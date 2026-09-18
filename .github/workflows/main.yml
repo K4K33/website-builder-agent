@@ -22,4 +22,4 @@ jobs:
 
       - name: Run agent
         working-directory: website-builder-agent/website-builder-agent
-        run: python main.py
+        run: python main.py list
