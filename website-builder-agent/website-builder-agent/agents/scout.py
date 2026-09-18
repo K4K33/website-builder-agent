@@ -1,775 +1,714 @@
 """
-Scout-agentti.
+Scout-agentti Website Builder Agentille.
 
-Prosessi:
+Tämä versio tukee kahta toimintatilaa:
 
-1. Hakee yritysehdokkaita web-haulla.
-2. Poimii oikeat verkkosivujen URL-osoitteet.
-3. Tarkistaa yritysten verkkosivut.
-4. Dry-run-tilassa ei käytä OpenRouteria.
-5. Normaalitilassa OpenRouter arvioi löydetyt sivustot.
+1. --dry-run
+   - Käyttää OpenStreetMap / Overpass APIa yritysten löytämiseen.
+   - EI käytä Tavilyä.
+   - EI käytä OpenRouteria.
+   - EI tallenna yrityksiä.
+   - Tarkistaa löydettyjen yritysten verkkosivut paikallisesti.
 
-Tärkeä periaate:
-OpenRouteria ei kutsuta ennen kuin oikeita yritysten
-verkkosivuja on löydetty ja niiden lataus on onnistunut.
+2. Normaali ajo
+   - Käyttää Tavilyä yritysten verkkosivujen löytämiseen.
+   - Tämän jälkeen AI-analyysi voidaan tehdä OpenRouterilla.
+
+Dry-run on tarkoitettu turvalliseen testaamiseen ilman AI- tai
+hakupalveluiden kuukausikiintiöiden kuluttamista.
 """
 
-from urllib.parse import parse_qs, unquote, urlparse
+import re
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
 
 import config
-from utils.claude_client import ask_claude_json
 from utils.fetch import analyze_url
-from utils.state import load_companies, save_companies, make_slug
+from utils.state import load_companies, make_slug, save_companies
+from utils.claude_client import ask_claude_json
 
+
+OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/131.0 Safari/537.36"
-    ),
-    "Accept-Language": "fi-FI,fi;q=0.9,en;q=0.8",
+        "Mozilla/5.0 "
+        "(compatible; WebsiteBuilderAgent/1.0; "
+        "+https://github.com/K4K33/website-builder-agent)"
+    )
 }
 
 
-SCOUT_SYSTEM_PROMPT = """
-Olet Website Builder Agentin Scout-agentti.
-
-Arvioi oikeita yrityksiä ja niiden verkkosivuja.
-
-Kiinnitä huomiota esimerkiksi:
-- puuttuuko viewport-meta
-- näyttääkö sivusto teknisesti vanhalta
-- onko sisältö epäselvää tai vanhentunutta
-- onko title tai meta description puutteellinen
-- onko sivusto erittäin suppea
-- onko sivustolla muita selviä merkkejä siitä,
-  että uudistus voisi olla hyödyllinen
-
-Älä päättele vanhentuneisuutta pelkästään
-yksinkertaisesta ulkoasusta.
-
-Palauta VAIN JSON-lista:
-
-[
-  {
-    "name": "Yrityksen nimi",
-    "url": "https://example.fi",
-    "industry_guess": "toimiala",
-    "location": "paikkakunta",
-    "old_site": true,
-    "confidence": 0.85,
-    "reason": "Lyhyt konkreettinen perustelu."
-  }
-]
-
-confidence pitää olla välillä 0 ja 1.
-
-Älä keksi yrityksiä tai URL-osoitteita.
-"""
+BLOCKED_DOMAINS = {
+    "facebook.com",
+    "instagram.com",
+    "linkedin.com",
+    "youtube.com",
+    "tiktok.com",
+    "x.com",
+    "twitter.com",
+    "google.com",
+    "google.fi",
+    "maps.google.com",
+    "tripadvisor.com",
+    "yelp.com",
+    "wikipedia.org",
+}
 
 
-def _clean_url(url: str) -> str:
+def _clean_url(url: str) -> str | None:
     """
-    Puhdistaa hakutuloksesta saadun URL-osoitteen.
+    Puhdistaa ja tarkistaa URL:n.
     """
-
-    url = (url or "").strip()
 
     if not url:
-        return ""
+        return None
 
-    # HTML-entiteettejä voi esiintyä osoitteessa.
-    url = unquote(url)
+    url = url.strip()
 
-    # Poistetaan lainausmerkit ja ympäröivä whitespace.
-    url = url.strip(" \"'")
+    if not url:
+        return None
 
-    if not url.startswith(
-        (
-            "http://",
-            "https://",
-        )
-    ):
-        return ""
-
-    # JavaScript-linkit eivät ole verkkosivuja.
-    if "javascript:" in url.lower():
-        return ""
+    if not url.lower().startswith(("http://", "https://")):
+        url = "https://" + url
 
     try:
         parsed = urlparse(url)
 
+        if parsed.scheme not in ("http", "https"):
+            return None
+
         if not parsed.netloc:
-            return ""
+            return None
 
-        if parsed.scheme not in (
-            "http",
-            "https",
-        ):
-            return ""
-
-        host = parsed.netloc.lower()
-
-        if host in (
-            "javascript",
-            "void(0)",
-        ):
-            return ""
+        return url.rstrip("/")
 
     except Exception:
-        return ""
-
-    return url
+        return None
 
 
 def _is_blocked_domain(url: str) -> bool:
     """
-    Estää hakukoneet, some-sivut ja muut sivut,
-    joita emme halua pitää yrityksen omana verkkosivuna.
+    Estää sosiaalisen median ja hakemistopalvelujen URL:t.
     """
 
     try:
-        host = urlparse(url).netloc.lower()
-        host = host.replace(
-            "www.",
-            "",
-        )
+        domain = urlparse(url).netloc.lower()
+        domain = domain.replace("www.", "")
+
+        for blocked in BLOCKED_DOMAINS:
+            if domain == blocked or domain.endswith("." + blocked):
+                return True
+
+        return False
+
     except Exception:
         return True
 
-    blocked = {
-        "google.com",
-        "bing.com",
-        "duckduckgo.com",
-        "facebook.com",
-        "instagram.com",
-        "linkedin.com",
-        "youtube.com",
-        "tiktok.com",
-        "x.com",
-        "twitter.com",
-        "yelp.com",
-        "tripadvisor.com",
-    }
 
-    return host in blocked
-
-
-def _unwrap_duckduckgo_url(url: str) -> str:
+def _normalize_website(value: str | None) -> str | None:
     """
-    DuckDuckGo voi käyttää /l/?uddg=... -muotoisia
-    välitysurleja. Yritetään purkaa ne alkuperäiseksi URL:ksi.
+    Muuntaa OSM:n website/contact:website-arvon käyttökelpoiseksi URL:ksi.
     """
 
-    try:
-        parsed = urlparse(url)
+    if not value:
+        return None
 
-        if parsed.path == "/l/":
-            query = parse_qs(
-                parsed.query
-            )
+    value = value.strip()
 
-            target = query.get(
-                "uddg",
-                [""],
-            )[0]
+    if not value:
+        return None
 
-            if target:
-                return unquote(target)
+    value = value.split(";")[0].strip()
 
-    except Exception:
-        pass
+    url = _clean_url(value)
+
+    if not url:
+        return None
+
+    if _is_blocked_domain(url):
+        return None
 
     return url
 
 
-def _search_web(
-    query: str,
+def _build_overpass_query(location: str, industry: str) -> str:
+    """
+    Rakentaa Overpass-kyselyn.
+
+    Kampaamot ja parturit ovat OSM:ssa yleensä shop=hairdresser.
+    """
+
+    location = location.strip()
+    industry_lower = industry.lower().strip()
+
+    if "kampa" in industry_lower:
+        tags = """
+          nwr["shop"="hairdresser"](area.searchArea);
+          nwr["craft"="hairdresser"](area.searchArea);
+        """
+    elif "parturi" in industry_lower:
+        tags = """
+          nwr["shop"="hairdresser"](area.searchArea);
+          nwr["craft"="hairdresser"](area.searchArea);
+        """
+    else:
+        tags = """
+          nwr["shop"](area.searchArea);
+          nwr["craft"](area.searchArea);
+          nwr["office"](area.searchArea);
+        """
+
+    query = f"""
+[out:json][timeout:30];
+
+area
+  ["name"="{location}"]
+  ["boundary"="administrative"]
+  ->.searchArea;
+
+(
+{tags}
+);
+
+out center tags;
+"""
+
+    return query
+
+
+def _search_overpass(
+    location: str,
+    industry: str,
     max_results: int = 20,
 ) -> list[dict]:
     """
-    Hakee DuckDuckGo HTML -hakutuloksia.
+    Hakee yrityksiä OpenStreetMapista.
 
-    Tämä ei käytä OpenRouteria.
+    Tämä ei käytä Tavilyä eikä OpenRouteria.
     """
 
-    print(
-        f"  [search] Haetaan: {query}"
+    print()
+    print("  [OSM] Haetaan yrityksiä OpenStreetMapista...")
+    print(f"  [OSM] Sijainti: {location}")
+    print(f"  [OSM] Ala: {industry or 'yleinen yrityshaku'}")
+
+    query = _build_overpass_query(
+        location=location,
+        industry=industry,
     )
 
     try:
         response = requests.post(
-            "https://html.duckduckgo.com/html/",
-            data={
-                "q": query,
-            },
+            OVERPASS_URL,
+            data=query,
             headers=HEADERS,
-            timeout=20,
+            timeout=45,
         )
 
         print(
-            f"  [search] HTTP-status: "
-            f"{response.status_code}"
+            f"  [OSM] HTTP-status: {response.status_code}"
         )
 
         response.raise_for_status()
 
+        data = response.json()
+
     except requests.RequestException as e:
         print(
-            f"  [search] Haku epäonnistui: {e}"
+            f"  [OSM] Haku epäonnistui: {e}"
         )
         return []
 
-    soup = BeautifulSoup(
-        response.text,
-        "html.parser",
-    )
+    except ValueError as e:
+        print(
+            f"  [OSM] Vastauksen JSONia ei voitu lukea: {e}"
+        )
+        return []
 
-    # DuckDuckGo HTML -hakutulokset.
-    result_nodes = soup.select(
-        ".result"
-    )
+    elements = data.get("elements", [])
 
     print(
-        f"  [search] Hakutuloslohkoja: "
-        f"{len(result_nodes)}"
+        f"  [OSM] Löydettyjä kohteita: {len(elements)}"
     )
 
     results = []
+    seen_names = set()
 
-    for node in result_nodes:
+    for element in elements:
+        tags = element.get("tags", {})
 
-        link = node.select_one(
-            ".result__a"
-        )
+        name = (
+            tags.get("name")
+            or tags.get("brand")
+            or ""
+        ).strip()
 
-        if not link:
+        if not name:
             continue
 
-        raw_url = link.get(
-            "href",
-            "",
-        )
-
-        raw_url = _unwrap_duckduckgo_url(
-            raw_url
-        )
-
-        url = _clean_url(
-            raw_url
-        )
-
-        if not url:
-            continue
-
-        if _is_blocked_domain(url):
-            continue
-
-        title = link.get_text(
+        normalized_name = re.sub(
+            r"\s+",
             " ",
-            strip=True,
+            name.lower(),
         )
 
-        if not title:
+        if normalized_name in seen_names:
             continue
 
-        description_node = node.select_one(
-            ".result__snippet"
+        seen_names.add(normalized_name)
+
+        website = (
+            tags.get("website")
+            or tags.get("contact:website")
+            or tags.get("url")
         )
 
-        description = ""
+        website = _normalize_website(website)
 
-        if description_node:
-            description = description_node.get_text(
-                " ",
-                strip=True,
-            )
+        phone = (
+            tags.get("phone")
+            or tags.get("contact:phone")
+            or ""
+        ).strip()
+
+        email = (
+            tags.get("email")
+            or tags.get("contact:email")
+            or ""
+        ).strip()
+
+        street = (
+            tags.get("addr:street")
+            or ""
+        ).strip()
+
+        house_number = (
+            tags.get("addr:housenumber")
+            or ""
+        ).strip()
+
+        postcode = (
+            tags.get("addr:postcode")
+            or ""
+        ).strip()
+
+        city = (
+            tags.get("addr:city")
+            or location
+        ).strip()
+
+        address_parts = [
+            part
+            for part in [
+                street,
+                house_number,
+                postcode,
+                city,
+            ]
+            if part
+        ]
+
+        address = " ".join(address_parts)
 
         results.append(
             {
-                "title": title,
-                "url": url,
-                "description": description,
+                "name": name,
+                "url": website,
+                "phone": phone,
+                "email": email,
+                "address": address,
+                "source": "openstreetmap",
             }
         )
 
         if len(results) >= max_results:
             break
 
-    # Poistetaan saman domainin toistot.
-    unique = []
-    seen_domains = set()
-
-    for result in results:
-
-        url = result["url"]
-
-        try:
-            domain = urlparse(
-                url
-            ).netloc.lower()
-
-            domain = domain.replace(
-                "www.",
-                "",
-            )
-
-        except Exception:
-            continue
-
-        if not domain:
-            continue
-
-        if domain in seen_domains:
-            continue
-
-        seen_domains.add(domain)
-
-        unique.append(result)
-
-    print(
-        f"  [search] Oikeita verkkosivutuloksia: "
-        f"{len(unique)}"
-    )
-
-    return unique
-
-
-def _extract_company_name(
-    search_result: dict,
-) -> str:
-
-    title = search_result.get(
-        "title",
-        "",
-    ).strip()
-
-    if not title:
-        return ""
-
-    separators = [
-        " | ",
-        " - ",
-        " – ",
-        " — ",
+    with_website = [
+        result
+        for result in results
+        if result.get("url")
     ]
 
-    for separator in separators:
-
-        if separator in title:
-            title = title.split(
-                separator
-            )[0].strip()
-
-            break
-
-    return title[:200]
-
-
-def _build_candidate_data(
-    search_result: dict,
-    industry: str,
-    location: str,
-) -> dict | None:
-
-    url = _clean_url(
-        search_result.get(
-            "url",
-            "",
-        )
+    print(
+        f"  [OSM] Yrityksiä yhteensä: {len(results)}"
     )
-
-    if not url:
-        return None
 
     print(
-        f"  [site] Tarkistetaan: {url}"
+        f"  [OSM] Yrityksiä, joilla verkkosivu: "
+        f"{len(with_website)}"
     )
 
-    site_data = analyze_url(url)
+    return results
 
-    if not site_data:
+
+def _analyze_candidates(
+    candidates: list[dict],
+    max_results: int,
+) -> list[dict]:
+    """
+    Hakee ja analysoi löydettyjen yritysten omat verkkosivut.
+
+    Tämä vaihe ei käytä Tavilyä eikä OpenRouteria.
+    """
+
+    analyzed = []
+
+    for candidate in candidates:
+        if len(analyzed) >= max_results:
+            break
+
+        url = candidate.get("url")
+
+        if not url:
+            print(
+                f"  [skip] Ei verkkosivua: "
+                f"{candidate.get('name', '')}"
+            )
+            continue
+
+        print()
         print(
-            "  [site] Sivustoa ei voitu lukea."
+            f"  [site] Tarkistetaan: "
+            f"{candidate.get('name', '')}"
         )
-        return None
+        print(
+            f"  [site] URL: {url}"
+        )
+
+        data = analyze_url(url)
+
+        if not data:
+            print(
+                "  [site] Verkkosivua ei voitu hakea."
+            )
+            continue
+
+        candidate_copy = dict(candidate)
+        candidate_copy["site_analysis"] = data
+
+        analyzed.append(candidate_copy)
+
+        print(
+            f"  [site] OK | "
+            f"title='{data.get('title', '')}' | "
+            f"viewport={data.get('has_viewport_meta', False)}"
+        )
+
+    return analyzed
+
+
+def _score_without_ai(company: dict) -> dict:
+    """
+    Paikallinen heuristiikka dry-run-testaukseen.
+
+    Tämä ei ole lopullinen AI-arvio.
+    """
+
+    site = company.get("site_analysis", {})
+
+    title = site.get("title", "")
+    meta_description = site.get("meta_description", "")
+    visible_text = site.get("visible_text", "")
+    viewport = site.get("has_viewport_meta", False)
+
+    issues = []
+
+    if not title:
+        issues.append("title puuttuu")
+
+    if not meta_description:
+        issues.append("meta description puuttuu")
+
+    if not viewport:
+        issues.append("viewport-meta puuttuu")
+
+    if len(visible_text) < 200:
+        issues.append("hyvin vähän näkyvää sisältöä")
+
+    raw_html_length = site.get("raw_html_length", 0)
+
+    if raw_html_length < 5000:
+        issues.append("hyvin pieni HTML-sivu")
+
+    score = len(issues)
+
+    old_site = score >= 2
 
     return {
-        "name": _extract_company_name(
-            search_result
+        "old_site": old_site,
+        "confidence": min(
+            0.95,
+            0.40 + score * 0.15,
         ),
-        "url": url,
-        "industry": industry,
-        "location": location,
-        "search_title": search_result.get(
-            "title",
-            "",
-        ),
-        "search_description": search_result.get(
-            "description",
-            "",
-        ),
-        "site": site_data,
+        "issues": issues,
+        "method": "local_heuristic",
     }
 
 
-def _print_candidate(
-    candidate: dict,
-) -> None:
+def _ai_analyze_company(
+    company: dict,
+) -> dict:
+    """
+    Normaali tuotantoanalyysi OpenRouterilla.
 
-    site = candidate["site"]
+    Tätä funktiota ei kutsuta dry-run-tilassa.
+    """
 
-    print()
-    print("  --- EHDOKAS ---")
+    site = company.get("site_analysis", {})
 
-    print(
-        f"  Yritys: {candidate['name']}"
-    )
+    prompt = f"""
+Analysoi seuraavan yrityksen nykyinen verkkosivusto.
 
-    print(
-        f"  URL: {candidate['url']}"
-    )
-
-    print(
-        f"  Title: {site.get('title', '')}"
-    )
-
-    print(
-        "  Viewport-meta: "
-        f"{site.get('has_viewport_meta', False)}"
-    )
-
-    print(
-        "  HTML-koko: "
-        f"{site.get('raw_html_length', 0)}"
-    )
-
-
-def _ask_ai_to_evaluate(
-    candidates: list[dict],
-) -> list[dict]:
-
-    prompt_parts = [
-        "Arvioi seuraavat yritykset.",
-        "",
-    ]
-
-    for index, candidate in enumerate(
-        candidates,
-        start=1,
-    ):
-
-        site = candidate["site"]
-
-        prompt_parts.append(
-            f"""
-YRITYS {index}
-
-Nimi:
-{candidate['name']}
+Yritys:
+{company.get("name", "")}
 
 URL:
-{candidate['url']}
+{company.get("url", "")}
 
-Toimiala:
-{candidate['industry']}
-
-Sijainti:
-{candidate['location']}
-
-Hakutuloksen otsikko:
-{candidate['search_title']}
-
-Hakutuloksen kuvaus:
-{candidate['search_description']}
-
-Sivuston title:
-{site.get('title', '')}
+Sivun title:
+{site.get("title", "")}
 
 Meta description:
-{site.get('meta_description', '')}
+{site.get("meta_description", "")}
 
-Viewport-meta:
-{site.get('has_viewport_meta', False)}
+Viewport:
+{site.get("has_viewport_meta", False)}
 
-HTML-koko:
-{site.get('raw_html_length', 0)}
+Näkyvä teksti:
+{site.get("visible_text", "")[:6000]}
 
-Sivuston teksti:
-{site.get('visible_text', '')[:5000]}
+Palauta JSON:
+
+{{
+  "old_site": true,
+  "confidence": 0.0,
+  "reasons": [
+    "..."
+  ]
+}}
+
+Arvioi erityisesti:
+- vanhanaikainen rakenne
+- mobiilikäytettävyys
+- puuttuva tai heikko sisältö
+- puuttuvat yhteydenottokehotteet
+- teknisesti heikko toteutus
+- selvästi parannettavissa oleva asiakaskokemus
+
+Älä väitä sivustoa vanhaksi vain siksi, että se on yksinkertainen.
 """
-        )
-
-    prompt_parts.append(
-        """
-Arvioi jokainen yritys.
-
-Palauta vain JSON-lista.
-Älä keksi uusia yrityksiä.
-Käytä vain annettuja yrityksiä ja URL-osoitteita.
-"""
-    )
 
     return ask_claude_json(
-        SCOUT_SYSTEM_PROMPT,
-        "\n".join(prompt_parts),
-        use_web_search=False,
-        max_tokens=4000,
+        system=(
+            "Olet verkkosivustojen analysointiin erikoistunut "
+            "AI-agentti. Ole objektiivinen ja perustele havainnot."
+        ),
+        user_prompt=prompt,
+        max_tokens=1500,
     )
 
 
 def run_scout(
-    count: int = None,
+    count: int = 10,
     industry: str = "",
     location: str = "",
     dry_run: bool = False,
 ) -> list[dict]:
-
-    count = count or config.SCOUT_MAX_RESULTS
-
-    industry = industry.strip()
-    location = location.strip()
-
-    if industry and location:
-        query = f"{industry} {location}"
-    elif industry:
-        query = industry
-    elif location:
-        query = f"yritys {location}"
-    else:
-        query = "pieni yritys Suomi"
+    """
+    Scout-agentin pääfunktio.
+    """
 
     print()
     print("=== SCOUT ===")
+
+    query_text = " ".join(
+        part
+        for part in [
+            industry,
+            location,
+        ]
+        if part
+    ).strip()
+
     print(
-        f"Hakukysely: {query}"
+        f"Hakukysely: {query_text or '(ei määritelty)'}"
     )
+
     print(
         f"Tavoite: {count} yritystä"
     )
 
     if dry_run:
-        print(
-            "TILA: DRY-RUN"
-        )
-        print(
-            "OpenRouteria EI käytetä."
-        )
-    else:
-        print(
-            "TILA: NORMAALI"
-        )
-        print(
-            "OpenRouteria käytetään "
-            "AI-arviointiin."
-        )
+        print("TILA: DRY-RUN")
+        print("Tavilyä EI käytetä.")
+        print("OpenRouteria EI käytetä.")
+        print("Yrityksiä EI tallenneta.")
 
-    print()
-
-    search_results = _search_web(
-        query,
+    candidates = _search_overpass(
+        location=location,
+        industry=industry,
         max_results=max(
-            count * 5,
-            20,
+            count * 3,
+            10,
         ),
     )
 
-    if not search_results:
-
-        print()
-        print(
-            "[scout] Hakupalvelusta ei saatu "
-            "käyttökelpoisia yrityssivustoja."
-        )
-
-        return []
-
-    candidates = []
-
-    for result in search_results:
-
-        candidate = _build_candidate_data(
-            result,
-            industry,
-            location,
-        )
-
-        if not candidate:
-            continue
-
-        if not candidate["name"]:
-            continue
-
-        _print_candidate(
-            candidate
-        )
-
-        candidates.append(
-            candidate
-        )
-
-        if len(candidates) >= count:
-            break
-
-    print()
-
     if not candidates:
-
-        print(
-            "[scout] Hakutuloksia löytyi, "
-            "mutta verkkosivuja ei voitu analysoida."
-        )
-
-        return []
-
-    print(
-        "[scout] Verkkosivujen analyysi onnistui: "
-        f"{len(candidates)}"
-    )
-
-    if dry_run:
-
         print()
         print(
-            "=== DRY-RUN VALMIS ==="
+            "[scout] OpenStreetMapista ei löytynyt yrityksiä."
         )
+        return []
 
-        print(
-            "OpenRouter-kutsuja tehtiin: 0"
-        )
-
-        print(
-            "Yritysten verkkosivuja analysoitu: "
-            f"{len(candidates)}"
-        )
-
-        return candidates
-
-    print()
-    print(
-        "[scout] Lähetetään ehdokkaat "
-        "OpenRouterille arvioitavaksi..."
+    analyzed = _analyze_candidates(
+        candidates=candidates,
+        max_results=count,
     )
 
-    evaluated = _ask_ai_to_evaluate(
-        candidates
-    )
+    if not analyzed:
+        print()
+        print(
+            "[scout] Löydetyillä yrityksillä ei ollut "
+            "käyttökelpoisia verkkosivuja."
+        )
+        return []
 
-    companies = load_companies()
+    results = []
 
-    saved = []
+    for company in analyzed:
+        if dry_run:
+            evaluation = _score_without_ai(company)
 
-    for item in evaluated:
+            company["evaluation"] = evaluation
+            results.append(company)
 
-        if not isinstance(item, dict):
-            continue
-
-        name = str(
-            item.get(
-                "name",
-                "",
+            print()
+            print(
+                f"  [dry-run] {company.get('name', '')}"
             )
-        ).strip()
+            print(
+                f"  [dry-run] URL: "
+                f"{company.get('url', '')}"
+            )
+            print(
+                f"  [dry-run] Mahdollisesti vanha: "
+                f"{evaluation['old_site']}"
+            )
+            print(
+                f"  [dry-run] Luottamus: "
+                f"{evaluation['confidence']:.2f}"
+            )
 
-        url = _clean_url(
-            str(
-                item.get(
-                    "url",
-                    "",
+            if evaluation["issues"]:
+                print(
+                    "  [dry-run] Havainnot: "
+                    + ", ".join(
+                        evaluation["issues"]
+                    )
                 )
-            ).strip()
-        )
 
-        if not name or not url:
             continue
+
+        evaluation = _ai_analyze_company(company)
+
+        company["evaluation"] = evaluation
 
         old_site = bool(
-            item.get(
+            evaluation.get(
                 "old_site",
                 False,
             )
         )
 
-        try:
-            confidence = float(
-                item.get(
-                    "confidence",
-                    0,
-                )
-            )
-        except (
-            TypeError,
-            ValueError,
-        ):
-            confidence = 0.0
-
-        confidence = max(
-            0.0,
-            min(
-                1.0,
-                confidence,
+        confidence = float(
+            evaluation.get(
+                "confidence",
+                0,
             )
         )
 
         if not old_site:
+            print(
+                f"  [scout] Hylätään: "
+                f"{company.get('name', '')} "
+                "(sivu ei vaikuta riittävän vanhalta/puutteelliselta)"
+            )
             continue
 
         if confidence < 0.60:
+            print(
+                f"  [scout] Hylätään: "
+                f"{company.get('name', '')} "
+                f"(luottamus {confidence:.2f})"
+            )
             continue
 
-        slug = make_slug(
-            name
-        )
+        results.append(company)
 
-        if (
-            slug in companies
-            and companies[slug].get(
-                "status"
-            ) != "found"
-        ):
+    if dry_run:
+        print()
+        print("=== DRY-RUN VALMIS ===")
+        print(
+            f"Yrityksiä analysoitiin: {len(results)}"
+        )
+        print("Tavily-kutsuja: 0")
+        print("OpenRouter-kutsuja: 0")
+        print("Tallennettuja yrityksiä: 0")
+
+        return results
+
+    companies = load_companies()
+    saved = []
+
+    for company in results:
+        name = company.get("name", "")
+        url = company.get("url", "")
+
+        slug = make_slug(name)
+
+        if not slug:
+            continue
+
+        if slug in companies:
+            print(
+                f"  [scout] Ohitetaan jo olemassa oleva: "
+                f"{name}"
+            )
             continue
 
         companies[slug] = {
             "name": name,
             "url": url,
+            "phone": company.get("phone", ""),
+            "email": company.get("email", ""),
+            "address": company.get("address", ""),
             "status": "found",
-            "scout": {
-                "industry_guess": item.get(
-                    "industry_guess",
-                    industry,
-                ),
-                "location": item.get(
-                    "location",
-                    location,
-                ),
-                "reason": item.get(
-                    "reason",
-                    "",
-                ),
-                "confidence": confidence,
-            },
+            "source": company.get(
+                "source",
+                "unknown",
+            ),
+            "site_analysis": company.get(
+                "site_analysis",
+                {},
+            ),
+            "evaluation": company.get(
+                "evaluation",
+                {},
+            ),
         }
 
-        saved.append(
-            (
-                slug,
-                companies[slug],
-            )
-        )
+        saved.append(company)
 
-    save_companies(
-        companies
-    )
+    save_companies(companies)
 
     print()
-
     print(
-        "[scout] Tallennettu potentiaalisia "
-        f"yrityksiä: {len(saved)}"
+        f"[Scout] Tallennettu uusia yrityksiä: "
+        f"{len(saved)}"
     )
 
     return saved
