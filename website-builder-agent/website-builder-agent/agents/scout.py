@@ -1,18 +1,15 @@
 """
 Scout-agentti.
 
-Tämä versio tukee kahta toimintatapaa:
+Dry-run-tila:
+- hakee hakutuloksia
+- poimii oikeita verkkosivuja
+- tarkistaa verkkosivut
+- ei käytä OpenRouteria
 
-1. Dry-run:
-   - hakee hakutuloksia
-   - poimii verkkosivut
-   - testaa verkkosivujen latauksen
-   - analysoi HTML:n
-   - EI käytä OpenRouteria
-
-2. Normaali Scout:
-   - tekee samat vaiheet
-   - lähettää ehdokkaat OpenRouterille arvioitavaksi
+Normaali tila:
+- tekee samat vaiheet
+- käyttää OpenRouteria verkkosivujen AI-arviointiin
 """
 
 from urllib.parse import urlparse
@@ -38,15 +35,7 @@ HEADERS = {
 SCOUT_SYSTEM_PROMPT = """
 Olet Website Builder Agentin Scout-agentti.
 
-Tehtäväsi on arvioida oikeita yrityksiä ja niiden verkkosivuja.
-
-Saat yrityksestä:
-- yrityksen nimen
-- verkkosivun URL-osoitteen
-- toimialan ja sijainnin
-- verkkosivulta kerättyä sisältöä ja teknisiä tietoja
-
-Arvioi, vaikuttaako verkkosivu aidosti vanhentuneelta tai heikkolaatuiselta.
+Arvioi oikeita yrityksiä ja niiden verkkosivuja.
 
 Kiinnitä huomiota esimerkiksi:
 - puuttuuko viewport-meta
@@ -57,8 +46,8 @@ Kiinnitä huomiota esimerkiksi:
 - onko sivustolla muita selviä merkkejä siitä,
   että uudistus voisi olla hyödyllinen
 
-ÄLÄ päättele vanhentuneisuutta pelkästään siitä,
-että sivu on yksinkertainen.
+Älä päättele vanhentuneisuutta pelkästään
+yksinkertaisesta ulkoasusta.
 
 Palauta VAIN JSON-lista:
 
@@ -86,13 +75,35 @@ def _clean_url(url: str) -> str:
     if not url:
         return ""
 
+    if url.startswith("//"):
+        url = "https:" + url
+
     if not url.startswith(("http://", "https://")):
-        url = "https://" + url
+        return ""
+
+    if "javascript:" in url.lower():
+        return ""
+
+    if url.lower().startswith(
+        (
+            "https://javascript:",
+            "http://javascript:",
+        )
+    ):
+        return ""
 
     try:
         parsed = urlparse(url)
 
         if not parsed.netloc:
+            return ""
+
+        host = parsed.netloc.lower()
+
+        if host in {
+            "javascript",
+            "void(0)",
+        }:
             return ""
 
     except Exception:
@@ -123,12 +134,10 @@ def _is_blocked_domain(url: str) -> bool:
     return host in blocked
 
 
-def _search_web(query: str, max_results: int = 20) -> list[dict]:
-    """
-    Hakee Bingistä tavallisen HTML-sivun.
-
-    Tämä toiminto ei käytä OpenRouteria.
-    """
+def _search_web(
+    query: str,
+    max_results: int = 20,
+) -> list[dict]:
 
     print(f"  [search] Haetaan: {query}")
 
@@ -146,13 +155,16 @@ def _search_web(query: str, max_results: int = 20) -> list[dict]:
         )
 
         print(
-            f"  [search] HTTP-status: {response.status_code}"
+            f"  [search] HTTP-status: "
+            f"{response.status_code}"
         )
 
         response.raise_for_status()
 
     except requests.RequestException as e:
-        print(f"  [search] Haku epäonnistui: {e}")
+        print(
+            f"  [search] Haku epäonnistui: {e}"
+        )
         return []
 
     soup = BeautifulSoup(
@@ -162,15 +174,18 @@ def _search_web(query: str, max_results: int = 20) -> list[dict]:
 
     results = []
 
-    # Ensisijainen Bing-rakenne.
     items = soup.select("li.b_algo")
 
     print(
-        f"  [search] Bingin b_algo-tuloksia: {len(items)}"
+        f"  [search] Bingin b_algo-tuloksia: "
+        f"{len(items)}"
     )
 
     for item in items:
-        link = item.select_one("h2 a")
+
+        link = item.select_one(
+            "h2 a[href]"
+        )
 
         if not link:
             continue
@@ -213,72 +228,50 @@ def _search_web(query: str, max_results: int = 20) -> list[dict]:
         if len(results) >= max_results:
             break
 
-    # Varahaku, jos Bingin HTML-rakenne muuttuu.
-    if not results:
+    # Jos Bingin rakenne ei anna meille oikeita linkkejä,
+    # älä käytä vaarallista yleistä a[href]-varahakua.
+    #
+    # Se voisi poimia esimerkiksi javascript:void(0)
+    # -linkkejä, jotka eivät ole yritysten verkkosivuja.
 
-        print(
-            "  [search] b_algo-rakennetta ei löytynyt. "
-            "Kokeillaan varahakua."
-        )
-
-        for link in soup.select("a[href]"):
-
-            href = _clean_url(
-                link.get("href", "")
-            )
-
-            title = link.get_text(
-                " ",
-                strip=True,
-            )
-
-            if not href or not title:
-                continue
-
-            if _is_blocked_domain(href):
-                continue
-
-            if len(title) < 2:
-                continue
-
-            results.append(
-                {
-                    "title": title,
-                    "url": href,
-                    "description": "",
-                }
-            )
-
-            if len(results) >= max_results:
-                break
-
-    # Poistetaan saman domainin toistot.
     unique = []
     seen_domains = set()
 
     for result in results:
 
+        url = result["url"]
+
+        if not _clean_url(url):
+            continue
+
+        if _is_blocked_domain(url):
+            continue
+
         try:
             domain = urlparse(
-                result["url"]
+                url
             ).netloc.lower()
 
             domain = domain.replace(
                 "www.",
-                ""
+                "",
             )
 
         except Exception:
+            continue
+
+        if not domain:
             continue
 
         if domain in seen_domains:
             continue
 
         seen_domains.add(domain)
+
         unique.append(result)
 
     print(
-        f"  [search] Käyttökelpoisia tuloksia: "
+        f"  [search] Oikeita verkkosivutuloksia: "
         f"{len(unique)}"
     )
 
@@ -310,7 +303,6 @@ def _extract_company_name(
             title = title.split(
                 separator
             )[0].strip()
-
             break
 
     return title[:200]
@@ -389,26 +381,13 @@ def _print_candidate(
         f"{site.get('raw_html_length', 0)}"
     )
 
-    text = site.get(
-        "visible_text",
-        "",
-    )
-
-    print(
-        "  Tekstiä: "
-        f"{len(text)} merkkiä"
-    )
-
 
 def _ask_ai_to_evaluate(
     candidates: list[dict],
 ) -> list[dict]:
 
-    if not candidates:
-        return []
-
     prompt_parts = [
-        "Arvioi seuraavat oikeista hakutuloksista löydetyt yritykset.",
+        "Arvioi seuraavat yritykset.",
         "",
     ]
 
@@ -520,12 +499,11 @@ def run_scout(
     )
 
     if not search_results:
-
         print()
         print(
-            "[scout] Hakutuloksia ei löytynyt."
+            "[scout] Hakupalvelusta ei saatu "
+            "käyttökelpoisia yrityssivustoja."
         )
-
         return []
 
     candidates = []
@@ -554,12 +532,10 @@ def run_scout(
     print()
 
     if not candidates:
-
         print(
             "[scout] Hakutuloksia löytyi, "
             "mutta verkkosivuja ei voitu analysoida."
         )
-
         return []
 
     print(
@@ -567,36 +543,17 @@ def run_scout(
         f"{len(candidates)}"
     )
 
-    # ---------------------------------------------------------
-    # DRY-RUN
-    # ---------------------------------------------------------
-
     if dry_run:
 
         print()
+        print("=== DRY-RUN VALMIS ===")
+        print("OpenRouter-kutsuja tehtiin: 0")
         print(
-            "=== DRY-RUN VALMIS ==="
-        )
-
-        print(
-            "OpenRouter-kutsuja tehtiin: 0"
-        )
-
-        print(
-            "Yrityksiä analysoitu: "
+            f"Yritysten verkkosivuja analysoitu: "
             f"{len(candidates)}"
         )
 
-        print(
-            "Seuraava vaihe voidaan tehdä vasta "
-            "kun tämä testi toimii."
-        )
-
         return candidates
-
-    # ---------------------------------------------------------
-    # NORMAALI AI-ARVIOINTI
-    # ---------------------------------------------------------
 
     print()
     print(
@@ -661,7 +618,7 @@ def run_scout(
             min(
                 1.0,
                 confidence,
-            ),
+            )
         )
 
         if not old_site:
