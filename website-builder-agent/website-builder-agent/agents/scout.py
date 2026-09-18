@@ -1,18 +1,20 @@
 """
 Scout-agentti.
 
-Dry-run-tila:
-- hakee hakutuloksia
-- poimii oikeita verkkosivuja
-- tarkistaa verkkosivut
-- ei käytä OpenRouteria
+Prosessi:
 
-Normaali tila:
-- tekee samat vaiheet
-- käyttää OpenRouteria verkkosivujen AI-arviointiin
+1. Hakee yritysehdokkaita web-haulla.
+2. Poimii oikeat verkkosivujen URL-osoitteet.
+3. Tarkistaa yritysten verkkosivut.
+4. Dry-run-tilassa ei käytä OpenRouteria.
+5. Normaalitilassa OpenRouter arvioi löydetyt sivustot.
+
+Tärkeä periaate:
+OpenRouteria ei kutsuta ennen kuin oikeita yritysten
+verkkosivuja on löydetty ja niiden lataus on onnistunut.
 """
 
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,7 +30,8 @@ HEADERS = {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/131.0 Safari/537.36"
-    )
+    ),
+    "Accept-Language": "fi-FI,fi;q=0.9,en;q=0.8",
 }
 
 
@@ -70,26 +73,31 @@ confidence pitää olla välillä 0 ja 1.
 
 
 def _clean_url(url: str) -> str:
+    """
+    Puhdistaa hakutuloksesta saadun URL-osoitteen.
+    """
+
     url = (url or "").strip()
 
     if not url:
         return ""
 
-    if url.startswith("//"):
-        url = "https:" + url
+    # HTML-entiteettejä voi esiintyä osoitteessa.
+    url = unquote(url)
 
-    if not url.startswith(("http://", "https://")):
-        return ""
+    # Poistetaan lainausmerkit ja ympäröivä whitespace.
+    url = url.strip(" \"'")
 
-    if "javascript:" in url.lower():
-        return ""
-
-    if url.lower().startswith(
+    if not url.startswith(
         (
-            "https://javascript:",
-            "http://javascript:",
+            "http://",
+            "https://",
         )
     ):
+        return ""
+
+    # JavaScript-linkit eivät ole verkkosivuja.
+    if "javascript:" in url.lower():
         return ""
 
     try:
@@ -98,12 +106,18 @@ def _clean_url(url: str) -> str:
         if not parsed.netloc:
             return ""
 
+        if parsed.scheme not in (
+            "http",
+            "https",
+        ):
+            return ""
+
         host = parsed.netloc.lower()
 
-        if host in {
+        if host in (
             "javascript",
             "void(0)",
-        }:
+        ):
             return ""
 
     except Exception:
@@ -113,9 +127,17 @@ def _clean_url(url: str) -> str:
 
 
 def _is_blocked_domain(url: str) -> bool:
+    """
+    Estää hakukoneet, some-sivut ja muut sivut,
+    joita emme halua pitää yrityksen omana verkkosivuna.
+    """
+
     try:
         host = urlparse(url).netloc.lower()
-        host = host.replace("www.", "")
+        host = host.replace(
+            "www.",
+            "",
+        )
     except Exception:
         return True
 
@@ -128,27 +150,62 @@ def _is_blocked_domain(url: str) -> bool:
         "linkedin.com",
         "youtube.com",
         "tiktok.com",
+        "x.com",
+        "twitter.com",
         "yelp.com",
+        "tripadvisor.com",
     }
 
     return host in blocked
+
+
+def _unwrap_duckduckgo_url(url: str) -> str:
+    """
+    DuckDuckGo voi käyttää /l/?uddg=... -muotoisia
+    välitysurleja. Yritetään purkaa ne alkuperäiseksi URL:ksi.
+    """
+
+    try:
+        parsed = urlparse(url)
+
+        if parsed.path == "/l/":
+            query = parse_qs(
+                parsed.query
+            )
+
+            target = query.get(
+                "uddg",
+                [""],
+            )[0]
+
+            if target:
+                return unquote(target)
+
+    except Exception:
+        pass
+
+    return url
 
 
 def _search_web(
     query: str,
     max_results: int = 20,
 ) -> list[dict]:
+    """
+    Hakee DuckDuckGo HTML -hakutuloksia.
 
-    print(f"  [search] Haetaan: {query}")
+    Tämä ei käytä OpenRouteria.
+    """
+
+    print(
+        f"  [search] Haetaan: {query}"
+    )
 
     try:
-        response = requests.get(
-            "https://www.bing.com/search",
-            params={
+        response = requests.post(
+            "https://html.duckduckgo.com/html/",
+            data={
                 "q": query,
-                "count": max_results,
-                "setlang": "fi",
-                "cc": "fi",
             },
             headers=HEADERS,
             timeout=20,
@@ -172,41 +229,56 @@ def _search_web(
         "html.parser",
     )
 
-    results = []
-
-    items = soup.select("li.b_algo")
-
-    print(
-        f"  [search] Bingin b_algo-tuloksia: "
-        f"{len(items)}"
+    # DuckDuckGo HTML -hakutulokset.
+    result_nodes = soup.select(
+        ".result"
     )
 
-    for item in items:
+    print(
+        f"  [search] Hakutuloslohkoja: "
+        f"{len(result_nodes)}"
+    )
 
-        link = item.select_one(
-            "h2 a[href]"
+    results = []
+
+    for node in result_nodes:
+
+        link = node.select_one(
+            ".result__a"
         )
 
         if not link:
             continue
 
-        href = _clean_url(
-            link.get("href", "")
+        raw_url = link.get(
+            "href",
+            "",
         )
+
+        raw_url = _unwrap_duckduckgo_url(
+            raw_url
+        )
+
+        url = _clean_url(
+            raw_url
+        )
+
+        if not url:
+            continue
+
+        if _is_blocked_domain(url):
+            continue
 
         title = link.get_text(
             " ",
             strip=True,
         )
 
-        if not href or not title:
+        if not title:
             continue
 
-        if _is_blocked_domain(href):
-            continue
-
-        description_node = item.select_one(
-            ".b_caption p"
+        description_node = node.select_one(
+            ".result__snippet"
         )
 
         description = ""
@@ -220,7 +292,7 @@ def _search_web(
         results.append(
             {
                 "title": title,
-                "url": href,
+                "url": url,
                 "description": description,
             }
         )
@@ -228,24 +300,13 @@ def _search_web(
         if len(results) >= max_results:
             break
 
-    # Jos Bingin rakenne ei anna meille oikeita linkkejä,
-    # älä käytä vaarallista yleistä a[href]-varahakua.
-    #
-    # Se voisi poimia esimerkiksi javascript:void(0)
-    # -linkkejä, jotka eivät ole yritysten verkkosivuja.
-
+    # Poistetaan saman domainin toistot.
     unique = []
     seen_domains = set()
 
     for result in results:
 
         url = result["url"]
-
-        if not _clean_url(url):
-            continue
-
-        if _is_blocked_domain(url):
-            continue
 
         try:
             domain = urlparse(
@@ -303,6 +364,7 @@ def _extract_company_name(
             title = title.split(
                 separator
             )[0].strip()
+
             break
 
     return title[:200]
@@ -363,19 +425,24 @@ def _print_candidate(
 
     print()
     print("  --- EHDOKAS ---")
+
     print(
         f"  Yritys: {candidate['name']}"
     )
+
     print(
         f"  URL: {candidate['url']}"
     )
+
     print(
         f"  Title: {site.get('title', '')}"
     )
+
     print(
         "  Viewport-meta: "
         f"{site.get('has_viewport_meta', False)}"
     )
+
     print(
         "  HTML-koko: "
         f"{site.get('raw_html_length', 0)}"
@@ -478,15 +545,28 @@ def run_scout(
 
     print()
     print("=== SCOUT ===")
-    print(f"Hakukysely: {query}")
-    print(f"Tavoite: {count} yritystä")
+    print(
+        f"Hakukysely: {query}"
+    )
+    print(
+        f"Tavoite: {count} yritystä"
+    )
 
     if dry_run:
-        print("TILA: DRY-RUN")
-        print("OpenRouteria EI käytetä.")
+        print(
+            "TILA: DRY-RUN"
+        )
+        print(
+            "OpenRouteria EI käytetä."
+        )
     else:
-        print("TILA: NORMAALI")
-        print("OpenRouteria käytetään AI-arviointiin.")
+        print(
+            "TILA: NORMAALI"
+        )
+        print(
+            "OpenRouteria käytetään "
+            "AI-arviointiin."
+        )
 
     print()
 
@@ -499,11 +579,13 @@ def run_scout(
     )
 
     if not search_results:
+
         print()
         print(
             "[scout] Hakupalvelusta ei saatu "
             "käyttökelpoisia yrityssivustoja."
         )
+
         return []
 
     candidates = []
@@ -522,9 +604,13 @@ def run_scout(
         if not candidate["name"]:
             continue
 
-        _print_candidate(candidate)
+        _print_candidate(
+            candidate
+        )
 
-        candidates.append(candidate)
+        candidates.append(
+            candidate
+        )
 
         if len(candidates) >= count:
             break
@@ -532,24 +618,32 @@ def run_scout(
     print()
 
     if not candidates:
+
         print(
             "[scout] Hakutuloksia löytyi, "
             "mutta verkkosivuja ei voitu analysoida."
         )
+
         return []
 
     print(
-        f"[scout] Verkkosivujen analyysi onnistui: "
+        "[scout] Verkkosivujen analyysi onnistui: "
         f"{len(candidates)}"
     )
 
     if dry_run:
 
         print()
-        print("=== DRY-RUN VALMIS ===")
-        print("OpenRouter-kutsuja tehtiin: 0")
         print(
-            f"Yritysten verkkosivuja analysoitu: "
+            "=== DRY-RUN VALMIS ==="
+        )
+
+        print(
+            "OpenRouter-kutsuja tehtiin: 0"
+        )
+
+        print(
+            "Yritysten verkkosivuja analysoitu: "
             f"{len(candidates)}"
         )
 
@@ -627,7 +721,9 @@ def run_scout(
         if confidence < 0.60:
             continue
 
-        slug = make_slug(name)
+        slug = make_slug(
+            name
+        )
 
         if (
             slug in companies
@@ -665,9 +761,12 @@ def run_scout(
             )
         )
 
-    save_companies(companies)
+    save_companies(
+        companies
+    )
 
     print()
+
     print(
         "[scout] Tallennettu potentiaalisia "
         f"yrityksiä: {len(saved)}"
