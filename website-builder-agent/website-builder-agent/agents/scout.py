@@ -963,3 +963,25 @@ def scout(
         )
 
     return analyzed
+
+
+def run_scout(
+    count: int = 10,
+    industry: str = "kampaamo",
+    location: str = "Tampere",
+    dry_run: bool = False,
+    **kwargs,
+):
+    """
+    Yhteensopivuus main.py:n kanssa.
+
+    main.py kutsuu scout.run_scout().
+    Varsinainen työ tehdään scout()-funktiossa.
+    """
+
+    return scout(
+        count=count,
+        industry=industry,
+        location=location,
+        dry_run=dry_run,
+    )
