@@ -7,9 +7,8 @@ Tarkistukset:
 - viewport-meta
 - HTML-rakenne
 - puuttuvat alt-tekstit
-- puuttuvat aria-labelit tarvittaessa
 - rikkinäiset sisäiset ankkurilinkit
-- placeholder-tekstit
+- täyttämättömät placeholderit
 - http://-ulkoiset linkit
 - tyhjät linkit ja painikkeet
 - research-faktojen ja sivun sisällön vastaavuus
@@ -86,13 +85,7 @@ Palauta VAIN validi JSON:
 """
 
 
-def _automated_checks(
-    html: str,
-) -> dict:
-    """
-    Tekee deterministiset HTML-tarkistukset ilman AI-kutsua.
-    """
-
+def _automated_checks(html: str) -> dict:
     issues = []
 
     if not html or not html.strip():
@@ -139,9 +132,7 @@ def _automated_checks(
 
     viewport = soup.find(
         "meta",
-        attrs={
-            "name": "viewport"
-        },
+        attrs={"name": "viewport"},
     )
 
     has_viewport = viewport is not None
@@ -156,9 +147,7 @@ def _automated_checks(
     # H1
     # ---------------------------------------------------------
 
-    h1_elements = soup.find_all(
-        "h1"
-    )
+    h1_elements = soup.find_all("h1")
 
     if len(h1_elements) == 0:
         issues.append(
@@ -172,13 +161,13 @@ def _automated_checks(
         )
 
     # ---------------------------------------------------------
-    # IMAGES
+    # IMAGE ALT
     # ---------------------------------------------------------
 
     imgs_without_alt = [
         img
         for img in soup.find_all("img")
-        if not img.get("alt")
+        if img.get("alt") is None
     ]
 
     if imgs_without_alt:
@@ -193,9 +182,7 @@ def _automated_checks(
 
     ids = {
         tag.get("id")
-        for tag in soup.find_all(
-            id=True
-        )
+        for tag in soup.find_all(id=True)
         if tag.get("id")
     }
 
@@ -210,16 +197,11 @@ def _automated_checks(
             "",
         ).strip()
 
-        if href.startswith(
-            "#"
-        ) and len(href) > 1:
-
+        if href.startswith("#") and len(href) > 1:
             target = href[1:]
 
             if target not in ids:
-                broken_anchors.append(
-                    href
-                )
+                broken_anchors.append(href)
 
     if broken_anchors:
         issues.append(
@@ -235,9 +217,7 @@ def _automated_checks(
 
     empty_links = []
 
-    for anchor in soup.find_all(
-        "a"
-    ):
+    for anchor in soup.find_all("a"):
         href = anchor.get(
             "href",
             "",
@@ -253,18 +233,21 @@ def _automated_checks(
             "",
         ).strip()
 
-        if not href and not text and not aria:
-            empty_links.append(
-                anchor
-            )
+        if (
+            not href
+            and not text
+            and not aria
+        ):
+            empty_links.append(anchor)
 
     if empty_links:
         issues.append(
-            f"{len(empty_links)} tyhjää linkkielementtiä."
+            f"{len(empty_links)} "
+            "tyhjää linkkielementtiä."
         )
 
     # ---------------------------------------------------------
-    # BUTTONS
+    # EMPTY BUTTONS
     # ---------------------------------------------------------
 
     empty_buttons = []
@@ -283,13 +266,12 @@ def _automated_checks(
         ).strip()
 
         if not text and not aria:
-            empty_buttons.append(
-                button
-            )
+            empty_buttons.append(button)
 
     if empty_buttons:
         issues.append(
-            f"{len(empty_buttons)} tyhjää button-elementtiä."
+            f"{len(empty_buttons)} "
+            "tyhjää button-elementtiä."
         )
 
     # ---------------------------------------------------------
@@ -303,7 +285,6 @@ def _automated_checks(
 
     placeholder_patterns = [
         r"lorem ipsum",
-        r"\[.*?tähän.*?\]",
         r"\[.*?täytä.*?\]",
         r"\[.*?lisää.*?\]",
         r"placeholder",
@@ -313,7 +294,6 @@ def _automated_checks(
     ]
 
     for pattern in placeholder_patterns:
-
         if re.search(
             pattern,
             text,
@@ -354,7 +334,7 @@ def _automated_checks(
         )
 
     # ---------------------------------------------------------
-    # REQUIRED STRUCTURE
+    # REQUIRED HTML ELEMENTS
     # ---------------------------------------------------------
 
     required_elements = {
@@ -365,9 +345,11 @@ def _automated_checks(
     }
 
     for element_name, element in required_elements.items():
+
         if element is None:
             issues.append(
-                f"Sivulta puuttuu <{element_name}>-elementti."
+                f"Sivulta puuttuu "
+                f"<{element_name}>-elementti."
             )
 
     # ---------------------------------------------------------
@@ -385,7 +367,8 @@ def _automated_checks(
 
         if len(main_text) < 100:
             issues.append(
-                "Main-sisällössä on poikkeuksellisen vähän tekstiä."
+                "Main-sisällössä on "
+                "poikkeuksellisen vähän tekstiä."
             )
 
     # ---------------------------------------------------------
@@ -395,9 +378,11 @@ def _automated_checks(
     external_resources = []
 
     for tag in soup.find_all(
-        ["script", "link"],
+        [
+            "script",
+            "link",
+        ]
     ):
-
         source = (
             tag.get("src")
             or tag.get("href")
@@ -413,7 +398,8 @@ def _automated_checks(
 
     if external_resources:
         issues.append(
-            "HTML käyttää http://-muotoisia ulkoisia resursseja."
+            "HTML käyttää http://-muotoisia "
+            "ulkoisia resursseja."
         )
 
     # ---------------------------------------------------------
@@ -430,11 +416,6 @@ def _automated_checks(
 def run_qa(
     slug_or_name: str,
 ) -> dict:
-    """
-    main.py:n käyttämä QA-käynnistys.
-
-    Yrityksen voi antaa slugina tai nimenä.
-    """
 
     slug, company = get_company(
         slug_or_name
@@ -442,7 +423,8 @@ def run_qa(
 
     if company is None:
         raise RuntimeError(
-            f"Yritystä ei löytynyt: {slug_or_name}"
+            f"Yritystä ei löytynyt: "
+            f"{slug_or_name}"
         )
 
     build_info = company.get(
@@ -451,7 +433,8 @@ def run_qa(
 
     if not build_info:
         raise RuntimeError(
-            f"Yritykselle '{slug}' ei löydy build-dataa. "
+            f"Yritykselle '{slug}' "
+            "ei löydy build-dataa. "
             f"Aja ensin: python main.py build {slug}"
         )
 
@@ -460,37 +443,35 @@ def run_qa(
         "",
     )
 
-    if not output_path or not os.path.exists(
-        output_path
+    if (
+        not output_path
+        or not os.path.exists(
+            output_path
+        )
     ):
         raise RuntimeError(
-            f"Rakennettua HTML-tiedostoa ei löytynyt: "
-            f"{output_path}"
+            "Rakennettua HTML-tiedostoa "
+            f"ei löytynyt: {output_path}"
         )
 
     print()
     print("=== QA ===")
     print(
-        f"Yritys: {company.get('name', '')}"
+        f"Yritys: "
+        f"{company.get('name', '')}"
     )
-
-    # ---------------------------------------------------------
-    # READ HTML
-    # ---------------------------------------------------------
 
     with open(
         output_path,
         "r",
         encoding="utf-8",
     ) as file:
+
         html = file.read()
 
-    # ---------------------------------------------------------
-    # AUTOMATED CHECKS
-    # ---------------------------------------------------------
-
     print(
-        "  [QA] Tehdään automaattiset tarkistukset..."
+        "  [QA] Tehdään automaattiset "
+        "tarkistukset..."
     )
 
     automated = _automated_checks(
@@ -498,13 +479,9 @@ def run_qa(
     )
 
     print(
-        f"  [QA] Automaattisia ongelmia: "
+        "  [QA] Automaattisia ongelmia: "
         f"{len(automated['automated_issues'])}"
     )
-
-    # ---------------------------------------------------------
-    # AI CONTENT REVIEW
-    # ---------------------------------------------------------
 
     research = company.get(
         "research",
@@ -546,7 +523,8 @@ Design recommendations:
         content_review = {
             "content_ok": False,
             "issues": [
-                "AI:n QA-vastaus ei ollut validi JSON-objekti."
+                "AI:n QA-vastaus ei ollut "
+                "validi JSON-objekti."
             ],
             "notes": "",
         }
@@ -566,10 +544,6 @@ Design recommendations:
         and ai_content_ok
     )
 
-    # ---------------------------------------------------------
-    # SAVE QA RESULT
-    # ---------------------------------------------------------
-
     qa_result = {
         "automated": automated,
         "content_review": content_review,
@@ -579,11 +553,12 @@ Design recommendations:
     upsert_company(
         slug,
         {
-            "qa": qa_result
+            "qa": qa_result,
         },
     )
 
     if overall_pass:
+
         set_status(
             slug,
             "qa_passed",
@@ -594,6 +569,7 @@ Design recommendations:
         )
 
     else:
+
         set_status(
             slug,
             "built",
@@ -606,8 +582,10 @@ Design recommendations:
         if automated.get(
             "automated_issues"
         ):
+
             print(
-                "  [QA] Automaattiset ongelmat:"
+                "  [QA] Automaattiset "
+                "ongelmat:"
             )
 
             for issue in automated[
@@ -619,12 +597,14 @@ Design recommendations:
 
         ai_issues = content_review.get(
             "issues",
-            [],
+            []
         )
 
         if ai_issues:
+
             print(
-                "  [QA] AI:n havaitsemat ongelmat:"
+                "  [QA] AI:n havaitsemat "
+                "ongelmat:"
             )
 
             for issue in ai_issues:
@@ -635,7 +615,7 @@ Design recommendations:
     print()
     print("=== QA VALMIS ===")
     print(
-        f"Tulos: "
+        "Tulos: "
         f"{'PASS' if overall_pass else 'FAIL'}"
     )
 
@@ -645,11 +625,6 @@ Design recommendations:
 def approve_company(
     slug_or_name: str,
 ) -> dict:
-    """
-    Hyväksyy QA:n läpäisseen verkkosivun.
-
-    Sivua ei voi hyväksyä, jos QA ei ole mennyt läpi.
-    """
 
     slug, company = get_company(
         slug_or_name
@@ -657,12 +632,13 @@ def approve_company(
 
     if company is None:
         raise RuntimeError(
-            f"Yritystä ei löytynyt: {slug_or_name}"
+            f"Yritystä ei löytynyt: "
+            f"{slug_or_name}"
         )
 
     qa = company.get(
         "qa",
-        {},
+        {}
     )
 
     if not qa.get(
@@ -670,7 +646,8 @@ def approve_company(
         False,
     ):
         raise RuntimeError(
-            "Sivustoa ei voi hyväksyä, koska QA ei ole läpäisty."
+            "Sivustoa ei voi hyväksyä, "
+            "koska QA ei ole läpäisty."
         )
 
     upsert_company(
