@@ -8,8 +8,7 @@ DRY-RUN:
 - EI tallenna yrityksiä.
 
 NORMAALI AJO:
-- Tavily voidaan ottaa käyttöön myöhemmin.
-- OpenRouteria käytetään vasta AI-analyysissä.
+- AI-analyysi voidaan tehdä myöhemmin OpenRouterilla.
 """
 
 import re
@@ -17,7 +16,6 @@ from urllib.parse import urlparse
 
 import requests
 
-import config
 from utils.fetch import analyze_url
 from utils.state import load_companies, make_slug, save_companies
 from utils.claude_client import ask_claude_json
@@ -117,7 +115,7 @@ def _normalize_website(value: str | None) -> str | None:
 
 def _build_overpass_query(location: str, industry: str) -> str:
     """
-    Rakentaa Overpass QL -kyselyn.
+    Rakentaa yksinkertaisen ja yhteensopivan Overpass-kyselyn.
 
     Kampaamot ja parturit:
     shop=hairdresser
@@ -128,31 +126,32 @@ def _build_overpass_query(location: str, industry: str) -> str:
     industry_lower = industry.lower().strip()
 
     if "kampa" in industry_lower or "parturi" in industry_lower:
-        tags = """
-          nwr["shop"="hairdresser"](area.searchArea);
-          nwr["craft"="hairdresser"](area.searchArea);
-        """
+        business_filter = """
+(
+  nwr["shop"="hairdresser"](area.searchArea);
+  nwr["craft"="hairdresser"](area.searchArea);
+);
+"""
     else:
-        tags = """
-          nwr["shop"](area.searchArea);
-          nwr["craft"](area.searchArea);
-          nwr["office"](area.searchArea);
-        """
+        business_filter = """
+(
+  nwr["shop"](area.searchArea);
+  nwr["craft"](area.searchArea);
+  nwr["office"](area.searchArea);
+);
+"""
 
-    return f"""
+    query = f"""
 [out:json][timeout:30];
 
-area
-  ["name"="{location}"]
-  ["boundary"="administrative"]
-  ->.searchArea;
+area["name"="{location}"]["boundary"="administrative"]->.searchArea;
 
-(
-{tags}
-);
+{business_filter}
 
-out center tags;
-""".strip()
+out center;
+"""
+
+    return query.strip()
 
 
 def _search_overpass(
@@ -179,7 +178,7 @@ def _search_overpass(
     try:
         response = requests.post(
             OVERPASS_URL,
-            params={
+            data={
                 "data": query,
             },
             headers=HEADERS,
@@ -195,7 +194,7 @@ def _search_overpass(
                 "  [OSM] Palvelin palautti virheen:"
             )
             print(
-                f"  [OSM] {response.text[:500]}"
+                response.text[:1000]
             )
 
         response.raise_for_status()
@@ -336,8 +335,7 @@ def _analyze_candidates(
     max_results: int,
 ) -> list[dict]:
     """
-    Hakee löydettyjen yritysten verkkosivut ja analysoi
-    niiden perustekniset ominaisuudet.
+    Hakee löydettyjen yritysten omat verkkosivut.
 
     Ei käytä Tavilyä eikä OpenRouteria.
     """
@@ -362,6 +360,7 @@ def _analyze_candidates(
             f"  [site] Tarkistetaan: "
             f"{candidate.get('name', '')}"
         )
+
         print(
             f"  [site] URL: {url}"
         )
@@ -392,7 +391,7 @@ def _score_without_ai(company: dict) -> dict:
     """
     Paikallinen heuristiikka dry-run-testaukseen.
 
-    Tämä ei ole lopullinen AI-arvio.
+    Ei käytä OpenRouteria.
     """
 
     site = company.get("site_analysis", {})
@@ -416,7 +415,10 @@ def _score_without_ai(company: dict) -> dict:
     if len(visible_text) < 200:
         issues.append("hyvin vähän näkyvää sisältöä")
 
-    raw_html_length = site.get("raw_html_length", 0)
+    raw_html_length = site.get(
+        "raw_html_length",
+        0,
+    )
 
     if raw_html_length < 5000:
         issues.append("hyvin pieni HTML-sivu")
@@ -443,7 +445,10 @@ def _ai_analyze_company(company: dict) -> dict:
     Tätä funktiota ei kutsuta dry-run-tilassa.
     """
 
-    site = company.get("site_analysis", {})
+    site = company.get(
+        "site_analysis",
+        {},
+    )
 
     prompt = f"""
 Analysoi seuraavan yrityksen nykyinen verkkosivusto.
@@ -520,7 +525,8 @@ def run_scout(
     ).strip()
 
     print(
-        f"Hakukysely: {query_text or '(ei määritelty)'}"
+        f"Hakukysely: "
+        f"{query_text or '(ei määritelty)'}"
     )
 
     print(
@@ -545,7 +551,8 @@ def run_scout(
     if not candidates:
         print()
         print(
-            "[scout] OpenStreetMapista ei löytynyt yrityksiä."
+            "[scout] OpenStreetMapista "
+            "ei löytynyt yrityksiä."
         )
         return []
 
@@ -557,23 +564,29 @@ def run_scout(
     if not analyzed:
         print()
         print(
-            "[scout] Löydetyillä yrityksillä ei ollut "
-            "käyttökelpoisia verkkosivuja."
+            "[scout] Löydetyillä yrityksillä "
+            "ei ollut käyttökelpoisia verkkosivuja."
         )
         return []
 
     results = []
 
     for company in analyzed:
+
         if dry_run:
-            evaluation = _score_without_ai(company)
+
+            evaluation = _score_without_ai(
+                company
+            )
 
             company["evaluation"] = evaluation
+
             results.append(company)
 
             print()
             print(
-                f"  [dry-run] {company.get('name', '')}"
+                f"  [dry-run] "
+                f"{company.get('name', '')}"
             )
 
             print(
@@ -582,7 +595,8 @@ def run_scout(
             )
 
             print(
-                f"  [dry-run] Mahdollisesti vanha: "
+                f"  [dry-run] "
+                f"Mahdollisesti vanha: "
                 f"{evaluation['old_site']}"
             )
 
@@ -601,7 +615,9 @@ def run_scout(
 
             continue
 
-        evaluation = _ai_analyze_company(company)
+        evaluation = _ai_analyze_company(
+            company
+        )
 
         company["evaluation"] = evaluation
 
@@ -623,7 +639,8 @@ def run_scout(
             print(
                 f"  [scout] Hylätään: "
                 f"{company.get('name', '')} "
-                "(sivu ei vaikuta riittävän vanhalta/puutteelliselta)"
+                "(sivu ei vaikuta riittävän "
+                "vanhalta/puutteelliselta)"
             )
             continue
 
@@ -638,23 +655,44 @@ def run_scout(
         results.append(company)
 
     if dry_run:
+
         print()
         print("=== DRY-RUN VALMIS ===")
+
         print(
-            f"Yrityksiä analysoitiin: {len(results)}"
+            f"Yrityksiä analysoitiin: "
+            f"{len(results)}"
         )
-        print("Tavily-kutsuja: 0")
-        print("OpenRouter-kutsuja: 0")
-        print("Tallennettuja yrityksiä: 0")
+
+        print(
+            "Tavily-kutsuja: 0"
+        )
+
+        print(
+            "OpenRouter-kutsuja: 0"
+        )
+
+        print(
+            "Tallennettuja yrityksiä: 0"
+        )
 
         return results
 
     companies = load_companies()
+
     saved = []
 
     for company in results:
-        name = company.get("name", "")
-        url = company.get("url", "")
+
+        name = company.get(
+            "name",
+            "",
+        )
+
+        url = company.get(
+            "url",
+            "",
+        )
 
         slug = make_slug(name)
 
@@ -663,17 +701,26 @@ def run_scout(
 
         if slug in companies:
             print(
-                f"  [scout] Ohitetaan jo olemassa oleva: "
-                f"{name}"
+                f"  [scout] Ohitetaan "
+                f"jo olemassa oleva: {name}"
             )
             continue
 
         companies[slug] = {
             "name": name,
             "url": url,
-            "phone": company.get("phone", ""),
-            "email": company.get("email", ""),
-            "address": company.get("address", ""),
+            "phone": company.get(
+                "phone",
+                "",
+            ),
+            "email": company.get(
+                "email",
+                "",
+            ),
+            "address": company.get(
+                "address",
+                "",
+            ),
             "status": "found",
             "source": company.get(
                 "source",
@@ -694,6 +741,7 @@ def run_scout(
     save_companies(companies)
 
     print()
+
     print(
         f"[Scout] Tallennettu uusia yrityksiä: "
         f"{len(saved)}"
