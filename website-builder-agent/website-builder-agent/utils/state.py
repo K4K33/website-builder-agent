@@ -1,65 +1,249 @@
 """
-Yksinkertainen JSON-pohjainen tilanhallinta. companies.json toimii
-"tietokantana", jossa jokainen yritys on avain (slug) ja arvona sen
-koko historia (löytö, research, build, qa, outreach).
+Yksinkertainen JSON-pohjainen tilanhallinta.
 
-Ei riipu ulkoisesta tietokannasta -> helppo committaa Githubiin ja
-tarkastella diffinä mitä agentit ovat tehneet.
+companies.json toimii projektin tietokantana.
+
+Tämä versio osaa käsitellä sekä vanhaa listamuotoa
+että nykyistä sanakirjamuotoa, jotta Scoutin jo tallentama
+yritys ei katoa eikä Scoutia tarvitse ajaa uudelleen.
 """
+
 import json
 import os
+
 from slugify import slugify
 
 import config
 
 
+def make_slug(name: str) -> str:
+    return slugify(
+        (name or "").strip()
+    )
+
+
 def _ensure_file():
-    os.makedirs(config.DATA_DIR, exist_ok=True)
-    if not os.path.exists(config.COMPANIES_FILE):
-        with open(config.COMPANIES_FILE, "w", encoding="utf-8") as f:
-            json.dump({}, f)
+    os.makedirs(
+        config.DATA_DIR,
+        exist_ok=True,
+    )
+
+    if not os.path.exists(
+        config.COMPANIES_FILE
+    ):
+        with open(
+            config.COMPANIES_FILE,
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(
+                {},
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
+
+
+def _normalize_companies(data):
+    """
+    Muuntaa companies.jsonin aina sanakirjamuotoon.
+
+    Hyväksyy:
+    1. nykyisen dict-muodon
+    2. vanhan/listamuodon
+    """
+
+    if isinstance(
+        data,
+        dict,
+    ):
+        return data
+
+    if isinstance(
+        data,
+        list,
+    ):
+        normalized = {}
+
+        for company in data:
+
+            if not isinstance(
+                company,
+                dict,
+            ):
+                continue
+
+            name = str(
+                company.get(
+                    "name",
+                    "",
+                )
+            ).strip()
+
+            slug = str(
+                company.get(
+                    "slug",
+                    "",
+                )
+            ).strip()
+
+            if not slug:
+                slug = make_slug(
+                    name
+                )
+
+            if not slug:
+                continue
+
+            company = dict(
+                company
+            )
+
+            company["slug"] = slug
+
+            normalized[slug] = company
+
+        return normalized
+
+    return {}
 
 
 def load_companies() -> dict:
     _ensure_file()
-    with open(config.COMPANIES_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+
+    with open(
+        config.COMPANIES_FILE,
+        "r",
+        encoding="utf-8",
+    ) as f:
+
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            data = {}
+
+    normalized = _normalize_companies(
+        data
+    )
+
+    # Jos vanha listamuoto löytyi,
+    # tallennetaan se heti uudessa muodossa.
+    if normalized != data:
+        save_companies(
+            normalized
+        )
+
+    return normalized
 
 
 def save_companies(data: dict) -> None:
     _ensure_file()
-    with open(config.COMPANIES_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    normalized = _normalize_companies(
+        data
+    )
+
+    with open(
+        config.COMPANIES_FILE,
+        "w",
+        encoding="utf-8",
+    ) as f:
+
+        json.dump(
+            normalized,
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
 
-def make_slug(name: str) -> str:
-    return slugify(name)
+def get_company(
+    slug_or_name: str,
+) -> tuple[str, dict | None]:
 
-
-def get_company(slug_or_name: str) -> tuple[str, dict | None]:
-    """Hakee yrityksen joko suoralla slugilla tai nimen perusteella (fuzzy)."""
     companies = load_companies()
-    slug = make_slug(slug_or_name)
+
+    slug = make_slug(
+        slug_or_name
+    )
+
     if slug in companies:
-        return slug, companies[slug]
-    # yritetään löytää nimen perusteella jos slug ei täsmää suoraan
-    for s, c in companies.items():
-        if c.get("name", "").lower() == slug_or_name.lower():
-            return s, c
-    return slug, None
+        return (
+            slug,
+            companies[slug],
+        )
+
+    search_name = (
+        slug_or_name
+        .strip()
+        .lower()
+    )
+
+    for current_slug, company in (
+        companies.items()
+    ):
+
+        if (
+            str(
+                company.get(
+                    "name",
+                    "",
+                )
+            )
+            .strip()
+            .lower()
+            == search_name
+        ):
+            return (
+                current_slug,
+                company,
+            )
+
+    return (
+        slug,
+        None,
+    )
 
 
-def upsert_company(slug: str, updates: dict) -> dict:
+def upsert_company(
+    slug: str,
+    updates: dict,
+) -> dict:
+
     companies = load_companies()
-    existing = companies.get(slug, {})
-    existing.update(updates)
+
+    existing = companies.get(
+        slug,
+        {},
+    )
+
+    existing.update(
+        updates
+    )
+
+    existing["slug"] = slug
+
     companies[slug] = existing
-    save_companies(companies)
+
+    save_companies(
+        companies
+    )
+
     return existing
 
 
-def set_status(slug: str, status: str) -> None:
+def set_status(
+    slug: str,
+    status: str,
+) -> None:
+
     companies = load_companies()
-    if slug in companies:
-        companies[slug]["status"] = status
-        save_companies(companies)
+
+    if slug not in companies:
+        return
+
+    companies[slug]["status"] = status
+
+    save_companies(
+        companies
+    )
