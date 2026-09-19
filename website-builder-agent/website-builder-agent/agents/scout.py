@@ -1,26 +1,18 @@
 """
 Scout-agentti Website Builder Agentille.
 
-Scout tekee kaksi eri asiaa:
+Scout:
+- löytää yrityksiä OpenStreetMapista
+- tarkistaa verkkosivut
+- kerää teknistä dataa
+- ottaa desktop- ja mobiilikuvakaappaukset
+- tekee AI-analyysin normaalissa ajossa
+- käyttää screenshotteja visuaalisessa AI-analyysissä
 
-1. DRY-RUN
-   - löytää yrityksiä OpenStreetMapista
-   - käyttää useampaa Overpass-palvelinta varalla
-   - tarkistaa verkkosivut
-   - analysoi teknisiä ominaisuuksia
-   - analysoi sisältöä ja käytettävyyden signaaleja
-   - ottaa desktop- ja mobiilikuvakaappaukset
-   - EI käytä Tavilyä
-   - EI käytä OpenRouteria
-   - EI tallenna yrityksiä
-
-2. NORMAALI KÄYTTÖ
-   - tekee saman perustason analyysin
-   - ottaa kuvakaappaukset
-   - käyttää myöhemmin OpenRouteria syvempään AI-arvioon
-   - tallentaa yritykset data/companies.json-tiedostoon
-
-Visuaalinen AI-analyysi lisätään seuraavassa vaiheessa.
+DRY-RUN:
+- ei OpenRouter-kutsuja
+- ei Tavily-kutsuja
+- ei tallenna yrityksiä
 """
 
 import re
@@ -32,7 +24,11 @@ import config
 
 from utils.fetch import analyze_url
 from utils.screenshot import capture_website
-from utils.state import load_companies, save_companies, make_slug
+from utils.state import (
+    load_companies,
+    save_companies,
+    make_slug,
+)
 
 
 OVERPASS_URLS = [
@@ -124,6 +120,7 @@ def _search_overpass(
             f"  [OSM] Palvelin "
             f"{index}/{len(OVERPASS_URLS)}:"
         )
+
         print(
             f"  [OSM] {overpass_url}"
         )
@@ -352,13 +349,6 @@ def _analyze_candidates(
     candidates: list[dict],
     max_results: int,
 ) -> list[dict]:
-    """
-    Analysoi yrityksiä korkeintaan max_results kappaletta.
-
-    Tärkeää:
-    screenshotit otetaan vain yrityksistä, jotka oikeasti
-    päätyvät analysoitaviksi.
-    """
 
     analyzed = []
 
@@ -459,7 +449,9 @@ def _analyze_candidates(
 
         result["url"] = url
         result["site_analysis"] = data
-        result["screenshots"] = screenshots or {}
+        result["screenshots"] = (
+            screenshots or {}
+        )
 
         analyzed.append(
             result
@@ -586,110 +578,160 @@ def _score_without_ai(
     positive_signals = []
 
     if not meta_description:
+
         score += 1
+
         reasons.append(
             "meta description puuttuu"
         )
+
     else:
+
         positive_signals.append(
             "meta description löytyy"
         )
 
     if not has_viewport:
+
         score += 2
+
         reasons.append(
             "viewport-meta puuttuu"
         )
+
     else:
+
         positive_signals.append(
             "viewport-meta löytyy"
         )
 
     if not title:
+
         score += 2
+
         reasons.append(
             "title puuttuu"
         )
+
     elif len(title) < 8:
+
         score += 1
+
         reasons.append(
             "erittäin lyhyt title"
         )
+
     else:
+
         positive_signals.append(
             "sivulla on title"
         )
 
     if raw_html_length < 10000:
+
         score += 2
+
         reasons.append(
             "hyvin pieni HTML-sivu"
         )
+
     elif raw_html_length < 20000:
+
         score += 1
+
         reasons.append(
             "pieni HTML-sivu"
         )
+
     else:
+
         positive_signals.append(
-            "HTML-rakenne ei ole poikkeuksellisen pieni"
+            "HTML-rakenne ei ole "
+            "poikkeuksellisen pieni"
         )
 
     if visible_text_length < 500:
+
         score += 3
+
         reasons.append(
             "erittäin vähän näkyvää sisältöä"
         )
+
     elif visible_text_length < 1000:
+
         score += 2
+
         reasons.append(
             "vähän näkyvää sisältöä"
         )
+
     elif visible_text_length < 1800:
+
         score += 1
+
         reasons.append(
             "melko vähän näkyvää sisältöä"
         )
+
     else:
+
         positive_signals.append(
             "sivulla on kohtuullisesti sisältöä"
         )
 
     if h1_count == 0:
+
         score += 2
+
         reasons.append(
             "H1-otsikko puuttuu"
         )
+
     elif h1_count > 1:
+
         score += 1
+
         reasons.append(
             "sivulla on useita H1-otsikoita"
         )
+
     else:
+
         positive_signals.append(
             "yksi H1-otsikko löytyy"
         )
 
     if link_count == 0:
+
         score += 3
+
         reasons.append(
             "sivulla ei ole linkkejä"
         )
+
     elif link_count < 3:
+
         score += 1
+
         reasons.append(
             "hyvin vähän linkkejä"
         )
+
     else:
+
         positive_signals.append(
             "sivulla on navigoitavia linkkejä"
         )
 
     if button_count == 0:
+
         reasons.append(
             "selkeitä painikkeita ei löytynyt"
         )
+
     else:
+
         positive_signals.append(
             "painikkeita löytyy"
         )
@@ -698,11 +740,15 @@ def _score_without_ai(
         "phone_found",
         False,
     ):
+
         score += 1
+
         reasons.append(
             "puhelinnumeroa ei havaittu"
         )
+
     else:
+
         positive_signals.append(
             "puhelinnumero havaittu"
         )
@@ -711,11 +757,15 @@ def _score_without_ai(
         "email_found",
         False,
     ):
+
         score += 1
+
         reasons.append(
             "sähköpostiosoitetta ei havaittu"
         )
+
     else:
+
         positive_signals.append(
             "sähköpostiosoite havaittu"
         )
@@ -724,11 +774,15 @@ def _score_without_ai(
         "address_signal",
         False,
     ):
+
         score += 1
+
         reasons.append(
             "osoitetietoa ei havaittu"
         )
+
     else:
+
         positive_signals.append(
             "osoitetieto havaittu"
         )
@@ -737,19 +791,25 @@ def _score_without_ai(
         "has_cta",
         False,
     ):
+
         positive_signals.append(
             "toimintakehotus havaittu"
         )
+
     else:
+
         score += 2
+
         reasons.append(
-            "selkeää toimintakehotusta ei havaittu"
+            "selkeää toimintakehotusta "
+            "ei havaittu"
         )
 
     if contact_signals.get(
         "booking_signal",
         False,
     ):
+
         positive_signals.append(
             "ajanvaraus havaittu"
         )
@@ -757,32 +817,43 @@ def _score_without_ai(
     if image_count > 0:
 
         if images_without_alt_count == image_count:
+
             score += 1
+
             reasons.append(
                 "kuvien alt-tekstit puuttuvat"
             )
 
         elif images_without_alt_count > 0:
+
             score += 1
+
             reasons.append(
                 "osasta kuvista puuttuu alt-teksti"
             )
 
         else:
+
             positive_signals.append(
                 "kuvien alt-tekstit löytyvät"
             )
 
     if form_count > 0:
+
         positive_signals.append(
             "yhteydenotto-/lomake-elementti löytyy"
         )
 
     if score >= 8:
+
         priority = "high"
+
     elif score >= 4:
+
         priority = "medium"
+
     else:
+
         priority = "low"
 
     confidence = min(
@@ -857,23 +928,18 @@ def _print_dry_run_result(
         )
 
         if screenshots.get("desktop"):
+
             print(
                 f"    - desktop: "
                 f"{screenshots['desktop']}"
             )
 
         if screenshots.get("mobile"):
+
             print(
                 f"    - mobile: "
                 f"{screenshots['mobile']}"
             )
-
-    else:
-
-        print(
-            "  [dry-run] "
-            "Kuvakaappauksia ei saatu."
-        )
 
     if result["reasons"]:
 
@@ -882,6 +948,7 @@ def _print_dry_run_result(
         )
 
         for reason in result["reasons"]:
+
             print(
                 f"    - {reason}"
             )
@@ -893,6 +960,7 @@ def _print_dry_run_result(
         )
 
         for signal in result["positive_signals"]:
+
             print(
                 f"    + {signal}"
             )
@@ -911,67 +979,142 @@ def _ai_analyze_company(
         {},
     )
 
+    screenshots = company.get(
+        "screenshots",
+        {},
+    )
+
     technical_score = (
         _score_without_ai(
             company
         )
     )
 
+    image_paths = []
+
+    desktop_path = screenshots.get(
+        "desktop"
+    )
+
+    mobile_path = screenshots.get(
+        "mobile"
+    )
+
+    if desktop_path:
+        image_paths.append(
+            desktop_path
+        )
+
+    if mobile_path:
+        image_paths.append(
+            mobile_path
+        )
+
     system = """
-Olet verkkosivustojen auditointiin erikoistunut
-asiantuntija.
+Olet pienten yritysten verkkosivustojen
+auditointiin erikoistunut asiantuntija.
 
-Arvioi pienen yrityksen verkkosivustoa
-potentiaalisen uuden asiakkaan näkökulmasta.
+Tavoitteena on tunnistaa verkkosivustoja,
+joiden uudistamisesta voisi olla yritykselle
+todellista hyötyä.
 
-Arvioi erikseen:
+Sinulle annetaan:
+- verkkosivuston desktop-kuvakaappaus
+- verkkosivuston mobiilikuvasivu
+- teknisiä tietoja
+- sivun tekstiä
+- CTA- ja yhteystietoja
 
-1. käytettävyys
-2. sisältö
-3. mobiilikäytön todennäköiset ongelmat
-4. tekniset ongelmat
-5. toimintakehotukset
-6. asiakaskokemus
-7. verkkosivuston uudistamisen potentiaali
+Arvioi sivustoa erityisesti tavallisen
+potentiaalisen asiakkaan näkökulmasta.
 
-Älä arvioi visuaalista ulkoasua tämän datan perusteella
-liian varmasti, koska tässä vaiheessa et näe kuvakaappausta.
+Katso kuvista erityisesti:
+
+1. Ensivaikutelma
+2. Visuaalinen modernius
+3. Selkeys
+4. Luettavuus
+5. Navigoinnin ymmärrettävyys
+6. Tärkeän tiedon löytyminen
+7. CTA:n näkyvyys
+8. Luottamusta lisäävät elementit
+9. Mobiilikokemus
+10. Visuaalinen hierarkia
+11. Sivun mahdollinen sekavuus
+12. Vaikutelma siitä, tarvitseeko sivusto
+    oikeasti suuremman uudistuksen
+
+Älä pidä yksittäistä teknistä ongelmaa
+automaattisesti merkkinä huonosta sivustosta.
+
+Esimerkiksi puuttuva meta description
+ei yksin tarkoita, että sivusto pitäisi
+uudistaa.
+
+Jos sivusto näyttää hyvältä ja toimii hyvin,
+sano se myös analyysissä.
 
 Palauta AINOASTAAN validi JSON:
 
 {
+  "visual_score": 0,
   "usability_score": 0,
-  "content_score": 0,
   "mobile_score": 0,
-  "technical_score": 0,
+  "content_score": 0,
   "conversion_score": 0,
   "overall_opportunity_score": 0,
-  "old_site": true,
+  "redesign_recommended": false,
   "confidence": 0.0,
-  "reasons": [],
-  "recommended_improvements": []
+  "visual_problems": [],
+  "usability_problems": [],
+  "mobile_problems": [],
+  "conversion_problems": [],
+  "strengths": [],
+  "recommended_improvements": [],
+  "reasoning": ""
 }
 
-Kaikki score-arvot välillä 0-10.
-Korkeampi score tarkoittaa suurempaa
-uudistustarvetta.
+Score-arvot ovat välillä 0-10.
+
+Korkeampi overall_opportunity_score tarkoittaa,
+että verkkosivustossa on enemmän havaittavaa
+uudistamispotentiaalia.
+
+redesign_recommended saa olla true vain,
+jos kokonaisuus antaa siihen järkevän perusteen.
+
+Älä keksi asioita, joita kuvissa tai annetuissa
+tiedoissa ei voi havaita.
 """
 
     user_prompt = f"""
-Yritys:
+YRITYS
+
+Nimi:
 {company.get('name', '')}
 
 URL:
 {company.get('url', '')}
 
-Perustason ongelmasignaalit:
+---
+
+TEKNINEN ANALYYSI
+
+Ongelmasignaalit:
 {technical_score.get('score', 0)}
 
-Perustason prioriteetti:
+Tekninen prioriteetti:
 {technical_score.get('priority', '')}
 
-Perustason havainnot:
+Teknisen analyysin havainnot:
 {technical_score.get('reasons', [])}
+
+Positiiviset tekniset signaalit:
+{technical_score.get('positive_signals', [])}
+
+---
+
+SIVUN TIEDOT
 
 Title:
 {data.get('title', '')}
@@ -1012,16 +1155,40 @@ CTA-signaalit:
 Otsikot:
 {data.get('headings', {})}
 
-Näkyvä teksti:
-{data.get('visible_text', '')[:6000]}
+---
+
+SIVUN TEKSTI
+
+{data.get('visible_text', '')[:8000]}
+
+---
+
+KUVAT
+
+Ensimmäinen kuva on desktop-kuvakaappaus,
+jos se on saatavilla.
+
+Toinen kuva on mobiilikuvasivu,
+jos se on saatavilla.
+
+Arvioi kuvat yhdessä muun datan kanssa.
 """
 
-    return ask_claude_json(
+    print(
+        "  [AI] Lähetetään tekninen data + "
+        f"{len(image_paths)} screenshotia "
+        "OpenRouterille..."
+    )
+
+    result = ask_claude_json(
         system,
         user_prompt,
         use_web_search=False,
-        max_tokens=1500,
+        max_tokens=2500,
+        image_paths=image_paths,
     )
+
+    return result
 
 
 def run_scout(
