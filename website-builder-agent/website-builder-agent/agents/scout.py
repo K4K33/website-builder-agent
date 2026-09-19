@@ -5,6 +5,7 @@ Scout tekee kaksi eri asiaa:
 
 1. DRY-RUN
    - löytää yrityksiä OpenStreetMapista
+   - käyttää useampaa Overpass-palvelinta varalla
    - tarkistaa verkkosivut
    - analysoi teknisiä ominaisuuksia
    - analysoi sisältöä ja käytettävyyden signaaleja
@@ -23,6 +24,8 @@ Visuaalinen AI-analyysi lisätään seuraavassa vaiheessa.
 """
 
 import re
+import time
+
 import requests
 
 import config
@@ -32,7 +35,16 @@ from utils.screenshot import capture_website
 from utils.state import load_companies, save_companies, make_slug
 
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+# ============================================================
+# OVERPASS-PALVELIMET
+# ============================================================
+
+OVERPASS_URLS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+]
+
 
 HEADERS = {
     "User-Agent": (
@@ -41,6 +53,11 @@ HEADERS = {
     ),
     "Accept": "application/json",
 }
+
+
+# ============================================================
+# OVERPASS-KYSELY
+# ============================================================
 
 
 def _build_overpass_query(
@@ -74,7 +91,7 @@ def _build_overpass_query(
 """
 
     query = f"""
-[out:json][timeout:30];
+[out:json][timeout:45];
 
 area["name"="{location}"]["boundary"="administrative"]->.searchArea;
 
@@ -93,6 +110,10 @@ def _search_overpass(
 ) -> list[dict]:
     """
     Hakee yrityksiä OpenStreetMapista.
+
+    Käyttää useita Overpass-palvelimia.
+    Jos yksi palvelin aikakatkaisee tai palauttaa
+    virheen, kokeillaan seuraavaa.
     """
 
     query = _build_overpass_query(
@@ -112,170 +133,233 @@ def _search_overpass(
         f"  [OSM] Ala: {industry}"
     )
 
-    try:
-        response = requests.post(
-            OVERPASS_URL,
-            data={
-                "data": query,
-            },
-            headers=HEADERS,
-            timeout=45,
+    for index, overpass_url in enumerate(
+        OVERPASS_URLS,
+        start=1,
+    ):
+
+        print()
+
+        print(
+            f"  [OSM] Palvelin "
+            f"{index}/{len(OVERPASS_URLS)}:"
         )
 
         print(
-            f"  [OSM] HTTP-status: "
-            f"{response.status_code}"
+            f"  [OSM] {overpass_url}"
         )
 
-        if response.status_code >= 400:
-            print(
-                "  [OSM] Palvelin palautti virheen:"
+        try:
+
+            response = requests.post(
+                overpass_url,
+                data={
+                    "data": query,
+                },
+                headers=HEADERS,
+                timeout=60,
             )
 
             print(
-                response.text[:3000]
+                f"  [OSM] HTTP-status: "
+                f"{response.status_code}"
             )
 
-            response.raise_for_status()
+            if response.status_code >= 400:
 
-        data = response.json()
+                print(
+                    "  [OSM] Palvelin palautti virheen."
+                )
 
-    except requests.RequestException as e:
-        print(
-            f"  [OSM] Haku epäonnistui: {e}"
-        )
+                print(
+                    response.text[:1000]
+                )
 
-        return []
+                # Yritetään seuraavaa palvelinta.
+                continue
 
-    except ValueError as e:
-        print(
-            f"  [OSM] JSON-vastausta ei voitu lukea: {e}"
-        )
+            data = response.json()
 
-        return []
+        except requests.Timeout:
 
-    elements = data.get(
-        "elements",
-        [],
-    )
+            print(
+                "  [OSM] Palvelin aikakatkaisi."
+            )
 
-    print(
-        f"  [OSM] Löydettyjä kohteita: "
-        f"{len(elements)}"
-    )
+            print(
+                "  [OSM] Kokeillaan seuraavaa "
+                "Overpass-palvelinta..."
+            )
 
-    companies = []
-
-    seen_names = set()
-
-    for element in elements:
-
-        tags = element.get(
-            "tags",
-            {},
-        )
-
-        name = tags.get(
-            "name",
-            "",
-        ).strip()
-
-        if not name:
             continue
 
-        normalized_name = name.lower()
+        except requests.RequestException as e:
 
-        if normalized_name in seen_names:
+            print(
+                f"  [OSM] Verkkovirhe: {e}"
+            )
+
+            print(
+                "  [OSM] Kokeillaan seuraavaa "
+                "Overpass-palvelinta..."
+            )
+
             continue
 
-        seen_names.add(
-            normalized_name
+        except ValueError as e:
+
+            print(
+                f"  [OSM] JSON-vastausta ei voitu "
+                f"lukea: {e}"
+            )
+
+            continue
+
+        elements = data.get(
+            "elements",
+            [],
         )
 
-        website = (
-            tags.get("website")
-            or tags.get("contact:website")
-            or ""
-        ).strip()
+        print(
+            f"  [OSM] Löydettyjä kohteita: "
+            f"{len(elements)}"
+        )
 
-        phone = (
-            tags.get("phone")
-            or tags.get("contact:phone")
-            or ""
-        ).strip()
+        if not elements:
 
-        email = (
-            tags.get("email")
-            or tags.get("contact:email")
-            or ""
-        ).strip()
+            print(
+                "  [OSM] Palvelin vastasi onnistuneesti, "
+                "mutta kohteita ei löytynyt."
+            )
 
-        address_parts = [
-            tags.get(
-                "addr:street",
+            return []
+
+        companies = []
+
+        seen_names = set()
+
+        for element in elements:
+
+            tags = element.get(
+                "tags",
+                {},
+            )
+
+            name = tags.get(
+                "name",
                 "",
-            ).strip(),
+            ).strip()
 
-            tags.get(
-                "addr:housenumber",
-                "",
-            ).strip(),
+            if not name:
+                continue
 
-            tags.get(
-                "addr:postcode",
-                "",
-            ).strip(),
+            normalized_name = name.lower()
 
-            tags.get(
-                "addr:city",
-                "",
-            ).strip(),
+            if normalized_name in seen_names:
+                continue
+
+            seen_names.add(
+                normalized_name
+            )
+
+            website = (
+                tags.get("website")
+                or tags.get("contact:website")
+                or ""
+            ).strip()
+
+            phone = (
+                tags.get("phone")
+                or tags.get("contact:phone")
+                or ""
+            ).strip()
+
+            email = (
+                tags.get("email")
+                or tags.get("contact:email")
+                or ""
+            ).strip()
+
+            address_parts = [
+                tags.get(
+                    "addr:street",
+                    "",
+                ).strip(),
+
+                tags.get(
+                    "addr:housenumber",
+                    "",
+                ).strip(),
+
+                tags.get(
+                    "addr:postcode",
+                    "",
+                ).strip(),
+
+                tags.get(
+                    "addr:city",
+                    "",
+                ).strip(),
+            ]
+
+            address = " ".join(
+                part
+                for part in address_parts
+                if part
+            )
+
+            companies.append(
+                {
+                    "name": name,
+                    "url": website,
+                    "phone": phone,
+                    "email": email,
+                    "address": address,
+                    "osm_type": element.get(
+                        "type",
+                        "",
+                    ),
+                    "osm_id": element.get(
+                        "id"
+                    ),
+                    "tags": tags,
+                }
+            )
+
+            if len(companies) >= limit:
+                break
+
+        with_website = [
+            company
+            for company in companies
+            if company.get("url")
         ]
 
-        address = " ".join(
-            part
-            for part in address_parts
-            if part
+        print(
+            f"  [OSM] Yrityksiä yhteensä: "
+            f"{len(companies)}"
         )
 
-        companies.append(
-            {
-                "name": name,
-                "url": website,
-                "phone": phone,
-                "email": email,
-                "address": address,
-                "osm_type": element.get(
-                    "type",
-                    "",
-                ),
-                "osm_id": element.get(
-                    "id"
-                ),
-                "tags": tags,
-            }
+        print(
+            f"  [OSM] Yrityksiä, joilla verkkosivu: "
+            f"{len(with_website)}"
         )
 
-        if len(companies) >= limit:
-            break
+        return companies
 
-    with_website = [
-        company
-        for company in companies
-        if company.get("url")
-    ]
+    print()
 
     print(
-        f"  [OSM] Yrityksiä yhteensä: "
-        f"{len(companies)}"
+        "[OSM] Kaikki Overpass-palvelimet "
+        "epäonnistuivat."
     )
 
-    print(
-        f"  [OSM] Yrityksiä, joilla verkkosivu: "
-        f"{len(with_website)}"
-    )
+    return []
 
-    return companies
+
+# ============================================================
+# URL
+# ============================================================
 
 
 def _normalize_url(
@@ -303,6 +387,11 @@ def _normalize_url(
     return url
 
 
+# ============================================================
+# SIVUJEN ANALYYSI
+# ============================================================
+
+
 def _analyze_candidates(
     candidates: list[dict],
 ) -> list[dict]:
@@ -326,6 +415,7 @@ def _analyze_candidates(
         )
 
         if not raw_url:
+
             print(
                 f"  [skip] Ei verkkosivua: "
                 f"{name}"
@@ -337,6 +427,8 @@ def _analyze_candidates(
             raw_url
         )
 
+        print()
+
         print(
             f"  [site] Tarkistetaan: "
             f"{name}"
@@ -346,15 +438,16 @@ def _analyze_candidates(
             f"  [site] URL: {url}"
         )
 
-        # ==================================================
+        # ====================================================
         # HTML-ANALYYSI
-        # ==================================================
+        # ====================================================
 
         data = analyze_url(
             url
         )
 
         if not data:
+
             print(
                 f"  [site] Sivua ei voitu hakea: "
                 f"{name}"
@@ -369,9 +462,9 @@ def _analyze_candidates(
             f"{data.get('has_viewport_meta', False)}"
         )
 
-        # ==================================================
+        # ====================================================
         # KUVAKAAPPAUKSET
-        # ==================================================
+        # ====================================================
 
         print(
             f"  [site] Otetaan kuvakaappaukset: "
@@ -389,15 +482,19 @@ def _analyze_candidates(
                 "  [site] Kuvakaappaukset: OK"
             )
 
-            print(
-                f"    desktop: "
-                f"{screenshots.get('desktop', '')}"
-            )
+            if screenshots.get("desktop"):
 
-            print(
-                f"    mobile: "
-                f"{screenshots.get('mobile', '')}"
-            )
+                print(
+                    f"    desktop: "
+                    f"{screenshots['desktop']}"
+                )
+
+            if screenshots.get("mobile"):
+
+                print(
+                    f"    mobile: "
+                    f"{screenshots['mobile']}"
+                )
 
         else:
 
@@ -420,7 +517,21 @@ def _analyze_candidates(
             result
         )
 
+        # Pieni tauko verkkosivujen välillä.
+        time.sleep(
+            getattr(
+                config,
+                "REQUEST_DELAY",
+                1.0,
+            )
+        )
+
     return analyzed
+
+
+# ============================================================
+# TEKNINEN SCORE
+# ============================================================
 
 
 def _score_without_ai(
@@ -546,110 +657,159 @@ def _score_without_ai(
     positive_signals = []
 
     if not meta_description:
+
         score += 1
+
         reasons.append(
             "meta description puuttuu"
         )
+
     else:
+
         positive_signals.append(
             "meta description löytyy"
         )
 
     if not has_viewport:
+
         score += 2
+
         reasons.append(
             "viewport-meta puuttuu"
         )
+
     else:
+
         positive_signals.append(
             "viewport-meta löytyy"
         )
 
     if not title:
+
         score += 2
+
         reasons.append(
             "title puuttuu"
         )
+
     elif len(title) < 8:
+
         score += 1
+
         reasons.append(
             "erittäin lyhyt title"
         )
+
     else:
+
         positive_signals.append(
             "sivulla on title"
         )
 
     if raw_html_length < 10000:
+
         score += 2
+
         reasons.append(
             "hyvin pieni HTML-sivu"
         )
+
     elif raw_html_length < 20000:
+
         score += 1
+
         reasons.append(
             "pieni HTML-sivu"
         )
+
     else:
+
         positive_signals.append(
             "HTML-rakenne ei ole poikkeuksellisen pieni"
         )
 
     if visible_text_length < 500:
+
         score += 3
+
         reasons.append(
             "erittäin vähän näkyvää sisältöä"
         )
+
     elif visible_text_length < 1000:
+
         score += 2
+
         reasons.append(
             "vähän näkyvää sisältöä"
         )
+
     elif visible_text_length < 1800:
+
         score += 1
+
         reasons.append(
             "melko vähän näkyvää sisältöä"
         )
+
     else:
+
         positive_signals.append(
             "sivulla on kohtuullisesti sisältöä"
         )
 
     if h1_count == 0:
+
         score += 2
+
         reasons.append(
             "H1-otsikko puuttuu"
         )
+
     elif h1_count > 1:
+
         score += 1
+
         reasons.append(
             "sivulla on useita H1-otsikoita"
         )
+
     else:
+
         positive_signals.append(
             "yksi H1-otsikko löytyy"
         )
 
     if link_count == 0:
+
         score += 3
+
         reasons.append(
             "sivulla ei ole linkkejä"
         )
+
     elif link_count < 3:
+
         score += 1
+
         reasons.append(
             "hyvin vähän linkkejä"
         )
+
     else:
+
         positive_signals.append(
             "sivulla on navigoitavia linkkejä"
         )
 
     if button_count == 0:
+
         reasons.append(
             "selkeitä painikkeita ei löytynyt"
         )
+
     else:
+
         positive_signals.append(
             "painikkeita löytyy"
         )
@@ -658,11 +818,15 @@ def _score_without_ai(
         "phone_found",
         False,
     ):
+
         score += 1
+
         reasons.append(
             "puhelinnumeroa ei havaittu"
         )
+
     else:
+
         positive_signals.append(
             "puhelinnumero havaittu"
         )
@@ -671,11 +835,15 @@ def _score_without_ai(
         "email_found",
         False,
     ):
+
         score += 1
+
         reasons.append(
             "sähköpostiosoitetta ei havaittu"
         )
+
     else:
+
         positive_signals.append(
             "sähköpostiosoite havaittu"
         )
@@ -684,11 +852,15 @@ def _score_without_ai(
         "address_signal",
         False,
     ):
+
         score += 1
+
         reasons.append(
             "osoitetietoa ei havaittu"
         )
+
     else:
+
         positive_signals.append(
             "osoitetieto havaittu"
         )
@@ -697,11 +869,15 @@ def _score_without_ai(
         "has_cta",
         False,
     ):
+
         positive_signals.append(
             "toimintakehotus havaittu"
         )
+
     else:
+
         score += 2
+
         reasons.append(
             "selkeää toimintakehotusta ei havaittu"
         )
@@ -710,6 +886,7 @@ def _score_without_ai(
         "booking_signal",
         False,
     ):
+
         positive_signals.append(
             "ajanvaraus havaittu"
         )
@@ -720,32 +897,43 @@ def _score_without_ai(
             images_without_alt_count
             == image_count
         ):
+
             score += 1
+
             reasons.append(
                 "kuvien alt-tekstit puuttuvat"
             )
 
         elif images_without_alt_count > 0:
+
             score += 1
+
             reasons.append(
                 "osasta kuvista puuttuu alt-teksti"
             )
 
         else:
+
             positive_signals.append(
                 "kuvien alt-tekstit löytyvät"
             )
 
     if form_count > 0:
+
         positive_signals.append(
             "yhteydenotto-/lomake-elementti löytyy"
         )
 
     if score >= 8:
+
         priority = "high"
+
     elif score >= 4:
+
         priority = "medium"
+
     else:
+
         priority = "low"
 
     confidence = min(
@@ -764,6 +952,11 @@ def _score_without_ai(
         "positive_signals": positive_signals,
         "old_site": score >= 4,
     }
+
+
+# ============================================================
+# DRY-RUN TULOSTUS
+# ============================================================
 
 
 def _print_dry_run_result(
@@ -824,12 +1017,14 @@ def _print_dry_run_result(
         )
 
         if screenshots.get("desktop"):
+
             print(
                 f"    - desktop: "
                 f"{screenshots['desktop']}"
             )
 
         if screenshots.get("mobile"):
+
             print(
                 f"    - mobile: "
                 f"{screenshots['mobile']}"
@@ -850,6 +1045,7 @@ def _print_dry_run_result(
         )
 
         for reason in result["reasons"]:
+
             print(
                 f"    - {reason}"
             )
@@ -864,9 +1060,15 @@ def _print_dry_run_result(
         for signal in result[
             "positive_signals"
         ]:
+
             print(
                 f"    + {signal}"
             )
+
+
+# ============================================================
+# AI-ANALYYSI
+# ============================================================
 
 
 def _ai_analyze_company(
@@ -1003,6 +1205,11 @@ Näkyvä teksti:
     )
 
 
+# ============================================================
+# SCOUT
+# ============================================================
+
+
 def run_scout(
     count: int = 10,
     industry: str = "",
@@ -1018,7 +1225,10 @@ def run_scout(
     )
 
     print()
-    print("=== SCOUT ===")
+
+    print(
+        "=== SCOUT ==="
+    )
 
     print(
         f"Hakukysely: "
@@ -1058,6 +1268,8 @@ def run_scout(
 
     if not candidates:
 
+        print()
+
         print(
             "[scout] OpenStreetMapista "
             "ei löytynyt yrityksiä."
@@ -1070,6 +1282,8 @@ def run_scout(
     )
 
     if not analyzed:
+
+        print()
 
         print(
             "[scout] Yhtään toimivaa verkkosivua "
@@ -1126,6 +1340,7 @@ def run_scout(
     if dry_run:
 
         print()
+
         print(
             "=== DRY-RUN VALMIS ==="
         )
