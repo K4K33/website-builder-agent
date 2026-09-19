@@ -7,6 +7,11 @@ Tehtävä:
 3. Tallentaa sivun output/<slug>/index.html.
 4. Tukee luonnollisen kielen revise-kutsuja.
 5. Tukee preview-toimintoa.
+
+Tärkeää:
+- Yritykselle ei keksitä faktoja.
+- Puuttuvia yhteystietoja ei korvata valheellisilla tiedoilla.
+- Puuttuvista tiedoista ei jätetä näkyviä placeholder-tekstejä.
 """
 
 import os
@@ -15,7 +20,6 @@ import webbrowser
 from utils.claude_client import ask_claude
 from utils.state import (
     get_company,
-    load_companies,
     upsert_company,
     set_status,
 )
@@ -30,6 +34,7 @@ yhden sivun verkkosivun HTML/CSS/JS:llä.
 EHDOTTOMAT SÄÄNNÖT:
 
 1. SISÄLTÖ
+
 - ÄLÄ kopioi tekstiä, kuvatekstejä, logoja tai koodia miltään
   toiselta oikealta yritykseltä tai referenssisivulta.
 - Kaikki tekstit kirjoitetaan itse kohdeyrityksen omien
@@ -37,19 +42,36 @@ EHDOTTOMAT SÄÄNNÖT:
 - Älä keksi yritykselle palveluita, tuotteita, ominaisuuksia,
   palkintoja, asiakaslupauksia tai muita faktoja.
 - Käytä vain annettuja ja todennettuja yhteystietoja.
-- Jos jokin yhteystieto puuttuu, käytä selkeää placeholderia:
+
+ERITTÄIN TÄRKEÄÄ YHTEYSTIEDOISTA:
+
+- Jos puhelinnumeroa ei ole annettu, ÄLÄ keksi sitä.
+- Jos sähköpostia ei ole annettu, ÄLÄ keksi sitä.
+- Jos osoitetta ei ole annettu, ÄLÄ keksi sitä.
+- ÄLÄ kirjoita sivulle placeholder-tekstejä kuten:
   "[Puhelinnumero tähän]"
   "[Sähköposti tähän]"
   "[Osoite tähän]"
-- Älä keksi puhelinnumeroita, sähköposteja tai osoitteita.
+  "[Lisää tähän]"
+  "Täytä tähän"
+  tai vastaavia.
+
+Jos yhteystieto puuttuu:
+- jätä kyseinen tieto pois
+- voit silti tehdä yhteydenotto-osion
+- voit käyttää yleistä CTA-tekstiä kuten
+  "Ota yhteyttä"
+- älä kuitenkaan keksi puuttuvaa yhteystietoa.
 
 2. REFERENSSIT
+
 - design_inspiration sisältää vain yleisiä suunnitteluperiaatteita.
 - Älä kopioi referenssien tekstejä, kuvia, logoja tai koodia.
 - Älä käytä referenssiyritysten nimiä uudella sivulla.
 - Älä yritä jäljitellä yhtä tiettyä olemassa olevaa sivustoa.
 
 3. VISUAALINEN TOTEUTUS
+
 - Käytä annettua color_palette-värimaailmaa.
 - Käytä annettua font_style-tyyliä.
 - Käytä annettua tone-sävyä.
@@ -59,15 +81,19 @@ EHDOTTOMAT SÄÄNNÖT:
 - Älä käytä ulkopuolisia stock-kuvia.
 
 4. RESPONSIVUUS
+
 - Sivun pitää toimia mobiilissa, tabletissa ja desktopissa.
 - Lisää:
+
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
+
 - Navigaation pitää toimia mobiilissa.
 - Tekstin pitää pysyä luettavana pienellä näytöllä.
 - Painikkeiden pitää olla helposti klikattavia mobiilissa.
 
 5. RAKENNE
+
 Sisällytä tilanteeseen sopivassa muodossa:
 
 - navigaatio
@@ -77,12 +103,13 @@ Sisällytä tilanteeseen sopivassa muodossa:
 - miksi valita tämä yritys
 - mahdollinen prosessi tai toimintatapa
 - yhteydenotto / CTA
-- yhteystiedot
+- yhteystiedot vain jos tiedot ovat oikeasti saatavilla
 - footer
 
 Käytä semanttista HTML5:tä.
 
 6. ACCESSIBILITY
+
 - Käytä semanttisia HTML-elementtejä.
 - Lisää aria-label tarvittaessa.
 - Inline SVG-kuvakkeille sopivat accessibility-attribuutit.
@@ -90,11 +117,31 @@ Käytä semanttista HTML5:tä.
 - Älä käytä pelkästään väriä informaation välittämiseen.
 
 7. TEKNINEN TOTEUTUS
+
 - Koko sivu pitää olla yhdessä index.html-tiedostossa.
 - CSS tulee <style>-tagiin.
 - JavaScript tulee <script>-tagiin.
 - Sivun pitää toimia avaamalla index.html suoraan selaimessa.
 - Älä tarvitse build systemiä, npm:ää tai ulkoisia riippuvuuksia.
+
+8. VALMIIN SIVUN LAATU
+
+Valmiin sivun pitää näyttää asiakkaalle tarkoitetulta oikealta
+verkkosivulta, ei AI-luonnokselta.
+
+Älä jätä sivulle:
+- lorem ipsumia
+- placeholder-tekstiä
+- "Lisää tähän"
+- "Täytä tähän"
+- "Your company"
+- "Company name here"
+- "example.com"
+- keksittyjä yhteystietoja
+- keksittyjä yrityksen faktoja.
+
+Jos jokin tieto puuttuu, suunnittele osio niin, että se toimii
+ilman kyseistä tietoa.
 
 Palauta VASTAUKSENA AINOASTAAN valmis HTML-tiedoston koko sisältö,
 alkaen '<!DOCTYPE html>'-rivistä.
@@ -113,6 +160,7 @@ Saat:
 Tee pyydetyt muutokset.
 
 SÄÄNNÖT:
+
 - Palauta KOKO päivitetty HTML-tiedosto.
 - Älä palauta diffiä.
 - Säilytä kaikki muu ennallaan, ellei muutospyyntö koske sitä.
@@ -122,44 +170,66 @@ SÄÄNNÖT:
 - Älä lisää ulkoisia kuvia tai riippuvuuksia.
 - Pidä HTML/CSS/JS yhdessä tiedostossa.
 - Noudata accessibility- ja responsiivisuusperiaatteita.
+- Älä jätä sivulle placeholder-tekstejä.
+- Älä lisää tekstejä kuten "[Lisää tähän]",
+  "[Puhelinnumero tähän]" tai vastaavia.
+- Jos tieto puuttuu, jätä se mieluummin pois kuin keksi se.
 
 Palauta VASTAUKSENA AINOASTAAN koko HTML-tiedoston sisältö.
+
 Älä lisää selityksiä.
 Älä lisää markdown-koodilohkoa.
 """
 
 
-def _output_dir(slug: str) -> str:
+def _output_dir(
+    slug: str,
+) -> str:
+
     return os.path.join(
         config.OUTPUT_DIR,
         slug,
     )
 
 
-def _output_path(slug: str) -> str:
+def _output_path(
+    slug: str,
+) -> str:
+
     return os.path.join(
         _output_dir(slug),
         "index.html",
     )
 
 
-def _clean_html(html: str) -> str:
-    """
-    Poistaa mahdolliset markdown-koodilohkot AI:n vastauksesta.
-    """
+def _clean_html(
+    html: str,
+) -> str:
 
-    cleaned = (html or "").strip()
+    cleaned = (
+        html or ""
+    ).strip()
 
-    if cleaned.startswith("```"):
+    if cleaned.startswith(
+        "```"
+    ):
+
         lines = cleaned.splitlines()
 
         if lines:
             lines = lines[1:]
 
-        if lines and lines[-1].strip() == "```":
+        if (
+            lines
+            and lines[-1].strip()
+            == "```"
+        ):
             lines = lines[:-1]
 
-        cleaned = "\n".join(lines).strip()
+        cleaned = (
+            "\n".join(lines)
+            .strip()
+        )
 
     return cleaned
 
@@ -168,36 +238,48 @@ def _write_html(
     slug: str,
     html: str,
 ) -> str:
+
     if not html:
         raise RuntimeError(
-            "AI ei palauttanut HTML-sisältöä."
+            "AI ei palauttanut "
+            "HTML-sisältöä."
         )
 
-    cleaned = _clean_html(html)
+    cleaned = _clean_html(
+        html
+    )
 
     if not cleaned.lower().startswith(
         "<!doctype html"
     ):
         raise RuntimeError(
-            "AI:n palauttama sisältö ei näytä validilta "
+            "AI:n palauttama sisältö "
+            "ei näytä validilta "
             "kokonaiselta HTML-tiedostolta."
         )
 
-    out_dir = _output_dir(slug)
+    out_dir = _output_dir(
+        slug
+    )
 
     os.makedirs(
         out_dir,
         exist_ok=True,
     )
 
-    path = _output_path(slug)
+    path = _output_path(
+        slug
+    )
 
     with open(
         path,
         "w",
         encoding="utf-8",
     ) as file:
-        file.write(cleaned)
+
+        file.write(
+            cleaned
+        )
 
     return path
 
@@ -205,9 +287,6 @@ def _write_html(
 def _resolve_company(
     slug_or_name: str,
 ) -> tuple[str, dict]:
-    """
-    Hakee yrityksen slugilla tai nimellä.
-    """
 
     slug, company = get_company(
         slug_or_name
@@ -215,7 +294,8 @@ def _resolve_company(
 
     if company is None:
         raise RuntimeError(
-            f"Yritystä ei löytynyt: {slug_or_name}"
+            f"Yritystä ei löytynyt: "
+            f"{slug_or_name}"
         )
 
     return slug, company
@@ -225,9 +305,6 @@ def build_site(
     slug: str,
     company: dict,
 ) -> str:
-    """
-    Rakentaa uuden verkkosivun Research-datan perusteella.
-    """
 
     research = company.get(
         "research"
@@ -235,8 +312,10 @@ def build_site(
 
     if not research:
         raise RuntimeError(
-            f"Yritykselle '{slug}' ei löydy research-dataa. "
-            f"Aja ensin: python main.py research {slug}"
+            f"Yritykselle '{slug}' "
+            "ei löydy research-dataa. "
+            f"Aja ensin: "
+            f"python main.py research {slug}"
         )
 
     company_facts = research.get(
@@ -260,7 +339,8 @@ def build_site(
     )
 
     user_prompt = f"""
-Rakenna uusi verkkosivu seuraavien tutkimustietojen perusteella.
+Rakenna uusi verkkosivu seuraavien
+tutkimustietojen perusteella.
 
 === COMPANY FACTS ===
 
@@ -280,13 +360,18 @@ Rakenna uusi verkkosivu seuraavien tutkimustietojen perusteella.
 
 Tärkeää:
 
-Korjaa uuden sivuston suunnittelussa nykyisen sivuston tunnistetut
-heikkoudet.
+Korjaa uuden sivuston suunnittelussa
+nykyisen sivuston tunnistetut heikkoudet.
 
-Kirjoita kaikki verkkosivun tekstit itse yrityksen todellisten
-company_facts-tietojen perusteella.
+Kirjoita kaikki verkkosivun tekstit itse
+yrityksen todellisten company_facts-tietojen
+perusteella.
 
 Älä keksi puuttuvia faktoja.
+
+Jos yhteystieto puuttuu,
+älä lisää placeholderia.
+Suunnittele sivu toimimaan ilman sitä.
 """
 
     print(
@@ -315,7 +400,9 @@ company_facts-tietojen perusteella.
         0,
     )
 
-    version = old_version + 1
+    version = (
+        old_version + 1
+    )
 
     upsert_company(
         slug,
@@ -333,7 +420,8 @@ company_facts-tietojen perusteella.
     )
 
     print(
-        f"  [Builder] Sivusto valmis: {path}"
+        f"  [Builder] Sivusto valmis: "
+        f"{path}"
     )
 
     return path
@@ -344,19 +432,20 @@ def revise_site(
     company: dict,
     feedback: str,
 ) -> str:
-    """
-    Muokkaa olemassa olevaa verkkosivua
-    käyttäjän luonnollisen kielen ohjeen perusteella.
-    """
 
     path = _output_path(
         slug
     )
 
-    if not os.path.exists(path):
+    if not os.path.exists(
+        path
+    ):
         raise RuntimeError(
-            f"Yritykselle '{slug}' ei löydy vielä rakennettua sivua. "
-            f"Aja ensin: python main.py build {slug}"
+            f"Yritykselle '{slug}' "
+            "ei löydy vielä rakennettua "
+            "sivua. "
+            f"Aja ensin: "
+            f"python main.py build {slug}"
         )
 
     with open(
@@ -364,6 +453,7 @@ def revise_site(
         "r",
         encoding="utf-8",
     ) as file:
+
         current_html = file.read()
 
     user_prompt = f"""
@@ -376,7 +466,13 @@ def revise_site(
 {feedback}
 
 Tee ainoastaan pyydetyt muutokset.
-Palauta koko päivitetty HTML.
+
+Muista:
+- Älä keksi uusia yrityksen faktoja.
+- Älä keksi yhteystietoja.
+- Älä lisää placeholder-tekstejä.
+- Säilytä responsiivisuus.
+- Palauta koko päivitetty HTML.
 """
 
     print(
@@ -405,7 +501,9 @@ Palauta koko päivitetty HTML.
         1,
     )
 
-    version = old_version + 1
+    version = (
+        old_version + 1
+    )
 
     upsert_company(
         slug,
@@ -424,7 +522,8 @@ Palauta koko päivitetty HTML.
     )
 
     print(
-        f"  [Builder] Uusi versio valmis: {new_path}"
+        f"  [Builder] Uusi versio valmis: "
+        f"{new_path}"
     )
 
     return new_path
@@ -433,9 +532,6 @@ Palauta koko päivitetty HTML.
 def run_build(
     slug_or_name: str,
 ) -> str:
-    """
-    main.py:n käyttämä Builder-käynnistys.
-    """
 
     slug, company = _resolve_company(
         slug_or_name
@@ -444,7 +540,8 @@ def run_build(
     print()
     print("=== BUILD ===")
     print(
-        f"Yritys: {company.get('name', '')}"
+        f"Yritys: "
+        f"{company.get('name', '')}"
     )
 
     return build_site(
@@ -457,9 +554,6 @@ def run_revise(
     slug_or_name: str,
     instructions: str,
 ) -> str:
-    """
-    main.py:n käyttämä revise-käynnistys.
-    """
 
     slug, company = _resolve_company(
         slug_or_name
@@ -473,7 +567,8 @@ def run_revise(
     print()
     print("=== REVISE ===")
     print(
-        f"Yritys: {company.get('name', '')}"
+        f"Yritys: "
+        f"{company.get('name', '')}"
     )
 
     return revise_site(
@@ -486,12 +581,6 @@ def run_revise(
 def run_preview(
     slug_or_name: str,
 ) -> str:
-    """
-    Avaa rakennetun sivuston esikatselun.
-
-    GitHub Actionsissa selainta ei ole käytettävissä,
-    joten siellä tulostetaan vain tiedoston sijainti.
-    """
 
     slug, company = _resolve_company(
         slug_or_name
@@ -501,10 +590,14 @@ def run_preview(
         slug
     )
 
-    if not os.path.exists(path):
+    if not os.path.exists(
+        path
+    ):
         raise RuntimeError(
-            f"Yritykselle '{slug}' ei löydy rakennettua sivua. "
-            f"Aja ensin: python main.py build {slug}"
+            f"Yritykselle '{slug}' "
+            "ei löydy rakennettua sivua. "
+            f"Aja ensin: "
+            f"python main.py build {slug}"
         )
 
     absolute_path = os.path.abspath(
@@ -522,34 +615,41 @@ def run_preview(
     print()
     print("=== PREVIEW ===")
     print(
-        f"Yritys: {company.get('name', '')}"
+        f"Yritys: "
+        f"{company.get('name', '')}"
     )
     print(
-        f"Tiedosto: {absolute_path}"
+        f"Tiedosto: "
+        f"{absolute_path}"
     )
     print(
-        f"URL: {file_url}"
+        f"URL: "
+        f"{file_url}"
     )
 
-    # GitHub Actionsissa BROWSER-ympäristömuuttujaa
-    # ei yleensä ole eikä graafista selainta ole.
     if os.getenv(
         "GITHUB_ACTIONS"
     ) == "true":
+
         print(
-            "[Preview] GitHub Actions -ympäristössä "
-            "selainta ei avata."
+            "[Preview] GitHub Actions "
+            "-ympäristössä selainta "
+            "ei avata."
         )
 
         return absolute_path
 
     try:
+
         webbrowser.open(
             file_url
         )
+
     except Exception as e:
+
         print(
-            f"[Preview] Selaimen avaaminen epäonnistui: {e}"
+            "[Preview] Selaimen "
+            f"avaaminen epäonnistui: {e}"
         )
 
     return absolute_path
