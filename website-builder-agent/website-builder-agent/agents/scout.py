@@ -8,16 +8,18 @@ Scout tekee kaksi eri asiaa:
    - tarkistaa verkkosivut
    - analysoi teknisiä ominaisuuksia
    - analysoi sisältöä ja käytettävyyden signaaleja
+   - ottaa desktop- ja mobiilikuvakaappaukset
    - EI käytä Tavilyä
    - EI käytä OpenRouteria
    - EI tallenna yrityksiä
 
 2. NORMAALI KÄYTTÖ
    - tekee saman perustason analyysin
+   - ottaa kuvakaappaukset
    - käyttää myöhemmin OpenRouteria syvempään AI-arvioon
    - tallentaa yritykset data/companies.json-tiedostoon
 
-Visuaalinen kuvakaappausanalyysi lisätään seuraavassa vaiheessa.
+Visuaalinen AI-analyysi lisätään seuraavassa vaiheessa.
 """
 
 import re
@@ -26,6 +28,7 @@ import requests
 import config
 
 from utils.fetch import analyze_url
+from utils.screenshot import capture_website
 from utils.state import load_companies, save_companies, make_slug
 
 
@@ -304,7 +307,8 @@ def _analyze_candidates(
     candidates: list[dict],
 ) -> list[dict]:
     """
-    Hakee yritysten verkkosivut ja analysoi ne.
+    Hakee yritysten verkkosivut,
+    analysoi ne ja ottaa kuvakaappaukset.
     """
 
     analyzed = []
@@ -342,6 +346,10 @@ def _analyze_candidates(
             f"  [site] URL: {url}"
         )
 
+        # ==================================================
+        # HTML-ANALYYSI
+        # ==================================================
+
         data = analyze_url(
             url
         )
@@ -361,10 +369,52 @@ def _analyze_candidates(
             f"{data.get('has_viewport_meta', False)}"
         )
 
+        # ==================================================
+        # KUVAKAAPPAUKSET
+        # ==================================================
+
+        print(
+            f"  [site] Otetaan kuvakaappaukset: "
+            f"{name}"
+        )
+
+        screenshots = capture_website(
+            url=url,
+            company_name=name,
+        )
+
+        if screenshots:
+
+            print(
+                "  [site] Kuvakaappaukset: OK"
+            )
+
+            print(
+                f"    desktop: "
+                f"{screenshots.get('desktop', '')}"
+            )
+
+            print(
+                f"    mobile: "
+                f"{screenshots.get('mobile', '')}"
+            )
+
+        else:
+
+            print(
+                "  [site] Kuvakaappausten ottaminen "
+                "epäonnistui."
+            )
+
         result = dict(company)
 
         result["url"] = url
+
         result["site_analysis"] = data
+
+        result["screenshots"] = (
+            screenshots or {}
+        )
 
         analyzed.append(
             result
@@ -495,17 +545,11 @@ def _score_without_ai(
 
     positive_signals = []
 
-    # =========================================================
-    # TEKNINEN
-    # =========================================================
-
     if not meta_description:
         score += 1
-
         reasons.append(
             "meta description puuttuu"
         )
-
     else:
         positive_signals.append(
             "meta description löytyy"
@@ -513,11 +557,9 @@ def _score_without_ai(
 
     if not has_viewport:
         score += 2
-
         reasons.append(
             "viewport-meta puuttuu"
         )
-
     else:
         positive_signals.append(
             "viewport-meta löytyy"
@@ -525,18 +567,14 @@ def _score_without_ai(
 
     if not title:
         score += 2
-
         reasons.append(
             "title puuttuu"
         )
-
     elif len(title) < 8:
         score += 1
-
         reasons.append(
             "erittäin lyhyt title"
         )
-
     else:
         positive_signals.append(
             "sivulla on title"
@@ -544,48 +582,34 @@ def _score_without_ai(
 
     if raw_html_length < 10000:
         score += 2
-
         reasons.append(
             "hyvin pieni HTML-sivu"
         )
-
     elif raw_html_length < 20000:
         score += 1
-
         reasons.append(
             "pieni HTML-sivu"
         )
-
     else:
         positive_signals.append(
             "HTML-rakenne ei ole poikkeuksellisen pieni"
         )
 
-    # =========================================================
-    # SISÄLTÖ
-    # =========================================================
-
     if visible_text_length < 500:
         score += 3
-
         reasons.append(
             "erittäin vähän näkyvää sisältöä"
         )
-
     elif visible_text_length < 1000:
         score += 2
-
         reasons.append(
             "vähän näkyvää sisältöä"
         )
-
     elif visible_text_length < 1800:
         score += 1
-
         reasons.append(
             "melko vähän näkyvää sisältöä"
         )
-
     else:
         positive_signals.append(
             "sivulla on kohtuullisesti sisältöä"
@@ -593,41 +617,29 @@ def _score_without_ai(
 
     if h1_count == 0:
         score += 2
-
         reasons.append(
             "H1-otsikko puuttuu"
         )
-
     elif h1_count > 1:
         score += 1
-
         reasons.append(
             "sivulla on useita H1-otsikoita"
         )
-
     else:
         positive_signals.append(
             "yksi H1-otsikko löytyy"
         )
 
-    # =========================================================
-    # KÄYTETTÄVYYS
-    # =========================================================
-
     if link_count == 0:
         score += 3
-
         reasons.append(
             "sivulla ei ole linkkejä"
         )
-
     elif link_count < 3:
         score += 1
-
         reasons.append(
             "hyvin vähän linkkejä"
         )
-
     else:
         positive_signals.append(
             "sivulla on navigoitavia linkkejä"
@@ -637,26 +649,19 @@ def _score_without_ai(
         reasons.append(
             "selkeitä painikkeita ei löytynyt"
         )
-
     else:
         positive_signals.append(
             "painikkeita löytyy"
         )
-
-    # =========================================================
-    # YHTEYSTIEDOT
-    # =========================================================
 
     if not contact_signals.get(
         "phone_found",
         False,
     ):
         score += 1
-
         reasons.append(
             "puhelinnumeroa ei havaittu"
         )
-
     else:
         positive_signals.append(
             "puhelinnumero havaittu"
@@ -667,11 +672,9 @@ def _score_without_ai(
         False,
     ):
         score += 1
-
         reasons.append(
             "sähköpostiosoitetta ei havaittu"
         )
-
     else:
         positive_signals.append(
             "sähköpostiosoite havaittu"
@@ -682,19 +685,13 @@ def _score_without_ai(
         False,
     ):
         score += 1
-
         reasons.append(
             "osoitetietoa ei havaittu"
         )
-
     else:
         positive_signals.append(
             "osoitetieto havaittu"
         )
-
-    # =========================================================
-    # CTA / TOIMINTAKEHOTUS
-    # =========================================================
 
     if cta_signals.get(
         "has_cta",
@@ -703,10 +700,8 @@ def _score_without_ai(
         positive_signals.append(
             "toimintakehotus havaittu"
         )
-
     else:
         score += 2
-
         reasons.append(
             "selkeää toimintakehotusta ei havaittu"
         )
@@ -719,14 +714,6 @@ def _score_without_ai(
             "ajanvaraus havaittu"
         )
 
-    # Ajanvaraussignaalia ei automaattisesti
-    # pidetä puutteena, koska kaikilla yrityksillä
-    # ei tarvitse olla ajanvarausta.
-    
-    # =========================================================
-    # KUVAT / SAAVUTETTAVUUS
-    # =========================================================
-
     if image_count > 0:
 
         if (
@@ -734,14 +721,12 @@ def _score_without_ai(
             == image_count
         ):
             score += 1
-
             reasons.append(
                 "kuvien alt-tekstit puuttuvat"
             )
 
         elif images_without_alt_count > 0:
             score += 1
-
             reasons.append(
                 "osasta kuvista puuttuu alt-teksti"
             )
@@ -751,39 +736,17 @@ def _score_without_ai(
                 "kuvien alt-tekstit löytyvät"
             )
 
-    # =========================================================
-    # LOMAKKEET
-    # =========================================================
-
     if form_count > 0:
         positive_signals.append(
             "yhteydenotto-/lomake-elementti löytyy"
         )
 
-    # =========================================================
-    # KOKONAISTULOS
-    # =========================================================
-
-    # Karkea tekninen/käytettävyysluokitus.
-    #
-    # Tämä EI ole visuaalinen arvio.
-    # Visuaalinen arvio tulee myöhemmin kuvakaappauksen
-    # avulla.
-
     if score >= 8:
         priority = "high"
-
     elif score >= 4:
         priority = "medium"
-
     else:
         priority = "low"
-
-    # Luottamus kuvaa vain tämän teknisen
-    # analyysin signaalien määrää.
-    #
-    # Se ei tarkoita:
-    # "80 % todennäköisyys että sivu on huono."
 
     confidence = min(
         0.95,
@@ -812,6 +775,11 @@ def _print_dry_run_result(
 
     result = _score_without_ai(
         company
+    )
+
+    screenshots = company.get(
+        "screenshots",
+        {},
     )
 
     print()
@@ -847,6 +815,32 @@ def _print_dry_run_result(
         f"Teknisen analyysin luottamus: "
         f"{result['confidence']:.2f}"
     )
+
+    if screenshots:
+
+        print(
+            "  [dry-run] "
+            "Kuvakaappaukset:"
+        )
+
+        if screenshots.get("desktop"):
+            print(
+                f"    - desktop: "
+                f"{screenshots['desktop']}"
+            )
+
+        if screenshots.get("mobile"):
+            print(
+                f"    - mobile: "
+                f"{screenshots['mobile']}"
+            )
+
+    else:
+
+        print(
+            "  [dry-run] "
+            "Kuvakaappauksia ei saatu."
+        )
 
     if result["reasons"]:
 
@@ -884,7 +878,7 @@ def _ai_analyze_company(
     Tätä EI kutsuta dry-runissa.
 
     Visuaalinen kuvakaappausanalyysi lisätään
-    tähän myöhemmin.
+    seuraavassa vaiheessa.
     """
 
     from utils.claude_client import (
@@ -1154,10 +1148,6 @@ def run_scout(
         )
 
         return results
-
-    # =========================================================
-    # NORMAALI TILA
-    # =========================================================
 
     companies = load_companies()
 
