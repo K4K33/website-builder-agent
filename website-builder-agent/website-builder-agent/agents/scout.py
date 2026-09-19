@@ -373,6 +373,49 @@ def _technical_analysis(
             "confidence": 0.5,
         }
 
+    # analyze_url() voi joissain tilanteissa
+    # palauttaa None ilman exceptionia.
+    # Muutetaan se hallituksi epäonnistumiseksi,
+    # jotta yksi huono verkkosivu ei kaada Scoutia.
+    if result is None:
+
+        print(
+            "  [site] Analyysi palautti tyhjän "
+            "tuloksen."
+        )
+
+        return {
+            "success": False,
+            "issues": [
+                "verkkosivun analyysi palautti tyhjän tuloksen"
+            ],
+            "positives": [],
+            "problem_signals": 3,
+            "priority": "medium",
+            "redesignable": True,
+            "confidence": 0.5,
+        }
+
+    # Varmistetaan vielä, että tulos on sanakirja.
+    if not isinstance(result, dict):
+
+        print(
+            "  [site] Analyysi palautti "
+            "virheellisen tietotyypin."
+        )
+
+        return {
+            "success": False,
+            "issues": [
+                "verkkosivun analyysi palautti virheellisen tietotyypin"
+            ],
+            "positives": [],
+            "problem_signals": 3,
+            "priority": "medium",
+            "redesignable": True,
+            "confidence": 0.5,
+        }
+
     return result
 
 
@@ -385,6 +428,9 @@ def _ai_analyze_company(
         "screenshots",
         {},
     )
+
+    if not isinstance(screenshots, dict):
+        screenshots = {}
 
     image_paths = []
 
@@ -603,6 +649,18 @@ def _analyze_candidates(
             candidate
         )
 
+        # Lisäsuoja: technical ei saa koskaan
+        # olla None tai muu kuin dict.
+        if not isinstance(technical, dict):
+
+            print(
+                "  [site] Tekninen analyysi "
+                "ei palauttanut kelvollista "
+                "tulosta."
+            )
+
+            continue
+
         candidate["technical_analysis"] = (
             technical
         )
@@ -631,10 +689,21 @@ def _analyze_candidates(
             f"{name}"
         )
 
-        screenshots = capture_website(
-            website,
-            name,
-        )
+        try:
+
+            screenshots = capture_website(
+                website,
+                name,
+            )
+
+        except Exception as error:
+
+            print(
+                "  [site] Kuvakaappausten "
+                f"ottaminen epäonnistui: {error}"
+            )
+
+            screenshots = None
 
         candidate["screenshots"] = (
             screenshots or {}
@@ -677,6 +746,16 @@ def _analyze_candidates(
                     candidate,
                     technical,
                 )
+
+                if not isinstance(
+                    ai_analysis,
+                    dict,
+                ):
+
+                    raise RuntimeError(
+                        "AI palautti virheellisen "
+                        "tietotyypin."
+                    )
 
                 candidate["ai_analysis"] = (
                     ai_analysis
