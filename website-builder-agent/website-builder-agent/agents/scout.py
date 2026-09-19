@@ -1,28 +1,21 @@
 """
 Scout-agentti Website Builder Agentille.
 
-Tämä versio tukee kahta toimintatilaa:
+DRY-RUN:
+- Käyttää OpenStreetMap / Overpass APIa.
+- EI käytä Tavilyä.
+- EI käytä OpenRouteria.
+- EI tallenna yrityksiä.
 
-1. --dry-run
-   - Käyttää OpenStreetMap / Overpass APIa yritysten löytämiseen.
-   - EI käytä Tavilyä.
-   - EI käytä OpenRouteria.
-   - EI tallenna yrityksiä.
-   - Tarkistaa löydettyjen yritysten verkkosivut paikallisesti.
-
-2. Normaali ajo
-   - Käyttää Tavilyä yritysten verkkosivujen löytämiseen.
-   - Tämän jälkeen AI-analyysi voidaan tehdä OpenRouterilla.
-
-Dry-run on tarkoitettu turvalliseen testaamiseen ilman AI- tai
-hakupalveluiden kuukausikiintiöiden kuluttamista.
+NORMAALI AJO:
+- Tavily voidaan ottaa käyttöön myöhemmin.
+- OpenRouteria käytetään vasta AI-analyysissä.
 """
 
 import re
 from urllib.parse import urlparse
 
 import requests
-from bs4 import BeautifulSoup
 
 import config
 from utils.fetch import analyze_url
@@ -34,10 +27,10 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 "
-        "(compatible; WebsiteBuilderAgent/1.0; "
-        "+https://github.com/K4K33/website-builder-agent)"
-    )
+        "WebsiteBuilderAgent/1.0 "
+        "(https://github.com/K4K33/website-builder-agent)"
+    ),
+    "Accept": "application/json",
 }
 
 
@@ -59,10 +52,6 @@ BLOCKED_DOMAINS = {
 
 
 def _clean_url(url: str) -> str | None:
-    """
-    Puhdistaa ja tarkistaa URL:n.
-    """
-
     if not url:
         return None
 
@@ -90,10 +79,6 @@ def _clean_url(url: str) -> str | None:
 
 
 def _is_blocked_domain(url: str) -> bool:
-    """
-    Estää sosiaalisen median ja hakemistopalvelujen URL:t.
-    """
-
     try:
         domain = urlparse(url).netloc.lower()
         domain = domain.replace("www.", "")
@@ -109,10 +94,6 @@ def _is_blocked_domain(url: str) -> bool:
 
 
 def _normalize_website(value: str | None) -> str | None:
-    """
-    Muuntaa OSM:n website/contact:website-arvon käyttökelpoiseksi URL:ksi.
-    """
-
     if not value:
         return None
 
@@ -136,20 +117,17 @@ def _normalize_website(value: str | None) -> str | None:
 
 def _build_overpass_query(location: str, industry: str) -> str:
     """
-    Rakentaa Overpass-kyselyn.
+    Rakentaa Overpass QL -kyselyn.
 
-    Kampaamot ja parturit ovat OSM:ssa yleensä shop=hairdresser.
+    Kampaamot ja parturit:
+    shop=hairdresser
+    craft=hairdresser
     """
 
     location = location.strip()
     industry_lower = industry.lower().strip()
 
-    if "kampa" in industry_lower:
-        tags = """
-          nwr["shop"="hairdresser"](area.searchArea);
-          nwr["craft"="hairdresser"](area.searchArea);
-        """
-    elif "parturi" in industry_lower:
+    if "kampa" in industry_lower or "parturi" in industry_lower:
         tags = """
           nwr["shop"="hairdresser"](area.searchArea);
           nwr["craft"="hairdresser"](area.searchArea);
@@ -161,7 +139,7 @@ def _build_overpass_query(location: str, industry: str) -> str:
           nwr["office"](area.searchArea);
         """
 
-    query = f"""
+    return f"""
 [out:json][timeout:30];
 
 area
@@ -174,9 +152,7 @@ area
 );
 
 out center tags;
-"""
-
-    return query
+""".strip()
 
 
 def _search_overpass(
@@ -187,7 +163,7 @@ def _search_overpass(
     """
     Hakee yrityksiä OpenStreetMapista.
 
-    Tämä ei käytä Tavilyä eikä OpenRouteria.
+    Tämä vaihe ei käytä Tavilyä eikä OpenRouteria.
     """
 
     print()
@@ -203,7 +179,9 @@ def _search_overpass(
     try:
         response = requests.post(
             OVERPASS_URL,
-            data=query,
+            params={
+                "data": query,
+            },
             headers=HEADERS,
             timeout=45,
         )
@@ -211,6 +189,14 @@ def _search_overpass(
         print(
             f"  [OSM] HTTP-status: {response.status_code}"
         )
+
+        if response.status_code >= 400:
+            print(
+                "  [OSM] Palvelin palautti virheen:"
+            )
+            print(
+                f"  [OSM] {response.text[:500]}"
+            )
 
         response.raise_for_status()
 
@@ -224,7 +210,7 @@ def _search_overpass(
 
     except ValueError as e:
         print(
-            f"  [OSM] Vastauksen JSONia ei voitu lukea: {e}"
+            f"  [OSM] JSON-vastausta ei voitu lukea: {e}"
         )
         return []
 
@@ -350,9 +336,10 @@ def _analyze_candidates(
     max_results: int,
 ) -> list[dict]:
     """
-    Hakee ja analysoi löydettyjen yritysten omat verkkosivut.
+    Hakee löydettyjen yritysten verkkosivut ja analysoi
+    niiden perustekniset ominaisuudet.
 
-    Tämä vaihe ei käytä Tavilyä eikä OpenRouteria.
+    Ei käytä Tavilyä eikä OpenRouteria.
     """
 
     analyzed = []
@@ -449,9 +436,7 @@ def _score_without_ai(company: dict) -> dict:
     }
 
 
-def _ai_analyze_company(
-    company: dict,
-) -> dict:
+def _ai_analyze_company(company: dict) -> dict:
     """
     Normaali tuotantoanalyysi OpenRouterilla.
 
@@ -590,14 +575,17 @@ def run_scout(
             print(
                 f"  [dry-run] {company.get('name', '')}"
             )
+
             print(
                 f"  [dry-run] URL: "
                 f"{company.get('url', '')}"
             )
+
             print(
                 f"  [dry-run] Mahdollisesti vanha: "
                 f"{evaluation['old_site']}"
             )
+
             print(
                 f"  [dry-run] Luottamus: "
                 f"{evaluation['confidence']:.2f}"
