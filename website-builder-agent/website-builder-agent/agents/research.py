@@ -23,13 +23,15 @@ import requests
 from utils.claude_client import ask_claude_json
 from utils.fetch import analyze_url
 from utils.state import (
-    load_companies,
+    get_company,
     upsert_company,
     set_status,
 )
 
 
-TAVILY_URL = "https://api.tavily.com/search"
+TAVILY_URL = (
+    "https://api.tavily.com/search"
+)
 
 
 FACT_EXTRACTION_PROMPT = """
@@ -38,7 +40,9 @@ Olet verkkosivujen tutkimukseen erikoistunut Research-agentti.
 Analysoi yrityksen nykyisen verkkosivun sisältö.
 
 Tavoitteet:
+
 1. Tunnista yrityksen todellinen toimiala mahdollisimman tarkasti.
+
 2. Poimi vain sivulta löytyvät faktat:
    - yrityksen nimi
    - palvelut tai tuotteet
@@ -49,11 +53,14 @@ Tavoitteet:
    - aukioloajat
    - slogan tai arvolupaus
    - kohderyhmä
+
 3. Tunnista nykyisen verkkosivun tärkeimmät heikkoudet.
+
 4. Luo lyhyt hakulause, jolla voidaan etsiä moderneja
    referenssisivustoja samalta toimialalta.
 
 Älä keksi yhteystietoja.
+
 Jos tietoa ei löydy, käytä tyhjää merkkijonoa.
 
 Palauta VAIN validi JSON:
@@ -83,6 +90,7 @@ FINAL_RESEARCH_PROMPT = """
 Olet Research-agentti verkkosivujen uudistusprojektissa.
 
 Sinulle annetaan:
+
 1. Kohdeyrityksen faktat.
 2. Nykyisen verkkosivun heikkoudet.
 3. Hakutuloksia moderneista verkkosivuista samalta tai läheiseltä
@@ -91,6 +99,7 @@ Sinulle annetaan:
 Tehtäväsi on tuottaa Builder-agentille selkeä design brief.
 
 Referenssisivustoja saa käyttää VAIN inspiraationa:
+
 - värimaailma
 - typografia
 - layout
@@ -100,6 +109,7 @@ Referenssisivustoja saa käyttää VAIN inspiraationa:
 - palveluiden esittelytapa
 
 ÄLÄ kopioi:
+
 - tekstejä
 - kuvia
 - logoja
@@ -145,21 +155,28 @@ Palauta VAIN validi JSON tässä muodossa:
 }
 
 Sääntöjä:
+
 - design_inspiration sisältää 3-5 lyhyttä yleistä havaintoa.
 - Älä kirjoita referenssiyritysten nimiä.
 - Älä kirjoita referenssien URL-osoitteita.
 - color_palette sisältää 3-5 väriä.
 - key_sections sisältää Builder-agentille hyödylliset sivuston pääosiot.
+- Älä keksi yrityksen faktoja.
+- Jos yhteystieto puuttuu, jätä se tyhjäksi.
 """
 
 
 def _get_tavily_key():
-    key = os.getenv("TAVILY_API_KEY", "")
+    key = os.getenv(
+        "TAVILY_API_KEY",
+        "",
+    )
 
     if not key:
         raise RuntimeError(
             "TAVILY_API_KEY puuttuu. "
-            "Lisää se GitHub Secretiksi nimellä TAVILY_API_KEY."
+            "Lisää se GitHub Secretiksi "
+            "nimellä TAVILY_API_KEY."
         )
 
     return key
@@ -169,11 +186,6 @@ def _search_tavily(
     query: str,
     max_results: int = 5,
 ) -> list[dict]:
-    """
-    Hakee Tavillysta referenssisivustoja.
-
-    Tätä käytetään vain Research-vaiheessa.
-    """
 
     api_key = _get_tavily_key()
 
@@ -193,6 +205,7 @@ def _search_tavily(
     }
 
     try:
+
         response = requests.post(
             TAVILY_URL,
             json=payload,
@@ -200,11 +213,13 @@ def _search_tavily(
         )
 
     except requests.RequestException as e:
+
         raise RuntimeError(
             f"Tavily-verkkovirhe: {e}"
         ) from e
 
     if response.status_code >= 400:
+
         raise RuntimeError(
             "Tavily API-virhe: "
             f"HTTP {response.status_code} "
@@ -212,11 +227,14 @@ def _search_tavily(
         )
 
     try:
+
         data = response.json()
 
     except ValueError as e:
+
         raise RuntimeError(
-            f"Tavily palautti virheellisen JSON-vastauksen: {e}"
+            "Tavily palautti virheellisen "
+            f"JSON-vastauksen: {e}"
         ) from e
 
     results = data.get(
@@ -227,19 +245,32 @@ def _search_tavily(
     cleaned = []
 
     for result in results:
-        if not isinstance(result, dict):
+
+        if not isinstance(
+            result,
+            dict,
+        ):
             continue
 
         title = str(
-            result.get("title", "")
+            result.get(
+                "title",
+                "",
+            )
         ).strip()
 
         url = str(
-            result.get("url", "")
+            result.get(
+                "url",
+                "",
+            )
         ).strip()
 
         content = str(
-            result.get("content", "")
+            result.get(
+                "content",
+                "",
+            )
         ).strip()
 
         if not url:
@@ -254,21 +285,23 @@ def _search_tavily(
         )
 
     print(
-        f"  [Tavily] Tuloksia: {len(cleaned)}"
+        f"  [Tavily] Tuloksia: "
+        f"{len(cleaned)}"
     )
 
-    return cleaned[:max_results]
+    return cleaned[
+        :max_results
+    ]
 
 
 def _format_search_results(
     results: list[dict],
 ) -> str:
-    """
-    Muuttaa Tavily-tulokset AI:lle sopivaksi tekstiksi.
-    """
 
     if not results:
-        return "Ei referenssihakutuloksia."
+        return (
+            "Ei referenssihakutuloksia."
+        )
 
     sections = []
 
@@ -276,6 +309,7 @@ def _format_search_results(
         results,
         start=1,
     ):
+
         sections.append(
             f"""
 REFERENSSI {index}
@@ -286,36 +320,25 @@ Sisältökuvaus:
 """.strip()
         )
 
-    return "\n\n".join(sections)
-
-
-def _get_company(
-    slug: str,
-) -> dict:
-    companies = load_companies()
-
-    company = companies.get(slug)
-
-    if not company:
-        raise RuntimeError(
-            f"Yritystä ei löytynyt: {slug}"
-        )
-
-    return company
+    return "\n\n".join(
+        sections
+    )
 
 
 def run_research(
-    slug: str,
+    slug_or_name: str,
 ) -> dict:
-    """
-    Tutkii yhden Scoutin löytämän yrityksen.
 
-    Main.py kutsuu tätä muodossa:
+    slug, company = get_company(
+        slug_or_name
+    )
 
-        research.run_research(args.company)
-    """
+    if company is None:
 
-    company = _get_company(slug)
+        raise RuntimeError(
+            f"Yritystä ei löytynyt: "
+            f"{slug_or_name}"
+        )
 
     name = company.get(
         "name",
@@ -328,8 +351,10 @@ def run_research(
     )
 
     if not url:
+
         raise RuntimeError(
-            f"Yrityksellä {slug} ei ole verkkosivun URL-osoitetta."
+            f"Yrityksellä {slug} "
+            "ei ole verkkosivun URL-osoitetta."
         )
 
     print()
@@ -342,31 +367,38 @@ def run_research(
     )
 
     # ---------------------------------------------------------
-    # 1. Hae nykyinen verkkosivu
+    # CURRENT WEBSITE
     # ---------------------------------------------------------
 
     print(
-        "  [Research] Haetaan nykyinen verkkosivu..."
+        "  [Research] Haetaan "
+        "nykyinen verkkosivu..."
     )
 
-    site_data = analyze_url(url)
+    site_data = analyze_url(
+        url
+    )
 
     if not site_data:
+
         raise RuntimeError(
-            f"Yrityksen sivua ei saatu analysoitua: {url}"
+            f"Yrityksen sivua ei saatu "
+            f"analysoitua: {url}"
         )
 
     if not site_data.get(
         "success",
         True,
     ):
+
         error = site_data.get(
             "error",
             "Tuntematon virhe",
         )
 
         raise RuntimeError(
-            f"Yrityksen sivun analyysi epäonnistui: {error}"
+            "Yrityksen sivun analyysi "
+            f"epäonnistui: {error}"
         )
 
     print(
@@ -374,7 +406,7 @@ def run_research(
     )
 
     # ---------------------------------------------------------
-    # 2. Ensimmäinen AI-analyysi
+    # FACT EXTRACTION
     # ---------------------------------------------------------
 
     user_prompt = f"""
@@ -385,15 +417,19 @@ Yrityksen URL:
 {url}
 
 --- Sivun otsikko ---
+
 {site_data.get("title", "")}
 
 --- Meta-kuvaus ---
+
 {site_data.get("meta_description", "")}
 
 --- Sivun näkyvä teksti ---
+
 {site_data.get("visible_text", "")[:10000]}
 
 --- Tekniset tiedot ---
+
 Viewport-meta:
 {site_data.get("has_viewport_meta", "")}
 
@@ -405,7 +441,8 @@ Raaka HTML:
 """
 
     print(
-        "  [Research] Tunnistetaan yrityksen faktat..."
+        "  [Research] Tunnistetaan "
+        "yrityksen faktat..."
     )
 
     extracted = ask_claude_json(
@@ -418,8 +455,11 @@ Raaka HTML:
         extracted,
         dict,
     ):
+
         raise RuntimeError(
-            "AI ei palauttanut Researchin faktatietoja JSON-objektina."
+            "AI ei palauttanut "
+            "Researchin faktatietoja "
+            "JSON-objektina."
         )
 
     company_facts = extracted.get(
@@ -431,29 +471,46 @@ Raaka HTML:
         company_facts,
         dict,
     ):
+
         company_facts = {}
 
-    industry = company_facts.get(
-        "industry",
-        "",
-    )
+    industry = str(
+        company_facts.get(
+            "industry",
+            "",
+        )
+    ).strip()
 
-    search_query = extracted.get(
-        "reference_search_query",
-        "",
-    )
+    search_query = str(
+        extracted.get(
+            "reference_search_query",
+            "",
+        )
+    ).strip()
 
     if not search_query:
-        search_query = (
-            f"modern {industry} website design"
-        )
+
+        if industry:
+
+            search_query = (
+                f"modern {industry} "
+                "website design"
+            )
+
+        else:
+
+            search_query = (
+                "modern small business "
+                "website design"
+            )
 
     # ---------------------------------------------------------
-    # 3. Tavily-referenssihaku
+    # TAVILY
     # ---------------------------------------------------------
 
     print(
-        "  [Research] Etsitään design-referenssejä..."
+        "  [Research] Etsitään "
+        "design-referenssejä..."
     )
 
     references = _search_tavily(
@@ -462,28 +519,45 @@ Raaka HTML:
     )
 
     # ---------------------------------------------------------
-    # 4. Lopullinen design brief
+    # FINAL DESIGN BRIEF
     # ---------------------------------------------------------
 
     final_prompt = f"""
 KOHDEYRITYS
-Nimi: {name}
-URL: {url}
+
+Nimi:
+{name}
+
+URL:
+{url}
 
 --- YRITYKSEN FAKTAT ---
+
 {company_facts}
 
 --- NYKYISEN SIVUN HEIKKOUDET ---
+
 {extracted.get("current_site_weaknesses", [])}
 
 --- TAVILYN REFERENSSIT ---
+
 {_format_search_results(references)}
 
 Muodosta nyt lopullinen design brief.
+
+Tärkeää:
+
+- Yrityksen faktat ovat ensisijaisia.
+- Älä keksi puuttuvia tietoja.
+- Referenssit ovat vain design-inspiraatiota.
+- Älä kopioi referenssisivujen tekstejä.
+- Älä kopioi referenssisivujen kuvia.
+- Älä käytä referenssiyritysten nimiä.
 """
 
     print(
-        "  [Research] Rakennetaan design brief..."
+        "  [Research] Rakennetaan "
+        "design brief..."
     )
 
     brief = ask_claude_json(
@@ -496,12 +570,15 @@ Muodosta nyt lopullinen design brief.
         brief,
         dict,
     ):
+
         raise RuntimeError(
-            "AI ei palauttanut lopullista Research-briefiä JSON-objektina."
+            "AI ei palauttanut "
+            "lopullista Research-briefiä "
+            "JSON-objektina."
         )
 
     # ---------------------------------------------------------
-    # 5. Tallenna Research yrityksen tietoihin
+    # SAVE
     # ---------------------------------------------------------
 
     research_data = {
@@ -528,7 +605,7 @@ Muodosta nyt lopullinen design brief.
             "name": (
                 brief.get(
                     "company_facts",
-                    {},
+                    {}
                 ).get(
                     "name"
                 )
@@ -559,16 +636,23 @@ Muodosta nyt lopullinen design brief.
     )
 
     print()
-    print("=== RESEARCH VALMIS ===")
+    print(
+        "=== RESEARCH VALMIS ==="
+    )
+
     print(
         f"Yritys: {name}"
     )
+
     print(
         f"Toimiala: {industry}"
     )
+
     print(
-        f"Referenssejä: {len(references)}"
+        f"Referenssejä: "
+        f"{len(references)}"
     )
+
     print(
         "Status: researched"
     )
