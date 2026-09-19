@@ -1,17 +1,23 @@
 """
 Scout-agentti Website Builder Agentille.
 
-Dry-run:
-- käyttää OpenStreetMapia yritysten löytämiseen
-- tarkistaa yritysten omat verkkosivut
-- pisteyttää mahdollisesti vanhentuneita sivustoja
-- EI käytä Tavilyä
-- EI käytä OpenRouteria
-- EI tallenna yrityksiä
+Scout tekee kaksi eri asiaa:
 
-Normaali tila:
-- käyttää samaa ilmaista löytövaihetta
-- AI-analyysi voidaan ottaa käyttöön myöhemmin
+1. DRY-RUN
+   - löytää yrityksiä OpenStreetMapista
+   - tarkistaa verkkosivut
+   - analysoi teknisiä ominaisuuksia
+   - analysoi sisältöä ja käytettävyyden signaaleja
+   - EI käytä Tavilyä
+   - EI käytä OpenRouteria
+   - EI tallenna yrityksiä
+
+2. NORMAALI KÄYTTÖ
+   - tekee saman perustason analyysin
+   - käyttää myöhemmin OpenRouteria syvempään AI-arvioon
+   - tallentaa yritykset data/companies.json-tiedostoon
+
+Visuaalinen kuvakaappausanalyysi lisätään seuraavassa vaiheessa.
 """
 
 import re
@@ -34,18 +40,21 @@ HEADERS = {
 }
 
 
-def _build_overpass_query(location: str, industry: str) -> str:
+def _build_overpass_query(
+    location: str,
+    industry: str,
+) -> str:
     """
-    Rakentaa Overpass-kyselyn.
-
-    Kampaamoille käytetään hairdresser-tageja.
-    Muissa tapauksissa etsitään yleisiä yrityskohteita.
+    Rakentaa OpenStreetMap/Overpass-kyselyn.
     """
 
     location = location.strip()
     industry_lower = industry.lower().strip()
 
-    if "kampa" in industry_lower or "parturi" in industry_lower:
+    if (
+        "kampa" in industry_lower
+        or "parturi" in industry_lower
+    ):
         business_filter = """
 (
   nwr["shop"="hairdresser"](area.searchArea);
@@ -88,9 +97,17 @@ def _search_overpass(
         industry,
     )
 
-    print("  [OSM] Haetaan yrityksiä OpenStreetMapista...")
-    print(f"  [OSM] Sijainti: {location}")
-    print(f"  [OSM] Ala: {industry}")
+    print(
+        "  [OSM] Haetaan yrityksiä OpenStreetMapista..."
+    )
+
+    print(
+        f"  [OSM] Sijainti: {location}"
+    )
+
+    print(
+        f"  [OSM] Ala: {industry}"
+    )
 
     try:
         response = requests.post(
@@ -103,13 +120,15 @@ def _search_overpass(
         )
 
         print(
-            f"  [OSM] HTTP-status: {response.status_code}"
+            f"  [OSM] HTTP-status: "
+            f"{response.status_code}"
         )
 
         if response.status_code >= 400:
             print(
                 "  [OSM] Palvelin palautti virheen:"
             )
+
             print(
                 response.text[:3000]
             )
@@ -122,18 +141,24 @@ def _search_overpass(
         print(
             f"  [OSM] Haku epäonnistui: {e}"
         )
+
         return []
 
     except ValueError as e:
         print(
             f"  [OSM] JSON-vastausta ei voitu lukea: {e}"
         )
+
         return []
 
-    elements = data.get("elements", [])
+    elements = data.get(
+        "elements",
+        [],
+    )
 
     print(
-        f"  [OSM] Löydettyjä kohteita: {len(elements)}"
+        f"  [OSM] Löydettyjä kohteita: "
+        f"{len(elements)}"
     )
 
     companies = []
@@ -141,9 +166,16 @@ def _search_overpass(
     seen_names = set()
 
     for element in elements:
-        tags = element.get("tags", {})
 
-        name = tags.get("name", "").strip()
+        tags = element.get(
+            "tags",
+            {},
+        )
+
+        name = tags.get(
+            "name",
+            "",
+        ).strip()
 
         if not name:
             continue
@@ -153,7 +185,9 @@ def _search_overpass(
         if normalized_name in seen_names:
             continue
 
-        seen_names.add(normalized_name)
+        seen_names.add(
+            normalized_name
+        )
 
         website = (
             tags.get("website")
@@ -174,14 +208,31 @@ def _search_overpass(
         ).strip()
 
         address_parts = [
-            tags.get("addr:street", "").strip(),
-            tags.get("addr:housenumber", "").strip(),
-            tags.get("addr:postcode", "").strip(),
-            tags.get("addr:city", "").strip(),
+            tags.get(
+                "addr:street",
+                "",
+            ).strip(),
+
+            tags.get(
+                "addr:housenumber",
+                "",
+            ).strip(),
+
+            tags.get(
+                "addr:postcode",
+                "",
+            ).strip(),
+
+            tags.get(
+                "addr:city",
+                "",
+            ).strip(),
         ]
 
         address = " ".join(
-            part for part in address_parts if part
+            part
+            for part in address_parts
+            if part
         )
 
         companies.append(
@@ -191,8 +242,13 @@ def _search_overpass(
                 "phone": phone,
                 "email": email,
                 "address": address,
-                "osm_type": element.get("type", ""),
-                "osm_id": element.get("id"),
+                "osm_type": element.get(
+                    "type",
+                    "",
+                ),
+                "osm_id": element.get(
+                    "id"
+                ),
                 "tags": tags,
             }
         )
@@ -207,7 +263,8 @@ def _search_overpass(
     ]
 
     print(
-        f"  [OSM] Yrityksiä yhteensä: {len(companies)}"
+        f"  [OSM] Yrityksiä yhteensä: "
+        f"{len(companies)}"
     )
 
     print(
@@ -218,17 +275,26 @@ def _search_overpass(
     return companies
 
 
-def _normalize_url(url: str) -> str:
+def _normalize_url(
+    url: str,
+) -> str:
     """
-    Muuttaa yleisimmät OSM-URL-muodot analysoitaviksi.
+    Varmistaa, että URL sisältää protokollan.
     """
 
-    url = url.strip()
+    url = (
+        url
+        or ""
+    ).strip()
 
     if not url:
         return ""
 
-    if not re.match(r"^https?://", url, re.IGNORECASE):
+    if not re.match(
+        r"^https?://",
+        url,
+        re.IGNORECASE,
+    ):
         url = "https://" + url
 
     return url
@@ -238,44 +304,61 @@ def _analyze_candidates(
     candidates: list[dict],
 ) -> list[dict]:
     """
-    Hakee yritysten verkkosivut ja kerää tekniset havainnot.
+    Hakee yritysten verkkosivut ja analysoi ne.
     """
 
     analyzed = []
 
     for company in candidates:
 
-        name = company.get("name", "")
-        raw_url = company.get("url", "")
+        name = company.get(
+            "name",
+            "",
+        )
+
+        raw_url = company.get(
+            "url",
+            "",
+        )
 
         if not raw_url:
             print(
-                f"  [skip] Ei verkkosivua: {name}"
+                f"  [skip] Ei verkkosivua: "
+                f"{name}"
             )
+
             continue
 
-        url = _normalize_url(raw_url)
+        url = _normalize_url(
+            raw_url
+        )
 
         print(
-            f"  [site] Tarkistetaan: {name}"
+            f"  [site] Tarkistetaan: "
+            f"{name}"
         )
 
         print(
             f"  [site] URL: {url}"
         )
 
-        data = analyze_url(url)
+        data = analyze_url(
+            url
+        )
 
         if not data:
             print(
-                f"  [site] Sivua ei voitu hakea: {name}"
+                f"  [site] Sivua ei voitu hakea: "
+                f"{name}"
             )
+
             continue
 
         print(
             f"  [site] OK | "
             f"title='{data.get('title', '')}' | "
-            f"viewport={data.get('has_viewport_meta', False)}"
+            f"viewport="
+            f"{data.get('has_viewport_meta', False)}"
         )
 
         result = dict(company)
@@ -283,25 +366,38 @@ def _analyze_candidates(
         result["url"] = url
         result["site_analysis"] = data
 
-        analyzed.append(result)
+        analyzed.append(
+            result
+        )
 
     return analyzed
 
 
-def _score_without_ai(company: dict) -> dict:
+def _score_without_ai(
+    company: dict,
+) -> dict:
     """
-    Arvioi sivuston vanhentuneisuutta ilman AI:ta.
+    Arvioi verkkosivun laatua ilman AI:ta.
 
-    Mitä enemmän teknisiä puutteita löytyy,
-    sitä suurempi pisteytys.
+    Tämä ei yritä väittää, että kone tietää miltä
+    sivu näyttää ihmisen silmissä.
 
-    Tämä EI tarkoita vielä, että sivusto varmasti
-    tarvitsee uuden verkkosivun.
+    Se kerää objektiivisia signaaleja, joita voidaan
+    myöhemmin yhdistää visuaaliseen AI-arvioon.
+
+    Korkeampi score = enemmän havaittuja ongelmasignaaleja.
     """
 
-    data = company.get("site_analysis", {})
+    data = company.get(
+        "site_analysis",
+        {},
+    )
 
-    title = data.get("title", "").strip()
+    title = data.get(
+        "title",
+        "",
+    ).strip()
+
     meta_description = data.get(
         "meta_description",
         "",
@@ -310,6 +406,14 @@ def _score_without_ai(company: dict) -> dict:
     visible_text = data.get(
         "visible_text",
         "",
+    )
+
+    visible_text_length = int(
+        data.get(
+            "visible_text_length",
+            len(visible_text),
+        )
+        or 0
     )
 
     raw_html_length = int(
@@ -327,100 +431,394 @@ def _score_without_ai(company: dict) -> dict:
         )
     )
 
-    links = data.get(
-        "links",
-        [],
+    h1_count = int(
+        data.get(
+            "h1_count",
+            0,
+        )
+        or 0
+    )
+
+    link_count = int(
+        data.get(
+            "link_count",
+            0,
+        )
+        or 0
+    )
+
+    button_count = int(
+        data.get(
+            "button_count",
+            0,
+        )
+        or 0
+    )
+
+    form_count = int(
+        data.get(
+            "form_count",
+            0,
+        )
+        or 0
+    )
+
+    image_count = int(
+        data.get(
+            "image_count",
+            0,
+        )
+        or 0
+    )
+
+    images_without_alt_count = int(
+        data.get(
+            "images_without_alt_count",
+            0,
+        )
+        or 0
+    )
+
+    contact_signals = data.get(
+        "contact_signals",
+        {},
+    )
+
+    cta_signals = data.get(
+        "cta_signals",
+        {},
     )
 
     score = 0
+
     reasons = []
 
-    # 1. Meta description puuttuu.
+    positive_signals = []
+
+    # =========================================================
+    # TEKNINEN
+    # =========================================================
+
     if not meta_description:
         score += 1
+
         reasons.append(
             "meta description puuttuu"
         )
 
-    # 2. Mobiili-viewport puuttuu.
+    else:
+        positive_signals.append(
+            "meta description löytyy"
+        )
+
     if not has_viewport:
         score += 2
+
         reasons.append(
             "viewport-meta puuttuu"
         )
 
-    # 3. Title puuttuu tai on erittäin lyhyt.
+    else:
+        positive_signals.append(
+            "viewport-meta löytyy"
+        )
+
     if not title:
         score += 2
+
         reasons.append(
             "title puuttuu"
         )
+
     elif len(title) < 8:
         score += 1
+
         reasons.append(
             "erittäin lyhyt title"
         )
 
-    # 4. Sivulla on hyvin vähän näkyvää sisältöä.
-    if len(visible_text) < 800:
-        score += 2
-        reasons.append(
-            "hyvin vähän näkyvää sisältöä"
-        )
-    elif len(visible_text) < 1500:
-        score += 1
-        reasons.append(
-            "vähän näkyvää sisältöä"
+    else:
+        positive_signals.append(
+            "sivulla on title"
         )
 
-    # 5. Erittäin pieni HTML-dokumentti.
     if raw_html_length < 10000:
         score += 2
+
         reasons.append(
             "hyvin pieni HTML-sivu"
         )
+
     elif raw_html_length < 20000:
         score += 1
+
         reasons.append(
             "pieni HTML-sivu"
         )
 
-    # 6. Sivustolla on hyvin vähän linkkejä.
-    if len(links) < 3:
+    else:
+        positive_signals.append(
+            "HTML-rakenne ei ole poikkeuksellisen pieni"
+        )
+
+    # =========================================================
+    # SISÄLTÖ
+    # =========================================================
+
+    if visible_text_length < 500:
+        score += 3
+
+        reasons.append(
+            "erittäin vähän näkyvää sisältöä"
+        )
+
+    elif visible_text_length < 1000:
+        score += 2
+
+        reasons.append(
+            "vähän näkyvää sisältöä"
+        )
+
+    elif visible_text_length < 1800:
         score += 1
+
+        reasons.append(
+            "melko vähän näkyvää sisältöä"
+        )
+
+    else:
+        positive_signals.append(
+            "sivulla on kohtuullisesti sisältöä"
+        )
+
+    if h1_count == 0:
+        score += 2
+
+        reasons.append(
+            "H1-otsikko puuttuu"
+        )
+
+    elif h1_count > 1:
+        score += 1
+
+        reasons.append(
+            "sivulla on useita H1-otsikoita"
+        )
+
+    else:
+        positive_signals.append(
+            "yksi H1-otsikko löytyy"
+        )
+
+    # =========================================================
+    # KÄYTETTÄVYYS
+    # =========================================================
+
+    if link_count == 0:
+        score += 3
+
+        reasons.append(
+            "sivulla ei ole linkkejä"
+        )
+
+    elif link_count < 3:
+        score += 1
+
         reasons.append(
             "hyvin vähän linkkejä"
         )
 
-    # Luottamus pidetään tarkoituksella maltillisena.
+    else:
+        positive_signals.append(
+            "sivulla on navigoitavia linkkejä"
+        )
+
+    if button_count == 0:
+        reasons.append(
+            "selkeitä painikkeita ei löytynyt"
+        )
+
+    else:
+        positive_signals.append(
+            "painikkeita löytyy"
+        )
+
+    # =========================================================
+    # YHTEYSTIEDOT
+    # =========================================================
+
+    if not contact_signals.get(
+        "phone_found",
+        False,
+    ):
+        score += 1
+
+        reasons.append(
+            "puhelinnumeroa ei havaittu"
+        )
+
+    else:
+        positive_signals.append(
+            "puhelinnumero havaittu"
+        )
+
+    if not contact_signals.get(
+        "email_found",
+        False,
+    ):
+        score += 1
+
+        reasons.append(
+            "sähköpostiosoitetta ei havaittu"
+        )
+
+    else:
+        positive_signals.append(
+            "sähköpostiosoite havaittu"
+        )
+
+    if not contact_signals.get(
+        "address_signal",
+        False,
+    ):
+        score += 1
+
+        reasons.append(
+            "osoitetietoa ei havaittu"
+        )
+
+    else:
+        positive_signals.append(
+            "osoitetieto havaittu"
+        )
+
+    # =========================================================
+    # CTA / TOIMINTAKEHOTUS
+    # =========================================================
+
+    if cta_signals.get(
+        "has_cta",
+        False,
+    ):
+        positive_signals.append(
+            "toimintakehotus havaittu"
+        )
+
+    else:
+        score += 2
+
+        reasons.append(
+            "selkeää toimintakehotusta ei havaittu"
+        )
+
+    if contact_signals.get(
+        "booking_signal",
+        False,
+    ):
+        positive_signals.append(
+            "ajanvaraus havaittu"
+        )
+
+    # Ajanvaraussignaalia ei automaattisesti
+    # pidetä puutteena, koska kaikilla yrityksillä
+    # ei tarvitse olla ajanvarausta.
+    
+    # =========================================================
+    # KUVAT / SAAVUTETTAVUUS
+    # =========================================================
+
+    if image_count > 0:
+
+        if (
+            images_without_alt_count
+            == image_count
+        ):
+            score += 1
+
+            reasons.append(
+                "kuvien alt-tekstit puuttuvat"
+            )
+
+        elif images_without_alt_count > 0:
+            score += 1
+
+            reasons.append(
+                "osasta kuvista puuttuu alt-teksti"
+            )
+
+        else:
+            positive_signals.append(
+                "kuvien alt-tekstit löytyvät"
+            )
+
+    # =========================================================
+    # LOMAKKEET
+    # =========================================================
+
+    if form_count > 0:
+        positive_signals.append(
+            "yhteydenotto-/lomake-elementti löytyy"
+        )
+
+    # =========================================================
+    # KOKONAISTULOS
+    # =========================================================
+
+    # Karkea tekninen/käytettävyysluokitus.
+    #
+    # Tämä EI ole visuaalinen arvio.
+    # Visuaalinen arvio tulee myöhemmin kuvakaappauksen
+    # avulla.
+
+    if score >= 8:
+        priority = "high"
+
+    elif score >= 4:
+        priority = "medium"
+
+    else:
+        priority = "low"
+
+    # Luottamus kuvaa vain tämän teknisen
+    # analyysin signaalien määrää.
+    #
+    # Se ei tarkoita:
+    # "80 % todennäköisyys että sivu on huono."
+
     confidence = min(
         0.95,
         round(
-            0.25 + (score * 0.10),
+            0.25 + score * 0.07,
             2,
         ),
     )
 
-    # Vanhaksi ei merkitä yhden pienen puutteen perusteella.
-    old_site = score >= 3
-
     return {
-        "old_site": old_site,
         "score": score,
+        "priority": priority,
         "confidence": confidence,
         "reasons": reasons,
+        "positive_signals": positive_signals,
+        "old_site": score >= 4,
     }
 
 
-def _print_dry_run_result(company: dict) -> None:
+def _print_dry_run_result(
+    company: dict,
+) -> None:
     """
-    Tulostaa yhden yrityksen dry-run-analyysin.
+    Tulostaa yrityksen auditointituloksen.
     """
 
-    result = _score_without_ai(company)
+    result = _score_without_ai(
+        company
+    )
+
+    print()
 
     print(
-        f"  [dry-run] {company.get('name', '')}"
+        f"  [dry-run] "
+        f"{company.get('name', '')}"
     )
 
     print(
@@ -429,65 +827,119 @@ def _print_dry_run_result(company: dict) -> None:
     )
 
     print(
-        f"  [dry-run] Pisteet: "
+        f"  [dry-run] Ongelmasignaalit: "
         f"{result['score']}"
     )
 
     print(
-        f"  [dry-run] Mahdollisesti vanha: "
+        f"  [dry-run] Prioriteetti: "
+        f"{result['priority']}"
+    )
+
+    print(
+        f"  [dry-run] "
+        f"Mahdollisesti uudistettava: "
         f"{result['old_site']}"
     )
 
     print(
-        f"  [dry-run] Luottamus: "
+        f"  [dry-run] "
+        f"Teknisen analyysin luottamus: "
         f"{result['confidence']:.2f}"
     )
 
     if result["reasons"]:
+
         print(
-            "  [dry-run] Havainnot: "
-            + ", ".join(result["reasons"])
-        )
-    else:
-        print(
-            "  [dry-run] Havainnot: "
-            "ei merkittäviä teknisiä puutteita"
+            "  [dry-run] "
+            "Ongelmahavainnot:"
         )
 
+        for reason in result["reasons"]:
+            print(
+                f"    - {reason}"
+            )
 
-def _ai_analyze_company(company: dict) -> dict:
+    if result["positive_signals"]:
+
+        print(
+            "  [dry-run] "
+            "Positiiviset signaalit:"
+        )
+
+        for signal in result[
+            "positive_signals"
+        ]:
+            print(
+                f"    + {signal}"
+            )
+
+
+def _ai_analyze_company(
+    company: dict,
+) -> dict:
     """
-    AI-analyysi myöhempää tuotantokäyttöä varten.
+    AI:n syvempi analyysi normaalia käyttöä varten.
 
-    Tätä ei kutsuta dry-run-tilassa.
+    Tätä EI kutsuta dry-runissa.
+
+    Visuaalinen kuvakaappausanalyysi lisätään
+    tähän myöhemmin.
     """
 
-    from utils.claude_client import ask_claude_json
+    from utils.claude_client import (
+        ask_claude_json,
+    )
 
     data = company.get(
         "site_analysis",
         {},
     )
 
+    technical_score = (
+        _score_without_ai(
+            company
+        )
+    )
+
     system = """
-Olet verkkosivustojen auditointiin erikoistunut analyytikko.
+Olet verkkosivustojen auditointiin erikoistunut
+asiantuntija.
 
-Arvioi, vaikuttaako pienen yrityksen verkkosivusto
-aidosti vanhentuneelta ja voisiko yritykselle olla
-järkevää tarjota verkkosivuston uudistusta.
+Arvioi pienen yrityksen verkkosivustoa
+potentiaalisen uuden asiakkaan näkökulmasta.
 
-Älä päättele pelkästään siitä, että sivu ei ole modernin
-näköinen. Erota tekniset puutteet, sisällölliset puutteet
-ja aidot myyntimahdollisuudet.
+Arvioi erikseen:
+
+1. käytettävyys
+2. sisältö
+3. mobiilikäytön todennäköiset ongelmat
+4. tekniset ongelmat
+5. toimintakehotukset
+6. asiakaskokemus
+7. verkkosivuston uudistamisen potentiaali
+
+Älä arvioi visuaalista ulkoasua tämän datan perusteella
+liian varmasti, koska tässä vaiheessa et näe kuvakaappausta.
 
 Palauta AINOASTAAN validi JSON:
+
 {
+  "usability_score": 0,
+  "content_score": 0,
+  "mobile_score": 0,
+  "technical_score": 0,
+  "conversion_score": 0,
+  "overall_opportunity_score": 0,
   "old_site": true,
   "confidence": 0.0,
   "reasons": [],
-  "opportunity": "",
-  "priority": "low"
+  "recommended_improvements": []
 }
+
+Kaikki score-arvot välillä 0-10.
+Korkeampi score tarkoittaa suurempaa
+uudistustarvetta.
 """
 
     user_prompt = f"""
@@ -496,6 +948,15 @@ Yritys:
 
 URL:
 {company.get('url', '')}
+
+Perustason ongelmasignaalit:
+{technical_score.get('score', 0)}
+
+Perustason prioriteetti:
+{technical_score.get('priority', '')}
+
+Perustason havainnot:
+{technical_score.get('reasons', [])}
 
 Title:
 {data.get('title', '')}
@@ -506,21 +967,45 @@ Meta description:
 Viewport:
 {data.get('has_viewport_meta', False)}
 
-Näkyvä teksti:
-{data.get('visible_text', '')[:5000]}
+Näkyvän tekstin määrä:
+{data.get('visible_text_length', 0)}
 
-HTML-koko:
-{data.get('raw_html_length', 0)}
+H1-määrä:
+{data.get('h1_count', 0)}
 
 Linkkien määrä:
-{len(data.get('links', []))}
+{data.get('link_count', 0)}
+
+Painikkeiden määrä:
+{data.get('button_count', 0)}
+
+Lomakkeiden määrä:
+{data.get('form_count', 0)}
+
+Kuvien määrä:
+{data.get('image_count', 0)}
+
+Kuvia ilman alt-tekstiä:
+{data.get('images_without_alt_count', 0)}
+
+Yhteystietosignaalit:
+{data.get('contact_signals', {})}
+
+CTA-signaalit:
+{data.get('cta_signals', {})}
+
+Otsikot:
+{data.get('headings', {})}
+
+Näkyvä teksti:
+{data.get('visible_text', '')[:6000]}
 """
 
     return ask_claude_json(
         system,
         user_prompt,
         use_web_search=False,
-        max_tokens=1000,
+        max_tokens=1500,
     )
 
 
@@ -533,6 +1018,10 @@ def run_scout(
     """
     Scoutin päätoiminto.
     """
+
+    print(
+        f"[Scout] Etsitään {count} yritystä..."
+    )
 
     print()
     print("=== SCOUT ===")
@@ -547,15 +1036,19 @@ def run_scout(
     )
 
     if dry_run:
+
         print(
             "TILA: DRY-RUN"
         )
+
         print(
             "Tavilyä EI käytetä."
         )
+
         print(
             "OpenRouteria EI käytetä."
         )
+
         print(
             "Yrityksiä EI tallenneta."
         )
@@ -570,10 +1063,12 @@ def run_scout(
     )
 
     if not candidates:
+
         print(
             "[scout] OpenStreetMapista "
             "ei löytynyt yrityksiä."
         )
+
         return []
 
     analyzed = _analyze_candidates(
@@ -581,10 +1076,12 @@ def run_scout(
     )
 
     if not analyzed:
+
         print(
             "[scout] Yhtään toimivaa verkkosivua "
             "ei löytynyt."
         )
+
         return []
 
     results = []
@@ -595,29 +1092,45 @@ def run_scout(
             break
 
         if dry_run:
+
             _print_dry_run_result(
                 company
             )
-            results.append(company)
-            continue
 
-        try:
-            ai_result = _ai_analyze_company(
+            results.append(
                 company
             )
 
-        except Exception as e:
-            print(
-                f"  [AI] Analyysi epäonnistui "
-                f"({company.get('name', '')}): {e}"
-            )
             continue
 
-        company["ai_analysis"] = ai_result
+        try:
 
-        results.append(company)
+            ai_result = (
+                _ai_analyze_company(
+                    company
+                )
+            )
+
+        except Exception as e:
+
+            print(
+                f"  [AI] Analyysi epäonnistui "
+                f"({company.get('name', '')}): "
+                f"{e}"
+            )
+
+            continue
+
+        company["ai_analysis"] = (
+            ai_result
+        )
+
+        results.append(
+            company
+        )
 
     if dry_run:
+
         print()
         print(
             "=== DRY-RUN VALMIS ==="
@@ -642,7 +1155,10 @@ def run_scout(
 
         return results
 
-    # Normaali tila: tallenna vain AI:n analysoimat kohteet.
+    # =========================================================
+    # NORMAALI TILA
+    # =========================================================
+
     companies = load_companies()
 
     saved_count = 0
@@ -664,8 +1180,13 @@ def run_scout(
             {},
         )
 
-        company_record = dict(existing)
-        company_record.update(company)
+        company_record = dict(
+            existing
+        )
+
+        company_record.update(
+            company
+        )
 
         company_record["status"] = (
             existing.get(
@@ -674,11 +1195,15 @@ def run_scout(
             )
         )
 
-        companies[slug] = company_record
+        companies[slug] = (
+            company_record
+        )
 
         saved_count += 1
 
-    save_companies(companies)
+    save_companies(
+        companies
+    )
 
     print(
         f"[Scout] Tallennettuja yrityksiä: "
