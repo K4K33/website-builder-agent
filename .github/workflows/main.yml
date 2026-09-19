@@ -31,7 +31,7 @@ jobs:
         run: |
           python -m playwright install --with-deps chromium
 
-      - name: Run Scout dry-run
+      - name: Run Scout AI test
         working-directory: website-builder-agent/website-builder-agent
         run: |
-          python main.py scout --count 3 --industry "kampaamo" --location "Tampere" --dry-run
+          python main.py scout --count 1 --industry "kampaamo" --location "Tampere"
