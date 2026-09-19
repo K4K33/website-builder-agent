@@ -1,24 +1,19 @@
 """
 Website Builder Agent - Scout.
 
-Scoutin tehtävät:
-- löytää yrityksiä OpenStreetMapista
-- käsitellä Overpass-palvelinten tilapäiset virheet
+Scout:
+- hakee yrityksiä OpenStreetMapista
+- kokeilee useita Overpass-palvelimia
 - tarkistaa verkkosivut
 - ottaa desktop- ja mobiilikuvakaappaukset
-- analysoida yrityksiä teknisesti
-- käyttää OpenRouterin vision-AI:tä oikeassa ajossa
-- dry-runissa ei käytä OpenRouteria eikä Tavilyä
-
-Overpass:
-Jos yksi palvelin antaa timeoutin/504-virheen,
-Scout kokeilee seuraavaa palvelinta.
+- tekee teknisen analyysin
+- käyttää OpenRouterin vision-AI:ta oikeassa ajossa
+- ei käytä OpenRouteria dry-runissa
 """
 
 import json
 import os
 import time
-from typing import Any
 
 import requests
 
@@ -35,7 +30,7 @@ OVERPASS_SERVERS = [
 ]
 
 OVERPASS_TIMEOUT = 45
-OVERPASS_RETRIES_PER_SERVER = 2
+OVERPASS_RETRIES = 2
 
 OSM_HEADERS = {
     "User-Agent": (
@@ -49,15 +44,6 @@ def _build_overpass_query(
     industry: str,
     location: str,
 ) -> str:
-    """
-    Rakentaa Overpass-kyselyn.
-
-    Haetaan yrityksiä, joilla on:
-    - shop=hairdresser
-    - craft=hairdresser
-    - name
-    - website
-    """
 
     return f"""
 [out:json][timeout:40];
@@ -89,22 +75,17 @@ def _request_overpass(
     server: str,
     query: str,
 ) -> dict | None:
-    """
-    Yrittää yhtä Overpass-palvelinta.
-
-    Palauttaa JSON-datan onnistuneessa haussa.
-    Virheessä palauttaa None.
-    """
 
     for attempt in range(
         1,
-        OVERPASS_RETRIES_PER_SERVER + 1,
+        OVERPASS_RETRIES + 1,
     ):
+
         try:
+
             print(
                 f"  [OSM] Yritys "
-                f"{attempt}/"
-                f"{OVERPASS_RETRIES_PER_SERVER}:"
+                f"{attempt}/{OVERPASS_RETRIES}:"
             )
 
             response = requests.post(
@@ -120,15 +101,19 @@ def _request_overpass(
             )
 
             if response.status_code == 200:
+
                 try:
                     return response.json()
-                except ValueError as e:
+
+                except ValueError as error:
+
                     print(
                         "  [OSM] JSON-vastausta "
-                        f"ei voitu lukea: {e}"
+                        f"ei voitu lukea: {error}"
                     )
 
             else:
+
                 print(
                     "  [OSM] Palvelin palautti "
                     f"virheen: {response.status_code}"
@@ -140,22 +125,24 @@ def _request_overpass(
                     )
 
         except requests.Timeout:
+
             print(
                 "  [OSM] Palvelin aikakatkaisi."
             )
 
-        except requests.RequestException as e:
+        except requests.RequestException as error:
+
             print(
                 "  [OSM] Verkkovirhe: "
-                f"{e}"
+                f"{error}"
             )
 
-        if attempt < OVERPASS_RETRIES_PER_SERVER:
+        if attempt < OVERPASS_RETRIES:
+
             wait = 2 * attempt
 
             print(
-                f"  [OSM] Odotetaan "
-                f"{wait}s ennen uutta yritystä..."
+                f"  [OSM] Odotetaan {wait}s..."
             )
 
             time.sleep(wait)
@@ -167,11 +154,6 @@ def _fetch_osm_companies(
     industry: str,
     location: str,
 ) -> list[dict]:
-    """
-    Hakee yritykset Overpassista.
-
-    Kokeilee kaikkia palvelimia järjestyksessä.
-    """
 
     print(
         "  [OSM] Haetaan yrityksiä "
@@ -198,8 +180,7 @@ def _fetch_osm_companies(
 
         print(
             f"  [OSM] Palvelin "
-            f"{index}/"
-            f"{len(OVERPASS_SERVERS)}:"
+            f"{index}/{len(OVERPASS_SERVERS)}:"
         )
 
         print(
@@ -212,10 +193,12 @@ def _fetch_osm_companies(
         )
 
         if data is None:
+
             print(
                 "  [OSM] Palvelin epäonnistui. "
                 "Kokeillaan seuraavaa..."
             )
+
             continue
 
         elements = data.get(
@@ -229,7 +212,6 @@ def _fetch_osm_companies(
         )
 
         companies = []
-
         seen = set()
 
         for element in elements:
@@ -267,22 +249,10 @@ def _fetch_osm_companies(
             ).strip()
 
             address_parts = [
-                tags.get(
-                    "addr:street",
-                    "",
-                ),
-                tags.get(
-                    "addr:housenumber",
-                    "",
-                ),
-                tags.get(
-                    "addr:postcode",
-                    "",
-                ),
-                tags.get(
-                    "addr:city",
-                    "",
-                ),
+                tags.get("addr:street", ""),
+                tags.get("addr:housenumber", ""),
+                tags.get("addr:postcode", ""),
+                tags.get("addr:city", ""),
             ]
 
             address = " ".join(
@@ -308,12 +278,8 @@ def _fetch_osm_companies(
                     "phone": phone,
                     "email": email,
                     "address": address,
-                    "osm_type": element.get(
-                        "type"
-                    ),
-                    "osm_id": element.get(
-                        "id"
-                    ),
+                    "osm_type": element.get("type"),
+                    "osm_id": element.get("id"),
                     "tags": tags,
                 }
             )
@@ -331,8 +297,7 @@ def _fetch_osm_companies(
 
         print(
             "  [OSM] Yrityksiä, joilla "
-            f"verkkosivu: "
-            f"{len(with_websites)}"
+            f"verkkosivu: {len(with_websites)}"
         )
 
         return companies
@@ -348,6 +313,7 @@ def _fetch_osm_companies(
 def _normalize_url(
     url: str,
 ) -> str:
+
     if not url:
         return ""
 
@@ -367,15 +333,13 @@ def _normalize_url(
 def _technical_analysis(
     company: dict,
 ) -> dict:
-    """
-    Tekee verkkosivun teknisen analyysin.
-    """
 
     url = _normalize_url(
         company.get("website", "")
     )
 
     if not url:
+
         return {
             "success": False,
             "issues": [],
@@ -387,18 +351,20 @@ def _technical_analysis(
         }
 
     try:
+
         result = analyze_url(url)
 
-    except Exception as e:
+    except Exception as error:
+
         print(
-            f"  [site] Analyysi epäonnistui: "
-            f"{e}"
+            "  [site] Analyysi epäonnistui: "
+            f"{error}"
         )
 
         return {
             "success": False,
             "issues": [
-                f"verkkosivun analyysi epäonnistui: {e}"
+                f"verkkosivun analyysi epäonnistui: {error}"
             ],
             "positives": [],
             "problem_signals": 3,
@@ -414,12 +380,6 @@ def _ai_analyze_company(
     company: dict,
     technical: dict,
 ) -> dict:
-    """
-    Analysoi verkkosivun desktop- ja mobiilikuvat
-    vision-AI:lla.
-
-    Tätä kutsutaan vain oikeassa ajossa.
-    """
 
     screenshots = technical.get(
         "screenshots",
@@ -436,48 +396,41 @@ def _ai_analyze_company(
         "mobile"
     )
 
-    if desktop and os.path.exists(
-        desktop
-    ):
+    if desktop and os.path.exists(desktop):
         image_paths.append(desktop)
 
-    if mobile and os.path.exists(
-        mobile
-    ):
+    if mobile and os.path.exists(mobile):
         image_paths.append(mobile)
 
     system = """
 Olet verkkosivujen UX/UI-asiantuntija.
 
-Arvioi yrityksen verkkosivua oikean asiakkaan
-näkökulmasta. Älä arvioi vain teknistä laatua.
+Arvioi verkkosivua oikean asiakkaan näkökulmasta.
 
-Katso erityisesti:
+Arvioi:
 - ensimmäinen vaikutelma
 - visuaalinen modernius
 - selkeys
 - luettavuus
 - navigointi
 - tietojen löydettävyys
-- toimintakehotusten näkyvyys
+- CTA:n näkyvyys
 - luottamusta lisäävät elementit
 - mobiilikokemus
 - visuaalinen hierarkia
 - mahdollinen sekavuus
-- näyttääkö sivu oikeasti siltä, että se hyötyisi
-  ammattimaisesta uudistuksesta
+- todellinen tarve verkkosivun uudistamiselle
 
-Älä keksi ongelmia, joita kuvissa ei voi havaita.
+Älä keksi asioita, joita kuvissa ei voi havaita.
 
 Pelkkä tekninen puute ei yksin tarkoita,
-että koko verkkosivu pitäisi uusia.
+että koko sivu pitäisi uudistaa.
 
-Pisteytä arvot 0-10.
+Käytä pisteitä 0-10.
 
-overall_opportunity_score tarkoittaa sitä,
-kuinka suuri mahdollisuus ammattimaiselle
-verkkosivun uudistukselle on.
-Korkeampi arvo = suurempi uudistusmahdollisuus.
+overall_opportunity_score:
+0 = erittäin pieni uudistusmahdollisuus
+10 = erittäin suuri uudistusmahdollisuus.
 """
 
     prompt = f"""
@@ -494,11 +447,11 @@ Tekninen analyysi:
     indent=2,
 )[:12000]}
 
-Analysoi mukana olevat:
-1. desktop-kuvakaappaus
-2. mobiilikuva
+Mukana olevat kuvat ovat:
+- desktop-kuvakaappaus
+- mobiilikuva
 
-Palauta AINOASTAAN tämä JSON-rakenne:
+Palauta AINOASTAAN validi JSON:
 
 {{
   "visual_score": 0,
@@ -524,46 +477,48 @@ Palauta AINOASTAAN tämä JSON-rakenne:
         "verkkosivua visuaalisesti..."
     )
 
-    result = ask_claude_json(
+    return ask_claude_json(
         system=system,
         user_prompt=prompt,
         max_tokens=3000,
         image_paths=image_paths,
     )
 
-    return result
-
 
 def _save_company(
     company: dict,
     output_file: str,
 ) -> None:
-    """
-    Tallentaa yrityksen companies.json-tiedostoon.
-    """
 
-    os.makedirs(
-        os.path.dirname(output_file)
-        or ".",
-        exist_ok=True,
+    directory = os.path.dirname(
+        output_file
     )
+
+    if directory:
+        os.makedirs(
+            directory,
+            exist_ok=True,
+        )
 
     companies = []
 
     if os.path.exists(output_file):
 
         try:
+
             with open(
                 output_file,
                 "r",
                 encoding="utf-8",
             ) as file:
+
                 companies = json.load(file)
 
         except (
             json.JSONDecodeError,
             OSError,
         ):
+
             companies = []
 
     if not isinstance(
@@ -626,10 +581,12 @@ def _analyze_candidates(
         )
 
         if not website:
+
             print(
                 f"  [skip] Ei verkkosivua: "
                 f"{name}"
             )
+
             continue
 
         candidate["website"] = website
@@ -654,10 +611,12 @@ def _analyze_candidates(
             "success",
             False,
         ):
+
             print(
                 f"  [site] Analyysi epäonnistui: "
                 f"{name}"
             )
+
             continue
 
         print(
@@ -687,23 +646,20 @@ def _analyze_candidates(
                 "  [site] Kuvakaappaukset: OK"
             )
 
-            if screenshots.get(
-                "desktop"
-            ):
+            if screenshots.get("desktop"):
                 print(
                     "    desktop: "
                     f"{screenshots['desktop']}"
                 )
 
-            if screenshots.get(
-                "mobile"
-            ):
+            if screenshots.get("mobile"):
                 print(
                     "    mobile: "
                     f"{screenshots['mobile']}"
                 )
 
         else:
+
             print(
                 "  [site] Kuvakaappausten "
                 "ottaminen epäonnistui."
@@ -713,17 +669,13 @@ def _analyze_candidates(
             screenshots or {}
         )
 
-        # Tärkeää:
-        # Dry-runissa AI:tä ei kutsuta.
         if not dry_run:
 
             try:
 
-                ai_analysis = (
-                    _ai_analyze_company(
-                        candidate,
-                        technical,
-                    )
+                ai_analysis = _ai_analyze_company(
+                    candidate,
+                    technical,
                 )
 
                 candidate["ai_analysis"] = (
@@ -734,33 +686,39 @@ def _analyze_candidates(
                     "  [AI] Analyysi valmis."
                 )
 
-                print(
-                    "  [AI] "
-                    f"Opportunity score: "
-                    f"{ai_analysis.get(
-                        'overall_opportunity_score',
-                        'N/A'
-                    )}"
+                opportunity_score = (
+                    ai_analysis.get(
+                        "overall_opportunity_score",
+                        "N/A",
+                    )
+                )
+
+                redesign_recommended = (
+                    ai_analysis.get(
+                        "redesign_recommended",
+                        "N/A",
+                    )
                 )
 
                 print(
-                    "  [AI] "
-                    f"Redesign recommended: "
-                    f"{ai_analysis.get(
-                        'redesign_recommended',
-                        'N/A'
-                    )}"
+                    "  [AI] Opportunity score: "
+                    f"{opportunity_score}"
                 )
 
-            except Exception as e:
+                print(
+                    "  [AI] Redesign recommended: "
+                    f"{redesign_recommended}"
+                )
+
+            except Exception as error:
 
                 print(
                     "  [AI] Analyysi epäonnistui: "
-                    f"{e}"
+                    f"{error}"
                 )
 
                 candidate["ai_analysis"] = {
-                    "error": str(e)
+                    "error": str(error)
                 }
 
         analyzed.append(
@@ -776,9 +734,6 @@ def scout(
     location: str = "Tampere",
     dry_run: bool = False,
 ) -> list[dict]:
-    """
-    Scoutin päätoiminto.
-    """
 
     print(
         f"[Scout] Etsitään {count} yritystä..."
@@ -786,6 +741,7 @@ def scout(
 
     print()
     print("=== SCOUT ===")
+
     print(
         f"Hakukysely: "
         f"{industry} {location}"
@@ -845,12 +801,10 @@ def scout(
 
     if not dry_run:
 
-        output_file = (
-            getattr(
-                config,
-                "COMPANIES_FILE",
-                "data/companies.json",
-            )
+        output_file = getattr(
+            config,
+            "COMPANIES_FILE",
+            "data/companies.json",
         )
 
         for company in analyzed:
@@ -883,38 +837,23 @@ def scout(
             )
 
             print(
-                f"  [dry-run] "
-                f"Ongelmasignaalit: "
-                f"{technical.get(
-                    'problem_signals',
-                    0
-                )}"
+                "  [dry-run] Ongelmasignaalit: "
+                f"{technical.get('problem_signals', 0)}"
             )
 
             print(
-                f"  [dry-run] Prioriteetti: "
-                f"{technical.get(
-                    'priority',
-                    'unknown'
-                )}"
+                "  [dry-run] Prioriteetti: "
+                f"{technical.get('priority', 'unknown')}"
             )
 
             print(
-                f"  [dry-run] "
-                f"Mahdollisesti uudistettava: "
-                f"{technical.get(
-                    'redesignable',
-                    False
-                )}"
+                "  [dry-run] Mahdollisesti uudistettava: "
+                f"{technical.get('redesignable', False)}"
             )
 
             print(
-                f"  [dry-run] "
-                f"Teknisen analyysin luottamus: "
-                f"{technical.get(
-                    'confidence',
-                    0
-                )}"
+                "  [dry-run] Teknisen analyysin luottamus: "
+                f"{technical.get('confidence', 0)}"
             )
 
             screenshots = company.get(
@@ -928,17 +867,13 @@ def scout(
                     "  [dry-run] Kuvakaappaukset:"
                 )
 
-                if screenshots.get(
-                    "desktop"
-                ):
+                if screenshots.get("desktop"):
                     print(
                         "    - desktop: "
                         f"{screenshots['desktop']}"
                     )
 
-                if screenshots.get(
-                    "mobile"
-                ):
+                if screenshots.get("mobile"):
                     print(
                         "    - mobile: "
                         f"{screenshots['mobile']}"
@@ -952,8 +887,7 @@ def scout(
             if issues:
 
                 print(
-                    "  [dry-run] "
-                    "Ongelmahavainnot:"
+                    "  [dry-run] Ongelmahavainnot:"
                 )
 
                 for issue in issues:
@@ -969,8 +903,7 @@ def scout(
             if positives:
 
                 print(
-                    "  [dry-run] "
-                    "Positiiviset signaalit:"
+                    "  [dry-run] Positiiviset signaalit:"
                 )
 
                 for positive in positives:
