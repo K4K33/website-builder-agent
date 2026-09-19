@@ -12,6 +12,7 @@ jobs:
       TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -31,7 +32,10 @@ jobs:
         run: |
           python -m playwright install --with-deps chromium
 
-      - name: Run Scout AI test
+      - name: Run Website Builder Pipeline
         working-directory: website-builder-agent/website-builder-agent
         run: |
-          python main.py scout --count 1 --industry "kampaamo" --location "Tampere"
+          python main.py pipeline \
+            --count 1 \
+            --industry "kampaamo" \
+            --location "Tampere"
