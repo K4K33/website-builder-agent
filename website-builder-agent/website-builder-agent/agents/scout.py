@@ -373,10 +373,6 @@ def _technical_analysis(
             "confidence": 0.5,
         }
 
-    # analyze_url() voi joissain tilanteissa
-    # palauttaa None ilman exceptionia.
-    # Muutetaan se hallituksi epäonnistumiseksi,
-    # jotta yksi huono verkkosivu ei kaada Scoutia.
     if result is None:
 
         print(
@@ -396,7 +392,6 @@ def _technical_analysis(
             "confidence": 0.5,
         }
 
-    # Varmistetaan vielä, että tulos on sanakirja.
     if not isinstance(result, dict):
 
         print(
@@ -434,13 +429,8 @@ def _ai_analyze_company(
 
     image_paths = []
 
-    desktop = screenshots.get(
-        "desktop"
-    )
-
-    mobile = screenshots.get(
-        "mobile"
-    )
+    desktop = screenshots.get("desktop")
+    mobile = screenshots.get("mobile")
 
     if desktop and os.path.exists(desktop):
         image_paths.append(desktop)
@@ -477,6 +467,29 @@ Käytä pisteitä 0-10.
 overall_opportunity_score:
 0 = erittäin pieni uudistusmahdollisuus
 10 = erittäin suuri uudistusmahdollisuus.
+
+Pidä vastaukset lyhyinä.
+
+visual_problems:
+enintään 5 lyhyttä kohtaa.
+
+usability_problems:
+enintään 5 lyhyttä kohtaa.
+
+mobile_problems:
+enintään 5 lyhyttä kohtaa.
+
+conversion_problems:
+enintään 5 lyhyttä kohtaa.
+
+strengths:
+enintään 5 lyhyttä kohtaa.
+
+recommended_improvements:
+enintään 5 lyhyttä kohtaa.
+
+reasoning:
+enintään 2 lyhyttä virkettä.
 """
 
     prompt = f"""
@@ -491,13 +504,17 @@ Tekninen analyysi:
     technical,
     ensure_ascii=False,
     indent=2,
-)[:12000]}
+)[:8000]}
 
-Mukana olevat kuvat ovat:
+Mukana olevat kuvat:
 - desktop-kuvakaappaus
 - mobiilikuva
 
-Palauta AINOASTAAN validi JSON:
+Palauta AINOASTAAN validi JSON.
+
+Kaikkien tekstikenttien pitää olla lyhyitä.
+
+Käytä täsmälleen tätä rakennetta:
 
 {{
   "visual_score": 0,
@@ -526,7 +543,7 @@ Palauta AINOASTAAN validi JSON:
     return ask_claude_json(
         system=system,
         user_prompt=prompt,
-        max_tokens=3000,
+        max_tokens=5000,
         image_paths=image_paths,
     )
 
@@ -649,8 +666,6 @@ def _analyze_candidates(
             candidate
         )
 
-        # Lisäsuoja: technical ei saa koskaan
-        # olla None tai muu kuin dict.
         if not isinstance(technical, dict):
 
             print(
