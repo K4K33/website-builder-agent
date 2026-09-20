@@ -29,15 +29,15 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Check docs folder
+      - name: Check project files
         run: |
-          echo "=== DOCS ==="
-          find ./docs -maxdepth 3 -type f -print
+          echo "=== PROJECT ==="
+          find . -maxdepth 4 -type f | sort | head -200
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs
+          path: ./website-builder-agent/docs
 
       - name: Deploy to GitHub Pages
         id: deployment
