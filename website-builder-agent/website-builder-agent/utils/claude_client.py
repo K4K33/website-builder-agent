@@ -7,6 +7,7 @@ Tukee:
 - tavallista tekstianalyysiä
 - JSON-vastauksia
 - kuvien lähettämistä vision-mallille
+- keskitettyä resurssienhallintaa
 
 DRY-RUN ei kutsu tätä moduulia.
 """
@@ -20,10 +21,10 @@ import time
 import requests
 
 import config
+from utils import resource_manager
 
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-
 DEFAULT_MODEL = "openrouter/free"
 
 _client_headers = None
@@ -57,52 +58,32 @@ def _get_headers():
     return _client_headers
 
 
-def _image_to_data_url(
-    image_path: str,
-) -> str:
-
+def _image_to_data_url(image_path: str) -> str:
     if not image_path:
-        raise ValueError(
-            "Kuvapolku puuttuu."
-        )
+        raise ValueError("Kuvapolku puuttuu.")
 
     if not os.path.exists(image_path):
         raise FileNotFoundError(
             f"Kuvaa ei löytynyt: {image_path}"
         )
 
-    mime_type, _ = mimetypes.guess_type(
-        image_path
-    )
+    mime_type, _ = mimetypes.guess_type(image_path)
 
     if not mime_type:
         mime_type = "image/png"
 
-    with open(
-        image_path,
-        "rb",
-    ) as image_file:
-
+    with open(image_path, "rb") as image_file:
         encoded = base64.b64encode(
             image_file.read()
         ).decode("utf-8")
 
-    return (
-        f"data:{mime_type};base64,{encoded}"
-    )
+    return f"data:{mime_type};base64,{encoded}"
 
 
 def _build_user_content(
     user_prompt: str,
     image_paths: list[str] | None = None,
 ):
-    """
-    Rakentaa OpenRouterin multimodaalisen
-    user-viestin.
-
-    Jos kuvia ei ole, palautetaan tavallinen teksti.
-    """
-
     if not image_paths:
         return user_prompt
 
@@ -114,10 +95,7 @@ def _build_user_content(
     ]
 
     for image_path in image_paths:
-
-        data_url = _image_to_data_url(
-            image_path
-        )
+        data_url = _image_to_data_url(image_path)
 
         content.append(
             {
@@ -129,6 +107,37 @@ def _build_user_content(
         )
 
     return content
+
+
+def _extract_content(data: dict) -> str:
+    choices = data.get("choices", [])
+
+    if not choices:
+        raise RuntimeError(
+            "OpenRouter ei palauttanut choices-dataa: "
+            f"{data}"
+        )
+
+    message = choices[0].get("message", {})
+
+    content = message.get("content", "")
+
+    if isinstance(content, list):
+        text_parts = []
+
+        for part in content:
+            if isinstance(part, dict):
+                if part.get("type") == "text":
+                    text_parts.append(
+                        part.get("text", "")
+                    )
+
+        content = "\n".join(text_parts)
+
+    if content:
+        return str(content).strip()
+
+    return ""
 
 
 def ask_claude(
@@ -168,15 +177,33 @@ def ask_claude(
         "max_tokens": max_tokens,
     }
 
+    retry_token_limits = [
+        max_tokens,
+        max(max_tokens * 2, 4000),
+        max(max_tokens * 4, 8000),
+    ]
+
     last_error = None
 
-    for attempt in range(
-        1,
-        max_retries + 1,
-    ):
+    for attempt in range(1, max_retries + 1):
+
+        current_max_tokens = retry_token_limits[
+            min(
+                attempt - 1,
+                len(retry_token_limits) - 1,
+            )
+        ]
+
+        payload["max_tokens"] = current_max_tokens
+
+        if not resource_manager.reserve("openrouter"):
+            raise RuntimeError(
+                "OpenRouter-kutsu estettiin Resource "
+                "Managerin toimesta. Kuukausiresurssia "
+                "ei ole turvallisesti käytettävissä."
+            )
 
         try:
-
             response = requests.post(
                 OPENROUTER_URL,
                 headers=headers,
@@ -185,7 +212,6 @@ def ask_claude(
             )
 
             if response.status_code == 429:
-
                 last_error = response.text
 
                 wait = (
@@ -200,22 +226,18 @@ def ask_claude(
                 print(
                     f"  [OpenRouter] Rate limit, "
                     f"odotetaan {wait:.1f}s "
-                    f"(yritys {attempt}/"
-                    f"{max_retries})..."
+                    f"(yritys {attempt}/{max_retries})..."
                 )
 
                 time.sleep(wait)
-
                 continue
 
             if response.status_code >= 400:
-
                 last_error = response.text
 
                 print(
                     f"  [OpenRouter] API-virhe "
-                    f"(yritys {attempt}/"
-                    f"{max_retries}): "
+                    f"(yritys {attempt}/{max_retries}): "
                     f"{response.status_code} "
                     f"{response.text[:1000]}"
                 )
@@ -232,74 +254,56 @@ def ask_claude(
 
             data = response.json()
 
-            choices = data.get(
-                "choices",
-                [],
-            )
+            content = _extract_content(data)
 
-            if not choices:
+            if content:
+                return content
 
-                raise RuntimeError(
-                    "OpenRouter ei palauttanut "
-                    f"choices-dataa: {data}"
+            choices = data.get("choices", [])
+
+            finish_reason = ""
+
+            if choices:
+                finish_reason = choices[0].get(
+                    "finish_reason",
+                    "",
                 )
 
-            message = choices[0].get(
-                "message",
-                {},
-            )
-
-            content = message.get(
-                "content",
-                "",
-            )
-
-            if isinstance(
-                content,
-                list,
-            ):
-
-                text_parts = []
-
-                for part in content:
-
-                    if isinstance(
-                        part,
-                        dict,
-                    ):
-
-                        if part.get(
-                            "type"
-                        ) == "text":
-
-                            text_parts.append(
-                                part.get(
-                                    "text",
-                                    "",
-                                )
-                            )
-
-                content = "\n".join(
-                    text_parts
+            if finish_reason == "length":
+                last_error = (
+                    "OpenRouter saavutti token-rajan "
+                    "ilman varsinaista content-vastausta."
                 )
 
-            if not content:
+                if attempt < max_retries:
+                    next_limit = retry_token_limits[
+                        min(
+                            attempt,
+                            len(retry_token_limits) - 1,
+                        )
+                    ]
 
-                raise RuntimeError(
-                    "OpenRouter palautti "
-                    f"tyhjän vastauksen: {data}"
-                )
+                    print(
+                        f"  [OpenRouter] Vastaus katkaistiin "
+                        f"token-rajaan. Yritetään "
+                        f"suuremmalla budjetilla "
+                        f"({current_max_tokens} -> "
+                        f"{next_limit})..."
+                    )
 
-            return content.strip()
+                    continue
+
+            raise RuntimeError(
+                "OpenRouter palautti tyhjän vastauksen: "
+                f"{data}"
+            )
 
         except requests.RequestException as e:
-
             last_error = e
 
             print(
                 f"  [OpenRouter] Verkkovirhe "
-                f"(yritys {attempt}/"
-                f"{max_retries}): {e}"
+                f"(yritys {attempt}/{max_retries}): {e}"
             )
 
             time.sleep(
@@ -311,14 +315,11 @@ def ask_claude(
             )
 
         except ValueError as e:
-
             last_error = e
 
             print(
-                f"  [OpenRouter] JSON-vastausta "
-                f"ei voitu lukea "
-                f"(yritys {attempt}/"
-                f"{max_retries}): {e}"
+                f"  [OpenRouter] JSON-vastausta ei voitu "
+                f"lukea (yritys {attempt}/{max_retries}): {e}"
             )
 
             time.sleep(
@@ -364,7 +365,6 @@ def ask_claude_json(
     cleaned = raw.strip()
 
     if cleaned.startswith("```"):
-
         lines = cleaned.splitlines()
 
         if lines and lines[0].strip().lower() in (
@@ -373,27 +373,17 @@ def ask_claude_json(
         ):
             lines = lines[1:]
 
-        if (
-            lines
-            and lines[-1].strip() == "```"
-        ):
+        if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
 
-        cleaned = "\n".join(
-            lines
-        ).strip()
+        cleaned = "\n".join(lines).strip()
 
     try:
-
-        return json.loads(
-            cleaned
-        )
+        return json.loads(cleaned)
 
     except json.JSONDecodeError as e:
-
         raise RuntimeError(
-            "OpenRouter ei palauttanut "
-            "validia JSONia: "
+            "OpenRouter ei palauttanut validia JSONia: "
             f"{e}\n"
             "---Raaka vastaus---\n"
             f"{raw[:3000]}"

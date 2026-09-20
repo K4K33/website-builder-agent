@@ -1,1 +1,102 @@
-{}
+{
+  "test-company": {
+    "name": "Test Company",
+    "url": "https://example.com",
+    "status": "qa_passed",
+    "research": {
+      "company_facts": {
+        "name": "Test Company",
+        "industry": "",
+        "services": [],
+        "location": "",
+        "contact": {
+          "phone": "",
+          "email": "",
+          "address": ""
+        },
+        "opening_hours": "",
+        "tagline_or_value_prop": "This domain is for use in documentation examples without needing permission. Avoid use in operations.",
+        "target_audience": "Käyttäjät, jotka laativat dokumentaatioesimerkkejä"
+      },
+      "current_site_weaknesses": [
+        "Sivu on vain esimerkkialueen placeholder-sivu eikä yrityksen markkinointisivusto",
+        "Palveluita, tuotteita, toimialaa, sijaintia tai muita yritysinfoa ei esitetä",
+        "Yhteydenotto- tai toimintaympäristötietoja ei ole",
+        "Meta-kuvausta ei ole",
+        "Sivulla ei ole selkeää call-to-actionia"
+      ],
+      "design_inspiration": [
+        "Odoo 19.0 documentation - valmistautuminen ja järjestelmän rakenne",
+        "Elest.io - käyttäjille ohjeita ja käyttöliittymistä",
+        "Network Solutions - kokonaispalveluiden yhdistelmä ja selkeä navigointi",
+        "GoDaddy - brändimuoto ja kasvuhankkeet",
+        "Example Domain - minimistiili ja käytännöllisyys"
+      ],
+      "design_recommendations": {
+        "color_palette": [
+          "#1A73E8",
+          "#34A853",
+          "#F39C12",
+          "#2C3E50",
+          "#ECF0F1"
+        ],
+        "font_style": "Inter (sans-serif)",
+        "tone": "Ammattimainen, läpinäkyvä ja keskittynyt tehokkuuteen",
+        "key_sections": [
+          "Hero-osa mitäkertaus ja suora CTA",
+          "Palvelut ja toimitusmuodot",
+          "Yhteiskunta ja taustaa",
+          "Yksityiskohdat ja tapahtumat",
+          "Hinnastavat ja vaihtoehdot",
+          "Yhteystiedot ja kontaktit"
+        ]
+      },
+      "reference_sources": [
+        {
+          "title": "Domain names — Odoo 19.0 documentation",
+          "url": "https://www.odoo.com/documentation/19.0/applications/websites/website/configuration/domain_names.html"
+        },
+        {
+          "title": "Domain Management | DNS Configuration | Elestio",
+          "url": "https://elest.io/domains"
+        },
+        {
+          "title": "Network Solutions: Website Builder, Hosting, & Domain Names",
+          "url": "https://www.networksolutions.com"
+        },
+        {
+          "title": "Example Domain",
+          "url": "https://example.com"
+        },
+        {
+          "title": "Domain Name Search | Find & Register an Available Domain with GoDaddy",
+          "url": "https://www.godaddy.com/domains"
+        }
+      ],
+      "reference_search_query": "domain documentation service website"
+    },
+    "current_site_raw": {
+      "has_viewport_meta": true,
+      "raw_html_length": 559,
+      "status_code": 200
+    },
+    "slug": "test-company",
+    "build": {
+      "output_path": "output/test-company/index.html",
+      "version": 4
+    },
+    "qa": {
+      "automated": {
+        "has_viewport_meta": true,
+        "automated_issues": [],
+        "automated_pass": true
+      },
+      "content_review": {
+        "content_ok": true,
+        "issues": [],
+        "notes": "Sivu käyttää vain vahvistettuja yritysten faktoja (nimi, tagline, kohderyhteensopivuus) ilman keksittyjä tietoja. Tagline on säilytetty alkuperäisenäan ilman muutosta. Rakakne on selkeä, responsiivinen ja HTML on kunnollinen. Sivu on lyhyt, mutta se vastaa tutkimustietojen määrään. Ei ole CTA-ongelmaa, sillä sivu ei väitä yhteydenottoa. PASS."
+      },
+      "overall_pass": true
+    }
+  }
+}

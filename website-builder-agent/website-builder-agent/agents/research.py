@@ -20,6 +20,7 @@ import os
 
 import requests
 
+from utils import resource_manager
 from utils.claude_client import ask_claude_json
 from utils.fetch import analyze_url
 from utils.state import (
@@ -203,6 +204,12 @@ def _search_tavily(
         "include_raw_content": False,
         "include_images": False,
     }
+
+    if not resource_manager.reserve("tavily"):
+        raise RuntimeError(
+            "Tavily-kutsu estettiin Resource Managerin toimesta. "
+            "Kuukausiresurssia ei ole turvallisesti käytettävissä."
+        )
 
     try:
 

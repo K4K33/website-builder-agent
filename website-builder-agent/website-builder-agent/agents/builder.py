@@ -1,20 +1,15 @@
 """
 Website Builder -agentti.
 
-Tehtävä:
-1. Ottaa Research-agentin tuottaman design briefin.
-2. Generoi oikean, toimivan ja responsiivisen yhden sivun verkkosivun.
-3. Tallentaa sivun output/<slug>/index.html.
-4. Tukee luonnollisen kielen revise-kutsuja.
-5. Tukee preview-toimintoa.
+Rakentaa research-datan perusteella yhden sivun verkkosivun.
 
-Tärkeää:
-- Yritykselle ei keksitä faktoja.
-- Puuttuvia yhteystietoja ei korvata valheellisilla tiedoilla.
-- Puuttuvista tiedoista ei jätetä näkyviä placeholder-tekstejä.
+Tärkeä periaate:
+AI ei saa keksiä yrityksen faktoja.
+Faktat validoidaan myös ohjelmallisesti ennen tallennusta.
 """
 
 import os
+import re
 import webbrowser
 
 from utils.claude_client import ask_claude
@@ -26,279 +21,457 @@ from utils.state import (
 import config
 
 
-BUILD_SYSTEM_PROMPT = """Olet kokenut web-suunnittelija ja frontend-kehittäjä.
+BUILD_SYSTEM_PROMPT = """
+Olet kokenut frontend-kehittäjä.
 
-Rakennat yritykselle UUDEN, AMMATTIMAISEN, modernin ja responsiivisen
-yhden sivun verkkosivun HTML/CSS/JS:llä.
+Rakennat tutkimusdatan perusteella ammattimaisen,
+responsiivisen yhden sivun verkkosivun.
 
-EHDOTTOMAT SÄÄNNÖT:
+TÄRKEIN SÄÄNTÖ:
 
-1. SISÄLTÖ
+ÄLÄ KEKSI YHTÄÄN YRITYKSEN FAKTAA.
 
-- ÄLÄ kopioi tekstiä, kuvatekstejä, logoja tai koodia miltään
-  toiselta oikealta yritykseltä tai referenssisivulta.
-- Kaikki tekstit kirjoitetaan itse kohdeyrityksen omien
-  company_facts-tietojen pohjalta.
-- Älä keksi yritykselle palveluita, tuotteita, ominaisuuksia,
-  palkintoja, asiakaslupauksia tai muita faktoja.
-- Käytä vain annettuja ja todennettuja yhteystietoja.
+Sallittuja yrityksen faktoja ovat VAIN käyttäjän
+antamassa VERIFIED FACTS -osiossa olevat tiedot.
 
-ERITTÄIN TÄRKEÄÄ YHTEYSTIEDOISTA:
+Älä keksi:
+- palveluita
+- tuotteita
+- hintoja
+- toimialaa
+- sijaintia
+- osoitetta
+- puhelinnumeroa
+- sähköpostia
+- aukioloaikoja
+- asiakkaita
+- referenssejä
+- kokemusta
+- henkilöstömäärää
+- perustamisvuotta
+- sertifikaatteja
+- palkintoja
+- yrityksen toimintaa kuvaavia väitteitä.
 
-- Jos puhelinnumeroa ei ole annettu, ÄLÄ keksi sitä.
-- Jos sähköpostia ei ole annettu, ÄLÄ keksi sitä.
-- Jos osoitetta ei ole annettu, ÄLÄ keksi sitä.
-- ÄLÄ kirjoita sivulle placeholder-tekstejä kuten:
-  "[Puhelinnumero tähän]"
-  "[Sähköposti tähän]"
-  "[Osoite tähän]"
-  "[Lisää tähän]"
-  "Täytä tähän"
-  tai vastaavia.
+ÄLÄ päättele yrityksen toimintaa:
+- nimestä
+- domainista
+- target audience -kentästä
+- design-suosituksista
+- hakutuloksista
+- yleisestä tiedosta.
 
-Jos yhteystieto puuttuu:
-- jätä kyseinen tieto pois
-- voit silti tehdä yhteydenotto-osion
-- voit käyttää yleistä CTA-tekstiä kuten
-  "Ota yhteyttä"
-- älä kuitenkaan keksi puuttuvaa yhteystietoa.
+TARGET AUDIENCE EI OLE YRITYKSEN PALVELU.
 
-2. REFERENSSIT
+DESIGN-RECOMMENDATIONS EIVÄT OLE YRITYKSEN FAKTOJA.
 
-- design_inspiration sisältää vain yleisiä suunnitteluperiaatteita.
-- Älä kopioi referenssien tekstejä, kuvia, logoja tai koodia.
-- Älä käytä referenssiyritysten nimiä uudella sivulla.
-- Älä yritä jäljitellä yhtä tiettyä olemassa olevaa sivustoa.
+Jos tieto puuttuu, jätä se pois.
 
-3. VISUAALINEN TOTEUTUS
+Älä täytä tyhjää kohtaa markkinointitekstillä.
 
-- Käytä annettua color_palette-värimaailmaa.
-- Käytä annettua font_style-tyyliä.
-- Käytä annettua tone-sävyä.
-- Tee sivusta visuaalisesti viimeistelty ja moderni.
-- Käytä CSS-pohjaisia elementtejä, gradientteja ja inline SVG-kuvakkeita.
-- Älä linkitä ulkoisiin kuvatiedostoihin joita ei ole olemassa.
-- Älä käytä ulkopuolisia stock-kuvia.
+Jos yrityksestä on hyvin vähän tietoa, tee tarkoituksella
+yksinkertainen mutta visuaalisesti hyvä sivu.
 
-4. RESPONSIVUUS
+TAGLINE:
 
-- Sivun pitää toimia mobiilissa, tabletissa ja desktopissa.
-- Lisää:
+Jos VERIFIED FACTS sisältää vahvistetun taglinen,
+saat käyttää sitä.
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+Älä muuta taglinen merkitystä uudeksi yrityksen
+toimintaa kuvaavaksi väitteeksi.
 
-- Navigaation pitää toimia mobiilissa.
-- Tekstin pitää pysyä luettavana pienellä näytöllä.
-- Painikkeiden pitää olla helposti klikattavia mobiilissa.
+Jos tagline puuttuu, käytä yrityksen nimeä otsikkona
+ja neutraalia tekstiä, joka kertoo vain että saatavilla
+oleva tutkimustieto on rajallinen.
 
-5. RAKENNE
+META DESCRIPTION:
 
-Sisällytä tilanteeseen sopivassa muodossa:
+Sen pitää perustua vain vahvistettuihin tietoihin.
 
-- navigaatio
-- Hero
-- yrityksen arvolupaus
-- palvelut/tuotteet
-- miksi valita tämä yritys
-- mahdollinen prosessi tai toimintatapa
-- yhteydenotto / CTA
-- yhteystiedot vain jos tiedot ovat oikeasti saatavilla
+Älä kirjoita keksittyä markkinointikuvausta.
+
+CTA:
+
+Älä käytä "Ota yhteyttä" -painiketta ilman vahvistettua
+yhteystietoa.
+
+Älä tee kuvitteellista sähköpostia, puhelinnumeroa tai
+yhteydenottolomaketta.
+
+YHTEYSTIEDOT:
+
+Näytä vain VERIFIED FACTS -osiossa olevat yhteystiedot.
+
+DESIGN:
+
+Noudata design-suosituksia vain visuaalisesti.
+
+Väripaletti voidaan ottaa design-suosituksista.
+
+Fonttisuositusta voidaan käyttää, mutta älä lataa
+ulkoisia fontteja tai muita ulkoisia resursseja.
+
+Älä lisää ulkoisia JavaScript-kirjastoja.
+
+Älä lisää ulkoisia kuvia.
+
+TEKNIIKKA:
+
+Kaikki yhdessä index.html-tiedostossa.
+
+Käytä:
+- <!DOCTYPE html>
+- <html lang="fi">
+- <head>
+- <meta charset>
+- viewport
+- title
+- meta description
+- style
+- header
+- nav
+- main
 - footer
+- script vain tarvittaessa.
 
-Käytä semanttista HTML5:tä.
+Sivun pitää olla responsiivinen.
 
-6. ACCESSIBILITY
+Navigaation ankkurien pitää osoittaa oikeasti olemassa
+oleviin osioihin.
 
-- Käytä semanttisia HTML-elementtejä.
-- Lisää aria-label tarvittaessa.
-- Inline SVG-kuvakkeille sopivat accessibility-attribuutit.
-- Varmista riittävä kontrasti.
-- Älä käytä pelkästään väriä informaation välittämiseen.
+ACCESSIBILITY:
 
-7. TEKNINEN TOTEUTUS
+Käytä semanttista HTML:ää.
+Varmista riittävä kontrasti.
+Käytä selkeitä otsikkotasoja.
+Älä käytä pelkkiä koriste-elementtejä sisältönä.
 
-- Koko sivu pitää olla yhdessä index.html-tiedostossa.
-- CSS tulee <style>-tagiin.
-- JavaScript tulee <script>-tagiin.
-- Sivun pitää toimia avaamalla index.html suoraan selaimessa.
-- Älä tarvitse build systemiä, npm:ää tai ulkoisia riippuvuuksia.
+KIELI:
 
-8. VALMIIN SIVUN LAATU
+Kirjoita luonnollista suomea.
 
-Valmiin sivun pitää näyttää asiakkaalle tarkoitetulta oikealta
-verkkosivulta, ei AI-luonnokselta.
+Jos vahvistettu tagline on englanniksi, sitä ei tarvitse
+kääntää eikä sen merkitystä saa muuttaa.
 
-Älä jätä sivulle:
-- lorem ipsumia
-- placeholder-tekstiä
-- "Lisää tähän"
-- "Täytä tähän"
-- "Your company"
-- "Company name here"
-- "example.com"
-- keksittyjä yhteystietoja
-- keksittyjä yrityksen faktoja.
+PALAUTUS:
 
-Jos jokin tieto puuttuu, suunnittele osio niin, että se toimii
-ilman kyseistä tietoa.
+Palauta VAIN koko HTML-tiedosto.
 
-Palauta VASTAUKSENA AINOASTAAN valmis HTML-tiedoston koko sisältö,
-alkaen '<!DOCTYPE html>'-rivistä.
-
+Älä käytä markdown-koodilohkoa.
 Älä lisää selityksiä.
-Älä lisää markdown-koodilohkoa.
 """
 
 
-REVISE_SYSTEM_PROMPT = """Olet kokenut web-suunnittelija ja frontend-kehittäjä.
+REVISE_SYSTEM_PROMPT = """
+Olet kokenut frontend-kehittäjä.
 
-Saat:
-1. olemassa olevan index.html-tiedoston
-2. käyttäjän muutospyynnön.
+Saat nykyisen HTML-sivun, tutkimusdatan ja muutospyynnön.
 
-Tee pyydetyt muutokset.
+Palauta koko päivitetty HTML.
 
-SÄÄNNÖT:
+TÄRKEIN SÄÄNTÖ:
 
-- Palauta KOKO päivitetty HTML-tiedosto.
-- Älä palauta diffiä.
-- Säilytä kaikki muu ennallaan, ellei muutospyyntö koske sitä.
-- Älä poista toimivaa responsiivisuutta.
-- Älä keksi uusia yrityksen faktoja.
-- Älä keksi yhteystietoja.
-- Älä lisää ulkoisia kuvia tai riippuvuuksia.
-- Pidä HTML/CSS/JS yhdessä tiedostossa.
-- Noudata accessibility- ja responsiivisuusperiaatteita.
-- Älä jätä sivulle placeholder-tekstejä.
-- Älä lisää tekstejä kuten "[Lisää tähän]",
-  "[Puhelinnumero tähän]" tai vastaavia.
-- Jos tieto puuttuu, jätä se mieluummin pois kuin keksi se.
+ÄLÄ KEKSI uusia yrityksen faktoja.
 
-Palauta VASTAUKSENA AINOASTAAN koko HTML-tiedoston sisältö.
+Sallittuja yrityksen faktoja ovat VAIN VERIFIED FACTS
+-osiossa annetut tiedot.
 
-Älä lisää selityksiä.
-Älä lisää markdown-koodilohkoa.
+Älä lisää ilman vahvistettua tietoa:
+- palveluita
+- tuotteita
+- hintoja
+- sijaintia
+- osoitetta
+- puhelinta
+- sähköpostia
+- asiakkaita
+- kokemusta
+- perustamisvuotta
+- palkintoja
+- sertifikaatteja
+- markkinointiväitteitä.
+
+TARGET AUDIENCE ei ole palvelu.
+
+DESIGN-RECOMMENDATIONS eivät ole yrityksen faktoja.
+
+Jos tieto puuttuu, jätä se pois.
+
+Säilytä:
+- semanttinen HTML
+- nav
+- main
+- footer
+- title
+- meta description
+- responsiivisuus
+- accessibility
+- vahvistetut faktat.
+
+Älä lisää ulkoisia fontteja, kuvia tai JavaScript-kirjastoja.
+
+Palauta VAIN koko HTML.
 """
 
 
-def _output_dir(
-    slug: str,
-) -> str:
-
-    return os.path.join(
-        config.OUTPUT_DIR,
-        slug,
-    )
+def _output_dir(slug: str) -> str:
+    return os.path.join(config.OUTPUT_DIR, slug)
 
 
-def _output_path(
-    slug: str,
-) -> str:
-
-    return os.path.join(
-        _output_dir(slug),
-        "index.html",
-    )
+def _output_path(slug: str) -> str:
+    return os.path.join(_output_dir(slug), "index.html")
 
 
-def _clean_html(
-    html: str,
-) -> str:
+def _clean_html(html: str) -> str:
+    cleaned = (html or "").strip()
 
-    cleaned = (
-        html or ""
-    ).strip()
-
-    if cleaned.startswith(
-        "```"
-    ):
-
+    if cleaned.startswith("```"):
         lines = cleaned.splitlines()
 
         if lines:
             lines = lines[1:]
 
-        if (
-            lines
-            and lines[-1].strip()
-            == "```"
-        ):
+        if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
 
-        cleaned = (
-            "\n".join(lines)
-            .strip()
-        )
+        cleaned = "\n".join(lines).strip()
 
     return cleaned
 
 
-def _write_html(
-    slug: str,
-    html: str,
-) -> str:
-
+def _write_html(slug: str, html: str) -> str:
     if not html:
         raise RuntimeError(
-            "AI ei palauttanut "
-            "HTML-sisältöä."
+            "AI ei palauttanut HTML-sisältöä."
         )
 
-    cleaned = _clean_html(
-        html
-    )
+    cleaned = _clean_html(html)
 
-    if not cleaned.lower().startswith(
-        "<!doctype html"
-    ):
+    if not cleaned.lower().startswith("<!doctype html"):
         raise RuntimeError(
-            "AI:n palauttama sisältö "
-            "ei näytä validilta "
-            "kokonaiselta HTML-tiedostolta."
+            "AI:n palauttama sisältö ei ala <!DOCTYPE html>."
         )
 
-    out_dir = _output_dir(
-        slug
-    )
+    required = [
+        "<html",
+        "<head",
+        "</head>",
+        "<body",
+        "</body>",
+        "</html>",
+        "<nav",
+        "</nav>",
+        "<main",
+        "</main>",
+        "<footer",
+        "</footer>",
+        "<title",
+        'name="description"',
+    ]
+
+    lowered = cleaned.lower()
+
+    missing = [
+        item
+        for item in required
+        if item.lower() not in lowered
+    ]
+
+    if missing:
+        raise RuntimeError(
+            "AI:n HTML:stä puuttuu pakollisia rakenteita: "
+            + ", ".join(missing)
+        )
+
+    # Builderin ei pidä käyttää ulkoisia resursseja.
+    external_resource_patterns = [
+        r'<link[^>]+href=["\']https?://',
+        r'<script[^>]+src=["\']https?://',
+        r'<img[^>]+src=["\']https?://',
+    ]
+
+    for pattern in external_resource_patterns:
+        if re.search(pattern, cleaned, re.IGNORECASE):
+            raise RuntimeError(
+                "AI:n HTML sisältää ulkoisen resurssin. "
+                "Sivun pitää olla täysin itsenäinen."
+            )
+
+    out_dir = _output_dir(slug)
 
     os.makedirs(
         out_dir,
         exist_ok=True,
     )
 
-    path = _output_path(
-        slug
-    )
+    path = _output_path(slug)
 
     with open(
         path,
         "w",
         encoding="utf-8",
     ) as file:
-
-        file.write(
-            cleaned
-        )
+        file.write(cleaned)
 
     return path
 
 
-def _resolve_company(
-    slug_or_name: str,
-) -> tuple[str, dict]:
-
-    slug, company = get_company(
-        slug_or_name
-    )
+def _resolve_company(slug_or_name: str) -> tuple[str, dict]:
+    slug, company = get_company(slug_or_name)
 
     if company is None:
         raise RuntimeError(
-            f"Yritystä ei löytynyt: "
-            f"{slug_or_name}"
+            f"Yritystä ei löytynyt: {slug_or_name}"
         )
 
     return slug, company
+
+
+def _safe_fact_summary(company_facts: dict) -> str:
+    allowed = {
+        "name": company_facts.get("name", ""),
+        "industry": company_facts.get("industry", ""),
+        "services": company_facts.get("services", []),
+        "location": company_facts.get("location", ""),
+        "phone": company_facts.get("contact_phone", ""),
+        "email": company_facts.get("contact_email", ""),
+        "address": company_facts.get("contact_address", ""),
+        "opening_hours": company_facts.get("opening_hours", {}),
+        "tagline": company_facts.get("tagline", ""),
+        "target_audience": company_facts.get(
+            "target_audience",
+            "",
+        ),
+    }
+
+    return repr(allowed)
+
+
+def _validate_generated_content(
+    html: str,
+    company_facts: dict,
+) -> None:
+    """
+    Paikallinen turvatarkistus.
+
+    Tämä ei käytä AI:ta eikä API-kutsuja.
+    """
+
+    text = re.sub(
+        r"<[^>]+>",
+        " ",
+        html,
+    )
+
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    ).strip().lower()
+
+    services = company_facts.get(
+        "services",
+        [],
+    )
+
+    phone = company_facts.get(
+        "contact_phone",
+        "",
+    )
+
+    email = company_facts.get(
+        "contact_email",
+        "",
+    )
+
+    address = company_facts.get(
+        "contact_address",
+        "",
+    )
+
+    location = company_facts.get(
+        "location",
+        "",
+    )
+
+    industry = company_facts.get(
+        "industry",
+        "",
+    )
+
+    # Jos vahvistettuja palveluita ei ole,
+    # estä tyypilliset keksityt palvelulistat.
+    if not services:
+        forbidden_service_terms = [
+            "palvelumme",
+            "palveluihimme",
+            "tarjoamme",
+            "palveluvalikoima",
+            "asiantuntijapalvelut",
+            "web-suunnittelu",
+            "verkkosivujen suunnittelu",
+        ]
+
+        found = [
+            term
+            for term in forbidden_service_terms
+            if term in text
+        ]
+
+        if found:
+            raise RuntimeError(
+                "Builder näyttää keksineen palvelusisältöä "
+                "vaikka researchissä ei ole vahvistettuja "
+                f"palveluita: {', '.join(found)}"
+            )
+
+    # Älä salli yhteydenottokehotusta ilman yhteystietoa.
+    if not any([phone, email, address]):
+        forbidden_contact_terms = [
+            "ota yhteyttä",
+            "ota meihin yhteyttä",
+            "contact us",
+            "soita meille",
+            "lähetä viesti",
+            "varaa aika",
+        ]
+
+        found = [
+            term
+            for term in forbidden_contact_terms
+            if term in text
+        ]
+
+        if found:
+            raise RuntimeError(
+                "Builder loi yhteydenottokehotuksen ilman "
+                "vahvistettuja yhteystietoja: "
+                + ", ".join(found)
+            )
+
+    # Tyypillisiä keksittyjä yritysfaktoja.
+    fabricated_patterns = [
+        r"\b\d+\s+vuoden kokem",
+        r"perustettu\s+\d{4}",
+        r"vuodesta\s+\d{4}",
+        r"yli\s+\d+\s+(?:asiakka|ammattila)",
+    ]
+
+    for pattern in fabricated_patterns:
+        if re.search(pattern, text):
+            raise RuntimeError(
+                "Builderin tuottamassa sivussa havaittiin "
+                "mahdollisesti keksitty yritysfakta."
+            )
+
+    # Jos toimiala puuttuu, AI ei saa esitellä keksittyä toimialaa.
+    # Emme käytä yleistä sanalistaa, koska se voisi aiheuttaa
+    # vääriä hälytyksiä. Tämä tarkistus suojaa erityisesti
+    # tutkimuksessa selvästi puuttuvaa location/industry-dataa
+    # vain yhteystietojen osalta.
+
+    _ = location
+    _ = industry
 
 
 def build_site(
@@ -306,16 +479,12 @@ def build_site(
     company: dict,
 ) -> str:
 
-    research = company.get(
-        "research"
-    )
+    research = company.get("research")
 
     if not research:
         raise RuntimeError(
-            f"Yritykselle '{slug}' "
-            "ei löydy research-dataa. "
-            f"Aja ensin: "
-            f"python main.py research {slug}"
+            f"Yritykselle '{slug}' ei löydy research-dataa. "
+            f"Aja ensin: python main.py research {slug}"
         )
 
     company_facts = research.get(
@@ -338,40 +507,127 @@ def build_site(
         {},
     )
 
+    fact_summary = _safe_fact_summary(
+        company_facts
+    )
+
     user_prompt = f"""
-Rakenna uusi verkkosivu seuraavien
-tutkimustietojen perusteella.
+Rakenna verkkosivu tämän research-datan perusteella.
 
-=== COMPANY FACTS ===
+========================================
+VERIFIED FACTS
+========================================
 
-{company_facts}
+{fact_summary}
 
-=== CURRENT SITE WEAKNESSES ===
+Nämä ovat AINOAT yrityksen faktat.
+
+========================================
+NYKYISEN SIVUN HEIKKOUDET
+========================================
 
 {weaknesses}
 
-=== DESIGN INSPIRATION ===
+========================================
+DESIGN-INSPIRAATIO
+========================================
 
 {inspiration}
 
-=== DESIGN RECOMMENDATIONS ===
+========================================
+DESIGN-SUOSITUKSET
+========================================
 
 {recommendations}
 
-Tärkeää:
+HUOMIO:
 
-Korjaa uuden sivuston suunnittelussa
-nykyisen sivuston tunnistetut heikkoudet.
+Design-suositukset ovat vain VISUAALISIA suosituksia.
 
-Kirjoita kaikki verkkosivun tekstit itse
-yrityksen todellisten company_facts-tietojen
-perusteella.
+Niitä EI saa käyttää yrityksen puuttuvien faktojen
+täyttämiseen.
 
-Älä keksi puuttuvia faktoja.
+========================================
+ERITYISEN TÄRKEÄT SÄÄNNÖT
+========================================
 
-Jos yhteystieto puuttuu,
-älä lisää placeholderia.
-Suunnittele sivu toimimaan ilman sitä.
+Jos services on tyhjä:
+ÄLÄ kirjoita palvelulistaa.
+
+Jos industry on tyhjä:
+ÄLÄ nimeä yrityksen toimialaa.
+
+Jos location on tyhjä:
+ÄLÄ nimeä kaupunkia tai maata.
+
+Jos address on tyhjä:
+ÄLÄ kirjoita osoitetta.
+
+Jos phone on tyhjä:
+ÄLÄ kirjoita puhelinnumeroa.
+
+Jos email on tyhjä:
+ÄLÄ kirjoita sähköpostiosoitetta.
+
+Jos pricing-tietoa ei ole:
+ÄLÄ kirjoita hintoja.
+
+Jos opening_hours on tyhjä:
+ÄLÄ kirjoita aukioloaikoja.
+
+Jos yhteystietoja ei ole:
+ÄLÄ tee "Ota yhteyttä" -painiketta.
+
+ÄLÄ muuta target_audience-kenttää yrityksen
+palveluksi tai tuotteeksi.
+
+ÄLÄ muuta taglinea uudeksi yrityksen toimintaa
+kuvaavaksi markkinointiväitteeksi.
+
+Jos tietoa ei ole:
+JÄTÄ SE POIS.
+
+========================================
+SIVUN RAKENNE
+========================================
+
+Tee visuaalisesti hyvä mutta sisällöltään rehellinen
+sivu.
+
+Jos tutkimustietoa on vähän, sivu saa olla lyhyt.
+
+Älä lisää kuvitteellisia osioita vain siksi, että
+design-suosituksessa niitä ehdotetaan.
+
+========================================
+TEKNINEN TOTEUTUS
+========================================
+
+Yksi itsenäinen index.html.
+
+Ei:
+- Google Fonts -linkkiä
+- ulkoisia kuvia
+- ulkoisia JavaScript-kirjastoja
+- ulkoisia CSS-tiedostoja.
+
+Kaikki CSS inline <style>-elementissä.
+
+Tarvittaessa JavaScript inline <script>-elementissä.
+
+Varmista:
+- <!DOCTYPE html>
+- <html lang="fi">
+- <head>
+- title
+- meta description
+- nav
+- main
+- footer
+- responsiivisuus
+- accessibility.
+
+Palauta VAIN koko HTML.
 """
 
     print(
@@ -385,9 +641,17 @@ Suunnittele sivu toimimaan ilman sitä.
         max_tokens=8000,
     )
 
+    cleaned = _clean_html(html)
+
+    # Ohjelmallinen faktaturva ennen tiedoston kirjoittamista.
+    _validate_generated_content(
+        cleaned,
+        company_facts,
+    )
+
     path = _write_html(
         slug,
-        html,
+        cleaned,
     )
 
     old_build = company.get(
@@ -400,9 +664,7 @@ Suunnittele sivu toimimaan ilman sitä.
         0,
     )
 
-    version = (
-        old_version + 1
-    )
+    version = old_version + 1
 
     upsert_company(
         slug,
@@ -420,11 +682,24 @@ Suunnittele sivu toimimaan ilman sitä.
     )
 
     print(
-        f"  [Builder] Sivusto valmis: "
-        f"{path}"
+        f"  [Builder] Sivusto valmis: {path}"
     )
 
     return path
+
+
+def run_build(
+    slug_or_name: str,
+) -> str:
+
+    slug, company = _resolve_company(
+        slug_or_name
+    )
+
+    return build_site(
+        slug,
+        company,
+    )
 
 
 def revise_site(
@@ -433,19 +708,12 @@ def revise_site(
     feedback: str,
 ) -> str:
 
-    path = _output_path(
-        slug
-    )
+    path = _output_path(slug)
 
-    if not os.path.exists(
-        path
-    ):
+    if not os.path.exists(path):
         raise RuntimeError(
-            f"Yritykselle '{slug}' "
-            "ei löydy vielä rakennettua "
-            "sivua. "
-            f"Aja ensin: "
-            f"python main.py build {slug}"
+            f"Yritykselle '{slug}' ei löydy rakennettua sivua. "
+            f"Aja ensin: python main.py build {slug}"
         )
 
     with open(
@@ -453,26 +721,75 @@ def revise_site(
         "r",
         encoding="utf-8",
     ) as file:
-
         current_html = file.read()
 
+    research = company.get(
+        "research",
+        {},
+    )
+
+    company_facts = research.get(
+        "company_facts",
+        {},
+    )
+
     user_prompt = f"""
-=== NYKYINEN INDEX.HTML ===
+========================================
+VERIFIED FACTS
+========================================
+
+{_safe_fact_summary(company_facts)}
+
+========================================
+NYKYINEN HTML
+========================================
 
 {current_html}
 
-=== KÄYTTÄJÄN MUUTOSPYYNTÖ ===
+========================================
+MUUTOSPYYNTÖ
+========================================
 
 {feedback}
 
-Tee ainoastaan pyydetyt muutokset.
+========================================
+SÄÄNNÖT
+========================================
 
-Muista:
-- Älä keksi uusia yrityksen faktoja.
-- Älä keksi yhteystietoja.
-- Älä lisää placeholder-tekstejä.
-- Säilytä responsiivisuus.
-- Palauta koko päivitetty HTML.
+Tee pyydetyt muutokset.
+
+ÄLÄ keksi yrityksen faktoja.
+
+Jos tieto puuttuu:
+jätä se pois.
+
+TARGET AUDIENCE ei ole yrityksen palvelu.
+
+DESIGN-RECOMMENDATIONS eivät ole yrityksen faktoja.
+
+Älä lisää ilman vahvistettua tietoa:
+- palveluita
+- tuotteita
+- hintoja
+- yhteystietoja
+- sijaintia
+- asiakkaita
+- kokemusta
+- vuosilukuja
+- markkinointiväitteitä.
+
+Älä lisää ulkoisia resursseja.
+
+Säilytä:
+- nav
+- main
+- footer
+- title
+- meta description
+- responsiivisuus
+- accessibility.
+
+Palauta koko HTML.
 """
 
     print(
@@ -486,9 +803,16 @@ Muista:
         max_tokens=8000,
     )
 
+    cleaned = _clean_html(new_html)
+
+    _validate_generated_content(
+        cleaned,
+        company_facts,
+    )
+
     new_path = _write_html(
         slug,
-        new_html,
+        cleaned,
     )
 
     old_build = company.get(
@@ -501,9 +825,7 @@ Muista:
         1,
     )
 
-    version = (
-        old_version + 1
-    )
+    version = old_version + 1
 
     upsert_company(
         slug,
@@ -522,60 +844,54 @@ Muista:
     )
 
     print(
-        f"  [Builder] Uusi versio valmis: "
-        f"{new_path}"
+        f"  [Builder] Sivusto päivitetty: {new_path}"
     )
 
     return new_path
 
 
-def run_build(
-    slug_or_name: str,
-) -> str:
-
-    slug, company = _resolve_company(
-        slug_or_name
-    )
-
-    print()
-    print("=== BUILD ===")
-    print(
-        f"Yritys: "
-        f"{company.get('name', '')}"
-    )
-
-    return build_site(
-        slug,
-        company,
-    )
-
-
 def run_revise(
     slug_or_name: str,
-    instructions: str,
+    feedback: str,
 ) -> str:
 
     slug, company = _resolve_company(
         slug_or_name
-    )
-
-    if not instructions.strip():
-        raise RuntimeError(
-            "Muutospyyntö ei voi olla tyhjä."
-        )
-
-    print()
-    print("=== REVISE ===")
-    print(
-        f"Yritys: "
-        f"{company.get('name', '')}"
     )
 
     return revise_site(
         slug,
         company,
-        instructions,
+        feedback,
     )
+
+
+def preview_site(
+    slug: str,
+    company: dict,
+) -> str:
+
+    path = _output_path(slug)
+
+    if not os.path.exists(path):
+        raise RuntimeError(
+            f"Esikatseltavaa sivua ei löydy: {path}"
+        )
+
+    absolute_path = os.path.abspath(path)
+
+    print(
+        f"  [Preview] {absolute_path}"
+    )
+
+    try:
+        webbrowser.open(
+            "file://" + absolute_path
+        )
+    except Exception:
+        pass
+
+    return absolute_path
 
 
 def run_preview(
@@ -586,70 +902,7 @@ def run_preview(
         slug_or_name
     )
 
-    path = _output_path(
-        slug
+    return preview_site(
+        slug,
+        company,
     )
-
-    if not os.path.exists(
-        path
-    ):
-        raise RuntimeError(
-            f"Yritykselle '{slug}' "
-            "ei löydy rakennettua sivua. "
-            f"Aja ensin: "
-            f"python main.py build {slug}"
-        )
-
-    absolute_path = os.path.abspath(
-        path
-    )
-
-    file_url = (
-        "file:///"
-        + absolute_path.replace(
-            "\\",
-            "/",
-        )
-    )
-
-    print()
-    print("=== PREVIEW ===")
-    print(
-        f"Yritys: "
-        f"{company.get('name', '')}"
-    )
-    print(
-        f"Tiedosto: "
-        f"{absolute_path}"
-    )
-    print(
-        f"URL: "
-        f"{file_url}"
-    )
-
-    if os.getenv(
-        "GITHUB_ACTIONS"
-    ) == "true":
-
-        print(
-            "[Preview] GitHub Actions "
-            "-ympäristössä selainta "
-            "ei avata."
-        )
-
-        return absolute_path
-
-    try:
-
-        webbrowser.open(
-            file_url
-        )
-
-    except Exception as e:
-
-        print(
-            "[Preview] Selaimen "
-            f"avaaminen epäonnistui: {e}"
-        )
-
-    return absolute_path
