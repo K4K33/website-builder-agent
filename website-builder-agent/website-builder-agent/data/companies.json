@@ -97,6 +97,11 @@
         "notes": "Sivu käyttää vain vahvistettuja yritysten faktoja (nimi, tagline, kohderyhteensopivuus) ilman keksittyjä tietoja. Tagline on säilytetty alkuperäisenäan ilman muutosta. Rakakne on selkeä, responsiivinen ja HTML on kunnollinen. Sivu on lyhyt, mutta se vastaa tutkimustietojen määrään. Ei ole CTA-ongelmaa, sillä sivu ei väitä yhteydenottoa. PASS."
       },
       "overall_pass": true
+    },
+    "demo": {
+      "path": "docs/demos/test-company/index.html",
+      "url": "https://k4k33.github.io/website-builder-agent/demos/test-company/",
+      "published": true
     }
   }
 }

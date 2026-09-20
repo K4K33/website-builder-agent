@@ -17,9 +17,10 @@ from agents import builder
 from agents import qa
 from agents import outreach
 
+from utils import publisher
+
 from utils.state import (
     load_companies,
-    get_company,
 )
 
 
@@ -28,9 +29,7 @@ from utils.state import (
 # =========================================================
 
 def cmd_scout(args):
-    print(
-        f"[Scout] Etsitään {args.count} yritystä..."
-    )
+    print(f"[Scout] Etsitään {args.count} yritystä...")
 
     results = scout.run_scout(
         count=args.count,
@@ -47,16 +46,11 @@ def cmd_scout(args):
         return
 
     print()
-
-    print(
-        f"[Scout] Käsitelty "
-        f"{len(results)} yritystä."
-    )
+    print(f"[Scout] Käsitelty {len(results)} yritystä.")
 
     if args.dry_run:
         print(
-            "[Scout] DRY-RUN: mitään yrityksiä "
-            "ei tallennettu."
+            "[Scout] DRY-RUN: mitään yrityksiä ei tallennettu."
         )
 
 
@@ -68,16 +62,13 @@ def cmd_list(args):
     companies = load_companies()
 
     if not companies:
-        print(
-            "Yrityksiä ei ole vielä tallennettu."
-        )
+        print("Yrityksiä ei ole vielä tallennettu.")
         return
 
     print()
     print("=== YRITYKSET ===")
 
     for slug, company in companies.items():
-
         print(
             f"{slug} | "
             f"{company.get('name', '')} | "
@@ -93,14 +84,9 @@ def cmd_list(args):
 def cmd_add(args):
     companies = load_companies()
 
-    from utils.state import (
-        make_slug,
-        save_companies,
-    )
+    from utils.state import make_slug, save_companies
 
-    slug = make_slug(
-        args.name
-    )
+    slug = make_slug(args.name)
 
     companies[slug] = {
         "name": args.name,
@@ -108,14 +94,10 @@ def cmd_add(args):
         "status": "found",
     }
 
-    save_companies(
-        companies
-    )
+    save_companies(companies)
 
     print(
-        f"Lisätty: "
-        f"{args.name} "
-        f"({slug})"
+        f"Lisätty: {args.name} ({slug})"
     )
 
 
@@ -124,9 +106,7 @@ def cmd_add(args):
 # =========================================================
 
 def cmd_research(args):
-    research.run_research(
-        args.company
-    )
+    research.run_research(args.company)
 
 
 # =========================================================
@@ -134,9 +114,7 @@ def cmd_research(args):
 # =========================================================
 
 def cmd_build(args):
-    builder.run_build(
-        args.company
-    )
+    builder.run_build(args.company)
 
 
 # =========================================================
@@ -155,9 +133,7 @@ def cmd_revise(args):
 # =========================================================
 
 def cmd_qa(args):
-    qa.run_qa(
-        args.company
-    )
+    qa.run_qa(args.company)
 
 
 # =========================================================
@@ -165,9 +141,15 @@ def cmd_qa(args):
 # =========================================================
 
 def cmd_preview(args):
-    builder.run_preview(
-        args.company
-    )
+    builder.run_preview(args.company)
+
+
+# =========================================================
+# PUBLISH
+# =========================================================
+
+def cmd_publish(args):
+    publisher.run_publish(args.company)
 
 
 # =========================================================
@@ -175,9 +157,7 @@ def cmd_preview(args):
 # =========================================================
 
 def cmd_approve(args):
-    qa.approve_company(
-        args.company
-    )
+    qa.approve_company(args.company)
 
 
 # =========================================================
@@ -185,9 +165,7 @@ def cmd_approve(args):
 # =========================================================
 
 def cmd_outreach(args):
-    outreach.run_outreach(
-        args.company
-    )
+    outreach.run_outreach(args.company)
 
 
 # =========================================================
@@ -195,9 +173,7 @@ def cmd_outreach(args):
 # =========================================================
 
 def cmd_approve_outreach(args):
-    outreach.approve_outreach(
-        args.company
-    )
+    outreach.approve_outreach(args.company)
 
 
 # =========================================================
@@ -207,14 +183,11 @@ def cmd_approve_outreach(args):
 def cmd_show(args):
     companies = load_companies()
 
-    company = companies.get(
-        args.company
-    )
+    company = companies.get(args.company)
 
     if not company:
         print(
-            f"Yritystä ei löytynyt: "
-            f"{args.company}"
+            f"Yritystä ei löytynyt: {args.company}"
         )
         return
 
@@ -222,10 +195,7 @@ def cmd_show(args):
     print("=== YRITYS ===")
 
     for key, value in company.items():
-
-        print(
-            f"{key}: {value}"
-        )
+        print(f"{key}: {value}")
 
 
 # =========================================================
@@ -235,47 +205,25 @@ def cmd_show(args):
 def cmd_pipeline(args):
 
     print()
-    print(
-        "========================================"
-    )
-    print(
-        " WEBSITE BUILDER AGENT - PIPELINE"
-    )
-    print(
-        "========================================"
-    )
+    print("========================================")
+    print(" WEBSITE BUILDER AGENT - PIPELINE")
+    print("========================================")
 
     print()
-    print(
-        "Vaiheet:"
-    )
-    print(
-        "1. Scout"
-    )
-    print(
-        "2. Research"
-    )
-    print(
-        "3. Build"
-    )
-    print(
-        "4. QA"
-    )
+    print("Vaiheet:")
+    print("1. Scout")
+    print("2. Research")
+    print("3. Build")
+    print("4. QA")
     print()
 
     # -----------------------------------------------------
     # SCOUT
     # -----------------------------------------------------
 
-    print(
-        "========================================"
-    )
-    print(
-        " VAIHE 1/4 — SCOUT"
-    )
-    print(
-        "========================================"
-    )
+    print("========================================")
+    print(" VAIHE 1/4 — SCOUT")
+    print("========================================")
 
     results = scout.run_scout(
         count=args.count,
@@ -285,10 +233,8 @@ def cmd_pipeline(args):
     )
 
     if not results:
-
         raise RuntimeError(
-            "Scout ei löytänyt käsiteltävää "
-            "yritystä."
+            "Scout ei löytänyt käsiteltävää yritystä."
         )
 
     # -----------------------------------------------------
@@ -300,14 +246,9 @@ def cmd_pipeline(args):
     selected_slug = None
     selected_company = None
 
-    # Ensisijaisesti käytetään Scoutin viimeksi
-    # palauttamaa yritystä.
     for result in reversed(results):
 
-        if not isinstance(
-            result,
-            dict,
-        ):
+        if not isinstance(result, dict):
             continue
 
         candidate_slug = (
@@ -316,26 +257,17 @@ def cmd_pipeline(args):
         )
 
         if candidate_slug in companies:
-
             selected_slug = candidate_slug
-            selected_company = companies[
-                candidate_slug
-            ]
-
+            selected_company = companies[candidate_slug]
             break
 
-    # Jos Scout ei palauttanut slugia,
-    # etsitään viimeisin found-tilassa oleva yritys.
     if selected_company is None:
 
         candidates = []
 
         for slug, company in companies.items():
 
-            if company.get(
-                "status"
-            ) == "found":
-
+            if company.get("status") == "found":
                 candidates.append(
                     (
                         slug,
@@ -344,37 +276,27 @@ def cmd_pipeline(args):
                 )
 
         if candidates:
-
-            selected_slug, selected_company = (
-                candidates[-1]
-            )
+            selected_slug, selected_company = candidates[-1]
 
     if selected_company is None:
-
         raise RuntimeError(
-            "Scout löysi yrityksen, mutta "
-            "pipeline ei pystynyt tunnistamaan "
-            "tallennettua yritystä."
+            "Scout löysi yrityksen, mutta pipeline ei pystynyt "
+            "tunnistamaan tallennettua yritystä."
         )
 
     print()
+    print("Pipeline valitsi yrityksen:")
+
     print(
-        "Pipeline valitsi yrityksen:"
+        f"  Nimi: {selected_company.get('name', '')}"
     )
 
     print(
-        f"  Nimi: "
-        f"{selected_company.get('name', '')}"
+        f"  Slug: {selected_slug}"
     )
 
     print(
-        f"  Slug: "
-        f"{selected_slug}"
-    )
-
-    print(
-        f"  URL: "
-        f"{selected_company.get('url', '')}"
+        f"  URL: {selected_company.get('url', '')}"
     )
 
     # -----------------------------------------------------
@@ -382,138 +304,79 @@ def cmd_pipeline(args):
     # -----------------------------------------------------
 
     print()
-    print(
-        "========================================"
-    )
-    print(
-        " VAIHE 2/4 — RESEARCH"
-    )
-    print(
-        "========================================"
-    )
+    print("========================================")
+    print(" VAIHE 2/4 — RESEARCH")
+    print("========================================")
 
-    research.run_research(
-        selected_slug
-    )
+    research.run_research(selected_slug)
 
     # -----------------------------------------------------
     # BUILD
     # -----------------------------------------------------
 
     print()
-    print(
-        "========================================"
-    )
-    print(
-        " VAIHE 3/4 — BUILD"
-    )
-    print(
-        "========================================"
-    )
+    print("========================================")
+    print(" VAIHE 3/4 — BUILD")
+    print("========================================")
 
-    builder.run_build(
-        selected_slug
-    )
+    builder.run_build(selected_slug)
 
     # -----------------------------------------------------
     # QA
     # -----------------------------------------------------
 
     print()
-    print(
-        "========================================"
-    )
-    print(
-        " VAIHE 4/4 — QA"
-    )
-    print(
-        "========================================"
-    )
+    print("========================================")
+    print(" VAIHE 4/4 — QA")
+    print("========================================")
 
-    qa_result = qa.run_qa(
-        selected_slug
-    )
+    qa_result = qa.run_qa(selected_slug)
 
     # -----------------------------------------------------
     # FINAL RESULT
     # -----------------------------------------------------
 
     print()
-    print(
-        "========================================"
-    )
-    print(
-        " PIPELINE VALMIS"
-    )
-    print(
-        "========================================"
-    )
+    print("========================================")
+    print(" PIPELINE VALMIS")
+    print("========================================")
 
     print()
     print(
-        f"Yritys: "
-        f"{selected_company.get('name', '')}"
+        f"Yritys: {selected_company.get('name', '')}"
     )
 
     print(
-        f"Slug: "
-        f"{selected_slug}"
+        f"Slug: {selected_slug}"
     )
 
     print(
         "QA: "
         + (
             "PASS"
-            if qa_result.get(
-                "overall_pass",
-                False,
-            )
+            if qa_result.get("overall_pass", False)
             else "FAIL"
         )
     )
 
     print()
 
-    if qa_result.get(
-        "overall_pass",
-        False,
-    ):
+    if qa_result.get("overall_pass", False):
 
-        print(
-            "Sivusto läpäisi QA:n."
-        )
-
-        print(
-            "Sivustoa EI ole vielä hyväksytty."
-        )
-
-        print(
-            "Outreachia EI ole luotu."
-        )
-
-        print(
-            "Mitään sähköpostia EI ole lähetetty."
-        )
-
+        print("Sivusto läpäisi QA:n.")
+        print("Sivustoa EI ole vielä hyväksytty.")
+        print("Outreachia EI ole luotu.")
+        print("Mitään sähköpostia EI ole lähetetty.")
         print()
         print(
-            "Seuraava vaihe on tarkistaa "
-            "rakennettu sivusto."
+            "Seuraava vaihe on tarkistaa rakennettu sivusto."
         )
 
     else:
 
-        print(
-            "Sivusto EI läpäissyt QA:ta."
-        )
-
-        print(
-            "Pipeline pysähtyy tähän."
-        )
-
-        print(
-            "Outreachia ei luoda."
-        )
+        print("Sivusto EI läpäissyt QA:ta.")
+        print("Pipeline pysähtyy tähän.")
+        print("Outreachia ei luoda.")
 
 
 # =========================================================
@@ -523,16 +386,12 @@ def cmd_pipeline(args):
 def build_parser():
 
     parser = argparse.ArgumentParser(
-        description=(
-            "Website Builder Agent"
-        )
+        description="Website Builder Agent"
     )
 
-    subparsers = (
-        parser.add_subparsers(
-            dest="command",
-            required=True,
-        )
+    subparsers = parser.add_subparsers(
+        dest="command",
+        required=True,
     )
 
     # -----------------------------------------------------
@@ -544,9 +403,7 @@ def build_parser():
         help="Näytä tallennetut yritykset.",
     )
 
-    parser_list.set_defaults(
-        func=cmd_list
-    )
+    parser_list.set_defaults(func=cmd_list)
 
     # -----------------------------------------------------
     # ADD
@@ -567,9 +424,7 @@ def build_parser():
         required=True,
     )
 
-    parser_add.set_defaults(
-        func=cmd_add
-    )
+    parser_add.set_defaults(func=cmd_add)
 
     # -----------------------------------------------------
     # SCOUT
@@ -605,9 +460,7 @@ def build_parser():
         ),
     )
 
-    parser_scout.set_defaults(
-        func=cmd_scout
-    )
+    parser_scout.set_defaults(func=cmd_scout)
 
     # -----------------------------------------------------
     # RESEARCH
@@ -622,9 +475,7 @@ def build_parser():
         "company"
     )
 
-    parser_research.set_defaults(
-        func=cmd_research
-    )
+    parser_research.set_defaults(func=cmd_research)
 
     # -----------------------------------------------------
     # BUILD
@@ -639,9 +490,7 @@ def build_parser():
         "company"
     )
 
-    parser_build.set_defaults(
-        func=cmd_build
-    )
+    parser_build.set_defaults(func=cmd_build)
 
     # -----------------------------------------------------
     # REVISE
@@ -660,9 +509,7 @@ def build_parser():
         "instructions"
     )
 
-    parser_revise.set_defaults(
-        func=cmd_revise
-    )
+    parser_revise.set_defaults(func=cmd_revise)
 
     # -----------------------------------------------------
     # QA
@@ -677,9 +524,7 @@ def build_parser():
         "company"
     )
 
-    parser_qa.set_defaults(
-        func=cmd_qa
-    )
+    parser_qa.set_defaults(func=cmd_qa)
 
     # -----------------------------------------------------
     # PREVIEW
@@ -694,9 +539,22 @@ def build_parser():
         "company"
     )
 
-    parser_preview.set_defaults(
-        func=cmd_preview
+    parser_preview.set_defaults(func=cmd_preview)
+
+    # -----------------------------------------------------
+    # PUBLISH
+    # -----------------------------------------------------
+
+    parser_publish = subparsers.add_parser(
+        "publish",
+        help="Julkaise verkkosivuston demo.",
     )
+
+    parser_publish.add_argument(
+        "company"
+    )
+
+    parser_publish.set_defaults(func=cmd_publish)
 
     # -----------------------------------------------------
     # APPROVE
@@ -711,9 +569,7 @@ def build_parser():
         "company"
     )
 
-    parser_approve.set_defaults(
-        func=cmd_approve
-    )
+    parser_approve.set_defaults(func=cmd_approve)
 
     # -----------------------------------------------------
     # OUTREACH
@@ -728,22 +584,15 @@ def build_parser():
         "company"
     )
 
-    parser_outreach.set_defaults(
-        func=cmd_outreach
-    )
+    parser_outreach.set_defaults(func=cmd_outreach)
 
     # -----------------------------------------------------
     # APPROVE OUTREACH
     # -----------------------------------------------------
 
-    parser_approve_outreach = (
-        subparsers.add_parser(
-            "approve-outreach",
-            help=(
-                "Hyväksy "
-                "yhteydenottoluonnos."
-            ),
-        )
+    parser_approve_outreach = subparsers.add_parser(
+        "approve-outreach",
+        help="Hyväksy yhteydenottoluonnos.",
     )
 
     parser_approve_outreach.add_argument(
@@ -767,9 +616,7 @@ def build_parser():
         "company"
     )
 
-    parser_show.set_defaults(
-        func=cmd_show
-    )
+    parser_show.set_defaults(func=cmd_show)
 
     # -----------------------------------------------------
     # PIPELINE
@@ -799,9 +646,7 @@ def build_parser():
         required=True,
     )
 
-    parser_pipeline.set_defaults(
-        func=cmd_pipeline
-    )
+    parser_pipeline.set_defaults(func=cmd_pipeline)
 
     return parser
 
@@ -816,9 +661,7 @@ def main():
 
     args = parser.parse_args()
 
-    args.func(
-        args
-    )
+    args.func(args)
 
 
 if __name__ == "__main__":
