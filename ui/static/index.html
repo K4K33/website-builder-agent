@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <meta name="theme-color" content="#111111">
+  <meta
+    name="description"
+    content="Kaurivo Website Builder Agent"
+  >
+  <link rel="manifest" href="/manifest.json">
+  <title>Kaurivo Agent</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: #f7f7f5;
+      color: #111111;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1100px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+    }
+
+    header {
+      height: 72px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e8e8e5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: #111111;
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #666666;
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #38a169;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .welcome {
+      padding: 70px 28px 30px;
+      max-width: 760px;
+    }
+
+    .eyebrow {
+      margin-bottom: 14px;
+      color: #777777;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 6vw, 58px);
+      line-height: 1.02;
+      letter-spacing: -0.055em;
+    }
+
+    .subtitle {
+      margin: 20px 0 0;
+      max-width: 620px;
+      color: #666666;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 10px 28px 30px;
+      overflow-y: auto;
+    }
+
+    .message {
+      max-width: 760px;
+      margin: 12px 0;
+      padding: 14px 17px;
+      border-radius: 16px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      margin-left: auto;
+      background: #111111;
+      color: #ffffff;
+    }
+
+    .agent {
+      margin-right: auto;
+      background: #f1f1ee;
+      color: #111111;
+    }
+
+    .composer {
+      padding: 18px 28px 24px;
+      border-top: 1px solid #e8e8e5;
+      background: #ffffff;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 52px;
+      max-height: 160px;
+      resize: vertical;
+      padding: 15px 17px;
+      border: 1px solid #ddddda;
+      border-radius: 15px;
+      outline: none;
+      font: inherit;
+      color: #111111;
+      background: #fafaf8;
+    }
+
+    textarea:focus {
+      border-color: #999999;
+    }
+
+    button {
+      align-self: stretch;
+      min-width: 82px;
+      border: 0;
+      border-radius: 15px;
+      background: #111111;
+      color: #ffffff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    @media (max-width: 640px) {
+      header {
+        height: 64px;
+        padding: 0 16px;
+      }
+
+      .welcome {
+        padding: 44px 16px 20px;
+      }
+
+      #messages {
+        padding: 10px 16px 20px;
+      }
+
+      .composer {
+        padding: 12px 16px 16px;
+      }
+
+      form {
+        align-items: stretch;
+      }
+
+      button {
+        min-width: 68px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">K</div>
+        <span>Kaurivo Agent</span>
+      </div>
+
+      <div class="status">
+        <span class="status-dot"></span>
+        Local
+      </div>
+    </header>
+
+    <main>
+      <section class="welcome">
+        <div class="eyebrow">Website Builder Agent</div>
+        <h1>What should we build?</h1>
+        <p class="subtitle">
+          Give the agent a task and manage your website projects
+          from one place.
+        </p>
+      </section>
+
+      <section id="messages" aria-live="polite"></section>
+
+      <div class="composer">
+        <form id="chat-form">
+          <textarea
+            id="message"
+            placeholder="Tell the agent what to do..."
+            aria-label="Message"
+            required
+          ></textarea>
+          <button id="send" type="submit">Send</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("message");
+    const messages = document.getElementById("messages");
+    const send = document.getElementById("send");
+
+    function addMessage(text, type) {
+      const element = document.createElement("div");
+      element.className = `message ${type}`;
+      element.textContent = text;
+      messages.appendChild(element);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const message = input.value.trim();
+
+      if (!message) {
+        return;
+      }
+
+      addMessage(message, "user");
+      input.value = "";
+      send.disabled = true;
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Request failed.");
+        }
+
+        addMessage(data.message, "agent");
+      } catch (error) {
+        addMessage(
+          `Something went wrong: ${error.message}`,
+          "agent"
+        );
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "Kaurivo Agent",
+  "short_name": "Kaurivo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "description": "Kaurivo Website Builder Agent"
+}
