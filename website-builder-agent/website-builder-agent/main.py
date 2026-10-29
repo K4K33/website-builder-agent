@@ -27,6 +27,7 @@ from utils.lead_intelligence import evaluate_prospect, site_signal
 from utils.company_registry import lookup_by_business_id, lookup_by_name_and_location
 from utils.free_enrichment import enrich_queue
 from utils.verified_profile import validate_verified_profile
+from utils.lead_queue import rank_leads
 from utils.state import get_company, upsert_company
 
 from utils.state import (
@@ -304,6 +305,17 @@ def cmd_verify_registry(args):
     updates["lead_intelligence"] = evaluate_prospect({**company, **updates})
     upsert_company(slug, updates)
     print(json.dumps(updates["lead_intelligence"], ensure_ascii=False, indent=2))
+
+
+# =========================================================
+# LEAD TRIAGE (OFFLINE, NO AI CREDITS)
+# =========================================================
+
+def cmd_leads(args):
+    rows = rank_leads(load_companies(), estimated_project_eur=args.project_price)
+    print(json.dumps(rows[:args.limit], ensure_ascii=False, indent=2))
+    if not rows:
+        print("No saved leads; run scout --discovery-only first.")
 
 
 # =========================================================
@@ -811,6 +823,13 @@ def build_parser():
     parser_registry.add_argument("--confirm-name-mismatch", action="store_true",
         help="Explicitly confirm a trading-name/legal-name difference after checking the identity.")
     parser_registry.set_defaults(func=cmd_verify_registry)
+
+    parser_leads = subparsers.add_parser(
+        "leads", help="Rank verified/unverified prospects without external API calls."
+    )
+    parser_leads.add_argument("--project-price", type=float, default=1500.0)
+    parser_leads.add_argument("--limit", type=int, default=30)
+    parser_leads.set_defaults(func=cmd_leads)
 
     # -----------------------------------------------------
     # FREE PRH ENRICHMENT
