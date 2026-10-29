@@ -12,23 +12,24 @@ def rank_leads(companies, estimated_project_eur=1500):
         info = evaluate_prospect(company, estimated_project_eur)
         reputation = info["reputation"]
         financial = info["financial"]
+        capacity = info["purchase_capacity"]
         site = info["site_status"]
         has_report = (company.get("financial_availability") or {}).get("status") == "available"
         report_checked = (company.get("financial_statement_review") or {}).get("status") == "taxonomy_review_required"
-        if financial["status"] == "exclude":
+        if capacity["status"] == "excluded":
             bucket, priority = "excluded_official_status", 0
-        elif financial["status"] == "promising" and reputation["strong"] and site in {
+        elif capacity["status"] == "strong_indicators" and reputation["strong"] and site in {
             "has_website", "confirmed_no_website"
         }:
             bucket, priority = "high_priority_manual_review", 6
-        elif financial["status"] == "promising" and reputation["strong"]:
-            bucket, priority = "verify_website_absence", 5
-        elif financial["status"] == "promising" and site == "has_website":
-            bucket, priority = "verify_reputation", 4
-        elif reputation["strong"] and site == "confirmed_no_website":
-            bucket, priority = "verify_financial_budget", 4
-        elif reputation["strong"] and site == "website_not_listed":
-            bucket, priority = "verify_website_then_financials", 3
+        elif capacity["can_prioritize"] and reputation["strong"] and site == "confirmed_no_website":
+            bucket, priority = "promising_no_site_manual_review", 5
+        elif capacity["can_prioritize"] and reputation["strong"] and site == "website_not_listed":
+            bucket, priority = "verify_website_absence", 4
+        elif capacity["can_prioritize"] and site == "has_website":
+            bucket, priority = "estimate_only_manual_review", 4
+        elif capacity["status"] == "strong_indicators":
+            bucket, priority = "verify_reputation_and_website", 3
         elif report_checked:
             bucket, priority = "review_xbrl_taxonomy_facts", 3
         elif has_report:
@@ -42,6 +43,11 @@ def rank_leads(companies, estimated_project_eur=1500):
             "company": slug, "name": company.get("name", slug),
             "site_status": site, "reputation_status": reputation["status"],
             "finance_status": financial["status"],
+            "indicative_capacity": {
+                "score": capacity["score"], "status": capacity["status"],
+                "confidence": capacity["confidence"], "signals": capacity["signals"],
+                "not_actual_solvency": True,
+            },
             "financial_availability": (company.get("financial_availability") or {}).get("status", "unknown"),
             "next_step": bucket if bucket != "high_priority_manual_review"
             else "manual_lead_approval_required", "bucket": bucket,
