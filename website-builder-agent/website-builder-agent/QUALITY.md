@@ -265,3 +265,92 @@ candidate without treating that business as commercially suitable. It still
 requires the normal real browsing/AI usage and safety checks. No outreach,
 financial qualification or customer deployment is implied. The manual GitHub
 workflow uses benchmark mode only for its explicitly approved live test.
+
+
+## Free PRH financial-period enrichment and no-website research (2026-10-29)
+
+New zero-AI-credit CLI flow (real official PRH HTTP requests require explicit
+consent; bounded to ten prospects per invocation):
+
+    python main.py scout --count 10 --industry ravintola --location Tampere --discovery-only
+    python main.py enrich-free --max-companies 5 --confirm-public-lookups
+    python main.py leads --project-price 1500
+
+`enrich-free --company SLUG --confirm-public-lookups` targets one existing
+lead. It looks up the PRH/YTJ business identity using a valid business ID or
+an exact company name and city. Ambiguous identity never becomes a match.
+It then checks the PRH XBRL API `/financials?businessId=...` for actual
+reported iXBRL periods. This is a **period availability lookup** only, not
+automated revenue/operating profit analysis. The normalized amounts are
+not present in the period listing. The taxonomies in XML reports must be
+verified before interpreting an individual report's turnover or profit.
+No amount is invented. Roughly 5% of annual statements are in this open
+iXBRL feed; others remain `needs_review`, not a negative verdict.
+An official PRH company website is stored as a candidate; if it conflicts
+with an earlier claim of no website, that claim is invalidated and must
+be rechecked. PRH attribution: Patentti- ja rekisterihallitus (PRH),
+Creative Commons BY 4.0, https://avoindata.prh.fi/ .
+
+The new `leads` command generates a deterministic ranking of saved records
+according to source-reviewed reputation, financial status, and website
+verification. This is a worklist for a person; it never sends communications.
+
+### Verified business without a website
+
+When a candidate's absent website has been **independently confirmed**
+through `screen-lead`, its real business identity, industry, services
+and contact details may be assembled from documented third-party sources.
+Example (schema illustration, **not** facts about a real firm):
+
+    {
+      "verified_by_human": true,
+      "verified_at": "2026-10-29",
+      "company_facts": {
+        "name": "Example Oy",
+        "industry": "restaurant",
+        "services": ["Lunch service"],
+        "location": "Tampere"
+      },
+      "fact_sources": {
+        "name": ["https://example.org/official-registry"],
+        "industry": ["https://example.org/official-registry"],
+        "services": ["https://example.org/verified-menu"]
+      }
+    }
+
+Save as `verified-profile.json` with true inspected references, then:
+
+    python main.py attach-profile SLUG --profile verified-profile.json
+    python main.py research SLUG --confirm-paid-apis
+
+The profile must be dated within 180 days, manually verified, have
+source URLs and validated services, and belong to the correct company.
+For a business without a website, the Research agent now **does not
+fetch or invent a target website**. Instead it uses the approved profile
+as immutable target facts, observes three genuine independent same-industry
+websites, and creates the same audited design plan used for redesigns.
+The subsequent Builder/QA process is unchanged.
+
+A paid commercial `pipeline --company SLUG --confirm-live-run` checks
+live reputation and financial evidence again before using any credits.
+No-site commercial work requires strong source-reviewed ratings, a
+verified no-site profile, and promising financial suitability evidence.
+An internal `--benchmark-mode` experiment is separately authorized;
+it is not a sales lead or customer acceptance.
+
+Direct `scout` (except `--discovery-only` / `--dry-run`),
+`research`, `build`, `revise`, `qa` and `outreach` now require
+`--confirm-paid-apis`. This protects accidental manual credit usage.
+`pipeline` continues to use the explicit `--confirm-live-run`.
+These are consent gates, **not monetary spending caps**: keep
+provider-side hard limits configured.
+
+### Remaining blockers
+
+- Review ratings/counts still need a permitted, traceable manual or
+  licensed provider source; Google Maps scraping is not enabled.
+- PRH XBRL values are not yet mapped from signed/dated reporting
+  concepts. An iXBRL period does not imply a profitable company.
+- No-site profile fact verification still requires human review.
+- No live multi-sector autonomous builder benchmark or commercial
+  publishing/invoicing review has been completed.
