@@ -31,7 +31,12 @@ Vastaanottajan tulee ymmärtää ensimmäisessä kahdessa virkkeessä
 kuka ottaa yhteyttä, mitä hän tekee ja miksi juuri heille kirjoitetaan.
 
 Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
-1. Hei [vastaanottajan etunimi vain, jos se on TARKISTETTU], muuten 'Hei'.
+1. Tervehdys: jos vastaanottajan ETUNIMI on oikeasti lähteestä
+   tarkistettu, käytä 'Hei Etunimi,'. Jos vastaanottaja on vain
+   yrityksen yleinen sähköpostilaatikko tai yhteyshenkilön nimeä ei
+   tunneta, aloita täsmälleen 'Hei,'. Älä koskaan keksi henkilöä,
+   etunimeä, titteliä tai yleisosoitetta. Mainitse yrityksen oikea
+   nimi ensimmäisessä asiakaskohtaisessa virkkeessä.
 2. 'Olen Kaarlo Kaurivolta. Suunnittelen ja toteutan
    verkkosivuja yrityksille.' Esittäydy ilman titteliä.
 3. Kerro suoraan, että tutustuit nimenomaan tämän yrityksen
@@ -60,6 +65,15 @@ Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
    Jos hyväksytty portfolio on tyhjä, ÄLÄ väitä aiempia töitä,
    asiakkaita, tuloksia tai kokemuksia. Tällöin oma näyte on
    tämän vastaanottajan valmis ehdotus.
+LÄHETTÄJÄTILI: AINOASTAAN hello.kaurivo@gmail.com.
+Tämä on Kaurivon Gmail-tili, josta todelliset viestit lähetetään.
+Mikään henkilökohtainen sähköpostitili EI ole sallittu.
+Tekstissä esittäydy 'Olen Kaarlo Kaurivolta', älä anna titteliä.
+Jos vastaanottajan henkilön nimeä ei tunneta, 'Hei,' on oikea aloitus.
+Jos tiedämme vain yrityksen yleisen julkisen osoitteen, viestin sisältö
+puhuttelee yritystä eikä kuviteltua yksityishenkilöä. Viestin lähetys
+edellyttää oikean yritysvastaanottajan osoitteen erillistä tarkistusta.
+
 7. Kerro SUORA kaupallinen tarjous: 'Jos pidätte ehdotuksesta, voin
    toteuttaa uuden sivuston teille kokonaan.' Tämä ei ole väite
    siitä, että valmis tuotantosivu olisi jo toimitettu.
@@ -251,8 +265,15 @@ tarjoa nimenomaisesti uuden sivuston toteuttamista.
 Jos nykyistä sivua ei ole riippumattomasti varmistettu olemassaolevaksi,
 älä väitä nähneesi sivua tai sen heikkouksia. Silloin myy uuden
 sivuston toteutusta, ei uudistusta.
-Vastaanottajan nimi on tiedossa vain, jos kentässä on lähteistetty
-tarkistettu nimi. Älä keksi henkilön nimeä.
+Vastaanottajan etunimi on tiedossa vain, jos tieto on lähteistetty
+ja tarkistettu. Yleiseen yritysosoitteeseen lähetettävässä viestissä
+aloita 'Hei,' ja puhuttele yritystä sen oikealla nimellä.
+Älä keksi vastaanottajaa, nimeä tai yleistä sähköpostiosoitetta.
+Tarkistettu vastaanottaja, jos tallennettu:
+{company.get("outreach_research", {}).get("recipient_first_name", "")}
+Vastaanottajan nimen tarkistus:
+{company.get("outreach_research", {}).get("recipient_name_verified_by_human", False)}
+Jos tarkistus ei ole tosi, älä käytä nimeä.
 Valmis julkinen demolinkki (ei anneta ellei vahvistettu):
 {company.get("demo_url", "")}
 Jos tämä on tyhjä, viesti voi viitata kuvan ja linkin sisältävään
@@ -327,6 +348,8 @@ Jokainen asiakkaan hyöty ja havainto tarkistetaan ennen lähettämistä.
         "subject": subject,
         "body": body,
         "approved": False,
+        "sender_account": "hello.kaurivo@gmail.com",
+        "send_authorized": False,
     }
 
     upsert_company(
