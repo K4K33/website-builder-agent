@@ -114,6 +114,29 @@ class StatementInspectorTests(unittest.TestCase):
         result = inspect_latest_statement(company(), downloader=lambda id, period: XML)
         self.assertEqual(result["business_id"], "0116297-6")
 
+    def test_lead_queue_uses_prh_review_and_reputation_evidence_safely(self):
+        from datetime import date
+        from utils.lead_queue import rank_leads
+        reput = {"rating": 4.9, "review_count": 55,
+                 "source_url": "https://example.org/verified-reviews",
+                 "verified_by_human": True, "checked_at": date.today().isoformat()}
+        no_site = {"name": "Popular venue", "website": "",
+                   "site_verification": {"confirmed_absent": True,
+                       "verified_by_human": True, "source_url": "https://example.org/verification"},
+                   "reputation": reput}
+        periods = {"name": "XBRL", "website": "https://xbrl.example",
+                   "financial_availability": {"status": "available"}}
+        catalog = {"name": "Needs source review", "website": "https://catalog.example",
+                   "financial_statement_review": {"status": "taxonomy_review_required"}}
+        unknown = {"name": "Unknown", "website": ""}
+        results = rank_leads({"strong": no_site, "periods": periods, "catalog": catalog, "unknown": unknown})
+        by_slug = {row["company"]: row for row in results}
+        self.assertEqual(by_slug["strong"]["bucket"], "verify_financial_budget")
+        self.assertEqual(by_slug["periods"]["bucket"], "inspect_available_prh_statement")
+        self.assertEqual(by_slug["catalog"]["bucket"], "review_xbrl_taxonomy_facts")
+        self.assertTrue(all(row["outreach_allowed"] is False for row in results))
+        self.assertLess(results.index(by_slug["strong"]), results.index(by_slug["unknown"]))
+
     def test_cli_requires_explicit_permission_and_keeps_financials_unchanged(self):
         with tempfile.TemporaryDirectory() as tmp:
             cfg = patch.object(config, "COMPANIES_FILE", str(Path(tmp) / "companies.json"))
