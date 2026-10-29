@@ -111,9 +111,11 @@ def chat():
                     f"Project not found: {slug}"
                 )
             else:
-                intelligence = company.get("lead_intelligence") or {}
+                from utils.lead_intelligence import evaluate_prospect
+                intelligence = evaluate_prospect(company)
                 review = intelligence.get("reputation") or {}
                 financial = intelligence.get("financial") or {}
+                capacity = intelligence.get("purchase_capacity") or {}
                 response = (
                     f"Company: "
                     f"{company.get('name', resolved_slug)}\n"
@@ -123,7 +125,11 @@ def chat():
                     f"{company.get('status', 'unknown')}\n"
                     f"Website status: {intelligence.get('site_status', 'unknown')}\n"
                     f"Reputation: {review.get('status', 'unknown')}\n"
-                    f"Financial fit: {financial.get('status', 'needs_review')}\n"
+                    f"Financial evidence: {financial.get('status', 'needs_review')}\n"
+                    f"Indicative buying potential: {capacity.get('score', 0)}/100 "
+                    f"({capacity.get('status', 'insufficient_evidence')}, "
+                    f"{capacity.get('confidence', 'limited')} confidence)\n"
+                    f"Not a verified budget or purchase probability.\n"
                     f"Commercial gate: {intelligence.get('outreach_gate', 'verification_pending')}\n"
                     f"Recommended check: {intelligence.get('next_step', 'verify business evidence')}\n"
                     f"Demo: "
