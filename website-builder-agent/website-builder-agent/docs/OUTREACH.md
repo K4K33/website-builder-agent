@@ -82,6 +82,78 @@ object. Verify applicable recipient-specific consent rules before sending,
 especially for personal addresses and sole traders. See
 https://www.finlex.fi/fi/lainsaadanto/2014/917 (sections 200-203).
 
+## Why the company benefits and what we have done before
+
+A strong proposal is not just "I can make a new site." Each message must
+explain one **concrete business benefit** attributable to something the
+business can see in its personal approved demo:
+
+- A verified existing site with a hard-to-find booking option can get a
+  visible booking path. Customer benefit: fewer steps to make a booking.
+- A verified existing site with a hidden enquiry route can get a prominent
+  quotation/contact button. Business benefit: easier incoming enquiries.
+- An independently verified business without a website can get a site
+  describing its real services, service area and genuine contact options.
+  Customer benefit: easier discovery and direct contact in one place.
+
+Do not say the changes **caused** more customers, bookings, revenue or
+Google ranking increases unless independently measured and authorized.
+Avoid fabricated figures, exaggerated conversion claims and vague
+"premium/modern" selling points not connected to a customer action.
+
+### Previous work: only verified and authorised proof
+
+The research record may include `portfolio_examples` for specific
+Kaurivo case studies, used by the AI only after these checks:
+
+```json
+{
+  "portfolio_examples": [
+    {
+      "project_name": "Example shown only after verification",
+      "project_type": "demo",
+      "improvements": ["One genuine improvement visibly present in this demo"],
+      "proof_url": "https://your-real-public-demo-url.example",
+      "verified_by_human": true,
+      "approved_for_outreach": true
+    }
+  ]
+}
+```
+
+This schema is an illustration, **not an existing verified customer or
+real published proof URL**. Never copy its placeholder into real mail.
+A confirmed demo is always labelled "suunnitteludemo" or
+"verkkosivuehdotus", not a customer order.
+
+For an actual client project, use `project_type: "client_work"` **only**
+when the client relationship and work have been verified and the client
+has given `client_reference_permission: true`. Do not pass testimonials,
+ROI figures, claims of increased sales or company names without evidence
+and permission. Without any authorised case, omit portfolio claims and
+let the recipient-specific approved demo demonstrate ability.
+
+### Two distinct prospect types
+
+**Existing website:** "Tutustuin [company]'n nykyisiin verkkosivuihin.
+Huomasin, että [checked issue]. Nostin [specific completed demo change]
+näkyviin, jolloin [specific customer action] onnistuu helpommin."
+Add verified prior work only if relevant and approved, then a clear
+offer to implement a finished site.
+
+**Verified no website:** "Tutustuin [company]'n toimintaan, eikä
+yritykselle löytynyt tarkistuksessa omaa verkkosivua." Name real
+services and explain one concrete advantage of a single place for
+service descriptions and direct enquiries. Show a company-specific
+approved demo. Offer a new website, **not a redesign**. OSM missing
+website tags are not enough to assert this claim.
+
+**HTML format:** Personal message, restrained brand signature, one
+genuine screenshot (if available), one functional link, text fallback,
+working opt-out footer, no massive marketing banner. Preview the whole
+email on mobile and with images disabled before approval. Never send
+a draft automatically.
+
 ## Data limitations
 
 OpenRouter/AI-generated candidate observations are not enough to claim
