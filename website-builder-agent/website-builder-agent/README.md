@@ -1,4 +1,4 @@
-> Current quality controls, model setup, costs and remaining validation: [QUALITY.md](QUALITY.md).
+> Current quality controls, model setup, costs and remaining validation: [QUALITY.md](QUALITY.md).\n> Customer-specific email research, persuasive copy and sending safeguards: [OUTREACH.md](docs/OUTREACH.md).
 
 # Website Builder Agent
 
