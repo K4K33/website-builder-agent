@@ -179,3 +179,82 @@ No actual paid multi-industry benchmark has been executed as part of this
 change, so **production ready is not yet proven**. The fixture tests exercise
 orchestration and browser gates, not independent frontier model creative quality.
 Outreach and Kaurivo's own website remain deliberately outside this phase.
+
+
+## Prospect discovery: businesses without listed websites and financial screening
+
+The Scout now supports two tracks: **existing websites needing improvement** and
+**companies without a website listed in OpenStreetMap**. OSM omitting a website
+is not proof of no website. The second track is saved in
+`verification_pending` without screenshots or paid AI; it must never be
+misrepresented as a confirmed no-site company or sent automatically to outreach.
+
+Use a zero-AI **persistent first-pass discovery**:
+
+    python main.py scout --count 10 --industry ravintola --location Tampere --discovery-only
+
+This uses OpenStreetMap's publicly accessible Overpass API only. It does not
+use OpenRouter, Tavily or the browser. `--dry-run` still makes no saves.
+A later manual website check may reveal that OSM simply missed a real website.
+The standard Scout route still supports existing-site visual redesign discovery.
+
+### Official identity and financial evidence
+
+The optional `python main.py verify-registry COMPANY` performs an explicit
+free PRH/YTJ open-data lookup: first by known business ID, otherwise by exact
+company name and saved city. If PRH identity is ambiguous or the names conflict,
+verification stops pending human checking. The official API does not provide
+all company types (including sole proprietors), nor does its basic company
+record establish revenue, profit, cash, business budget or ability to pay.
+For a strict Y-tunnus use `--business-id 0116297-6`; name mismatches require
+deliberate `--confirm-name-mismatch` after real-world inspection.
+
+Financial statement and reviewed reputation enrichment is **source-driven**:
+create an evidence JSON yourself, using figures from legally accessible
+verified source material, then run:
+
+    python main.py screen-lead COMPANY --evidence evidence.json --project-price 1500
+
+Example shape (illustrative data, NOT a factual business record):
+
+    {
+      "reputation": {"rating": 4.8, "review_count": 60,
+        "source_url": "https://example.org/verified-provider-page",
+        "checked_at": "2026-10-29", "verified_by_human": true},
+      "site_verification": {"confirmed_absent": true,
+        "source_url": "https://example.org/verified-directory-page",
+        "verified_by_human": true},
+      "financials": {"business_id": "0116297-6",
+        "business_id_verified": true, "registry_source_url": "https://avoindata.prh.fi/opendata-ytj-api/v3/companies?businessId=0116297-6",
+        "legal_status": "active", "insolvency_proceeding": false,
+        "revenue_eur": 245000, "operating_profit_eur": 17000,
+        "financial_year": 2025,
+        "financial_source_url": "https://example.org/verified-statement",
+        "financial_verified_by_human": true}
+    }
+
+The example URLs/numbers above are **fictitious schema examples**.
+Never mark evidence verified without checking the source, legal entity,
+location, date and data-use rights. Strong reviews default to >=4.5/5 with
+>=20 ratings checked within 180 days. A commercial "promising" budget signal
+requires a positive reported operating profit, suitable sales scale,
+registered active status, verified business ID and a recent source-backed
+financial statement. It is **not** a solvency test or a claim of likely
+purchase. Missing data is `needs_review` (not "broke") and stops expensive
+build/outreach. Registry-based bankruptcy, liquidation, restructuring or
+termination is exclusionary for prospecting.
+
+The default full paid pipeline now prevents spending on unresolved lead
+finances, including `--company COMPANY` runs. Fully automatic finance
+statements are NOT implemented: PRH's free iXBRL data covers only ~5% of
+reports. Google Places ratings/website fields require billing, and
+Google's API has storage/attribution restrictions; no unauthorized Google
+scraping or fee-incurring integration is enabled here. Review values remain
+manually verified in this phase. Accordingly **do not claim the system
+automatically discovers only highly reviewed financially qualified firms
+yet**.
+
+This phase does not change the no-send outreach policy. Human approval
+is still required for website completion and customer contact.
+PRH open data attribution: Patentti- ja rekisterihallitus (PRH),
+CC BY 4.0, https://avoindata.prh.fi/fi/info/swagger-ui.
