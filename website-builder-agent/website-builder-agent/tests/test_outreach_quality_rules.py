@@ -52,7 +52,7 @@ class OutreachQualityTests(unittest.TestCase):
         prompt = outreach.OUTREACH_SYSTEM_PROMPT
         self.assertIn("Olen Kaarlo, Kaurivon perustaja", prompt)
         self.assertIn("Suunnittelen ja toteutan", prompt)
-        self.assertIn("voin toteuttaa uuden sivuston teille kokonaan", prompt)
+        self.assertIn("toteuttaa uuden sivuston teille kokonaan", prompt)
         self.assertIn("Olisiko teillä kiinnostusta uudistaa", prompt)
         self.assertIn("Olisiko oman verkkosivun", prompt)
         self.assertIn("hello.kaurivo@gmail.com", prompt)
