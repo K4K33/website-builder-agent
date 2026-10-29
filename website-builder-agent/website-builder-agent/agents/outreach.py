@@ -82,10 +82,7 @@ def draft_outreach(
     # 1. Tarkista QA
     # ---------------------------------------------------------
 
-    qa = company.get(
-        "qa",
-        {},
-    )
+    qa = company.get("qa") or {}
 
     if not qa.get(
         "overall_pass",
@@ -101,10 +98,7 @@ def draft_outreach(
     # 2. Tarkista käyttäjän hyväksyntä
     # ---------------------------------------------------------
 
-    approval = company.get(
-        "approval",
-        {},
-    )
+    approval = company.get("approval") or {}
 
     if (approval.get("approved") is not True
             or approval.get("build_version") != company.get("build", {}).get("version")
