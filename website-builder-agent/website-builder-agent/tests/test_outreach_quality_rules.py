@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import config
 from agents import outreach
+from utils.outreach_portfolio import approved_portfolio_examples
 
 
 def company_record():
@@ -80,6 +81,64 @@ class OutreachQualityTests(unittest.TestCase):
         context = ask.call_args.args[1]
         self.assertIn("https://example.org/demo-for-salon", context)
         self.assertIn("Älä koskaan keksi URL", outreach.OUTREACH_SYSTEM_PROMPT)
+
+    def test_prompt_explicitly_sells_real_business_benefit_with_prior_work(self):
+        prompt = outreach.OUTREACH_SYSTEM_PROMPT
+        self.assertIn("KONKREETTISEKSI HYÖDYKSI YRITYKSELLE", prompt)
+        self.assertIn("aiempia töitä", prompt)
+        self.assertIn("suunnitteludemo", prompt.lower())
+        self.assertIn("verkkosivua", prompt)
+        self.assertIn("Olisiko oman verkkosivun", prompt)
+
+    def test_unverified_portfolio_excluded_and_no_claims_in_prompt(self):
+        record = company_record()
+        record["portfolio_examples"] = [
+            {"project_name": "Fake result", "project_type": "client_work",
+             "improvements": ["Doubled revenue"], "proof_url": "https://example.org",
+             "verified_by_human": False, "approved_for_outreach": True,
+             "client_reference_permission": True},
+        ]
+        with patch.object(outreach, "ask_claude_json",
+                          return_value={"subject": "Idea", "body": "Hei, tässä ehdotus."}) as ask:
+            outreach.draft_outreach("example-salon", record)
+        context = ask.call_args.args[1]
+        self.assertIn("Aiempi todennettu", context)
+        self.assertIn("[]", context)
+        self.assertNotIn("Fake result", context)
+        self.assertNotIn("Doubled revenue", context)
+
+    def test_permissioned_demo_works_and_keeps_demo_status(self):
+        demo = {"project_name": "Koivuranta Demo",
+                "project_type": "demo",
+                "improvements": ["Palvelualueen selkeämpi esittely"],
+                "proof_url": "https://portfolio.example.org/koivuranta",
+                "verified_by_human": True, "approved_for_outreach": True,
+                "improvement_in_revenue": "1000%"}
+        result = approved_portfolio_examples([demo])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["project_type"], "demo")
+        self.assertIn("ei asiakastoimeksianto", result[0]["description"])
+        self.assertNotIn("improvement_in_revenue", result[0])
+        record = company_record()
+        record["portfolio_examples"] = [demo]
+        with patch.object(outreach, "ask_claude_json",
+                          return_value={"subject": "Idea", "body": "Hei, tässä ehdotus."}) as ask:
+            outreach.draft_outreach("example-salon", record)
+        context = ask.call_args.args[1]
+        self.assertIn("Koivuranta Demo", context)
+        self.assertIn("ei asiakastoimeksianto", context)
+        self.assertNotIn("1000%", context)
+
+    def test_client_example_needs_reference_permission(self):
+        client = {"project_name": "Real public project", "project_type": "client_work",
+                  "improvements": ["Selkeä tarjouspyyntö"],
+                  "proof_url": "https://example.org/case",
+                  "verified_by_human": True, "approved_for_outreach": True}
+        self.assertEqual(approved_portfolio_examples([client]), [])
+        client["client_reference_permission"] = True
+        result = approved_portfolio_examples([client])
+        self.assertEqual(result[0]["project_type"], "client_work")
+        self.assertIn("lupa referenssin käyttöön", result[0]["description"])
 
     def test_dashes_and_old_boilerplate_are_not_stored(self):
         record = company_record()
