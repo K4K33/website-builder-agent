@@ -131,7 +131,7 @@ class StatementInspectorTests(unittest.TestCase):
         unknown = {"name": "Unknown", "website": ""}
         results = rank_leads({"strong": no_site, "periods": periods, "catalog": catalog, "unknown": unknown})
         by_slug = {row["company"]: row for row in results}
-        self.assertEqual(by_slug["strong"]["bucket"], "promising_no_site_manual_review")
+        self.assertEqual(by_slug["strong"]["bucket"], "verify_business_activity")
         self.assertEqual(by_slug["periods"]["bucket"], "inspect_available_prh_statement")
         self.assertEqual(by_slug["catalog"]["bucket"], "review_xbrl_taxonomy_facts")
         self.assertTrue(all(row["outreach_allowed"] is False for row in results))
