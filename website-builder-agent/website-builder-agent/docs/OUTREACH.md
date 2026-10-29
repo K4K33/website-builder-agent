@@ -25,39 +25,62 @@ with a ready demo deserves a fully individualized note.
 6. Review the recipient name, greeting, headline and the complete draft.
    The owner separately authorizes *each actual sending action*.
 
-## Email narrative
+## Email narrative: direct personal sales from Kaarlo at Kaurivo
 
-A short real-company subject.
+The user wants a **commercially direct** message, not a soft 'design idea'
+pitch. Before the second sentence ends, the recipient should know who
+Kaarlo is and why this business has been contacted.
 
-A concise opening acknowledging a **genuinely observed specific strength**.
+1. Short recipient-specific subject, e.g. "Verkkosivuidea [Company]lle".
+2. Introduce sender immediately: "Olen Kaarlo Kaurivolta.
+   Suunnittelen ja toteutan verkkosivuja yrityksille."
+3. State why THIS company was contacted; for an existing site, reference
+   one or two factual, specific modernization opportunities. Connect
+   the observation to an actual customer's practical task without
+   inventing lost sales or conversion statistics. Avoid gratuitous flattery.
+4. State that a company-specific demo has been built and show a genuine
+   approved demo link/card. Never invent a URL or pretend mockups are
+   a complete production launch.
+5. Make a clear commercial offer: "Jos pidätte ehdotuksesta,
+   voin toteuttaa uuden sivuston teille kokonaan."
+6. End with a **direct sales question**, for example "Olisiko teillä
+   kiinnostusta uudistaa nykyisiä verkkosivujanne?" or, for a
+   verified no-website business, "Olisiko oman verkkosivun
+   toteuttaminen ajankohtaista?"
+7. Close as Kaarlo at Kaurivo with the Kaurivo contact details. Never add a founder or CEO title.
 
-One real customer-journey friction point, with its **meaning for the customer**
-instead of aesthetic criticism. No made-up conversion losses.
+**Sender account:** All client-facing drafts and approved commercial mail must
+be created and sent using only **hello.kaurivo@gmail.com**. NEVER use
+any personal Gmail account or any other sender.
+Introducing Kaarlo by his first name in the body does NOT make it a
+personal Gmail email. Before a send operation through Gmail, explicitly
+confirm the connected account's `get_profile` address equals
+`hello.kaurivo@gmail.com`; if this cannot be verified, abort.
+Verify the exact recipient and message and obtain per-message owner approval.
+The local Python repository has no sending ability.
 
-One exact solution visible in the proposed demo, not just "a more modern site".
+Avoid vague closings such as "Miltä tällainen suunta tuntuu?", a forced
+positive opening, over-explaining or asking for a meeting in the first
+contact. The tone should be confident, helpful, honest and friendly,
+not rude or manipulative. Don't claim an improvement that isn't actually
+in the demo. Make each observation and solution truly distinct.
 
-A clear preview and one low-pressure interest question. Do not ask for a
-meeting in the first email or pretend the company asked for this work.
-
-A plain signature identifying the sender and contact address.
+Use a crisp HTML mail with a company-specific approved screenshot/card
+and one clear demo link, with a real text fallback when images are blocked.
+Avoid newsletters, tracking pixels and large embedded base64 images.
 
 No sentence-level em dashes, en dashes, separator lines, aggressive sales
 claims, artificial urgency, boilerplate flattery or generic "inspired to
-build you a website" filler. Avoid heavy marketing templates, tracking
-pixels and attachments on a cold first contact.
-
-A single branded screenshot card and one CTA can work well in HTML, but
-the message must remain understandable in plain text and when images are
-blocked. Avoid inserting large embedded base64 images.
+build you a website" filler.
 
 **Compliance:** A Finnish commercial B2B email must also clearly offer a
-simple and free way to opt out in every message. The existing awkward
-long opt-out sentence should not be in the personal sales copy. The email
-can instead use a concise, legible footer link labelled "Kieltäydy
-jatkoviesteistä" with a working reply or unsubscribe mechanism. Suppress
-contacts who object. Verify applicable recipient-specific consent rules
-before sending, especially for personal addresses and sole traders.
-See https://www.finlex.fi/fi/lainsaadanto/2014/917 (sections 200-203).
+simple and free way to opt out in every message. The awkward long opt-out
+sentence should not be in the personal sales copy. The email can instead
+use a concise, legible footer link labelled "Kieltäydy jatkoviesteistä"
+with a working reply or unsubscribe mechanism. Suppress contacts who
+object. Verify applicable recipient-specific consent rules before sending,
+especially for personal addresses and sole traders. See
+https://www.finlex.fi/fi/lainsaadanto/2014/917 (sections 200-203).
 
 ## Data limitations
 

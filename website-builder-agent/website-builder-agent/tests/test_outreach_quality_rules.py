@@ -50,11 +50,13 @@ class OutreachQualityTests(unittest.TestCase):
 
     def test_prompt_focuses_on_customer_actions_not_generic_modern_sites(self):
         prompt = outreach.OUTREACH_SYSTEM_PROMPT
-        self.assertIn("Vastaanottaja ymmärtää", prompt)
-        self.assertIn("ajanvarauksen", prompt)
-        self.assertIn("Yksi", prompt)
-        self.assertIn("Älä pyydä kylmässä ensiviestissä tapaamista", prompt)
-        self.assertIn("kieltomahdollisuus", prompt)
+        self.assertIn("Olen Kaarlo Kaurivolta", prompt)
+        self.assertIn("Suunnittelen ja toteutan", prompt)
+        self.assertIn("toteuttaa uuden sivuston teille kokonaan", prompt)
+        self.assertIn("Olisiko teillä kiinnostusta uudistaa", prompt)
+        self.assertIn("Olisiko oman verkkosivun", prompt)
+        self.assertIn("hello.kaurivo@gmail.com", prompt)
+        self.assertIn("ihmisen erillisellä hyväksynnällä", prompt)
 
     def test_draft_includes_company_specific_evidence_and_customer_task(self):
         record = company_record()
@@ -67,6 +69,17 @@ class OutreachQualityTests(unittest.TestCase):
         self.assertIn("Faster booking", instructions)
         self.assertIn("Visible booking button", instructions)
         self.assertIn("Booking link is hard to find", instructions)
+
+    def test_prompt_passes_existing_demo_link_without_inventing_one(self):
+        record = company_record()
+        record["demo_url"] = "https://example.org/demo-for-salon"
+        with patch.object(outreach, "ask_claude_json",
+                          return_value={"subject": "Site example",
+                                        "body": "Hei, olen Kaarlo. Tein ehdotuksen. Olisiko kiinnostusta?"}) as ask:
+            outreach.draft_outreach("example-salon", record)
+        context = ask.call_args.args[1]
+        self.assertIn("https://example.org/demo-for-salon", context)
+        self.assertIn("Älä koskaan keksi URL", outreach.OUTREACH_SYSTEM_PROMPT)
 
     def test_dashes_and_old_boilerplate_are_not_stored(self):
         record = company_record()
