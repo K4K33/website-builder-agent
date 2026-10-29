@@ -15,6 +15,8 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
+from utils.design_benchmark import validate_benchmark
+import json
 
 from utils.claude_client import ask_claude
 from utils.state import (
@@ -352,6 +354,8 @@ def _safe_fact_summary(company_facts: dict) -> str:
         "address": company_facts.get("contact_address", ""),
         "opening_hours": company_facts.get("opening_hours", {}),
         "tagline": company_facts.get("tagline", ""),
+        "history": company_facts.get("history", ""),
+        "fleet": company_facts.get("fleet", {}),
         "target_audience": company_facts.get(
             "target_audience",
             "",
@@ -483,8 +487,9 @@ def _validate_generated_content(
         r"yli\s+\d+\s+(?:asiakka|ammattila)",
     ]
 
+    verified_text = json.dumps(company_facts, ensure_ascii=False).lower()
     for pattern in fabricated_patterns:
-        if re.search(pattern, text):
+        if any(match.group(0) not in verified_text for match in re.finditer(pattern, text)):
             raise RuntimeError(
                 "Builderin tuottamassa sivussa havaittiin "
                 "mahdollisesti keksitty yritysfakta."
@@ -513,6 +518,8 @@ def build_site(
             f"Aja ensin: python main.py research {slug}"
         )
 
+    benchmark = validate_benchmark(research, company.get("url", ""))
+
     company_facts = research.get(
         "company_facts",
         {},
@@ -539,6 +546,9 @@ def build_site(
 
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+TOIMIALAN VERTAILU (vain suunnittelua, ei yritysfaktoja):
+{json.dumps(benchmark, ensure_ascii=False)}
 
 ========================================
 VERIFIED FACTS
@@ -741,6 +751,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     """
     slug, company = _resolve_company(slug_or_name)
     research = company.get("research") or {}
+    validate_benchmark(research, company.get("url", ""))
     facts = research.get("company_facts")
     if not isinstance(facts, dict) or not facts:
         raise RuntimeError("Research company facts are required before completion.")
@@ -791,7 +802,12 @@ def revise_site(
         {},
     )
 
+    benchmark = validate_benchmark(research, company.get("url", ""))
+
     user_prompt = f"""
+TOIMIALAN VERTAILU (vain design-dataa):
+{json.dumps(benchmark, ensure_ascii=False)}
+
 ========================================
 VERIFIED FACTS
 ========================================

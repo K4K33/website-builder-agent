@@ -87,3 +87,20 @@ This runs the same factual and static validation as an API build, records explic
 external-agent provenance, increments the build version and clears stale QA. It
 does not claim autonomous API generation or visual-AI acceptance. Use this mode for
 reviewable examples when API credentials are unavailable.
+
+## Required industry comparison
+
+Every new build, external completion and revision now requires two independent
+industry reference domains with saved screenshots and specific observations,
+applicable ideas and things to avoid. The research stage captures up to three
+reference sites and gives their images/text to the existing final design-brief
+request. Unavailable references do not become fabricated evidence. Existing
+research without this evidence must be refreshed before generation.
+
+QA receives generated-page images first and reference images afterward. Its
+structured comparison must name the observed reference URLs, find the result
+company-specific, and report no material remaining gaps before acceptance.
+These are reasoned internal comparisons, not proof of industry leadership or
+an objective model-quality ranking. Extra reference fetching/screenshots and
+larger vision inputs add time and may increase token costs; no extra AI stage
+was introduced.

@@ -12,6 +12,7 @@ from agents import scout, builder, qa, research
 from utils import claude_client, state
 from utils.quality import canonical_url, normalize_facts, qualify_lead
 from utils.browser_qa import inspect_site
+from utils.design_benchmark import validate_benchmark
 
 HTML = '''<!DOCTYPE html><html lang="fi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -29,7 +30,10 @@ def lead(score=8, confidence=.9):
 
 
 def review():
-    return {"content_ok": True, "issues": [], "visual_review": dict.fromkeys(
+    return {"content_ok": True, "issues": [], "reference_comparison": {
+        "reviewed_urls": ["https://reference-a.fi", "https://reference-b.fi"],
+        "company_specific": True, "remaining_gaps": [], "ready_for_client_review": True
+    }, "visual_review": dict.fromkeys(
         ("desktop", "tablet", "mobile", "small_mobile", "brand_specificity", "typography", "hierarchy"), 90
     ) | {"blockers": [], "improvements": []}}
 
@@ -43,6 +47,35 @@ class QualityTests(unittest.TestCase):
                          "COMPANIES_FILE": str(self.root / 'data/companies.json'),
                          "OUTPUT_DIR": str(self.root / 'output')}.items():
             p = patch.object(config, key, val); p.start(); self.addCleanup(p.stop)
+
+    def benchmark(self):
+        shot = self.root / 'reference.png'; shot.write_bytes(b'fixture')
+        return [{"url":url,"screenshots":{"desktop":str(shot)},
+                 "observations":["Visible CTA and service details"],
+                 "apply":["Use company-specific service detail and a real contact path"],
+                 "avoid":["Do not copy competitor claims"]}
+                for url in ("https://reference-a.fi", "https://reference-b.fi")]
+
+    def test_benchmark_rejects_empty_duplicate_and_unobserved_sources(self):
+        for records in ([], self.benchmark()[:1], [self.benchmark()[0]] * 2,
+                        [dict(record,screenshots={}) for record in self.benchmark()]):
+            with self.assertRaises(RuntimeError): validate_benchmark({"design_benchmark":records})
+        self.assertEqual(len(validate_benchmark({"design_benchmark":self.benchmark()})),2)
+
+    def test_benchmark_cannot_use_target_as_independent_reference(self):
+        with self.assertRaises(RuntimeError):
+            validate_benchmark({"design_benchmark":self.benchmark()},'https://reference-a.fi')
+
+    def test_qa_comparison_must_match_observed_references(self):
+        item=review(); self.assertTrue(qa.review_passes(item,['https://reference-a.fi','https://reference-b.fi']))
+        self.assertFalse(qa.review_passes(item,['https://other.fi','https://reference-b.fi']))
+        item['reference_comparison']['remaining_gaps']=['generic service copy']
+        self.assertFalse(qa.review_passes(item))
+
+    def test_verified_historical_year_is_allowed_but_invented_year_is_rejected(self):
+        builder._validate_generated_content('<p>Liikennettä vuodesta 1923</p>',{'history':'Liikennettä vuodesta 1923'})
+        with self.assertRaises(RuntimeError):
+            builder._validate_generated_content('<p>Liikennettä vuodesta 1923</p>',{})
 
     def test_url_deduplication(self):
         self.assertEqual(canonical_url('http://www.testi.fi/?utm=a'), 'https://testi.fi')
@@ -111,7 +144,7 @@ class QualityTests(unittest.TestCase):
                                                 {'contact': {'email':'real@testi.fi'}})
 
     def test_external_agent_completion_records_provenance_without_ai_call(self):
-        state.upsert_company('testi', {'research':{'company_facts':{'name':'Testi'}},
+        state.upsert_company('testi', {'research':{'company_facts':{'name':'Testi'},'design_benchmark':self.benchmark()},
                                       'qa':{'overall_pass':True}})
         response = self.root / 'response.html'; response.write_text(HTML)
         with patch.object(builder, 'ask_claude') as ask:
@@ -129,7 +162,7 @@ class QualityTests(unittest.TestCase):
         response = self.root / 'response.html'; response.write_text(HTML)
         with self.assertRaises(RuntimeError):
             builder.run_build_from_response('testi', str(response), 'Work agent')
-        state.upsert_company('testi', {'research':{'company_facts':{'name':'Testi'}}})
+        state.upsert_company('testi', {'research':{'company_facts':{'name':'Testi'},'design_benchmark':self.benchmark()}})
         response.write_text(HTML.replace('</main>','<a href="mailto:invented@fake.fi">Contact</a></main>'))
         with self.assertRaises(RuntimeError):
             builder.run_build_from_response('testi', str(response), 'Work agent')
@@ -185,12 +218,12 @@ class QualityTests(unittest.TestCase):
 
     def test_visual_qa_receives_all_rendered_views(self):
         path = builder._write_html('testi', HTML)
-        state.upsert_company('testi', {'build': {'output_path':path,'version':1},'research':{'company_facts':{}}})
+        state.upsert_company('testi', {'build': {'output_path':path,'version':1},'research':{'company_facts':{},'design_benchmark':self.benchmark()}})
         shots = {k:k+'.png' for k in ('desktop','tablet','mobile','small_mobile')}
         with patch.object(qa,'inspect_site',return_value={'pass':True,'issues':[],'screenshots':shots}), patch.object(
                 qa,'ask_claude_json',return_value=review()) as ask:
             self.assertTrue(qa.run_qa('testi')['overall_pass'])
-            self.assertEqual(len(ask.call_args.kwargs['image_paths']), 4)
+            self.assertEqual(len(ask.call_args.kwargs['image_paths']), 6)
             self.assertEqual(ask.call_args.kwargs['stage'], 'qa')
 
     def test_stale_qa_cannot_be_approved(self):
@@ -201,9 +234,9 @@ class QualityTests(unittest.TestCase):
     def test_design_pass_cannot_modify_company_facts(self):
         state.upsert_company('testi', {'name':'Testi','url':'https://testi.fi'})
         extracted = {'company_facts':{'name':'Testi','services':['Oikea palvelu']}}
-        brief = {'company_facts':{'name':'Invented','services':['Fake service']}}
+        brief = {'company_facts':{'name':'Invented','services':['Fake service']},'reference_comparison':self.benchmark()}
         with patch.object(research,'analyze_url',return_value={'success':True,'visible_text':'Oikea palvelu'}), patch.object(
-                research,'_search_tavily',return_value=[]), patch.object(
+                research,'_search_tavily',return_value=[]), patch.object(research,'_collect_reference_evidence',return_value=[dict(record,title='Reference',site_text='Service details') for record in self.benchmark()]), patch.object(
                 research,'ask_claude_json',side_effect=[extracted,brief]):
             research.run_research('testi')
         saved = state.get_company('testi')[1]

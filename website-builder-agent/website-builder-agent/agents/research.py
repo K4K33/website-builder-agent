@@ -17,8 +17,12 @@ Tärkeää:
 """
 
 import os
+import json
+from urllib.parse import urlsplit
 
-from utils.quality import normalize_facts, DESIGN_CONTRACT
+from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
+from utils.design_benchmark import validate_benchmark
+from utils.screenshot import capture_website
 
 import requests
 
@@ -142,6 +146,11 @@ Palauta VAIN validi JSON tässä muodossa:
     "target_audience": ""
   },
   "current_site_weaknesses": [],
+  "reference_comparison": [
+    {"url": "exact observed reference URL", "observations": ["visible specific finding"],
+     "apply": ["how to adapt this for the target company"],
+     "avoid": ["what not to copy, including unsupported services and claims"]}
+  ],
   "design_inspiration": [
     {
       "reference_note": ""
@@ -345,6 +354,32 @@ Sisältökuvaus:
     )
 
 
+def _collect_reference_evidence(references, target_url):
+    evidence, domains = [], {urlsplit(canonical_url(target_url)).hostname}
+    for reference in references[:5]:
+        url = canonical_url(reference.get("url"))
+        domain = urlsplit(url).hostname
+        if not domain or domain in domains:
+            continue
+        domains.add(domain)
+        try:
+            site = analyze_url(url)
+            if not isinstance(site, dict) or site.get("success") is not True:
+                continue
+            shots = capture_website(url, "reference-" + domain)
+            if not shots or not any(shots.values()):
+                continue
+            evidence.append({"url": url, "title": site.get("title", ""),
+                             "screenshots": shots, "site_text": site.get("visible_text", "")[:3500]})
+        except Exception as error:
+            print(f"[Research] Reference unavailable: {domain}: {type(error).__name__}")
+        if len(evidence) == 3:
+            break
+    if len(evidence) < 2:
+        raise RuntimeError("At least two observed industry references are required before final design research.")
+    return evidence
+
+
 def run_research(
     slug_or_name: str,
 ) -> dict:
@@ -545,7 +580,17 @@ Raaka HTML:
     # FINAL DESIGN BRIEF
     # ---------------------------------------------------------
 
+    reference_evidence = _collect_reference_evidence(references, url)
+    reference_images = [path for record in reference_evidence
+                        for path in record["screenshots"].values() if path and os.path.isfile(path)]
+
     final_prompt = f"""
+OBSERVED INDUSTRY REFERENCES (screenshots in this order, not facts about the target):
+{json.dumps(reference_evidence, ensure_ascii=False)}
+Compare the actual customer journey, typography, layout, imagery and factual detail.
+Record concrete observations and target-specific adaptations in reference_comparison.
+Never copy competitors' text, assets, certifications or service promises.
+
 KOHDEYRITYS
 
 Nimi:
@@ -586,8 +631,9 @@ Tärkeää:
     brief = ask_claude_json(
         FINAL_RESEARCH_PROMPT,
         final_prompt,
-        max_tokens=5000,
+        max_tokens=6000,
         stage="research",
+        image_paths=reference_images,
     )
 
     if not isinstance(
@@ -605,8 +651,16 @@ Tärkeää:
     # SAVE
     # ---------------------------------------------------------
 
+    comparison = {canonical_url(item.get("url")): item for item in brief.get("reference_comparison", [])
+                  if isinstance(item, dict)}
+    benchmark = [{"url": record["url"], "title": record["title"],
+                  "screenshots": record["screenshots"],
+                  **{key: comparison.get(record["url"], {}).get(key, [])
+                     for key in ("observations", "apply", "avoid")}}
+                 for record in reference_evidence]
     research_data = {
         **brief,
+        "design_benchmark": benchmark,
         # The design pass must not rewrite or invent extracted company facts.
         "company_facts": company_facts,
         "fact_sources": [{"url": url, "title": site_data.get("title", ""),
@@ -626,6 +680,8 @@ Tärkeää:
         ],
         "reference_search_query": search_query,
     }
+
+    validate_benchmark(research_data, url)
 
     updated_company = upsert_company(
         slug,
