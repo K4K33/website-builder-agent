@@ -585,7 +585,7 @@ def _save_company(
         **company,
         "slug": slug,
         "url": _normalize_url(company.get("website") or company.get("url")),
-        "status": "verification_pending" if site != "has_website" else "found",
+        "status": "verification_pending" if site != "has_website" or company.get("discovery_only") else "found",
         "lead_type": "no_website_candidate" if site != "has_website" else "redesign_candidate",
         "lead_intelligence": evaluate_prospect(company),
     }
@@ -597,6 +597,8 @@ def _analyze_candidates(
     candidates: list[dict],
     max_results: int,
     dry_run: bool,
+    discovery_only: bool = False,
+    commercial_only: bool = False,
 ) -> list[dict]:
 
     analyzed = []
@@ -607,7 +609,11 @@ def _analyze_candidates(
 
     for candidate in candidates:
 
-        if len(analyzed) >= max_results:
+        # Website-less candidates must not exhaust the expensive website-analysis
+        # quota before the first actual website appears in the OSM results.
+        web_count = sum(item.get("site_status") == "has_website" for item in analyzed)
+        missing_count = len(analyzed) - web_count
+        if web_count >= max_results and missing_count >= max_results:
             break
 
         name = candidate.get(
@@ -623,6 +629,8 @@ def _analyze_candidates(
         )
 
         if not website:
+            if missing_count >= max_results:
+                continue
             # Discovery != redesign verification. Never call browser/AI on a nonexistent URL.
             identity = (candidate.get("osm_type"), candidate.get("osm_id"))
             if identity in seen:
@@ -648,7 +656,7 @@ def _analyze_candidates(
             print(f"  [lead] Verkkosivua ei merkitty OSM:ään: {name}; odottaa tarkistusta")
             continue
 
-        if canonical_url(website) in seen:
+        if web_count >= max_results or canonical_url(website) in seen:
             continue
         seen.add(canonical_url(website))
         candidate["website"] = website
@@ -657,6 +665,19 @@ def _analyze_candidates(
         candidate["lead_intelligence"] = evaluate_prospect(candidate)
         if candidate["lead_intelligence"]["financial"]["status"] == "exclude":
             print(f"  [skip] Rekisteröity maksukyvyttömyysmenettely: {name}")
+            continue
+        if discovery_only:
+            candidate["discovery_only"] = True
+            candidate["qualification"] = {
+                "eligible": False, "score": 0, "confidence": 0,
+                "reasons": ["financial_and_site_redesign_review_pending"],
+            }
+            candidate["lead_type"] = "redesign_candidate"
+            analyzed.append(candidate)
+            print(f"  [lead] Tallennusjonoon ilman AI- tai selainanalyysiä: {name}")
+            continue
+        if commercial_only and candidate["lead_intelligence"]["financial"]["status"] != "promising":
+            print(f"  [skip] Talousnäyttö puuttuu; maksullista analyysiä ei tehdä: {name}")
             continue
 
         print(
@@ -833,6 +854,7 @@ def scout(
     location: str = "Tampere",
     dry_run: bool = False,
     commercial_only: bool = False,
+    discovery_only: bool = False,
 ) -> list[dict]:
 
     if not 1 <= count <= 30:
@@ -896,9 +918,20 @@ def scout(
         candidates,
         max_results=min(count * 3, 30),
         dry_run=dry_run,
+        discovery_only=discovery_only,
+        commercial_only=commercial_only,
     )
 
-    if not dry_run:
+    if discovery_only and not dry_run:
+        # Cost-free collection only; do not confuse an unscreened lead with a qualified site.
+        # Keep a mix of businesses with/without website, without false review claims.
+        present = [item for item in analyzed if item.get("site_status") == "has_website"]
+        missing = [item for item in analyzed if item.get("lead_type") == "no_website_candidate"]
+        reserve_missing = min(count // 2, len(missing))
+        analyzed = (present[:count - reserve_missing] +
+                    missing[:reserve_missing] +
+                    missing[reserve_missing:count - len(present[:count - reserve_missing])])[:count]
+    elif not dry_run:
         # Preserve the existing proven redesign route while adding low-cost,
         # non-actionable research leads. A no-website item never enters Builder.
         buildable = sorted(
@@ -1109,4 +1142,5 @@ def run_scout(
         location=location,
         dry_run=dry_run,
         commercial_only=bool(kwargs.get("commercial_only", False)),
+        discovery_only=bool(kwargs.get("discovery_only", False)),
     )
