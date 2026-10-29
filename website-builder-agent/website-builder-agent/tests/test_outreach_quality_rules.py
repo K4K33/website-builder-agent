@@ -66,6 +66,8 @@ class OutreachQualityTests(unittest.TestCase):
                                         "body": "Hei, huomasin, että ajanvaraus löytyy usean klikkauksen takaa. Uudessa etusivussa asiakas pääsee varaamaan heti. Miltä se kuulostaa?"}) as ask:
             result = outreach.draft_outreach("example-salon", record)
         self.assertFalse(result["approved"])
+        self.assertFalse(result["send_authorized"])
+        self.assertEqual(result["sender_account"], "hello.kaurivo@gmail.com")
         instructions = ask.call_args.args[1]
         self.assertIn("Faster booking", instructions)
         self.assertIn("Visible booking button", instructions)
@@ -89,6 +91,25 @@ class OutreachQualityTests(unittest.TestCase):
         self.assertIn("suunnitteludemo", prompt.lower())
         self.assertIn("verkkosivua", prompt)
         self.assertIn("Olisiko oman verkkosivun", prompt)
+
+    def test_no_person_name_means_hei_to_company(self):
+        prompt = outreach.OUTREACH_SYSTEM_PROMPT
+        self.assertIn("aloita täsmälleen 'Hei,'", prompt)
+        self.assertIn("Mainitse yrityksen oikea", prompt)
+        record = company_record()
+        record["outreach_research"]["recipient_first_name"] = ""
+        record["outreach_research"]["recipient_name_verified_by_human"] = False
+        with patch.object(outreach, "ask_claude_json",
+                          return_value={"subject": "Idea", "body": "Hei, olen Kaarlo Kaurivolta."}) as ask:
+            outreach.draft_outreach("example-salon", record)
+        context = ask.call_args.args[1]
+        self.assertIn("Yleiseen yritysosoitteeseen", context)
+        self.assertIn("Älä keksi vastaanottajaa", context)
+
+    def test_verified_sender_is_kaurivo_not_private_account(self):
+        prompt = outreach.OUTREACH_SYSTEM_PROMPT
+        self.assertIn("LÄHETTÄJÄTILI: AINOASTAAN hello.kaurivo@gmail.com", prompt)
+        self.assertIn("Mikään henkilökohtainen sähköpostitili EI ole sallittu", prompt)
 
     def test_unverified_portfolio_excluded_and_no_claims_in_prompt(self):
         record = company_record()
