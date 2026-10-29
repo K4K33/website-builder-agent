@@ -13,6 +13,7 @@ kun käyttäjä antaa siihen nimenomaisen hyväksynnän.
 
 from utils.claude_client import ask_claude_json
 from utils.lead_intelligence import evaluate_prospect
+from utils.outreach_portfolio import approved_portfolio_examples
 from utils.state import (
     get_company,
     upsert_company,
@@ -42,26 +43,49 @@ Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
    verkkosivuehdotuksen ja näytä siihen oikea linkki vain, jos se
    on annettu tai esitetään erillisessä hyväksytyssä HTML-demokortissa.
    Älä koskaan keksi URL-osoitetta tai luvattuja ominaisuuksia.
-5. Kerro SUORA kaupallinen tarjous: 'Jos pidätte ehdotuksesta, voin
+5. Muuta tekninen muutos KONKREETTISEKSI HYÖDYKSI YRITYKSELLE:
+   jos tarjouspyyntö on helpompi tehdä, yritykselle syntyy
+   helpompi yhteydenottokanava. Jos varauspolku on lyhyempi,
+   asiakas pystyy varaamaan vähemmillä vaiheilla. Jos palvelut
+   ja toimialue näkyvät heti, kiinnostunut asiakas saa tarvitsemansa
+   tiedot. Käytä 1 oikeasti toteutettua esimerkkiä ja erota
+   mahdollinen hyöty todistetuista toteutetuista ominaisuuksista.
+   Älä lupaa uutta myyntiä tai parempia Google-sijoituksia.
+6. Kerro lyhyesti AIEMMASTA TEKEMISESTÄ vain, jos annettu
+   hyväksyttyjen portfolioesimerkkien lista sisältää lähteistetyn
+   projektin. Nimeä yksi esimerkki ja konkreettinen siinä tehty
+   muutos, jos se on tässä yrityksessä merkityksellinen.
+   Suunnitteludemo on 'suunnitteludemo' tai 'verkkosivuehdotus',
+   ei 'asiakasprojekti' tai 'toteutin yritykselle käyttöön'.
+   Jos hyväksytty portfolio on tyhjä, ÄLÄ väitä aiempia töitä,
+   asiakkaita, tuloksia tai kokemuksia. Tällöin oma näyte on
+   tämän vastaanottajan valmis ehdotus.
+7. Kerro SUORA kaupallinen tarjous: 'Jos pidätte ehdotuksesta, voin
    toteuttaa uuden sivuston teille kokonaan.' Tämä ei ole väite
    siitä, että valmis tuotantosivu olisi jo toimitettu.
-6. Päätä selkeään kysymykseen: 'Olisiko teillä kiinnostusta uudistaa
+8. Päätä selkeään kysymykseen: 'Olisiko teillä kiinnostusta uudistaa
    nykyisiä verkkosivujanne?' Voit sovittaa sanamuodon vastaanottajan
    tilanteeseen. Älä piilota myyntitarjousta epämääräiseen
    'miltä suunta tuntuu' -kysymykseen.
-7. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
+9. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
    hello.kaurivo@gmail.com'.
 
 Jos yrityksellä ei ole TODETUSTI verkkosivuja, älä väitä nähneesi
 nykyisiä sivuja, äläkä sano 'uudistaa nykyisiä verkkosivuja'.
 Kerro sen sijaan 'Huomasin, ettei yrityksellenne löydy vielä
 verkkosivua' vain jos tämä on lähteistä riippumattomasti varmistettu.
-Kerro yksi rehellinen syy uuden sivun hyötyyn (esimerkiksi palvelut,
-toimialue tai yhteydenotto löytyisi yhdestä paikasta), esittele
-juuri heille rakennettu demo, tarjoa toteutus ja kysy suoraan:
+Kerro yksi rehellinen konkreettinen hyöty uudesta sivusta:
+esimerkiksi yrityksen palvelut, palvelualue ja yhteydenotto löytyisivät
+yhdestä paikasta. Erota todettu sivun puuttuminen oletuksesta:
+OSM-merkinnän puuttuminen EI todista, ettei sivua ole.
+Kerro, että valmis sivuehdotus näyttäisi, miten asiakkaat voivat
+tutustua palveluihin ja tehdä yhteydenoton ilman pelkkää
+sosiaalisen median selaamista. Mainitse yksi AIEMPI TODENNETTU
+SUUNNITTELUDEMO vain, jos se on luvallista ja lähteistettyä.
+Esittele juuri heille rakennettu demo, tarjoa toteutus ja kysy suoraan:
 'Olisiko oman verkkosivun toteuttaminen ajankohtaista?'
 
-Tyyli: 85–140 sanaa, suomalaisessa yritysviestinnässä suora,
+Tyyli: 100–165 sanaa, suomalaisessa yritysviestinnässä suora,
 ystävällinen, itsevarma, asiakasta kunnioittava, aito ihminen.
 Ei pitkiä sepustuksia, tekaistuja kehuja, yleisiä korulauseita,
 psykologista painostusta, feikkituloksia, keinotekoista kiirettä,
@@ -212,6 +236,13 @@ Uuden toteutuksen muutokset ja niiden hyväksymiskriteerit:
 
 Ihmisen mahdolliset yksilölliset, lähteistetyt havainnot:
 {company.get("outreach_research", {})}
+
+Aiempi todennettu Kaurivon portfolio, jota on lupa esitellä
+(demo ja toimitettu asiakastyö OVAT ERI ASIOITA):
+{approved_portfolio_examples(company.get("portfolio_examples"))}
+
+Jos lista on tyhjä, älä keksi tai väitä aiempia asiakkaita,
+julkaisuja, myyntilukuja tai valmiita referenssejä.
 
 Kirjoita näiden tietojen perusteella Kaarlon nimellä suora ja
 henkilökohtainen MYYNTIsähköposti. Osoita lyhyesti, mikä nykyisessä
