@@ -15,7 +15,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
-from utils.design_benchmark import validate_benchmark
+from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 import json
 
 from utils.claude_client import ask_claude
@@ -505,6 +505,14 @@ def _validate_generated_content(
     _ = industry
 
 
+def _validate_plan_sections(html, research, target_url=""):
+    decisions = validate_design_plan(research, target_url)
+    ids = {tag["id"] for tag in BeautifulSoup(html, "html.parser").find_all(id=True)}
+    missing = {decision["section_id"] for decision in decisions} - ids
+    if missing:
+        raise RuntimeError("Missing planned sections: " + ", ".join(sorted(missing)))
+
+
 def build_site(
     slug: str,
     company: dict,
@@ -519,6 +527,8 @@ def build_site(
         )
 
     benchmark = validate_benchmark(research, company.get("url", ""))
+    decisions = validate_design_plan(research, company.get("url", ""))
+    reference_images, image_labels = reference_image_inputs(benchmark)
 
     company_facts = research.get(
         "company_facts",
@@ -549,6 +559,12 @@ Rakenna verkkosivu tämän research-datan perusteella.
 
 TOIMIALAN VERTAILU (vain suunnittelua, ei yritysfaktoja):
 {json.dumps(benchmark, ensure_ascii=False)}
+
+PAKOLLINEN SUUNNITELMA ENNEN RAKENTAMISTA:
+{json.dumps(decisions, ensure_ascii=False)}
+Toteuta suunnitelman section_id-tunnukset ja hyväksymiskriteerit. Älä lisää täyteosioita.
+VERTAILUKUVAT ENSIN, tässä järjestyksessä; kohdeyrityksen kuvat niiden jälkeen:
+{json.dumps(image_labels, ensure_ascii=False)}
 
 ========================================
 VERIFIED FACTS
@@ -676,7 +692,7 @@ Palauta VAIN koko HTML.
         use_web_search=False,
         max_tokens=config.BUILDER_MAX_TOKENS,
         stage="builder",
-        image_paths=[path for path in (company.get("screenshots") or {}).values()
+        image_paths=reference_images + [path for path in (company.get("screenshots") or {}).values()
                      if isinstance(path, str) and os.path.isfile(path)] or None,
     )
 
@@ -688,6 +704,7 @@ Palauta VAIN koko HTML.
         company_facts,
     )
 
+    _validate_plan_sections(cleaned, research, company.get("url", ""))
     path = _write_html(
         slug,
         cleaned,
@@ -712,6 +729,7 @@ Palauta VAIN koko HTML.
                 "output_path": path,
                 "version": version,
                 "model": config.model_for_stage("builder"),
+                "design_decisions": decisions,
             }
         },
     )
@@ -751,7 +769,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     """
     slug, company = _resolve_company(slug_or_name)
     research = company.get("research") or {}
-    validate_benchmark(research, company.get("url", ""))
+    validate_design_plan(research, company.get("url", ""))
     facts = research.get("company_facts")
     if not isinstance(facts, dict) or not facts:
         raise RuntimeError("Research company facts are required before completion.")
@@ -759,12 +777,14 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
         raise ValueError("External response producer must be identified.")
     cleaned = _clean_html(Path(response_path).read_text(encoding="utf-8"))
     _validate_generated_content(cleaned, facts)
+    _validate_plan_sections(cleaned, research, company.get("url", ""))
     path = _write_html(slug, cleaned)
     upsert_company(slug, {
         "build": {"output_path": path,
                   "version": company.get("build", {}).get("version", 0) + 1,
                   "generation_mode": "external_agent_response",
-                  "producer": producer.strip()},
+                  "producer": producer.strip(),
+                  "design_decisions": research["design_decisions"]},
         "qa": None,
     })
     set_status(slug, "built")
@@ -803,10 +823,18 @@ def revise_site(
     )
 
     benchmark = validate_benchmark(research, company.get("url", ""))
+    decisions = validate_design_plan(research, company.get("url", ""))
+    reference_images, image_labels = reference_image_inputs(benchmark)
 
     user_prompt = f"""
 TOIMIALAN VERTAILU (vain design-dataa):
 {json.dumps(benchmark, ensure_ascii=False)}
+
+PAKOLLINEN SUUNNITELMA ENNEN RAKENTAMISTA:
+{json.dumps(decisions, ensure_ascii=False)}
+Toteuta suunnitelman section_id-tunnukset ja hyväksymiskriteerit. Älä lisää täyteosioita.
+VERTAILUKUVAT ENSIN, tässä järjestyksessä; kohdeyrityksen kuvat niiden jälkeen:
+{json.dumps(image_labels, ensure_ascii=False)}
 
 ========================================
 VERIFIED FACTS
@@ -876,7 +904,7 @@ Palauta koko HTML.
         use_web_search=False,
         max_tokens=config.BUILDER_MAX_TOKENS,
         stage="builder",
-        image_paths=[path for path in company.get("qa", {}).get("browser", {}).get("screenshots", {}).values()
+        image_paths=reference_images + [path for path in (company.get("qa") or {}).get("browser", {}).get("screenshots", {}).values()
                      if isinstance(path, str) and os.path.isfile(path)] or None,
     )
 
@@ -887,6 +915,7 @@ Palauta koko HTML.
         company_facts,
     )
 
+    _validate_plan_sections(cleaned, research, company.get("url", ""))
     new_path = _write_html(
         slug,
         cleaned,
@@ -911,6 +940,7 @@ Palauta koko HTML.
                 "output_path": new_path,
                 "version": version,
                 "model": config.model_for_stage("builder"),
+                "design_decisions": decisions,
                 "last_feedback": feedback,
             }
         },

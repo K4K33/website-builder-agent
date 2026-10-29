@@ -42,7 +42,7 @@ Example after setting the four model environment variables and credentials:
 Optional `--max-revisions 1` enables one repair followed by fresh QA (default 0,
 maximum 3). No auto-publish, automatic approval, or customer contact is performed.
 Revisions receive actual rendered screenshots plus actionable QA findings. Initial
-builds receive existing-site screenshots where available.
+builds receive actual reference images plus existing-site screenshots where available.
 
 ## Build and QA
 
@@ -90,9 +90,9 @@ reviewable examples when API credentials are unavailable.
 
 ## Required industry comparison
 
-Every new build, external completion and revision now requires two independent
-industry reference domains with saved screenshots and specific observations,
-applicable ideas and things to avoid. The research stage captures up to three
+Every new build, external completion and revision now requires three independent
+same-industry operator domains with desktop AND mobile screenshots and specific observations,
+applicable ideas and things to avoid. The research stage captures three
 reference sites and gives their images/text to the existing final design-brief
 request. Unavailable references do not become fabricated evidence. Existing
 research without this evidence must be refreshed before generation.
@@ -102,5 +102,25 @@ structured comparison must name the observed reference URLs, find the result
 company-specific, and report no material remaining gaps before acceptance.
 These are reasoned internal comparisons, not proof of industry leadership or
 an objective model-quality ranking. Extra reference fetching/screenshots and
-larger vision inputs add time and may increase token costs; no extra AI stage
-was introduced.
+larger vision inputs add time and may increase token costs. Reference discovery now
+uses two bounded search requests (five results each; eight unique domains inspected)
+and one additional Research-model selection request. Model selection is source-backed,
+not an objective proof of relevance. Fewer than three verified operators stops research.
+
+Before build, a validated design_decisions plan must trace exact observations to
+original target-specific adaptations, section IDs and visible acceptance checks.
+It covers first view, service hierarchy, contact path and mobile and uses all three
+references. Initial generation AND revision receive the actual six reference images
+with an ordered URL/viewport manifest. Previously the builder only received target
+screenshots, a material gap now covered by regression tests. QA sees both views of
+every reference and must give evidence for every planned decision. Missing planned
+section IDs or missing/failed decision checks prevent acceptance. Art direction,
+imagery and motion join the scored dimensions. Static design may score well where
+appropriate; animation quality is not proven by screenshots. Manual interaction and
+reduced-motion review are still needed for demanding showcase builds.
+
+The supplied visual target is an art-directed product showcase with bold typography,
+a coherent palette and meaningful scroll choreography. Its visual ambition informs
+the contract; its product, branding and claims are not copied to client businesses.
+Single-file output still limits assets and advanced 3D; do not claim parity with a
+showcase or autonomous commercial quality without a live fixed-model benchmark.

@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
 from utils.quality import normalize_facts, canonical_url
-from utils.design_benchmark import validate_benchmark
+from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.state import (
     get_company,
     upsert_company,
@@ -624,6 +624,7 @@ def _build_ai_snapshot(html: str) -> str:
     body_text = body_text[:9000]
 
     html_end = html[-2500:]
+    motion_code = "\n".join(tag.get_text() for tag in soup.find_all(["style", "script"]))[:25000]
 
     return f"""
 TITLE:
@@ -640,6 +641,9 @@ IMAGES:
 
 VISIBLE TEXT:
 {body_text}
+
+MOTION / STYLE / INTERACTION SOURCE:
+{motion_code}
 
 HTML END:
 {html_end}
@@ -660,6 +664,13 @@ Vertaa sivua mukana oleviin saman alan referenssikuviin. Kirjaa havaittavat erot
 asiakkaan polussa, tiedon selkeydessä, sommittelussa ja yrityskohtaisuudessa.
 Pelkkä oma pistemäärä ei riitä. Jos vertailun perusteella näkyy olennaisia puutteita,
 kirjaa remaining_gaps ja estä hyväksyntä. Älä vaadi kilpailijan palveluita tai lupauksia.
+Arvioi myös art_direction (yhtenäinen, rohkea ja yritykselle sopiva kokonaisuus), imagery
+(kuvan laatu, rajaus ja merkitys palvelulle) ja motion (harkittu liike, käyttötarkoitus,
+reduced-motion ja toimiva staattinen tila). Liike ei ole itseisarvo: perusteltu staattinen
+ratkaisu voi saada korkean arvion. Kuvista ei voi todistaa animaation toimivuutta:
+tarkista mukaan annettu motion_plan ja HTML/CSS/JS; älä väitä näkemättä todennetuksi.
+Tavallinen siisti tekstisivu ei yksin vastaa vaativaa visuaalista laatutavoitetta.
+Jokainen design_decisions-päätös on tarkistettava omassa design_checks-rivissään.
 Tämä palautusskeema korvaa aiemman esimerkkiskeeman:
 {
   "content_ok": true,
@@ -669,16 +680,18 @@ Tämä palautusskeema korvaa aiemman esimerkkiskeeman:
     "reviewed_urls": [], "company_specific": true,
     "remaining_gaps": [], "ready_for_client_review": true
   },
+  "design_checks": [{"id": "exact design_decision id", "passed": true, "evidence": "specific visible result, not a generic assertion"}],
   "visual_review": {
     "desktop": 0, "tablet": 0, "mobile": 0, "small_mobile": 0,
     "brand_specificity": 0, "typography": 0, "hierarchy": 0,
+    "art_direction": 0, "imagery": 0, "motion": 0,
     "blockers": [], "improvements": []
   }
 }
 """
 
 
-def review_passes(review, benchmark_urls=None):
+def review_passes(review, benchmark_urls=None, decisions=None):
     if not isinstance(review, dict) or review.get("content_ok") is not True:
         return False
     if review.get("issues") != []:
@@ -689,17 +702,25 @@ def review_passes(review, benchmark_urls=None):
             or comparison.get("remaining_gaps") != []):
         return False
     urls = comparison.get("reviewed_urls")
-    if not isinstance(urls, list) or len({canonical_url(url) for url in urls if isinstance(url, str)}) < 2:
+    if not isinstance(urls, list) or len({canonical_url(url) for url in urls if isinstance(url, str)}) < 3:
         return False
     if benchmark_urls is not None and {canonical_url(url) for url in urls} != {
         canonical_url(url) for url in benchmark_urls
     }:
         return False
+    if decisions is not None:
+        checks = review.get("design_checks")
+        if (not isinstance(checks, list) or len(checks) != len(decisions)
+                or any(not isinstance(item, dict) or item.get("passed") is not True
+                       or not isinstance(item.get("evidence"), str) or not item["evidence"].strip()
+                       for item in checks)
+                or {item.get("id") for item in checks} != {item["id"] for item in decisions}):
+            return False
     visual = review.get("visual_review")
     if not isinstance(visual, dict) or visual.get("blockers") != []:
         return False
     for field in ("desktop", "tablet", "mobile", "small_mobile",
-                  "brand_specificity", "typography", "hierarchy"):
+                  "brand_specificity", "typography", "hierarchy", "art_direction", "imagery", "motion"):
         score = visual.get(field)
         if (isinstance(score, bool) or not isinstance(score, (int, float))
                 or not config.QA_MIN_VISUAL_SCORE <= score <= 100):
@@ -720,7 +741,7 @@ def run_qa(slug_or_name: str) -> dict:
     automated = _automated_checks(html)
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
-    benchmark_urls = []
+    benchmark_urls, decisions = [], []
     if automated["automated_pass"]:
         browser = inspect_site(path)
         if browser["pass"]:
@@ -728,8 +749,10 @@ def run_qa(slug_or_name: str) -> dict:
             try:
                 benchmark = validate_benchmark(research, company.get("url", ""))
                 benchmark_urls = [record["url"] for record in benchmark]
-                benchmark_images = [next(path for path in record["screenshots"].values()
-                                         if path and os.path.isfile(path)) for record in benchmark]
+                decisions = validate_design_plan(research, company.get("url", ""))
+                from agents.builder import _validate_plan_sections
+                _validate_plan_sections(html, research, company.get("url", ""))
+                benchmark_images, image_labels = reference_image_inputs(benchmark)
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
@@ -738,6 +761,10 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(research.get("design_recommendations", {}), ensure_ascii=False)
                     + "\nINDUSTRY REFERENCES (not company facts; their images follow generated views):\n"
                     + json.dumps(benchmark, ensure_ascii=False)
+                    + "\nREFERENCE IMAGE ORDER (after the four generated views):\n"
+                    + json.dumps(image_labels, ensure_ascii=False)
+                    + "\nREQUIRED DESIGN DECISIONS (check each with visible evidence):\n"
+                    + json.dumps(decisions, ensure_ascii=False)
                     + "\nPAGE CONTENT:\n" + _build_ai_snapshot(html),
                     max_tokens=5000, stage="qa",
                     image_paths=list(browser["screenshots"].values()) + benchmark_images,
@@ -747,7 +774,7 @@ def run_qa(slug_or_name: str) -> dict:
     result = {
         "automated": automated, "browser": browser, "content_review": review,
         "build_version": build.get("version"),
-        "overall_pass": automated["automated_pass"] and browser["pass"] and review_passes(review, benchmark_urls),
+        "overall_pass": automated["automated_pass"] and browser["pass"] and review_passes(review, benchmark_urls, decisions),
     }
     upsert_company(slug, {"qa": result})
     set_status(slug, "qa_passed" if result["overall_pass"] else "built")

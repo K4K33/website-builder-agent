@@ -67,8 +67,11 @@ def qualify_lead(candidate):
 
 DESIGN_CONTRACT = """
 Laatutavoite: yritykselle suunniteltu, viimeistelty ja kokonaan toimiva sivusto.
-Vertaa aina vähintään kahteen havaittuun saman alan sivustoon. Kirjaa konkreettiset
-havainnot ja perustele omat ratkaisut. Älä kopioi referenssien ulkoasua tai faktoja.
+Vertaa aina vähintään kolmeen havaittuun saman alan yrityksen sivustoon. Kirjaa konkreettiset
+havainnot ja perustele omat ratkaisut. Katso oikeat desktop- ja mobiilikuvat.
+Noudata ennen generointia laadittua design_decisions-suunnitelmaa.
+Suunnittelun on näytettävä alan yritykseltä: selkeä palvelu, oikea kalusto tai tuote,
+luettavat tekstit ja näkyvä yhteydenottopolku. Pelkkä tyylikäs konsepti ei riitä. Älä kopioi referenssien ulkoasua tai faktoja.
 Vältä toistuvia tunnistepisteitä, nuolia kaikissa linkeissä, pillereitä, kolmen kortin
 rivejä sekä iskulauseita, jotka voisivat kuulua mille tahansa yritykselle.
 Näytä palvelun sisältö, asiakkaan tarvitsemat tiedot ja oikea seuraava askel.
@@ -78,6 +81,13 @@ Suunnittele sisältöhierarkia yrityksen oikeiden palveluiden ja asiakkaan teht�
 Valitse yritykselle ominainen typografia, mittakaava, värit ja sommittelu.
 Älä toista geneeristä gradienttihero + kolme samanlaista korttia -rakennetta.
 Käytä CSS-muuttujia väreille, tekstikoolle, tilaväleille ja sisältöleveydelle.
+Suunnittele art direction: oma visuaalinen idea, vahva typografia ja harkittu kuvakäsittely.
+Pelkkä siisti geneerinen tekstisivu ei täytä korkeaa laatutavoitetta.
+Määritä motion_plan ja asset_plan ennen koodaamista. Käytä liikettä vain tarkoitukseen:
+esimerkiksi tuotteen tai palvelun havainnollistamiseen, navigaatioon tai osioiden rytmiin.
+Vieritys ei saa lukittua, sisältö ei saa riippua animaation latautumisesta.
+Reduced-motion ja JS:n puuttuminen jättävät kaikki tiedot ja yhteystiedot näkyviin.
+Älä väitä CSS-kuvitusta aidoksi kalustoksi; älä keksi asiakkaan ajoneuvoja tai henkilöstöä.
 Tee harkittu ensimmäinen näkymä, selkeä lukujärjestys ja vaihteleva mutta yhtenäinen rytmi.
 Käytä laadukkaita inline-SVG/CSS-kuvituksia vain koristeina, ei keksittyinä yrityskuvina.
 Älä kirjoita sivulle tutkimuksen puutteista tai toteutustekniikasta; jätä puuttuva sisältö pois.
