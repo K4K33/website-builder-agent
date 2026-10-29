@@ -24,7 +24,7 @@ from agents import outreach
 from utils import publisher
 from utils.production_readiness import readiness_report
 from utils.lead_intelligence import evaluate_prospect, site_signal
-from utils.company_registry import lookup_by_business_id
+from utils.company_registry import lookup_by_business_id, lookup_by_name_and_location
 from utils.state import get_company, upsert_company
 
 from utils.state import (
@@ -259,7 +259,18 @@ def cmd_verify_registry(args):
     if company is None:
         raise RuntimeError("Lead not found; run Scout first.")
     business_id = args.business_id or company.get("business_id", "")
-    official = lookup_by_business_id(business_id)
+    if business_id:
+        official = lookup_by_business_id(business_id)
+    else:
+        city = args.city or company.get("city", "")
+        official = lookup_by_name_and_location(company.get("name", ""), city)
+        business_id = official["business_id"]
+    official_names = [name.strip().casefold() for name in official["official_names"]]
+    display_name = company.get("name", "").strip().casefold()
+    # If a trading name differs from the legal business name, don't join
+    # unrelated companies automatically based on a bare OSM tag.
+    if not args.confirm_name_mismatch and display_name not in official_names:
+        raise RuntimeError("PRH business name does not exactly match; confirm identity manually first.")
     # A free official business-ID lookup does not contain revenue or profit.
     # Do not mark an unknown business as financially qualified.
     financials = dict(company.get("financials") or {})
@@ -746,6 +757,9 @@ def build_parser():
     )
     parser_registry.add_argument("company")
     parser_registry.add_argument("--business-id", default="")
+    parser_registry.add_argument("--city", default="", help="Only needed when the saved lead has no city.")
+    parser_registry.add_argument("--confirm-name-mismatch", action="store_true",
+        help="Explicitly confirm a trading-name/legal-name difference after checking the identity.")
     parser_registry.set_defaults(func=cmd_verify_registry)
 
     # -----------------------------------------------------
