@@ -730,7 +730,11 @@ Palauta VAIN koko HTML.
                 "version": version,
                 "model": config.model_for_stage("builder"),
                 "design_decisions": decisions,
-            }
+            },
+            "qa": None,
+            "approval": None,
+            "outreach": None,
+            "demo": None,
         },
     )
 
@@ -785,7 +789,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
                   "generation_mode": "external_agent_response",
                   "producer": producer.strip(),
                   "design_decisions": research["design_decisions"]},
-        "qa": None,
+        "qa": None, "approval": None, "outreach": None, "demo": None,
     })
     set_status(slug, "built")
     return path
@@ -942,7 +946,11 @@ Palauta koko HTML.
                 "model": config.model_for_stage("builder"),
                 "design_decisions": decisions,
                 "last_feedback": feedback,
-            }
+            },
+            "qa": None,
+            "approval": None,
+            "outreach": None,
+            "demo": None,
         },
     )
 
