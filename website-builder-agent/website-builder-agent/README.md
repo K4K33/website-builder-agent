@@ -2,6 +2,44 @@
 
 # Website Builder Agent
 
+## Paikallinen maksuton AI (Ollama, opt-in)
+
+Kaurivo voidaan asettaa käyttämään **omaan koneeseen asennettuja** paikallisia
+Ollama-malleja. Se ei tällöin käytä OAVIRin OpenRouter-kiintiöitä tai
+API-avaimia. Tämä ominaisuus on valinnainen, ja aiempi OpenRouter-toiminta
+säilyy oletuksena. **Mitään ei asenneta automaattisesti.**
+
+```powershell
+$env:AI_BACKEND = "ollama"
+$env:FREE_ONLY = "1"
+$env:OLLAMA_MODEL = "PAIKALLINEN_TEKSTIMALLI"
+$env:OLLAMA_BUILDER_MODEL = "PAIKALLINEN_KOODIMALLI"
+$env:OLLAMA_QA_MODEL = "PAIKALLINEN_KUVIA_TUKEVA_MALLI"
+```
+
+Korvaa esimerkkimallien nimet *todella asennettujen paikallisten mallien*
+nimillä. QA:n mallin on pystyttävä lukemaan kuvakaappauksia; Builderin
+mallin on pystyttävä tuottamaan riittävän laadukasta koodia ja JSONia.
+Näitä laatuominaisuuksia **ei ole vielä vahvistettu todellisella paikallisella
+malliajolla**. Ollaman API on paikallisesti
+`http://127.0.0.1:11434`, ei pilvessä. Pilvitunniste `:cloud` estetään.
+Paikallisen palvelun puuttuessa järjestelmä pysähtyy: se ei lähetä
+samoja syötteitä automaattisesti OpenRouteriin.
+
+Ohje: https://docs.ollama.com/api . Ennen asentamista tarkista koneen RAM,
+näytönohjain, levytila ja asennuskäytännöt. Erityisesti koulun hallinnoimalle
+koneelle ei pidä asentaa ohjelmia ilman lupaa. Älä lataa mallia pelkkää
+kokeilua varten, jos koneen kapasiteetti ei riitä.
+
+`FREE_ONLY` estää pilvessä tapahtuvan AI-ajon, mutta **ei tarkoita**
+rajatonta maksutonta ulkoista hakua. Tavily-tutkimus käyttää edelleen
+erillistä palvelua ja kiintiötä. Ollaman käyttöä ei voi tehdä GitHubin
+pilviajokoneelta suoraan käyttäjän koulukoneen `localhost`-osoitteeseen.
+Koko putken paikalliseen ajoon tarvitaan oma hallittu kone, mahdolliset
+Tavily-krediitit ja muut erikseen vahvistetut lähteet. Paikalliset
+ilmaismallit eivät automaattisesti täytä premium-laatuvaatimustamme.
+
+
 ## Maksuton asiakashaku ja turvallinen pilotointi (2026-10-29)
 
 Uusi ehdotettu kuluton alkuprosessi:
