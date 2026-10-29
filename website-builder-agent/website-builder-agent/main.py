@@ -262,14 +262,14 @@ def cmd_verify_registry(args):
     if business_id:
         official = lookup_by_business_id(business_id)
     else:
-        city = args.city or company.get("city", "")
+        city = getattr(args, "city", "") or company.get("city", "")
         official = lookup_by_name_and_location(company.get("name", ""), city)
         business_id = official["business_id"]
     official_names = [name.strip().casefold() for name in official["official_names"]]
     display_name = company.get("name", "").strip().casefold()
     # If a trading name differs from the legal business name, don't join
     # unrelated companies automatically based on a bare OSM tag.
-    if not args.confirm_name_mismatch and display_name not in official_names:
+    if not getattr(args, "confirm_name_mismatch", False) and display_name not in official_names:
         raise RuntimeError("PRH business name does not exactly match; confirm identity manually first.")
     # A free official business-ID lookup does not contain revenue or profit.
     # Do not mark an unknown business as financially qualified.
