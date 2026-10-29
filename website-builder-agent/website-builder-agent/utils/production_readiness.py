@@ -10,6 +10,7 @@ from pathlib import Path
 import config
 from agents.qa import review_passes
 from utils.design_benchmark import validate_benchmark, validate_design_plan
+from utils.verified_profile import validate_verified_profile
 
 REQUIRED_VIEWS = ("desktop", "tablet", "mobile", "small_mobile")
 
@@ -29,7 +30,10 @@ def inspect_candidate(slug: str, company: dict) -> dict:
     if not industry:
         problems.append("Industry is missing from verified research.")
     if not url:
-        problems.append("Source company URL is missing.")
+        try:
+            validate_verified_profile(company)
+        except (RuntimeError, ValueError) as exc:
+            problems.append("No current site: verified business profile missing: " + str(exc))
     if (not model or model in {"openrouter/free", "test/model"}
             or model.endswith(":free") or mode != "api"):
         problems.append("No independently generated paid-model build evidence (offline/external builds excluded).")
