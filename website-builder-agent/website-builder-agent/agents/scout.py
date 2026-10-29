@@ -288,6 +288,7 @@ def _fetch_osm_companies(
                     "phone": phone,
                     "email": email,
                     "address": address,
+                    "city": (tags.get("addr:city") or location).strip(),
                     "osm_type": element.get("type"),
                     "osm_id": element.get("id"),
                     "tags": tags,
