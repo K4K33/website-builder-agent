@@ -118,6 +118,19 @@ class ProductionGates(unittest.TestCase):
         self.assertFalse(report["ready_for_review"])
         self.assertFalse(report["evaluated"][0]["eligible"])
 
+    def test_windows_crlf_file_hash_matches_actual_bytes(self):
+        path = self.create_build()
+        path.write_bytes(HTML.replace("\n", "\r\n").encode("utf-8"))
+        shots = {v: str(self.root / "reference.png") for v in
+                 ("desktop", "tablet", "mobile", "small_mobile")}
+        with patch.object(qa, "inspect_site", return_value={"pass": True, "issues": [], "screenshots": shots}), \
+             patch.object(qa, "ask_claude_json", return_value=approved_review()):
+            result = qa.run_qa("demo")
+        self.assertTrue(result["overall_pass"], result)
+        self.assertEqual(result["html_sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
+        qa.approve_company("demo")
+        self.assertTrue(state.get_company("demo")[1]["approval"]["approved"])
+
     def test_authorization_blocks_live_calls_before_lookup(self):
         args = SimpleNamespace(confirm_live_run=False)
         with patch.object(main.scout, "run_scout") as scout:
