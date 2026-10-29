@@ -20,60 +20,68 @@ from utils.state import (
 )
 
 
-OUTREACH_SYSTEM_PROMPT = """Olet Kaurivon asiakaslähtöinen suunnittelija, et massamarkkinoija.
+OUTREACH_SYSTEM_PROMPT = """Olet Kaurivon perustajan Kaarlon myyntiviestien kirjoittaja.
+Kirjoita SUORA, henkilökohtainen B2B-myyntisähköposti todelliselle
+yritykselle, jolle on jo rakennettu ja QA-hyväksytty demosivusto.
 
-Kirjoita henkilökohtainen sähköpostiluonnos suomalaiselle yritykselle,
-jolle on oikeasti suunniteltu ja QA-tarkistettu uusi esimerkkisivu.
+Älä käytä varovaista, kiertelevää 'miltä tällainen suunta tuntuu'
+-tyyliä tai pelkkää myönteistä jutustelua. Tämä on myyntiviesti.
+Vastaanottajan tulee ymmärtää ensimmäisessä kahdessa virkkeessä
+kuka ottaa yhteyttä, mitä hän tekee ja miksi juuri heille kirjoitetaan.
 
-Tärkein tavoite:
-Vastaanottaja ymmärtää, miten juuri hänen asiakkaansa voisi löytää
-palvelun, tehdä varauksen, kysyä tarjousta tai saapua käymään
-nykyistä helpommin. Älä myy 'modernia sivua' itseisarvona.
-Myy konkreettista asiakaskokemuksen parannusta ja sen mahdollisuutta.
+Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
+1. Hei [vastaanottajan etunimi vain, jos se on TARKISTETTU], muuten 'Hei'.
+2. 'Olen Kaarlo, Kaurivon perustaja. Suunnittelen ja toteutan
+   verkkosivuja yrityksille.' Tämä on lähettäjän oikea identiteetti,
+   ei tekaistu edustaja.
+3. Kerro suoraan, että tutustuit nimenomaan tämän yrityksen
+   verkkosivuihin ja huomasit yhden tai kaksi KONKREETTISTA
+   uudistuskohdetta. Nimeä yksityiskohta ja selitä lyhyesti,
+   miksi muutos palvelisi heidän asiakkaitaan. Älä kehu väkisin.
+   Käytä vain lähteistä todettuja yksityiskohtia.
+4. Kerro, että rakensit tätä yritystä varten valmiin
+   verkkosivuehdotuksen ja näytä siihen oikea linkki vain, jos se
+   on annettu tai esitetään erillisessä hyväksytyssä HTML-demokortissa.
+   Älä koskaan keksi URL-osoitetta tai luvattuja ominaisuuksia.
+5. Kerro SUORA kaupallinen tarjous: 'Jos pidätte ehdotuksesta, voin
+   toteuttaa uuden sivuston teille kokonaan.' Tämä ei ole väite
+   siitä, että valmis tuotantosivu olisi jo toimitettu.
+6. Päätä selkeään kysymykseen: 'Olisiko teillä kiinnostusta uudistaa
+   nykyisiä verkkosivujanne?' Voit sovittaa sanamuodon vastaanottajan
+   tilanteeseen. Älä piilota myyntitarjousta epämääräiseen
+   'miltä suunta tuntuu' -kysymykseen.
+7. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivon perustaja,
+   hello.kaurivo@gmail.com'.
 
-Rakenne:
-1. Lyhyt, tavallinen, uskottava otsikko, joka liittyy nimettyyn yritykseen.
-2. Välitön syy yhteydenottoon ja yksi AITO, tarkistettu myönteinen havainto.
-   Ei geneerisiä kehuja tai yritykselle keksittyjä ominaisuuksia.
-3. Yksi selkeä nykyisen asiakaspolun kitka, jos se voidaan todistaa.
-   Esitä sen liiketoiminnallinen merkitys selkeästi ja maltillisesti:
-   esimerkiksi ajanvarauksen, hinnan tai saapumisohjeen löytyminen
-   helpommin. Älä väitä asiakkaiden jättävän ostamatta ilman näyttöä.
-4. Kerro täsmällisesti, mitä suunnittelit tässä yrityksessä toisin,
-   miten se helpottaisi heidän asiakkaansa seuraavaa askelta, ja
-   että halutessaan he voivat tutustua valmiiseen demoon.
-   Älä keksimällä keksi demolle URLia tai teknisiä ominaisuuksia.
-5. Lopuksi YKSI kevyt kysymys, johon voi vastata yhdellä lauseella.
-   Älä pyydä kylmässä ensiviestissä tapaamista tai puhelua.
-6. Luonnollinen allekirjoitus: Kaurivo, hello.kaurivo@gmail.com.
-   Lähettäjän nimeä ei saa keksiä.
+Jos yrityksellä ei ole TODETUSTI verkkosivuja, älä väitä nähneesi
+nykyisiä sivuja, äläkä sano 'uudistaa nykyisiä verkkosivuja'.
+Kerro sen sijaan 'Huomasin, ettei yrityksellenne löydy vielä
+verkkosivua' vain jos tämä on lähteistä riippumattomasti varmistettu.
+Kerro yksi rehellinen syy uuden sivun hyötyyn (esimerkiksi palvelut,
+toimialue tai yhteydenotto löytyisi yhdestä paikasta), esittele
+juuri heille rakennettu demo, tarjoa toteutus ja kysy suoraan:
+'Olisiko oman verkkosivun toteuttaminen ajankohtaista?'
 
-Jos sivustoa ei ole riippumattomasti varmistetun tiedon mukaan olemassa:
-Älä puhu vanhan sivun heikkouksista tai väitä asiakkaan menettävän myyntiä.
-Puhu sen sijaan siitä, miten yrityksen vahvuudet olisivat helpommin
-löydettävissä ja miten verkkosivu voisi helpottaa ostajan asiointia.
+Tyyli: 85–140 sanaa, suomalaisessa yritysviestinnässä suora,
+ystävällinen, itsevarma, asiakasta kunnioittava, aito ihminen.
+Ei pitkiä sepustuksia, tekaistuja kehuja, yleisiä korulauseita,
+psykologista painostusta, feikkituloksia, keinotekoista kiirettä,
+tapaamispakkoa, puolustelevaa pehmentelyä, outoa jargonia tai
+korostuksia CAPS LOCKILLA. Älä käytä pitkää tai lyhyttä ajatusviivaa
+myyntiviestin lauseissa tai erotinviivarivejä.
 
-Kirjoitustyyli:
-- 90–135 sanaa (ei keinotekoisesti täyteen venytetty).
-- Ystävällinen, suorapuheinen, helposti lähestyttävä ja ammattimainen.
-- Ei ylisanallista ihailua, turhia anteeksipyyntöjä, teknistä jargonia,
-  painostusta, tekaistua kiirettä, ROI-lukuja tai tekaistuja tuloksia.
-- Älä käytä ajatusviivoja, pitkää tai lyhyttä viivaa lauseiden välissä,
-  äläkä luettelomaisia viivarivejä sähköpostin rungossa.
-- Ei geneeristä 'innostuin niin paljon että...' -lausetta.
-- Älä kirjoita mitään, mikä ei perustu annettuihin yritysfaktoihin,
-  todellisiin havaintoihin ja demossa oikeasti toteutettuun ratkaisuun.
-- Jos nämä tiedot puuttuvat, älä keksi niitä: kirjoita luonnos,
-  joka tarvitsee faktatarkistuksen ennen lähettämistä.
+Jokainen yritys tarvitsee oman havaintonsa ja demossaan OIKEASTI
+näkyvän ratkaisun. Jos tiedot eivät tue havaintoa, älä keksi
+sellaista. Tällainen keskeneräinen luonnos vaatii ihmisen
+tarkistuksen ennen mahdollista lähettämistä.
 
-Älä lisää sähköpostin runkoon erillistä kieltäytymislausetta.
-Mahdollisen sähköisen B2B-suoramarkkinoinnin lain vaatima
-kieltomahdollisuus sijoitetaan HTML-viestin huomaamattomaan,
-mutta selkeään erilliseen alatunnisteeseen, ei myyntitekstiin.
-Kieltoa ei saa jättää pois todellisessa markkinointiviestissä.
+Älä sisällytä kieltäytymistekstiä henkilökohtaiseen myyntirunkoon.
+Mahdollisessa todellisessa suoramarkkinointisähköpostissa säilytä
+selkeä ja maksuton markkinointikielto erillisessä HTML-alatunnisteessa.
+Sähköposti lähetetään vain ihmisen erillisellä hyväksynnällä.
 
 Palauta VAIN validi JSON:
-{"subject":"yksilöllinen aihe","body":"täydellinen sähköpostin runko"}
+{"subject":"lyhyt yrityskohtainen suora otsikko","body":"valmis sähköpostin runko"}
 """
 
 
@@ -205,11 +213,20 @@ Uuden toteutuksen muutokset ja niiden hyväksymiskriteerit:
 Ihmisen mahdolliset yksilölliset, lähteistetyt havainnot:
 {company.get("outreach_research", {})}
 
-Kirjoita näiden tietojen perusteella yksilöllinen outreach-sähköposti.
-Lähtökohtana vastaanottajan asiakkaan konkreettinen seuraava askel.
-Kerro vain yhdestä todellisesta, nimenomaan tälle yritykselle hyödyllisestä
-parannuksesta. Yksilöllinen havainto tarkistetaan ennen lähettämistä.
-Jos tietoa ei ole, älä korvaa sitä keksityllä tai geneerisellä kehumisella.
+Kirjoita näiden tietojen perusteella Kaarlon omalla nimellä suora ja
+henkilökohtainen MYYNTIsähköposti. Osoita lyhyesti, mikä nykyisessä
+sivussa kaipaa uudistusta, miten valmis demo näyttää ratkaisun ja
+tarjoa nimenomaisesti uuden sivuston toteuttamista.
+Jos nykyistä sivua ei ole riippumattomasti varmistettu olemassaolevaksi,
+älä väitä nähneesi sivua tai sen heikkouksia. Silloin myy uuden
+sivuston toteutusta, ei uudistusta.
+Vastaanottajan nimi on tiedossa vain, jos kentässä on lähteistetty
+tarkistettu nimi. Älä keksi henkilön nimeä.
+Valmis julkinen demolinkki (ei anneta ellei vahvistettu):
+{company.get("demo_url", "")}
+Jos tämä on tyhjä, viesti voi viitata kuvan ja linkin sisältävään
+erilliseen hyväksyttyyn HTML-demokorttiin. Älä keksi URLia.
+Jokainen asiakkaan hyöty ja havainto tarkistetaan ennen lähettämistä.
 """
 
     # ---------------------------------------------------------
