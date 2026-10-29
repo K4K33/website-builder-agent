@@ -25,14 +25,14 @@ with a ready demo deserves a fully individualized note.
 6. Review the recipient name, greeting, headline and the complete draft.
    The owner separately authorizes *each actual sending action*.
 
-## Email narrative: direct founder-led sales, not polite small talk
+## Email narrative: direct personal sales from Kaarlo at Kaurivo
 
 The user wants a **commercially direct** message, not a soft 'design idea'
 pitch. Before the second sentence ends, the recipient should know who
 Kaarlo is and why this business has been contacted.
 
 1. Short recipient-specific subject, e.g. "Verkkosivuidea [Company]lle".
-2. Introduce sender immediately: "Olen Kaarlo, Kaurivon perustaja.
+2. Introduce sender immediately: "Olen Kaarlo Kaurivolta.
    Suunnittelen ja toteutan verkkosivuja yrityksille."
 3. State why THIS company was contacted; for an existing site, reference
    one or two factual, specific modernization opportunities. Connect
@@ -47,12 +47,12 @@ Kaarlo is and why this business has been contacted.
    kiinnostusta uudistaa nykyisiä verkkosivujanne?" or, for a
    verified no-website business, "Olisiko oman verkkosivun
    toteuttaminen ajankohtaista?"
-7. Close with founder name and Kaurivo contact details.
+7. Close as Kaarlo at Kaurivo with the Kaurivo contact details. Never add a founder or CEO title.
 
 **Sender account:** All client-facing drafts and approved commercial mail must
 be created and sent using only **hello.kaurivo@gmail.com**. NEVER use
 any personal Gmail account or any other sender.
-Introducing Kaarlo in the message body as founder does NOT make it a
+Introducing Kaarlo by his first name in the body does NOT make it a
 personal Gmail email. Before a send operation through Gmail, explicitly
 confirm the connected account's `get_profile` address equals
 `hello.kaurivo@gmail.com`; if this cannot be verified, abort.
