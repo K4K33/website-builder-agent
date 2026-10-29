@@ -64,8 +64,16 @@ def enrich_one(company, lookup_id=lookup_by_business_id,
                                             "official_candidate_url": official_web}
         elif not existing:
             # A website candidate is not promoted to verified site automatically.
+            # If this was earlier classified as definitely site-less, the
+            # official registry hint invalidates that conclusion pending review.
             updates["website_discovery"] = {"status": "official_registry_candidate",
                                             "official_candidate_url": official_web}
+            if (company.get("site_verification") or {}).get("confirmed_absent") is True:
+                updates["site_verification"] = {
+                    "confirmed_absent": False,
+                    "reason": "PRH_lists_website_candidate_needs_rechecking",
+                }
+                issues.append("previous_no_website_claim_needs_reverification")
     else:
         updates["website_discovery"] = {"status": "not_listed_in_prh"}
 
