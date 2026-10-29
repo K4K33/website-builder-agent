@@ -13,6 +13,7 @@ import argparse
 import config
 import os
 import json
+from pathlib import Path
 
 from agents import scout
 from agents import research
@@ -22,6 +23,9 @@ from agents import outreach
 
 from utils import publisher
 from utils.production_readiness import readiness_report
+from utils.lead_intelligence import evaluate_prospect, site_signal
+from utils.company_registry import lookup_by_business_id, lookup_by_name_and_location
+from utils.state import get_company, upsert_company
 
 from utils.state import (
     load_companies,
@@ -40,6 +44,7 @@ def cmd_scout(args):
         industry=args.industry,
         location=args.location,
         dry_run=args.dry_run,
+        discovery_only=getattr(args, "discovery_only", False),
     )
 
     if not results:
@@ -218,6 +223,88 @@ def cmd_readiness(args):
 
 
 # =========================================================
+# BUSINESS INTELLIGENCE / LEAD SCREENING
+# =========================================================
+
+def cmd_screen_lead(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Lead not found; run Scout first.")
+    evidence = json.loads(Path(args.evidence).read_text(encoding="utf-8"))
+    if not isinstance(evidence, dict) or not any(
+        item in evidence for item in ("reputation", "financials", "site_verification")
+    ):
+        raise ValueError("Evidence must include reputation, financials or site_verification.")
+    updates = {}
+    for key in ("reputation", "financials", "site_verification"):
+        if key in evidence:
+            value = evidence[key]
+            if not isinstance(value, dict):
+                raise ValueError("Evidence section must be an object: " + key)
+            if key == "financials":
+                known_id = company.get("business_id", "")
+                provided_id = value.get("business_id", "")
+                if not provided_id or (known_id and known_id != provided_id):
+                    raise ValueError("Financial evidence must match the selected business ID.")
+            updates[key] = value
+    refreshed = {**company, **updates}
+    updates["lead_intelligence"] = evaluate_prospect(refreshed, args.project_price)
+    upsert_company(slug, updates)
+    print(json.dumps(updates["lead_intelligence"], ensure_ascii=False, indent=2))
+    if updates["lead_intelligence"]["outreach_gate"] != "priority_for_human_review":
+        print("Lead remains in verification queue; no outreach permitted.")
+
+
+def cmd_verify_registry(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Lead not found; run Scout first.")
+    business_id = args.business_id or company.get("business_id", "")
+    if business_id:
+        official = lookup_by_business_id(business_id)
+    else:
+        city = getattr(args, "city", "") or company.get("city", "")
+        official = lookup_by_name_and_location(company.get("name", ""), city)
+        business_id = official["business_id"]
+    official_names = [name.strip().casefold() for name in official["official_names"]]
+    display_name = company.get("name", "").strip().casefold()
+    # If a trading name differs from the legal business name, don't join
+    # unrelated companies automatically based on a bare OSM tag.
+    if not getattr(args, "confirm_name_mismatch", False) and display_name not in official_names:
+        raise RuntimeError("PRH business name does not exactly match; confirm identity manually first.")
+    # A free official business-ID lookup does not contain revenue or profit.
+    # Do not mark an unknown business as financially qualified.
+    financials = dict(company.get("financials") or {})
+    if financials.get("business_id") and financials["business_id"] != business_id:
+        raise ValueError("Stored financial identity conflicts with official PRH ID.")
+    financials.update({
+        "business_id": business_id,
+        "business_id_verified": True,
+        "registry_source_url": official["registry_source_url"],
+    })
+    if official["registration_ended"]:
+        financials["legal_status"] = "ended"
+    # PRH situation codes: KONK bankruptcy, SELTILA liquidation, SANE restructuring.
+    current_situations = [
+        item for item in official.get("company_situations", [])
+        if isinstance(item, dict) and item.get("type") in {"KONK", "SELTILA", "SANE"}
+        and not item.get("endDate")
+    ]
+    if current_situations:
+        financials["insolvency_proceeding"] = True
+    updates = {"business_id": business_id, "financials": financials,
+               "registry_evidence": official}
+    if official.get("official_website") and not company.get("website"):
+        updates["website"] = official["official_website"]
+        updates["url"] = official["official_website"]
+        updates["lead_type"] = "redesign_candidate"
+        updates["status"] = "found"
+    updates["lead_intelligence"] = evaluate_prospect({**company, **updates})
+    upsert_company(slug, updates)
+    print(json.dumps(updates["lead_intelligence"], ensure_ascii=False, indent=2))
+
+
+# =========================================================
 # PIPELINE
 # =========================================================
 
@@ -252,17 +339,22 @@ def cmd_pipeline(args):
     print(" VAIHE 1/4 — SCOUT")
     print("========================================")
 
-    results = scout.run_scout(
-        count=args.count,
-        industry=args.industry,
-        location=args.location,
-        dry_run=False,
-    )
+    if getattr(args, "company", ""):
+        slug, found = get_company(args.company)
+        if found is None:
+            raise RuntimeError("Selected company was not found in the saved lead queue.")
+        results = [{"slug": slug}]
+    else:
+        results = scout.run_scout(
+            count=args.count,
+            industry=args.industry,
+            location=args.location,
+            dry_run=False,
+            commercial_only=not getattr(args, "benchmark_mode", False),
+        )
 
     if not results:
-        raise RuntimeError(
-            "Scout ei löytänyt käsiteltävää yritystä."
-        )
+        raise RuntimeError("No financially screened and buildable company available; verify business facts first.")
 
     # -----------------------------------------------------
     # SELECT COMPANY
@@ -281,10 +373,13 @@ def cmd_pipeline(args):
             break
 
     if selected_company is None:
-        raise RuntimeError(
-            "Scout löysi yrityksen, mutta pipeline ei pystynyt "
-            "tunnistamaan tallennettua yritystä."
-        )
+        raise RuntimeError("Scout returned no company with a saved record.")
+    if site_signal(selected_company) != "has_website":
+        raise RuntimeError("No-site lead is not buildable from an unverified empty URL; verify business facts first.")
+    intelligence = selected_company.get("lead_intelligence") or {}
+    if (intelligence and intelligence.get("financial", {}).get("status") != "promising"
+            and not getattr(args, "benchmark_mode", False)):
+        raise RuntimeError("Financial screening not passed; do not spend build credits on this commercial lead.")
 
     print()
     print("Pipeline valitsi yrityksen:")
@@ -479,6 +574,10 @@ def build_parser():
         ),
     )
 
+    parser_scout.add_argument(
+        "--discovery-only", action="store_true",
+        help="Save unscreened website/no-website leads with zero AI, screenshots or Tavily calls.",
+    )
     parser_scout.set_defaults(func=cmd_scout)
 
     # -----------------------------------------------------
@@ -656,6 +755,28 @@ def build_parser():
     parser_readiness.set_defaults(func=cmd_readiness)
 
     # -----------------------------------------------------
+    # BUSINESS INTELLIGENCE
+    # -----------------------------------------------------
+
+    parser_screen = subparsers.add_parser(
+        "screen-lead", help="Attach independently verified review/financial evidence, offline."
+    )
+    parser_screen.add_argument("company")
+    parser_screen.add_argument("--evidence", required=True)
+    parser_screen.add_argument("--project-price", type=float, default=1500)
+    parser_screen.set_defaults(func=cmd_screen_lead)
+
+    parser_registry = subparsers.add_parser(
+        "verify-registry", help="Perform explicit free PRH business-ID lookup (no AI credits)."
+    )
+    parser_registry.add_argument("company")
+    parser_registry.add_argument("--business-id", default="")
+    parser_registry.add_argument("--city", default="", help="Only needed when the saved lead has no city.")
+    parser_registry.add_argument("--confirm-name-mismatch", action="store_true",
+        help="Explicitly confirm a trading-name/legal-name difference after checking the identity.")
+    parser_registry.set_defaults(func=cmd_verify_registry)
+
+    # -----------------------------------------------------
     # PIPELINE
     # -----------------------------------------------------
 
@@ -667,6 +788,10 @@ def build_parser():
         ),
     )
 
+    parser_pipeline.add_argument("--company", default="",
+        help="Run a previously financially screened saved lead (skips Scout discovery).")
+    parser_pipeline.add_argument("--benchmark-mode", action="store_true",
+        help="Explicitly use unscreened leads ONLY for an internal quality benchmark; no customer outreach.")
     parser_pipeline.add_argument(
         "--count",
         type=int,
@@ -675,12 +800,12 @@ def build_parser():
 
     parser_pipeline.add_argument(
         "--industry",
-        required=True,
+        default="kampaamo",
     )
 
     parser_pipeline.add_argument(
         "--location",
-        required=True,
+        default="Tampere",
     )
 
     parser_pipeline.add_argument(

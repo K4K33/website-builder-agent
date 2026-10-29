@@ -12,6 +12,7 @@ kun käyttäjä antaa siihen nimenomaisen hyväksynnän.
 """
 
 from utils.claude_client import ask_claude_json
+from utils.lead_intelligence import evaluate_prospect
 from utils.state import (
     get_company,
     upsert_company,
@@ -107,6 +108,15 @@ def draft_outreach(
             f"Yrityksen '{slug}' nykyistä verkkosivustoversiota ei ole hyväksytty. "
             f"Aja QA ja hyväksy: python main.py approve {slug}"
         )
+
+    intelligence = evaluate_prospect(company)
+    if intelligence["financial"]["status"] != "promising":
+        raise RuntimeError("Company budget evidence not verified; no paid outreach draft or contact.")
+    if intelligence["site_status"] != "has_website" and not (
+        intelligence["site_status"] == "confirmed_no_website"
+        and intelligence["reputation"]["strong"]
+    ):
+        raise RuntimeError("Missing-site listing and strong reputation have not been independently verified.")
 
     # ---------------------------------------------------------
     # 3. Research-data
