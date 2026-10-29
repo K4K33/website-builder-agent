@@ -25,6 +25,8 @@ from utils import publisher
 from utils.production_readiness import readiness_report
 from utils.lead_intelligence import evaluate_prospect, site_signal
 from utils.company_registry import lookup_by_business_id, lookup_by_name_and_location
+from utils.free_enrichment import enrich_queue
+from utils.verified_profile import validate_verified_profile
 from utils.state import get_company, upsert_company
 
 from utils.state import (
@@ -305,6 +307,32 @@ def cmd_verify_registry(args):
 
 
 # =========================================================
+# PRH FREE-SOURCE ENRICHMENT / VERIFIED NO-WEBSITE FACTS
+# =========================================================
+
+def cmd_enrich_free(args):
+    if not args.confirm_public_lookups:
+        raise RuntimeError("External PRH lookups require --confirm-public-lookups.")
+    results = enrich_queue(
+        max_companies=args.max_companies,
+        pause_seconds=args.pause_seconds,
+        company_slug=args.company or None,
+    )
+    print(json.dumps(results, indent=2, ensure_ascii=False))
+
+
+def cmd_attach_profile(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Lead not found; run Scout first.")
+    data = json.loads(Path(args.profile).read_text(encoding="utf-8"))
+    result = validate_verified_profile(company, data)
+    upsert_company(slug, {"company_profile": data})
+    print("Verified no-website profile attached:", slug, result["facts"]["industry"])
+    print("No AI requests were made. Research/build still require explicit authorization.")
+
+
+# =========================================================
 # PIPELINE
 # =========================================================
 
@@ -374,8 +402,13 @@ def cmd_pipeline(args):
 
     if selected_company is None:
         raise RuntimeError("Scout returned no company with a saved record.")
-    if site_signal(selected_company) != "has_website":
-        raise RuntimeError("No-site lead is not buildable from an unverified empty URL; verify business facts first.")
+    website_state = site_signal(selected_company)
+    if website_state != "has_website":
+        # A confirmed site-less company can be built from a manually reviewed,
+        # source-backed profile; unknown OSM website listings are still blocked.
+        if website_state != "confirmed_no_website":
+            raise RuntimeError("No-site lead needs independent website and business verification.")
+        validate_verified_profile(selected_company)
     intelligence = selected_company.get("lead_intelligence") or {}
     if (intelligence and intelligence.get("financial", {}).get("status") != "promising"
             and not getattr(args, "benchmark_mode", False)):
@@ -775,6 +808,25 @@ def build_parser():
     parser_registry.add_argument("--confirm-name-mismatch", action="store_true",
         help="Explicitly confirm a trading-name/legal-name difference after checking the identity.")
     parser_registry.set_defaults(func=cmd_verify_registry)
+
+    # -----------------------------------------------------
+    # FREE PRH ENRICHMENT
+    # -----------------------------------------------------
+    parser_free = subparsers.add_parser(
+        "enrich-free", help="Bounded PRH registry and iXBRL-period lookups without AI credits."
+    )
+    parser_free.add_argument("--company", default="")
+    parser_free.add_argument("--max-companies", type=int, default=5)
+    parser_free.add_argument("--pause-seconds", type=float, default=1.0)
+    parser_free.add_argument("--confirm-public-lookups", action="store_true")
+    parser_free.set_defaults(func=cmd_enrich_free)
+
+    parser_profile = subparsers.add_parser(
+        "attach-profile", help="Attach source-verified company facts for a genuinely website-less lead."
+    )
+    parser_profile.add_argument("company")
+    parser_profile.add_argument("--profile", required=True)
+    parser_profile.set_defaults(func=cmd_attach_profile)
 
     # -----------------------------------------------------
     # PIPELINE
