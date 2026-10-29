@@ -738,8 +738,9 @@ def run_qa(slug_or_name: str) -> dict:
     path = build.get("output_path", "")
     if not path or not os.path.exists(path):
         raise RuntimeError("Rakennettua HTML-tiedostoa ei löytynyt. Aja build ensin.")
-    with open(path, encoding="utf-8") as file:
-        html = file.read()
+    with open(path, "rb") as file:
+        html_bytes = file.read()
+    html = html_bytes.decode("utf-8")
     automated = _automated_checks(html)
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
@@ -776,7 +777,7 @@ def run_qa(slug_or_name: str) -> dict:
     result = {
         "automated": automated, "browser": browser, "content_review": review,
         "build_version": build.get("version"),
-        "html_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
+        "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "overall_pass": automated["automated_pass"] and browser["pass"] and review_passes(review, benchmark_urls, decisions),
     }
     upsert_company(slug, {"qa": result})
