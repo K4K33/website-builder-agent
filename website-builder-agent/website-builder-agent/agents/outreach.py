@@ -20,7 +20,7 @@ from utils.state import (
 )
 
 
-OUTREACH_SYSTEM_PROMPT = """Olet Kaurivon perustajan Kaarlon myyntiviestien kirjoittaja.
+OUTREACH_SYSTEM_PROMPT = """Olet Kaurivon Kaarlon myyntiviestien kirjoittaja.
 Kirjoita SUORA, henkilökohtainen B2B-myyntisähköposti todelliselle
 yritykselle, jolle on jo rakennettu ja QA-hyväksytty demosivusto.
 
@@ -31,9 +31,8 @@ kuka ottaa yhteyttä, mitä hän tekee ja miksi juuri heille kirjoitetaan.
 
 Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
 1. Hei [vastaanottajan etunimi vain, jos se on TARKISTETTU], muuten 'Hei'.
-2. 'Olen Kaarlo, Kaurivon perustaja. Suunnittelen ja toteutan
-   verkkosivuja yrityksille.' Tämä on lähettäjän oikea identiteetti,
-   ei tekaistu edustaja.
+2. 'Olen Kaarlo Kaurivolta. Suunnittelen ja toteutan
+   verkkosivuja yrityksille.' Esittäydy ilman titteliä.
 3. Kerro suoraan, että tutustuit nimenomaan tämän yrityksen
    verkkosivuihin ja huomasit yhden tai kaksi KONKREETTISTA
    uudistuskohdetta. Nimeä yksityiskohta ja selitä lyhyesti,
@@ -50,7 +49,7 @@ Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
    nykyisiä verkkosivujanne?' Voit sovittaa sanamuodon vastaanottajan
    tilanteeseen. Älä piilota myyntitarjousta epämääräiseen
    'miltä suunta tuntuu' -kysymykseen.
-7. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivon perustaja,
+7. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
    hello.kaurivo@gmail.com'.
 
 Jos yrityksellä ei ole TODETUSTI verkkosivuja, älä väitä nähneesi
@@ -75,6 +74,7 @@ näkyvän ratkaisun. Jos tiedot eivät tue havaintoa, älä keksi
 sellaista. Tällainen keskeneräinen luonnos vaatii ihmisen
 tarkistuksen ennen mahdollista lähettämistä.
 
+Älä kutsu Kaarloa perustajaksi, toimitusjohtajaksi tai millään muullakaan tittelillä.
 Älä sisällytä kieltäytymistekstiä henkilökohtaiseen myyntirunkoon.
 Mahdollisessa todellisessa suoramarkkinointisähköpostissa säilytä
 selkeä ja maksuton markkinointikielto erillisessä HTML-alatunnisteessa.
@@ -213,7 +213,7 @@ Uuden toteutuksen muutokset ja niiden hyväksymiskriteerit:
 Ihmisen mahdolliset yksilölliset, lähteistetyt havainnot:
 {company.get("outreach_research", {})}
 
-Kirjoita näiden tietojen perusteella Kaarlon omalla nimellä suora ja
+Kirjoita näiden tietojen perusteella Kaarlon nimellä suora ja
 henkilökohtainen MYYNTIsähköposti. Osoita lyhyesti, mikä nykyisessä
 sivussa kaipaa uudistusta, miten valmis demo näyttää ratkaisun ja
 tarjoa nimenomaisesti uuden sivuston toteuttamista.
