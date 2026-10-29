@@ -11,6 +11,7 @@ import config
 import main
 from agents import builder, qa
 from utils import publisher, state
+from utils.production_readiness import readiness_report
 
 HTML = """<!doctype html><html lang="fi"><head><title>Demo yritys</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -100,6 +101,22 @@ class ProductionGates(unittest.TestCase):
         self.assertTrue(result["overall_pass"], result)
         qa.approve_company("demo")
         return result
+
+    def test_production_readiness_rejects_missing_live_evidence(self):
+        self.create_build(industry="transport")
+        report = readiness_report(state.load_companies())
+        self.assertFalse(report["ready_for_review"])
+        self.assertEqual(report["qualified_industries"], [])
+        self.assertTrue(any("offline/external" in issue for issue in report["evaluated"][0]["issues"]))
+        with self.assertRaises(ValueError):
+            readiness_report({}, min_industries=2)
+
+    def test_production_readiness_rejects_even_approved_offline_mock(self):
+        self.create_build(industry="restaurant")
+        self.qa_and_approve()
+        report = readiness_report(state.load_companies())
+        self.assertFalse(report["ready_for_review"])
+        self.assertFalse(report["evaluated"][0]["eligible"])
 
     def test_authorization_blocks_live_calls_before_lookup(self):
         args = SimpleNamespace(confirm_live_run=False)
