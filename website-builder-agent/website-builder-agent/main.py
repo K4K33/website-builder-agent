@@ -28,6 +28,7 @@ from utils.company_registry import lookup_by_business_id, lookup_by_name_and_loc
 from utils.free_enrichment import enrich_queue
 from utils.verified_profile import validate_verified_profile
 from utils.lead_queue import rank_leads
+from utils.prh_statement_inspector import inspect_latest_statement
 from utils.state import get_company, upsert_company
 
 from utils.state import (
@@ -335,6 +336,23 @@ def cmd_leads(args):
     print(json.dumps(rows[:args.limit], ensure_ascii=False, indent=2))
     if not rows:
         print("No saved leads; run scout --discovery-only first.")
+
+
+# =========================================================
+# TAXONOMY-REVIEW INVENTORY FROM ONE OFFICIAL PRH STATEMENT
+# =========================================================
+
+def cmd_inspect_financial(args):
+    if not args.confirm_public_lookups:
+        raise RuntimeError("PRH XML statement lookup requires --confirm-public-lookups.")
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Company is missing from the saved lead queue.")
+    report = inspect_latest_statement(company)
+    # Safe metadata only: never copy unsupported raw numbers into financials.
+    upsert_company(slug, {"financial_statement_review": report})
+    summary = {**report, "fact_candidates": report["fact_candidates"][:args.limit]}
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
 
 
 # =========================================================
@@ -861,6 +879,15 @@ def build_parser():
     parser_leads.add_argument("--project-price", type=float, default=1500.0)
     parser_leads.add_argument("--limit", type=int, default=30)
     parser_leads.set_defaults(func=cmd_leads)
+
+    parser_fin_statement = subparsers.add_parser(
+        "inspect-financial",
+        help="Inspect one saved PRH digital statement's raw taxonomy facts; NEVER auto-qualify finance."
+    )
+    parser_fin_statement.add_argument("company")
+    parser_fin_statement.add_argument("--limit", type=int, default=15, choices=range(1, 81))
+    parser_fin_statement.add_argument("--confirm-public-lookups", action="store_true")
+    parser_fin_statement.set_defaults(func=cmd_inspect_financial)
 
     # -----------------------------------------------------
     # FREE PRH ENRICHMENT
