@@ -1,12 +1,69 @@
-name: Website Builder Agent
+name: Website Builder Agent (controlled run)
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "offline = no API costs; live = paid AI only with explicit confirmation"
+        required: true
+        type: choice
+        options:
+          - offline
+          - live
+        default: offline
+      confirmation:
+        description: 'Live only: type exactly I AUTHORIZE PAID API CALLS'
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-builder-agent-controlled
+  cancel-in-progress: false
 
 jobs:
-  run-agent:
+  authorize:
     runs-on: ubuntu-latest
+    steps:
+      - name: Reject accidental or unconfirmed paid runs
+        shell: bash
+        env:
+          MODE: ${{ inputs.mode }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          if [[ "$MODE" == "live" && "$CONFIRMATION" != "I AUTHORIZE PAID API CALLS" ]]; then
+            echo "::error::Live run requires exact paid API confirmation."
+            exit 1
+          fi
 
+  offline:
+    needs: authorize
+    if: ${{ inputs.mode == 'offline' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Offline full regression suite (no AI or search API credentials)
+        env:
+          REQUIRE_BROWSER_TESTS: '1'
+        run: python -m unittest discover -s tests -v
+
+  live:
+    needs: authorize
+    if: ${{ inputs.mode == 'live' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       SCOUT_MODEL: ${{ vars.SCOUT_MODEL }}
@@ -14,32 +71,34 @@ jobs:
       BUILDER_MODEL: ${{ vars.BUILDER_MODEL }}
       QA_MODEL: ${{ vars.QA_MODEL }}
       TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-
+      OPENROUTER_DAILY_LIMIT: '15'
+      OPENROUTER_SAFETY_MARGIN: '2'
+      TAVILY_MONTHLY_LIMIT: '12'
+      TAVILY_SAFETY_MARGIN: '2'
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Install dependencies
-        working-directory: website-builder-agent/website-builder-agent
+      - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Live single-company pipeline (manual paid authorization required)
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install Playwright browser
-        working-directory: website-builder-agent/website-builder-agent
-        run: |
-          python -m playwright install --with-deps chromium
-
-      - name: Run Website Builder Pipeline
-        working-directory: website-builder-agent/website-builder-agent
-        run: |
-          python main.py pipeline \
-            --count 1 \
-            --industry "kampaamo" \
-            --location "Tampere"
+          python main.py pipeline --count 1 --industry "kampaamo" --location "Tampere" --max-revisions 1 --confirm-live-run
+      - name: Preserve candidate, state, evidence and rendered screenshots even on QA failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaurivo-live-run-${{ github.run_id }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            website-builder-agent/website-builder-agent/data/companies.json
+            website-builder-agent/website-builder-agent/data/resource_usage.json
+            website-builder-agent/website-builder-agent/output/
+      - name: Confirm manual review is still required
+        if: success()
+        run: echo "Output archived. No auto-approval, no outreach, and no production deployment."
