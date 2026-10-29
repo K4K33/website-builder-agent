@@ -20,51 +20,60 @@ from utils.state import (
 )
 
 
-OUTREACH_SYSTEM_PROMPT = """Olet myynti- ja viestintäassistentti.
+OUTREACH_SYSTEM_PROMPT = """Olet Kaurivon asiakaslähtöinen suunnittelija, et massamarkkinoija.
 
-Kirjoita lyhyt, henkilökohtainen ja ei-tyrkyttävä sähköpostiluonnos
-yritykselle, jolle on rakennettu uusi esimerkkiverkkosivu.
+Kirjoita henkilökohtainen sähköpostiluonnos suomalaiselle yritykselle,
+jolle on oikeasti suunniteltu ja QA-tarkistettu uusi esimerkkisivu.
 
-Sävy:
-- ystävällinen
-- ammattimainen
-- konkreettinen
-- luonnollinen
-- ei aggressiivista myyntipuhetta
-- ei kliseistä markkinointikieltä
+Tärkein tavoite:
+Vastaanottaja ymmärtää, miten juuri hänen asiakkaansa voisi löytää
+palvelun, tehdä varauksen, kysyä tarjousta tai saapua käymään
+nykyistä helpommin. Älä myy 'modernia sivua' itseisarvona.
+Myy konkreettista asiakaskokemuksen parannusta ja sen mahdollisuutta.
 
-Sähköpostin pitää:
+Rakenne:
+1. Lyhyt, tavallinen, uskottava otsikko, joka liittyy nimettyyn yritykseen.
+2. Välitön syy yhteydenottoon ja yksi AITO, tarkistettu myönteinen havainto.
+   Ei geneerisiä kehuja tai yritykselle keksittyjä ominaisuuksia.
+3. Yksi selkeä nykyisen asiakaspolun kitka, jos se voidaan todistaa.
+   Esitä sen liiketoiminnallinen merkitys selkeästi ja maltillisesti:
+   esimerkiksi ajanvarauksen, hinnan tai saapumisohjeen löytyminen
+   helpommin. Älä väitä asiakkaiden jättävän ostamatta ilman näyttöä.
+4. Kerro täsmällisesti, mitä suunnittelit tässä yrityksessä toisin,
+   miten se helpottaisi heidän asiakkaansa seuraavaa askelta, ja
+   että halutessaan he voivat tutustua valmiiseen demoon.
+   Älä keksimällä keksi demolle URLia tai teknisiä ominaisuuksia.
+5. Lopuksi YKSI kevyt kysymys, johon voi vastata yhdellä lauseella.
+   Älä pyydä kylmässä ensiviestissä tapaamista tai puhelua.
+6. Luonnollinen allekirjoitus: Kaurivo, hello.kaurivo@gmail.com.
+   Lähettäjän nimeä ei saa keksiä.
 
-1. Jos yrityksellä on sivusto, voit mainita todellisen nykyisen sivuston havainnon.
-   Jos sivustoa ei ole todennetusti löytynyt, kerro uuden sivuston mahdollisuudesta
-   ilman väitettä vanhasta sivustosta tai sen vioista.
-2. Kertoa lyhyesti, että yritykselle on rakennettu MAKSUTON
-   esimerkkiversio modernimmasta verkkosivusta.
-3. Korostaa, ettei esimerkki aiheuta sitoumusta.
-4. Sisältää matalan kynnyksen CTA:n.
-   Esimerkiksi lyhyt 10 minuutin keskustelu.
-5. Olla enintään 150 sanaa.
-6. Olla suomeksi.
-7. Päättyä:
+Jos sivustoa ei ole riippumattomasti varmistetun tiedon mukaan olemassa:
+Älä puhu vanhan sivun heikkouksista tai väitä asiakkaan menettävän myyntiä.
+Puhu sen sijaan siitä, miten yrityksen vahvuudet olisivat helpommin
+löydettävissä ja miten verkkosivu voisi helpottaa ostajan asiointia.
 
-Ystävällisin terveisin,
-[Oma nimesi tähän]
+Kirjoitustyyli:
+- 90–135 sanaa (ei keinotekoisesti täyteen venytetty).
+- Ystävällinen, suorapuheinen, helposti lähestyttävä ja ammattimainen.
+- Ei ylisanallista ihailua, turhia anteeksipyyntöjä, teknistä jargonia,
+  painostusta, tekaistua kiirettä, ROI-lukuja tai tekaistuja tuloksia.
+- Älä käytä ajatusviivoja, pitkää tai lyhyttä viivaa lauseiden välissä,
+  äläkä luettelomaisia viivarivejä sähköpostin rungossa.
+- Ei geneeristä 'innostuin niin paljon että...' -lausetta.
+- Älä kirjoita mitään, mikä ei perustu annettuihin yritysfaktoihin,
+  todellisiin havaintoihin ja demossa oikeasti toteutettuun ratkaisuun.
+- Jos nämä tiedot puuttuvat, älä keksi niitä: kirjoita luonnos,
+  joka tarvitsee faktatarkistuksen ennen lähettämistä.
 
-Älä:
-- keksi yrityksestä faktoja
-- keksi yhteystietoja
-- väitä tietäväsi asioita joita brief ei tue
-- väitä, että yrityksen sivusto on "huono"
-- käytä loukkaavaa tai alentavaa kieltä
-- lupaa tuloksia joita ei ole todistettu
-- painosta vastaanottajaa
+Älä lisää sähköpostin runkoon erillistä kieltäytymislausetta.
+Mahdollisen sähköisen B2B-suoramarkkinoinnin lain vaatima
+kieltomahdollisuus sijoitetaan HTML-viestin huomaamattomaan,
+mutta selkeään erilliseen alatunnisteeseen, ei myyntitekstiin.
+Kieltoa ei saa jättää pois todellisessa markkinointiviestissä.
 
 Palauta VAIN validi JSON:
-
-{
-  "subject": "sähköpostin otsikko",
-  "body": "sähköpostin runko-teksti"
-}
+{"subject":"yksilöllinen aihe","body":"täydellinen sähköpostin runko"}
 """
 
 
@@ -187,14 +196,20 @@ Yrityksen sivutilanne: {intelligence["site_status"]}
 Nykyisen sivuston havaitut heikkoudet:
 {weaknesses}
 
-Kirjoita näiden tietojen perusteella henkilökohtainen outreach-sähköposti.
+Yrityksen designin asiakastehtävät ja konkretia:
+{research.get("design_recommendations", {}).get("customer_tasks", [])}
 
-Tärkeää:
-- Mainitse vain sellainen nykyisen sivuston havainto, joka on oikeasti
-  tuettavissa annetuilla tiedoilla.
-- Älä keksi yrityksestä mitään.
-- Älä käytä teknistä jargon-selitystä.
-- Sähköpostin pitää tuntua oikean ihmisen kirjoittamalta.
+Uuden toteutuksen muutokset ja niiden hyväksymiskriteerit:
+{research.get("design_decisions", [])}
+
+Ihmisen mahdolliset yksilölliset, lähteistetyt havainnot:
+{company.get("outreach_research", {})}
+
+Kirjoita näiden tietojen perusteella yksilöllinen outreach-sähköposti.
+Lähtökohtana vastaanottajan asiakkaan konkreettinen seuraava askel.
+Kerro vain yhdestä todellisesta, nimenomaan tälle yritykselle hyödyllisestä
+parannuksesta. Yksilöllinen havainto tarkistetaan ennen lähettämistä.
+Jos tietoa ei ole, älä korvaa sitä keksityllä tai geneerisellä kehumisella.
 """
 
     # ---------------------------------------------------------
@@ -242,6 +257,18 @@ Tärkeää:
     if not body:
         raise RuntimeError(
             "AI ei tuottanut sähköpostille runkoa."
+        )
+    # Do not silently save impersonal stock copy or user-disliked dashes.
+    # AI can try again only on a new explicitly approved manual run.
+    if any(mark in body for mark in ("—", "–")):
+        raise RuntimeError(
+            "Outreach copy contains sentence-divider dashes. "
+            "Revise the draft without AI-style em/en dashes."
+        )
+    if "jos et toivo kaurivolta muita yhteydenottoja" in body.casefold():
+        raise RuntimeError(
+            "Keep the legal marketing opt-out in the separate email footer, "
+            "not in the personal sales copy."
         )
 
     # ---------------------------------------------------------
