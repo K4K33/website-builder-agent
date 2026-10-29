@@ -35,7 +35,9 @@ Sävy:
 
 Sähköpostin pitää:
 
-1. Mainita yksi konkreettinen havainto yrityksen nykyisestä sivustosta.
+1. Jos yrityksellä on sivusto, voit mainita todellisen nykyisen sivuston havainnon.
+   Jos sivustoa ei ole todennetusti löytynyt, kerro uuden sivuston mahdollisuudesta
+   ilman väitettä vanhasta sivustosta tai sen vioista.
 2. Kertoa lyhyesti, että yritykselle on rakennettu MAKSUTON
    esimerkkiversio modernimmasta verkkosivusta.
 3. Korostaa, ettei esimerkki aiheuta sitoumusta.
@@ -112,13 +114,11 @@ def draft_outreach(
     intelligence = evaluate_prospect(company)
     if intelligence["financial"]["status"] == "exclude":
         raise RuntimeError("Company inactive/insolvent according to recorded official data.")
-    if not intelligence["purchase_capacity"]["can_prioritize"]:
-        raise RuntimeError("Insufficient indicative buying-capacity signals; verify before drafting outreach.")
-    if intelligence["site_status"] != "has_website" and not (
-        intelligence["site_status"] == "confirmed_no_website"
-        and intelligence["reputation"]["strong"]
-    ):
-        raise RuntimeError("Missing-site listing and strong reputation have not been independently verified.")
+    if intelligence["business_activity"]["status"] != "active":
+        raise RuntimeError("Active business operations must be independently verified before outreach drafting.")
+    if intelligence["site_status"] not in {"has_website", "confirmed_no_website"}:
+        raise RuntimeError("Website absence must be verified before drafting outreach.")
+    # Review stars, location count, turnover and profit are OPTIONAL.
 
     # ---------------------------------------------------------
     # 3. Research-data
@@ -181,6 +181,8 @@ Palvelut:
 
 Sijainti:
 {location}
+
+Yrityksen sivutilanne: {intelligence["site_status"]}
 
 Nykyisen sivuston havaitut heikkoudet:
 {weaknesses}
