@@ -216,6 +216,38 @@ class LeadScreeningTests(unittest.TestCase):
         self.assertEqual(record["financials"]["legal_status"] if "legal_status" in record["financials"] else "unknown", "unknown")
         self.assertEqual(record["lead_intelligence"]["financial"]["status"], "needs_review")
 
+    def test_commercial_pipeline_fails_before_research_when_finance_missing(self):
+        from types import SimpleNamespace
+        record = {"name": "Demo", "url": "https://demo.fi", "website": "https://demo.fi"}
+        record["lead_intelligence"] = evaluate_prospect(record)
+        state.upsert_company("demo", record)
+        args = SimpleNamespace(company="demo", benchmark_mode=False, confirm_live_run=True,
+                               industry="ravintola", location="Tampere", count=1, max_revisions=0)
+        with patch.object(config, "model_for_stage", return_value="fixture/mock"), \
+             patch.dict(os.environ, {"OPENROUTER_API_KEY": "offline_fixture",
+                                      "TAVILY_API_KEY": "offline_fixture"}), \
+             patch.object(main.research, "run_research") as researched, \
+             patch.object(main.builder, "run_build") as built:
+            with self.assertRaisesRegex(RuntimeError, "Financial screening"):
+                main.cmd_pipeline(args)
+            researched.assert_not_called()
+            built.assert_not_called()
+
+    def test_no_site_pipeline_stops_before_any_paid_research_even_in_benchmark(self):
+        from types import SimpleNamespace
+        record = self.no_site()
+        record["url"] = ""
+        state.upsert_company("demo", record)
+        args = SimpleNamespace(company="demo", benchmark_mode=True, confirm_live_run=True,
+                               industry="ravintola", location="Tampere", count=1, max_revisions=0)
+        with patch.object(config, "model_for_stage", return_value="fixture/mock"), \
+             patch.dict(os.environ, {"OPENROUTER_API_KEY": "offline_fixture",
+                                      "TAVILY_API_KEY": "offline_fixture"}), \
+             patch.object(main.research, "run_research") as researched:
+            with self.assertRaisesRegex(RuntimeError, "No-site lead"):
+                main.cmd_pipeline(args)
+            researched.assert_not_called()
+
     def test_outreach_blocked_before_ai_when_no_proven_budget(self):
         company = {"qa": {"overall_pass": True, "build_version": 1, "html_sha256": "hash"},
                    "approval": {"approved": True, "build_version": 1, "html_sha256": "hash"},
