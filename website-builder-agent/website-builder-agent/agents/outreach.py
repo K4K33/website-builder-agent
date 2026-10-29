@@ -258,6 +258,18 @@ Jos tietoa ei ole, älä korvaa sitä keksityllä tai geneerisellä kehumisella.
         raise RuntimeError(
             "AI ei tuottanut sähköpostille runkoa."
         )
+    # Do not silently save impersonal stock copy or user-disliked dashes.
+    # AI can try again only on a new explicitly approved manual run.
+    if any(mark in body for mark in ("—", "–")):
+        raise RuntimeError(
+            "Outreach copy contains sentence-divider dashes. "
+            "Revise the draft without AI-style em/en dashes."
+        )
+    if "jos et toivo kaurivolta muita yhteydenottoja" in body.casefold():
+        raise RuntimeError(
+            "Keep the legal marketing opt-out in the separate email footer, "
+            "not in the personal sales copy."
+        )
 
     # ---------------------------------------------------------
     # 5. Tallenna luonnos
