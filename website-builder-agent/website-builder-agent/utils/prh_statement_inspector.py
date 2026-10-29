@@ -43,6 +43,7 @@ def _download_statement(business_id, period, timeout=12, max_bytes=MAX_BYTES):
         headers=_HEADERS,
         timeout=timeout,
         stream=True,
+        allow_redirects=False,
     ) as response:
         response.raise_for_status()
         mimetype = response.headers.get("Content-Type", "").split(";")[0].strip().lower()
@@ -74,7 +75,6 @@ def inspect_xml_document(payload, business_id, financial_period):
         raise ValueError("Invalid business identity.")
     if not isinstance(payload, (bytes, bytearray)) or not payload or len(payload) > MAX_BYTES:
         raise ValueError("Statement must be non-empty bounded XML bytes.")
-    prefix = bytes(payload[:1000]).upper()
     if b"<!DOCTYPE" in bytes(payload).upper() or b"<!ENTITY" in bytes(payload).upper():
         raise ValueError("External entities and DOCTYPE are not allowed.")
     try:
