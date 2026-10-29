@@ -89,6 +89,18 @@ class LeadScreeningTests(unittest.TestCase):
         site_check.assert_not_called()
         browser.assert_not_called()
 
+    def test_paid_commercial_scan_does_not_spend_on_unknown_finances(self):
+        leads = [{"name": "Unscreened", "website": "https://unscreened.fi",
+                  "osm_type": "node", "osm_id": 900, "tags": {}}]
+        with patch.object(scout, "_fetch_osm_companies", return_value=leads), \
+             patch.object(scout, "_technical_analysis") as technical, \
+             patch.object(scout, "_ai_analyze_company") as ai, \
+             patch.object(scout, "capture_website") as browser:
+            self.assertEqual(scout.scout(count=1, commercial_only=True), [])
+            technical.assert_not_called()
+            ai.assert_not_called()
+            browser.assert_not_called()
+
     def test_missing_site_does_not_exhaust_all_website_analysis_slots(self):
         leads = [self.no_site(name=f"Without {n}", osm_id=n) for n in range(8)]
         leads.append({"name": "Actual site", "website": "https://real.fi",
