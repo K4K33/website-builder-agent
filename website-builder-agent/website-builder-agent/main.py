@@ -25,6 +25,9 @@ from utils import publisher
 from utils.production_readiness import readiness_report
 from utils.lead_intelligence import evaluate_prospect, site_signal
 from utils.company_registry import lookup_by_business_id, lookup_by_name_and_location
+from utils.free_enrichment import enrich_queue
+from utils.verified_profile import validate_verified_profile
+from utils.lead_queue import rank_leads
 from utils.state import get_company, upsert_company
 
 from utils.state import (
@@ -33,10 +36,24 @@ from utils.state import (
 
 
 # =========================================================
+# EXPLICIT CONSENT FOR COMMANDS THAT MAY USE PAID AI
+# =========================================================
+
+def _require_paid_consent(args):
+    if not getattr(args, "confirm_paid_apis", False):
+        raise RuntimeError(
+            "This command may consume paid AI/search credits. "
+            "Pass --confirm-paid-apis only after checking provider spending caps."
+        )
+
+
+# =========================================================
 # SCOUT
 # =========================================================
 
 def cmd_scout(args):
+    if not (args.dry_run or getattr(args, "discovery_only", False)):
+        _require_paid_consent(args)
     print(f"[Scout] Etsitään {args.count} yritystä...")
 
     results = scout.run_scout(
@@ -115,6 +132,7 @@ def cmd_add(args):
 # =========================================================
 
 def cmd_research(args):
+    _require_paid_consent(args)
     research.run_research(args.company)
 
 
@@ -123,6 +141,7 @@ def cmd_research(args):
 # =========================================================
 
 def cmd_build(args):
+    _require_paid_consent(args)
     builder.run_build(args.company)
 
 
@@ -135,6 +154,7 @@ def cmd_complete_build(args):
 # =========================================================
 
 def cmd_revise(args):
+    _require_paid_consent(args)
     builder.run_revise(
         args.company,
         args.instructions,
@@ -146,6 +166,7 @@ def cmd_revise(args):
 # =========================================================
 
 def cmd_qa(args):
+    _require_paid_consent(args)
     qa.run_qa(args.company)
 
 
@@ -178,6 +199,7 @@ def cmd_approve(args):
 # =========================================================
 
 def cmd_outreach(args):
+    _require_paid_consent(args)
     outreach.run_outreach(args.company)
 
 
@@ -305,6 +327,43 @@ def cmd_verify_registry(args):
 
 
 # =========================================================
+# LEAD TRIAGE (OFFLINE, NO AI CREDITS)
+# =========================================================
+
+def cmd_leads(args):
+    rows = rank_leads(load_companies(), estimated_project_eur=args.project_price)
+    print(json.dumps(rows[:args.limit], ensure_ascii=False, indent=2))
+    if not rows:
+        print("No saved leads; run scout --discovery-only first.")
+
+
+# =========================================================
+# PRH FREE-SOURCE ENRICHMENT / VERIFIED NO-WEBSITE FACTS
+# =========================================================
+
+def cmd_enrich_free(args):
+    if not args.confirm_public_lookups:
+        raise RuntimeError("External PRH lookups require --confirm-public-lookups.")
+    results = enrich_queue(
+        max_companies=args.max_companies,
+        pause_seconds=args.pause_seconds,
+        company_slug=args.company or None,
+    )
+    print(json.dumps(results, indent=2, ensure_ascii=False))
+
+
+def cmd_attach_profile(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Lead not found; run Scout first.")
+    data = json.loads(Path(args.profile).read_text(encoding="utf-8"))
+    result = validate_verified_profile(company, data)
+    upsert_company(slug, {"company_profile": data})
+    print("Verified no-website profile attached:", slug, result["facts"]["industry"])
+    print("No AI requests were made. Research/build still require explicit authorization.")
+
+
+# =========================================================
 # PIPELINE
 # =========================================================
 
@@ -374,10 +433,18 @@ def cmd_pipeline(args):
 
     if selected_company is None:
         raise RuntimeError("Scout returned no company with a saved record.")
-    if site_signal(selected_company) != "has_website":
-        raise RuntimeError("No-site lead is not buildable from an unverified empty URL; verify business facts first.")
-    intelligence = selected_company.get("lead_intelligence") or {}
-    if (intelligence and intelligence.get("financial", {}).get("status") != "promising"
+    website_state = site_signal(selected_company)
+    intelligence = evaluate_prospect(selected_company)
+    if website_state != "has_website":
+        # A confirmed site-less company can be built from a manually reviewed,
+        # source-backed profile; unknown OSM website listings are still blocked.
+        if website_state != "confirmed_no_website":
+            raise RuntimeError("No-site lead needs independent website and business verification.")
+        validate_verified_profile(selected_company)
+        if (not getattr(args, "benchmark_mode", False)
+                and not intelligence["reputation"]["strong"]):
+            raise RuntimeError("Verified no-site commercial candidate requires strong independently checked reviews.")
+    if (intelligence["financial"]["status"] != "promising"
             and not getattr(args, "benchmark_mode", False)):
         raise RuntimeError("Financial screening not passed; do not spend build credits on this commercial lead.")
 
@@ -578,6 +645,8 @@ def build_parser():
         "--discovery-only", action="store_true",
         help="Save unscreened website/no-website leads with zero AI, screenshots or Tavily calls.",
     )
+    parser_scout.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_scout.set_defaults(func=cmd_scout)
 
     # -----------------------------------------------------
@@ -593,6 +662,8 @@ def build_parser():
         "company"
     )
 
+    parser_research.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_research.set_defaults(func=cmd_research)
 
     # -----------------------------------------------------
@@ -608,6 +679,8 @@ def build_parser():
         "company"
     )
 
+    parser_build.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_build.set_defaults(func=cmd_build)
 
     parser_complete = subparsers.add_parser(
@@ -635,6 +708,8 @@ def build_parser():
         "instructions"
     )
 
+    parser_revise.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_revise.set_defaults(func=cmd_revise)
 
     # -----------------------------------------------------
@@ -650,6 +725,8 @@ def build_parser():
         "company"
     )
 
+    parser_qa.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_qa.set_defaults(func=cmd_qa)
 
     # -----------------------------------------------------
@@ -710,6 +787,8 @@ def build_parser():
         "company"
     )
 
+    parser_outreach.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_outreach.set_defaults(func=cmd_outreach)
 
     # -----------------------------------------------------
@@ -775,6 +854,32 @@ def build_parser():
     parser_registry.add_argument("--confirm-name-mismatch", action="store_true",
         help="Explicitly confirm a trading-name/legal-name difference after checking the identity.")
     parser_registry.set_defaults(func=cmd_verify_registry)
+
+    parser_leads = subparsers.add_parser(
+        "leads", help="Rank verified/unverified prospects without external API calls."
+    )
+    parser_leads.add_argument("--project-price", type=float, default=1500.0)
+    parser_leads.add_argument("--limit", type=int, default=30)
+    parser_leads.set_defaults(func=cmd_leads)
+
+    # -----------------------------------------------------
+    # FREE PRH ENRICHMENT
+    # -----------------------------------------------------
+    parser_free = subparsers.add_parser(
+        "enrich-free", help="Bounded PRH registry and iXBRL-period lookups without AI credits."
+    )
+    parser_free.add_argument("--company", default="")
+    parser_free.add_argument("--max-companies", type=int, default=5)
+    parser_free.add_argument("--pause-seconds", type=float, default=1.0)
+    parser_free.add_argument("--confirm-public-lookups", action="store_true")
+    parser_free.set_defaults(func=cmd_enrich_free)
+
+    parser_profile = subparsers.add_parser(
+        "attach-profile", help="Attach source-verified company facts for a genuinely website-less lead."
+    )
+    parser_profile.add_argument("company")
+    parser_profile.add_argument("--profile", required=True)
+    parser_profile.set_defaults(func=cmd_attach_profile)
 
     # -----------------------------------------------------
     # PIPELINE

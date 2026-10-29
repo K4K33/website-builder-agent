@@ -2,6 +2,39 @@
 
 # Website Builder Agent
 
+## Maksuton asiakashaku ja turvallinen pilotointi (2026-10-29)
+
+Uusi ehdotettu kuluton alkuprosessi:
+
+```bash
+python main.py scout --count 10 --industry ravintola --location Tampere --discovery-only
+python main.py enrich-free --max-companies 5 --confirm-public-lookups
+python main.py leads
+```
+
+Ensimmäinen ja viimeinen komento eivät käytä AI-krediittejä. Keskimmäinen
+tekee korkeintaan rajatun määrän maksuttomia PRH:n avoimen datan verkkopyyntöjä.
+PRH:n tilinpäätösrajapinnasta tarkistetaan vain, **onko tilikausia saatavana**;
+se ei vielä anna luotettavaa liikevaihto-/voittosummaa ilman raportin
+taksonomiatulkintaa. Arvostelut vaativat edelleen sallituista lähteistä
+varmistetun arvion ja arvostelumäärän; puuttuva tieto ei tarkoita huonoa
+yritystä.
+
+Verkkosivuton yritys voi siirtyä rakentamiseen vain, kun verkkosivun
+puuttuminen ja yrityksen todelliset palvelut on tarkistettu:
+
+```bash
+python main.py screen-lead YRITYS --evidence lead-evidence.json
+python main.py attach-profile YRITYS --profile verified-profile.json
+python main.py research YRITYS --confirm-paid-apis
+```
+
+Huom. `research` sekä muut AI-pohjaiset yksittäiset komennot edellyttävät
+`--confirm-paid-apis`; `pipeline` edellyttää `--confirm-live-run`.
+Tarkista palveluntarjoajan euro-/kulukatto ennen maksullisia ajoja.
+Tarkka profiilin ja tietolähteiden skeema sekä rajoitukset: [QUALITY.md](QUALITY.md).
+
+
 > **Turvallinen käyttö:** `pipeline` tekee oikeita ulkoisia API-kutsuja ja voi aiheuttaa maksuja. Käytä sitä tietoisesti `python main.py pipeline --confirm-live-run --count 1 --industry kampaamo --location Tampere` -komennolla vasta, kun mallin asetukset ja palveluntarjoajan kulukatto on tarkistettu. GitHub Actionsin manuaalisen työnkulun oletus on maksuton `offline`-testi. `python main.py readiness --min-industries 3` tarkistaa kerätyt tuotantotodisteet maksutta. Katso [QUALITY.md](QUALITY.md).
 
 
