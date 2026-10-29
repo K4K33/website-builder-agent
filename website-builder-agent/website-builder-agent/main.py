@@ -41,6 +41,10 @@ from utils.state import (
 # =========================================================
 
 def _require_paid_consent(args):
+    # A loopback-only local model needs no paid-model authorization.
+    # External search APIs (if any) remain independently quota-limited.
+    if config.ai_backend() == "ollama":
+        return
     if not getattr(args, "confirm_paid_apis", False):
         raise RuntimeError(
             "This command may consume paid AI/search credits. "
@@ -391,7 +395,10 @@ def cmd_pipeline(args):
     # Resolve all required models before discovery can spend API requests.
     config.model_for_stage("builder")
     config.model_for_stage("qa")
-    for key in ("OPENROUTER_API_KEY", "TAVILY_API_KEY"):
+    keys = ["TAVILY_API_KEY"]
+    if config.ai_backend() == "openrouter":
+        keys.append("OPENROUTER_API_KEY")
+    for key in keys:
         if not os.getenv(key) and not getattr(config, key, ""):
             raise RuntimeError(f"{key} puuttuu. Pipelinea ei käynnistetty.")
 

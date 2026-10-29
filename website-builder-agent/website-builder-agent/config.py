@@ -28,9 +28,35 @@ OPENROUTER_MODEL = os.getenv(
     "openrouter/free",
 )
 
+# Default remains the existing cloud client to avoid breaking older projects.
+# Kaurivo can opt into local inference WITHOUT touching OAVIR's OpenRouter credits.
+# FREE_ONLY forbids OpenRouter calls, including accidentally selected paid models.
+def ai_backend():
+    mode = os.getenv("AI_BACKEND", "openrouter").strip().lower()
+    if mode not in {"openrouter", "ollama"}:
+        raise RuntimeError("AI_BACKEND must be 'openrouter' or 'ollama'.")
+    if os.getenv("FREE_ONLY", "").strip().lower() in {"1", "true", "yes"} and mode != "ollama":
+        raise RuntimeError("FREE_ONLY requires AI_BACKEND=ollama; no cloud AI requests permitted.")
+    return mode
+
+
 # Each stage has an explicit model; Builder and visual QA cannot silently use
 # a random free router. Set exact provider model IDs after choosing the model.
 def model_for_stage(stage=None):
+    if ai_backend() == "ollama":
+        # Keep local and cloud model configurations distinct: never interpret an
+        # OpenRouter model ID as a local model name.
+        stage_key = f"OLLAMA_{stage.upper()}_MODEL" if stage else ""
+        model = (os.getenv(stage_key, "").strip() if stage_key else "")
+        model = model or os.getenv("OLLAMA_MODEL", "").strip()
+        if not model or (stage in {"builder", "qa"} and not os.getenv(stage_key, "").strip()):
+            raise RuntimeError(
+                f"Configure a locally installed Ollama model for stage {stage or 'default'}; "
+                "Builder and visual QA need explicit OLLAMA_BUILDER_MODEL / OLLAMA_QA_MODEL."
+            )
+        if model.lower().endswith(":cloud"):
+            raise RuntimeError("Ollama cloud models are disabled; local-only inference required.")
+        return model
     model = os.getenv(f"{stage.upper()}_MODEL", "").strip() if stage else ""
     model = model or OPENROUTER_MODEL
     if stage in {"builder", "qa"} and (model == "openrouter/free" or model.endswith(":free")):
@@ -93,7 +119,7 @@ STATUS_FLOW = [
 # Käynnistyksen tarkistus
 # ============================================================
 
-if not OPENROUTER_API_KEY:
+if not OPENROUTER_API_KEY and ai_backend() == "openrouter":
     print(
         "[VAROITUS] OPENROUTER_API_KEY puuttuu. "
         "Lisää se GitHub Secretiksi nimellä OPENROUTER_API_KEY "
