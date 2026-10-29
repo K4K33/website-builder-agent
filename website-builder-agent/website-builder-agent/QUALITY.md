@@ -354,3 +354,49 @@ provider-side hard limits configured.
 - No-site profile fact verification still requires human review.
 - No live multi-sector autonomous builder benchmark or commercial
   publishing/invoicing review has been completed.
+
+
+## PRH XBRL document inspection (2026-10-29, safe preview)
+
+The official PRH open-data financial API describes:
+- `GET /financials?businessId=...` returning reporting period metadata (JSON).
+- `GET /financial?businessId=...&financialDate=YYYY-MM-DD` returning an XML financial statement.
+
+Reference: https://avoindata.prh.fi/opendata-xbrl-api/v3/schema?lang=fi
+Data source: Finnish Patent and Registration Office (PRH), CC BY 4.0.
+
+To inspect **one** PRH digital statement after confirming legal company identity
+and fetching the real reporting periods:
+
+```bash
+python main.py enrich-free --company COMPANY --confirm-public-lookups
+python main.py inspect-financial COMPANY --confirm-public-lookups --limit 15
+python main.py leads
+```
+
+The inspector makes **one explicit, bounded PRH HTTP request** only; it refuses
+redirects, non-XML replies, documents over 2 MB, malformed XML, DTD/entity
+constructs, invalid IDs, future dates and unverifiable reporting periods.
+It saves just a bounded sample of original XML data facts, the official source
+address and a SHA-256 digest for independent human verification.
+
+**WARNING:** An XML concept like `fi_met:mi53` and a displayed figure are NOT
+an automatically verified financial result. Correct identification requires
+an exact taxonomy and financial reporting context, unit, scale, sign,
+consolidation scope and relevant period. This feature deliberately records
+`financial_figures_verified: false`, never writes `revenue_eur` or
+`operating_profit_eur` and does not change the commercial budget gate.
+Final financial qualifications must still use independently reviewed and
+source-linked evidence. The iXBRL open dataset covers only a minority of
+Finnish statements.
+
+Review priorities now include `inspect_available_prh_statement`,
+`review_xbrl_taxonomy_facts` and `verify_financial_budget`, helping the
+operator focus on verified, highly regarded website-less businesses without
+spending any model credits. The review sources still need lawful access;
+Google Maps ratings scraping is *not* enabled because Place API content has
+license, caching and billing restrictions.
+
+The change has been validated using fully mocked HTTP and XML fixtures only.
+It is not proof that all current PRH live responses use the same taxonomy,
+nor proof of the autonomous site-builder production quality.

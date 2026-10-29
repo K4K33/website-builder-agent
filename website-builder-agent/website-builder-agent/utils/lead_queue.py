@@ -13,30 +13,38 @@ def rank_leads(companies, estimated_project_eur=1500):
         reputation = info["reputation"]
         financial = info["financial"]
         site = info["site_status"]
+        has_report = (company.get("financial_availability") or {}).get("status") == "available"
+        report_checked = (company.get("financial_statement_review") or {}).get("status") == "taxonomy_review_required"
         if financial["status"] == "exclude":
-            bucket = "excluded_official_status"
-            priority = 0
+            bucket, priority = "excluded_official_status", 0
         elif financial["status"] == "promising" and reputation["strong"] and site in {
             "has_website", "confirmed_no_website"
         }:
-            bucket = "high_priority_manual_review"
-            priority = 4
+            bucket, priority = "high_priority_manual_review", 6
+        elif financial["status"] == "promising" and reputation["strong"]:
+            bucket, priority = "verify_website_absence", 5
         elif financial["status"] == "promising" and site == "has_website":
-            bucket = "verify_reputation"
-            priority = 3
+            bucket, priority = "verify_reputation", 4
+        elif reputation["strong"] and site == "confirmed_no_website":
+            bucket, priority = "verify_financial_budget", 4
+        elif reputation["strong"] and site == "website_not_listed":
+            bucket, priority = "verify_website_then_financials", 3
+        elif report_checked:
+            bucket, priority = "review_xbrl_taxonomy_facts", 3
+        elif has_report:
+            bucket, priority = "inspect_available_prh_statement", 2
         elif site == "website_not_listed":
-            bucket = "verify_website_and_reputation"
-            priority = 2
+            bucket, priority = "verify_website_and_reputation", 1
         else:
-            bucket = "verify_financials_and_reputation"
-            priority = 1
+            bucket, priority = "verify_financials_and_reputation", 1
         # Skip any automatic contact claim: the value is always human triage.
         rows.append({
             "company": slug, "name": company.get("name", slug),
             "site_status": site, "reputation_status": reputation["status"],
             "finance_status": financial["status"],
             "financial_availability": (company.get("financial_availability") or {}).get("status", "unknown"),
-            "next_step": info["next_step"], "bucket": bucket,
+            "next_step": bucket if bucket != "high_priority_manual_review"
+            else "manual_lead_approval_required", "bucket": bucket,
             "priority": priority, "outreach_allowed": False,
         })
     return sorted(rows, key=lambda item: (-item["priority"], item["name"].casefold(), item["company"]))
