@@ -12,6 +12,7 @@ Outreach vaatii erillisen käyttäjän hyväksynnän.
 import argparse
 import config
 import os
+import json
 
 from agents import scout
 from agents import research
@@ -20,6 +21,7 @@ from agents import qa
 from agents import outreach
 
 from utils import publisher
+from utils.production_readiness import readiness_report
 
 from utils.state import (
     load_companies,
@@ -202,6 +204,17 @@ def cmd_show(args):
 
     for key, value in company.items():
         print(f"{key}: {value}")
+
+
+# =========================================================
+# OFFLINE PRODUCTION-READINESS AUDIT
+# =========================================================
+
+def cmd_readiness(args):
+    report = readiness_report(load_companies(), min_industries=args.min_industries)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    if not report["ready_for_review"]:
+        raise RuntimeError("Production evidence gate failed: the live multi-industry benchmark is incomplete.")
 
 
 # =========================================================
@@ -631,6 +644,16 @@ def build_parser():
     )
 
     parser_show.set_defaults(func=cmd_show)
+
+    # -----------------------------------------------------
+    # READINESS (offline evidence audit)
+    # -----------------------------------------------------
+
+    parser_readiness = subparsers.add_parser(
+        "readiness", help="Audit live multi-industry evidence without any API requests."
+    )
+    parser_readiness.add_argument("--min-industries", type=int, default=3)
+    parser_readiness.set_defaults(func=cmd_readiness)
 
     # -----------------------------------------------------
     # PIPELINE
