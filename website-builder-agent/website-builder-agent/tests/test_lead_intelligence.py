@@ -74,6 +74,45 @@ class LeadScreeningTests(unittest.TestCase):
         with patch.object(scout, "_fetch_osm_companies", return_value=[self.no_site()]):
             self.assertEqual(scout.scout(count=1), [])
 
+    def test_discovery_only_saves_both_without_paid_ai_or_browser(self):
+        leads = [self.no_site(), {"name": "Has Website", "website": "https://exists.fi",
+                                 "osm_type": "node", "osm_id": 200, "tags": {}}]
+        with patch.object(scout, "_fetch_osm_companies", return_value=leads), \
+             patch.object(scout, "_technical_analysis") as site_check, \
+             patch.object(scout, "_ai_analyze_company") as paid_ai, \
+             patch.object(scout, "capture_website") as browser:
+            found = scout.scout(count=2, discovery_only=True)
+        self.assertEqual(len(found), 2)
+        self.assertEqual({lead["name"] for lead in found}, {"Demo", "Has Website"})
+        self.assertTrue(all(lead["status"] == "verification_pending" for lead in found))
+        paid_ai.assert_not_called()
+        site_check.assert_not_called()
+        browser.assert_not_called()
+
+    def test_missing_site_does_not_exhaust_all_website_analysis_slots(self):
+        leads = [self.no_site(name=f"Without {n}", osm_id=n) for n in range(8)]
+        leads.append({"name": "Actual site", "website": "https://real.fi",
+                      "osm_type": "node", "osm_id": 999, "tags": {}})
+        with patch.object(scout, "_fetch_osm_companies", return_value=leads), \
+             patch.object(scout, "_technical_analysis") as analysis:
+            found = scout.scout(count=2, discovery_only=True)
+        self.assertIn("Actual site", {x["name"] for x in found})
+        analysis.assert_not_called()
+
+    def test_prh_name_and_city_rejects_ambiguous_identity(self):
+        from utils.company_registry import lookup_by_name_and_location
+        company = {"businessId": {"value": "0116297-6"},
+                   "names": [{"name": "Demo"}],
+                   "addresses": [{"postOffices": [{"city": "Tampere"}]}]}
+        response = Mock()
+        response.json.return_value = {"companies": [company]}
+        response.raise_for_status.return_value = None
+        with patch("utils.company_registry.requests.get", return_value=response):
+            self.assertEqual(lookup_by_name_and_location("Demo", "Tampere")["business_id"], "0116297-6")
+            response.json.return_value = {"companies": [company, company]}
+            with self.assertRaisesRegex(RuntimeError, "one exact"):
+                lookup_by_name_and_location("Demo", "Tampere")
+
     def test_unnamed_website_tag_is_not_proof_of_no_site(self):
         self.assertEqual(site_signal(self.no_site()), "website_not_listed")
         upgraded = self.no_site() | {"site_verification": {
@@ -159,7 +198,8 @@ class LeadScreeningTests(unittest.TestCase):
                 "legal_status": "unknown"}
         with patch.object(main, "lookup_by_business_id", return_value=stub):
             main.cmd_verify_registry(type("Args", (), {
-                "company": "demo", "business_id": "0116297-6"})())
+                "company": "demo", "business_id": "0116297-6",
+                "confirm_name_mismatch": True})())
         record = state.get_company("demo")[1]
         self.assertEqual(record["financials"]["legal_status"] if "legal_status" in record["financials"] else "unknown", "unknown")
         self.assertEqual(record["lead_intelligence"]["financial"]["status"], "needs_review")
