@@ -400,3 +400,56 @@ license, caching and billing restrictions.
 The change has been validated using fully mocked HTTP and XML fixtures only.
 It is not proof that all current PRH live responses use the same taxonomy,
 nor proof of the autonomous site-builder production quality.
+
+
+## Indicative purchasing-capacity prioritization, not solvency (2026-10-29)
+
+Kaurivo no longer requires actual turnover and operating profit to consider a
+business for a paid website build. It uses a transparent **0..100 internal lead
+priority index** from independently verified signals, not purchase probability,
+a credit rating or actual cash availability.
+
+Default additive heuristic (caps at 100):
+- +55: recent, source-verified turnover scale and *positive* operating profit
+  compared with the project's estimated EUR price. This remains optional.
+- +10: matched official company identity in PRH/YTJ.
+- +10: independently documented active registry status.
+- +25: human-verified recent high customer ratings (>=4.5 with >=20 reviews).
+- +20: verified business operation at two or more locations.
+- +15: independently verified staff count of five or more.
+
+Registry identity, reputation and operational size are proxies only. All signals
+require source links and, where relevant, human confirmation; no fabricated
+reviews and no automated Google Maps scraping. An absent signal adds zero
+**without meaning that the firm is poor**. Closed, insolvent or officially
+terminated businesses remain excluded from commercial targeting. Any valid
+score of at least 25 is eligible for *manual consideration*, not automatic
+solicitation. Confidence reports `limited`, `moderate` or `higher`;
+scores are NOT calibrated probabilities.
+
+Businesses with no reliable financial statement can therefore proceed when
+they have other verifiable indicators (e.g. established good reviews or a
+proven operating footprint). Website-less firms still need verified website
+absence, a sourced company profile and strong reviews. Those checks concern
+factual accuracy and relevance, not exact solvency.
+
+The `leads` command and local UI both display these heuristic indicators.
+Commercial pipelines compute them again on each run, so stale saved scoring
+cannot bypass a gate. If a particular business is worth testing despite
+missing source evidence, the operator can explicitly authorize a single
+known-company experiment:
+
+    python main.py pipeline --company SLUG --allow-low-evidence-lead --confirm-live-run
+
+This manual exception does NOT bypass official inactive/insolvency exclusions,
+company identity/site verification, provider cost restrictions, QA, or human
+approval. It is only usable for a named saved company. Standard discovery and
+automated outreach draft creation still require indicative signals; customer
+emails are never sent automatically. `screen-lead` also accepts optional
+source-checked `operational_scale` evidence (location_count, employee_count,
+source_url, checked_at, verified_by_human) for the index.
+
+Do not present these numbers as the firm's assets, revenue, profit, available
+spending, creditworthiness, or likelihood of purchasing. The thresholds are
+initial operational heuristics that should eventually be evaluated against
+consented, actual customer outcomes rather than asserted as predictive.

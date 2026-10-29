@@ -676,8 +676,9 @@ def _analyze_candidates(
             analyzed.append(candidate)
             print(f"  [lead] Tallennusjonoon ilman AI- tai selainanalyysiä: {name}")
             continue
-        if commercial_only and candidate["lead_intelligence"]["financial"]["status"] != "promising":
-            print(f"  [skip] Talousnäyttö puuttuu; maksullista analyysiä ei tehdä: {name}")
+        if (commercial_only and
+                not candidate["lead_intelligence"]["purchase_capacity"]["can_prioritize"]):
+            print(f"  [skip] Ostokykyarvion näyttö puuttuu; odottaa maksutonta tarkistusta: {name}")
             continue
 
         print(
@@ -937,7 +938,7 @@ def scout(
         buildable = sorted(
             (item for item in analyzed if item.get("qualification", {}).get("eligible")
              and site_signal(item) == "has_website"
-             and (not commercial_only or item.get("lead_intelligence", {}).get("financial", {}).get("status") == "promising")),
+             and (not commercial_only or item.get("lead_intelligence", {}).get("purchase_capacity", {}).get("can_prioritize"))),
             key=lambda item: (item["qualification"]["score"], item["qualification"]["confidence"]),
             reverse=True,
         )
