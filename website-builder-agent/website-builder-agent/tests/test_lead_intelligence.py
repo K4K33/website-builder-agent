@@ -228,7 +228,7 @@ class LeadScreeningTests(unittest.TestCase):
                                       "TAVILY_API_KEY": "offline_fixture"}), \
              patch.object(main.research, "run_research") as researched, \
              patch.object(main.builder, "run_build") as built:
-            with self.assertRaisesRegex(RuntimeError, "Financial screening"):
+            with self.assertRaisesRegex(RuntimeError, "Insufficient indicative buying-capacity"):
                 main.cmd_pipeline(args)
             researched.assert_not_called()
             built.assert_not_called()
@@ -253,7 +253,7 @@ class LeadScreeningTests(unittest.TestCase):
                    "approval": {"approved": True, "build_version": 1, "html_sha256": "hash"},
                    "build": {"version": 1}, "website": "https://demo.fi"}
         with patch.object(outreach, "ask_claude_json") as paid_ai:
-            with self.assertRaisesRegex(RuntimeError, "budget evidence"):
+            with self.assertRaisesRegex(RuntimeError, "Insufficient indicative buying-capacity"):
                 outreach.draft_outreach("demo", company)
             paid_ai.assert_not_called()
 
