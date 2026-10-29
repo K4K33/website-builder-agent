@@ -36,10 +36,24 @@ from utils.state import (
 
 
 # =========================================================
+# EXPLICIT CONSENT FOR COMMANDS THAT MAY USE PAID AI
+# =========================================================
+
+def _require_paid_consent(args):
+    if not getattr(args, "confirm_paid_apis", False):
+        raise RuntimeError(
+            "This command may consume paid AI/search credits. "
+            "Pass --confirm-paid-apis only after checking provider spending caps."
+        )
+
+
+# =========================================================
 # SCOUT
 # =========================================================
 
 def cmd_scout(args):
+    if not (args.dry_run or getattr(args, "discovery_only", False)):
+        _require_paid_consent(args)
     print(f"[Scout] Etsitään {args.count} yritystä...")
 
     results = scout.run_scout(
@@ -118,6 +132,7 @@ def cmd_add(args):
 # =========================================================
 
 def cmd_research(args):
+    _require_paid_consent(args)
     research.run_research(args.company)
 
 
@@ -126,6 +141,7 @@ def cmd_research(args):
 # =========================================================
 
 def cmd_build(args):
+    _require_paid_consent(args)
     builder.run_build(args.company)
 
 
@@ -138,6 +154,7 @@ def cmd_complete_build(args):
 # =========================================================
 
 def cmd_revise(args):
+    _require_paid_consent(args)
     builder.run_revise(
         args.company,
         args.instructions,
@@ -149,6 +166,7 @@ def cmd_revise(args):
 # =========================================================
 
 def cmd_qa(args):
+    _require_paid_consent(args)
     qa.run_qa(args.company)
 
 
@@ -181,6 +199,7 @@ def cmd_approve(args):
 # =========================================================
 
 def cmd_outreach(args):
+    _require_paid_consent(args)
     outreach.run_outreach(args.company)
 
 
@@ -626,6 +645,8 @@ def build_parser():
         "--discovery-only", action="store_true",
         help="Save unscreened website/no-website leads with zero AI, screenshots or Tavily calls.",
     )
+    parser_scout.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_scout.set_defaults(func=cmd_scout)
 
     # -----------------------------------------------------
@@ -641,6 +662,8 @@ def build_parser():
         "company"
     )
 
+    parser_research.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_research.set_defaults(func=cmd_research)
 
     # -----------------------------------------------------
@@ -656,6 +679,8 @@ def build_parser():
         "company"
     )
 
+    parser_build.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_build.set_defaults(func=cmd_build)
 
     parser_complete = subparsers.add_parser(
@@ -683,6 +708,8 @@ def build_parser():
         "instructions"
     )
 
+    parser_revise.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_revise.set_defaults(func=cmd_revise)
 
     # -----------------------------------------------------
@@ -698,6 +725,8 @@ def build_parser():
         "company"
     )
 
+    parser_qa.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_qa.set_defaults(func=cmd_qa)
 
     # -----------------------------------------------------
@@ -758,6 +787,8 @@ def build_parser():
         "company"
     )
 
+    parser_outreach.add_argument("--confirm-paid-apis", action="store_true",
+        help="Explicitly authorize paid AI/search provider calls.")
     parser_outreach.set_defaults(func=cmd_outreach)
 
     # -----------------------------------------------------
