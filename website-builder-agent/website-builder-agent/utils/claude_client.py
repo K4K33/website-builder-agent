@@ -147,15 +147,15 @@ def ask_claude(
     max_tokens: int = 4000,
     max_retries: int = 3,
     image_paths: list[str] | None = None,
+    stage: str | None = None,
+    json_mode: bool = False,
 ) -> str:
 
     headers = _get_headers()
 
-    model = getattr(
-        config,
-        "OPENROUTER_MODEL",
-        DEFAULT_MODEL,
-    )
+    model = config.model_for_stage(stage)
+    if max_retries < 1 or max_tokens < 1:
+        raise ValueError("max_retries and max_tokens must be positive")
 
     user_content = _build_user_content(
         user_prompt,
@@ -176,6 +176,8 @@ def ask_claude(
         ],
         "max_tokens": max_tokens,
     }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
 
     retry_token_limits = [
         max_tokens,
@@ -194,6 +196,7 @@ def ask_claude(
             )
         ]
 
+        current_max_tokens = min(current_max_tokens, config.AI_MAX_OUTPUT_TOKENS)
         payload["max_tokens"] = current_max_tokens
 
         if not resource_manager.reserve("openrouter"):
@@ -232,6 +235,9 @@ def ask_claude(
                 time.sleep(wait)
                 continue
 
+            if 400 <= response.status_code < 500:
+                raise RuntimeError(f"OpenRouter rejected request: HTTP {response.status_code}")
+
             if response.status_code >= 400:
                 last_error = response.text
 
@@ -255,9 +261,6 @@ def ask_claude(
             data = response.json()
 
             content = _extract_content(data)
-
-            if content:
-                return content
 
             choices = data.get("choices", [])
 
@@ -292,6 +295,14 @@ def ask_claude(
                     )
 
                     continue
+
+                raise RuntimeError("OpenRouter response truncated; output rejected.")
+
+            if finish_reason in {"content_filter", "error"}:
+                raise RuntimeError(f"OpenRouter response rejected: {finish_reason}")
+
+            if content:
+                return content
 
             raise RuntimeError(
                 "OpenRouter palautti tyhjän vastauksen: "
@@ -343,6 +354,7 @@ def ask_claude_json(
     use_web_search: bool = False,
     max_tokens: int = 4000,
     image_paths: list[str] | None = None,
+    stage: str | None = None,
 ) -> dict | list:
 
     json_system = (
@@ -360,6 +372,8 @@ def ask_claude_json(
         use_web_search=use_web_search,
         max_tokens=max_tokens,
         image_paths=image_paths,
+        stage=stage,
+        json_mode=True,
     )
 
     cleaned = raw.strip()

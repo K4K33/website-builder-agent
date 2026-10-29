@@ -9,6 +9,10 @@ jobs:
 
     env:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      SCOUT_MODEL: ${{ vars.SCOUT_MODEL }}
+      RESEARCH_MODEL: ${{ vars.RESEARCH_MODEL }}
+      BUILDER_MODEL: ${{ vars.BUILDER_MODEL }}
+      QA_MODEL: ${{ vars.QA_MODEL }}
       TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
 
     steps:

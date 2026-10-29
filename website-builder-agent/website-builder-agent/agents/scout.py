@@ -21,6 +21,8 @@ import config
 from utils.fetch import analyze_url
 from utils.screenshot import capture_website
 from utils.claude_client import ask_claude_json
+from utils.quality import canonical_url, qualify_lead
+from utils.state import load_companies, save_companies, make_slug
 
 
 OVERPASS_SERVERS = [
@@ -45,30 +47,37 @@ def _build_overpass_query(
     location: str,
 ) -> str:
 
-    return f"""
-[out:json][timeout:40];
-
-area
-  ["name"="{location}"]
-  ["boundary"="administrative"]
-  ->.searchArea;
-
+    categories = {
+        "kampaamo": [("shop", "hairdresser")],
+        "hairdresser": [("shop", "hairdresser")],
+        "kauneushoitola": [("shop", "beauty")],
+        "ravintola": [("amenity", "restaurant")],
+        "restaurant": [("amenity", "restaurant")],
+        "kahvila": [("amenity", "cafe")],
+        "autokorjaamo": [("shop", "car_repair")],
+        "hammaslääkäri": [("amenity", "dentist")],
+        "kuntosali": [("leisure", "fitness_centre")],
+        "hotelli": [("tourism", "hotel")],
+        "sähköasentaja": [("craft", "electrician")],
+        "putkimies": [("craft", "plumber")],
+    }
+    tags = categories.get(industry.strip().casefold())
+    if not tags:
+        raise ValueError("Tuntematon toimiala. Tuetut: " + ", ".join(sorted(categories)))
+    if not location.strip():
+        raise ValueError("Sijainti on pakollinen.")
+    area = json.dumps(location.strip(), ensure_ascii=False)
+    selectors = "\n".join(
+        f'  nwr["{key}"="{value}"](area.searchArea);' for key, value in tags
+    )
+    return f'''[out:json][timeout:40];
+area["name"={area}]["boundary"="administrative"]->.searchArea;
 (
-  nwr
-    ["shop"="hairdresser"]
-    (area.searchArea);
-
-  nwr
-    ["craft"="hairdresser"]
-    (area.searchArea);
-
-  nwr
-    ["amenity"="beauty"]
-    (area.searchArea);
+{selectors}
 );
-
 out center tags;
-"""
+'''
+
 
 
 def _request_overpass(
@@ -314,20 +323,11 @@ def _normalize_url(
     url: str,
 ) -> str:
 
-    if not url:
+    canonical = canonical_url(url)
+    if not canonical:
         return ""
-
-    url = url.strip()
-
-    if not url.startswith(
-        (
-            "http://",
-            "https://",
-        )
-    ):
-        url = "https://" + url
-
-    return url
+    original = str(url).strip()
+    return original if original.startswith(("http://", "https://")) else "https://" + original
 
 
 def _technical_analysis(
@@ -545,77 +545,32 @@ Käytä täsmälleen tätä rakennetta:
         user_prompt=prompt,
         max_tokens=5000,
         image_paths=image_paths,
+        stage="scout",
     )
 
 
 def _save_company(
     company: dict,
     output_file: str,
-) -> None:
+) -> dict | None:
 
-    directory = os.path.dirname(
-        output_file
-    )
-
-    if directory:
-        os.makedirs(
-            directory,
-            exist_ok=True,
-        )
-
-    companies = []
-
-    if os.path.exists(output_file):
-
-        try:
-
-            with open(
-                output_file,
-                "r",
-                encoding="utf-8",
-            ) as file:
-
-                companies = json.load(file)
-
-        except (
-            json.JSONDecodeError,
-            OSError,
-        ):
-
-            companies = []
-
-    if not isinstance(
-        companies,
-        list,
-    ):
-        companies = []
-
-    existing_names = {
-        item.get("name", "").lower()
-        for item in companies
-        if isinstance(item, dict)
-    }
-
-    name = company.get(
-        "name",
-        "",
-    )
-
-    if name.lower() not in existing_names:
-        companies.append(company)
-
-    with open(
-        output_file,
-        "w",
-        encoding="utf-8",
-    ) as file:
-
-        json.dump(
-            companies,
-            file,
-            ensure_ascii=False,
-            indent=2,
-        )
+    # Use the same dictionary store as Research/Builder; preserve all prior work.
+    companies = load_companies()
+    url = canonical_url(company.get("website") or company.get("url"))
+    if not url or any(canonical_url(item.get("url") or item.get("website")) == url
+                      for item in companies.values()):
+        return None
+    base = make_slug(company.get("name", ""))
+    if not base:
+        return None
+    slug = base
+    suffix = 2
+    while slug in companies:
+        slug = f"{base}-{suffix}"
+        suffix += 1
+    companies[slug] = {**company, "slug": slug, "url": _normalize_url(company.get("website") or company.get("url")), "status": "found"}
+    save_companies(companies)
+    return companies[slug]
 
 
 def _analyze_candidates(
@@ -625,6 +580,10 @@ def _analyze_candidates(
 ) -> list[dict]:
 
     analyzed = []
+    seen = set()
+    if os.path.exists(config.COMPANIES_FILE):
+        seen = {canonical_url(item.get("url") or item.get("website"))
+                for item in load_companies().values()}
 
     for candidate in candidates:
 
@@ -652,7 +611,11 @@ def _analyze_candidates(
 
             continue
 
+        if canonical_url(website) in seen:
+            continue
+        seen.add(canonical_url(website))
         candidate["website"] = website
+        candidate["url"] = website
 
         print(
             f"  [site] Tarkistetaan: {name}"
@@ -815,9 +778,9 @@ def _analyze_candidates(
                     "error": str(error)
                 }
 
-        analyzed.append(
-            candidate
-        )
+        if not dry_run:
+            candidate["qualification"] = qualify_lead(candidate)
+        analyzed.append(candidate)
 
     return analyzed
 
@@ -829,9 +792,10 @@ def scout(
     dry_run: bool = False,
 ) -> list[dict]:
 
-    print(
-        f"[Scout] Etsitään {count} yritystä..."
-    )
+    if not 1 <= count <= 30:
+        raise ValueError("count pitää olla välillä 1–30.")
+    _build_overpass_query(industry, location)  # Validate before network/API work.
+    print(f"[Scout] Etsitään {count} yritystä...")
 
     print()
     print("=== SCOUT ===")
@@ -887,11 +851,18 @@ def scout(
 
     analyzed = _analyze_candidates(
         candidates,
-        max_results=count,
+        max_results=min(count * 3, 30),
         dry_run=dry_run,
     )
 
+    if not dry_run:
+        analyzed = sorted(
+            (item for item in analyzed if item["qualification"]["eligible"]),
+            key=lambda item: (item["qualification"]["score"], item["qualification"]["confidence"]),
+            reverse=True,
+        )[:count]
     saved_count = 0
+    saved = []
 
     if not dry_run:
 
@@ -903,12 +874,10 @@ def scout(
 
         for company in analyzed:
 
-            _save_company(
-                company,
-                output_file,
-            )
-
-            saved_count += 1
+            stored = _save_company(company, output_file)
+            if stored:
+                saved.append(stored)
+                saved_count += 1
 
     if dry_run:
 
@@ -1056,7 +1025,7 @@ def scout(
             "yrityksiä ei tallennettu."
         )
 
-    return analyzed
+    return analyzed if dry_run else saved
 
 
 def run_scout(

@@ -28,6 +28,25 @@ OPENROUTER_MODEL = os.getenv(
     "openrouter/free",
 )
 
+# Each stage has an explicit model; Builder and visual QA cannot silently use
+# a random free router. Set exact provider model IDs after choosing the model.
+def model_for_stage(stage=None):
+    model = os.getenv(f"{stage.upper()}_MODEL", "").strip() if stage else ""
+    model = model or OPENROUTER_MODEL
+    if stage in {"builder", "qa"} and (model == "openrouter/free" or model.endswith(":free")):
+        raise RuntimeError(
+            f"Aseta {stage.upper()}_MODEL laadukkaaksi, täsmälliseksi malliksi. "
+            "Rakentaja ja visuaalinen QA eivät käytä vaihtuvaa ilmaismallia."
+        )
+    return model
+
+
+BUILDER_MAX_TOKENS = int(os.getenv("BUILDER_MAX_TOKENS", "16000"))
+AI_MAX_OUTPUT_TOKENS = int(os.getenv("AI_MAX_OUTPUT_TOKENS", "24000"))
+QA_MIN_VISUAL_SCORE = int(os.getenv("QA_MIN_VISUAL_SCORE", "85"))
+if not 0 <= QA_MIN_VISUAL_SCORE <= 100:
+    raise ValueError("QA_MIN_VISUAL_SCORE pitää olla välillä 0–100")
+
 
 # ============================================================
 # Agentin asetukset

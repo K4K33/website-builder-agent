@@ -11,6 +11,12 @@ Faktat validoidaan myös ohjelmallisesti ennen tallennusta.
 import os
 import re
 import webbrowser
+from pathlib import Path
+from bs4 import BeautifulSoup
+
+from utils.quality import normalize_facts, DESIGN_CONTRACT
+from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
+import json
 
 from utils.claude_client import ask_claude
 from utils.state import (
@@ -81,8 +87,8 @@ saat käyttää sitä.
 toimintaa kuvaavaksi väitteeksi.
 
 Jos tagline puuttuu, käytä yrityksen nimeä otsikkona
-ja neutraalia tekstiä, joka kertoo vain että saatavilla
-oleva tutkimustieto on rajallinen.
+ja muuta vain vahvistettuihin tietoihin perustuvaa tekstiä.
+Älä näytä tutkimuksen puutteita loppukäyttäjälle.
 
 META DESCRIPTION:
 
@@ -214,6 +220,10 @@ Palauta VAIN koko HTML.
 """
 
 
+BUILD_SYSTEM_PROMPT += DESIGN_CONTRACT
+REVISE_SYSTEM_PROMPT += DESIGN_CONTRACT
+
+
 def _output_dir(slug: str) -> str:
     return os.path.join(config.OUTPUT_DIR, slug)
 
@@ -283,6 +293,11 @@ def _write_html(slug: str, html: str) -> str:
             + ", ".join(missing)
         )
 
+    from agents.qa import _automated_checks
+    local_issues = _automated_checks(cleaned)["automated_issues"]
+    if local_issues:
+        raise RuntimeError("HTML validation failed: " + "; ".join(local_issues))
+
     # Builderin ei pidä käyttää ulkoisia resursseja.
     external_resource_patterns = [
         r'<link[^>]+href=["\']https?://',
@@ -328,6 +343,7 @@ def _resolve_company(slug_or_name: str) -> tuple[str, dict]:
 
 
 def _safe_fact_summary(company_facts: dict) -> str:
+    company_facts = normalize_facts(company_facts)
     allowed = {
         "name": company_facts.get("name", ""),
         "industry": company_facts.get("industry", ""),
@@ -338,6 +354,8 @@ def _safe_fact_summary(company_facts: dict) -> str:
         "address": company_facts.get("contact_address", ""),
         "opening_hours": company_facts.get("opening_hours", {}),
         "tagline": company_facts.get("tagline", ""),
+        "history": company_facts.get("history", ""),
+        "fleet": company_facts.get("fleet", {}),
         "target_audience": company_facts.get(
             "target_audience",
             "",
@@ -356,6 +374,18 @@ def _validate_generated_content(
 
     Tämä ei käytä AI:ta eikä API-kutsuja.
     """
+
+    company_facts = normalize_facts(company_facts)
+
+    soup = BeautifulSoup(html, "html.parser")
+    allowed_email = company_facts.get("contact_email", "").casefold()
+    allowed_phone = re.sub(r"\D", "", company_facts.get("contact_phone", ""))
+    for anchor in soup.find_all("a", href=True):
+        href = anchor["href"].strip()
+        if href.lower().startswith("mailto:") and href[7:].split("?")[0].casefold() != allowed_email:
+            raise RuntimeError("Unverified email link in generated page")
+        if href.lower().startswith("tel:") and re.sub(r"\D", "", href[4:]) != allowed_phone:
+            raise RuntimeError("Unverified telephone link in generated page")
 
     text = re.sub(
         r"<[^>]+>",
@@ -457,8 +487,9 @@ def _validate_generated_content(
         r"yli\s+\d+\s+(?:asiakka|ammattila)",
     ]
 
+    verified_text = json.dumps(company_facts, ensure_ascii=False).lower()
     for pattern in fabricated_patterns:
-        if re.search(pattern, text):
+        if any(match.group(0) not in verified_text for match in re.finditer(pattern, text)):
             raise RuntimeError(
                 "Builderin tuottamassa sivussa havaittiin "
                 "mahdollisesti keksitty yritysfakta."
@@ -474,6 +505,14 @@ def _validate_generated_content(
     _ = industry
 
 
+def _validate_plan_sections(html, research, target_url=""):
+    decisions = validate_design_plan(research, target_url)
+    ids = {tag["id"] for tag in BeautifulSoup(html, "html.parser").find_all(id=True)}
+    missing = {decision["section_id"] for decision in decisions} - ids
+    if missing:
+        raise RuntimeError("Missing planned sections: " + ", ".join(sorted(missing)))
+
+
 def build_site(
     slug: str,
     company: dict,
@@ -486,6 +525,10 @@ def build_site(
             f"Yritykselle '{slug}' ei löydy research-dataa. "
             f"Aja ensin: python main.py research {slug}"
         )
+
+    benchmark = validate_benchmark(research, company.get("url", ""))
+    decisions = validate_design_plan(research, company.get("url", ""))
+    reference_images, image_labels = reference_image_inputs(benchmark)
 
     company_facts = research.get(
         "company_facts",
@@ -513,6 +556,15 @@ def build_site(
 
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+TOIMIALAN VERTAILU (vain suunnittelua, ei yritysfaktoja):
+{json.dumps(benchmark, ensure_ascii=False)}
+
+PAKOLLINEN SUUNNITELMA ENNEN RAKENTAMISTA:
+{json.dumps(decisions, ensure_ascii=False)}
+Toteuta suunnitelman section_id-tunnukset ja hyväksymiskriteerit. Älä lisää täyteosioita.
+VERTAILUKUVAT ENSIN, tässä järjestyksessä; kohdeyrityksen kuvat niiden jälkeen:
+{json.dumps(image_labels, ensure_ascii=False)}
 
 ========================================
 VERIFIED FACTS
@@ -638,7 +690,10 @@ Palauta VAIN koko HTML.
         BUILD_SYSTEM_PROMPT,
         user_prompt,
         use_web_search=False,
-        max_tokens=8000,
+        max_tokens=config.BUILDER_MAX_TOKENS,
+        stage="builder",
+        image_paths=reference_images + [path for path in (company.get("screenshots") or {}).values()
+                     if isinstance(path, str) and os.path.isfile(path)] or None,
     )
 
     cleaned = _clean_html(html)
@@ -649,6 +704,7 @@ Palauta VAIN koko HTML.
         company_facts,
     )
 
+    _validate_plan_sections(cleaned, research, company.get("url", ""))
     path = _write_html(
         slug,
         cleaned,
@@ -672,6 +728,8 @@ Palauta VAIN koko HTML.
             "build": {
                 "output_path": path,
                 "version": version,
+                "model": config.model_for_stage("builder"),
+                "design_decisions": decisions,
             }
         },
     )
@@ -700,6 +758,37 @@ def run_build(
         slug,
         company,
     )
+
+
+def run_build_from_response(slug_or_name: str, response_path: str, producer: str) -> str:
+    """Complete a build generated by an external coding agent, without an API call.
+
+    The same factual/static gates apply. Provenance is explicit; importing a
+    response does not claim that our autonomous API generator produced it or
+    that it has passed visual QA.
+    """
+    slug, company = _resolve_company(slug_or_name)
+    research = company.get("research") or {}
+    validate_design_plan(research, company.get("url", ""))
+    facts = research.get("company_facts")
+    if not isinstance(facts, dict) or not facts:
+        raise RuntimeError("Research company facts are required before completion.")
+    if not producer.strip():
+        raise ValueError("External response producer must be identified.")
+    cleaned = _clean_html(Path(response_path).read_text(encoding="utf-8"))
+    _validate_generated_content(cleaned, facts)
+    _validate_plan_sections(cleaned, research, company.get("url", ""))
+    path = _write_html(slug, cleaned)
+    upsert_company(slug, {
+        "build": {"output_path": path,
+                  "version": company.get("build", {}).get("version", 0) + 1,
+                  "generation_mode": "external_agent_response",
+                  "producer": producer.strip(),
+                  "design_decisions": research["design_decisions"]},
+        "qa": None,
+    })
+    set_status(slug, "built")
+    return path
 
 
 def revise_site(
@@ -733,7 +822,20 @@ def revise_site(
         {},
     )
 
+    benchmark = validate_benchmark(research, company.get("url", ""))
+    decisions = validate_design_plan(research, company.get("url", ""))
+    reference_images, image_labels = reference_image_inputs(benchmark)
+
     user_prompt = f"""
+TOIMIALAN VERTAILU (vain design-dataa):
+{json.dumps(benchmark, ensure_ascii=False)}
+
+PAKOLLINEN SUUNNITELMA ENNEN RAKENTAMISTA:
+{json.dumps(decisions, ensure_ascii=False)}
+Toteuta suunnitelman section_id-tunnukset ja hyväksymiskriteerit. Älä lisää täyteosioita.
+VERTAILUKUVAT ENSIN, tässä järjestyksessä; kohdeyrityksen kuvat niiden jälkeen:
+{json.dumps(image_labels, ensure_ascii=False)}
+
 ========================================
 VERIFIED FACTS
 ========================================
@@ -800,7 +902,10 @@ Palauta koko HTML.
         REVISE_SYSTEM_PROMPT,
         user_prompt,
         use_web_search=False,
-        max_tokens=8000,
+        max_tokens=config.BUILDER_MAX_TOKENS,
+        stage="builder",
+        image_paths=reference_images + [path for path in (company.get("qa") or {}).get("browser", {}).get("screenshots", {}).values()
+                     if isinstance(path, str) and os.path.isfile(path)] or None,
     )
 
     cleaned = _clean_html(new_html)
@@ -810,6 +915,7 @@ Palauta koko HTML.
         company_facts,
     )
 
+    _validate_plan_sections(cleaned, research, company.get("url", ""))
     new_path = _write_html(
         slug,
         cleaned,
@@ -833,6 +939,8 @@ Palauta koko HTML.
             "build": {
                 "output_path": new_path,
                 "version": version,
+                "model": config.model_for_stage("builder"),
+                "design_decisions": decisions,
                 "last_feedback": feedback,
             }
         },
