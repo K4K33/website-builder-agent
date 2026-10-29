@@ -403,14 +403,16 @@ def cmd_pipeline(args):
     if selected_company is None:
         raise RuntimeError("Scout returned no company with a saved record.")
     website_state = site_signal(selected_company)
+    intelligence = evaluate_prospect(selected_company)
     if website_state != "has_website":
         # A confirmed site-less company can be built from a manually reviewed,
         # source-backed profile; unknown OSM website listings are still blocked.
         if website_state != "confirmed_no_website":
             raise RuntimeError("No-site lead needs independent website and business verification.")
         validate_verified_profile(selected_company)
-    intelligence = selected_company.get("lead_intelligence") or {}
-    if (intelligence and intelligence.get("financial", {}).get("status") != "promising"
+        if not intelligence["reputation"]["strong"]:
+            raise RuntimeError("Verified no-site commercial candidate requires strong independently checked reviews.")
+    if (intelligence["financial"]["status"] != "promising"
             and not getattr(args, "benchmark_mode", False)):
         raise RuntimeError("Financial screening not passed; do not spend build credits on this commercial lead.")
 
