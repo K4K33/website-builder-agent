@@ -82,6 +82,28 @@ object. Verify applicable recipient-specific consent rules before sending,
 especially for personal addresses and sole traders. See
 https://www.finlex.fi/fi/lainsaadanto/2014/917 (sections 200-203).
 
+## Real sender and unknown recipient names
+
+**From account** must be the verified connected Kaurivo Gmail account:
+`Kaurivo <hello.kaurivo@gmail.com>`. The sender's visible display
+name should be **Kaurivo** in Gmail account settings. No personal Gmail
+account, alias or individual private email address may be used.
+Kaarlo's human introduction is in the body, not the email From address:
+"Olen Kaarlo Kaurivolta. Suunnittelen ja toteutan verkkosivuja yrityksille."
+
+When emailing a verified, public, role-based company address such as
+`info@...` but without a reliable individual contact name, begin
+with plain **"Hei,"** and name the company in the next sentence:
+"Tutustuin [actual company name]n toimintaan..." Do not invent an
+employee's name or greet an imaginary CEO, team leader or owner.
+Only use "Hei [etunimi]," if that person's name and relevance to the
+business address have actually been checked.
+
+Do not invent `info@` email addresses either: check the actual published
+address, any marketing restrictions and whether this recipient is a
+corporation or a natural person/sole trader before contacting. If the
+recipient is not confirmed, do not send.
+
 ## Why the company benefits and what we have done before
 
 A strong proposal is not just "I can make a new site." Each message must
