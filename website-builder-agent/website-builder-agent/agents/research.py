@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
+from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.screenshot import capture_website
 
@@ -450,6 +451,76 @@ def _collect_reference_evidence(references, target_url):
     return evidence
 
 
+def _research_verified_no_website_company(slug: str, company: dict) -> dict:
+    """Design research from a verified external fact profile, NOT an imaginary site.
+
+    Produces the same benchmark and traceable brief as standard Research,
+    with fact_sources declaring that the customer has no current site.
+    """
+    verified = validate_verified_profile(company)
+    facts = verified["facts"]
+    industry = str(facts["industry"]).strip()
+    name = facts["name"]
+    search_query = f"{industry} {str(facts['services'][0])[:80]} yritys palvelut verkkosivut"
+    print("[Research] No verified company website: using reviewed factual profile.")
+    references = _search_tavily(search_query, max_results=5)
+    references += _search_tavily(
+        f"{industry} yritys palvelut yhteystiedot", max_results=5
+    )
+    selected = _select_reference_candidates(references, facts, "")
+    evidence = _collect_reference_evidence(selected, "")
+    images, labels = reference_image_inputs(evidence)
+    instructions = (
+        "This business does not have a VERIFIED current website. "
+        "The factual profile was independently reviewed and is the ONLY source "
+        "of claims about the target. Never interpret competitors as the target; "
+        "never infer certifications, staff, portfolio, prices, products or services. "
+        "The absence of a site is NOT a design defect of an imaginary old page. "
+        "Do not invent old page screenshots. "
+        "Follow the same full same-industry comparison and unique design plan.\n"
+        + "FACTS:\n" + json.dumps(facts, ensure_ascii=False)
+        + "\nFACT SOURCES:\n" + json.dumps(verified["fact_sources"], ensure_ascii=False)
+        + "\nREFERENCE IMAGE ORDER:\n" + json.dumps(labels, ensure_ascii=False)
+        + "\nOBSERVED INDEPENDENT OPERATORS:\n" + json.dumps(evidence, ensure_ascii=False)
+        + "\nREFERENCES SEARCH:\n" + _format_search_results(references)
+    )
+    brief = ask_claude_json(
+        FINAL_RESEARCH_PROMPT, instructions,
+        max_tokens=6000, stage="research", image_paths=images
+    )
+    if not isinstance(brief, dict):
+        raise RuntimeError("Verified no-site design brief was not a JSON object")
+    comparison = {
+        canonical_url(item.get("url")): item
+        for item in brief.get("reference_comparison", [])
+        if isinstance(item, dict)
+    }
+    benchmark = [
+        {**record,
+         **{key: comparison.get(canonical_url(record["url"]), {}).get(key, [])
+            for key in ("observations", "apply", "avoid")}}
+        for record in evidence
+    ]
+    research_data = {
+        **brief,
+        "company_facts": facts,  # The AI design response cannot change verified facts.
+        "design_benchmark": benchmark,
+        "fact_sources": verified["fact_sources"],
+        "factual_profile_verified_at": verified["verified_at"],
+        "research_mode": "verified_no_website",
+        "current_site_weaknesses": [],
+        "reference_search_query": search_query,
+        "reference_sources": [
+            {"title": item.get("title", ""), "url": item.get("url", "")}
+            for item in references
+        ],
+    }
+    validate_design_plan(research_data, "")
+    updated = upsert_company(slug, {"research": research_data})
+    set_status(slug, "researched")
+    return updated
+
+
 def run_research(
     slug_or_name: str,
 ) -> dict:
@@ -476,11 +547,8 @@ def run_research(
     )
 
     if not url:
-
-        raise RuntimeError(
-            f"Yrityksellä {slug} "
-            "ei ole verkkosivun URL-osoitetta."
-        )
+        # An absent website must never be faked or fetched as an empty URL.
+        return _research_verified_no_website_company(slug, company)
 
     print()
     print("=== RESEARCH ===")
