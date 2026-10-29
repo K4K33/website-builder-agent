@@ -50,7 +50,7 @@ class OutreachQualityTests(unittest.TestCase):
 
     def test_prompt_focuses_on_customer_actions_not_generic_modern_sites(self):
         prompt = outreach.OUTREACH_SYSTEM_PROMPT
-        self.assertIn("Olen Kaarlo, Kaurivon perustaja", prompt)
+        self.assertIn("Olen Kaarlo Kaurivolta", prompt)
         self.assertIn("Suunnittelen ja toteutan", prompt)
         self.assertIn("toteuttaa uuden sivuston teille kokonaan", prompt)
         self.assertIn("Olisiko teillä kiinnostusta uudistaa", prompt)
