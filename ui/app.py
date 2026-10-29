@@ -111,13 +111,21 @@ def chat():
                     f"Project not found: {slug}"
                 )
             else:
+                intelligence = company.get("lead_intelligence") or {}
+                review = intelligence.get("reputation") or {}
+                financial = intelligence.get("financial") or {}
                 response = (
                     f"Company: "
                     f"{company.get('name', resolved_slug)}\n"
                     f"URL: "
-                    f"{company.get('url', '')}\n"
+                    f"{company.get('url', '') or 'not listed (unverified)'}\n"
                     f"Status: "
                     f"{company.get('status', 'unknown')}\n"
+                    f"Website status: {intelligence.get('site_status', 'unknown')}\n"
+                    f"Reputation: {review.get('status', 'unknown')}\n"
+                    f"Financial fit: {financial.get('status', 'needs_review')}\n"
+                    f"Commercial gate: {intelligence.get('outreach_gate', 'verification_pending')}\n"
+                    f"Recommended check: {intelligence.get('next_step', 'verify business evidence')}\n"
                     f"Demo: "
                     f"{(company.get('demo') or {}).get('url', 'not published')}\n"
                     f"Build version: "
