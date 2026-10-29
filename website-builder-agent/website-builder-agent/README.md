@@ -2,6 +2,52 @@
 
 # Website Builder Agent
 
+## Kaurivon uusi ihmisen hyväksymä asiakastyönkulku
+
+Nykyisessä 0 € -työnkulussa **ChatGPT avustaa yritysten valinnassa ja
+rakentaa hyväksytyn yrityksen demonsa**, mutta yrityksille ei lähetetä
+viestejä automaattisesti.
+
+1. Löydä yrityksiä maksuttomilla lähteillä:
+   `python main.py scout --discovery-only --count 10 --industry kampaamo --location Tampere`
+   (OSM/Overpass-kutsuja voidaan tehdä; ei kuluta OpenRouter- tai Tavily-krediittejä).
+2. Luo selkeä käyttäjän tarkistuslista:
+   `python main.py shortlist --limit 10 --format markdown`
+   (ei verkkoyhteyksiä eikä AI-kutsuja).
+3. Käyttäjä tutkii valitun yrityksen, erityisesti sen toiminnan
+   aktiivisuuden ja onko sillä todella jo verkkosivu. Merkintä
+   `website_not_listed` tarkoittaa ainoastaan, että sivua ei ollut
+   lähteessä listattuna.
+4. Tallenna päätös:
+   `python main.py review-lead SLUG --decision select --note "Sopiva demo"`.
+   Vaihtoehdot ovat `select`, `later` ja `skip`. Tämä **ei** tee
+   AI-ajokutsua, käynnistä demoa, todenna verkkosivun puuttumista
+   eikä anna yhteydenottolupaa.
+5. Käyttäjä sanoo ChatGPT-keskustelussa esimerkiksi `Tee tälle yritykselle
+   laadukas sivusto`. ChatGPT voi tehdä yritystutkimuksen, vertailla
+   oikeita saman alan referenssisivustoja, toteuttaa koodin GitHubiin
+   ja käyttää maksuttomia testejä ilman erillistä OpenRouter-ajokutsua.
+   Tämä kuluttaa ChatGPT-käyttöoikeuksia, ei automaattisesti
+   OpenRouter-krediittejä. Tuotannon laatu pitää tarkistaa.
+6. Käyttäjä hyväksyy demonstraation ja lähetysviestin erikseen.
+   Gmail-integraatio voi laatia ja lähettää yhden viestin erillisellä
+   nimenomaisella pyynnöllä. Tämä Python-työkalu ei koskaan lähetä
+   sähköposteja eikä automaattisesti poimi henkilöiden yhteystietoja.
+
+Markkinointiviestien osoitteet ja oikeusperuste tarkistetaan erikseen.
+Suomen sähköisessä B2B-suoramarkkinoinnissa yhteisölle osoitetut viestit
+ja luonnolliselle henkilölle osoitetut viestit eivät ole sama asia.
+Vastaanottajan markkinointikielto on aina huomioitava, ja viestissä
+on ilmoitettava selkeästi mahdollisuudesta kieltäytyä.
+Älä oleta, että kenen tahansa henkilökohtainen sähköposti on
+vapaasti markkinoitavissa vain, koska sen osoite löytyy verkosta.
+
+Luettelon aktiivisuuskriteeri on säilynyt ensisijaisena;
+hyvät arvostelut, monen toimipaikan omistaminen tai tilinpäätös eivät
+ole vaatimuksia. Muutokset ovat työkulun valmistelua. Ne eivät
+tarkoita, että ChatGPT jo lähettäisi taustalla automaattisesti uusia
+liidilistoja; jatkuva ilmoitus vaatii erikseen asetetun ajastuksen.
+
 ## Paikallinen maksuton AI (Ollama, opt-in)
 
 Kaurivo voidaan asettaa käyttämään **omaan koneeseen asennettuja** paikallisia

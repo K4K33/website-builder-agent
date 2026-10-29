@@ -28,6 +28,7 @@ from utils.company_registry import lookup_by_business_id, lookup_by_name_and_loc
 from utils.free_enrichment import enrich_queue
 from utils.verified_profile import validate_verified_profile
 from utils.lead_queue import rank_leads
+from utils.human_review_queue import shortlist as build_review_shortlist, record_decision, format_markdown
 from utils.prh_statement_inspector import inspect_latest_statement
 from utils.state import get_company, upsert_company
 
@@ -340,6 +341,25 @@ def cmd_leads(args):
     print(json.dumps(rows[:args.limit], ensure_ascii=False, indent=2))
     if not rows:
         print("No saved leads; run scout --discovery-only first.")
+
+
+# =========================================================
+# HUMAN REVIEW HANDOFF (no AI, mail or network operations)
+# =========================================================
+
+def cmd_shortlist(args):
+    rows = build_review_shortlist(load_companies(), limit=args.limit,
+                                  include_reviewed=args.include_reviewed)
+    if args.format == "markdown":
+        print(format_markdown(rows))
+    else:
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+
+
+def cmd_review_lead(args):
+    result = record_decision(args.company, args.decision, args.note)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print("No demo built, no company contacted. Selection is not website/activity verification.")
 
 
 # =========================================================
@@ -894,6 +914,24 @@ def build_parser():
     parser_leads.add_argument("--project-price", type=float, default=1500.0)
     parser_leads.add_argument("--limit", type=int, default=30)
     parser_leads.set_defaults(func=cmd_leads)
+
+    parser_shortlist = subparsers.add_parser(
+        "shortlist",
+        help="Prepare a compact company-review batch, no AI or outside requests."
+    )
+    parser_shortlist.add_argument("--limit", type=int, default=10)
+    parser_shortlist.add_argument("--format", choices=("json", "markdown"), default="markdown")
+    parser_shortlist.add_argument("--include-reviewed", action="store_true")
+    parser_shortlist.set_defaults(func=cmd_shortlist)
+
+    parser_review = subparsers.add_parser(
+        "review-lead",
+        help="Record human choice: select, later, skip. Does NOT build or send."
+    )
+    parser_review.add_argument("company")
+    parser_review.add_argument("--decision", choices=("select", "later", "skip"), required=True)
+    parser_review.add_argument("--note", default="", help="Optional short human note.")
+    parser_review.set_defaults(func=cmd_review_lead)
 
     parser_fin_statement = subparsers.add_parser(
         "inspect-financial",
