@@ -148,6 +148,60 @@ class FreeEnrichmentTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             enrich_queue(max_companies=11)
 
+    def test_offline_lead_queue_prioritizes_verified_finances_and_reviews(self):
+        from utils.lead_queue import rank_leads
+        good = company()
+        good.update({
+            "reputation": {"rating": 4.9, "review_count": 62, "source_url": "https://example.org/reviews",
+                           "verified_by_human": True, "checked_at": date.today().isoformat()},
+            "financials": {"business_id": "0116297-6", "business_id_verified": True,
+                           "registry_source_url": official()["registry_source_url"],
+                           "legal_status": "active", "insolvency_proceeding": False,
+                           "financial_source_url": "https://example.org/verified-report",
+                           "financial_verified_by_human": True, "financial_year": date.today().year - 1,
+                           "revenue_eur": 240000, "operating_profit_eur": 12500}
+        })
+        unknown = company() | {"name": "Unknown", "site_verification": {}}
+        excluded = company() | {"name": "Ended",
+                                 "financials": {"legal_status": "ended"}}
+        rows = rank_leads({"good": good, "unknown": unknown, "ended": excluded})
+        self.assertEqual(rows[0]["company"], "good")
+        self.assertEqual(rows[0]["bucket"], "high_priority_manual_review")
+        self.assertEqual(rows[-1]["company"], "ended")
+        self.assertTrue(all(not row["outreach_allowed"] for row in rows))
+
+    def test_no_site_commercial_pipeline_requires_reviews_and_profile(self):
+        record = company() | {"company_profile": profile()}
+        record["financials"] = {
+            "business_id": "0116297-6", "business_id_verified": True,
+            "registry_source_url": official()["registry_source_url"],
+            "legal_status": "active", "financial_source_url": "https://example.org/report",
+            "financial_verified_by_human": True, "financial_year": date.today().year - 1,
+            "revenue_eur": 190000, "operating_profit_eur": 7800,
+        }
+        state.upsert_company("demo", record)
+        args = SimpleNamespace(company="demo", benchmark_mode=False, confirm_live_run=True,
+                               count=1, industry="ravintola", location="Tampere", max_revisions=0)
+        with patch.object(config, "model_for_stage", return_value="fixture/mock"), \
+             patch.dict(os.environ, {"OPENROUTER_API_KEY": "fixture", "TAVILY_API_KEY": "fixture"}), \
+             patch.object(main.research, "run_research") as researched:
+            with self.assertRaisesRegex(RuntimeError, "strong independently checked reviews"):
+                main.cmd_pipeline(args)
+            researched.assert_not_called()
+        record["reputation"] = {
+            "rating": 4.8, "review_count": 60, "source_url": "https://example.org/reviews",
+            "verified_by_human": True, "checked_at": date.today().isoformat(),
+        }
+        state.upsert_company("demo", record)
+        with patch.object(config, "model_for_stage", return_value="fixture/mock"), \
+             patch.dict(os.environ, {"OPENROUTER_API_KEY": "fixture", "TAVILY_API_KEY": "fixture"}), \
+             patch.object(main.research, "run_research") as researched, \
+             patch.object(main.builder, "run_build") as built, \
+             patch.object(main.qa, "run_qa", return_value={"overall_pass": True}):
+            main.cmd_pipeline(args)
+            researched.assert_called_once_with("demo")
+            built.assert_called_once_with("demo")
+
     def test_enrichment_cli_fails_closed_without_permission(self):
         with patch.object(main, "enrich_queue") as run:
             with self.assertRaisesRegex(RuntimeError, "confirm-public-lookups"):
