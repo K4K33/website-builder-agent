@@ -110,8 +110,10 @@ def draft_outreach(
         )
 
     intelligence = evaluate_prospect(company)
-    if intelligence["financial"]["status"] != "promising":
-        raise RuntimeError("Company budget evidence not verified; no paid outreach draft or contact.")
+    if intelligence["financial"]["status"] == "exclude":
+        raise RuntimeError("Company inactive/insolvent according to recorded official data.")
+    if not intelligence["purchase_capacity"]["can_prioritize"]:
+        raise RuntimeError("Insufficient indicative buying-capacity signals; verify before drafting outreach.")
     if intelligence["site_status"] != "has_website" and not (
         intelligence["site_status"] == "confirmed_no_website"
         and intelligence["reputation"]["strong"]
