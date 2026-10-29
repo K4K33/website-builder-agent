@@ -60,12 +60,14 @@ def financial_signal(financials, estimated_project_eur=1500, today=None):
     """
     today = today or date.today()
     data = financials if isinstance(financials, dict) else {}
+    if data.get("legal_status") in {"ended", "bankrupt", "liquidation"}:
+        return {"status": "exclude", "reasons": ["company_registration_or_operations_ended"]}
+    if data.get("insolvency_proceeding") is True:
+        return {"status": "exclude", "reasons": ["registered_insolvency_proceeding"]}
     if not (data.get("legal_status") == "active"
             and _source(data.get("registry_source_url"))
             and data.get("business_id_verified") is True):
         return {"status": "needs_review", "reasons": ["company_identity_or_activity_unverified"]}
-    if data.get("insolvency_proceeding") is True:
-        return {"status": "exclude", "reasons": ["registered_insolvency_proceeding"]}
     revenue, earnings = data.get("revenue_eur"), data.get("operating_profit_eur")
     year = data.get("financial_year")
     if not (_source(data.get("financial_source_url"))
