@@ -10,6 +10,8 @@ Outreach vaatii erillisen käyttäjän hyväksynnän.
 """
 
 import argparse
+import config
+import os
 
 from agents import scout
 from agents import research
@@ -203,6 +205,12 @@ def cmd_show(args):
 # =========================================================
 
 def cmd_pipeline(args):
+    # Resolve all required models before discovery can spend API requests.
+    config.model_for_stage("builder")
+    config.model_for_stage("qa")
+    for key in ("OPENROUTER_API_KEY", "TAVILY_API_KEY"):
+        if not os.getenv(key) and not getattr(config, key, ""):
+            raise RuntimeError(f"{key} puuttuu. Pipelinea ei käynnistetty.")
 
     print()
     print("========================================")
@@ -246,37 +254,12 @@ def cmd_pipeline(args):
     selected_slug = None
     selected_company = None
 
-    for result in reversed(results):
-
-        if not isinstance(result, dict):
-            continue
-
-        candidate_slug = (
-            result.get("slug")
-            or result.get("company_slug")
-        )
-
+    for result in results:
+        candidate_slug = result.get("slug")
         if candidate_slug in companies:
             selected_slug = candidate_slug
             selected_company = companies[candidate_slug]
             break
-
-    if selected_company is None:
-
-        candidates = []
-
-        for slug, company in companies.items():
-
-            if company.get("status") == "found":
-                candidates.append(
-                    (
-                        slug,
-                        company,
-                    )
-                )
-
-        if candidates:
-            selected_slug, selected_company = candidates[-1]
 
     if selected_company is None:
         raise RuntimeError(
@@ -331,6 +314,22 @@ def cmd_pipeline(args):
     print("========================================")
 
     qa_result = qa.run_qa(selected_slug)
+    for attempt in range(args.max_revisions):
+        if qa_result.get("overall_pass") is True:
+            break
+        if qa_result.get("content_review", {}).get("notes") == "AI review failed":
+            break
+        if any("Browser QA unavailable" in issue for issue in qa_result.get("browser", {}).get("issues", [])):
+            break
+        import json
+        feedback = {
+            "static": qa_result.get("automated", {}).get("automated_issues", []),
+            "browser": qa_result.get("browser", {}).get("issues", []),
+            "review": qa_result.get("content_review", {}),
+        }
+        print(f"[Pipeline] Korjauskierros {attempt + 1}/{args.max_revisions}")
+        builder.run_revise(selected_slug, json.dumps(feedback, ensure_ascii=False))
+        qa_result = qa.run_qa(selected_slug)
 
     # -----------------------------------------------------
     # FINAL RESULT
@@ -646,6 +645,10 @@ def build_parser():
         required=True,
     )
 
+    parser_pipeline.add_argument(
+        "--max-revisions", type=int, choices=range(0, 4), default=0,
+        help="Rajattu QA-korjauskierrosten määrä (0–3). Oletus 0 pitää API-kulut ennallaan.",
+    )
     parser_pipeline.set_defaults(func=cmd_pipeline)
 
     return parser

@@ -10,6 +10,7 @@ yritys ei katoa eikä Scoutia tarvitse ajaa uudelleen.
 
 import json
 import os
+import tempfile
 
 from slugify import slugify
 
@@ -119,8 +120,8 @@ def load_companies() -> dict:
 
         try:
             data = json.load(f)
-        except json.JSONDecodeError:
-            data = {}
+        except json.JSONDecodeError as error:
+            raise RuntimeError("companies.json is corrupt; refusing to overwrite company data") from error
 
     normalized = _normalize_companies(
         data
@@ -143,18 +144,16 @@ def save_companies(data: dict) -> None:
         data
     )
 
-    with open(
-        config.COMPANIES_FILE,
-        "w",
-        encoding="utf-8",
-    ) as f:
-
-        json.dump(
-            normalized,
-            f,
-            ensure_ascii=False,
-            indent=2,
-        )
+    descriptor, temporary = tempfile.mkstemp(dir=config.DATA_DIR, prefix="companies-", suffix=".tmp")
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as file:
+            json.dump(normalized, file, ensure_ascii=False, indent=2)
+            file.flush()
+            os.fsync(file.fileno())
+        os.replace(temporary, config.COMPANIES_FILE)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def get_company(

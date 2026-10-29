@@ -1,3 +1,5 @@
+> Current quality controls, model setup, costs and remaining validation: [QUALITY.md](QUALITY.md).
+
 # Website Builder Agent
 
 Agenttijärjestelmä, joka automatisoi verkkosivujen uudistusprosessin

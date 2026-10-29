@@ -18,6 +18,8 @@ Tärkeää:
 
 import os
 
+from utils.quality import normalize_facts, DESIGN_CONTRACT
+
 import requests
 
 from utils import resource_manager
@@ -151,7 +153,15 @@ Palauta VAIN validi JSON tässä muodossa:
     ],
     "font_style": "",
     "tone": "",
-    "key_sections": []
+    "key_sections": [],
+    "visual_concept": "Yrityskohtainen visuaalinen suunta ja sen perustelu",
+    "typography_scale": "Otsikoiden ja leipätekstin mittakaava sekä rivipituudet",
+    "spacing_and_layout": "Sisältöleveydet, tilavälit ja osioiden rytmi",
+    "customer_tasks": [],
+    "section_plan": [{"id": "", "purpose": "", "fact_fields": [], "layout": ""}],
+    "interaction_plan": [],
+    "mobile_plan": "Miten hierarkia ja navigaatio toimivat 320–390 px leveydessä",
+    "avoid": []
   }
 }
 
@@ -165,6 +175,9 @@ Sääntöjä:
 - Älä keksi yrityksen faktoja.
 - Jos yhteystieto puuttuu, jätä se tyhjäksi.
 """
+
+
+FINAL_RESEARCH_PROMPT += DESIGN_CONTRACT.replace("Palauta täysin itsenäinen index.html, jossa kaikki tarvittavat kohteet ja toiminnot toimivat.", "Palauta edelleen vain yllä kuvatun skeeman JSON-designbrief.")
 
 
 def _get_tavily_key():
@@ -455,7 +468,8 @@ Raaka HTML:
     extracted = ask_claude_json(
         FACT_EXTRACTION_PROMPT,
         user_prompt,
-        max_tokens=2500,
+        max_tokens=3500,
+        stage="research",
     )
 
     if not isinstance(
@@ -480,6 +494,8 @@ Raaka HTML:
     ):
 
         company_facts = {}
+
+    company_facts = normalize_facts(company_facts)
 
     industry = str(
         company_facts.get(
@@ -570,7 +586,8 @@ Tärkeää:
     brief = ask_claude_json(
         FINAL_RESEARCH_PROMPT,
         final_prompt,
-        max_tokens=3500,
+        max_tokens=5000,
+        stage="research",
     )
 
     if not isinstance(
@@ -590,6 +607,10 @@ Tärkeää:
 
     research_data = {
         **brief,
+        # The design pass must not rewrite or invent extracted company facts.
+        "company_facts": company_facts,
+        "fact_sources": [{"url": url, "title": site_data.get("title", ""),
+                          "text": site_data.get("visible_text", "")[:12000]}],
         "reference_sources": [
             {
                 "title": result.get(
@@ -610,12 +631,7 @@ Tärkeää:
         slug,
         {
             "name": (
-                brief.get(
-                    "company_facts",
-                    {}
-                ).get(
-                    "name"
-                )
+                company_facts.get("name")
                 or name
             ),
             "url": url,

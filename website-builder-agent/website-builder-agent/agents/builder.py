@@ -11,6 +11,9 @@ Faktat validoidaan myös ohjelmallisesti ennen tallennusta.
 import os
 import re
 import webbrowser
+from bs4 import BeautifulSoup
+
+from utils.quality import normalize_facts, DESIGN_CONTRACT
 
 from utils.claude_client import ask_claude
 from utils.state import (
@@ -81,8 +84,8 @@ saat käyttää sitä.
 toimintaa kuvaavaksi väitteeksi.
 
 Jos tagline puuttuu, käytä yrityksen nimeä otsikkona
-ja neutraalia tekstiä, joka kertoo vain että saatavilla
-oleva tutkimustieto on rajallinen.
+ja muuta vain vahvistettuihin tietoihin perustuvaa tekstiä.
+Älä näytä tutkimuksen puutteita loppukäyttäjälle.
 
 META DESCRIPTION:
 
@@ -214,6 +217,10 @@ Palauta VAIN koko HTML.
 """
 
 
+BUILD_SYSTEM_PROMPT += DESIGN_CONTRACT
+REVISE_SYSTEM_PROMPT += DESIGN_CONTRACT
+
+
 def _output_dir(slug: str) -> str:
     return os.path.join(config.OUTPUT_DIR, slug)
 
@@ -283,6 +290,11 @@ def _write_html(slug: str, html: str) -> str:
             + ", ".join(missing)
         )
 
+    from agents.qa import _automated_checks
+    local_issues = _automated_checks(cleaned)["automated_issues"]
+    if local_issues:
+        raise RuntimeError("HTML validation failed: " + "; ".join(local_issues))
+
     # Builderin ei pidä käyttää ulkoisia resursseja.
     external_resource_patterns = [
         r'<link[^>]+href=["\']https?://',
@@ -328,6 +340,7 @@ def _resolve_company(slug_or_name: str) -> tuple[str, dict]:
 
 
 def _safe_fact_summary(company_facts: dict) -> str:
+    company_facts = normalize_facts(company_facts)
     allowed = {
         "name": company_facts.get("name", ""),
         "industry": company_facts.get("industry", ""),
@@ -356,6 +369,18 @@ def _validate_generated_content(
 
     Tämä ei käytä AI:ta eikä API-kutsuja.
     """
+
+    company_facts = normalize_facts(company_facts)
+
+    soup = BeautifulSoup(html, "html.parser")
+    allowed_email = company_facts.get("contact_email", "").casefold()
+    allowed_phone = re.sub(r"\D", "", company_facts.get("contact_phone", ""))
+    for anchor in soup.find_all("a", href=True):
+        href = anchor["href"].strip()
+        if href.lower().startswith("mailto:") and href[7:].split("?")[0].casefold() != allowed_email:
+            raise RuntimeError("Unverified email link in generated page")
+        if href.lower().startswith("tel:") and re.sub(r"\D", "", href[4:]) != allowed_phone:
+            raise RuntimeError("Unverified telephone link in generated page")
 
     text = re.sub(
         r"<[^>]+>",
@@ -638,7 +663,10 @@ Palauta VAIN koko HTML.
         BUILD_SYSTEM_PROMPT,
         user_prompt,
         use_web_search=False,
-        max_tokens=8000,
+        max_tokens=config.BUILDER_MAX_TOKENS,
+        stage="builder",
+        image_paths=[path for path in (company.get("screenshots") or {}).values()
+                     if isinstance(path, str) and os.path.isfile(path)] or None,
     )
 
     cleaned = _clean_html(html)
@@ -672,6 +700,7 @@ Palauta VAIN koko HTML.
             "build": {
                 "output_path": path,
                 "version": version,
+                "model": config.model_for_stage("builder"),
             }
         },
     )
@@ -800,7 +829,10 @@ Palauta koko HTML.
         REVISE_SYSTEM_PROMPT,
         user_prompt,
         use_web_search=False,
-        max_tokens=8000,
+        max_tokens=config.BUILDER_MAX_TOKENS,
+        stage="builder",
+        image_paths=[path for path in company.get("qa", {}).get("browser", {}).get("screenshots", {}).values()
+                     if isinstance(path, str) and os.path.isfile(path)] or None,
     )
 
     cleaned = _clean_html(new_html)
@@ -833,6 +865,7 @@ Palauta koko HTML.
             "build": {
                 "output_path": new_path,
                 "version": version,
+                "model": config.model_for_stage("builder"),
                 "last_feedback": feedback,
             }
         },
