@@ -110,6 +110,30 @@ class QualityTests(unittest.TestCase):
             builder._validate_generated_content('<a href="mailto:fake@testi.fi">Ota yhteyttä</a>',
                                                 {'contact': {'email':'real@testi.fi'}})
 
+    def test_external_agent_completion_records_provenance_without_ai_call(self):
+        state.upsert_company('testi', {'research':{'company_facts':{'name':'Testi'}},
+                                      'qa':{'overall_pass':True}})
+        response = self.root / 'response.html'; response.write_text(HTML)
+        with patch.object(builder, 'ask_claude') as ask:
+            path = builder.run_build_from_response('testi', str(response), 'Work agent')
+            ask.assert_not_called()
+        saved = state.get_company('testi')[1]
+        self.assertEqual(saved['build']['generation_mode'], 'external_agent_response')
+        self.assertEqual(saved['build']['producer'], 'Work agent')
+        self.assertIsNone(saved['qa'])
+        self.assertEqual(saved['status'], 'built')
+        self.assertTrue(Path(path).exists())
+
+    def test_external_response_needs_research_and_fact_checks(self):
+        state.upsert_company('testi', {'name':'Testi'})
+        response = self.root / 'response.html'; response.write_text(HTML)
+        with self.assertRaises(RuntimeError):
+            builder.run_build_from_response('testi', str(response), 'Work agent')
+        state.upsert_company('testi', {'research':{'company_facts':{'name':'Testi'}}})
+        response.write_text(HTML.replace('</main>','<a href="mailto:invented@fake.fi">Contact</a></main>'))
+        with self.assertRaises(RuntimeError):
+            builder.run_build_from_response('testi', str(response), 'Work agent')
+
     def test_invalid_revision_does_not_overwrite_work(self):
         path = builder._write_html('testi', HTML)
         with self.assertRaises(RuntimeError): builder._write_html('testi', HTML.replace('#main','#missing'))

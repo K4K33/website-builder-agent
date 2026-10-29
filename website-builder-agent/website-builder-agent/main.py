@@ -119,6 +119,10 @@ def cmd_build(args):
     builder.run_build(args.company)
 
 
+def cmd_complete_build(args):
+    print(builder.run_build_from_response(args.company, args.response, args.producer))
+
+
 # =========================================================
 # REVISE
 # =========================================================
@@ -490,6 +494,14 @@ def build_parser():
     )
 
     parser_build.set_defaults(func=cmd_build)
+
+    parser_complete = subparsers.add_parser(
+        "complete-build", help="Validate and import an external coding agent response without API calls."
+    )
+    parser_complete.add_argument("company")
+    parser_complete.add_argument("--response", required=True)
+    parser_complete.add_argument("--producer", required=True)
+    parser_complete.set_defaults(func=cmd_complete_build)
 
     # -----------------------------------------------------
     # REVISE

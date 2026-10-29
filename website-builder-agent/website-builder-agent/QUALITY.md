@@ -78,3 +78,12 @@ Before claiming commercial build quality, use a fixed-model benchmark across sev
 real industries, save before/after desktop/mobile images, check original source
 facts and all key interactions, and obtain human review against a written rubric.
 No live AI benchmark has been run as part of this initial foundation change.
+
+## External coding-agent completions
+
+When a trusted coding agent generates HTML outside the API client, import it through
+`python main.py complete-build COMPANY --response /path/to/response.html --producer "Work agent"`.
+This runs the same factual and static validation as an API build, records explicit
+external-agent provenance, increments the build version and clears stale QA. It
+does not claim autonomous API generation or visual-AI acceptance. Use this mode for
+reviewable examples when API credentials are unavailable.
