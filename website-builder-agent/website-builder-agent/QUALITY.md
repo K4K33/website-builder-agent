@@ -258,3 +258,10 @@ This phase does not change the no-send outreach policy. Human approval
 is still required for website completion and customer contact.
 PRH open data attribution: Patentti- ja rekisterihallitus (PRH),
 CC BY 4.0, https://avoindata.prh.fi/fi/info/swagger-ui.
+
+A separately authorized `pipeline --benchmark-mode --confirm-live-run` is an
+**internal model-quality experiment**, so it can use an unscreened design
+candidate without treating that business as commercially suitable. It still
+requires the normal real browsing/AI usage and safety checks. No outreach,
+financial qualification or customer deployment is implied. The manual GitHub
+workflow uses benchmark mode only for its explicitly approved live test.
