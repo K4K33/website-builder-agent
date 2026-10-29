@@ -191,7 +191,7 @@ class ProductionGates(unittest.TestCase):
         for sector in ("transport", "restaurant", "home services"):
             with self.subTest(sector=sector):
                 self.create_build(industry=sector)
-                args = SimpleNamespace(confirm_live_run=True, count=1,
+                args = SimpleNamespace(confirm_live_run=True, benchmark_mode=True, count=1,
                                        industry="ravintola", location="Tampere", max_revisions=0)
                 with patch.object(config, "model_for_stage", return_value="fixed/mock"), \
                      patch.dict(os.environ, {"OPENROUTER_API_KEY": "offline", "TAVILY_API_KEY": "offline"}), \
@@ -213,7 +213,7 @@ class ProductionGates(unittest.TestCase):
                 self.assertFalse((company.get("outreach") or {}).get("approved"))
 
     def test_offline_pipeline_failure_exits_nonzero(self):
-        args = SimpleNamespace(confirm_live_run=True, count=1,
+        args = SimpleNamespace(confirm_live_run=True, benchmark_mode=True, count=1,
                                industry="ravintola", location="Tampere", max_revisions=0)
         state.upsert_company("demo", {"name": "Demo yritys", "url": "https://demo-example.fi"})
         with patch.object(config, "model_for_stage", return_value="fixed/mock"), \
