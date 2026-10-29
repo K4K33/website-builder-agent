@@ -22,6 +22,7 @@ from utils.fetch import analyze_url
 from utils.screenshot import capture_website
 from utils.claude_client import ask_claude_json
 from utils.quality import canonical_url, qualify_lead
+from utils.lead_intelligence import evaluate_prospect, site_signal
 from utils.state import load_companies, save_companies, make_slug
 
 
@@ -271,9 +272,9 @@ def _fetch_osm_companies(
             )
 
             key = (
-                name.lower(),
-                website.lower(),
-            )
+                element.get("type"),
+                element.get("id"),
+            )  # OSM identity; distinct branches must not collapse by a missing website
 
             if key in seen:
                 continue
@@ -290,6 +291,11 @@ def _fetch_osm_companies(
                     "osm_type": element.get("type"),
                     "osm_id": element.get("id"),
                     "tags": tags,
+                    "site_status": "has_website" if _normalize_url(website) else "website_not_listed",
+                    "business_id": (tags.get("ref:ytj") or tags.get("ref:fi:business_id")
+                                    or tags.get("ref:fi:ytj") or "").strip(),
+                    # OSM has no authoritative review counts or financial statements.
+                    # Missing rating/URL are deliberately NOT interpreted as low rating/no website.
                 }
             )
 
@@ -557,8 +563,13 @@ def _save_company(
     # Use the same dictionary store as Research/Builder; preserve all prior work.
     companies = load_companies()
     url = canonical_url(company.get("website") or company.get("url"))
-    if not url or any(canonical_url(item.get("url") or item.get("website")) == url
-                      for item in companies.values()):
+    if url and any(canonical_url(item.get("url") or item.get("website")) == url
+                   for item in companies.values()):
+        return None
+    osm_identity = (company.get("osm_type"), company.get("osm_id"))
+    if not url and (not all(value is not None for value in osm_identity)
+                    or any((item.get("osm_type"), item.get("osm_id")) == osm_identity
+                           for item in companies.values())):
         return None
     base = make_slug(company.get("name", ""))
     if not base:
@@ -568,7 +579,15 @@ def _save_company(
     while slug in companies:
         slug = f"{base}-{suffix}"
         suffix += 1
-    companies[slug] = {**company, "slug": slug, "url": _normalize_url(company.get("website") or company.get("url")), "status": "found"}
+    site = site_signal(company)
+    companies[slug] = {
+        **company,
+        "slug": slug,
+        "url": _normalize_url(company.get("website") or company.get("url")),
+        "status": "verification_pending" if site != "has_website" else "found",
+        "lead_type": "no_website_candidate" if site != "has_website" else "redesign_candidate",
+        "lead_intelligence": evaluate_prospect(company),
+    }
     save_companies(companies)
     return companies[slug]
 
@@ -603,12 +622,29 @@ def _analyze_candidates(
         )
 
         if not website:
-
-            print(
-                f"  [skip] Ei verkkosivua: "
-                f"{name}"
-            )
-
+            # Discovery != redesign verification. Never call browser/AI on a nonexistent URL.
+            identity = (candidate.get("osm_type"), candidate.get("osm_id"))
+            if identity in seen:
+                continue
+            seen.add(identity)
+            candidate["site_status"] = "website_not_listed"
+            candidate["lead_type"] = "no_website_candidate"
+            candidate["website"] = ""
+            candidate["url"] = ""
+            candidate["technical_analysis"] = {
+                "success": False, "issues": [], "priority": "unknown",
+                "redesignable": False, "confidence": 0.0,
+                "reason": "OSM website tag absent, NOT proof no website exists",
+            }
+            candidate["screenshots"] = {}
+            candidate["lead_intelligence"] = evaluate_prospect(candidate)
+            candidate["qualification"] = {
+                "eligible": False,
+                "reasons": ["missing_website_requires_external_verification"],
+                "score": 0, "confidence": 0,
+            }
+            analyzed.append(candidate)
+            print(f"  [lead] Verkkosivua ei merkitty OSM:ään: {name}; odottaa tarkistusta")
             continue
 
         if canonical_url(website) in seen:
@@ -616,6 +652,11 @@ def _analyze_candidates(
         seen.add(canonical_url(website))
         candidate["website"] = website
         candidate["url"] = website
+        candidate["site_status"] = "has_website"
+        candidate["lead_intelligence"] = evaluate_prospect(candidate)
+        if candidate["lead_intelligence"]["financial"]["status"] == "exclude":
+            print(f"  [skip] Rekisteröity maksukyvyttömyysmenettely: {name}")
+            continue
 
         print(
             f"  [site] Tarkistetaan: {name}"
@@ -790,6 +831,7 @@ def scout(
     industry: str = "kampaamo",
     location: str = "Tampere",
     dry_run: bool = False,
+    commercial_only: bool = False,
 ) -> list[dict]:
 
     if not 1 <= count <= 30:
@@ -856,11 +898,29 @@ def scout(
     )
 
     if not dry_run:
-        analyzed = sorted(
-            (item for item in analyzed if item["qualification"]["eligible"]),
+        # Preserve the existing proven redesign route while adding low-cost,
+        # non-actionable research leads. A no-website item never enters Builder.
+        buildable = sorted(
+            (item for item in analyzed if item.get("qualification", {}).get("eligible")
+             and site_signal(item) == "has_website"
+             and (not commercial_only or item.get("lead_intelligence", {}).get("financial", {}).get("status") == "promising")),
             key=lambda item: (item["qualification"]["score"], item["qualification"]["confidence"]),
             reverse=True,
-        )[:count]
+        )
+        missing_site = sorted(
+            (item for item in analyzed
+             if item.get("lead_type") == "no_website_candidate"
+             and (not commercial_only or item["lead_intelligence"]["outreach_gate"] == "priority_for_human_review")),
+            key=lambda item: (
+                item.get("lead_intelligence", {}).get("financial", {}).get("status") == "promising",
+                item.get("lead_intelligence", {}).get("reputation", {}).get("strong", False),
+            ), reverse=True)
+        # For a batch, reserve space for both routes without throwing away
+        # already qualified website leads. count=1 stays buildable-first.
+        missing_slots = min(len(missing_site), count // 2)
+        analyzed = (buildable[:count - missing_slots] +
+                    missing_site[:missing_slots] +
+                    missing_site[missing_slots:count - len(buildable[:count - missing_slots])])[:count]
     saved_count = 0
     saved = []
 
@@ -1047,4 +1107,5 @@ def run_scout(
         industry=industry,
         location=location,
         dry_run=dry_run,
+        commercial_only=bool(kwargs.get("commercial_only", False)),
     )
