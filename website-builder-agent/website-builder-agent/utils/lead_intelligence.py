@@ -83,6 +83,38 @@ def financial_signal(financials, estimated_project_eur=1500, today=None):
     return {"status": "needs_review", "reasons": ["commercial_budget_requires_human_assessment"]}
 
 
+def business_activity_signal(candidate, today=None):
+    """Business activity matters; independent evidence required to mark active.
+
+    An OSM listing or a company ID alone is NOT proof of current trading.
+    Missing activity evidence is unknown, never automatically 'closed'.
+    """
+    today = today or date.today()
+    facts = candidate.get("financials") or {}
+    registry = candidate.get("registry_evidence") or {}
+    if (facts.get("legal_status") in {"ended", "bankrupt", "liquidation"}
+            or facts.get("insolvency_proceeding") is True
+            or registry.get("registration_ended") is True):
+        return {"status": "inactive", "source": "registered_inactive_or_insolvency"}
+    if (facts.get("legal_status") == "active"
+            and facts.get("business_id_verified") is True
+            and _source(facts.get("registry_source_url"))):
+        return {"status": "active", "source": "verified_registry_status"}
+
+    evidence = candidate.get("activity_evidence") or {}
+    if (isinstance(evidence, dict)
+            and evidence.get("active") is True
+            and evidence.get("verified_by_human") is True
+            and _source(evidence.get("source_url"))):
+        try:
+            checked = date.fromisoformat(evidence["checked_at"])
+            if 0 <= (today - checked).days <= 180:
+                return {"status": "active", "source": "recent_verified_operation"}
+        except (ValueError, KeyError, TypeError):
+            pass
+    return {"status": "unknown", "source": "activity_needs_verification"}
+
+
 def _verified_operating_scale(candidate, today=None):
     """Source-checked operational footprint; not a financial statement."""
     today = today or date.today()
@@ -128,6 +160,12 @@ def estimate_purchase_capacity(candidate, estimated_project_eur=1500, today=None
             "disclaimer": "Not a credit score or assessment of actual ability to pay.",
         }
 
+    # Active operations are a much stronger lead signal than review stars.
+    activity = business_activity_signal(candidate, today=today)
+    if activity["status"] == "active":
+        score += 35
+        reasons.append("independently_verified_active_operation")
+
     # Independently confirmed turnover + positive profit is a strong signal.
     if financial["status"] == "promising":
         score += 55
@@ -150,14 +188,11 @@ def estimate_purchase_capacity(candidate, estimated_project_eur=1500, today=None
 
     # Customer traction gives an *indirect* budget signal, not cash evidence.
     if reviews["strong"]:
-        score += 25
+        score += 10
         reasons.append("independently_checked_strong_customer_reputation")
 
     # Optional verified scale signals. OSM tags alone never count as proof.
     scale = _verified_operating_scale(candidate, today=today)
-    if scale.get("location_count", 0) >= 2:
-        score += 20
-        reasons.append("verified_multiple_operating_locations")
     if scale.get("employee_count", 0) >= 5:
         score += 15
         reasons.append("verified_team_size_at_least_five")
@@ -165,6 +200,7 @@ def estimate_purchase_capacity(candidate, estimated_project_eur=1500, today=None
     score = min(100, score)
     evidence_categories = sum((
         financial["status"] == "promising",
+        activity["status"] == "active",
         facts.get("business_id_verified") is True and _source(facts.get("registry_source_url")),
         reviews["strong"],
         bool(scale),
@@ -207,25 +243,23 @@ def evaluate_prospect(candidate, estimated_project_eur=1500, today=None):
     capacity = estimate_purchase_capacity(candidate, estimated_project_eur, today=today)
     # Bad website leads can still enter the existing UI QA pipeline, but never get
     # automatic sales contact until verified financial evidence is present.
+    activity = business_activity_signal(candidate, today=today)
     readiness = (
         "priority_for_human_review"
-        if capacity["can_prioritize"] and (
-            site == "has_website" or (site == "confirmed_no_website" and rep["strong"])
-        )
+        if activity["status"] == "active" and site in {"has_website", "confirmed_no_website"}
         else "verification_pending"
     )
     return {
         "site_status": site,
         "reputation": rep,
         "financial": finance,
+        "business_activity": activity,
         "purchase_capacity": capacity,
         "outreach_gate": readiness,
         "outreach_allowed": False,  # Explicit owner decision remains mandatory.
         "next_step": (
-            "verify_reviews_and_website_absence"
-            if site != "has_website" and not rep["strong"] else
-            "verify_financial_statements"
-            if not capacity["can_prioritize"] else
+            "verify_business_activity" if activity["status"] == "unknown" else
+            "verify_website_absence" if site == "website_not_listed" else
             "manual_lead_approval_required"
         ),
     }
