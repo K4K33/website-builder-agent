@@ -108,7 +108,13 @@ class LeadScreeningTests(unittest.TestCase):
         with patch.object(scout, "_fetch_osm_companies", return_value=leads), \
              patch.object(scout, "_technical_analysis") as analysis:
             found = scout.scout(count=2, discovery_only=True)
-        self.assertIn("Actual site", {x["name"] for x in found})
+        # No-site leads are the explicit primary target, even when
+        # the OSM batch contains an existing-site candidate later.
+        self.assertEqual({x["name"] for x in found}, {"Without 0", "Without 1"})
+        # The underlying low-cost analyzer can still discover existing-site
+        # candidates if more than just two are requested.
+        raw = scout._analyze_candidates(leads, max_results=6, dry_run=False, discovery_only=True)
+        self.assertIn("Actual site", {item["name"] for item in raw})
         analysis.assert_not_called()
 
     def test_prh_name_and_city_rejects_ambiguous_identity(self):
