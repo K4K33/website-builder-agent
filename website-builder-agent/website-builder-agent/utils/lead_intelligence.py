@@ -83,6 +83,110 @@ def financial_signal(financials, estimated_project_eur=1500, today=None):
     return {"status": "needs_review", "reasons": ["commercial_budget_requires_human_assessment"]}
 
 
+def _verified_operating_scale(candidate, today=None):
+    """Source-checked operational footprint; not a financial statement."""
+    today = today or date.today()
+    scale = candidate.get("operational_scale") or {}
+    if (not isinstance(scale, dict)
+            or scale.get("verified_by_human") is not True
+            or not _source(scale.get("source_url"))):
+        return {}
+    try:
+        checked = date.fromisoformat(scale["checked_at"])
+        if not 0 <= (today - checked).days <= 365:
+            return {}
+    except (KeyError, ValueError, TypeError):
+        return {}
+    result = {}
+    for key in ("location_count", "employee_count"):
+        value = scale.get(key)
+        if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 100000:
+            result[key] = value
+    return result
+
+
+def estimate_purchase_capacity(candidate, estimated_project_eur=1500, today=None):
+    """Evidence-backed LEAD PRIORITY heuristic, not ability-to-pay prediction.
+
+    Score 0..100 is an internal order-of-review index, never a probability or
+    promise of solvency. No evidence means *unknown*, not a poor company.
+    No inferred income, fabricated review counts, or paid/scraped data.
+    """
+    if not _number(estimated_project_eur) or not 100 <= estimated_project_eur <= 100000:
+        raise ValueError("Estimated web project price must be EUR 100..100000")
+    today = today or date.today()
+    financial = financial_signal(candidate.get("financials"), estimated_project_eur, today=today)
+    reviews = review_signal(candidate.get("reputation"), today=today)
+    facts = candidate.get("financials") or {}
+    reasons, score = [], 0
+    if financial["status"] == "exclude":
+        return {
+            "status": "excluded", "score": 0, "confidence": "official_warning",
+            "signals": ["registered_company_inactive_or_insolvency"],
+            "estimated_project_eur": estimated_project_eur,
+            "can_prioritize": False,
+            "disclaimer": "Not a credit score or assessment of actual ability to pay.",
+        }
+
+    # Independently confirmed turnover + positive profit is a strong signal.
+    if financial["status"] == "promising":
+        score += 55
+        reasons.append("source_checked_recent_turnover_and_profit")
+    elif (financial["status"] == "needs_review"
+          and _source(facts.get("financial_source_url"))
+          and facts.get("financial_verified_by_human") is True
+          and _number(facts.get("operating_profit_eur"))
+          and facts["operating_profit_eur"] <= 0):
+        reasons.append("recent_non_positive_operating_profit_needs_context")
+
+    # Official identity confirms business existence, not its spending power.
+    if (facts.get("business_id_verified") is True
+            and _source(facts.get("registry_source_url"))):
+        score += 10
+        reasons.append("official_company_identity")
+        if facts.get("legal_status") == "active":
+            score += 10
+            reasons.append("active_registry_status")
+
+    # Customer traction gives an *indirect* budget signal, not cash evidence.
+    if reviews["strong"]:
+        score += 25
+        reasons.append("independently_checked_strong_customer_reputation")
+
+    # Optional verified scale signals. OSM tags alone never count as proof.
+    scale = _verified_operating_scale(candidate, today=today)
+    if scale.get("location_count", 0) >= 2:
+        score += 20
+        reasons.append("verified_multiple_operating_locations")
+    if scale.get("employee_count", 0) >= 5:
+        score += 15
+        reasons.append("verified_team_size_at_least_five")
+
+    score = min(100, score)
+    evidence_categories = sum((
+        financial["status"] == "promising",
+        facts.get("business_id_verified") is True and _source(facts.get("registry_source_url")),
+        reviews["strong"],
+        bool(scale),
+    ))
+    if score >= 60:
+        status = "strong_indicators"
+    elif score >= 25:
+        status = "some_indicators"
+    else:
+        status = "insufficient_evidence"
+    return {
+        "status": status,
+        "score": score,
+        "confidence": ("higher" if financial["status"] == "promising"
+                       else "moderate" if evidence_categories >= 2 else "limited"),
+        "signals": reasons,
+        "estimated_project_eur": estimated_project_eur,
+        "can_prioritize": score >= 25,
+        "disclaimer": "A qualitative sales-priority heuristic, not a probability, credit rating, or verified budget.",
+    }
+
+
 def site_signal(candidate):
     raw = candidate.get("website") or candidate.get("url") or ""
     if canonical_url(raw):
@@ -100,11 +204,12 @@ def evaluate_prospect(candidate, estimated_project_eur=1500, today=None):
     site = site_signal(candidate)
     rep = review_signal(candidate.get("reputation"), today=today)
     finance = financial_signal(candidate.get("financials"), estimated_project_eur, today=today)
+    capacity = estimate_purchase_capacity(candidate, estimated_project_eur, today=today)
     # Bad website leads can still enter the existing UI QA pipeline, but never get
     # automatic sales contact until verified financial evidence is present.
     readiness = (
         "priority_for_human_review"
-        if finance["status"] == "promising" and (
+        if capacity["can_prioritize"] and (
             site == "has_website" or (site == "confirmed_no_website" and rep["strong"])
         )
         else "verification_pending"
@@ -113,13 +218,14 @@ def evaluate_prospect(candidate, estimated_project_eur=1500, today=None):
         "site_status": site,
         "reputation": rep,
         "financial": finance,
+        "purchase_capacity": capacity,
         "outreach_gate": readiness,
         "outreach_allowed": False,  # Explicit owner decision remains mandatory.
         "next_step": (
             "verify_reviews_and_website_absence"
             if site != "has_website" and not rep["strong"] else
             "verify_financial_statements"
-            if finance["status"] != "promising" else
+            if not capacity["can_prioritize"] else
             "manual_lead_approval_required"
         ),
     }
