@@ -209,6 +209,8 @@ def cmd_show(args):
 # =========================================================
 
 def cmd_pipeline(args):
+    if not getattr(args, "confirm_live_run", False):
+        raise RuntimeError("Live pipeline requires --confirm-live-run to authorize external API calls.")
     # Resolve all required models before discovery can spend API requests.
     config.model_for_stage("builder")
     config.model_for_stage("qa")
@@ -380,6 +382,7 @@ def cmd_pipeline(args):
         print("Sivusto EI läpäissyt QA:ta.")
         print("Pipeline pysähtyy tähän.")
         print("Outreachia ei luoda.")
+        raise RuntimeError("Pipeline failed QA; live run is not a successful build.")
 
 
 # =========================================================
@@ -657,6 +660,10 @@ def build_parser():
         required=True,
     )
 
+    parser_pipeline.add_argument(
+        "--confirm-live-run", action="store_true",
+        help="Explicitly authorize the paid external Scout/Research/Build/QA run.",
+    )
     parser_pipeline.add_argument(
         "--max-revisions", type=int, choices=range(0, 4), default=0,
         help="Rajattu QA-korjauskierrosten määrä (0–3). Oletus 0 pitää API-kulut ennallaan.",
