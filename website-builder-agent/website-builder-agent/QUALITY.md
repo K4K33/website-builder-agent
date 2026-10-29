@@ -453,3 +453,57 @@ Do not present these numbers as the firm's assets, revenue, profit, available
 spending, creditworthiness, or likelihood of purchasing. The thresholds are
 initial operational heuristics that should eventually be evaluated against
 consented, actual customer outcomes rather than asserted as predictive.
+
+
+## Commercial search policy: NO WEBSITE FIRST + ACTIVE BUSINESS (2026-10-29)
+
+**New user-approved priority order**:
+1. A company **verified to be currently operating** and **verified to have no existing website**.
+2. A company whose website field is **not listed** (needs manual/authorized verification), even if it has no ratings or public accounts.
+3. An active company with an existing website that might benefit from redesign, as a secondary market.
+4. Companies with unknown activity status stay in the research queue; registered ended/insolvent businesses are excluded.
+
+Star ratings, multiple locations, five employees, revenue and reported profit are
+**NOT mandatory**. A single active sole-location business is just as eligible.
+There are **zero bonus points for multiple locations**. Good reviews and
+financials remain optional supporting context, not lead selection gates.
+
+To mark a business as active for commercial building or outreach, use
+source-backed official company status, or evidence of recent trading activity
+reviewed within 180 days:
+
+```json
+{
+  "activity_evidence": {
+    "active": true,
+    "verified_by_human": true,
+    "source_url": "https://example.org/source-of-recent-operation",
+    "checked_at": "2026-10-29"
+  }
+}
+```
+
+This example URL is illustrative, not evidence for any real business.
+Attach the reviewed JSON using:
+
+```bash
+python main.py screen-lead COMPANY --evidence verified-activity.json
+python main.py leads
+```
+
+A missing activity field is **unknown**, not a false claim that the business is
+closed. But expensive commercial builds and outreach drafts require verified
+activity, which prevents spending credits on long-closed businesses. Controlled
+internal mock/model-quality benchmarks can still run separately.
+
+`scout --discovery-only` now puts missing-website *candidates* first, even for
+count=1, without calling AI or browser. An omitted OSM website tag is **not
+proof** the company has no site. Prior to commercial no-site work, independently
+verify website absence and the company's real services/contact facts through
+a source-backed, human-reviewed profile. Existing-site redesign is secondary.
+
+The 0–100 indicative capacity index continues to describe a sales-worklist
+heuristic, **not** actual ability to pay. Activity evidence contributes more
+than stars; multiple locations never contribute. The list order is based first
+on site-status and business activity, not the highest turnover or rating.
+Customers are not contacted automatically.

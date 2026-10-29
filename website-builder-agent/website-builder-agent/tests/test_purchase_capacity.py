@@ -23,6 +23,14 @@ def reviews(verified=True, count=60):
     }
 
 
+def verified_activity():
+    return {
+        "active": True, "verified_by_human": True,
+        "source_url": "https://example.org/recent-business-operation",
+        "checked_at": date.today().isoformat(),
+    }
+
+
 def identity():
     return {"business_id": "0116297-6", "business_id_verified": True,
             "registry_source_url": "https://avoindata.prh.fi/opendata-ytj-api/v3/companies?businessId=0116297-6",
@@ -67,10 +75,10 @@ class IndicativeBuyingPotentialTests(unittest.TestCase):
         lead = {"name": "Demo", "website": "https://demo.fi", "reputation": reviews()}
         report = evaluate_prospect(lead)
         self.assertEqual(report["financial"]["status"], "needs_review")
-        self.assertEqual(report["purchase_capacity"]["score"], 25)
-        self.assertEqual(report["purchase_capacity"]["status"], "some_indicators")
-        self.assertTrue(report["purchase_capacity"]["can_prioritize"])
-        self.assertEqual(report["outreach_gate"], "priority_for_human_review")
+        self.assertEqual(report["purchase_capacity"]["score"], 10)
+        self.assertEqual(report["purchase_capacity"]["status"], "insufficient_evidence")
+        self.assertFalse(report["purchase_capacity"]["can_prioritize"])
+        self.assertEqual(report["outreach_gate"], "verification_pending")
 
     def test_faked_ratings_or_missing_source_add_no_points(self):
         for rep in (reviews(verified=False), reviews(count=1),
@@ -84,8 +92,8 @@ class IndicativeBuyingPotentialTests(unittest.TestCase):
         self.assertEqual(report["score"], 10)
         self.assertFalse(report["can_prioritize"])
         report = estimate_purchase_capacity(verified | {"reputation": reviews()})
-        self.assertEqual(report["score"], 35)
-        self.assertTrue(report["can_prioritize"])
+        self.assertEqual(report["score"], 20)
+        self.assertFalse(report["can_prioritize"])
         self.assertEqual(report["confidence"], "moderate")
 
     def test_operating_scale_must_be_source_checked_and_recent(self):
@@ -94,8 +102,12 @@ class IndicativeBuyingPotentialTests(unittest.TestCase):
                  "source_url": "https://example.org/reviewed-company-about",
                  "checked_at": date.today().isoformat()}
         estimate = estimate_purchase_capacity({"operational_scale": scale})
-        self.assertEqual(estimate["score"], 35)
-        self.assertEqual(estimate["status"], "some_indicators")
+        self.assertEqual(estimate["score"], 15)
+        self.assertEqual(estimate["status"], "insufficient_evidence")
+        single = scale | {"location_count": 1, "employee_count": 0}
+        multi = scale | {"location_count": 20, "employee_count": 0}
+        self.assertEqual(estimate_purchase_capacity({"operational_scale": single})["score"], 0)
+        self.assertEqual(estimate_purchase_capacity({"operational_scale": multi})["score"], 0)
         for changed in (scale | {"verified_by_human": False},
                         scale | {"source_url": ""},
                         scale | {"checked_at": "2020-01-01"}):
@@ -130,11 +142,12 @@ class IndicativeBuyingPotentialTests(unittest.TestCase):
             "unknown": {"name": "Unknown", "website": "https://three.fi"},
         })
         self.assertEqual([x["company"] for x in rows], ["high", "medium", "unknown"])
-        self.assertEqual(rows[1]["indicative_capacity"]["score"], 25)
+        self.assertEqual(rows[1]["indicative_capacity"]["score"], 10)
         self.assertTrue(rows[1]["indicative_capacity"]["not_actual_solvency"])
 
     def test_high_reputation_no_site_with_no_turnover_can_pass_manual_pipeline(self):
-        record = no_site() | {"reputation": reviews()}
+        record = no_site() | {"reputation": reviews(),
+                              "activity_evidence": verified_activity()}
         state.upsert_company("demo", record)
         args = SimpleNamespace(company="demo", benchmark_mode=False, confirm_live_run=True,
                                max_revisions=0, count=1, industry="ravintola", location="Tampere")
@@ -149,7 +162,7 @@ class IndicativeBuyingPotentialTests(unittest.TestCase):
             build.assert_called_once_with("demo")
             qa.assert_called_once_with("demo")
 
-    def test_unverified_manual_low_evidence_requires_specific_override(self):
+    def test_unknown_activity_blocks_commercial_even_when_manually_selected(self):
         record = {"name": "Demo", "website": "https://demo.fi", "url": "https://demo.fi"}
         state.upsert_company("demo", record)
         args = SimpleNamespace(company="demo", benchmark_mode=False, confirm_live_run=True,
@@ -158,10 +171,11 @@ class IndicativeBuyingPotentialTests(unittest.TestCase):
              patch.dict(os.environ, {"OPENROUTER_API_KEY": "fixture",
                                       "TAVILY_API_KEY": "fixture"}), \
              patch.object(main.research, "run_research") as research:
-            with self.assertRaisesRegex(RuntimeError, "allow-low-evidence-lead"):
+            with self.assertRaisesRegex(RuntimeError, "Active business operations"):
                 main.cmd_pipeline(args)
             research.assert_not_called()
-            args.allow_low_evidence_lead = True
+            record["activity_evidence"] = verified_activity()
+            state.upsert_company("demo", record)
             with patch.object(main.builder, "run_build"), \
                  patch.object(main.qa, "run_qa", return_value={"overall_pass": True}):
                 main.cmd_pipeline(args)
@@ -170,6 +184,7 @@ class IndicativeBuyingPotentialTests(unittest.TestCase):
     def test_outreach_draft_allowed_from_indicative_reviews_but_not_sent(self):
         record = {"name": "Demo", "website": "https://demo.fi", "url": "https://demo.fi",
                   "reputation": reviews(),
+                  "activity_evidence": verified_activity(),
                   "build": {"version": 1},
                   "qa": {"overall_pass": True, "build_version": 1, "html_sha256": "hash"},
                   "approval": {"approved": True, "build_version": 1, "html_sha256": "hash"},

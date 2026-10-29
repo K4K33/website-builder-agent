@@ -924,14 +924,12 @@ def scout(
     )
 
     if discovery_only and not dry_run:
-        # Cost-free collection only; do not confuse an unscreened lead with a qualified site.
-        # Keep a mix of businesses with/without website, without false review claims.
-        present = [item for item in analyzed if item.get("site_status") == "has_website"]
+        # Primary target: businesses without a LISTED website. These are
+        # unverified leads, not a claim that they truly lack a website.
+        # Never require rating or a second location to enter the queue.
         missing = [item for item in analyzed if item.get("lead_type") == "no_website_candidate"]
-        reserve_missing = min(count // 2, len(missing))
-        analyzed = (present[:count - reserve_missing] +
-                    missing[:reserve_missing] +
-                    missing[reserve_missing:count - len(present[:count - reserve_missing])])[:count]
+        present = [item for item in analyzed if item.get("site_status") == "has_website"]
+        analyzed = (missing + present)[:count]
     elif not dry_run:
         # Preserve the existing proven redesign route while adding low-cost,
         # non-actionable research leads. A no-website item never enters Builder.
@@ -945,17 +943,14 @@ def scout(
         missing_site = sorted(
             (item for item in analyzed
              if item.get("lead_type") == "no_website_candidate"
-             and (not commercial_only or item["lead_intelligence"]["outreach_gate"] == "priority_for_human_review")),
+             and item.get("lead_intelligence", {}).get("business_activity", {}).get("status") != "inactive"),
             key=lambda item: (
-                item.get("lead_intelligence", {}).get("financial", {}).get("status") == "promising",
-                item.get("lead_intelligence", {}).get("reputation", {}).get("strong", False),
+                item.get("lead_intelligence", {}).get("business_activity", {}).get("status") == "active",
+                item.get("lead_intelligence", {}).get("purchase_capacity", {}).get("score", 0),
             ), reverse=True)
-        # For a batch, reserve space for both routes without throwing away
-        # already qualified website leads. count=1 stays buildable-first.
-        missing_slots = min(len(missing_site), count // 2)
-        analyzed = (buildable[:count - missing_slots] +
-                    missing_site[:missing_slots] +
-                    missing_site[missing_slots:count - len(buildable[:count - missing_slots])])[:count]
+        # No-site discovery first (research queue); existing-site redesigns
+        # remain a secondary service. No rating requirement for either.
+        analyzed = (missing_site + buildable)[:count]
     saved_count = 0
     saved = []
 

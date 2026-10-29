@@ -255,11 +255,11 @@ def cmd_screen_lead(args):
         raise RuntimeError("Lead not found; run Scout first.")
     evidence = json.loads(Path(args.evidence).read_text(encoding="utf-8"))
     if not isinstance(evidence, dict) or not any(
-        item in evidence for item in ("reputation", "financials", "site_verification", "operational_scale")
+        item in evidence for item in ("reputation", "financials", "site_verification", "operational_scale", "activity_evidence")
     ):
         raise ValueError("Evidence must include reputation, financials or site_verification.")
     updates = {}
-    for key in ("reputation", "financials", "site_verification", "operational_scale"):
+    for key in ("reputation", "financials", "site_verification", "operational_scale", "activity_evidence"):
         if key in evidence:
             value = evidence[key]
             if not isinstance(value, dict):
@@ -431,7 +431,7 @@ def cmd_pipeline(args):
         )
 
     if not results:
-        raise RuntimeError("No financially screened and buildable company available; verify business facts first.")
+        raise RuntimeError("No prequalified lead found. Use discovery-only and verify active operations first.")
 
     # -----------------------------------------------------
     # SELECT COMPANY
@@ -459,18 +459,18 @@ def cmd_pipeline(args):
         if website_state != "confirmed_no_website":
             raise RuntimeError("No-site lead needs independent website and business verification.")
         validate_verified_profile(selected_company)
-        if (not getattr(args, "benchmark_mode", False)
-                and not intelligence["reputation"]["strong"]):
-            raise RuntimeError("Verified no-site commercial candidate requires strong independently checked reviews.")
-    if intelligence["financial"]["status"] == "exclude":
-        raise RuntimeError("Official company status prevents commercial work.")
-    capacity = intelligence["purchase_capacity"]
-    if (not capacity["can_prioritize"] and not getattr(args, "benchmark_mode", False)
-            and not (getattr(args, "company", "") and getattr(args, "allow_low_evidence_lead", False))):
+        # Star ratings and multiple locations are OPTIONAL, not requirements.
+    activity = intelligence["business_activity"]["status"]
+    if activity == "inactive":
+        raise RuntimeError("Inactive company is excluded from commercial builds.")
+    if activity != "active" and not getattr(args, "benchmark_mode", False):
         raise RuntimeError(
-            "Insufficient indicative buying-capacity signals. Enrich the lead or "
-            "explicitly choose --company SLUG --allow-low-evidence-lead for a manual pilot."
+            "Active business operations must be independently verified before commercial building. "
+            "Add recent, source-checked activity_evidence through screen-lead."
         )
+    capacity = intelligence["purchase_capacity"]
+    # The score ranks opportunities only. For a confirmed active business,
+    # ratings, revenue, profit, staff count and locations are never mandatory.
     print(f"[Pipeline] Indicative sales priority {capacity['score']}/100 "
           f"({capacity['status']}; NOT verified ability to pay).")
 
@@ -930,8 +930,6 @@ def build_parser():
 
     parser_pipeline.add_argument("--company", default="",
         help="Run a previously researched or source-screened lead (skips Scout discovery).")
-    parser_pipeline.add_argument("--allow-low-evidence-lead", action="store_true",
-        help="Manual one-company exception: permit research/build when budget signals are unknown, never for an inactive business.")
     parser_pipeline.add_argument("--benchmark-mode", action="store_true",
         help="Explicitly use unscreened leads ONLY for an internal quality benchmark; no customer outreach.")
     parser_pipeline.add_argument(
