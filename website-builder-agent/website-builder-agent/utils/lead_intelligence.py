@@ -69,6 +69,7 @@ def financial_signal(financials, estimated_project_eur=1500, today=None):
     revenue, earnings = data.get("revenue_eur"), data.get("operating_profit_eur")
     year = data.get("financial_year")
     if not (_source(data.get("financial_source_url"))
+            and data.get("financial_verified_by_human") is True
             and isinstance(year, int) and not isinstance(year, bool)
             and today.year - 2 <= year <= today.year
             and _number(revenue) and revenue >= 0
