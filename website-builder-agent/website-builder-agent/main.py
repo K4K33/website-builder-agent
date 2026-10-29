@@ -284,6 +284,14 @@ def cmd_verify_registry(args):
     })
     if official["registration_ended"]:
         financials["legal_status"] = "ended"
+    # PRH situation codes: KONK bankruptcy, SELTILA liquidation, SANE restructuring.
+    current_situations = [
+        item for item in official.get("company_situations", [])
+        if isinstance(item, dict) and item.get("type") in {"KONK", "SELTILA", "SANE"}
+        and not item.get("endDate")
+    ]
+    if current_situations:
+        financials["insolvency_proceeding"] = True
     updates = {"business_id": business_id, "financials": financials,
                "registry_evidence": official}
     if official.get("official_website") and not company.get("website"):
