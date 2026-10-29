@@ -132,8 +132,10 @@ class StatementInspectorTests(unittest.TestCase):
         results = rank_leads({"strong": no_site, "periods": periods, "catalog": catalog, "unknown": unknown})
         by_slug = {row["company"]: row for row in results}
         self.assertEqual(by_slug["strong"]["bucket"], "verify_business_activity")
-        self.assertEqual(by_slug["periods"]["bucket"], "inspect_available_prh_statement")
-        self.assertEqual(by_slug["catalog"]["bucket"], "review_xbrl_taxonomy_facts")
+        # For an existing-site business with unknown activity, checking
+        # whether it still trades now comes before inspecting old accounts.
+        self.assertEqual(by_slug["periods"]["bucket"], "existing_website_verify_activity")
+        self.assertEqual(by_slug["catalog"]["bucket"], "existing_website_verify_activity")
         self.assertTrue(all(row["outreach_allowed"] is False for row in results))
         self.assertLess(results.index(by_slug["strong"]), results.index(by_slug["unknown"]))
 
