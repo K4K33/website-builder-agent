@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 
 import config
 import main
@@ -71,7 +71,7 @@ class StatementInspectorTests(unittest.TestCase):
             inspect_xml_document(b"<xml", "0116297-6", "2025-12-31")
 
     def test_statement_download_stream_bounded_with_exact_request(self):
-        response = Mock()
+        response = MagicMock()
         response.headers = {"Content-Type": "text/xml; charset=utf-8"}
         response.iter_content.return_value = [XML[:70], XML[70:]]
         response.__enter__ = Mock(return_value=response)
@@ -84,7 +84,7 @@ class StatementInspectorTests(unittest.TestCase):
         self.assertFalse(get.call_args.kwargs.get("allow_redirects", False))
 
     def test_invalid_content_type_and_response_limit_fail_closed(self):
-        response = Mock()
+        response = MagicMock()
         response.headers = {"Content-Type": "application/json"}
         response.__enter__ = Mock(return_value=response)
         response.__exit__ = Mock(return_value=False)
