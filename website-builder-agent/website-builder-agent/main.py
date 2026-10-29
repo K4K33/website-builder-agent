@@ -350,7 +350,7 @@ def cmd_pipeline(args):
             industry=args.industry,
             location=args.location,
             dry_run=False,
-            commercial_only=True,
+            commercial_only=not getattr(args, "benchmark_mode", False),
         )
 
     if not results:
@@ -377,8 +377,9 @@ def cmd_pipeline(args):
     if site_signal(selected_company) != "has_website":
         raise RuntimeError("No-site lead is not buildable from an unverified empty URL; verify business facts first.")
     intelligence = selected_company.get("lead_intelligence") or {}
-    if intelligence and intelligence.get("financial", {}).get("status") != "promising":
-        raise RuntimeError("Financial screening not passed; do not spend build credits on this lead.")
+    if (intelligence and intelligence.get("financial", {}).get("status") != "promising"
+            and not getattr(args, "benchmark_mode", False)):
+        raise RuntimeError("Financial screening not passed; do not spend build credits on this commercial lead.")
 
     print()
     print("Pipeline valitsi yrityksen:")
@@ -789,6 +790,8 @@ def build_parser():
 
     parser_pipeline.add_argument("--company", default="",
         help="Run a previously financially screened saved lead (skips Scout discovery).")
+    parser_pipeline.add_argument("--benchmark-mode", action="store_true",
+        help="Explicitly use unscreened leads ONLY for an internal quality benchmark; no customer outreach.")
     parser_pipeline.add_argument(
         "--count",
         type=int,
