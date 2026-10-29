@@ -151,12 +151,20 @@ def ask_claude(
     json_mode: bool = False,
 ) -> str:
 
-    headers = _get_headers()
-
     model = config.model_for_stage(stage)
     if max_retries < 1 or max_tokens < 1:
         raise ValueError("max_retries and max_tokens must be positive")
 
+    if config.ai_backend() == "ollama":
+        from utils.local_ai import chat_local
+        # No OpenRouter headers, credits, reservations, or cloud fallback.
+        return chat_local(
+            system, user_prompt, model=model, max_tokens=min(max_tokens, config.AI_MAX_OUTPUT_TOKENS),
+            image_paths=image_paths, json_mode=json_mode,
+            timeout=int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "600")),
+        )
+
+    headers = _get_headers()
     user_content = _build_user_content(
         user_prompt,
         image_paths=image_paths,
