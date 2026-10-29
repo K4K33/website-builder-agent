@@ -124,7 +124,9 @@ class FreeEnrichmentTests(unittest.TestCase):
         self.assertEqual(result["updates"]["website_discovery"]["status"],
                          "official_registry_candidate")
         self.assertEqual(result["updates"]["lead_intelligence"]["site_status"],
-                         "confirmed_no_website")
+                         "website_not_listed")
+        self.assertFalse(result["updates"]["site_verification"]["confirmed_absent"])
+        self.assertIn("previous_no_website_claim_needs_reverification", result["issues"])
         self.assertNotIn("website", result["updates"])
 
     def test_prh_lookup_failure_is_not_financial_exclusion(self):
