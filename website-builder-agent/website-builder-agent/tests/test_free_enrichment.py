@@ -202,6 +202,19 @@ class FreeEnrichmentTests(unittest.TestCase):
             researched.assert_called_once_with("demo")
             built.assert_called_once_with("demo")
 
+    def test_direct_paid_cli_commands_require_explicit_consent(self):
+        with patch.object(main.scout, "run_scout") as paid_scout:
+            args = SimpleNamespace(dry_run=False, discovery_only=False, count=1,
+                                   industry="ravintola", location="Tampere",
+                                   confirm_paid_apis=False)
+            with self.assertRaisesRegex(RuntimeError, "confirm-paid-apis"):
+                main.cmd_scout(args)
+            paid_scout.assert_not_called()
+        with patch.object(main.research, "run_research") as paid_research:
+            with self.assertRaisesRegex(RuntimeError, "confirm-paid-apis"):
+                main.cmd_research(SimpleNamespace(company="demo"))
+            paid_research.assert_not_called()
+
     def test_enrichment_cli_fails_closed_without_permission(self):
         with patch.object(main, "enrich_queue") as run:
             with self.assertRaisesRegex(RuntimeError, "confirm-public-lookups"):
