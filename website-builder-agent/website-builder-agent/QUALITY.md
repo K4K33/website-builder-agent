@@ -124,3 +124,58 @@ a coherent palette and meaningful scroll choreography. Its visual ambition infor
 the contract; its product, branding and claims are not copied to client businesses.
 Single-file output still limits assets and advanced 3D; do not claim parity with a
 showcase or autonomous commercial quality without a live fixed-model benchmark.
+
+
+## Production-readiness gates (2026-10-29)
+
+**Default is offline and no paid provider calls.** GitHub Actions workflow
+`Website Builder Agent (controlled run)` now has an `offline` option, which
+runs the real Playwright/Chromium fixture suite without OpenRouter/Tavily
+credentials. The `live` option requires exact confirmation
+`I AUTHORIZE PAID API CALLS`. Direct CLI pipelines require
+`--confirm-live-run`. This is a consent guard, not a model-spend cap.
+The live workflow uses conservative per-run request allowances; they are **not**
+a monetary cap or a lifetime allowance because Actions runners are ephemeral.
+Set hard provider-side spending limits before enabling live runs.
+
+A successful live run never auto-approves a site, publishes a customer
+website or sends outreach. The workflow archives the generated state, HTML,
+screenshots and resource usage for 7 days even on QA failure. GitHub-hosted
+filesystem changes are temporary; to retain results beyond artifact expiry,
+download the workflow artifact and restore it to durable private storage.
+Do not upload confidential customer information to public repositories.
+
+### Approval / publication integrity
+
+QA stores the SHA-256 of the checked HTML. Manual `approve` records the
+current build version and file digest. Subsequent rebuilds/revisions invalidate
+QA, approval, outreach and stale demo status. `publish` requires fresh QA
+and explicit approval; it refuses stale/mutated files and unexpected paths.
+Publishing to `docs/demos` still requires a manual Git commit to deploy.
+This is a public **demo** mechanism, not automated commercial domain hosting.
+
+### Evidence required before claiming autonomous production quality
+
+Run independently authorized live tests for **at least three different
+industries** on real, permission-respecting business sites. Each must have:
+- verified company facts and three independent same-industry references with
+  source-backed quotes and actual desktop/mobile screenshots;
+- traceable design decisions and an actual API-generated (not externally
+  authored or fixture) site;
+- passing static, browser (four viewports) and comparative visual/content QA;
+- an unchanged checked HTML file and explicit human approval of that version;
+- human review of actual copy, facts, imagery rights, accessibility,
+  interactions and business-specific needs.
+
+`python main.py readiness --min-industries 3` checks available local evidence
+without paying for API calls. It fails unless three independent sectors have
+complete evidence. This is a *metadata audit*, not cryptographic provider
+attestation; screenshots, models and customer facts still need human verification.
+It does **not** validate real backend forms, payment processing, web accessibility
+in full, GDPR compliance, customer domain hosting, sales conversion, or model
+pricing.
+
+No actual paid multi-industry benchmark has been executed as part of this
+change, so **production ready is not yet proven**. The fixture tests exercise
+orchestration and browser gates, not independent frontier model creative quality.
+Outreach and Kaurivo's own website remain deliberately outside this phase.

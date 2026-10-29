@@ -119,11 +119,11 @@ def chat():
                     f"Status: "
                     f"{company.get('status', 'unknown')}\n"
                     f"Demo: "
-                    f"{company.get('demo', {}).get('url', 'not published')}\n"
+                    f"{(company.get('demo') or {}).get('url', 'not published')}\n"
                     f"Build version: "
-                    f"{company.get('build', {}).get('version', 'unknown')}\n"
+                    f"{(company.get('build') or {}).get('version', 'unknown')}\n"
                     f"QA passed: "
-                    f"{company.get('qa', {}).get('overall_pass', False)}"
+                    f"{(company.get('qa') or {}).get('overall_pass', False)}"
                 )
 
         except Exception as exc:

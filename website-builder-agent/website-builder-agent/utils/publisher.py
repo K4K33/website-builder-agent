@@ -10,6 +10,8 @@ Tämä vaihe ei käytä AI:ta, Tavilya tai OpenRouteria.
 import os
 import re
 import shutil
+import hashlib
+from pathlib import Path
 
 import config
 from utils.state import (
@@ -107,10 +109,25 @@ def publish_site(
 
     slug = _safe_slug(slug)
 
-    source = _source_path(
-        slug,
-        company,
-    )
+    qa = company.get("qa") or {}
+    approval = company.get("approval") or {}
+    build = company.get("build") or {}
+    if (qa.get("overall_pass") is not True
+        or qa.get("build_version") != build.get("version")
+        or approval.get("approved") is not True
+        or approval.get("build_version") != build.get("version")
+        or not qa.get("html_sha256")
+        or approval.get("html_sha256") != qa.get("html_sha256")):
+        raise RuntimeError("Demoa ei julkaista ilman nykyisen version QA:ta ja hyväksyntää.")
+    source = _source_path(slug, company)
+    # Prevent copying an arbitrary path from JSON state into the public Pages folder.
+    expected = (Path(config.OUTPUT_DIR) / slug / "index.html").resolve()
+    if Path(source).resolve() != expected or Path(source).is_symlink():
+        raise RuntimeError("Build output path is outside the expected company directory.")
+    with open(source, "rb") as source_file:
+        actual_sha = hashlib.sha256(source_file.read()).hexdigest()
+    if actual_sha != qa["html_sha256"]:
+        raise RuntimeError("HTML changed since QA; refuse to publish a stale approval.")
 
     destination_dir = os.path.join(
         PUBLISH_DIR,

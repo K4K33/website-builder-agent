@@ -16,6 +16,8 @@ sisällä niitä.
 import json
 import os
 import re
+import hashlib
+from datetime import datetime, timezone
 
 import config
 from bs4 import BeautifulSoup
@@ -736,8 +738,9 @@ def run_qa(slug_or_name: str) -> dict:
     path = build.get("output_path", "")
     if not path or not os.path.exists(path):
         raise RuntimeError("Rakennettua HTML-tiedostoa ei löytynyt. Aja build ensin.")
-    with open(path, encoding="utf-8") as file:
-        html = file.read()
+    with open(path, "rb") as file:
+        html_bytes = file.read()
+    html = html_bytes.decode("utf-8")
     automated = _automated_checks(html)
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
@@ -774,6 +777,7 @@ def run_qa(slug_or_name: str) -> dict:
     result = {
         "automated": automated, "browser": browser, "content_review": review,
         "build_version": build.get("version"),
+        "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "overall_pass": automated["automated_pass"] and browser["pass"] and review_passes(review, benchmark_urls, decisions),
     }
     upsert_company(slug, {"qa": result})
@@ -789,4 +793,17 @@ def approve_company(slug_or_name):
     qa = company.get("qa") or {}
     if qa.get("overall_pass") is not True or qa.get("build_version") != company.get("build", {}).get("version"):
         raise RuntimeError("QA ei koske nykyistä build-versiota. Aja QA uudelleen.")
+    path = company["build"].get("output_path")
+    if not path or not os.path.isfile(path):
+        raise RuntimeError("Sivuston HTML puuttuu; hyväksyntä estetty.")
+    with open(path, "rb") as file:
+        digest = hashlib.sha256(file.read()).hexdigest()
+    if not qa.get("html_sha256") or digest != qa["html_sha256"]:
+        raise RuntimeError("Sivustoa on muutettu QA:n jälkeen. Aja QA uudelleen.")
+    upsert_company(slug, {"approval": {
+        "approved": True,
+        "build_version": qa["build_version"],
+        "html_sha256": digest,
+        "approved_at": datetime.now(timezone.utc).isoformat(),
+    }})
     set_status(slug, "approved")
