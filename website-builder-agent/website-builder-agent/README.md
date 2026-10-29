@@ -2,6 +2,9 @@
 
 # Website Builder Agent
 
+> **Turvallinen käyttö:** `pipeline` tekee oikeita ulkoisia API-kutsuja ja voi aiheuttaa maksuja. Käytä sitä tietoisesti `python main.py pipeline --confirm-live-run --count 1 --industry kampaamo --location Tampere` -komennolla vasta, kun mallin asetukset ja palveluntarjoajan kulukatto on tarkistettu. GitHub Actionsin manuaalisen työnkulun oletus on maksuton `offline`-testi. `python main.py readiness --min-industries 3` tarkistaa kerätyt tuotantotodisteet maksutta. Katso [QUALITY.md](QUALITY.md).
+
+
 Agenttijärjestelmä, joka automatisoi verkkosivujen uudistusprosessin
 yrityksille: löytää yrityksiä joiden sivut ovat vanhentuneita, tutkii
 yrityksen ja toimialan, suunnittelee ja rakentaa uuden ammattimaisen
