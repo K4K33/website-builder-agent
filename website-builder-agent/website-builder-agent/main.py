@@ -44,6 +44,7 @@ def cmd_scout(args):
         industry=args.industry,
         location=args.location,
         dry_run=args.dry_run,
+        discovery_only=getattr(args, "discovery_only", False),
     )
 
     if not results:
@@ -564,6 +565,10 @@ def build_parser():
         ),
     )
 
+    parser_scout.add_argument(
+        "--discovery-only", action="store_true",
+        help="Save unscreened website/no-website leads with zero AI, screenshots or Tavily calls.",
+    )
     parser_scout.set_defaults(func=cmd_scout)
 
     # -----------------------------------------------------
