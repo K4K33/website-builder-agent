@@ -69,7 +69,11 @@ def inspect_candidate(slug: str, company: dict) -> dict:
     screenshots = (qa.get("browser") or {}).get("screenshots") or {}
     for viewport in REQUIRED_VIEWS:
         file = screenshots.get(viewport)
-        if not file or not Path(file).is_file() or not Path(file).stat().st_size:
+        try:
+            valid = isinstance(file, str) and Path(file).is_file() and Path(file).stat().st_size > 0
+        except (OSError, ValueError):
+            valid = False
+        if not valid:
             problems.append("Missing actual QA screenshot: " + viewport)
 
     if benchmark and decisions and not review_passes(
