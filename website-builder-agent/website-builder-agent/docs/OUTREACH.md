@@ -51,7 +51,7 @@ Kaarlo is and why this business has been contacted.
 
 **Sender account:** All client-facing drafts and approved commercial mail must
 be created and sent using only **hello.kaurivo@gmail.com**. NEVER use
-the owner's personal account **kaarlo.kaukko1@gmail.com**.
+any personal Gmail account or any other sender.
 Introducing Kaarlo in the message body as founder does NOT make it a
 personal Gmail email. Before a send operation through Gmail, explicitly
 confirm the connected account's `get_profile` address equals
