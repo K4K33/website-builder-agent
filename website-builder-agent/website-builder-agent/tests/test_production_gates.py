@@ -153,6 +153,35 @@ class ProductionGates(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "QA"):
             publisher.publish_site("demo")
 
+    def test_complete_pipeline_orchestration_for_three_sectors_without_network(self):
+        # This proves the offline orchestration and actual browser + QA gates,
+        # not the quality of an autonomous paid model.
+        if os.getenv("REQUIRE_BROWSER_TESTS") != "1":
+            self.skipTest("Real Chromium integration runs on CI")
+        for sector in ("transport", "restaurant", "home services"):
+            with self.subTest(sector=sector):
+                self.create_build(industry=sector)
+                args = SimpleNamespace(confirm_live_run=True, count=1,
+                                       industry="ravintola", location="Tampere", max_revisions=0)
+                with patch.object(config, "model_for_stage", return_value="fixed/mock"), \
+                     patch.dict(os.environ, {"OPENROUTER_API_KEY": "offline", "TAVILY_API_KEY": "offline"}), \
+                     patch.object(main.scout, "run_scout", return_value=[{"slug": "demo"}]), \
+                     patch.object(main.research, "run_research"), \
+                     patch.object(main.builder, "run_build"), \
+                     patch.object(qa, "ask_claude_json", return_value=approved_review()), \
+                     patch("requests.post") as network_post, \
+                     patch("requests.get") as network_get, \
+                     patch.object(main.outreach, "run_outreach") as contact:
+                    main.cmd_pipeline(args)
+                    network_post.assert_not_called()
+                    network_get.assert_not_called()
+                    contact.assert_not_called()
+                company = state.get_company("demo")[1]
+                self.assertEqual(company["status"], "qa_passed")
+                self.assertTrue(company["qa"]["overall_pass"])
+                self.assertFalse((company.get("approval") or {}).get("approved"))
+                self.assertFalse((company.get("outreach") or {}).get("approved"))
+
     def test_offline_pipeline_failure_exits_nonzero(self):
         args = SimpleNamespace(confirm_live_run=True, count=1,
                                industry="ravintola", location="Tampere", max_revisions=0)
