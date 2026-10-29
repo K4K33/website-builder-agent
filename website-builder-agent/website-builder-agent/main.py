@@ -469,12 +469,8 @@ def cmd_pipeline(args):
             "Add recent, source-checked activity_evidence through screen-lead."
         )
     capacity = intelligence["purchase_capacity"]
-    if (not capacity["can_prioritize"] and not getattr(args, "benchmark_mode", False)
-            and not (getattr(args, "company", "") and getattr(args, "allow_low_evidence_lead", False))):
-        raise RuntimeError(
-            "Insufficient indicative buying-capacity signals. Enrich the lead or "
-            "explicitly choose --company SLUG --allow-low-evidence-lead for a manual pilot."
-        )
+    # The score ranks opportunities only. For a confirmed active business,
+    # ratings, revenue, profit, staff count and locations are never mandatory.
     print(f"[Pipeline] Indicative sales priority {capacity['score']}/100 "
           f"({capacity['status']}; NOT verified ability to pay).")
 
@@ -934,8 +930,6 @@ def build_parser():
 
     parser_pipeline.add_argument("--company", default="",
         help="Run a previously researched or source-screened lead (skips Scout discovery).")
-    parser_pipeline.add_argument("--allow-low-evidence-lead", action="store_true",
-        help="Manual one-company exception: permit research/build when budget signals are unknown, never for an inactive business.")
     parser_pipeline.add_argument("--benchmark-mode", action="store_true",
         help="Explicitly use unscreened leads ONLY for an internal quality benchmark; no customer outreach.")
     parser_pipeline.add_argument(
