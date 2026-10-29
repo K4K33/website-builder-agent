@@ -255,11 +255,11 @@ def cmd_screen_lead(args):
         raise RuntimeError("Lead not found; run Scout first.")
     evidence = json.loads(Path(args.evidence).read_text(encoding="utf-8"))
     if not isinstance(evidence, dict) or not any(
-        item in evidence for item in ("reputation", "financials", "site_verification")
+        item in evidence for item in ("reputation", "financials", "site_verification", "operational_scale")
     ):
         raise ValueError("Evidence must include reputation, financials or site_verification.")
     updates = {}
-    for key in ("reputation", "financials", "site_verification"):
+    for key in ("reputation", "financials", "site_verification", "operational_scale"):
         if key in evidence:
             value = evidence[key]
             if not isinstance(value, dict):
