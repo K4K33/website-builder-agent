@@ -7,6 +7,25 @@ how the business could edit its own site after delivery.
 
 ## Default policy for **every** future client
 
+**A bold redesign does not require a rebrand.**
+
+**Two distinct scenarios:**
+- **New website:** Design a fully original, ambitious website from the ground
+  up. If the business already has a real brand (logo, colors, voice) in other
+  materials, carry that identity into the new website, with client approval.
+  If there is no identity at all, propose a distinctive one for approval.
+- **Existing website redesign:** Deliver a **major visible upgrade** in
+  layout, hero, page architecture, typography, navigation, mobile experience,
+  motion, services presentation and contact flow. The old layout is not
+  protected. Keep the company's recognizable brand: its approved logo,
+  palette, licensed real photos and protected slogans. The design should
+  look new and higher quality while still unmistakably belonging to
+  the same company.
+
+Before showing the result to the customer, compare old and new screenshots:
+it should be easy to see a substantial improvement beyond minor polishing,
+without confusing customers about which business the site belongs to.
+
 **Improve the website, not automatically the company's identity.**
 
 1. Treat existing colors, logo, own photographs and recognizable messaging as
@@ -19,9 +38,10 @@ how the business could edit its own site after delivery.
 5. Do not take an existing site's images for reuse unless the client confirms
    permission/ownership and supplies assets or an authorized source. A public
    web image is not automatically licensed for reuse or rehosting.
-6. Keep the original identity while improving mobile hierarchy, services,
-   navigation, speed, forms and clarity. Large visual brand changes require
-   explicit client signoff.
+6. Keep the original identity while comprehensively rebuilding layout,
+   mobile hierarchy, hero, services, navigation, interaction, speed, forms
+   and clarity. This should be a substantial redesign, not small adjustments.
+   A brand identity change still requires explicit client signoff.
 7. A demo is a **proposal**. The owner has the final say before production.
 
 ## Record the client's explicit choices
