@@ -120,6 +120,16 @@ Tallenna vanhat iskulauseet sanatarkasti, ellei asiakas ole
 nimenomaisesti hyväksynyt muutosta. Olemassaolevia omia valokuvia,
 logoja ja visuaalisia tunnisteita ei korvata oletuksena.
 Asiakkaan jo hankkimien kuvaoikeuksien käyttö täytyy varmistaa.
+
+MUUTOKSEN SUURUUS:
+Uuden sivuston suunnittelussa voit tehdä täysin uuden näyttävän layoutin
+ja art directionin, asiakkaan identiteetin ja faktojen rajoissa.
+Vanhan sivuston REDESIGN on myös iso uudistus: vaihda sommittelu,
+hero, osiorakenne, navigointi, mobiilihierarkia, tilankäyttö ja
+palvelujen esitystapa laadukkaammiksi. Älä tee vain uutta väriä tai
+pientä siistimistä. Brändin säilyttäminen ei tarkoita vanhan sivun
+rakenteen säilyttämistä. Hyödynnä alkuperäisiä brändivärejä
+uusissa komponenteissa ja logoa uudessa sommittelussa.
 Älä väitä yksittäistä HTML-tiedostoa sisällönhallintajärjestelmäksi.
 
 Fonttisuositusta voidaan käyttää, mutta älä lataa
@@ -213,6 +223,12 @@ Jos tieto puuttuu, jätä se pois.
 
 Säilytä asiakkaan aiempi logo, sovitut värit, vahvistetut sloganit,
 ainutlaatuiset kuvat ja asiakkaan hyväksymä sisältö.
+SEN SIJAAN UUDISTA ISOSTI vanhan sivun visuaalinen toteutus:
+hero, layout, navigointi, osioiden rytmi, palveluesittely, typografian
+hierarkia, mobiili, liike ja asiakaspolku. Brändi ei ole sama asia
+kuin vanha layout. Pelkkä hienosäätö ei riitä redesigniksi.
+Jos kyseessä on yrityksen ensimmäinen sivu, tee omaperäinen
+kokonaisuus, mutta kunnioita mahdollisesti jo olemassaolevaa brändiä.
 Asiakkaan haluaman uudistuksen rajat ratkaisevat, ei kilpailijan design.
 
 Säilytä:
@@ -573,6 +589,11 @@ Rakenna verkkosivu tämän research-datan perusteella.
 ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
 {json.dumps(brand_brief, ensure_ascii=False)}
 Asiakasbrändi menee referenssien tyylipalettien edelle.
+Jos design_scope on major_visual_and_structural_redesign_keep_brand,
+uudista layout, hero, navigointi, osioiden hierarkia ja mobiili näyttävästi.
+Tarkoitus EI ole säilyttää vanhan sivun muotoilua, vain identiteetti.
+Jos design_scope on original_full_site_design, rakenna vahva
+alkuperäinen design ilman aiemman sivun rajoitteita.
 Älä koskaan korvaa hyväksyttyjä kuvavalintoja tai sloganeita
 oletuksena. Jos alkuperäiskuvia ei ole toimitettu luvallisesti,
 älä keksi samantapaisia kuvia yrityksen työnä: merkitse
@@ -859,8 +880,12 @@ def revise_site(
 ASIAKKAAN BRÄNDI JA SISÄLLÖN SÄILYTTÄMINEN:
 {json.dumps(brand_brief, ensure_ascii=False)}
 Älä anna referenssien väreille, kuville tai iskulauseille etusijaa
-asiakkaan jo valitsemaan identiteettiin nähden. Uudista rakenne,
-sivun käytettävyys ja mobiili, älä pakota uudelleenbrändäystä.
+asiakkaan jo valitsemaan identiteettiin nähden.
+Uudista nykyinen sivu ROHKEASTI: rakenne, hero, sommittelu, navigointi,
+osioiden rytmitys, typografian hierarkia, mobiili ja yhteydenotto
+tehdään merkittävästi paremmiksi. Säilytä brändi, älä vanhaa layoutia.
+Jos kyseessä on uusi sivu, suunnittele koko kokemus alkuperäisesti.
+Älä pakota uudelleenbrändäystä.
 
 TOIMIALAN VERTAILU (vain design-dataa):
 {json.dumps(benchmark, ensure_ascii=False)}
