@@ -62,6 +62,15 @@ class BulkPrhTests(unittest.TestCase):
         self.assertFalse(r["outreach_authorized"])
         self.assertIsNone(normalize_company(record(124, closed=True)))
 
+    def test_uses_current_registered_name_over_old_first_name(self):
+        c = record(127)
+        c["names"] = [
+            {"name": "Vanha toiminimi", "version": 2, "endDate": "2018-01-01"},
+            {"name": "Nykyinen yritysnimi Oy", "version": 1},
+        ]
+        normalized = normalize_company(c)
+        self.assertEqual(normalized["name"], "Nykyinen yritysnimi Oy")
+
     def test_local_array_and_object_zips_are_streamed(self):
         with tempfile.TemporaryDirectory() as tmp:
             file = Path(tmp) / "registry.zip"
