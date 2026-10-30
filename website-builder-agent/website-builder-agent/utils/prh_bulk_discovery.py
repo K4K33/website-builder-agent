@@ -36,7 +36,7 @@ MAX_SHORTLIST = 50
 
 
 def _one_line(text, max_length=150):
-    return re.sub(r"[\\x00-\\x1f\\x7f]", " ", str(text or "")).strip()[:max_length]
+    return re.sub(r"[\x00-\x1f\x7f]", " ", str(text or "")).strip()[:max_length]
 
 
 def _url(url):
@@ -191,7 +191,7 @@ def _read_seen(path):
 
 
 def _write(path, data):
-    Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\\n",
+    Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
                           encoding="utf-8")
 
 
@@ -278,7 +278,7 @@ def report_md(data, day, *, mode):
              "and full real-browser QA. Every final client delivery needs a working CMS.",
              "",
              "**This nightly run has NOT built demos, approved outreach or sent mail.**", ""]
-    return "\\n".join(rows)
+    return "\n".join(rows)
 
 
 def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
