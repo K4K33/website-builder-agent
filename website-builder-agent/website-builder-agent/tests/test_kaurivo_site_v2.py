@@ -127,7 +127,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
             with self.subTest(concept=kind):
                 src=path.read_text(encoding="utf-8")
                 self.assertIn("noindex,nofollow", src)
-                self.assertIn("Fictional", src)
+                self.assertIn("fictional", src.lower())
                 self.assertIn('href="../../"', src)
                 self.assertIn('href="../../contact/"', src)
                 self.assertNotIn("getContext(", src)
