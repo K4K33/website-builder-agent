@@ -331,6 +331,7 @@ header,header.scrolled{padding:19px clamp(20px,4vw,72px);transition:none}
 .delivery-item strong{font:650 clamp(18px,1.85vw,26px)/1.2 Manrope,sans-serif;letter-spacing:-.04em}
 .delivery-item p{font-size:13px;color:#4b5b68;line-height:1.65;margin:11px 0 0}
 @media(max-width:850px){
+  .hero-grid{grid-template-columns:1fr}
   .hero{min-height:0}
   .kaurivo-identity{min-height:410px}
   .identity-mark{width:200px}

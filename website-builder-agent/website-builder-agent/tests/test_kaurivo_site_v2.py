@@ -127,18 +127,6 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             self.assertTrue(page.locator("header .brand-icon").is_visible())
                             if name == "home":
                                 mark = page.locator(".identity-mark")
-                                if width == 320:
-                                    print("KAURIVO_MARK_DEBUG", page.evaluate("""() => {
-                                        const x=document.querySelector('.identity-mark');
-                                        const parent=document.querySelector('.kaurivo-identity');
-                                        return {count:document.querySelectorAll('.identity-mark').length,
-                                            mark: x&&{rect:x.getBoundingClientRect().toJSON(), display:getComputedStyle(x).display,
-                                                visibility:getComputedStyle(x).visibility, opacity:getComputedStyle(x).opacity,
-                                                complete:x.complete,naturalWidth:x.naturalWidth},
-                                            parent:parent&&{rect:parent.getBoundingClientRect().toJSON(),
-                                                display:getComputedStyle(parent).display},
-                                            scene:document.querySelector('.hero')?.outerHTML.slice(0,900)};
-                                    }"""))
                                 mark.wait_for(state="visible", timeout=3500)
                                 self.assertTrue(mark.is_visible())
                                 self.assertTrue(page.locator(".delivery-panel").count() == 1)
