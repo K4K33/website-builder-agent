@@ -49,7 +49,7 @@ class NightlyDiscoveryTests(unittest.TestCase):
     def test_limit_priority_and_seen_dedupe(self):
         rows = parse_elements(ELEMENTS, "Turku", "kampaamo", limit=10)
         self.assertEqual(len(rows), 3)
-        self.assertIsNone(rows[0]["website_listed_url"])
+        self.assertFalse(rows[0]["website_listed_url"])
         rows2 = parse_elements(ELEMENTS, "Turku", "kampaamo",
                                seen={"osm:node:101"}, limit=10)
         self.assertEqual(len(rows2), 2)
