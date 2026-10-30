@@ -14,6 +14,9 @@ PAGES = {
     "process": SITE / "process" / "index.html",
     "faq": SITE / "faq" / "index.html",
     "contact": SITE / "contact" / "index.html",
+    "work": SITE / "work" / "index.html",
+    "privacy": SITE / "privacy" / "index.html",
+    "thanks": SITE / "thanks" / "index.html",
 }
 
 
@@ -41,6 +44,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
     def test_every_page_reuses_brand_and_valid_local_assets(self):
         self.assertTrue((SITE / "assets" / "site-v3.css").exists())
         self.assertTrue((SITE / "assets" / "site-v3.js").exists())
+        self.assertTrue((SITE / "assets" / "i18n.js").exists())
         self.assertTrue((SITE / "assets" / "kaurivo-mark.webp").exists())
         for name, path in PAGES.items():
             with self.subTest(page=name):
@@ -53,8 +57,12 @@ class KaurivoWebsiteTests(unittest.TestCase):
                 self.assertIn("kaurivo-mark.webp", src)
                 self.assertIn("site-v3.js", src)
                 self.assertIn("site-v3.css", src)
+                self.assertIn("i18n.js", src)
+                self.assertIn("data-lang-set", src)
                 for link in tags.links:
                     if not link or link.startswith(("mailto:", "#")):
+                        continue
+                    if link.startswith("https://formsubmit.co/"):
                         continue
                     self.assertFalse(link.startswith("http"), (name, link))
                     self.assertTrue((path.parent / link).resolve().exists(), (name, link))
@@ -71,6 +79,10 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertIn("Can I update my website myself?", faq)
         self.assertGreaterEqual(faq.count("<details>"), 8)
         self.assertIn("data-stage-button", process)
+        self.assertIn('id="selected-work"', home)
+        self.assertIn('href="lab/service/"', home)
+        self.assertIn('href="lab/editorial/"', home)
+        self.assertIn("performance targets, not measured results", process.lower())
         self.assertIn('id="enquiry-form"', contact)
         self.assertIn('href="faq/"', home)
         for name in ("services", "process", "faq", "contact"):
@@ -91,7 +103,9 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertNotIn("IntersectionObserver", js)
         self.assertNotIn('addEventListener("scroll"', js)
         self.assertIn("scroll-behavior:auto", css)
-        self.assertIn("identity-mark", css)
+        self.assertIn("v6-logo-complete", css)
+        self.assertIn("@keyframes v6-part-a", css)
+        self.assertIn("v6-logo-part-three", PAGES["home"].read_text(encoding="utf-8"))
         self.assertNotIn("v4-window-headline", PAGES["home"].read_text(encoding="utf-8"))
         self.assertIn("data-stage-button", js)
         self.assertNotIn("getContext(", js)
@@ -126,15 +140,20 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             self.assertEqual(errors,[],(width,name,errors))
                             self.assertTrue(page.locator("header .brand-icon").is_visible())
                             if name == "home":
-                                mark = page.locator(".identity-mark")
+                                mark = page.locator(".v6-logo-complete")
                                 mark.wait_for(state="visible", timeout=3500)
                                 self.assertTrue(mark.is_visible())
                                 self.assertTrue(page.locator(".delivery-panel").count() == 1)
+                                self.assertEqual(page.locator(".v6-work-card").count(), 2)
                                 self.assertTrue(page.locator(".service-card").first.is_visible() or page.locator(".service-card").first.count() == 1)
                             if name != "home":
                                 back = page.get_by_role("link", name="Back to Home page")
                                 self.assertTrue(back.is_visible())
                                 self.assertEqual(back.get_attribute("href"), "../")
+                            if name == "contact":
+                                form = page.locator("#enquiry-form")
+                                self.assertEqual(form.get_attribute("method"), "POST")
+                                self.assertIn("formsubmit.co", form.get_attribute("action"))
                             if name=="faq":
                                 details=page.locator("#faq-list details").first
                                 details.locator("summary").click()
@@ -149,6 +168,10 @@ class KaurivoWebsiteTests(unittest.TestCase):
                                 t=page.locator(".mobile-toggle")
                                 t.click()
                                 self.assertEqual(t.get_attribute("aria-expanded"),"true")
+                                fi = page.locator("[data-lang-set=fi]")
+                                fi.click()
+                                self.assertEqual(page.locator("html").get_attribute("lang"), "fi")
+                                self.assertIn("Verkkosivut", page.locator("#hero-heading").inner_text())
                                 self.assertTrue(page.locator('.nav-menu a[href="faq/"]').is_visible())
                             page.close()
             finally:

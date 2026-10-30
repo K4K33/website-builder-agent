@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1] / "docs" / "kaurivo"
-PAGES = ("index.html", "services/index.html", "process/index.html", "faq/index.html", "contact/index.html")
+PAGES = ("index.html", "services/index.html", "process/index.html", "faq/index.html", "contact/index.html", "work/index.html", "privacy/index.html", "thanks/index.html")
 ALIASES = ("services", "process", "faq", "contact")
 
 
@@ -32,9 +32,10 @@ class V3Tests(unittest.TestCase):
         js = (ROOT / "assets" / "site-v3.js").read_text()
         self.assertIn("prefers-reduced-motion", css)
         self.assertNotIn("IntersectionObserver", js)
-        self.assertIn("@keyframes identity-reveal", css)
+        self.assertIn("@keyframes v6-part-a", css)
         self.assertIn("scroll-behavior:auto", css)
         self.assertIn("delivery-panel", (ROOT / "index.html").read_text())
+        self.assertIn("v6-logo-piece", (ROOT / "index.html").read_text())
         self.assertNotIn("pointermove", js)
         self.assertNotIn("pointerleave", js)
         self.assertIn("v4-window", css)
