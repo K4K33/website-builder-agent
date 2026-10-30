@@ -67,6 +67,23 @@ def qualify_lead(candidate):
 
 DESIGN_CONTRACT = """
 Laatutavoite: yritykselle suunniteltu, viimeistelty ja kokonaan toimiva sivusto.
+KAKSI ERI SUUNNITTELUTILANNETTA:
+1) Kokonaan uusi verkkosivusto: toteuta rohkea, omaperäinen ja vahvasti
+yrityskohtainen sivusto alusta asti. Jos yrityksellä on jo logo tai
+tunnusvärit muissa kanavissa, kunnioita niitä; muuta identiteettiä vain
+asiakkaan luvalla. Ilman olemassaolevaa identiteettiä suunnittele
+selkeä alkuperäinen visuaalinen suunta asiakkaan hyväksyttäväksi.
+2) Vanhan verkkosivuston uudistaminen: TEE ISO, SILMINNÄHTÄVÄ MUUTOS
+sivurakenteeseen, hero-osioon, typografian hierarkiaan, navigaatioon,
+mobiilikokemukseen, palveluiden esittelyyn, vuorovaikutukseen ja
+yhteydenottopolkuun. Vanhojen elementtien pieni siistiminen ei riitä.
+Muutoksen täytyy näyttää ja tuntua uudelta laadukkaalta verkkosivulta,
+mutta sen täytyy EDELLEEN NÄYTTÄÄ SAMAN YRITYKSEN SIVULTA.
+Ylläpidä yrityksen sovittuja logoja, brändivärejä, luvallisia kuvia
+sekä lukittuja iskulauseita. Älä sekoita brändiä ja vanhaa layoutia:
+brändin säilyttäminen ei tarkoita vanhan ulkoasun kopiointia.
+Todista ennen/jälkeen-arvioinnissa merkittävä käytettävyys- ja
+ulkoasuparannus asiakkaan tunnistettavan ilmeen rinnalla.
 Asiakkaan olemassa oleva brändi on lähtökohta, ei vaihdettava muotitrendi:
 säilytä asiakkaan nykyinen logo, väripaletti, omat luvalliset kuvat ja tärkeät
 vahvistetut iskulauseet oletuksena. Niitä saa vaihtaa vain erillisellä
