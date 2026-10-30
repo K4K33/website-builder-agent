@@ -15,6 +15,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
+from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 import json
 
@@ -112,7 +113,14 @@ DESIGN:
 
 Noudata design-suosituksia vain visuaalisesti.
 
-Väripaletti voidaan ottaa design-suosituksista.
+Väripaletti voidaan ottaa design-suosituksista VAIN, jos se ei
+riko asiakkaan nykyistä brändiä tai asiakkaan lukitsemia värejä.
+Ulkopuolisten referenssien värit eivät ole lupa vaihtaa brändiä.
+Tallenna vanhat iskulauseet sanatarkasti, ellei asiakas ole
+nimenomaisesti hyväksynyt muutosta. Olemassaolevia omia valokuvia,
+logoja ja visuaalisia tunnisteita ei korvata oletuksena.
+Asiakkaan jo hankkimien kuvaoikeuksien käyttö täytyy varmistaa.
+Älä väitä yksittäistä HTML-tiedostoa sisällönhallintajärjestelmäksi.
 
 Fonttisuositusta voidaan käyttää, mutta älä lataa
 ulkoisia fontteja tai muita ulkoisia resursseja.
@@ -202,6 +210,10 @@ TARGET AUDIENCE ei ole palvelu.
 DESIGN-RECOMMENDATIONS eivät ole yrityksen faktoja.
 
 Jos tieto puuttuu, jätä se pois.
+
+Säilytä asiakkaan aiempi logo, sovitut värit, vahvistetut sloganit,
+ainutlaatuiset kuvat ja asiakkaan hyväksymä sisältö.
+Asiakkaan haluaman uudistuksen rajat ratkaisevat, ei kilpailijan design.
 
 Säilytä:
 - semanttinen HTML
@@ -553,9 +565,19 @@ def build_site(
     fact_summary = _safe_fact_summary(
         company_facts
     )
+    brand_brief = client_design_brief(company)
 
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
+{json.dumps(brand_brief, ensure_ascii=False)}
+Asiakasbrändi menee referenssien tyylipalettien edelle.
+Älä koskaan korvaa hyväksyttyjä kuvavalintoja tai sloganeita
+oletuksena. Jos alkuperäiskuvia ei ole toimitettu luvallisesti,
+älä keksi samantapaisia kuvia yrityksen työnä: merkitse
+tämä jatkokehityksen ja asiakkaan hyväksynnän asiaksi.
+Yksittäinen HTML-demo EI vielä sisällä CMS-järjestelmää.
 
 TOIMIALAN VERTAILU (vain suunnittelua, ei yritysfaktoja):
 {json.dumps(benchmark, ensure_ascii=False)}
@@ -703,6 +725,7 @@ Palauta VAIN koko HTML.
         cleaned,
         company_facts,
     )
+    validate_locked_copy(cleaned, brand_brief)
 
     _validate_plan_sections(cleaned, research, company.get("url", ""))
     path = _write_html(
@@ -781,6 +804,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
         raise ValueError("External response producer must be identified.")
     cleaned = _clean_html(Path(response_path).read_text(encoding="utf-8"))
     _validate_generated_content(cleaned, facts)
+    validate_locked_copy(cleaned, client_design_brief(company))
     _validate_plan_sections(cleaned, research, company.get("url", ""))
     path = _write_html(slug, cleaned)
     upsert_company(slug, {
@@ -829,8 +853,15 @@ def revise_site(
     benchmark = validate_benchmark(research, company.get("url", ""))
     decisions = validate_design_plan(research, company.get("url", ""))
     reference_images, image_labels = reference_image_inputs(benchmark)
+    brand_brief = client_design_brief(company)
 
     user_prompt = f"""
+ASIAKKAAN BRÄNDI JA SISÄLLÖN SÄILYTTÄMINEN:
+{json.dumps(brand_brief, ensure_ascii=False)}
+Älä anna referenssien väreille, kuville tai iskulauseille etusijaa
+asiakkaan jo valitsemaan identiteettiin nähden. Uudista rakenne,
+sivun käytettävyys ja mobiili, älä pakota uudelleenbrändäystä.
+
 TOIMIALAN VERTAILU (vain design-dataa):
 {json.dumps(benchmark, ensure_ascii=False)}
 
@@ -918,6 +949,7 @@ Palauta koko HTML.
         cleaned,
         company_facts,
     )
+    validate_locked_copy(cleaned, brand_brief)
 
     _validate_plan_sections(cleaned, research, company.get("url", ""))
     new_path = _write_html(

@@ -67,6 +67,17 @@ def qualify_lead(candidate):
 
 DESIGN_CONTRACT = """
 Laatutavoite: yritykselle suunniteltu, viimeistelty ja kokonaan toimiva sivusto.
+Asiakkaan olemassa oleva brändi on lähtökohta, ei vaihdettava muotitrendi:
+säilytä asiakkaan nykyinen logo, väripaletti, omat luvalliset kuvat ja tärkeät
+vahvistetut iskulauseet oletuksena. Niitä saa vaihtaa vain erillisellä
+asiakashyväksynnällä. Valmiin tutkimuksen referenssit EIVÄT anna lupaa
+uudelleenbrändäykseen. Jos kuvia ei ole toimitettu ja käyttöoikeutta
+vahvistettu, pyydä kuvat tai kuvaoikeustiedot; älä väitä generoitua
+kuvitusta asiakkaan oikeaksi kuvamateriaaliksi.
+Erottele sisältöpäivitys ja ulkoasun tai animaation uudistaminen. Tarjoa
+asiakkaalle oma helppo sisällönmuokkaus (CMS), mutta älä väitä pelkkää
+index.html-demoversiota asiakaskohtaiseksi CMS:ksi ennen autentikoitua
+editori- ja julkaisutyönkulkua sekä käytännön testausta.
 Vertaa aina vähintään kolmeen havaittuun saman alan yrityksen sivustoon. Kirjaa konkreettiset
 havainnot ja perustele omat ratkaisut. Katso oikeat desktop- ja mobiilikuvat.
 Noudata ennen generointia laadittua design_decisions-suunnitelmaa.
