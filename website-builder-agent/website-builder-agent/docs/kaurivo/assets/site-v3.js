@@ -16,21 +16,7 @@ if("IntersectionObserver" in window&&!reduced){
 var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add("is-visible");io.unobserve(e.target)}})},{rootMargin:"0px 0px -20px 0px",threshold:.09});
 document.querySelectorAll(".reveal").forEach(function(el){io.observe(el)});
 }else{document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("is-visible")})}
-var scene=document.querySelector(".hero-scene"), frame=document.querySelector(".scene-frame");
-if(scene&&frame&&!reduced&&window.matchMedia("(hover:hover) and (pointer:fine)").matches){
-var raf=0;
-scene.addEventListener("pointermove",function(e){
-if(raf)return;
-var x=e.clientX,y=e.clientY;
-raf=requestAnimationFrame(function(){
-var r=scene.getBoundingClientRect(),nx=(x-r.left)/r.width-.5,ny=(y-r.top)/r.height-.5;
-frame.style.setProperty("--ry",String(-8+nx*10)+"deg");
-frame.style.setProperty("--rx",String(5-ny*7)+"deg");
-raf=0;
-});
-},{passive:true});
-scene.addEventListener("pointerleave",function(){if(raf){cancelAnimationFrame(raf);raf=0}frame.style.removeProperty("--ry");frame.style.removeProperty("--rx")});
-}
+// The V4 hero uses a compositor-friendly CSS float, never pointer tracking.
 var tabs=[].slice.call(document.querySelectorAll("[data-stage-button]")),prototype=document.querySelector(".prototype-window");
 if(tabs.length&&prototype){
 var stages=["outline","design","ready"];

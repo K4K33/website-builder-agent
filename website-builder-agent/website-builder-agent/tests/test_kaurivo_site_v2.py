@@ -73,6 +73,11 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertIn("data-stage-button", process)
         self.assertIn('id="enquiry-form"', contact)
         self.assertIn('href="faq/"', home)
+        for name in ("services", "process", "faq", "contact"):
+            page_text = PAGES[name].read_text(encoding="utf-8")
+            self.assertIn('class="back-home" href="../"', page_text)
+            self.assertIn("Back to Home", page_text)
+        self.assertNotIn('class="back-home"', home)
         self.assertIn('href="../faq/"', process)
 
     def test_animations_present_but_no_heavy_background_loop(self):
@@ -82,13 +87,16 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertIn("@keyframes markdraw", css)
         self.assertIn("@keyframes accent-slide", css)
         self.assertIn("prefers-reduced-motion:reduce", css)
-        self.assertIn("requestAnimationFrame", js)
+        self.assertIn("IntersectionObserver", js)
         self.assertIn("data-stage-button", js)
         self.assertNotIn("getContext(", js)
         self.assertNotIn("WebGL", js)
         self.assertNotIn("420vh", css)
         self.assertNotIn("backdrop-filter", css)
-        self.assertIn("#2281ff", css)
+        self.assertIn("#cad5df", css)
+        self.assertNotIn("#1162df", css)
+        self.assertNotIn("#2281ff", css)
+        self.assertNotIn("pointermove", js)
 
     def test_responsive_browser_and_working_interactions(self):
         try:
@@ -112,6 +120,10 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             self.assertLessEqual(overflow,2,(width,name,overflow))
                             self.assertEqual(errors,[],(width,name,errors))
                             self.assertTrue(page.locator("header .brand-icon").is_visible())
+                            if name != "home":
+                                back = page.get_by_role("link", name="Back to Home page")
+                                self.assertTrue(back.is_visible())
+                                self.assertEqual(back.get_attribute("href"), "../")
                             if name=="faq":
                                 details=page.locator("#faq-list details").first
                                 details.locator("summary").click()
