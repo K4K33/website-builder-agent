@@ -9,6 +9,9 @@ class ClientOwnershipTests(unittest.TestCase):
     def test_existing_site_preserves_brand_by_default(self):
         plan = client_design_brief({"website": "https://example.org"})
         self.assertEqual(plan["brand_policy"], "keep_existing_identity")
+        self.assertEqual(plan["design_scope"], "major_visual_and_structural_redesign_keep_brand")
+        self.assertEqual(plan["redesign_intensity"], "substantial_visible_change")
+        self.assertIn("rethink_navigation_hero_layout", plan["layout_policy"])
         self.assertEqual(plan["photo_policy"], "retain_authorized_originals_or_request_rights")
         self.assertTrue(plan["keep_client_logo_by_default"])
         self.assertTrue(plan["keep_original_claims_and_taglines_by_default"])
@@ -51,6 +54,8 @@ class ClientOwnershipTests(unittest.TestCase):
         plan = client_design_brief({})
         self.assertEqual(plan["site_type"], "new_site")
         self.assertEqual(plan["brand_policy"], "new_brand_design_requires_review")
+        self.assertEqual(plan["design_scope"], "original_full_site_design")
+        self.assertEqual(plan["redesign_intensity"], "substantial_visible_change")
 
     def test_explicit_permission_to_rebrand(self):
         plan = client_design_brief({
@@ -62,6 +67,8 @@ class ClientOwnershipTests(unittest.TestCase):
     def test_build_and_revision_prompts_include_client_brand_requirements(self):
         self.assertIn("Ulkopuolisten referenssien värit", builder.BUILD_SYSTEM_PROMPT)
         self.assertIn("Säilytä asiakkaan aiempi logo", builder.REVISE_SYSTEM_PROMPT)
+        self.assertIn("Brändin säilyttäminen ei tarkoita vanhan sivun", builder.BUILD_SYSTEM_PROMPT)
+        self.assertIn("SEN SIJAAN UUDISTA ISOSTI", builder.REVISE_SYSTEM_PROMPT)
         self.assertIn("client_design_brief(company)", __import__("inspect").getsource(builder.build_site))
         self.assertIn("validate_locked_copy(cleaned, brand_brief)", __import__("inspect").getsource(builder.revise_site))
         self.assertIn("validate_locked_copy(cleaned, client_design_brief(company))",
