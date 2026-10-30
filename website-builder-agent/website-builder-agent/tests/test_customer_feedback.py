@@ -68,7 +68,9 @@ class CustomerFeedbackTests(unittest.TestCase):
         self.assertFalse(draft["public_testimonial_permission"])
         self.assertIn("Hei Anna,", draft["body"])
         self.assertIn("suoraan tähän sähköpostiin", draft["body"])
-        self.assertIn("kriittinen palaute", draft["body"])
+        self.assertIn("kriittinen palaute", draft["body"].lower())
+        self.assertIn("Kaurivo", draft["body"])
+        self.assertNotIn("Kaarlo Kaurivolta", draft["body"])
 
     def test_negative_feedback_is_not_dismissed(self):
         result = triage_feedback("Lomake ei toimi puhelimella, emme voi lähettää yhtään viestiä",
@@ -112,7 +114,10 @@ class CustomerFeedbackTests(unittest.TestCase):
         self.assertFalse(draft["public_testimonial_permission"])
         self.assertIn("Hei Anna", draft["body"])
         self.assertIn("4/5", draft["body"])
-        self.assertIn("lyhyt kommentti", draft["html_body"])
+        self.assertIn("Kirjoita lyhyt palaute tähän", draft["html_body"])
+        self.assertIn("mailto:hello.kaurivo@gmail.com", draft["html_body"])
+        self.assertNotIn("Kaarlo Kaurivolta", draft["html_body"])
+        self.assertIn("Asiakaskokemus", draft["html_body"])
         self.assertIn("mailto:hello.kaurivo@gmail.com", draft["html_body"])
         self.assertEqual(draft["html_body"].count('aria-label="'), 5)
         self.assertIn("keskeneräistä", draft["html_body"])

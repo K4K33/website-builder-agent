@@ -87,7 +87,7 @@ def draft_completed_project_feedback(*, recipient_email: str, company_name: str,
             "Voit vastata suoraan tähän sähköpostiin, vaikka vain parilla lauseella. "
             "Myös kriittinen palaute on erittäin arvokasta.\n\n"
             "Kiitos jo etukäteen!\n"
-            "Kaarlo Kaurivolta"
+            "Kaurivo"
         ),
         "send_approved": False,
         "send_performed": False,
@@ -149,7 +149,7 @@ def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
         "Yksi lyhyt lause riittää. Myös kriittinen palaute on arvokasta, "
         "eikä tätä arviota julkaista ilman erillistä lupaasi.\n\n"
         "Ystävällisin terveisin,\n"
-        "Kaarlo Kaurivolta"
+        "Kaurivo"
     )
     # Optional star links; mailto opens a draft, NEVER records a click as a vote.
     # The primary, more reliable path is replying directly to the Gmail thread.
@@ -179,13 +179,26 @@ def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
         '<p style="font-size:13px;color:#46545f">'
         'Voit klikata tähtimäärää, jolloin sähköpostiluonnos avautuu. '
         'Arvosana tallentuu vasta, kun lähetät viestin.</p>'
-        '<p><strong>Kirjoita halutessasi yksi lyhyt kommentti.</strong><br>'
-        'Voit myös vastata suoraan tähän sähköpostiin, esimerkiksi '
-        '"4/5 – Kaikki sujui selkeästi". Myös kriittinen palaute auttaa meitä.</p>'
+        '<p style="font-size:15px;font-weight:700">Kirjallinen palaute '
+        '<span style="color:#65717b;font-size:12px;font-weight:400">'
+        '(vapaaehtoinen)</span></p>'
+        '<a href="' + escape(
+            "mailto:" + SENDER + "?subject=" + quote(subject)
+            + "&body=" + quote("Arvosana: /5\n\nLyhyt palaute:\n"),
+            quote=True
+        ) + '" style="display:block;padding:19px 16px;'
+        'background:#ffffff;border:1px solid #b6c2cb;border-radius:5px;'
+        'color:#64737e;font-size:14px;text-decoration:none">'
+        'Kirjoita lyhyt palaute tähän... ↗</a>'
+        '<p style="font-size:12px;color:#46545f">'
+        'Kentän painaminen avaa sähköpostin oikean kirjoitusnäkymän. '
+        'Voit myös vastata suoraan tähän viestiin, esimerkiksi '
+        '"4/5 – Kaikki sujui selkeästi". '
+        'Tähtivalinta ei itsessään tallenna palautetta.</p>'
         '<p style="font-size:12px;color:#56626b">Arvio koskee vain '
         'asiointia tähän asti, ei vielä keskeneräistä verkkosivustoa. '
         'Palautetta ei julkaista ilman erillistä lupaa.</p>'
-        '<p>Ystävällisin terveisin,<br>Kaarlo Kaurivolta</p></div>'
+        '<p style="padding-top:14px;border-top:1px solid #d4dade">Kaurivo<br>Asiakaskokemus</p></div>'
     )
     return {
         "from": SENDER, "to": recipient_email.strip(),

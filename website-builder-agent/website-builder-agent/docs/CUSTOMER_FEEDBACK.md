@@ -86,6 +86,10 @@ approved for change -> implemented -> retested -> customer-confirmed.
 
 Review feedback after each handover and in a weekly internal review. Address recurring issues by updating Kaurivo's Builder, quality checklist, tests and project handover process, not merely replying with "thanks." Before generalizing a preference, check that it applies to other clients; do not override distinctive brand identities. Owner approves production changes. No public GitHub issues containing raw customer messages or personal details.
 
+## Tested HTML email appearance (2026-10-30)
+
+Two real TEST emails were sent using the verified Kaurivo Gmail account to the user-supplied test mailbox (one sample sales email, one purchase-experience feedback request). The feedback email uses KAURIVO as the generic sender identity instead of a person's signature, 1–5 clickable star options, and a rectangular clickable writing prompt beneath the text-feedback label. Both clickable elements use mailto links and open a compose view: **clicking does not transmit or store feedback; the recipient must send the resulting message**. The plain reply-in-thread alternative remains available. Sent-folder verification does not establish inbox delivery. No customer was contacted by this test.
+
 ## Privacy and publication
 
 Demo review submissions use the site's existing third-party FormSubmit endpoint and follow its privacy notice. Recipient activation and delivery are NOT yet verified. Until activation, invite replies to the original Gmail message instead of advertising the page as fully operational.
