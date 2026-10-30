@@ -1,5 +1,6 @@
 > Current quality controls, model setup, costs and remaining validation: [QUALITY.md](QUALITY.md).
-> Client brand preservation, approved image/copy changes, editable websites and CMS handover: [CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md).\n> Customer-specific email research, persuasive copy and sending safeguards: [OUTREACH.md](docs/OUTREACH.md).
+> Client brand preservation, approved image/copy changes, editable websites and CMS handover: [CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md).
+> **Mandatory for every final client delivery:** the customer can personally edit text, services, images and contact details via a secure CMS. Static demos are allowed for review, never labelled as editable delivered sites. Verify with `python main.py handover-check COMPANY_SLUG` before the actual client handover.\n> Customer-specific email research, persuasive copy and sending safeguards: [OUTREACH.md](docs/OUTREACH.md).
 
 # Website Builder Agent
 

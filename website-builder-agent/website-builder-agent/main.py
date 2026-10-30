@@ -23,6 +23,7 @@ from agents import outreach
 
 from utils import publisher
 from utils.production_readiness import readiness_report
+from utils.client_handover import inspect_client_delivery
 from utils.lead_intelligence import evaluate_prospect, site_signal
 from utils.company_registry import lookup_by_business_id, lookup_by_name_and_location
 from utils.free_enrichment import enrich_queue
@@ -248,6 +249,22 @@ def cmd_readiness(args):
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if not report["ready_for_review"]:
         raise RuntimeError("Production evidence gate failed: the live multi-industry benchmark is incomplete.")
+
+
+# =========================================================
+# CUSTOMER DELIVERY AUDIT: MUST HAVE TESTED SELF-EDITABLE CMS
+# =========================================================
+def cmd_handover_check(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Company not found.")
+    result = inspect_client_delivery(company)
+    print(json.dumps({"company": slug, **result}, ensure_ascii=False, indent=2))
+    if not result["ready_to_handover"]:
+        raise RuntimeError(
+            "Client delivery BLOCKED: CMS self-editing is not proven. "
+            "A website demo can still be reviewed without this check."
+        )
 
 
 # =========================================================
@@ -627,6 +644,15 @@ def build_parser():
         dest="command",
         required=True,
     )
+
+    # Final client-site delivery is not allowed until self-editing is verified.
+    # This offline check does not publish or spend any API credits.
+    handover = subparsers.add_parser(
+        "handover-check",
+        help="Block client delivery until CMS login, content edits and publishing are verified.",
+    )
+    handover.add_argument("company", help="Company name or slug")
+    handover.set_defaults(func=cmd_handover_check)
 
     # -----------------------------------------------------
     # LIST

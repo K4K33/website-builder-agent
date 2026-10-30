@@ -41,7 +41,7 @@ class ClientOwnershipTests(unittest.TestCase):
         })
         self.assertEqual(plan["brand_policy"], "keep_existing_identity")
         self.assertEqual(plan["existing_colors_verified_by_client"], ["#123abc", "#FFFFFF"])
-        self.assertEqual(plan["content_editing_goal"], "client_self_service")
+        self.assertEqual(plan["content_editing_goal"], "client_self_service_required")
         good = "<!doctype html><main><h1>Hyvää palvelua vuodesta 1986</h1><p>Ainutlaatuinen iskulause</p></main>"
         validate_locked_copy(good, plan)
         with self.assertRaisesRegex(RuntimeError, "protected copy"):
