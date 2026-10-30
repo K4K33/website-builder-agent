@@ -85,3 +85,7 @@ User-tested changes after V3:
 ## Final V6 viewport regression
 
 Additional 960px navigation test verifies mobile menu opens as an absolute-positioned dropdown without changing layout or scroll width. Existing Playwright browser checks run at 320, 390, 768, 960 and 1440px; original interactive study pages are checked for truthfulness, back links and local-only behaviour. Full performance field metrics are not yet measured.
+
+## iPhone-only correction (2026-10-30)
+
+Reviewed the user's nine-second iPhone screen recording. Mobile under 600 CSS pixels now gets a compact 64px header, readable menu buttons with a full-height accessible drawer, arrow text glyphs rather than iOS emoji glyphs, a shorter hero logo module, larger body/card text, and better touch/form sizing. All changes are strictly scoped to mobile via `@media (max-width:600px)` and/or the equivalent `matchMedia` JavaScript check. Laptop/desktop appearance, behavior and layout are unchanged. The animated logo on the phone uses a short, single composited fade; the desktop's three-part animation remains untouched. Browser tests should verify iPhone, tablet and desktop layouts.

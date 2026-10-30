@@ -5,7 +5,8 @@ const originals=new WeakMap();
 function nodes(){const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);const out=[];while(walker.nextNode()){const n=walker.currentNode;const p=n.parentElement;if(p&&p.closest("script,style,noscript"))continue;if(n.textContent.trim())out.push(n)}return out}
 const texts=nodes();texts.forEach(n=>originals.set(n,n.textContent));
 const placeholders=[...document.querySelectorAll("input[placeholder],textarea[placeholder]")];placeholders.forEach(el=>el.dataset.originalPlaceholder=el.getAttribute("placeholder"));
-function apply(lang){document.documentElement.lang=lang;for(const n of texts){const original=originals.get(n);if(!original)continue;const key=original.trim();const translated=lang==="fi"?fi[key]:null;if(translated){const lead=original.match(/^\s*/)[0],trail=original.match(/\s*$/)[0];n.textContent=lead+translated+trail;}else n.textContent=original;}
+function apply(lang){document.documentElement.lang=lang;for(const n of texts){const original=originals.get(n);if(!original)continue;const key=original.trim();const translated=lang==="fi"?fi[key]:null;if(translated){const lead=original.match(/^\s*/)[0],trail=original.match(/\s*$/)[0];n.textContent=lead+translated+trail;}else n.textContent=original;
+if(window.matchMedia("(max-width: 600px)").matches)n.textContent=n.textContent.replace(/↗/g,"↗︎").replace(/✳/g,"✳︎");}
 for(const el of placeholders){const original=el.dataset.originalPlaceholder;el.setAttribute("placeholder",lang==="fi"?(fi[original]||original):original)}
 document.querySelectorAll("[data-lang-set]").forEach(b=>b.setAttribute("aria-pressed",String(b.getAttribute("data-lang-set")===lang)));
 try{localStorage.setItem("kaurivo-language",lang)}catch(e){}

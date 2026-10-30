@@ -132,6 +132,19 @@ class KaurivoWebsiteTests(unittest.TestCase):
                 self.assertIn('href="../../contact/"', src)
                 self.assertNotIn("getContext(", src)
 
+    def test_iphone_only_mobile_refinement(self):
+        css=(SITE/"assets/site-v3.css").read_text(encoding="utf-8")
+        js=(SITE/"assets/site-v3.js").read_text(encoding="utf-8")
+        i18n=(SITE/"assets/i18n.js").read_text(encoding="utf-8")
+        self.assertIn("iPhone/mobile-only refinement", css)
+        self.assertIn("@media (max-width:600px)", css)
+        self.assertIn("v6-mobile-appear", css)
+        self.assertIn("onPhone.matches", js)
+        self.assertIn("mobile-menu-open", css)
+        self.assertIn('replace(/↗/g,"↗︎")', i18n)
+        self.assertNotIn("IntersectionObserver", js)
+        self.assertNotIn('addEventListener("scroll"', js)
+
     def test_responsive_browser_and_working_interactions(self):
         try:
             from playwright.sync_api import sync_playwright

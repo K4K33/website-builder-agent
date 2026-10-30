@@ -4,8 +4,9 @@
 // The fixed header does not respond to scroll: scrolling must remain native and instant.
 var toggle=document.querySelector(".mobile-toggle"), menu=document.querySelector(".nav-menu");
 if(toggle&&menu){
-function close(){menu.classList.remove("open");toggle.setAttribute("aria-expanded","false")}
-toggle.addEventListener("click",function(){var open=menu.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open))});
+var onPhone=window.matchMedia("(max-width: 600px)");
+function close(){menu.classList.remove("open");toggle.setAttribute("aria-expanded","false");if(onPhone.matches)document.body.classList.remove("mobile-menu-open")}
+toggle.addEventListener("click",function(){var open=menu.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));if(onPhone.matches)document.body.classList.toggle("mobile-menu-open",open)});
 document.addEventListener("keydown",function(e){if(e.key==="Escape")close()});
 menu.querySelectorAll("a").forEach(function(a){a.addEventListener("click",close)});
 }
