@@ -65,3 +65,10 @@ User-tested changes after V3:
 - The offline CI browser suite checks responsive layout and verifies
   the dedicated Back to Home control on each inner page.
 - Keep the Kaurivo logo and overall navigation identity.
+
+## V5 – proof before decoration, native scrolling
+
+- Removed the artificial floating browser illustration and replaced it with Kaurivo's existing real brand mark, with a single short entrance and thin line reveal (no continuous movement).
+- Removed all scroll observers and content-hiding reveal animations; every page section is immediately visible. The fixed header no longer changes padding on wheel/trackpad scrolling and anchor jumps are immediate.
+- Replaced another fictional homepage browser mockup with concrete, honest handover deliverables: business-specific design, mobile experience and editable content.
+- Premium benchmark for next phase: real, approved client/demo case studies with screenshots and credible process; do not invent client work, reviews, traffic gains or awards.

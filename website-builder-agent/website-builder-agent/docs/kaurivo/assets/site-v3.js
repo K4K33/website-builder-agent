@@ -1,9 +1,7 @@
 
 (function(){
 "use strict";
-var h=document.getElementById("topbar");
-function scrollTop(){if(h)h.classList.toggle("scrolled",window.scrollY>16)}
-window.addEventListener("scroll",scrollTop,{passive:true});scrollTop();
+// The fixed header does not respond to scroll: scrolling must remain native and instant.
 var toggle=document.querySelector(".mobile-toggle"), menu=document.querySelector(".nav-menu");
 if(toggle&&menu){
 function close(){menu.classList.remove("open");toggle.setAttribute("aria-expanded","false")}
@@ -11,12 +9,7 @@ toggle.addEventListener("click",function(){var open=menu.classList.toggle("open"
 document.addEventListener("keydown",function(e){if(e.key==="Escape")close()});
 menu.querySelectorAll("a").forEach(function(a){a.addEventListener("click",close)});
 }
-var reduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-if("IntersectionObserver" in window&&!reduced){
-var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add("is-visible");io.unobserve(e.target)}})},{rootMargin:"0px 0px -20px 0px",threshold:.09});
-document.querySelectorAll(".reveal").forEach(function(el){io.observe(el)});
-}else{document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("is-visible")})}
-// The V4 hero uses a compositor-friendly CSS float, never pointer tracking.
+// All content is visible immediately; no scroll-triggered reveal gating.
 var tabs=[].slice.call(document.querySelectorAll("[data-stage-button]")),prototype=document.querySelector(".prototype-window");
 if(tabs.length&&prototype){
 var stages=["outline","design","ready"];
@@ -49,5 +42,4 @@ window.location.href=url;
 });
 }
 var year=document.getElementById("year");if(year)year.textContent=String(new Date().getFullYear());
-document.addEventListener("visibilitychange",function(){document.body.classList.toggle("pause-motion",document.hidden)});
 })();
