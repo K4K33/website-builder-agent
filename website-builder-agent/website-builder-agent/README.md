@@ -2,6 +2,8 @@
 > Client brand preservation, approved image/copy changes, editable websites and CMS handover: [CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md).
 > **Mandatory for every final client delivery:** the customer can personally edit text, services, images and contact details via a secure CMS. Static demos are allowed for review, never labelled as editable delivered sites. Verify with `python main.py handover-check COMPANY_SLUG` before the actual client handover.\n> Customer-specific email research, persuasive copy and sending safeguards: [OUTREACH.md](docs/OUTREACH.md).
 
+> Overnight prospecting pilot and premium demo-first sales quality gates: [NIGHTLY_ACQUISITION.md](docs/NIGHTLY_ACQUISITION.md). Runs every night at 03:17 Helsinki time after merging to main, with at most one bounded public Overpass call, no paid AI, and no automatic mail or site publishing.
+
 # Website Builder Agent
 
 ## Kaurivon uusi ihmisen hyväksymä asiakastyönkulku
