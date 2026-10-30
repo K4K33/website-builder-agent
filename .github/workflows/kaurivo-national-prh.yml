@@ -1,0 +1,95 @@
+name: Kaurivo national business discovery (PRH bulk)
+
+on:
+  schedule:
+    # Europe/Helsinki local clock, DST-aware. Off the hour.
+    - cron: "13 4 * * *"
+      timezone: "Europe/Helsinki"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "offline = test pipeline; pilot-live = one national PRH ZIP GET"
+        type: choice
+        required: true
+        default: offline
+        options:
+          - offline
+          - pilot-live
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kaurivo-national-prh
+  cancel-in-progress: false
+
+jobs:
+  national:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    env:
+      OPENROUTER_API_KEY: ""
+      TAVILY_API_KEY: ""
+      FREE_ONLY: "1"
+      PYTHONUNBUFFERED: "1"
+      KAURIVO_PRH_MODE: ${{ github.event_name == 'schedule' && 'pilot-live' || inputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Restore previously considered business IDs (best effort)
+        uses: actions/cache/restore@v4
+        with:
+          path: website-builder-agent/website-builder-agent/data/prh_seen_ids.json
+          key: prh-company-history-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            prh-company-history-v1-
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: National PRH ZIP, one request at most; process all records locally
+        run: |
+          python -m utils.prh_bulk_discovery \
+            --mode "$KAURIVO_PRH_MODE" \
+            --max-candidates 5000 \
+            --shortlist-size 50 \
+            --output-dir output/nightly-prh \
+            --seen-path data/prh_seen_ids.json
+
+      - name: Show fresh lead report for manual review
+        if: success()
+        run: |
+          cat output/nightly-prh/shortlist.md >> "$GITHUB_STEP_SUMMARY"
+          echo "No API credits, automatic demo claims or marketing sends." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Explain source failure without inventing search results
+        if: failure()
+        run: |
+          echo "## National PRH discovery failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Check logs. A failed download must not be treated as zero available leads." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain national discovery report for 14 days
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaurivo-national-leads-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            website-builder-agent/website-builder-agent/output/nightly-prh/
+            website-builder-agent/website-builder-agent/data/prh_seen_ids.json
+
+      - name: Cache only a successful history update
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: website-builder-agent/website-builder-agent/data/prh_seen_ids.json
+          key: prh-company-history-v1-${{ github.run_id }}-${{ github.run_attempt }}

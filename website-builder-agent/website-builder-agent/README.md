@@ -2,6 +2,8 @@
 > Client brand preservation, approved image/copy changes, editable websites and CMS handover: [CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md).
 > **Mandatory for every final client delivery:** the customer can personally edit text, services, images and contact details via a secure CMS. Static demos are allowed for review, never labelled as editable delivered sites. Verify with `python main.py handover-check COMPANY_SLUG` before the actual client handover.\n> Customer-specific email research, persuasive copy and sending safeguards: [OUTREACH.md](docs/OUTREACH.md).
 
+> **National daily discovery at 04:13 Europe/Helsinki:** process the PRH bulk company ZIP via one capped request; inspect the entire registry locally, queue at most 5,000 unseen prospects and show 50 for human review. A small 03:17 OSM pilot supplements this. Neither job uses paid AI, creates demos or sends outreach. [NIGHTLY_ACQUISITION.md](docs/NIGHTLY_ACQUISITION.md).
+
 # Website Builder Agent
 
 ## Kaurivon uusi ihmisen hyväksymä asiakastyönkulku
