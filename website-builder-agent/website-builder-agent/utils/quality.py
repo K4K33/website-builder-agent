@@ -74,10 +74,19 @@ asiakashyväksynnällä. Valmiin tutkimuksen referenssit EIVÄT anna lupaa
 uudelleenbrändäykseen. Jos kuvia ei ole toimitettu ja käyttöoikeutta
 vahvistettu, pyydä kuvat tai kuvaoikeustiedot; älä väitä generoitua
 kuvitusta asiakkaan oikeaksi kuvamateriaaliksi.
-Erottele sisältöpäivitys ja ulkoasun tai animaation uudistaminen. Tarjoa
-asiakkaalle oma helppo sisällönmuokkaus (CMS), mutta älä väitä pelkkää
-index.html-demoversiota asiakaskohtaiseksi CMS:ksi ennen autentikoitua
-editori- ja julkaisutyönkulkua sekä käytännön testausta.
+Erottele sisältöpäivitys ja ulkoasun tai animaation uudistaminen.
+PAKOLLINEN KAIKKIIN VALMIISIIN ASIAKASTOIMITUKSIIN: asiakas voi itse kirjautua
+sisällönhallintaan ja muokata tekstejä, otsikoita, palveluita, kuvia,
+yhteystietoja sekä soveltuvin osin hintoja ja aukioloaikoja ilman koodia.
+Säilytä laadukas erikoisdesign ja animaatiot erillään muokattavista kentistä.
+Jos asiakkaalla on WordPress tai muu tuttu toimiva CMS, pyri säilyttämään
+se, kun kyseinen järjestelmä soveltuu toteutukseen. Muuten valitse soveltuva
+CMS asiakkaan kanssa. Kustannukset ja ylläpitovastuut sovitaan ennen valintaa.
+HTML-demo voi olla välivaihe, mutta ÄLÄ merkitse valmista asiakastoimitusta
+muokattavaksi ennen kuin asiakaskohtainen editorikirjautuminen,
+tekstin ja kuvan muutos, julkaisu, varmistuspalautus ja oikeudet on testattu.
+Pelkkä index.html tai 'contenteditable' ilman tallennusta ja turvallista
+julkaisua EI ole toimiva asiakkaan CMS.
 Vertaa aina vähintään kolmeen havaittuun saman alan yrityksen sivustoon. Kirjaa konkreettiset
 havainnot ja perustele omat ratkaisut. Katso oikeat desktop- ja mobiilikuvat.
 Noudata ennen generointia laadittua design_decisions-suunnitelmaa.
