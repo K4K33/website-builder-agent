@@ -47,6 +47,15 @@ def client_design_brief(company):
     # This policy is not proof that the CMS has been implemented.
     return {
         "site_type": "redesign" if has_site else "new_site",
+        "design_scope": (
+            "major_visual_and_structural_redesign_keep_brand"
+            if has_site else "original_full_site_design"
+        ),
+        "redesign_intensity": "substantial_visible_change",
+        "layout_policy": (
+            "rethink_navigation_hero_layout_content_hierarchy_typography_mobile"
+            if has_site else "design_the_full_experience_from_scratch"
+        ),
         "brand_policy": mode,
         "existing_colors_verified_by_client": color_hex if approved else [],
         "photo_policy": photo_policy,
