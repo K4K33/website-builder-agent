@@ -238,12 +238,23 @@ def rank_bulk(records, *, day, seen=(), max_candidates=5000, shortlist_size=50):
         rest = sorted((item for group in pools.values() for item in group
                        if item[2]["identity"] not in selected_ids), reverse=True)
         selected += [v[2] for v in rest[:max_candidates-len(selected)]]
+    # Mix both kinds in the morning review list, rather than filling the
+    # first 50 slots exclusively with companies lacking a PRH website tag.
+    no_site = [c for c in selected if not c["website_listed_url"]]
+    known_site = [c for c in selected if c["website_listed_url"]]
+    shortlist = (no_site[:round(shortlist_size * .7)]
+                 + known_site[:shortlist_size-round(shortlist_size * .7)])
+    if len(shortlist) < shortlist_size:
+        chosen = {c["identity"] for c in shortlist}
+        shortlist += [c for c in selected if c["identity"] not in chosen][
+            :shortlist_size-len(shortlist)
+        ]
     return {
         "scanned_registry_records": scanned,
         "valid_registry_records": valid,
         "previously_seen_skipped": skipped,
         "new_candidates": selected,
-        "shortlist": selected[:shortlist_size],
+        "shortlist": shortlist,
         "candidates_with_unlisted_url": sum(not x["website_listed_url"] for x in selected),
         "candidates_with_listed_url": sum(bool(x["website_listed_url"]) for x in selected),
     }
@@ -314,7 +325,6 @@ def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
                                shortlist_size=shortlist_size)
     shortlist = result["shortlist"]
     selected = result["new_candidates"]
-    new_id_set = {x["identity"] for x in selected}
     # Keep prior IDs + genuinely selected new IDs, not *every* registry item
     # (otherwise businesses we have not yet evaluated would be lost).
     merged_seen = (seen + [c["identity"] for c in selected])[-MAX_HISTORY:]
