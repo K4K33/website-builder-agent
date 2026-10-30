@@ -1,4 +1,4 @@
-# Kaurivo — V3 multi-page premium website
+# Kaurivo — V4 premium multi-page website
 
 Live preview after GitHub Pages deployment:
 https://k4k33.github.io/website-builder-agent/kaurivo/
@@ -47,3 +47,21 @@ integrated backend form, privacy details and client-ready copy should be
 reviewed before replacing this preview with a production site.
 
 GitHub Pages deploys from the \`docs\` subfolder on the main branch.
+
+## V4 update — 30 October 2026
+
+User-tested changes after V3:
+- On every Services, Process, FAQ and Contact page, a conspicuous
+  **← Back to Home** link appears before the main heading; Home is also a
+  labeled navigation item. The brand logo is never the only return path.
+- The homepage hero restores V1-inspired editorial browser depth and a
+  *slow, transform-only* vertical float, without pointer-following tilt,
+  WebGL or a long scroll-locked animation. Mobile and reduced-motion
+  users get an effectively static hero.
+- The palette is now sharp dark charcoal, off-white, and neutral
+  metallic-silver details; electric blue is deliberately avoided.
+- Preserve the V3 separate pages, accessible FAQ, step tabs and email
+  enquiry draft (not a backend submission).
+- The offline CI browser suite checks responsive layout and verifies
+  the dedicated Back to Home control on each inner page.
+- Keep the Kaurivo logo and overall navigation identity.

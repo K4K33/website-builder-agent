@@ -519,8 +519,10 @@ just the Kaurivo brand site. It comes from direct visual feedback on V1/V2/V3.
   clear boundaries, legible small text, precise graphical detail, and a
   visually confident premium finish. Avoid washed-out, hazy, grey-on-grey,
   muddy overlays or ornamental low-contrast elements that look blurry.
-- The Kaurivo agency brand uses black/navy, bright icy white and crisp vivid
-  blue. **Do not impose those specific colors on client websites.** Match
+- The Kaurivo agency brand currently uses deep charcoal/black, clean
+  off-white and muted metallic-silver/steel accents. Avoid the electric-blue
+  V3 palette and distracting pointer-following hero movement. **Do not impose
+  Kaurivo's specific colors on client websites.** Match
   each client's approved identity and evaluate color fidelity against
   three high-quality sites in its actual industry.
 - Text contrast must meet WCAG AA when possible: 4.5:1 for normal text
