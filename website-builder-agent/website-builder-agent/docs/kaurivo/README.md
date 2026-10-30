@@ -95,3 +95,7 @@ Reviewed the user's nine-second iPhone screen recording. Mobile under 600 CSS pi
 A new `demo-review/` page receives a very short **must-haves for the final website** brief (company, reply email, mandatory features, optional wishes). FormSubmit must first be activated by confirming the Kaurivo receiving mailbox; this is **not** a verified end-to-end submission service yet. The page explicitly offers replying directly to the demo email as an alternative. Feedback is for a client proposal, not public reviews or consent for marketing.
 
 After an actual customer handover, request **private service feedback by sending an individual email in the existing Gmail thread**, not by expecting clients to revisit the website. Never auto-send without project completion and owner approval. See `docs/CUSTOMER_FEEDBACK.md` and `utils/customer_feedback.py` for templates and offline quality triage.
+
+## Gmail one-day-after-sale rating (2026-10-30)
+
+A verified client sale triggers eligibility for a private Gmail feedback draft **one Finnish calendar day later**. The formatted email offers five clickable stars; each opens a pre-addressed email draft for the client to send with optional short feedback. A plain reply such as 4/5 and a short comment also works. This rates the purchase/onboarding experience, not a site that has not yet been delivered. The offline helper does NOT schedule, send, or verify sales. A live automation requires a private verified sale record, sender confirmation, duplicate suppression, and authorized delivery.

@@ -3,11 +3,14 @@
 No Gmail, third-party form submission, AI calls or secrets.
 """
 from pathlib import Path
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import unittest
 
 from utils.customer_feedback import (
     DEMO_REVIEW_URL, SENDER, demo_review_invitation,
-    draft_completed_project_feedback, triage_feedback,
+    draft_completed_project_feedback, draft_after_sale_feedback,
+    feedback_due_at, extract_rating_from_reply, triage_feedback,
 )
 
 SITE = Path(__file__).resolve().parents[1] / "docs" / "kaurivo"
@@ -84,6 +87,58 @@ class CustomerFeedbackTests(unittest.TestCase):
         self.assertEqual(vague["priority"], "clarify")
         with self.assertRaises(ValueError):
             triage_feedback("   ")
+
+    def test_sale_feedback_is_due_day_after_confirmed_purchase(self):
+        tz = ZoneInfo("Europe/Helsinki")
+        sale = datetime(2026, 10, 30, 15, 30, tzinfo=tz)
+        due = feedback_due_at(sale)
+        self.assertEqual(due.date().isoformat(), "2026-10-31")
+        self.assertEqual(due.hour, 15)
+        kwargs = dict(recipient_email="client@example.org", company_name="Example Oy",
+                      sale_confirmed_at=sale, sale_verified=True,
+                      relationship_verified=True, contact_first_name="Anna")
+        with self.assertRaises(ValueError):
+            draft_after_sale_feedback(now=due-timedelta(minutes=1), **kwargs)
+        with self.assertRaises(ValueError):
+            draft_after_sale_feedback(now=due, **dict(kwargs, sale_verified=False))
+        with self.assertRaises(ValueError):
+            draft_after_sale_feedback(now=due, **dict(kwargs, relationship_verified=False))
+        draft = draft_after_sale_feedback(now=due, **kwargs)
+        self.assertEqual(draft["feedback_stage"], "day_after_confirmed_sale")
+        self.assertEqual(draft["due_at"], due.isoformat())
+        self.assertEqual(draft["from"], SENDER)
+        self.assertFalse(draft["send_performed"])
+        self.assertFalse(draft["send_approved"])
+        self.assertFalse(draft["public_testimonial_permission"])
+        self.assertIn("Hei Anna", draft["body"])
+        self.assertIn("4/5", draft["body"])
+        self.assertIn("lyhyt kommentti", draft["html_body"])
+        self.assertIn("mailto:hello.kaurivo@gmail.com", draft["html_body"])
+        self.assertEqual(draft["html_body"].count('aria-label="'), 5)
+        self.assertIn("keskeneräistä", draft["html_body"])
+        with self.assertRaises(ValueError):
+            feedback_due_at(datetime(2026, 10, 30, 15, 30))
+
+    def test_rating_parsing_and_human_triage(self):
+        self.assertEqual(extract_rating_from_reply("4/5 – hyvä yhteydenpito"), 4)
+        self.assertEqual(extract_rating_from_reply("Arvosana: 1/5\nLyhyt palaute: Hidasta"), 1)
+        self.assertEqual(extract_rating_from_reply("★★★☆☆ Palvelu oli selkeä"), 3)
+        self.assertIsNone(extract_rating_from_reply("Kiitos!"))
+        self.assertIsNone(extract_rating_from_reply("Kiitos\nOn Thu, Oct 30 wrote:\n> 5/5"))
+        self.assertIsNone(extract_rating_from_reply("Kiitos\n> 5/5"))
+        self.assertIsNone(extract_rating_from_reply("6/5"))
+        feedback = triage_feedback("Sähköpostit olivat epäselviä, tarjous jäi avoimeksi",
+                                   rating=2, relationship_verified=True,
+                                   project_verified=True)
+        self.assertEqual(feedback["rating"], 2)
+        self.assertFalse(feedback["rating_is_authenticity_evidence"])
+        self.assertTrue(feedback["human_review_required"])
+        self.assertFalse(feedback["publish_permitted"])
+        self.assertEqual(triage_feedback("", rating=5)["priority"], "clarify")
+        for value in (0, 6, True, "5"):
+            with self.subTest(rating=value):
+                with self.assertRaises(ValueError):
+                    triage_feedback("test", rating=value)
 
     def test_internal_process_does_not_publish_or_send(self):
         docs = (ROOT / "docs" / "CUSTOMER_FEEDBACK.md").read_text()

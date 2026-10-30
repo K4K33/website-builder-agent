@@ -6,7 +6,11 @@ and approve a change to a customer's website.
 """
 from __future__ import annotations
 
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
+from html import escape
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+import re
 
 SENDER = "hello.kaurivo@gmail.com"
 DEMO_REVIEW_URL = "https://k4k33.github.io/website-builder-agent/kaurivo/demo-review/"
@@ -92,16 +96,152 @@ def draft_completed_project_feedback(*, recipient_email: str, company_name: str,
     }
 
 
+def feedback_due_at(sale_confirmed_at: datetime) -> datetime:
+    """One calendar day after a verified sale, in Finnish local time."""
+    if not isinstance(sale_confirmed_at, datetime) or sale_confirmed_at.tzinfo is None:
+        raise ValueError("Use a timezone-aware confirmed sale timestamp.")
+    local = sale_confirmed_at.astimezone(ZoneInfo("Europe/Helsinki"))
+    tomorrow = local.date() + timedelta(days=1)
+    return datetime.combine(tomorrow, local.timetz()).replace(
+        tzinfo=ZoneInfo("Europe/Helsinki")
+    )
+
+
+def _stars(value: int) -> str:
+    return "★" * value + "☆" * (5 - value)
+
+
+def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
+                              sale_confirmed_at: datetime, now: datetime,
+                              sale_verified: bool, relationship_verified: bool,
+                              contact_first_name: str = "") -> dict:
+    """Draft for Gmail only when one Finnish calendar day has passed.
+
+    Checks neither Gmail nor purchase authenticity itself. Sale + customer
+    verification are caller responsibilities. No sending or scheduling occurs.
+    The early feedback rates buying/onboarding, never unfinished site quality.
+    """
+    if not (sale_verified and relationship_verified):
+        raise ValueError("Verified sale and actual customer relationship required.")
+    due = feedback_due_at(sale_confirmed_at)
+    if not isinstance(now, datetime) or now.tzinfo is None:
+        raise ValueError("Provide timezone-aware current datetime.")
+    if now.astimezone(ZoneInfo("Europe/Helsinki")) < due:
+        raise ValueError("Review request is not due until the day after the sale.")
+    if not isinstance(recipient_email, str) or not re.fullmatch(
+        r"[^@\s]+@[^@\s]+\.[^@\s]+", recipient_email.strip()
+    ):
+        raise ValueError("Verified recipient address is required.")
+    if not isinstance(company_name, str) or not company_name.strip():
+        raise ValueError("Confirmed client company is required.")
+
+    greeting = f"Hei {contact_first_name.strip()}," if contact_first_name.strip() else "Hei,"
+    subject = "Miten asiointi Kaurivon kanssa alkoi?"
+    body = (
+        f"{greeting}\n\n"
+        "Kiitos luottamuksesta! Haluaisin heti yhteistyön alussa "
+        "kuulla, miltä yhteydenpito, tarjous ja ostoprosessi tuntuivat.\n\n"
+        "Kuinka arvioisit asioinnin tähän asti asteikolla 1–5 tähteä?\n"
+        "★★★★★ = 5 / 5, ★★★★☆ = 4 / 5, ★★★☆☆ = 3 / 5\n"
+        "★★☆☆☆ = 2 / 5, ★☆☆☆☆ = 1 / 5\n\n"
+        "Vastaa tähän viestiin esimerkiksi näin:\n"
+        "4/5 – Kaikki sujui selkeästi, mutta aikatauluista voisi kertoa tarkemmin.\n\n"
+        "Yksi lyhyt lause riittää. Myös kriittinen palaute on arvokasta, "
+        "eikä tätä arviota julkaista ilman erillistä lupaasi.\n\n"
+        "Ystävällisin terveisin,\n"
+        "Kaarlo Kaurivolta"
+    )
+    # Optional star links; mailto opens a draft, NEVER records a click as a vote.
+    # The primary, more reliable path is replying directly to the Gmail thread.
+    star_links = []
+    for value in range(1, 6):
+        message = f"Arvosana: {value}/5\nLyhyt palaute: "
+        link = "mailto:" + SENDER + "?subject=" + quote(subject) + "&body=" + quote(message)
+        star_links.append(
+            '<a href="' + escape(link, quote=True)
+            + '" style="display:inline-block;padding:9px 7px;margin:3px;'
+              'border:1px solid #c7d0d5;color:#172027;text-decoration:none;'
+              'font-size:17px;font-weight:700;white-space:nowrap"'
+            + ' aria-label="' + str(value) + ' tähteä">'
+            + _stars(value) + "</a>"
+        )
+    html_body = (
+        '<div style="max-width:540px;margin:0 auto;padding:24px;'
+        'background:#f6f7f8;color:#172027;font-family:Arial,sans-serif;'
+        'font-size:15px;line-height:1.7">'
+        '<div style="font-size:14px;letter-spacing:2px;font-weight:700;'
+        'padding-bottom:17px;border-bottom:1px solid #c8d0d5">KAURIVO</div>'
+        '<p>' + escape(greeting) + '</p>'
+        '<p>Kiitos luottamuksesta! Haluaisin kuulla, miten yhteydenpito,'
+        ' tarjous ja ostoprosessi sujuivat.</p>'
+        '<p><strong>Montako tähteä antaisit asioinnille tähän asti?</strong></p>'
+        '<div>' + "".join(star_links) + '</div>'
+        '<p style="font-size:13px;color:#46545f">'
+        'Voit klikata tähtimäärää, jolloin sähköpostiluonnos avautuu. '
+        'Arvosana tallentuu vasta, kun lähetät viestin.</p>'
+        '<p><strong>Kirjoita halutessasi yksi lyhyt kommentti.</strong><br>'
+        'Voit myös vastata suoraan tähän sähköpostiin, esimerkiksi '
+        '"4/5 – Kaikki sujui selkeästi". Myös kriittinen palaute auttaa meitä.</p>'
+        '<p style="font-size:12px;color:#56626b">Arvio koskee vain '
+        'asiointia tähän asti, ei vielä keskeneräistä verkkosivustoa. '
+        'Palautetta ei julkaista ilman erillistä lupaa.</p>'
+        '<p>Ystävällisin terveisin,<br>Kaarlo Kaurivolta</p></div>'
+    )
+    return {
+        "from": SENDER, "to": recipient_email.strip(),
+        "subject": subject, "body": body, "html_body": html_body,
+        "due_at": due.isoformat(),
+        "feedback_stage": "day_after_confirmed_sale",
+        "send_approved": False, "send_performed": False,
+        "public_testimonial_permission": False,
+        "notes": ("Gmail draft only. Verify actual sale, contact, Kaurivo Gmail sender "
+                  "and explicit approval before sending; no scheduled automation active."),
+    }
+
+
+def extract_rating_from_reply(message: str) -> int | None:
+    """Read explicit 1–5 score in the new reply, never infer sentiment.
+
+    Ignore quoted Gmail history, where example ratings may appear.
+    Human review remains necessary for ambiguous or forwarded content.
+    """
+    if not isinstance(message, str):
+        return None
+    fresh = []
+    for line in message.splitlines():
+        trimmed = line.strip()
+        if trimmed.startswith(">") or re.search(
+            r"^(?:On .+ wrote:|.+ kirjoitti:|Lähettäjä:|From:|"
+            r"-{4,}\s*Forwarded message)",
+            trimmed, flags=re.I
+        ):
+            break
+        fresh.append(line)
+    text = "\n".join(fresh).strip()
+    match = re.search(r"(?:arvosana|tähteä|stars?)\s*:\s*([1-5])(?:\s*/\s*5)?\b", text, re.I)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"(?<!\d)([1-5])\s*/\s*5(?!\d)", text)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"(?<![★☆])([★]{1,5})([☆]{0,4})(?![★☆])", text)
+    if match and len(match.group(1)) + len(match.group(2)) == 5:
+        return len(match.group(1))
+    return None
+
+
 def triage_feedback(message: str, *, relationship_verified: bool = False,
-                    project_verified: bool = False) -> dict:
+                    project_verified: bool = False, rating: int | None = None) -> dict:
     """Triage a genuine or unconfirmed note without sentiment-based rejection.
 
     Negative, short and anonymous reports must not be automatically classed
     as fake or discarded. Verification must rely on external, consent-respecting
     client/project records and follow-up, never tone or an AI authenticity score.
     """
-    if not isinstance(message, str) or not message.strip():
-        raise ValueError("Non-empty feedback text required.")
+    if rating is not None and (type(rating) is not int or not 1 <= rating <= 5):
+        raise ValueError("Rating must be 1 to 5 stars.")
+    if not isinstance(message, str) or (not message.strip() and rating is None):
+        raise ValueError("Feedback text or explicit star rating is required.")
     text = message.strip()
     lower = text.lower()
     categories = [name for name, terms in CATEGORY_TERMS.items()
@@ -121,6 +261,8 @@ def triage_feedback(message: str, *, relationship_verified: bool = False,
     return {
         "source_status": "verified_client_project" if verified else "unverified_source",
         "specificity": specificity,
+        "rating": rating,
+        "rating_is_authenticity_evidence": False,
         "categories": categories or ["general_experience"],
         "priority": priority,
         "next_action": next_action,

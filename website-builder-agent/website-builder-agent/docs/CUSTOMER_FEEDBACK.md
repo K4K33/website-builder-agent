@@ -12,29 +12,63 @@ Always make the lowest-friction alternative prominent: "Voitte myös vastata suo
 
 The first sales message must follow all outreach legal and human-review gates in OUTREACH.md. No autonomous sends.
 
-### 2. After the real website is delivered
-Do not wait for a customer to return to Kaurivo's website. Prepare an individual feedback request in the EXISTING Gmail thread, normally 7 to 14 days after actual handover, and only when a real customer relationship and completion are confirmed.
+### 2. One day after a confirmed sale: Gmail stars + short comment
 
-Subject: Miten verkkosivuprojektimme sujui?
+The primary feedback request is due **one day after the confirmed purchase**.
+It covers the quotation, purchasing process, communication and getting started,
+NOT the quality of a website that has not been delivered.
 
-Hei [asiakas],
+A private sale record needs a genuine confirmed timestamp, verified customer,
+recipient email and unique project reference. Calculate the review due datetime
+from the confirmed sale in Europe/Helsinki local time. The offline function
+`feedback_due_at()` and `draft_after_sale_feedback()` enforce this timing.
 
-Nyt kun sivustonne on ollut käytössä hetken, haluaisin aidosti kuulla miten yhteistyö sujui.
+The Gmail email is deliberately very short:
 
-Mikä meni erityisen hyvin?
-Oliko jokin hankalaa tai epäselvää?
-Mitä yhtä asiaa meidän pitäisi tehdä jatkossa paremmin?
+Subject: Miten asiointi Kaurivon kanssa alkoi?
 
-Voit vastata suoraan tähän sähköpostiin, vaikka vain parilla lauseella. Myös kriittinen palaute auttaa meitä kehittymään.
+Hei [nimi],
+
+Kiitos luottamuksesta! Miltä tarjous, yhteydenpito ja kaupanteko
+tuntuivat tähän asti?
+
+Anna 1–5 tähteä ja halutessasi yksi lyhyt kommentti. Voit vastata
+suoraan tähän viestiin esimerkiksi: 4/5, asiointi sujui hyvin,
+mutta aikataulut voisivat olla selkeämmät.
 
 Kiitos!
 Kaarlo Kaurivolta
 
-Do not demand a review, redirect to the website, assume consent to public testimonials or generate pressure for five-star ratings. At most one considerate reminder, depending on the relationship. Sender MUST be hello.kaurivo@gmail.com, account verified, with explicit owner approval for each send.
+The optional polished HTML version places five clickable star choices inside
+the Gmail message. Each star choice opens an email draft addressed to
+hello.kaurivo@gmail.com with a prefilled rating and a blank one-line feedback
+field. **Clicking a star is NOT a submission.** The client confirms and sends
+the reply. The plain-text fallback is simply replying in the original Gmail
+thread with e.g. "4/5 – hyvä, mutta..." — no website or login required.
+
+Each sent request should be marked in a PRIVATE customer record so the same
+purchase does not produce duplicate requests. No automatic sender is currently
+installed; the helper only prepares a draft after a real sale. When Gmail
+sending is connected to verified private sale records, require sender account
+verification, applicable privacy rules, deduplication, and an authorized
+sending policy. Do not send an email to a prospect who has not purchased.
+
+### 3. After the actual website is delivered (optional second feedback)
+
+The website's real usability and result can only be reviewed after actual
+handover. If appropriate, ask for that project-specific feedback later,
+without pestering the same client. It is separate from the first-day
+purchase/onboarding rating, and it must not be represented as a verified
+website quality assessment until the site exists and is used.
+
+Do not demand a review, redirect to the website, presume consent to public
+testimonials, or pressure customers to leave five stars. At most one considerate
+reminder, depending on the relationship. The sender MUST be
+hello.kaurivo@gmail.com with verified account and approval before actual send.
 
 ## Reliability and quality triage
 
-The offline helper utils/customer_feedback.py can suggest categories and urgency. It NEVER determines authenticity based on tone, star rating, AI-style writing or whether criticism is favorable. Negative, short, anonymous or unverified feedback remains worth reviewing.
+The offline helper utils/customer_feedback.py can parse explicitly written 1–5 stars and suggest categories and urgency. It NEVER determines authenticity based on tone, star rating, AI-style writing or whether criticism is favorable. Low ratings are never discarded. Negative, short, anonymous or unverified feedback remains worth reviewing.
 
 Verify that the person and project actually match private records. The email address by itself is NOT proof of identity. Preserve unknown-sender feedback with source_status unverified and ask for necessary context. Categorize as mobile, usability, technical fault, speed, content and brand, editability/CMS or communication. Distinguish a verified client-specific design preference from a reproducible problem worth fixing for all future customers.
 
@@ -43,7 +77,7 @@ A single serious bug, accessibility failure, broken contact form, lost content o
 ## Closed-loop improvements
 
 Keep the actual customer records private, NOT in the public GitHub repository:
-project_ref, verified_source_evidence, received_at, original_message_location,
+project_ref, sale_confirmed_at, feedback_due_at, feedback_sent_at, verified_source_evidence, received_at, original_message_location, rating_1_to_5,
 category, reproduced_issue, impact, priority, human_owner, status, change_link,
 next_review_date, customer_confirmation.
 
