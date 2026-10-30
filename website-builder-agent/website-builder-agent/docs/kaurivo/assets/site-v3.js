@@ -27,19 +27,6 @@ select(0);
 }
 var faqs=[].slice.call(document.querySelectorAll("#faq-list details"));
 faqs.forEach(function(d){d.addEventListener("toggle",function(){if(d.open){faqs.forEach(function(other){if(other!==d)other.open=false})}})});
-var form=document.getElementById("enquiry-form");
-if(form){
-form.addEventListener("submit",function(e){
-e.preventDefault();if(!form.reportValidity())return;
-var value=function(id){return document.getElementById(id).value.trim()};
-var fields=[["Name",value("name")],["Email",value("email")],["Company",value("company")],["Current website",value("website")||"Not provided"],["Project",value("service")],["Message",value("message")]];
-var body=fields.map(function(v){return v[0]+": "+v[1]}).join("\n\n");
-var subject="Website project enquiry — "+value("company").replace(/[\r\n]/g," ").slice(0,80);
-var url="mailto:hello.kaurivo@gmail.com?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
-var status=document.getElementById("form-status");
-if(status)status.textContent="A draft should open in your email app. Check it and press Send there. If nothing opens, email us directly.";
-window.location.href=url;
-});
-}
+// Native POST form uses FormSubmit; no fake success state or mailto intercept.
 var year=document.getElementById("year");if(year)year.textContent=String(new Date().getFullYear());
 })();

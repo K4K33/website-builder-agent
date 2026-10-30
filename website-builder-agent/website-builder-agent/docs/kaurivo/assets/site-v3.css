@@ -505,3 +505,34 @@ body{background:var(--v6-ink);color:#f7f8fa}
  .v6-process-micro p{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.v6-logo-complete{animation:none;opacity:1}.v6-logo-piece,.v6-logo-reflection{animation:none;display:none}.v6-hero-line:after{animation:none;transform:none}}
+
+/* V6 contact transparency, actual service submission and measurable quality principles */
+.honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.form-panel .v6-consent{margin-top:23px}
+.v6-consent label{display:flex;align-items:flex-start;gap:13px;font-size:12px;font-weight:500;line-height:1.6;color:#33465a;cursor:pointer}
+.v6-consent input{width:18px;min-width:18px;height:18px;margin-top:3px;accent-color:#263746}
+.v6-consent a,.policy-body a{color:#3c5f7c;text-decoration:underline;text-underline-offset:3px}
+.v6-consent a:hover,.policy-body a:hover{color:#111820}
+.policy-body{max-width:920px}
+.policy-body h2{font:650 clamp(24px,3vw,39px)/1.1 Manrope,sans-serif;letter-spacing:-.06em;margin:49px 0 14px;color:#f3f6f8}
+.policy-body h2:first-child{margin-top:0}
+.policy-body p{max-width:750px;color:#c4ced7;line-height:1.9;font-size:15px}
+.policy-body a{color:#d1dce6}
+.policy-body a:hover{color:#fff}
+.policy-note{border-top:1px solid #485563;padding-top:25px;margin-top:52px;font-size:12px!important}
+.v6-thanks-section{min-height:76vh;display:flex;align-items:center;padding:148px 0 90px}
+.v6-thanks-section .display{margin:24px 0}.v6-thanks-section .lead{margin:0 0 35px}
+.v6-thanks-section .lead a{text-decoration:underline;text-underline-offset:4px}
+.v6-performance{padding:110px 0;background:#0a0d11}
+.v6-performance-head{display:grid;grid-template-columns:1fr .52fr;gap:7vw;align-items:end;margin-bottom:43px}
+.v6-performance-head h2{font:650 clamp(46px,5.8vw,92px)/1.02 Manrope,sans-serif;letter-spacing:-.083em;margin:22px 0 0}
+.v6-performance-head p{font-size:15px;line-height:1.75;color:#bbc8d3;max-width:350px}
+.v6-metrics{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #647484;background:#182029}
+.v6-metric{padding:37px 32px;min-width:0}
+.v6-metric:not(:last-child){border-right:1px solid #546373}
+.v6-metric>span{display:block;font-size:11px;letter-spacing:.15em;font-weight:750;color:#c7d2dc}
+.v6-metric strong{font:650 clamp(42px,4.3vw,71px)/1.1 Manrope,sans-serif;letter-spacing:-.06em;display:block;margin:17px 0 13px;color:#f8fafc}
+.v6-metric strong span{font-size:.55em;letter-spacing:-.03em}
+.v6-metric p{font-size:13px;line-height:1.45;color:#b3c0cc;margin:0}
+.v6-metrics-caveat{margin:20px 0 0;font-size:12px;color:#99a8b6;line-height:1.6}
+@media(max-width:700px){.v6-performance-head{grid-template-columns:1fr}.v6-metrics{grid-template-columns:1fr}.v6-metric:not(:last-child){border-right:0;border-bottom:1px solid #546373}.v6-metric{padding:25px 22px}}
