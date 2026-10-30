@@ -1,45 +1,49 @@
-# Kaurivo — premium animated studio website
+# Kaurivo — V3 multi-page premium website
 
-A production-shaped, zero-paid-dependency, international-English website for Kaurivo.
+Live preview after GitHub Pages deployment:
+https://k4k33.github.io/website-builder-agent/kaurivo/
 
-## Where to view
+Pages (independent URLs, shared design system and navigation):
+- Home: \`/kaurivo/\`
+- Services: \`/kaurivo/services/\`
+- Process: \`/kaurivo/process/\`
+- FAQ: \`/kaurivo/faq/\`
+- Contact: \`/kaurivo/contact/\`
 
-Static GitHub Pages route after an explicitly approved merge into `main`:
+## Changes based on real 30 October 2026 screen recording
 
-`https://k4k33.github.io/website-builder-agent/kaurivo/`
+The user approved the branding and navigation but found the V2 appearance
+too soft, the page too flat without animations, and the one-page FAQ/sections
+too long. V3 reintroduces intentional interaction rather than the V1 WebGL
+background or long sticky 3D scroll animation:
 
-The branch / PR is for review first. Do not change the root application or the website-builder-agent's prospecting pipeline. No commercial domains or paid hosting are needed at this stage.
+- Crisp navy/black, high-contrast white type and electric-blue highlights.
+- Original Kaurivo mark and familiar restrained black navigation preserved.
+- Responsive HTML/CSS hero mockup with subtle GPU transform-only pointer tilt;
+  short, staggered entrance and intersection-reveal animations.
+- Interactive three-stage website prototype on Process. User-controlled,
+  keyboard-operable and instantly switchable; not scroll-locked.
+- Separate Services, Process, FAQ, Contact pages and working cross-navigation.
+- FAQ uses native semantic details. No FAQuestions on the landing page.
+- A clear offer for premium business websites with editable content, and
+  truthful distinctions between concept examples and delivered client work.
+- Contact form **only prepares a mailto email draft** (no backend, no
+  automatic send or data collection). Users send manually in their mail app.
+- Reduced motion, hover/coarse pointer and hidden-tab animation safeguards.
+- No fake client references, testimonials, results or prices.
 
-## Original art direction
+## Release checks
 
-- Reuse the user-approved metallic split-K symbol (optimized from the original user-provided image).
-- Black/dark navy, restrained silver and icy blue, editorial oversized type, geometric details.
-- Study high-quality digital studios' editorial hierarchy and scroll pacing, while producing original design.
-- The uploaded reference clip depicts an Apple-style product exploded-view assembly. Adapt the *principle* into a visual story explaining website design and development, never copy someone else's page or content.
+Run \`python -m unittest tests.test_kaurivo_site_v2 -v\` from the inner
+project directory. Although the historical test filename ends in V2, it now
+validates V3 pages. The CI suite runs Playwright Chromium at 320, 390, 768,
+1440 pixel widths across all five pages, checking overflow, navigation,
+FAQ, process steps, form, and JavaScript errors. Browser tests use only local
+\`file://\` HTML and no external API credits.
 
-## Demonstrated motion and design expertise
+All pages currently include \`noindex,nofollow\` because the site is still
+a preview rather than a fully reviewed commercial launch. Custom domain,
+integrated backend form, privacy details and client-ready copy should be
+reviewed before replacing this preview with a production site.
 
-- Cinematic responsive browser mockup with ambient orbits and floating labels in the hero.
-- Scroll-pinned, perspective-correct 3D HTML/CSS construction sequence: wireframe, typography, visual asset, CTA, HTML markup and navigation assemble into a site.
-- Native browser WebGL custom fragment shader for animated ambient light (no JS libraries needed; content remains usable without WebGL).
-- Kinetic marquee, pointer-friendly hover states, staggered on-scroll reveals, editorial inverse-color typographic break, concept previews.
-- Real `mailto:hello.kaurivo@gmail.com` links.
-- Full responsive CSS, keyboard focus, skip link, semantic sections, reduced-motion mode.
-
-## Truthfulness
-
-The two concept showcases are explicitly described as *concept studies*, not completed client work. No fabricated clients, five-star testimonials, awards, conversion lift, revenue claims, or fake contact details.
-
-Before publicly launching the brand, replace concept work with verified, permitted portfolio samples when available. Do a copy review with the owner.
-
-## Offline QA already completed in the working environment
-
-Native browser via Playwright/Chromium (no external API calls): 1440×900, 768×1024, 390×844 and 320×740; no horizontal overflow; visual identity asset loaded; primary CTA valid; all four scroll chapters update; page errors absent; reduced-motion reveals functional.
-
-The offline QA screenshot runner disables WebGL only in headless SwiftShader; the actual page includes native WebGL with graceful fallback. WebGL behavior and real-world mobile hardware should be revisited before claiming production-perfect performance.
-
-## Deployment notes
-
-GitHub Pages action in `.github/workflows/static.yml` publishes `website-builder-agent/website-builder-agent/docs` on main. This site lives under the `/kaurivo/` subpath, so asset references are relative.
-
-No paid services, web design API calls, third-party JS bundles or secret tokens are required.
+GitHub Pages deploys from the \`docs\` subfolder on the main branch.
