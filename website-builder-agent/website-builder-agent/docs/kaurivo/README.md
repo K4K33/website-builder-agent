@@ -81,3 +81,7 @@ User-tested changes after V3:
 - EN/FI language selector persists via localStorage; demo concepts are intentionally English.
 - The performance targets are not actual measured data. Field measurements must be obtained before making result claims.
 - Project remains preview-only: noindex until legal/privacy and company ownership details are completed.
+
+## Final V6 viewport regression
+
+Additional 960px navigation test verifies mobile menu opens as an absolute-positioned dropdown without changing layout or scroll width. Existing Playwright browser checks run at 320, 390, 768, 960 and 1440px; original interactive study pages are checked for truthfulness, back links and local-only behaviour. Full performance field metrics are not yet measured.

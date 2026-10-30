@@ -120,6 +120,18 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertNotIn("#2281ff", css)
         self.assertNotIn("pointermove", js)
 
+    def test_original_study_links_and_accessibility(self):
+        from html.parser import HTMLParser
+        for kind in ("service","editorial"):
+            path=SITE/"lab"/kind/"index.html"
+            with self.subTest(concept=kind):
+                src=path.read_text(encoding="utf-8")
+                self.assertIn("noindex,nofollow", src)
+                self.assertIn("Fictional", src)
+                self.assertIn('href="../../"', src)
+                self.assertIn('href="../../contact/"', src)
+                self.assertNotIn("getContext(", src)
+
     def test_responsive_browser_and_working_interactions(self):
         try:
             from playwright.sync_api import sync_playwright
@@ -130,7 +142,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True, args=["--disable-gpu"])
             try:
-                for width,height in [(320,740),(390,844),(768,1024),(1440,900)]:
+                for width,height in [(320,740),(390,844),(768,1024),(960,900),(1440,900)]:
                     for name,path in PAGES.items():
                         with self.subTest(width=width,page=name):
                             page=browser.new_page(viewport={"width":width,"height":height})
@@ -178,6 +190,15 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             if name=="work":
                                 self.assertEqual(page.locator(".v6-work-card").count(),2)
                                 self.assertEqual(page.locator('.nav-menu a[href="../faq/"]').count(),1)
+                            if width == 960 and name == "home":
+                                toggle=page.locator(".mobile-toggle")
+                                self.assertTrue(toggle.is_visible())
+                                toggle.click()
+                                self.assertTrue(page.locator(".nav-menu").is_visible())
+                                nav_box=page.locator(".nav-menu").bounding_box()
+                                header_box=page.locator("header").bounding_box()
+                                self.assertGreaterEqual(nav_box["y"], header_box["y"]+header_box["height"]-2)
+                                self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth - innerWidth"),2)
                             page.close()
             finally:
                 browser.close()

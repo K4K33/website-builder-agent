@@ -542,7 +542,7 @@ body{background:var(--v6-ink);color:#f7f8fa}
 .site-language-switch button{padding:8px 3px;border:0;background:none;color:#b1bcc7;font:800 10px/1 Manrope,Arial,sans-serif;letter-spacing:.08em;cursor:pointer;min-width:23px}
 .site-language-switch button[aria-pressed=true]{color:#fff;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1.5px}
 .site-language-switch button:hover{color:#fff}
-@media(max-width:1090px){.nav-menu{display:none}.mobile-toggle{display:block}.nav-menu.open{display:grid;grid-template-columns:1fr;background:#0e141b;box-shadow:0 18px 40px rgba(0,0,0,.4);padding:17px 24px 22px}.nav-menu.open .site-language-switch{border-left:0;padding:16px 0 0;justify-content:flex-start}.site-language-switch button{min-width:38px;min-height:39px}}
+@media(max-width:1090px){.nav-menu{display:none;position:absolute;top:100%;left:0;right:0;margin:0;padding:0;background:#0e141b}.mobile-toggle{display:block}.nav-menu.open{display:grid;grid-template-columns:1fr;background:#0e141b;border-bottom:1px solid #536272;box-shadow:0 18px 40px rgba(0,0,0,.4);padding:17px 24px 22px}.nav-menu.open .site-language-switch{border-left:0;padding:16px 0 0;justify-content:flex-start}.site-language-switch button{min-width:38px;min-height:39px}}
 @media(max-width:570px){.v6-intro-ribbon .wrap{gap:8px}.v6-intro-ribbon span{white-space:normal}.v6-intro-ribbon span:not(:first-child):before{margin-right:9px}}
 
 /* V6 studio/identity presentation */
