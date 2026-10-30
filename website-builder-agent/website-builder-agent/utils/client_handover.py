@@ -4,6 +4,8 @@ This is a *planning and locked-copy validation* layer, not a CMS.
 A static HTML delivery alone cannot be described as customer-editable.
 """
 import re
+from datetime import date
+from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
 
@@ -38,9 +40,11 @@ def client_design_brief(company):
     photo_policy = "retain_authorized_originals_or_request_rights"
     if approved and prefs.get("permission_to_replace_photos") is True:
         photo_policy = "client_permits_selected_replacement_photos"
-    content_editing = prefs.get("content_editing") if approved else None
-    # Content editing is offered as a real separate handover step; it is
-    # *never* silently claimed to be installed by the single-HTML builder.
+    # Kaurivo delivery standard: EVERY client-owned finished site is
+    # self-editable. A static demo is still allowed for pre-sales review.
+    # No preference, default or agency-managed selection can silently
+    # downgrade the final handover requirement.
+    # This policy is not proof that the CMS has been implemented.
     return {
         "site_type": "redesign" if has_site else "new_site",
         "brand_policy": mode,
@@ -49,9 +53,12 @@ def client_design_brief(company):
         "keep_client_logo_by_default": has_site,
         "keep_original_claims_and_taglines_by_default": has_site,
         "locked_copy": locked_copy,
-        "content_editing_goal": content_editing if content_editing in (
-            "client_self_service", "agency_managed", "not_decided"
-        ) else "client_self_service_offered",
+        "content_editing_goal": "client_self_service_required",
+        "content_editing_fields": [
+            "headings", "body_text", "services", "photos",
+            "contact_details", "opening_hours", "prices_when_applicable"
+        ],
+        "final_delivery_requires_live_cms": True,
         "cms_status": "not_implemented_in_static_html",
         "cms_delivery": (
             "Before selling a client-editable site, choose a CMS and hosting/auth "
@@ -81,3 +88,83 @@ def validate_locked_copy(html, brief):
                 "Client-approved protected copy is missing from the new page: "
                 + phrase[:80]
             )
+
+def _https_url(value):
+    if not isinstance(value, str) or not value.strip() or len(value) > 2000:
+        return False
+    parts = urlsplit(value.strip())
+    return (parts.scheme == "https" and bool(parts.hostname)
+            and not parts.username and not parts.password)
+
+
+def inspect_client_delivery(company, *, today=None):
+    """Fail-closed, offline audit for CLIENT HANDOVER (not demo approval).
+
+    Self-reported checkboxes and URLs cannot independently prove live CMS
+    functionality. The operator must actually test and document the real
+    client's login/edit/publish/image flow before setting these flags.
+    This function never deploys, sends mail or calls APIs.
+    """
+    today = today or date.today()
+    delivery = company.get("delivery") or {}
+    build = company.get("build") or {}
+    qa = company.get("qa") or {}
+    approval = company.get("approval") or {}
+    problems = []
+    if not isinstance(delivery, dict):
+        delivery = {}
+    platform = delivery.get("cms_platform")
+    allowed = {"wordpress", "webflow", "framer", "pages_cms",
+               "decap_cms", "custom_cms"}
+    if platform not in allowed:
+        problems.append("An actual CMS platform must be selected and integrated.")
+    if not _https_url(delivery.get("admin_url")):
+        problems.append("A real HTTPS customer editor URL is missing.")
+    if not _https_url(delivery.get("published_url")):
+        problems.append("The published client website HTTPS URL is missing.")
+    try:
+        checked = date.fromisoformat(delivery["verified_at"])
+        if not 0 <= (today - checked).days <= 60:
+            raise ValueError("stale")
+    except (KeyError, ValueError, TypeError):
+        problems.append("A recent real-client handover verification date is missing.")
+    for field, detail in (
+        ("verified_by_human", "Human-reviewed CMS delivery evidence is required."),
+        ("client_editor_login_tested", "Client's own editor login has not been tested."),
+        ("text_edit_published_tested", "Client text change has not been saved and published."),
+        ("image_edit_published_tested", "Client image change has not been saved and published."),
+        ("contact_edit_published_tested", "Client contact information edit has not been tested."),
+        ("mobile_layout_after_edit_tested", "Mobile view after edits is not tested."),
+        ("backup_and_rollback_tested", "Backup and rollback have not been tested."),
+        ("client_owns_editor_access", "Customer needs control of their own editing access."),
+        ("owner_guide_delivered", "Client editing instructions have not been delivered."),
+        ("customer_acceptance", "Customer has not confirmed the handover."),
+    ):
+        if delivery.get(field) is not True:
+            problems.append(detail)
+    if build.get("version") != delivery.get("build_version") or not isinstance(build.get("version"), int):
+        problems.append("CMS handover does not match the current build version.")
+    if qa.get("overall_pass") is not True or qa.get("build_version") != build.get("version"):
+        problems.append("The current website build has not passed QA.")
+    if (approval.get("approved") is not True
+            or approval.get("build_version") != build.get("version")):
+        problems.append("Owner's current build approval is missing.")
+    # The digest ties handover evidence to the exact approved build.
+    digest = qa.get("html_sha256")
+    if (not isinstance(digest, str) or not digest
+            or delivery.get("html_sha256") != digest
+            or approval.get("html_sha256") != digest):
+        problems.append("CMS handover is not bound to the current approved HTML.")
+    return {
+        "client_editable": True,
+        "stage": "client_delivery",
+        "ready_to_handover": not problems,
+        "cms_platform": platform,
+        "issues": problems,
+        "limitations": (
+            "This offline audit checks recorded review evidence, not live "
+            "CMS behavior. A human must actually test the client login, "
+            "editing, publishing, and rollback on the deployed website."
+        ),
+    }
+
