@@ -150,3 +150,8 @@ This requirement applies to all **future** client deliveries.
 It is not an assertion that CMS support has already been deployed to
 Kotifixi or another demo. The current builder still produces static
 index.html; real integration is required for each production site.
+
+
+## Client's explicit demo must-haves
+
+Record client wishes from the demo in the private project record; then review together: (1) must-have pages and features, (2) current logo, colours, photos and copy to keep, (3) optional ideas, (4) CMS/editor requirements, (5) scope, budget and timeline, (6) open questions. Only client-confirmed requirements become binding. Never mistake a response to an initial sales demo for permission to rebrand, publish comments or start paid work. Do not put personal customer details or raw correspondence into GitHub. See CUSTOMER_FEEDBACK.md.

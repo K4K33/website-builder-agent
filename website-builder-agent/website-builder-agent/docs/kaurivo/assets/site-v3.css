@@ -676,3 +676,17 @@ body{background:var(--v6-ink);color:#f7f8fa}
 @media(max-width:600px) and (prefers-reduced-motion:reduce){
   .v6-logo-complete{animation:none!important;transform:none!important;opacity:1!important}
 }
+
+/* Customer-specific demo review intake: deliberately short and accessible. */
+.demo-review-hero{padding-bottom:62px}
+.demo-review-layout{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:start;gap:clamp(32px,6vw,96px)}
+.demo-review-copy .display{font-size:clamp(43px,4.7vw,75px);line-height:1.08;margin:26px 0}
+.demo-review-copy .lead{font-size:16px;max-width:470px;line-height:1.7}
+.demo-review-examples{border-top:1px solid #667583;padding-top:23px;margin-top:36px;max-width:475px}
+.demo-review-examples strong{display:block;font:750 11px/1.5 Manrope,Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase}
+.demo-review-examples p{color:#b9c6d1;font-size:14px;line-height:1.8;margin:12px 0}
+.demo-review-reply{font-size:13px;line-height:1.7;color:#cfdae2;border-left:2px solid #b9cad6;padding-left:17px;margin-top:26px;max-width:470px}
+.demo-review-form .form-fields{margin-top:23px}
+.demo-review-form textarea{min-height:116px}
+@media(max-width:850px){.demo-review-layout{grid-template-columns:minmax(0,1fr);gap:32px}.demo-review-copy .display{font-size:clamp(43px,7.5vw,65px)}.demo-review-examples{margin-top:22px}}
+@media(max-width:600px){.demo-review-hero{padding-bottom:42px}.demo-review-layout{gap:23px}.demo-review-copy .display{font-size:clamp(43px,10.8vw,59px)}.demo-review-form{padding:22px 18px}.demo-review-form textarea{min-height:128px}.demo-review-reply{margin-top:16px}}

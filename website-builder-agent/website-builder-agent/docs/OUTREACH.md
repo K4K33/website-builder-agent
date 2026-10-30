@@ -137,3 +137,8 @@ Regulator interpretation for employee mailboxes:
 https://www.finlex.fi/fi/viranomaiset/tietosuojavaltuutettu/2020/629
 
 Run free tests: \`python -m unittest tests.test_marketing_compliance -v\`.
+
+
+## Demo must-haves and customer feedback
+
+When emailing a QA-approved company-specific demo, include one short optional question asking what MUST be on the final website. Replying to the same Gmail thread is always possible. Only include the reusable demo-review form link when the FormSubmit recipient is activated and a real submission is delivered, and only when the private customer record has `demo_review_intake_confirmed=True` and an explicit `demo_review_url`. Wishes do not create a contractual scope. After a real client project is completed, collect feedback in an individual Gmail reply request, not via the public site. Drafting is not sending. See CUSTOMER_FEEDBACK.md.

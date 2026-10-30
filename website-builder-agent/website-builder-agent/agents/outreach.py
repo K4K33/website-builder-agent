@@ -46,11 +46,18 @@ Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
 5. Kerro SUORA kaupallinen tarjous: 'Jos pidätte ehdotuksesta, voin
    toteuttaa uuden sivuston teille kokonaan.' Tämä ei ole väite
    siitä, että valmis tuotantosivu olisi jo toimitettu.
-6. Päätä selkeään kysymykseen: 'Olisiko teillä kiinnostusta uudistaa
+6. Kun asiakkaalle esitellään QA-hyväksytty demo, anna mahdollisuus
+   kertoa mitä ominaisuuksia tai sisältöjä lopullisella sivulla PITÄÄ
+   ehdottomasti olla. Helpoin tapa on vastata samaan sähköpostiin.
+   Jos yrityskohtaisissa tiedoissa on erikseen vahvistettu toimiva
+   demopalautelinkki, lisää se luontevasti toissijaiseksi vaihtoehdoksi.
+   Älä koskaan keksi linkkiä, väitä lomaketta toimivaksi ilman
+   toimitustestiä tai tee palautteen antamisesta ostamisen ehtoa.
+7. Päätä selkeään kysymykseen: 'Olisiko teillä kiinnostusta uudistaa
    nykyisiä verkkosivujanne?' Voit sovittaa sanamuodon vastaanottajan
    tilanteeseen. Älä piilota myyntitarjousta epämääräiseen
    'miltä suunta tuntuu' -kysymykseen.
-7. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
+8. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
    hello.kaurivo@gmail.com'.
 
 Jos yrityksellä ei ole TODETUSTI verkkosivuja, älä väitä nähneesi
@@ -226,6 +233,13 @@ Jos nykyistä sivua ei ole riippumattomasti varmistettu olemassaolevaksi,
 sivuston toteutusta, ei uudistusta.
 Vastaanottajan nimi on tiedossa vain, jos kentässä on lähteistetty
 tarkistettu nimi. Älä keksi henkilön nimeä.
+Demon katsoneelta asiakkaalta kysytään halutessaan mitä lopullisella
+sivustolla on ehdottomasti oltava. Asiakas voi vastata sähköpostiin.
+Jos toimiva palautelomake on aktivoitu ja toimitus testattu,
+käytettävissä on seuraava vahvistettu palautelinkki:
+{company.get("demo_review_url", "") if company.get("demo_review_intake_confirmed") is True else ""}
+Jos palautelinkki on tyhjä, älä keksi sellaista.
+
 Valmis julkinen demolinkki (ei anneta ellei vahvistettu):
 {company.get("demo_url", "")}
 Jos tämä on tyhjä, viesti voi viitata kuvan ja linkin sisältävään

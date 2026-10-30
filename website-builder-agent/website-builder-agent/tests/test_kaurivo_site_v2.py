@@ -18,6 +18,7 @@ PAGES = {
     "privacy": SITE / "privacy" / "index.html",
     "thanks": SITE / "thanks" / "index.html",
     "about": SITE / "about" / "index.html",
+    "demo_review": SITE / "demo-review" / "index.html",
 }
 
 
@@ -88,7 +89,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertIn("performance targets, not measured results", process.lower())
         self.assertIn('id="enquiry-form"', contact)
         self.assertIn('href="faq/"', home)
-        for name in ("services", "process", "faq", "contact", "work", "about", "privacy", "thanks"):
+        for name in ("services", "process", "faq", "contact", "work", "about", "privacy", "thanks", "demo_review"):
             page_text = PAGES[name].read_text(encoding="utf-8")
             self.assertIn('class="back-home" href="../"', page_text)
             self.assertIn("Back to Home", page_text)

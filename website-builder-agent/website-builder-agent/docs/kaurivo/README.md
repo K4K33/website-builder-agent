@@ -89,3 +89,9 @@ Additional 960px navigation test verifies mobile menu opens as an absolute-posit
 ## iPhone-only correction (2026-10-30)
 
 Reviewed the user's nine-second iPhone screen recording. Mobile under 600 CSS pixels now gets a compact 64px header, readable menu buttons with a full-height accessible drawer, arrow text glyphs rather than iOS emoji glyphs, a shorter hero logo module, larger body/card text, and better touch/form sizing. All changes are strictly scoped to mobile via `@media (max-width:600px)` and/or the equivalent `matchMedia` JavaScript check. Laptop/desktop appearance, behavior and layout are unchanged. The animated logo on the phone uses a short, single composited fade; the desktop's three-part animation remains untouched. Browser tests should verify iPhone, tablet and desktop layouts.
+
+## Customer demo wishes and post-project Gmail feedback (2026-10-30)
+
+A new `demo-review/` page receives a very short **must-haves for the final website** brief (company, reply email, mandatory features, optional wishes). FormSubmit must first be activated by confirming the Kaurivo receiving mailbox; this is **not** a verified end-to-end submission service yet. The page explicitly offers replying directly to the demo email as an alternative. Feedback is for a client proposal, not public reviews or consent for marketing.
+
+After an actual customer handover, request **private service feedback by sending an individual email in the existing Gmail thread**, not by expecting clients to revisit the website. Never auto-send without project completion and owner approval. See `docs/CUSTOMER_FEEDBACK.md` and `utils/customer_feedback.py` for templates and offline quality triage.
