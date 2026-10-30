@@ -57,8 +57,18 @@ have built-in login, CMS, content publishing or media upload**. Do not tell
 prospects that they can self-edit an unchanged static demo through an admin
 interface.
 
-When a client wants to update text, headlines, services, hours, prices or
-photos:
+This is no longer optional. **Every future client site Kaurivo hands over
+must be owner-editable by default**, including a company receiving its
+first website and one whose existing site is redesigned. The client must
+not need Kaurivo for routine text and photo changes. This does not mean
+all layout, 3D scenes or code are exposed to nontechnical editors.
+
+A pre-sales static HTML demo remains allowed while the customer reviews
+the design. But **no final customer handover** without a working, secure,
+tested CMS and the customer's own editing access.
+
+For every customer, set up editable text, headlines, service information,
+hours, prices where relevant, contact details and approved photos:
 
 1. Agree on edit scope. Separate safe content fields from layout/CSS/animations.
 2. Choose infrastructure together. A lightweight option for GitHub-backed
@@ -84,17 +94,39 @@ Pages CMS documentation: https://pagescms.org/docs/
 Decap CMS documentation: https://decapcms.org/docs/
 WordPress roles and site editing: https://wordpress.org/documentation/article/roles-and-capabilities/
 
+### Mandatory offline client handover gate
+
+Run the zero-credit CLI audit before labelling a site delivered:
+
+    python main.py handover-check COMPANY_SLUG
+
+The company's delivery record must document actual verification
+results: cms_platform, real HTTPS admin_url and published_url,
+verified_by_human, verified_at, client_editor_login_tested,
+text_edit_published_tested, image_edit_published_tested,
+contact_edit_published_tested, mobile_layout_after_edit_tested,
+backup_and_rollback_tested, client_owns_editor_access,
+owner_guide_delivered, customer_acceptance, and the current
+approved build_version and html_sha256.
+
+**These are records of real human tests, not features automatically
+implemented by this change.** The tool rejects incomplete or stale
+handover records. It does not contact CMS providers, verify the truth of
+checkboxes, or configure CMS and hosting.
+
 ### Hand-off acceptance
 
 - [ ] Client reviewed original identity, images and protected wording
 - [ ] Desktop and mobile proposal retains approved assets/content
 - [ ] Client approved any requested brand, photo or copy changes
-- [ ] CMS is actually installed and access controlled (if sold)
+- [ ] CMS is actually installed and access controlled (mandatory for every client delivery)
 - [ ] Client can edit one real text field and one real image
 - [ ] Saved change shows up at published URL without code editing
 - [ ] Permissions, backups and rollback tested
 - [ ] Written responsibilities for maintenance and hosting agreed
 - [ ] Final owner approval before public launch
 
-This is a design & delivery policy, not an assertion that CMS support has
-already been deployed to Kotifixi or another customer's site.
+This requirement applies to all **future** client deliveries.
+It is not an assertion that CMS support has already been deployed to
+Kotifixi or another demo. The current builder still produces static
+index.html; real integration is required for each production site.
