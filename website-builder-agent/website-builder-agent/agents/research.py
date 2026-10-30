@@ -110,7 +110,7 @@ Tehtäväsi on tuottaa Builder-agentille selkeä design brief.
 
 Referenssisivustoja saa käyttää VAIN inspiraationa:
 
-- värimaailma
+- värimaailma vain silloin, kun asiakkaan nykyinen brändi ja hyväksyntä sen sallivat
 - typografia
 - layout
 - visuaalinen hierarkia
