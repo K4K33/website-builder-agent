@@ -17,6 +17,7 @@ PAGES = {
     "work": SITE / "work" / "index.html",
     "privacy": SITE / "privacy" / "index.html",
     "thanks": SITE / "thanks" / "index.html",
+    "about": SITE / "about" / "index.html",
 }
 
 
@@ -58,9 +59,13 @@ class KaurivoWebsiteTests(unittest.TestCase):
                 self.assertIn("site-v3.js", src)
                 self.assertIn("site-v3.css", src)
                 self.assertIn("i18n.js", src)
+                self.assertIn("work/", src)
+                self.assertIn("about/", src)
                 self.assertIn("data-lang-set", src)
                 for link in tags.links:
                     if not link or link.startswith(("mailto:", "#")):
+                        continue
+                    if link.startswith("https://formsubmit.co/"):
                         continue
                     if link.startswith("https://formsubmit.co/"):
                         continue
@@ -172,6 +177,8 @@ class KaurivoWebsiteTests(unittest.TestCase):
                                 fi.click()
                                 self.assertEqual(page.locator("html").get_attribute("lang"), "fi")
                                 self.assertIn("Verkkosivut", page.locator("#hero-heading").inner_text())
+                            if name=="work":
+                                self.assertEqual(page.locator(".v6-work-card").count(),2)
                                 self.assertTrue(page.locator('.nav-menu a[href="faq/"]').is_visible())
                             page.close()
             finally:

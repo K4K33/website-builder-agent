@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1] / "docs" / "kaurivo"
-PAGES = ("index.html", "services/index.html", "process/index.html", "faq/index.html", "contact/index.html", "work/index.html", "privacy/index.html", "thanks/index.html")
+PAGES = ("index.html", "services/index.html", "process/index.html", "faq/index.html", "contact/index.html", "work/index.html", "privacy/index.html", "thanks/index.html", "about/index.html")
 ALIASES = ("services", "process", "faq", "contact")
 
 
