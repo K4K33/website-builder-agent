@@ -5,6 +5,54 @@ company-specific preview. The preview is the product demonstration, not a
 generic website template. One exceptional candidate is more useful than 20
 unconvincing pages.
 
+## Nation-wide registry search (primary broad source)
+
+**New daily national scan: 04:13 Europe/Helsinki** using
+`.github/workflows/kaurivo-national-prh.yml` (after merge to main).
+The official PRH/YTJ open-data endpoint provides a **single ZIP of the
+whole Trade Register** and refreshes it daily. `utils.prh_bulk_discovery`
+downloads it with just one bounded HTTP request, then **streams all registry
+records locally** without repeated AI calls or per-company API requests.
+
+- Bounded data transfer: ZIP hard cap 650 MiB and expanded member cap 3 GiB.
+  If an actual download exceeds either cap, the job fails rather than
+  silently pretending zero companies were found.
+- Keep up to 5,000 previously unseen candidate businesses each day in a
+  downloadable JSON artifact and present 50 in the daily review Markdown.
+  These are **caps and not guaranteed daily search results**.
+- Approx. 70% of daily candidates have **no PRH-listed website URL** and
+  30% do have a listed URL; if either group is short, fill from the other.
+  The 50 daily review items mix both groups. Missing PRH listing is
+  NOT verification of having no web presence.
+- Fair national sampling uses SHA-256 of date + Business ID, so it
+  explores different portions of the country/registry instead of taking
+  alphabetical first entries. Bounded cached seen IDs reduce repeats.
+  Cache restoration is best effort; output may repeat if cache expires.
+- PRH/YTJ data is **CC BY 4.0** with source attribution. It excludes
+  private traders, cannot verify sales ability, current activity or
+  old-site design quality, and has no phone/email information.
+  URLs and industries are only source hints.
+- The nightly report is visible in GitHub Actions run summaries and
+  attached for 14 days. No demo, email, or marketing approval is automatic.
+
+Official technical specification:
+https://avoindata.prh.fi/opendata-ytj-api/v3/schema?lang=fi
+Official PRH/YTJ open-data terms: https://avoindata.prh.fi/en/info/swagger-ui
+
+Manual zero-credit simulation (no source download):
+
+    python -m utils.prh_bulk_discovery --mode offline
+
+To intentionally test the real single ZIP download:
+
+    python -m utils.prh_bulk_discovery --mode pilot-live \\
+      --max-candidates 5000 --shortlist-size 50
+
+This national PRH feed is the **primary wide daily scan**. The small
+03:17 OSM Overpass search below is only a supplemental feasibility
+pilot. Before scaling OSM coverage, prefer locally processed Geofabrik
+extracts rather than intensive public Overpass querying.
+
 ## What runs autonomously now
 
 GitHub Actions: `.github/workflows/kaurivo-nightly.yml` runs at **03:17
