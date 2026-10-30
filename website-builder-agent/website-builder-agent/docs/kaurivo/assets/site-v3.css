@@ -579,7 +579,7 @@ body{background:var(--v6-ink);color:#f7f8fa}
   }
   .nav-cta span{display:none}
   .mobile-toggle{
-    order:3;margin-left:0;
+    position:relative;order:3;margin-left:0;
     flex:0 0 43px;width:43px;height:42px;
     display:flex;align-items:center;justify-content:center;
     border:1px solid #687582;background:#121a22;
@@ -642,7 +642,7 @@ body{background:var(--v6-ink);color:#f7f8fa}
   .v6-identity-coordinate{font-size:8px;letter-spacing:.1em}
   .v6-identity-coordinate-bottom{padding-top:10px}
   .v6-logo-piece{display:none!important}
-  .v6-logo-complete{opacity:1!important;animation:v6-mobile-appear .55s ease-out both}
+  .v6-logo-complete{opacity:1;animation:v6-mobile-appear .55s ease-out both}
   .v6-logo-reflection{display:none!important}
   .v6-intro-ribbon{display:none!important}
   /* Clearer reading and more purposeful sizing below the fold. */

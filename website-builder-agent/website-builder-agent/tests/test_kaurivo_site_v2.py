@@ -155,7 +155,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True, args=["--disable-gpu"])
             try:
-                for width,height in [(320,740),(390,844),(768,1024),(960,900),(1440,900)]:
+                for width,height in [(320,740),(375,812),(390,844),(430,932),(768,1024),(960,900),(1440,900)]:
                     for name,path in PAGES.items():
                         with self.subTest(width=width,page=name):
                             page=browser.new_page(viewport={"width":width,"height":height})
@@ -196,13 +196,26 @@ class KaurivoWebsiteTests(unittest.TestCase):
                                 t=page.locator(".mobile-toggle")
                                 t.click()
                                 self.assertEqual(t.get_attribute("aria-expanded"),"true")
+                                self.assertTrue(page.locator("body").evaluate("(b)=>b.classList.contains('mobile-menu-open')"))
+                                self.assertEqual(round(page.locator("header").bounding_box()["height"]),64)
+                                self.assertEqual(round(page.locator(".nav-menu").bounding_box()["y"]),64)
+                                self.assertTrue(page.locator('.nav-menu a[href="about/"]').is_visible())
                                 fi = page.locator("[data-lang-set=fi]")
                                 fi.click()
                                 self.assertEqual(page.locator("html").get_attribute("lang"), "fi")
                                 self.assertIn("Verkkosivut", page.locator("#hero-heading").inner_text())
+                                t.click()
+                                self.assertFalse(page.locator("body").evaluate("(b)=>b.classList.contains('mobile-menu-open')"))
+                                self.assertFalse(page.locator(".nav-menu").is_visible())
                             if name=="work":
                                 self.assertEqual(page.locator(".v6-work-card").count(),2)
                                 self.assertEqual(page.locator('.nav-menu a[href="../faq/"]').count(),1)
+                            if width == 1440 and name == "home":
+                                self.assertTrue(page.locator(".nav-menu").is_visible())
+                                self.assertFalse(page.locator(".mobile-toggle").is_visible())
+                                self.assertGreater(page.locator(".v6-logo-stage").bounding_box()["height"],400)
+                            if width == 390 and name == "home":
+                                self.assertLess(page.locator(".v6-logo-stage").bounding_box()["height"],225)
                             if width == 960 and name == "home":
                                 toggle=page.locator(".mobile-toggle")
                                 self.assertTrue(toggle.is_visible())
