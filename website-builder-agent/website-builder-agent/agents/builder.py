@@ -949,6 +949,7 @@ Palauta koko HTML.
         cleaned,
         company_facts,
     )
+    validate_locked_copy(cleaned, brand_brief)
 
     _validate_plan_sections(cleaned, research, company.get("url", ""))
     new_path = _write_html(
