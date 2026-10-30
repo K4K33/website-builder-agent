@@ -111,6 +111,28 @@ Näytä vain VERIFIED FACTS -osiossa olevat yhteystiedot.
 
 DESIGN:
 
+
+VISUAALISEN LAADUN PYSYVÄ V3-SÄÄNTÖ (koskee KAIKKIA uusia asiakasdemoja):
+Värien pitää näyttää tarkoituksellisilta, kirkkailta ja teräviltä,
+ei harmaalta, samealta tai automaattisten mallipohjien geneeriseltä.
+Pidä tekstin ja taustojen kontrasti vahvana; anna aktiivisille
+elementeille selkeä accent-väri, joka sopii TODELLISEEN brändiin.
+Älä koskaan pakota Kaurivon sinistä asiakkaan sivulle, jos se ei
+kuulu hänen brändiinsä. Suosi selkeää typografiaa, tarkkoja reunoja,
+kuvien oikeaa resoluutiota ja visuaalista hierarkiaa.
+Jos animaatio tukee asiakaskokemusta, RAKENNA SE JA OPTIMOI SE.
+Korjaa lagit vähentämällä raskasta laskentaa, ei poistamalla
+kaikkia animaatioita. Suosi transform/opacity-siirtymiä,
+kohteliaita hover-liikkeitä ja IntersectionObserveria;
+älä käytä raskasta jatkuvaa canvas/WebGL-renderöintiä tai
+pitkää kömpelöä scroll-pakotusta. Kunnioita reduced-motion-
+asetusta ja testaa puhelimella, tabletilla ja tietokoneella.
+Hyvä etusivu kertoo heti mitä yritys tarjoaa, kenelle ja
+mitä asiakkaan tulee tehdä seuraavaksi. Älä upota koko
+monimutkaista tietorakennetta yhteen loputtomaan sivuun:
+jos oikea monisivuinen sivusto kuuluu toimeksiannon laajuuteen,
+suunnittele oikeat erilliset URL-sivut ja navigaatio.
+
 Noudata design-suosituksia vain visuaalisesti.
 
 Väripaletti voidaan ottaa design-suosituksista VAIN, jos se ei
@@ -220,6 +242,28 @@ TARGET AUDIENCE ei ole palvelu.
 DESIGN-RECOMMENDATIONS eivät ole yrityksen faktoja.
 
 Jos tieto puuttuu, jätä se pois.
+
+
+VISUAALISEN LAADUN PYSYVÄ V3-SÄÄNTÖ (koskee KAIKKIA uusia asiakasdemoja):
+Värien pitää näyttää tarkoituksellisilta, kirkkailta ja teräviltä,
+ei harmaalta, samealta tai automaattisten mallipohjien geneeriseltä.
+Pidä tekstin ja taustojen kontrasti vahvana; anna aktiivisille
+elementeille selkeä accent-väri, joka sopii TODELLISEEN brändiin.
+Älä koskaan pakota Kaurivon sinistä asiakkaan sivulle, jos se ei
+kuulu hänen brändiinsä. Suosi selkeää typografiaa, tarkkoja reunoja,
+kuvien oikeaa resoluutiota ja visuaalista hierarkiaa.
+Jos animaatio tukee asiakaskokemusta, RAKENNA SE JA OPTIMOI SE.
+Korjaa lagit vähentämällä raskasta laskentaa, ei poistamalla
+kaikkia animaatioita. Suosi transform/opacity-siirtymiä,
+kohteliaita hover-liikkeitä ja IntersectionObserveria;
+älä käytä raskasta jatkuvaa canvas/WebGL-renderöintiä tai
+pitkää kömpelöä scroll-pakotusta. Kunnioita reduced-motion-
+asetusta ja testaa puhelimella, tabletilla ja tietokoneella.
+Hyvä etusivu kertoo heti mitä yritys tarjoaa, kenelle ja
+mitä asiakkaan tulee tehdä seuraavaksi. Älä upota koko
+monimutkaista tietorakennetta yhteen loputtomaan sivuun:
+jos oikea monisivuinen sivusto kuuluu toimeksiannon laajuuteen,
+suunnittele oikeat erilliset URL-sivut ja navigaatio.
 
 Säilytä asiakkaan aiempi logo, sovitut värit, vahvistetut sloganit,
 ainutlaatuiset kuvat ja asiakkaan hyväksymä sisältö.
