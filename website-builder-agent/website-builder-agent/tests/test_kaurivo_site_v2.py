@@ -67,8 +67,6 @@ class KaurivoWebsiteTests(unittest.TestCase):
                         continue
                     if link.startswith("https://formsubmit.co/"):
                         continue
-                    if link.startswith("https://formsubmit.co/"):
-                        continue
                     self.assertFalse(link.startswith("http"), (name, link))
                     self.assertTrue((path.parent / link).resolve().exists(), (name, link))
 
@@ -90,7 +88,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertIn("performance targets, not measured results", process.lower())
         self.assertIn('id="enquiry-form"', contact)
         self.assertIn('href="faq/"', home)
-        for name in ("services", "process", "faq", "contact"):
+        for name in ("services", "process", "faq", "contact", "work", "about", "privacy", "thanks"):
             page_text = PAGES[name].read_text(encoding="utf-8")
             self.assertIn('class="back-home" href="../"', page_text)
             self.assertIn("Back to Home", page_text)
@@ -150,7 +148,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
                                 self.assertTrue(mark.is_visible())
                                 self.assertTrue(page.locator(".delivery-panel").count() == 1)
                                 self.assertEqual(page.locator(".v6-work-card").count(), 2)
-                                self.assertTrue(page.locator(".service-card").first.is_visible() or page.locator(".service-card").first.count() == 1)
+                                self.assertEqual(page.locator(".service-card").count(), 3)
                             if name != "home":
                                 back = page.get_by_role("link", name="Back to Home page")
                                 self.assertTrue(back.is_visible())
@@ -179,7 +177,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
                                 self.assertIn("Verkkosivut", page.locator("#hero-heading").inner_text())
                             if name=="work":
                                 self.assertEqual(page.locator(".v6-work-card").count(),2)
-                                self.assertTrue(page.locator('.nav-menu a[href="faq/"]').is_visible())
+                                self.assertEqual(page.locator('.nav-menu a[href="../faq/"]').count(),1)
                             page.close()
             finally:
                 browser.close()
