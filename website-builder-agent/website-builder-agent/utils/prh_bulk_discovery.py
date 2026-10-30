@@ -55,11 +55,17 @@ def _name(record):
     names = record.get("names") or []
     if not isinstance(names, list):
         return ""
-    # The registry lists multiple names; choose the first source-listed
-    # legal/trade name, not an invented more "human" brand.
-    for n in names:
-        if isinstance(n, dict) and isinstance(n.get("name"), str) and n["name"].strip():
-            return _one_line(n["name"], 110)
+    # PRH schema says version 1 is the CURRENT registered name.
+    # Never choose an old trade name just because it appeared first.
+    current = [n for n in names if isinstance(n, dict)
+               and n.get("version") == 1
+               and isinstance(n.get("name"), str) and n["name"].strip()
+               and not n.get("endDate")]
+    fallback = [n for n in names if isinstance(n, dict)
+                and isinstance(n.get("name"), str) and n["name"].strip()
+                and not n.get("endDate")]
+    for n in current or fallback:
+        return _one_line(n["name"], 110)
     return ""
 
 
