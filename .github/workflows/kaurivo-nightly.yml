@@ -1,0 +1,98 @@
+name: Kaurivo nightly prospect review (zero AI credits)
+
+on:
+  schedule:
+    # Local Europe/Helsinki time (DST-aware). Away from busiest top-of-hour.
+    - cron: "17 3 * * *"
+      timezone: "Europe/Helsinki"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "offline = no network; pilot-live = max ONE Overpass query"
+        required: true
+        type: choice
+        options:
+          - offline
+          - pilot-live
+        default: offline
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kaurivo-nightly-prospects
+  cancel-in-progress: false
+
+jobs:
+  shortlist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    env:
+      # Absolutely no paid AI keys or mail credentials in the scheduled job.
+      OPENROUTER_API_KEY: ""
+      TAVILY_API_KEY: ""
+      FREE_ONLY: "1"
+      PYTHONUNBUFFERED: "1"
+      KAURIVO_NIGHTLY_MODE: ${{ github.event_name == 'schedule' && 'pilot-live' || inputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Restore bounded history of seen OpenStreetMap IDs
+        uses: actions/cache/restore@v4
+        with:
+          path: website-builder-agent/website-builder-agent/data/nightly_seen.json
+          key: kaurivo-nightly-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            kaurivo-nightly-v1-
+
+      - name: Install local Python requirements (no AI service)
+        run: pip install -r requirements.txt
+
+      - name: Run zero-AI pilot prospect search (one query max)
+        run: |
+          python -m utils.nightly_pipeline \
+            --mode "$KAURIVO_NIGHTLY_MODE" \
+            --max-candidates 5 \
+            --output-dir output/nightly \
+            --seen-path data/nightly_seen.json
+
+      - name: Human review queue visible directly in Actions summary
+        if: success()
+        shell: bash
+        run: |
+          cat output/nightly/shortlist.md >> "$GITHUB_STEP_SUMMARY"
+          echo "Nightly workflow does not build, approve, publish or email anyone." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record an unsuccessful run for inspection
+        if: failure()
+        shell: bash
+        run: |
+          echo "## Kaurivo nightly scan failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Check the failed step logs; no emails or demos were sent." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain review packet for 14 days
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaurivo-nightly-leads-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            website-builder-agent/website-builder-agent/output/nightly/
+            website-builder-agent/website-builder-agent/data/nightly_seen.json
+
+      - name: Save seen-company cache only after successful discovery
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: website-builder-agent/website-builder-agent/data/nightly_seen.json
+          key: kaurivo-nightly-v1-${{ github.run_id }}-${{ github.run_attempt }}
