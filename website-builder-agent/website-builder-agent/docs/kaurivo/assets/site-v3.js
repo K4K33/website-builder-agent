@@ -5,6 +5,28 @@
 var toggle=document.querySelector(".mobile-toggle"), menu=document.querySelector(".nav-menu");
 if(toggle&&menu){
 var onPhone=window.matchMedia("(max-width: 600px)");
+if(onPhone.matches){
+  // These useful destinations are inserted ONLY into the phone menu.
+  // The desktop/laptop navigation markup remains unchanged.
+  var faqLink=menu.querySelector('a[href$="faq/"]');
+  if(faqLink&&!menu.querySelector('a[href$="about/"]')){
+    var aboutLink=document.createElement("a");
+    aboutLink.href=faqLink.getAttribute("href").replace(/faq\/$/,"about/");
+    aboutLink.textContent="About";
+    aboutLink.className="mobile-menu-about";
+    faqLink.insertAdjacentElement("afterend",aboutLink);
+  }
+  if(!menu.querySelector('a[href$="contact/"]')){
+    var quoteLink=document.querySelector(".nav-cta");
+    if(quoteLink){
+      var contactLink=document.createElement("a");
+      contactLink.href=quoteLink.getAttribute("href");
+      contactLink.textContent="Contact";
+      contactLink.className="mobile-menu-contact";
+      menu.appendChild(contactLink);
+    }
+  }
+}
 function close(){menu.classList.remove("open");toggle.setAttribute("aria-expanded","false");if(onPhone.matches)document.body.classList.remove("mobile-menu-open")}
 toggle.addEventListener("click",function(){var open=menu.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));if(onPhone.matches)document.body.classList.toggle("mobile-menu-open",open)});
 document.addEventListener("keydown",function(e){if(e.key==="Escape")close()});
