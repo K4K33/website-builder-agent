@@ -507,3 +507,63 @@ heuristic, **not** actual ability to pay. Activity evidence contributes more
 than stars; multiple locations never contribute. The list order is based first
 on site-status and business activity, not the highest turnover or rating.
 Customers are not contacted automatically.
+
+
+## Visual clarity, sharp color & purposeful motion — project-wide baseline (2026-10-30)
+
+This applies to **every future Kaurivo-built demo and agency website**, not
+just the Kaurivo brand site. It comes from direct visual feedback on V1/V2/V3.
+
+**Color, clarity and art direction**
+- Aim for deliberate, sharp color separation, true high-contrast typography,
+  clear boundaries, legible small text, precise graphical detail, and a
+  visually confident premium finish. Avoid washed-out, hazy, grey-on-grey,
+  muddy overlays or ornamental low-contrast elements that look blurry.
+- The Kaurivo agency brand uses black/navy, bright icy white and crisp vivid
+  blue. **Do not impose those specific colors on client websites.** Match
+  each client's approved identity and evaluate color fidelity against
+  three high-quality sites in its actual industry.
+- Text contrast must meet WCAG AA when possible: 4.5:1 for normal text
+  and 3:1 for large text; maintain strong non-text affordance contrast.
+- At design QA, inspect a *real render* at 1440, 768, 390 and 320px,
+  including sharpness, line breaks, legibility and image asset resolution.
+  Do not report "premium" solely on the basis of generated HTML or scores.
+
+**Motion is mandatory when it adds demonstrable value, not decorative noise**
+- User explicitly wants high-quality motion. Never interpret a complaint
+  about lag as permission to remove all animations. Instead isolate the
+  expensive mechanism, replace with purposeful, performant interactions,
+  and retain high-quality entrance, hover, scroll-reveal, and contextually
+  meaningful interactive moments.
+- Prefer \`transform\` and \`opacity\` transitions, bounded intersection
+  observers, a small number of simultaneously animated elements, limited
+  pointer updates and native semantic controls. Avoid per-frame changes
+  to layout-affecting style, unbounded canvas/WebGL rendering and extremely
+  long sticky scroll-locked 3D assembly sequences.
+- Make animation intentionally choreographed, with readable pace and no
+  unexpected jumping; users should control interactive visual stories
+  using buttons/tabs if scroll scrubbing would be clumsy.
+- Respect \`prefers-reduced-motion\`, touch devices, keyboard navigation,
+  visibility state and real-device performance. Target a smooth experience
+  rather than claim "60fps" without measurements.
+
+**Page architecture / functional usability**
+- When content grows, do not put every major topic into one giant
+  scrolling landing page. Split into meaningful, linked pages (e.g.,
+  services, process, FAQ, contact) while keeping primary navigation clear.
+- Accordions are fine *inside a dedicated FAQ page*; don't force the
+  user to scroll through a full FAQ and contact form on the landing page.
+- Make each nav item navigate to a real URL; test deep links, backwards
+  navigation, responsive navigation and keyboard interactions.
+- New site or redesign? New sites may substantially reinterpret layout;
+  redesigns should remain genuinely recognisable to existing customers.
+- All client projects must have an explicit handover/editability plan
+  (WordPress or a suitable CMS/editor agreed per project).
+
+**Release proof**
+- Use free/offline browser testing and screen recordings where possible.
+  Log motion/render issues, compare before/after at key viewports, verify
+  actual links/FAQ/forms, and obtain human visual approval. Do not infer
+  that no layout overflow means the user will like the art direction.
+- Motion-heavy visuals are a craft demonstration, not an excuse to
+  compromise readability, conversion flows, accessibility or performance.
