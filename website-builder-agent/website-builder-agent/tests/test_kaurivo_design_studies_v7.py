@@ -92,6 +92,16 @@ class DesignStudyTests(unittest.TestCase):
                             page.wait_for_timeout(80)
                             self.assertEqual(errors, [], (name, width, errors))
                             overflow = page.evaluate("Math.max(document.body.scrollWidth, document.documentElement.scrollWidth)-innerWidth")
+                            if overflow > 2:
+                                offending = page.evaluate("""() => [...document.querySelectorAll('*')].map(e => {
+                                    const r=e.getBoundingClientRect();
+                                    const c=getComputedStyle(e);
+                                    return {tag:e.tagName,className:typeof e.className==='string'?e.className:'',
+                                            text:(e.textContent||'').trim().slice(0,48),
+                                            left:Math.round(r.left),right:Math.round(r.right),
+                                            scrollWidth:e.scrollWidth,position:c.position,font:c.fontSize};
+                                }).filter(o=>o.right>innerWidth+3 || o.left< -3).slice(0,20)""")
+                                print("MOBILE_LAYOUT_OFFENDERS", name, width, offending, flush=True)
                             self.assertLessEqual(overflow, 2, (name, width, overflow))
                             self.assertTrue(page.locator('a[href="../../"]').first.is_visible())
                             if width < 760:
