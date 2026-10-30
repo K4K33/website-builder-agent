@@ -13,6 +13,7 @@ kun käyttäjä antaa siihen nimenomaisen hyväksynnän.
 
 from utils.claude_client import ask_claude_json
 from utils.lead_intelligence import evaluate_prospect
+from utils.marketing_compliance import company_is_suppressed
 from utils.state import (
     get_company,
     upsert_company,
@@ -97,6 +98,9 @@ def draft_outreach(
     2. QA on läpäisty
     3. sivusto on hyväksytty
     """
+
+    if company_is_suppressed(company):
+        raise RuntimeError("Marketing opt-out: do not draft or contact this business.")
 
     # ---------------------------------------------------------
     # 1. Tarkista QA
@@ -375,6 +379,9 @@ def approve_outreach(
         raise RuntimeError(
             f"Yritystä ei löytynyt: {slug_or_name}"
         )
+
+    if company_is_suppressed(company):
+        raise RuntimeError("Marketing opt-out: cannot approve outreach to this business.")
 
     outreach = company.get(
         "outreach"
