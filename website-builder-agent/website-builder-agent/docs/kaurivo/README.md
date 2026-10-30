@@ -72,3 +72,12 @@ User-tested changes after V3:
 - Removed all scroll observers and content-hiding reveal animations; every page section is immediately visible. The fixed header no longer changes padding on wheel/trackpad scrolling and anchor jumps are immediate.
 - Replaced another fictional homepage browser mockup with concrete, honest handover deliverables: business-specific design, mobile experience and editable content.
 - Premium benchmark for next phase: real, approved client/demo case studies with screenshots and credible process; do not invent client work, reviews, traffic gains or awards.
+
+## V6: finished site and limits
+- Home has one short Kaurivo original mark-assembly animation and strong CTA. No scroll interception or continuous hero animation.
+- Two fictional but working demo websites are clearly labelled as independent concept studies. No unverified real clients or reviews.
+- Native POST enquiries go through FormSubmit.co. The FIRST enquiry triggers a recipient-activation request; the owner must verify `hello.kaurivo@gmail.com` in email before deliverability can be considered confirmed.
+- Dedicated Work, Privacy and Thank You pages.
+- EN/FI language selector persists via localStorage; demo concepts are intentionally English.
+- The performance targets are not actual measured data. Field measurements must be obtained before making result claims.
+- Project remains preview-only: noindex until legal/privacy and company ownership details are completed.

@@ -536,3 +536,11 @@ body{background:var(--v6-ink);color:#f7f8fa}
 .v6-metric p{font-size:13px;line-height:1.45;color:#b3c0cc;margin:0}
 .v6-metrics-caveat{margin:20px 0 0;font-size:12px;color:#99a8b6;line-height:1.6}
 @media(max-width:700px){.v6-performance-head{grid-template-columns:1fr}.v6-metrics{grid-template-columns:1fr}.v6-metric:not(:last-child){border-right:0;border-bottom:1px solid #546373}.v6-metric{padding:25px 22px}}
+
+/* EN/FI language switch and polished navigation focus */
+.site-language-switch{display:inline-flex;align-items:center;gap:7px;padding-left:13px;border-left:1px solid #5b6b79;color:#8e9ba8}
+.site-language-switch button{padding:8px 3px;border:0;background:none;color:#b1bcc7;font:800 10px/1 Manrope,Arial,sans-serif;letter-spacing:.08em;cursor:pointer;min-width:23px}
+.site-language-switch button[aria-pressed=true]{color:#fff;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1.5px}
+.site-language-switch button:hover{color:#fff}
+@media(max-width:1090px){.nav-menu{display:none}.mobile-toggle{display:block}.nav-menu.open{display:grid;grid-template-columns:1fr;background:#0e141b;box-shadow:0 18px 40px rgba(0,0,0,.4);padding:17px 24px 22px}.nav-menu.open .site-language-switch{border-left:0;padding:16px 0 0;justify-content:flex-start}.site-language-switch button{min-width:38px;min-height:39px}}
+@media(max-width:570px){.v6-intro-ribbon .wrap{gap:8px}.v6-intro-ribbon span{white-space:normal}.v6-intro-ribbon span:not(:first-child):before{margin-right:9px}}
