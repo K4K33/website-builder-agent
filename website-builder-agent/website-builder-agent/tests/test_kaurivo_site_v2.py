@@ -126,6 +126,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             self.assertEqual(errors,[],(width,name,errors))
                             self.assertTrue(page.locator("header .brand-icon").is_visible())
                             if name == "home":
+                                page.locator(".identity-mark").wait_for(state="visible", timeout=3500)
                                 self.assertTrue(page.locator(".identity-mark").is_visible())
                                 self.assertTrue(page.locator(".delivery-panel").count() == 1)
                                 self.assertTrue(page.locator(".service-card").first.is_visible() or page.locator(".service-card").first.count() == 1)

@@ -318,7 +318,7 @@ header,header.scrolled{padding:19px clamp(20px,4vw,72px);transition:none}
 .identity-rule-top,.identity-rule-bottom{width:100%}
 .identity-caption{position:relative;color:#bac5cf;font-size:10px;letter-spacing:.2em;font-weight:700;margin-top:16px}
 .identity-mark-wrap{position:relative;z-index:1;display:grid;place-items:center;flex:1;min-height:280px}
-.identity-mark{display:block;width:clamp(140px,20vw,248px);height:auto;max-height:255px;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(213,223,233,.12));opacity:1;animation:identity-reveal .65s cubic-bezier(.22,.78,.18,1) both}
+.identity-mark{display:block;width:clamp(140px,20vw,248px);height:auto;aspect-ratio:1.38/1;max-height:255px;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(213,223,233,.12));opacity:1;animation:identity-reveal .65s cubic-bezier(.22,.78,.18,1) both}
 .identity-horizon{position:absolute;z-index:0;pointer-events:none;left:10%;right:10%;top:53%;height:1px;transform-origin:left;background:linear-gradient(90deg,transparent,rgba(201,213,223,.42),transparent);animation:identity-line .85s ease both}
 .identity-bottom{display:flex;justify-content:space-between;gap:20px;position:relative;color:#c7cfd7;font-size:9px;font-weight:650;letter-spacing:.13em;padding:26px 0 22px}
 @keyframes identity-reveal{from{opacity:.58;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
