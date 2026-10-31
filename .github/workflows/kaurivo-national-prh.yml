@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write  # Short-lived GitHub OIDC assertion to Kaurivo only; no static keys.
 
 concurrency:
   group: kaurivo-national-prh
@@ -64,11 +65,18 @@ jobs:
             --output-dir output/nightly-prh \
             --seen-path data/prh_seen_ids.json
 
+      - name: Sync 50 unverified PRH company records into private Kaurivo CRM
+        if: ${{ success() && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        run: |
+          python -m utils.prh_crm_sync \
+            --packet output/nightly-prh/crm-shortlist.json
+
       - name: Show fresh lead report for manual review
         if: success()
         run: |
           cat output/nightly-prh/shortlist.md >> "$GITHUB_STEP_SUMMARY"
-          echo "No API credits, automatic demo claims or marketing sends." >> "$GITHUB_STEP_SUMMARY"
+          echo "Kaurivo CRM: validated public PRH candidates are sent only to the private UNVERIFIED lead queue using GitHub OIDC; no static credentials." >> "$GITHUB_STEP_SUMMARY"
+          echo "No AI credits, automatic demo claims or marketing sends." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Explain source failure without inventing search results
         if: failure()

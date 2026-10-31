@@ -6,13 +6,13 @@
  "use strict";
  const SUPABASE_URL="https://xhsfbcwpwbgdbatrcyuk.supabase.co";
  const PUBLIC_KEY="sb_publishable_eESXBcqgycaQXzflfZN34w_nWP2ixvU";
- const ADMIN_EMAIL="hello.kaurivo@gmail.com";
+ const ADMIN_EMAILS=new Set(["hello.kaurivo@gmail.com","kaarlo.kaukko1@gmail.com"]);
  const REVIEW_URL="https://k4k33.github.io/website-builder-agent/kaurivo/feedback/?lang=fi";
  const REDIRECT_URL="https://k4k33.github.io/website-builder-agent/kaurivo/admin/";
  const $=id=>document.getElementById(id);
- let db=null,activeTab="clients",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[]};
+ let db=null,activeTab="clients",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};
  let currentInvite=null,busy=false;
- const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava"};
+ const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava",unverified:"Tarkistamatta",researching:"Tutkitaan",needs_demo:"Demoehdokas",ready_for_demo:"Valmis demoon",skipped:"Ohitettu"};
  const fmtDate=x=>x?new Date(x).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"}):"Ei merkitty";
  const euro=x=>new Intl.NumberFormat("fi-FI",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Number(x)||0);
  function toast(text,kind="info") {const el=$("status");el.textContent=text;el.className="status "+kind;el.hidden=false;window.clearTimeout(toast.timer);toast.timer=window.setTimeout(()=>el.hidden=true,7000);}
@@ -24,13 +24,26 @@
  function stage(s){return label[s]||s||"—";}
  function record(container,title,sub,tag,kind){const card=append(container,"article","record");const main=append(card,"div","record-main");append(main,"div","record-title",title);append(main,"div","record-sub",sub);const actions=append(card,"div","record-actions");if(tag)append(actions,"span","tag "+(kind?"tag-"+kind:""),tag);return {card,main,actions};}
  function empty(target,text){append(target,"div","empty",text);}
- function showTab(tab){activeTab=tab;for(const t of ["clients","projects","sales","queue","reviews"]){$("tab-"+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');b.classList.toggle("current",t===tab);b.setAttribute("aria-selected",t===tab?"true":"false");}}
+ function showTab(tab){activeTab=tab;for(const t of ["prospects","clients","projects","sales","queue","reviews"]){$("tab-"+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');b.classList.toggle("current",t===tab);b.setAttribute("aria-selected",t===tab?"true":"false");}}
  function render(){
   $("m-clients").textContent=rows.clients.length;
   $("m-projects").textContent=rows.projects.length;
   $("m-sales").textContent=rows.sales.filter(x=>x.status==="won"&&x.source_verified).length;
   $("m-feedback").textContent=rows.queue.filter(x=>x.status==="pending"||x.status==="prepared").length;
   $("now-label").textContent=new Date().toLocaleDateString("fi-FI",{day:"numeric",month:"long",year:"numeric"});
+  const prospects=$("prospect-list");prospects.replaceChildren();
+  if(!rows.prospects.length)empty(prospects,"Liidijono on tyhjä. Tuo yön PRH-shortlist GitHub Actions -ajon paketista.");
+  for(const candidate of rows.prospects){
+   const row=record(prospects,candidate.company_name,
+     (candidate.city_hint||"Kaupunki tuntematon")+" · Y-tunnus: "+candidate.business_id,
+     stage(candidate.review_status));
+   append(row.main,"div","record-sub",candidate.website_listed_url
+     ? "PRH:n verkkosivuviite: "+candidate.website_listed_url
+     : "PRH:ssa ei verkkosivuosoitetta — sivuttomuutta ei vahvistettu");
+   append(row.main,"div","record-sub","Toimiala: "+(candidate.industry_code_hint||"ei tietoa")+" · Lähde PRH/YTJ CC BY 4.0");
+   if(candidate.research_notes)append(row.main,"div","record-note",candidate.research_notes);
+   row.actions.append(button("Tutkimusmuistiinpanot",()=>openEditor("prospect",candidate)));
+  }
   const clients=$("client-list");clients.replaceChildren();
   if(!rows.clients.length)empty(clients,"Ei yrityksiä vielä. Aloita lisäämällä ensimmäinen.");
   for(const c of rows.clients){
@@ -87,7 +100,7 @@
   busy=true;
   try{
    const entities=[
-    ["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
+    ["prospects","kaurivo_crm_prospects"],["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
     ["sales","kaurivo_crm_sales"],["queue","kaurivo_crm_feedback_queue"],
     ["reviews","kaurivo_feedback_submissions"],["invitations","kaurivo_feedback_invitations"]
    ];
@@ -100,6 +113,9 @@
   finally{busy=false;}
  }
  const forms={
+  prospect:{title:"Yrityksen taustatutkimus",table:"kaurivo_crm_prospects",fields:[
+   ["review_status","Tutkimuksen vaihe","choice",true,["unverified","researching","needs_demo","ready_for_demo","skipped"]],
+   ["research_notes","Vahvistetut faktat, puutteet ja lähteet","textarea"]]},
   client:{title:"Yrityksen tiedot",table:"kaurivo_crm_clients",fields:[
    ["company_name","Yrityksen nimi","text",true],["contact_name","Yhteyshenkilö","text"],
    ["email","Sähköposti","email",true],["website","Verkkosivu (https://...)","url"],
@@ -155,6 +171,7 @@
    if(required&&!value){toast("Täytä pakolliset kentät.","error");return;}
    data[key]=type==="number"?Number(value):(value||null);
   }
+  if(kind==="prospect"){data.research_notes=data.research_notes||"";}
   if(kind==="sale"){data.status="proposal";data.source_verified=false;data.confirmed_at=null;}
   if(kind==="client"){data.contact_name=data.contact_name||"";data.website=data.website||"";data.notes=data.notes||"";}
   if(kind==="project"){data.demo_url=data.demo_url||"";data.delivered_url=data.delivered_url||"";data.must_haves=data.must_haves||"";data.editor_platform=data.editor_platform||"";}
@@ -227,6 +244,53 @@
   currentInvite=null;$("invite-copy").value="";$("invite-dialog").close();
   toast("Pyyntö kirjattiin lähetetyksi.","success");await reload();
  }
+
+ async function importProspects(file){
+  if(file.size>3000000){toast("Tiedosto on liian suuri (enintään 3 Mt).","error");return;}
+  let packet;
+  try{packet=JSON.parse(await file.text());}
+  catch(_){toast("Tiedosto ei ole kelvollinen JSON.","error");return;}
+  if(packet.schema!=="kaurivo_prh_shortlist_v1"||packet.mode!=="pilot-live"||
+     !packet.review_required||packet.not_verified_for_outreach!==true||
+     !Array.isArray(packet.candidates)||packet.candidates.length>50||
+     packet.candidates.length<1||!/^\\d{4}-\\d{2}-\\d{2}$/.test(packet.date||"")){
+   toast("Valitse oikean PRH-yöajon crm-shortlist.json, ei demoa tai testaustiedostoa.","error");return;
+  }
+  const today=new Date();const d=new Date(packet.date+"T00:00:00Z");
+  if(!Number.isFinite(d.getTime())||Math.abs(today.getTime()-d.getTime())>32*86400000){
+   toast("Liidilista on vanhentunut. Käytä enintään 30 päivän takaista ajoa.","error");return;
+  }
+  const clean=s=>String(s||"").replace(/[\\u0000-\\u001f\\u007f]/g," ").trim();
+  const validUrl=v=>{try{const u=new URL(v);return u.protocol==="https:"&&!!u.hostname&&!u.username&&!u.password;}catch(_){return false;}};
+  const items=[],seen=new Set();
+  for(const c of packet.candidates){
+   if(!c||!/^prh:[0-9]{7}-[0-9]$/.test(c.identity||"")||!(/^[0-9]{7}-[0-9]$/).test(c.business_id||"")||
+      c.identity!=="prh:"+c.business_id||typeof c.name!=="string"||c.name.trim().length<2||
+      c.website_absence_verified!==false||c.business_activity!=="unverified"||
+      c.outreach_authorized!==false||c.demo_authorized!==false){
+    toast("Liidilistassa on puuttuvia tai epäluotettavia tietoja. Tuonti keskeytettiin.","error");return;
+   }
+   if(seen.has(c.business_id))continue;seen.add(c.business_id);
+   const url=clean(c.website_listed_url);
+   if(url&&!validUrl(url)){toast("PRH-verkkosivulinkki ei ole kelvollinen.","error");return;}
+   items.push({
+    business_id:c.business_id,company_name:clean(c.name).slice(0,160),
+    city_hint:clean(c.city_hint).slice(0,80),
+    industry_code_hint:clean(c.industry_code_hint).slice(0,20),
+    website_listed_url:url.slice(0,1200),
+    source_url:"https://avoindata.prh.fi/",
+    source_kind:"prh_registry",discovery_date:packet.date,review_status:"unverified",
+    activity_verified:false,website_verified:false,financial_verified:false
+   });
+  }
+  if(!window.confirm("Tuodaanko "+items.length+" julkisen PRH-yritysrekisterin liidiä YKSITYISEEN tarkistusjonoon? Tuonti ei lähetä viestejä."))return;
+  try{
+   const {error}=await db.from("kaurivo_crm_prospects").upsert(items,{onConflict:"business_id",ignoreDuplicates:true});
+   if(error)throw error;
+   toast("Liidit tuotu tarkistettavaksi. Jo olemassa olevia yrityksiä ei muutettu.","success");
+   await reload();showTab("prospects");
+  }catch(err){toast("Liidien tuonti epäonnistui: "+(err.message||""),"error");}
+ }
  function setLogin(isAuthenticated){
   $("login").hidden=isAuthenticated;$("dashboard").hidden=!isAuthenticated;
   $("sign-out").hidden=!isAuthenticated;
@@ -234,9 +298,9 @@
  async function handleAuth(){
   const {data,error}=await db.auth.getUser();
   const user=data?.user;
-  if(error||!user||user.email?.toLowerCase()!==ADMIN_EMAIL||!user.email_confirmed_at){
+  if(error||!user||!ADMIN_EMAILS.has(user.email?.toLowerCase())||!user.email_confirmed_at){
    setLogin(false);
-   if(user&&user.email?.toLowerCase()!==ADMIN_EMAIL){await db.auth.signOut();toast("Tämä ei ole Kaurivon hallintatili.","error");}
+   if(user&&!ADMIN_EMAILS.has(user.email?.toLowerCase())){await db.auth.signOut();toast("Tämä ei ole Kaurivon hallintatili.","error");}
    return;
   }
   setLogin(true);await reload();
@@ -245,11 +309,11 @@
   const buttonEl=$("send-login");buttonEl.disabled=true;
   try{
    const {error}=await db.auth.signInWithOtp({
-    email:ADMIN_EMAIL,
+    email:$("admin-email").value,
     options:{emailRedirectTo:REDIRECT_URL,shouldCreateUser:true}
    });
    if(error)throw error;
-   toast("Kirjautumislinkki on lähetetty osoitteeseen "+ADMIN_EMAIL+".","success");
+   toast("Kirjautumislinkki on lähetetty osoitteeseen "+$("admin-email").value+".","success");
   }catch(err){toast("Kirjautumislinkkiä ei voitu lähettää: "+(err.message||"Virhe"),"error");}
   finally{buttonEl.disabled=false;}
  }
@@ -260,8 +324,13 @@
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
   document.querySelectorAll("[data-dialog]").forEach(b=>b.addEventListener("click",()=>openEditor(b.dataset.dialog)));
   $("send-login").addEventListener("click",sendLogin);
-  $("sign-out").addEventListener("click",async()=>{await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[]};setLogin(false);});
+  $("sign-out").addEventListener("click",async()=>{await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
+  $("import-prospects").addEventListener("click",()=>$("prospect-file").click());
+  $("prospect-file").addEventListener("change",async e=>{
+   const file=e.target.files?.[0];e.target.value="";
+   if(file)await importProspects(file);
+  });
   $("editor-form").addEventListener("submit",e=>editing?.kind==="verify_sale"?confirmSale(e):saveEditor(e));
   $("close-editor").addEventListener("click",()=>$("editor").close());
   $("cancel-editor").addEventListener("click",()=>$("editor").close());

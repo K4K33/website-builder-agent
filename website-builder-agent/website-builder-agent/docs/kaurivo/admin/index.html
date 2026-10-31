@@ -22,9 +22,9 @@
   <div class="login-facts"><span>01 / Ei julkista asiakasrekisteriä</span><span>02 / Kaurivon oma tietokanta</span><span>03 / Ilmaiset palvelutasot</span></div></div>
   <div class="login-panel"><div class="pill">ADMIN ACCESS</div><h2>Tervetuloa takaisin.</h2>
   <p>Kirjautuminen sallitaan vain vahvistetulle Kaurivon hallintatilille.</p>
-  <div class="address">hello.kaurivo@gmail.com</div>
+  <label class="form-hint" for="admin-email">Ylläpitotili</label><select id="admin-email" class="address" aria-label="Valitse ylläpitotili"><option value="hello.kaurivo@gmail.com">Kaurivo — hello.kaurivo@gmail.com</option><option value="kaarlo.kaukko1@gmail.com">Henkilökohtainen — kaarlo.kaukko1@gmail.com</option></select>
   <button type="button" class="primary-button full" id="send-login">Lähetä kirjautumislinkki <span>↗</span></button>
-  <p class="form-hint">Kirjautumislinkki saapuu Kaurivon Gmailiin. Jos Supabasen sallittu paluuosoite ei ole vielä asetettu, katso asetusohje linkin alta.</p>
+  <p class="form-hint">Kirjautumislinkki saapuu valitsemaasi ylläpidon sähköpostiin. Jos Supabasen sallittu paluuosoite ei ole vielä asetettu, katso asetusohje linkin alta.</p>
   <details><summary>Supabase-kirjautumisen käyttöönotto</summary>
   <p>Lisää Supabase-projektin Authentication → URL Configuration → Redirect URLs -kohtaan tämä täsmällinen osoite:</p>
   <code id="redirect-url">https://k4k33.github.io/website-builder-agent/kaurivo/admin/</code>
@@ -41,12 +41,19 @@
 </div>
 <div class="workspace">
 <nav class="tabs" role="tablist" aria-label="Hallinnan osiot">
+<button type="button" class="tab" role="tab" aria-selected="false" data-tab="prospects">Liidijono</button>
 <button type="button" class="tab current" role="tab" aria-selected="true" data-tab="clients">Yritykset</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="projects">Projektit</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="sales">Kaupat</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="queue">Palautepyynnöt</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="reviews">Palaute</button>
 </nav>
+<div class="panel" id="tab-prospects" hidden>
+<div class="section-head"><div><h2>Yöllä löydetyt yritykset</h2><p>PRH/YTJ-yrityshaun tulokset. Yrityksen toiminta, ostokyky ja verkkosivujen tila on aina tarkistettava ennen demoa tai yhteydenottoa.</p></div>
+<div class="record-actions"><button type="button" class="outline-button" id="import-prospects">Tuo yön 50 yritystä</button><input type="file" accept=".json,application/json" id="prospect-file" hidden></div></div>
+<div class="inline-alert">Lataa ensin GitHub Actions → Kaurivo national business discovery -ajon <strong>kaurivo-national-leads</strong>-artefakti. Valitse paketista <strong>crm-shortlist.json</strong>. Automaattinen yöajo kuluttaa 0 AI-krediittiä; tuonti ei lähetä sähköposteja eikä väitä yritystä aktiiviseksi.</div>
+<div id="prospect-list" class="records"></div><p class="form-hint">Lähde: PRH/YTJ open data (CC BY 4.0). Puuttuva verkkosivuosoite PRH:ssa ei todista ettei yrityksellä ole verkkosivua.</p>
+</div>
 <div class="panel" id="tab-clients"><div class="section-head"><div><h2>Yritysrekisteri</h2><p>Potentiaaliset asiakkaat ja nykyiset asiakkaat.</p></div><button class="primary-button" data-dialog="client" type="button">+ Lisää yritys</button></div><div id="client-list" class="records"></div></div>
 <div class="panel" id="tab-projects" hidden><div class="section-head"><div><h2>Verkkosivuprojektit</h2><p>Demosta toteutukseen, asiakkaan brändi ja muokattavuus säilyttäen.</p></div><button class="primary-button" data-dialog="project" type="button">+ Lisää projekti</button></div><div id="project-list" class="records"></div></div>
 <div class="panel" id="tab-sales" hidden><div class="section-head"><div><h2>Kaupat</h2><p>Vahvista kauppa vain oikeaan ostotapahtumaan perustuen.</p></div><button class="primary-button" data-dialog="sale" type="button">+ Lisää tarjous</button></div><div id="sale-list" class="records"></div></div>

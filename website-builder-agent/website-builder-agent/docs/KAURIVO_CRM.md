@@ -8,8 +8,9 @@ No OAVIR resources are used.
 
 <https://k4k33.github.io/website-builder-agent/kaurivo/admin/>
 
-Only the exact, confirmed Supabase Auth email `hello.kaurivo@gmail.com`
-is an administrator. The database checks authenticated user ID against
+Only the confirmed Supabase Auth emails `hello.kaurivo@gmail.com` and
+`kaarlo.kaukko1@gmail.com` are administrators. Each must confirm its own
+Supabase Auth session; ChatGPT login does not sign in to the site. The database checks authenticated user ID against
 `auth.users` and its email confirmation timestamp. The UI and its
 public publishable key **do not provide authorization**: row-level
 security on every CRM table is the enforcement layer.

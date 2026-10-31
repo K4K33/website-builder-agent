@@ -298,6 +298,47 @@ def report_md(data, day, *, mode):
     return "\n".join(rows)
 
 
+def research_queue_md(shortlist, day):
+    """Create research instructions using real registry hints, not invented site audits.
+
+    The per-company brief is deliberately marked unverified until a reviewer
+    inspects operating activity, the current website and three real peers.
+    A published sales demo or marketing email must never be inferred.
+    """
+    lines = [
+        "# Kaurivo — yksilölliset tutkimustehtävät / " + day.isoformat(),
+        "",
+        "Lähde: PRH/YTJ avoin data, CC BY 4.0.",
+        "Nämä ovat taustatutkimustehtäviä, EIVÄT valmiita verkkosivudemoja.",
+        "Vähintään kolme oikeaa saman alan kilpailija-/vertailusivua ja",
+        "asiakkaan nykyinen visuaalinen ilme tarkistetaan ennen rakentamista.",
+        "",
+    ]
+    for idx, c in enumerate(shortlist, 1):
+        company = _one_line(c.get("name"), 110).replace("\\n", " ")
+        city = _one_line(c.get("city_hint"), 80)
+        sector = _one_line(c.get("industry_code_hint"), 16) or "ei listattu"
+        site = c.get("website_listed_url") or "Ei PRH-listausta: ETSI verkosta ennen sivuttomuusväitettä"
+        lines.extend([
+            f"## {idx:02d}. {company} ({c['business_id']})",
+            f"PRH-kaupunki: {city or 'ei tiedossa'} | Toimialakoodi: {sector}",
+            f"PRH-verkkosivuvihje: {site}",
+            "- [ ] Tarkista yrityksen aktiivinen toiminta ja juridinen tila",
+            "- [ ] Selvitä todellinen verkkosivusto, mobiilikäyttö ja yhteydenoton polku",
+            "- [ ] Tarkista yrityksen nykyiset logot, värit, palvelut ja kuvaoikeudet",
+            "- [ ] Vertaa kolmeen oikeaan saman alan korkeatasoiseen sivustoon",
+            "- [ ] Tarkista maksukyvyn suunta tilinpäätöksestä (ellei saatavilla: tuntematon)",
+            "- [ ] Kirjaa yksi todellinen ongelma tai saavutettava asiakashyöty",
+            "- [ ] Toteuta yksilöllinen responsive/CMS-valmis premium-demo, jos hyväksytty",
+            "- [ ] Testaa työpöytä/mobiili, linkit, saavutettavuus ja reduced motion",
+            "- [ ] Pyydä lopullinen visuaalinen laadun hyväksyntä ennen myyntiviestiä",
+            "- [ ] Yhteystiedot, sähköpostin laillisuus ja lähetyslupa erikseen",
+            "",
+        ])
+    lines.append("Ei automaattisia myyntiviestejä, väitettyjä referenssejä tai keksittyjä asiakaskuvia.")
+    return "\\n".join(lines) + "\\n"
+
+
 def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
         seen_path="data/prh_seen_ids.json", day=None,
         max_candidates=5000, shortlist_size=50, get=requests.get):
@@ -338,6 +379,18 @@ def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
         "date": today.isoformat(), "mode": mode, "candidates": selected,
         "not_verified_for_outreach": True, "source": PRH_SOURCE,
     })
+    # A private-CRM import packet contains only public PRH company data,
+    # never personal contact info, invented financials or auto-approval.
+    _write(out / "crm-shortlist.json", {
+        "schema": "kaurivo_prh_shortlist_v1",
+        "date": today.isoformat(),
+        "mode": mode,
+        "source": PRH_SOURCE,
+        "source_attribution": "PRH/YTJ open data, CC BY 4.0",
+        "review_required": True,
+        "not_verified_for_outreach": True,
+        "candidates": shortlist,
+    })
     _write(out / "status.json", {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "mode": mode, "registry_records_scanned": result["scanned_registry_records"],
@@ -350,6 +403,8 @@ def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
         "demos_generated": 0, "emails_drafted": 0, "emails_sent": 0,
     })
     (out / "shortlist.md").write_text(report_md(result, today, mode=mode), encoding="utf-8")
+    (out / "research-briefs.md").write_text(
+        research_queue_md(shortlist, today), encoding="utf-8")
     seen_file = Path(seen_path)
     seen_file.parent.mkdir(parents=True, exist_ok=True)
     _write(seen_file, {"ids": merged_seen})

@@ -151,6 +151,16 @@ class BulkPrhTests(unittest.TestCase):
             self.assertEqual(first["scanned"], 20)
             self.assertEqual(first["new"], 15)
             self.assertEqual(calls, [])
+            packet=json.loads((Path(tmp)/"output"/"crm-shortlist.json").read_text())
+            self.assertEqual(packet["schema"],"kaurivo_prh_shortlist_v1")
+            self.assertTrue(packet["not_verified_for_outreach"])
+            self.assertEqual(packet["mode"],"fixture")
+            self.assertEqual(len(packet["candidates"]),10)
+            self.assertTrue(all(c["outreach_authorized"] is False for c in packet["candidates"]))
+            briefs=(Path(tmp)/"output"/"research-briefs.md").read_text()
+            self.assertIn("kolme",briefs.lower())
+            self.assertIn("Ei automaattisia myyntiviestejä",briefs)
+
             self.assertIn("NOT prove a missing website",
                           (Path(tmp)/"output"/"shortlist.md").read_text())
             self.assertEqual(json.loads((Path(tmp)/"output"/"status.json").read_text())

@@ -184,3 +184,32 @@ drafts for every lead, or automatic Gmail delivery.
 
 Do not claim that clients will receive finished sites overnight until
 those steps truly exist and pass end-to-end evidence.
+
+
+## Update: protected Kaurivo-only lead inbox and hands-free import (31 October 2026)
+
+The existing PRH source search remains capped at ONE bulk archive download
+and 50 shortlisted companies. The workflow also produces a per-firm
+`research-briefs.md`, plus `crm-shortlist.json` (official business ID,
+registry-listed website hint, city and industry code only). The private
+Kaurivo Supabase `kaurivo_crm_prospects` table stores that data separately
+from genuine client, sales and feedback tables.
+
+On a successful `pilot-live` night scan, GitHub Actions fetches a short-lived
+signed GitHub OIDC token and automatically submits the shortlist to the
+`kaurivo-prh-ingest` Supabase Edge Function. GitHub issues the token only for
+a job granted `id-token: write`; the Edge Function checks its digital
+signature, required audience, specific repo IDs, `main` branch and the
+exact authorized workflow file. **No Supabase secret is stored in GitHub**.
+
+The insert is idempotent by official business ID, and every lead enters as
+`unverified`. Business solvency, site quality, active operations and marketing
+lawful basis remain UNKNOWN until independent review. The admin view
+`/kaurivo/admin/` provides a **Liidijono** research stage and optional manual
+`crm-shortlist.json` import fallback.
+
+The actual scheduled OIDC handshake and real PRH download still require their
+first successful end-to-end run. This implementation does NOT generate
+premium-quality customer demos or send sales emails automatically; those
+stages require verified actual services/branding, three same-sector benchmarks,
+real browser QA and owner approval. See `docs/KAURIVO_ACQUISITION_AUTOMATION.md`.
