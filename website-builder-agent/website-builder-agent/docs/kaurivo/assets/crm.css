@@ -192,3 +192,35 @@
  #prospect-list .record-actions>*{min-width:0}
  #prospect-list .record-actions>*:last-child:nth-child(odd){grid-column:1/-1}
 }
+
+/* Evidence-based acquisition KPIs, privacy-safe aggregation across days. */
+.sales-dashboard{margin:5px 0 15px}
+.sales-dashboard-body{padding:0 14px 15px}
+.sales-dashboard-body>.form-hint{margin:6px 0 12px;line-height:1.55}
+.sales-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:11px 0 14px}
+.sales-kpi{border:1px solid #3c5667;border-radius:9px;padding:12px 9px;min-width:0;background:#0e1d2a}
+.sales-kpi strong{font-size:24px;font-weight:750;letter-spacing:-.06em;color:#f3f8fd;display:block;line-height:1.1}
+.sales-kpi span{display:block;font-size:10px;line-height:1.4;margin-top:6px;color:#a6becd}
+.sales-kpi-revenue strong{font-size:20px}
+.sales-overview-bars{display:flex;align-items:end;gap:7px;min-height:56px;padding:8px 4px 0;overflow-x:auto;border-bottom:1px solid #385367}
+.sales-day{display:flex;min-width:31px;flex:1;gap:4px;align-items:center;flex-direction:column}
+.sales-day-bar{width:min(18px,70%);background:#9bc0d3;border-radius:4px 4px 0 0;min-height:5px}
+.sales-day span{font-size:9px;color:#a7c1cc;white-space:nowrap}
+.suppression-controls{padding:14px 0;border-top:1px solid #30495a;border-bottom:1px solid #30495a;margin:13px 0 16px;display:grid;gap:8px}
+.suppression-controls>strong{font-size:14px;color:#eaf5fb}
+.suppression-controls .form-hint{margin:0;line-height:1.5}
+.suppression-form{display:flex;align-items:end;gap:9px;flex-wrap:wrap}
+.suppression-form label{font-size:11px;flex-basis:100%}
+.suppression-form input{flex:1 1 140px;min-height:46px;border:1px solid #59788e;border-radius:7px;background:#0d1b27;color:#eaf6ff;padding:12px;font-size:16px}
+.suppression-form button{min-height:46px;flex:1 1 200px}
+@media(max-width:850px){
+ .sales-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .sales-kpi{padding:11px 7px}
+ .sales-kpi strong{font-size:21px}
+ .sales-kpi span{font-size:10px}
+ .sales-kpi-revenue{grid-column:span 2}
+ .sales-overview-bars{padding-bottom:9px}
+ .suppression-form{display:grid;grid-template-columns:1fr}
+ .suppression-form input,.suppression-form button{width:100%}
+}
+@media(max-width:340px){.sales-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
