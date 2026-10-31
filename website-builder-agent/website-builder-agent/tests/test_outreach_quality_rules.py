@@ -53,8 +53,8 @@ class OutreachQualityTests(unittest.TestCase):
         self.assertIn("Olen Kaarlo Kaurivolta", prompt)
         self.assertIn("Suunnittelen ja toteutan", prompt)
         self.assertIn("toteuttaa uuden sivuston teille kokonaan", prompt)
-        self.assertIn("Olisiko teillä kiinnostusta uudistaa", prompt)
-        self.assertIn("Olisiko oman verkkosivun", prompt)
+        self.assertIn("Haluaisitteko tällaiset verkkosivut yrityksellenne?", prompt)
+        self.assertIn("juuri tälle yritykselle tehtyä demosivustoa", prompt)
         self.assertIn("hello.kaurivo@gmail.com", prompt)
         self.assertIn("ihmisen erillisellä hyväksynnällä", prompt)
 
