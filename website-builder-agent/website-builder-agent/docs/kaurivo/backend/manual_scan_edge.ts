@@ -90,8 +90,8 @@ function normalize(rec:Record<string,unknown>){
   source_kind:"prh_registry",discovery_date:today(),review_status:"unverified",
   activity_verified:false,website_verified:false,financial_verified:false};
 }
-function selectedCities(day:string):string[]{
- const base=Number(day.replaceAll("-",""))%CITIES.length;
+function selectedCities(day:string,attempt:number):string[]{
+ const base=(Number(day.replaceAll("-",""))+attempt*7)%CITIES.length;
  // Spread the six lookups geographically instead of repeatedly using big cities.
  const picks=[] as string[];
  for(let i=0;i<MAX_REQUESTS;i++)picks.push(CITIES[(base+i*5)%CITIES.length]);
@@ -103,14 +103,16 @@ async function runSearch(day:string):Promise<Record<string,unknown>>{
  if(!result.ok)throw Error("claim_failed");
  const claimed=await result.json();
  if(claimed!==true)return {ok:false,reason:"cooldown_or_daily_limit",run:await currentRun(day)};
+ const current=await currentRun(day);
+ const attempt=Number(current?.attempts)||1;
  let examined=0,added=0,requests=0,validQueries=0;
  try{
   const pool=new Map<string,ReturnType<typeof normalize>>();
-  for(const city of selectedCities(day)){
+  for(const city of selectedCities(day,attempt)){
    const query=new globalThis.URL(API);
    query.searchParams.set("location",city);
    query.searchParams.set("companyForm","OY");
-   query.searchParams.set("page","1");
+   query.searchParams.set("page",String(Math.min(attempt,3)));
    const response=await fetch(query.toString(),{
     headers:{"Accept":"application/json","User-Agent":"KaurivoRegistryResearch/1.0"},
     signal:AbortSignal.timeout(12000)
