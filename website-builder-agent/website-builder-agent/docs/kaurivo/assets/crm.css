@@ -160,3 +160,35 @@
  .record-no-website{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 }
 @media(max-width:360px){#prospect-list .record-actions{grid-template-columns:1fr}}
+
+/* Operations & evidence gates: compact and comfortable in the installed iOS PWA */
+.ops-health{border:1px solid #405e73;background:#152532;border-radius:12px;margin:10px 0 12px;overflow:hidden}
+.ops-health>summary{padding:12px 15px;list-style:none;min-height:48px;display:flex;align-items:center;gap:10px;cursor:pointer;flex-wrap:wrap}
+.ops-health>summary::-webkit-details-marker{display:none}
+.ops-health .ops-led{display:inline-block;width:9px;height:9px;flex:none;border-radius:50%;background:#bdac7b;box-shadow:0 0 0 3px #bdb2891a}
+.ops-health[data-state="ok"] .ops-led{background:#8bbb9b}
+.ops-health[data-state="error"] .ops-led{background:#ec988a}
+.ops-health summary strong{font-size:13px;white-space:nowrap}
+.ops-health #ops-brief{font-size:12px;color:#bcceda;flex:1 1 150px;line-height:1.4}
+.ops-health .ops-chevron{font-size:22px;color:#c7d7e4}
+.ops-health[open] .ops-chevron{transform:rotate(45deg)}
+.ops-health .ops-events{padding:0 15px 12px;display:grid;gap:6px}
+.ops-health .ops-event{background:#0d1b26;border:1px solid #294255;border-radius:8px;padding:10px 12px;display:grid;gap:5px}
+.ops-health .ops-event strong{font-size:12px}
+.ops-health .ops-event span{font-size:11px;color:#b5cad6;line-height:1.45}
+.ops-health .form-hint{padding:0 15px 13px;margin:0;font-size:11px}
+.ops-health .form-hint a{text-decoration:underline;text-underline-offset:3px}
+.lead-pulse{color:#c5d6e0;font-size:12px;font-weight:650;line-height:1.5;min-height:28px;padding:0 2px;margin:0 0 7px}
+.record-warning{font-size:12px;color:#ffb7aa;border:1px solid #86534e;border-radius:8px;padding:9px 11px;background:#522f2b33}
+#prospect-list .record-sub{line-height:1.55}
+#editor-fields .field input[type="checkbox"]{width:23px;height:23px;min-height:23px;accent-color:#b8e0ec;display:block;margin:10px 0}
+#editor-fields .field textarea{min-height:110px;white-space:pre-wrap}
+@media(max-width:850px){
+ .ops-health{margin:7px 0 11px}
+ .ops-health>summary{padding:12px;gap:8px}
+ .ops-health #ops-brief{font-size:11px}
+ .lead-pulse{font-size:11px}
+ #prospect-list .record-actions{display:grid;grid-template-columns:1fr 1fr}
+ #prospect-list .record-actions>*{min-width:0}
+ #prospect-list .record-actions>*:last-child:nth-child(odd){grid-column:1/-1}
+}
