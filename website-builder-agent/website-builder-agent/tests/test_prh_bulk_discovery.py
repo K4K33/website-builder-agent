@@ -62,6 +62,18 @@ class BulkPrhTests(unittest.TestCase):
         self.assertFalse(r["outreach_authorized"])
         self.assertIsNone(normalize_company(record(124, closed=True)))
 
+    def test_rejects_businesses_in_bankruptcy_liquidation_or_restructuring(self):
+        for code in ("KONK", "SELTILA", "SANE"):
+            with self.subTest(code=code):
+                firm=record(456)
+                firm["companySituations"]=[{"type":code}]
+                self.assertIsNone(normalize_company(firm))
+                firm["companySituations"][0]["endDate"]="2024-01-01"
+                self.assertIsNotNone(normalize_company(firm))
+        firm=record(457)
+        firm["companySituations"]=[]
+        self.assertIsNotNone(normalize_company(firm))
+
     def test_uses_current_registered_name_over_old_first_name(self):
         c = record(127)
         c["names"] = [
