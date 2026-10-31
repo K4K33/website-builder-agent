@@ -60,6 +60,23 @@ Deno.serve(async req => {
   data=JSON.parse(text);
   if(!data||typeof data!=="object"||Array.isArray(data))throw Error("format");
  } catch(_){return send(400,{ok:false,error:"invalid_json"});}
+ // Separate workflow-failure event. Only the same verified GitHub OIDC
+ // workflow may report it; the public PWA cannot submit operational events.
+ if(data.schema==="kaurivo_prh_run_status_v1"){
+  if(data.outcome!=="failure"||typeof data.date!=="string"||
+     !/^\\d{4}-\\d{2}-\\d{2}$/.test(data.date))return send(400,{ok:false,error:"invalid_status"});
+  const d=new Date(data.date+"T00:00:00.000Z");
+  if(!Number.isFinite(d.getTime())||Math.abs(Date.now()-d.getTime())>2*86400000)
+   return send(400,{ok:false,error:"stale_status"});
+  const r=await fetch(SUPABASE_URL+"/rest/v1/kaurivo_pipeline_events",{
+   method:"POST",headers:{"Content-Type":"application/json",
+    "apikey":SERVICE_ROLE,"authorization":"Bearer "+SERVICE_ROLE,
+    "prefer":"return=minimal"},
+   body:JSON.stringify({event_day:data.date,component:"national_search",
+    outcome:"failure",details:"GitHub-yöhaku epäonnistui; tarkista Actions-loki",records:0})
+  }).catch(()=>null);
+  return send(r?.ok?200:503,{ok:Boolean(r?.ok),status_recorded:Boolean(r?.ok)});
+ }
  if(data.schema!=="kaurivo_prh_shortlist_v1"||
     data.mode!=="pilot-live"||
     data.not_verified_for_outreach!==true||
