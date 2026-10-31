@@ -45,3 +45,6 @@
 #password-dialog .field{width:100%}
 #password-dialog input{width:100%;min-height:48px;color:#f6fcff;background:#101f29;border:1px solid #526d7c;padding:12px;border-radius:7px;font-size:16px}
 #password-dialog .dialog-actions{margin-top:24px}
+
+/* Mobile login layout adjustment */
+@media(max-width:850px){.login-view{grid-template-columns:minmax(0,1fr)}.login-panel{min-width:0}.login-panel .address{display:block;width:100%;min-width:0;max-width:100%;text-overflow:ellipsis}.status{max-width:calc(100vw - 28px);right:14px}}
