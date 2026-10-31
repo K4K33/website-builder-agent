@@ -113,6 +113,11 @@ jobs:
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: python -m utils.kaurivo_report_failure
 
+      - name: Record failed live PRH run in private admin operations
+        if: ${{ failure() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        continue-on-error: true
+        run: python -m utils.kaurivo_failure_report
+
       - name: Retain national discovery report for 14 days
         if: ${{ always() && steps.gate.outputs.should_scan == 'true' }}
         uses: actions/upload-artifact@v4
