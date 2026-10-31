@@ -91,13 +91,13 @@ async function vapidKeys():Promise<Keys>{
  if(data.length!==1)throw new Error("vapid_missing");
  return data[0] as Keys;
 }
-type Sub={id:string,user_id:string,endpoint:string,p256dh:string,auth_secret:string,last_notified_date:string|null};
+type Sub={id:string,user_id:string,endpoint:string,p256dh:string,auth_secret:string,last_notified_date:string|null;last_missing_notice_date?:string|null};
 async function subscriptions(query:string):Promise<Sub[]>{
  const result=await rest("kaurivo_push_subscriptions?"+query);
  if(!result.ok)throw new Error("subscription_read");
  return await result.json();
 }
-async function deliver(sub:Sub,payload:Record<string,unknown>,keys:Keys,day?:string):Promise<boolean>{
+async function deliver(sub:Sub,payload:Record<string,unknown>,keys:Keys,day?:string,kind:"leads"|"missing"="leads"):Promise<boolean>{
 
  try {
   const sent=await sendPushNotification({
@@ -112,7 +112,7 @@ async function deliver(sub:Sub,payload:Record<string,unknown>,keys:Keys,day?:str
   }
   if(day){
    const update=await rest("kaurivo_push_subscriptions?id=eq."+encodeURIComponent(sub.id),{
-    method:"PATCH",body:JSON.stringify({last_notified_date:day,updated_at:new Date().toISOString()})
+    method:"PATCH",body:JSON.stringify({[kind==="missing"?"last_missing_notice_date":"last_notified_date"]:day,updated_at:new Date().toISOString()})
    });
    if(!update.ok)throw new Error("notification_marker");
   }
@@ -148,8 +148,8 @@ async function notifyDaily(event:string):Promise<Response>{
   // Do not alarm before the main and backup discovery windows have passed.
   // At the final 09:17 check, send a neutral missing-list warning.
   if(event==="schedule"&&helsinkiHour()>=9){
-   const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date&limit=100");
-   const pending=subs.filter(sub=>sub.last_notified_date!==day);
+   const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date,last_missing_notice_date&limit=100");
+   const pending=subs.filter(sub=>sub.last_missing_notice_date!==day);
    let warned=0;
    if(pending.length){
     const keys=await vapidKeys();
@@ -158,8 +158,8 @@ async function notifyDaily(event:string):Promise<Response>{
       title:"Kaurivo · aamun lista puuttuu",
       body:"Uusia yrityksiä ei ole vielä tallennettu tänään. Tarkista yöhaun tila administa.",
       url:ADMIN_URL+"?view=prospects&day="+day,
-      tag:"kaurivo-leads-"+day
-     },keys,day))warned++;
+      tag:"kaurivo-missing-leads-"+day
+     },keys,day,"missing"))warned++;
     }
    }
    await recordMorningEvent(day,"skipped",
@@ -171,7 +171,7 @@ async function notifyDaily(event:string):Promise<Response>{
   await recordMorningEvent(day,"skipped","Ei vielä uusia rekisteriyrityksiä");
   return reply(200,{ok:true,day,companies:0,notifications:0,reason:"no_feed_for_today"});
  }
- const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date&limit=100");
+ const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date,last_missing_notice_date&limit=100");
  const pending=subs.filter(s=>s.last_notified_date!==day);
  if(!pending.length){
   await recordMorningEvent(day,"skipped",
