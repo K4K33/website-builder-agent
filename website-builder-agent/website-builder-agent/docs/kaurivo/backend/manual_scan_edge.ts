@@ -66,7 +66,7 @@ function normalize(rec:Record<string,unknown>){
  const name=String(nameRecord?.name||"").replace(/[\u0000-\u001f\u007f]/g," ").trim().slice(0,160);
  if(name.length<2)return null;
  const situations=Array.isArray(rec.companySituations)?rec.companySituations as Array<{type?:string,endDate?:string}>:[];
- if(situations.some(x=>["KONK","SELTILA"].includes(x.type||"")&&!x.endDate))return null;
+ if(situations.some(x=>["KONK","SELTILA","SANE"].includes(x.type||"")&&!x.endDate))return null;
  const offices=Array.isArray(rec.addresses)?rec.addresses as Array<Record<string,unknown>>:[];
  let city="";
  for(const address of offices){
