@@ -13,7 +13,7 @@
  const helsinkiToday=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Helsinki",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
  let selectedDay=new URLSearchParams(location.search).get("day")||helsinkiToday();
  if(!/^\d{4}-\d{2}-\d{2}$/.test(selectedDay))selectedDay=helsinkiToday();
- let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};
+ let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[]};
  let currentInvite=null,busy=false;
  const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava",unverified:"Tarkistamatta",researching:"Tutkitaan",needs_demo:"Demoehdokas",ready_for_demo:"Valmis demoon",skipped:"Ohitettu"};
  const fmtDate=x=>x?new Date(x).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"}):"Ei merkitty";
@@ -71,6 +71,101 @@
    document.querySelector(".workspace").scrollIntoView({behavior:"smooth",block:"start"});
   }
  }
+ 
+ // Evidence-based research priority, NOT a forecast of purchase or solvency.
+ function leadEvidenceScore(c){
+  const ready=Boolean(c.evidence_url)&&
+   ["weak_evidence","adequate_evidence","none_confirmed"].includes(c.website_assessment)&&
+   c.business_activity_assessment!=="unreviewed"&&c.customer_need!=="unknown";
+  if(!ready)return null;
+  let score=0;
+  if(["weak_evidence","none_confirmed"].includes(c.website_assessment))score+=30;
+  if(c.customer_need==="strong")score+=25;
+  if(c.customer_need==="moderate")score+=13;
+  if(c.business_activity_assessment==="active_evidence")score+=15;
+  if(c.payment_signal==="positive_evidence")score+=15;
+  if(c.demo_stage==="reviewed")score+=15;
+  return Math.min(score,100);
+ }
+ function opsLabel(e){
+  const kind={national_search:"Yöhaku",manual_search:"Varahaku",morning_push:"Aamuilmoitus"};
+  const outcome={success:"Onnistui",failure:"Epäonnistui",skipped:"Ohitettu"};
+  return (kind[e.component]||"Ajastus")+" · "+(outcome[e.outcome]||"Ei tietoa");
+ }
+ function renderOperations(){
+  const events=rows.events||[];
+  const panel=$("ops-events");panel.replaceChildren();
+  const summary=$("ops-brief");
+  const nightly=events.find(e=>e.component==="national_search");
+  const manual=events.find(e=>e.component==="manual_search");
+  const push=events.find(e=>e.component==="morning_push");
+  const current=nightly||manual;
+  const errors=events.filter(e=>e.outcome==="failure");
+  if(errors.length){
+    summary.textContent="Häiriö havaittu · katso lisätiedot";
+    $("ops-health").dataset.state="error";
+  }else if(nightly?.outcome==="success"){
+    summary.textContent="Yöhaku vahvistettu · "+nightly.records+" ehdokasta";
+    $("ops-health").dataset.state="ok";
+  }else if(manual?.outcome==="success"){
+    summary.textContent="Varahaku vahvistettu · yöhaku tarkistamatta";
+    $("ops-health").dataset.state="pending";
+  }else{
+    summary.textContent="Ei vielä vahvistettua yöajoa";
+    $("ops-health").dataset.state="pending";
+  }
+  for(const component of ["national_search","manual_search","morning_push"]){
+    const event=events.find(e=>e.component===component);
+    const labels={national_search:"04.13 / PRH-yöhaku",
+      manual_search:"Adminin manuaalinen haku",morning_push:"08.00 / aamuilmoitus"};
+    const line=append(panel,"div","ops-event");
+    append(line,"strong",null,labels[component]);
+    append(line,"span",null,event
+      ?opsLabel(event)+" · "+fmtDate(event.created_at)+
+        (component==="morning_push"?" · "+event.notifications+" lähetetty":
+         " · "+event.records+" yritystä")
+      :"Ei vahvistettua tapahtumaa valitulle päivälle");
+  }
+  const reviewed=rows.prospects.filter(c=>c.review_status!=="unverified"&&c.review_status!=="skipped").length;
+  const demos=rows.prospects.filter(c=>c.demo_stage!=="not_started").length;
+  const links=rows.prospects.filter(c=>c.website_found_url||c.website_listed_url).length;
+  const optouts=rows.prospects.filter(c=>c.marketing_opt_out).length;
+  $("lead-pulse").textContent=
+   reviewed+" / "+rows.prospects.filter(c=>c.review_status!=="skipped").length+
+   " arvioitu · "+links+" sivulinkkiä · "+demos+" demobriefiä · "+optouts+" markkinointikieltoa";
+ }
+ function draftDemoBrief(c){
+  const url=c.website_found_url||c.website_listed_url||c.website_candidate_url||"Ei vahvistettua URL-osoitetta";
+  return [
+   "KAURIVO · SISÄINEN DEMOBRIEF · EI JULKAISTU",
+   "Yritys: "+c.company_name+" / "+c.business_id,
+   "Alue: "+(c.city_hint||"vahvistettava"),
+   "Toimialatieto (PRH): "+(c.industry_code_hint||"tuntematon"),
+   "Nykyinen verkkosivuehdotus: "+url,
+   "Lähteet: "+(c.evidence_url||"LISÄÄ LÄHDE"),
+   "",
+   "1. VAHVISTA TOSIASIAT: yrityksen toiminta, palvelut, toimialan erityispiirteet, todellinen sivusto ja brändin oikeudet.",
+   "2. KOLME VERTAILUKOHTAA: etsi 3 saman toimialan vahvaa sivustoa; dokumentoi navigaatio, ulkoasu ja luottamuselementit.",
+   "3. EHDOTUS: kirkas arvolupaus, mobiilikäyttö, toimiva yhteydenottoreitti ja relevantein palvelurakenne.",
+   "4. SISÄLTÖ: vain julkisesti todennetut yritysfaktat, ei keksittyjä arvosteluja tai palveluita.",
+   "5. TOTEUTUS: premium-yksilöllinen sivusto, responsiivisuus, nopeus, esteettömyys sekä asiakkaan CMS-muokattavuus.",
+   "6. QA: 320–1440 px, linkit, lomakkeet, liikkuvat elementit, tekstien todenperäisyys ja luvat.",
+   "7. JULKAISU: EI automaattista asiakasdemon julkaisua tai yhteydenottoa ilman tarkistusta.",
+   "",
+   "Havaintoja: "+(c.research_notes||"Ei vielä havaintoja.")
+  ].join("\n");
+ }
+ function prepareDemoBrief(c){
+   if(!c.evidence_url||!["weak_evidence","none_confirmed"].includes(c.website_assessment)||
+      c.business_activity_assessment!=="active_evidence"||c.customer_need==="unknown"){
+     toast("Vahvista ensin sivuston tarve, aktiivisuus ja tutkimuksen lähde ennen demobriefiä.","error");
+     openEditor("prospect",c);return;
+   }
+   openEditor("prospect",c);
+   $("field-demo_brief").value=c.demo_brief||draftDemoBrief(c);
+   $("field-demo_stage").value="brief_prepared";
+   toast("Demobrief-luonnos valmisteltu, tarkista ja tallenna. Ei ulkoisia AI-krediittejä.","success");
+ }
  function render(){
   $("m-clients").textContent=rows.clients.length;
   $("m-projects").textContent=rows.projects.length;
@@ -86,6 +181,7 @@
    if(target)target.textContent=String(value);
   }
   $("now-label").textContent=new Date().toLocaleDateString("fi-FI",{day:"numeric",month:"long",year:"numeric"});
+  renderOperations();
   const prospects=$("prospect-list");prospects.replaceChildren();
   $("prospect-day").value=selectedDay;
   const isToday=selectedDay===helsinkiToday();
@@ -131,7 +227,17 @@
    find.href=findUrl.href;find.target="_blank";find.rel="noopener noreferrer";
    append(row.main,"div","record-sub","Toimiala: "+(candidate.industry_code_hint||"ei tietoa")+" · Lähde PRH/YTJ CC BY 4.0");
    if(candidate.research_notes)append(row.main,"div","record-note",candidate.research_notes);
-   row.actions.append(button("Tarkista ja tallenna sivu",()=>openEditor("prospect",candidate)));
+   const score=leadEvidenceScore(candidate);
+   append(row.main,"div","record-sub",score===null
+     ?"Asiakasprioriteetti: tiedot tarkistamatta"
+     :"Tutkimusprioriteetti: "+score+" / 100 (ei ostotodennäköisyys)");
+   if(candidate.marketing_opt_out)append(row.main,"div","record-warning","MARKKINOINTIKIELTO · ei yhteydenottoa");
+   if(candidate.demo_stage!=="not_started")
+    append(row.main,"div","record-sub","Demobrief: "+(candidate.demo_stage==="reviewed"?"tarkistettu":"valmisteltu, odottaa tarkistusta"));
+   row.actions.append(button("Tarkista yritys",()=>openEditor("prospect",candidate)));
+   if(candidate.review_status!=="skipped"&&!candidate.marketing_opt_out)
+    row.actions.append(button("Valmistele demobrief",()=>prepareDemoBrief(candidate)));
+
   }
   const clients=$("client-list");clients.replaceChildren();
   if(!rows.clients.length)empty(clients,"Ei yrityksiä vielä. Aloita lisäämällä ensimmäinen.");
@@ -189,13 +295,14 @@
   busy=true;
   try{
    const entities=[
-    ["prospects","kaurivo_crm_prospects"],["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
+    ["prospects","kaurivo_crm_prospects"],["events","kaurivo_pipeline_events"],["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
     ["sales","kaurivo_crm_sales"],["queue","kaurivo_crm_feedback_queue"],
     ["reviews","kaurivo_feedback_submissions"],["invitations","kaurivo_feedback_invitations"]
    ];
    const results=await Promise.all(entities.map(([key,table])=>{
     let query=db.from(table).select("*");
     if(key==="prospects")return query.eq("discovery_date",selectedDay).order("created_at",{ascending:false}).limit(100);
+    if(key==="events")return query.eq("event_day",selectedDay).order("created_at",{ascending:false}).limit(30);
     return query.order(key==="reviews"?"submitted_at":"created_at",{ascending:false}).limit(250);
    }));
    for(let i=0;i<results.length;i++){
@@ -209,6 +316,16 @@
   prospect:{title:"Yrityksen taustatutkimus",table:"kaurivo_crm_prospects",fields:[
    ["review_status","Tutkimuksen vaihe","choice",true,["unverified","researching","needs_demo","ready_for_demo","skipped"]],
    ["website_found_url","Oikea verkkosivu (itse tarkistettu, https://...)","url"],
+   ["website_assessment","Verkkosivun arvio","choice",true,["unreviewed","weak_evidence","adequate_evidence","none_confirmed"]],
+   ["business_activity_assessment","Yrityksen aktiivisuuden näyttö","choice",true,["unreviewed","active_evidence","inactive_evidence"]],
+   ["payment_signal","Maksukyvyn havainto (ei ennuste)","choice",true,["unknown","positive_evidence","negative_evidence"]],
+   ["customer_need","Verkkosivu-uudistuksen tarve","choice",true,["unknown","strong","moderate","weak"]],
+   ["evidence_url","Havaintojen julkinen lähdelinkki (https://...)","url"],
+   ["demo_stage","Demobriefin vaihe","choice",true,["not_started","brief_prepared","reviewed"]],
+   ["demo_brief","Sisäinen demobrief ja QA-ohje","textarea"],
+   ["outreach_review","Yhteydenoton lainmukaisuuden tarkistus","choice",true,["not_reviewed","needs_legal_review","human_approved","blocked"]],
+   ["outreach_stage","Yhteydenoton vaihe (ei lähetä viestejä)","choice",true,["not_contacted","drafted","sent_manually","responded","won","opted_out"]],
+   ["marketing_opt_out","Yritys on kieltänyt markkinoinnin","checkbox"],
    ["research_notes","Vahvistetut faktat, puutteet ja lähteet","textarea"]]},
   client:{title:"Yrityksen tiedot",table:"kaurivo_crm_clients",fields:[
    ["company_name","Yrityksen nimi","text",true],["contact_name","Yhteyshenkilö","text"],
@@ -232,6 +349,7 @@
   const wrapper=el("div","field"),labelEl=append(wrapper,"label",null,title);
   let control;
   if(type==="textarea")control=el("textarea");
+  else if(type==="checkbox"){control=el("input");control.type="checkbox";control.checked=Boolean(value);}
   else if(type==="choice"||type==="clients"||type==="projects"){
    control=el("select");const vals=type==="choice"?options.map(v=>[v,stage(v)]):
     type==="clients"?rows.clients.map(v=>[v.id,v.company_name]):
@@ -243,7 +361,7 @@
   labelEl.htmlFor=control.id;control.required=Boolean(required);
   if(type==="number"){control.step=".01";control.min="0";}
   if(type==="textarea")control.maxLength=5000;
-  if(value!==undefined&&value!==null)control.value=String(value);
+  if(type!=="checkbox"&&value!==undefined&&value!==null)control.value=String(value);
   wrapper.append(control);return wrapper;
  }
  function openEditor(kind,recordValue){
@@ -261,9 +379,9 @@
   const {kind,record:old}=editing;
   const spec=forms[kind],data={};
   for(const [key,,type,required] of spec.fields){
-   const value=$("field-"+key).value.trim();
+   const value=type==="checkbox"?$("field-"+key).checked:$("field-"+key).value.trim();
    if(required&&!value){toast("Täytä pakolliset kentät.","error");return;}
-   data[key]=type==="number"?Number(value):(value||null);
+   data[key]=type==="checkbox"?value:type==="number"?Number(value):(value||null);
   }
   if(kind==="prospect"){
    data.research_notes=data.research_notes||"";
@@ -276,7 +394,37 @@
      toast("Verkkosivun osoitteen on oltava kelvollinen HTTP(S)-osoite.","error");return;
     }
    }
-   // A saved URL is not proof of its owner, quality, business activity or financial health.
+   data.demo_brief=data.demo_brief||"";
+   data.evidence_url=data.evidence_url||"";
+   if(data.evidence_url){
+    try{
+     const u=new URL(data.evidence_url);
+     if(u.protocol!=="https:"||u.username||u.password||data.evidence_url.length>1200)
+      throw Error("invalid");
+    }catch(_){toast("Havaintojen lähteen on oltava kelvollinen HTTPS-linkki.","error");return;}
+   }
+   const observed=[data.website_assessment!=="unreviewed",
+     data.business_activity_assessment!=="unreviewed",
+     data.payment_signal!=="unknown",data.customer_need!=="unknown"];
+   if(observed.some(Boolean)&&!data.evidence_url){
+    toast("Täytä lähdelinkki, kun vahvistat yrityksen arviointitietoja.","error");return;
+   }
+   if(data.demo_stage!=="not_started"&&!data.demo_brief.trim()){
+    toast("Kirjoita demobrief ennen valmisteluvaiheen tallentamista.","error");return;
+   }
+   if(data.marketing_opt_out||old?.marketing_opt_out){
+    data.marketing_opt_out=true;
+    data.outreach_review="blocked";
+    data.outreach_stage="opted_out";
+   }
+   if(data.outreach_review==="human_approved"&&!data.marketing_opt_out){
+    if(data.business_activity_assessment!=="active_evidence"||!data.evidence_url||
+      data.customer_need==="unknown"){
+     toast("Yhteydenottoa ei voi hyväksyä ilman aktiivisuuden, tarpeen ja lähteen tarkistusta.","error");return;
+    }
+    if(!window.confirm("Vahvistatko, että vastaanottajatyyppi, soveltuva B2B-suoramarkkinoinnin laki, GDPR-tiedot, estolistat ja maksuton kielto-ohje on tarkistettu erikseen? Tämä EI lähetä viestiä."))return;
+   }
+   // Website URLs and registry facts never automatically prove identity or payment capacity.
    data.website_verified=false;
   }
   if(kind==="sale"){data.status="proposal";data.source_verified=false;data.confirmed_at=null;}
@@ -753,7 +901,7 @@
   $("send-login").addEventListener("click",sendLogin);
   $("verify-login").addEventListener("click",verifyLogin);
   $("login-proof").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();verifyLogin();}});
-  $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};setLogin(false);});
+  $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
   $("start-manual-scan").addEventListener("click",startManualScan);
   $("show-skipped-prospects").addEventListener("change",render);
