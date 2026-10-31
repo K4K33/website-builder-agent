@@ -80,7 +80,9 @@ class KaurivoMorningPushTests(unittest.TestCase):
         self.assertIn('cron: "0 8 * * *"', yaml)
         self.assertIn('cron: "27 8 * * *"', yaml)
         self.assertIn('cron: "17 9 * * *"', yaml)
-        self.assertEqual(yaml.count('timezone: "Europe/Helsinki"'), 3)
+        self.assertIn('cron: "7 10 * * *"', yaml)
+        self.assertEqual(yaml.count('timezone: "Europe/Helsinki"'), 4)
+        self.assertEqual(yaml.count('cron: "17 9 * * *"'), 1)
 
 
 if __name__ == "__main__":
