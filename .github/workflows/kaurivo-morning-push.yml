@@ -8,6 +8,12 @@ on:
     # Backup if primary was delayed or failed. Server deduplicates each day/device.
     - cron: "27 8 * * *"
       timezone: "Europe/Helsinki"
+    # Warn about a genuinely missing morning batch; keep separate deduplication.
+    - cron: "17 9 * * *"
+      timezone: "Europe/Helsinki"
+    # One late retry for data restored after the missing-batch warning.
+    - cron: "7 10 * * *"
+      timezone: "Europe/Helsinki"
     # Final status check if the morning company list is still missing.
     - cron: "17 9 * * *"
       timezone: "Europe/Helsinki"
