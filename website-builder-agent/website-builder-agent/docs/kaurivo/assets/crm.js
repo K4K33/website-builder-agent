@@ -92,11 +92,12 @@
   const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
   const visible=rows.prospects.filter(x=>x.review_status!=="skipped"||
     $("show-skipped-prospects").checked).sort((a,b)=>
-     Number(Boolean(b.website_found_url||b.website_listed_url))-
-     Number(Boolean(a.website_found_url||a.website_listed_url)));
+     Number(Boolean(b.website_found_url||b.website_listed_url||b.website_candidate_url))-
+     Number(Boolean(a.website_found_url||a.website_listed_url||a.website_candidate_url)));
   const withSites=visible.filter(x=>x.website_found_url||x.website_listed_url).length;
+  const suggestions=visible.filter(x=>!x.website_found_url&&!x.website_listed_url&&x.website_candidate_url).length;
   $("morning-summary").textContent=rows.prospects.length
-    ? visible.length+" yritystä tarkistettavana · "+withSites+" verkkosivulinkkiä"+(excluded&&!$("show-skipped-prospects").checked
+    ? visible.length+" yritystä tarkistettavana · "+withSites+" rekisteri-/tarkistuslinkkiä"+(suggestions?" · "+suggestions+" sivuehdotusta":"")+(excluded&&!$("show-skipped-prospects").checked
       ?" · "+excluded+" ohitettu":"")+" · "+selectedDay
     : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
   if(!visible.length)empty(prospects,rows.prospects.length
@@ -108,16 +109,17 @@
      stage(candidate.review_status));
    const verified=String(candidate.website_found_url||"");
    const listed=String(candidate.website_listed_url||"");
-   const website=verified||listed;
+   const suggested=String(candidate.website_candidate_url||"");
+   const website=verified||listed||suggested;
    if(website){
     try{
      const url=new URL(website);
      if(url.protocol==="https:"||url.protocol==="http:"){
       const link=append(row.main,"a","record-website",
-       verified?"Avaa löydetty verkkosivu ↗":"Avaa PRH:n ilmoittama verkkosivu ↗");
+       verified?"Avaa tallennettu verkkosivu ↗":listed?"Avaa PRH:n ilmoittama verkkosivu ↗":"Avaa mahdollinen verkkosivu ↗");
       link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";
       append(row.main,"span","record-sub",url.hostname+" · "+
-       (verified?"Tallennettu käsin, vaatii asiakastarpeen arvioinnin":"PRH:n ilmoittama, ei vielä tarkistettu"));
+       (verified?"Tallennettu käsin · tarkista yrityksen vastaavuus":listed?"PRH:n ilmoittama · ei tarkistettu":"Hakukoneen ehdotus · EI vahvistettu, tarkista ennen tallennusta"));
      }
     }catch(_){append(row.main,"div","record-sub","Verkkosivulinkki on virheellinen · tarkista käsin");}
    }else{
@@ -274,7 +276,8 @@
      toast("Verkkosivun osoitteen on oltava kelvollinen HTTP(S)-osoite.","error");return;
     }
    }
-   data.website_verified=Boolean(data.website_found_url);
+   // A saved URL is not proof of its owner, quality, business activity or financial health.
+   data.website_verified=false;
   }
   if(kind==="sale"){data.status="proposal";data.source_verified=false;data.confirmed_at=null;}
   if(kind==="client"){data.contact_name=data.contact_name||"";data.website=data.website||"";data.notes=data.notes||"";}
