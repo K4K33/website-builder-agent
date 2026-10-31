@@ -23,8 +23,15 @@
   <div class="login-panel"><div class="pill">ADMIN ACCESS</div><h2>Tervetuloa takaisin.</h2>
   <p>Kirjautuminen sallitaan vain vahvistetulle Kaurivon hallintatilille.</p>
   <label class="form-hint" for="admin-email">Ylläpitotili</label><select id="admin-email" class="address" aria-label="Valitse ylläpitotili"><option value="hello.kaurivo@gmail.com">Kaurivo — hello.kaurivo@gmail.com</option><option value="kaarlo.kaukko1@gmail.com">Henkilökohtainen — kaarlo.kaukko1@gmail.com</option></select>
-  <button type="button" class="primary-button full" id="send-login">Lähetä kirjautumisviesti <span>↗</span></button>
-  <p class="form-hint">Kirjaudu tähän sovellukseen, älä Safariin. Valitse ylläpitotilisi ja tilaa kirjautumisviesti.</p>
+  <form id="password-login-form" class="password-login-form">
+    <label class="form-hint" for="admin-password">Salasana (jos olet jo asettanut sellaisen)</label>
+    <input id="admin-password" name="password" type="password" autocomplete="current-password" required maxlength="128" placeholder="Anna Kaurivon salasana">
+    <button class="primary-button full" id="password-login" type="submit">Kirjaudu salasanalla <span>↗</span></button>
+  </form>
+  <div class="login-divider"><span>TAI</span></div>
+  <button type="button" class="outline-button full" id="send-login">Lähetä kirjautumisviesti</button>
+  <p class="form-hint">Jos sähköpostipalvelun lähetysraja on täynnä, voit asettaa salasanan jo kirjautuneessa Safari-ikkunassa. Älä lähetä kirjautumisviestejä toistuvasti.</p>
+  <p class="form-hint">Sähköpostilinkki on varakirjautuminen. Jos käytät linkkiä, vahvista se tässä sovelluksessa, älä Safarissa.</p>
   <div id="login-verify" class="login-verify" hidden>
     <div class="eyebrow">VAHVISTA TÄSSÄ SOVELLUKSESSA</div>
     <p id="login-instructions">Avaa Gmail ja kopioi sähköpostin kirjautumislinkki painamalla linkkiä pitkään ja valitsemalla Kopioi linkki. Älä avaa linkkiä Safarissa.</p>
@@ -40,7 +47,7 @@
   </div>
 </section>
 <section id="dashboard" hidden>
-<div class="dashboard-top"><div><span class="eyebrow">KAURIVO / OPERATIONS</span><h1>Studio overview<span class="light-dot">.</span></h1><p>Yrityksistä valmiiksi verkkosivuiksi — selkeästi ja hallitusti.</p></div><div class="right-top"><span id="now-label"></span><button class="outline-button" type="button" id="refresh">Päivitä tiedot ↻</button></div></div>
+<div class="dashboard-top"><div><span class="eyebrow">KAURIVO / OPERATIONS</span><h1>Studio overview<span class="light-dot">.</span></h1><p>Yrityksistä valmiiksi verkkosivuiksi — selkeästi ja hallitusti.</p></div><div class="right-top"><span id="now-label"></span><button class="outline-button" type="button" id="open-password-setup">Aseta salasana</button><button class="outline-button" type="button" id="refresh">Päivitä tiedot ↻</button></div></div>
 <div class="metrics">
 <div class="metric"><span>Yritykset</span><strong id="m-clients">—</strong><small>Asiakasrekisteri</small></div>
 <div class="metric"><span>Projektit</span><strong id="m-projects">—</strong><small>Suunnittelusta luovutukseen</small></div>
@@ -81,6 +88,18 @@
 </main>
 <footer class="crm-footer"><span>KAURIVO © 2026</span><span>CLIENT DATA IS PRIVATE · NOT FOR PUBLICATION</span></footer>
 </div>
+<dialog id="password-dialog" class="editor">
+ <form id="password-setup-form">
+  <div class="dialog-head"><div><div class="eyebrow">KAURIVO / TILIN SUOJAUS</div><h2>Aseta oma salasana</h2></div><button type="button" class="close" id="close-password-dialog" aria-label="Sulje">×</button></div>
+  <p class="form-hint" id="password-account-notice">Salasana asetetaan vain tällä hetkellä kirjautuneelle vahvistetulle ylläpitotilille. Sen jälkeen voit kirjautua PWA-sovellukseen ilman uutta sähköpostia.</p>
+  <div class="fields">
+   <div class="field full"><label for="new-admin-password">Uusi salasana, vähintään 12 merkkiä</label><input type="password" id="new-admin-password" autocomplete="new-password" required minlength="12" maxlength="128"></div>
+   <div class="field full"><label for="confirm-admin-password">Vahvista salasana</label><input type="password" id="confirm-admin-password" autocomplete="new-password" required minlength="12" maxlength="128"></div>
+  </div>
+  <p class="form-hint">Käytä yksilöllistä salasanaa ja tallenna se iPhonen Salasanat-sovellukseen. Älä lähetä salasanaasi sähköpostilla tai tässä keskustelussa.</p>
+  <div class="dialog-actions"><button class="outline-button" id="cancel-password" type="button">Peruuta</button><button class="primary-button" id="save-password" type="submit">Tallenna salasana</button></div>
+ </form>
+</dialog>
 <dialog id="editor" class="editor"><form method="dialog" id="editor-form"><div class="dialog-head"><div><div class="eyebrow">KAURIVO / CRM</div><h2 id="editor-heading">Lisää uusi</h2></div><button type="button" aria-label="Sulje" id="close-editor" class="close">×</button></div><div id="editor-fields" class="fields"></div><div class="dialog-actions"><button class="outline-button" type="button" id="cancel-editor">Peruuta</button><button class="primary-button" type="submit" id="save-editor">Tallenna ↗</button></div></form></dialog>
 <dialog id="invite-dialog" class="editor"><div class="dialog-head"><div><div class="eyebrow">PRIVATE INVITATION</div><h2>Palautekutsu on valmis</h2></div><button type="button" class="close" id="close-invite" aria-label="Sulje">×</button></div><p class="form-hint">Kopioi tämä kerran näkyvä viesti ja lähetä vain oikean asiakkaan vahvistettuun sähköpostiosoitteeseen. Älä jaa linkkiä julkisesti.</p><textarea rows="10" id="invite-copy" readonly></textarea><div class="dialog-actions"><button class="outline-button" id="copy-invite" type="button">Kopioi viesti</button><button class="primary-button" id="mark-sent" type="button">Merkitse lähetetyksi</button></div></dialog>
 </body></html>
