@@ -134,6 +134,14 @@ Deno.serve(async req => {
   if(!result.ok){
    return send(503,{ok:false,error:"database_unavailable"});
   }
-  return send(200,{ok:true,processed:candidates.length,emails_sent:0,ai_credits_used:0});
+  // Operational evidence is recorded only after PRH candidates were saved.
+  const event=await fetch(SUPABASE_URL+"/rest/v1/kaurivo_pipeline_events",{
+   method:"POST",headers:{"apikey":SERVICE_ROLE,"authorization":"Bearer "+SERVICE_ROLE,
+     "content-type":"application/json","prefer":"return=minimal"},
+   body:JSON.stringify({event_day:data.date,component:"national_search",
+     outcome:"success",details:"PRH-aineisto tallennettu",records:candidates.length})
+  }).catch(()=>null);
+  return send(200,{ok:true,processed:candidates.length,
+   report_recorded:Boolean(event?.ok),emails_sent:0,ai_credits_used:0});
  }catch(_){return send(503,{ok:false,error:"database_unavailable"});}
 });
