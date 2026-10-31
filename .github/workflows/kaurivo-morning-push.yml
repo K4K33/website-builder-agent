@@ -14,9 +14,6 @@ on:
     # One late retry for data restored after the missing-batch warning.
     - cron: "7 10 * * *"
       timezone: "Europe/Helsinki"
-    # Final status check if the morning company list is still missing.
-    - cron: "17 9 * * *"
-      timezone: "Europe/Helsinki"
   workflow_dispatch:
 
 permissions:
