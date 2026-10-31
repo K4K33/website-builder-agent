@@ -54,6 +54,10 @@ class WebsiteResearchTests(unittest.TestCase):
             "title":"Espoon kilpailijat","content":"lukkohuoltopalveluita"}]))
         self.assertIsNone(rank_search_candidate(company,[{
             "url":"https://facebook.com/espoonlukkohuolto","title":"Espoon Lukkohuolto Oy"}]))
+        self.assertIsNone(rank_search_candidate(company,[{
+            "url":"https://paikallisuutiset.fi/yritykset/espoon-lukkohuolto",
+            "title":"Espoon Lukkohuolto Oy uudisti liiketilansa",
+            "content":"Espoon Lukkohuolto Oy on esimerkki paikallisesta yrityksestä"}]))
 
     def test_url_safety_and_no_ssrf_verification_fetch(self):
         for url in ("javascript:alert(1)","file:///etc/passwd","https://localhost/","http://127.0.0.1/x",
