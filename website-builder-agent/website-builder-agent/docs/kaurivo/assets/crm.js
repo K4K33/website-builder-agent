@@ -100,7 +100,7 @@
   const manual=events.find(e=>e.component==="manual_search");
   const push=events.find(e=>e.component==="morning_push");
   const current=nightly||manual;
-  const errors=events.filter(e=>e.outcome==="failure");
+  const errors=[nightly,manual,push].filter(e=>e&&e.outcome==="failure");
   if(errors.length){
     summary.textContent="Häiriö havaittu · katso lisätiedot";
     $("ops-health").dataset.state="error";
@@ -240,6 +240,14 @@
    if(candidate.demo_stage!=="not_started")
     append(row.main,"div","record-sub","Demobrief: "+(candidate.demo_stage==="reviewed"?"tarkistettu":"valmisteltu, odottaa tarkistusta"));
    row.actions.append(button("Tarkista yritys",()=>openEditor("prospect",candidate)));
+   if(candidate.demo_brief){
+    row.actions.append(button("Kopioi demobrief",async()=>{
+     try{
+      await navigator.clipboard.writeText(candidate.demo_brief);
+      toast("Demobrief kopioitu. Voit käyttää sitä sivuston suunnittelun lähtökohtana.","success");
+     }catch(_){toast("Kopiointi ei onnistunut. Avaa yrityksen tiedot ja kopioi brief käsin.","error");}
+    }));
+   }
    if(candidate.review_status!=="skipped"&&!candidate.marketing_opt_out)
     row.actions.append(button("Valmistele demobrief",()=>prepareDemoBrief(candidate)));
 
