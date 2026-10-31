@@ -1,7 +1,9 @@
 """Kaurivo CRM: offline security and browser tests, no billable API calls."""
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from functools import partial
+from threading import Thread
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 SITE = Path(__file__).resolve().parents[1]/"docs"/"kaurivo"
 PAGE = SITE/"admin"/"index.html"
@@ -36,6 +38,11 @@ class AdminSurfaceTests(unittest.TestCase):
    from playwright.sync_api import sync_playwright
   except ImportError:
    self.skipTest("Playwright missing")
+  class QuietHandler(SimpleHTTPRequestHandler):
+   def log_message(self,*args):pass
+  server=ThreadingHTTPServer(("127.0.0.1",0),partial(QuietHandler,directory=str(SITE)))
+  thread=Thread(target=server.serve_forever,daemon=True)
+  thread.start()
   with sync_playwright() as p:
    browser=p.chromium.launch(headless=True,args=["--disable-gpu"])
    try:
@@ -52,7 +59,7 @@ return { auth:{
  async signOut(){return {error:null}}
  }};
 }""",headers={"Access-Control-Allow-Origin":"*"}))
-      page.goto(PAGE.as_uri(),wait_until="domcontentloaded")
+      page.goto(f"http://127.0.0.1:{server.server_port}/admin/",wait_until="domcontentloaded")
       page.wait_for_timeout(140)
       self.assertTrue(page.locator("#login-screen").is_visible())
       self.assertFalse(page.locator("#app").is_visible())
@@ -63,6 +70,9 @@ return { auth:{
       over=page.evaluate("Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-innerWidth")
       self.assertLessEqual(over,2,(width,over))
       page.close()
-   finally: browser.close()
+   finally:
+    browser.close()
+    server.shutdown()
+    server.server_close()
 
 if __name__=="__main__":unittest.main()
