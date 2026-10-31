@@ -145,20 +145,26 @@ Deno.serve(async req => {
     "Content-Type":"application/json",
     "apikey":SERVICE_ROLE,
     "Authorization":"Bearer "+SERVICE_ROLE,
-    "Prefer":"resolution=ignore-duplicates,return=minimal"
+    "Prefer":"resolution=ignore-duplicates,return=representation"
    },body:JSON.stringify(candidates)
   });
   if(!result.ok){
    return send(503,{ok:false,error:"database_unavailable"});
   }
+  let inserted=0;
+  try{
+   const rows=await result.json();
+   if(!Array.isArray(rows))throw Error("invalid_insert_response");
+   inserted=rows.length;
+  }catch(_){return send(503,{ok:false,error:"database_confirmation_missing"});}
   // Operational evidence is recorded only after PRH candidates were saved.
   const event=await fetch(SUPABASE_URL+"/rest/v1/kaurivo_pipeline_events",{
    method:"POST",headers:{"apikey":SERVICE_ROLE,"authorization":"Bearer "+SERVICE_ROLE,
      "content-type":"application/json","prefer":"return=minimal"},
    body:JSON.stringify({event_day:data.date,component:"national_search",
-     outcome:"success",details:"PRH-aineisto tallennettu",records:candidates.length})
+     outcome:"success",details:"PRH-aineisto tallennettu",records:inserted})
   }).catch(()=>null);
-  return send(200,{ok:true,processed:candidates.length,
+  return send(200,{ok:true,processed:candidates.length,added:inserted,
    report_recorded:Boolean(event?.ok),emails_sent:0,ai_credits_used:0});
  }catch(_){return send(503,{ok:false,error:"database_unavailable"});}
 });
