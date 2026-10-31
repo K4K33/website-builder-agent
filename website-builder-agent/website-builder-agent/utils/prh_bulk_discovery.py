@@ -93,6 +93,14 @@ def normalize_company(record):
     """Keep minimal, source-referenced registry facts; nothing about poor sites."""
     if not isinstance(record, dict) or record.get("endDate"):
         return None
+    # PRH explicitly identifies bankruptcy, liquidation and restructuring.
+    # Exclude those from early sales targeting; this is not a claim of solvency
+    # for the remaining businesses.
+    situations = record.get("companySituations") or []
+    if any(isinstance(item, dict) and item.get("type") in
+           ("KONK", "SELTILA", "SANE") and not item.get("endDate")
+           for item in situations if isinstance(situations, list)):
+        return None
     obj = record.get("businessId") or {}
     business_id = obj.get("value") if isinstance(obj, dict) else ""
     if not isinstance(business_id, str) or not re.fullmatch(r"[0-9]{7}-[0-9]", business_id):
