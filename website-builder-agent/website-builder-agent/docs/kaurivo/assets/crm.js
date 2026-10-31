@@ -400,17 +400,96 @@
   }
   setLogin(true);showTab("prospects");await reload();await syncPushStatus();
  }
- async function sendLogin(){
-  const buttonEl=$("send-login");buttonEl.disabled=true;
+ // Keep only the pending email in this installed app, never an OTP/link or token.
+ const PENDING_LOGIN_KEY="kaurivo_pending_admin_login";
+ let pendingLoginEmail="";
+ function showLoginVerification(email){
+  pendingLoginEmail=email;
+  $("login-verify").hidden=false;
+  $("login-instructions").textContent=
+   "Vahvista tilin "+email+" kirjautuminen tässä Kaurivo-sovelluksessa. "+
+   "Avaa Gmail, paina sähköpostin kirjautumislinkkiä pitkään ja valitse Kopioi linkki. "+
+   "Älä avaa linkkiä Safarissa.";
+ }
+ function restorePendingLogin(){
   try{
+   const pending=JSON.parse(localStorage.getItem(PENDING_LOGIN_KEY)||"null");
+   if(pending && ADMIN_EMAILS.has(pending.email) &&
+      Number.isFinite(pending.until) && Date.now()<pending.until){
+    $("admin-email").value=pending.email;
+    showLoginVerification(pending.email);
+   }else localStorage.removeItem(PENDING_LOGIN_KEY);
+  }catch(_){localStorage.removeItem(PENDING_LOGIN_KEY);}
+ }
+ async function sendLogin(){
+  const buttonEl=$("send-login");
+  if(buttonEl.disabled)return;
+  buttonEl.disabled=true;
+  try{
+   const email=$("admin-email").value.trim().toLowerCase();
+   if(!ADMIN_EMAILS.has(email))throw Error("Tämä ei ole sallittu hallintatili.");
    const {error}=await db.auth.signInWithOtp({
-    email:$("admin-email").value,
-    options:{emailRedirectTo:REDIRECT_URL,shouldCreateUser:true}
+    email,options:{emailRedirectTo:REDIRECT_URL,shouldCreateUser:false}
    });
    if(error)throw error;
-   toast("Kirjautumislinkki on lähetetty osoitteeseen "+$("admin-email").value+".","success");
-  }catch(err){toast("Kirjautumislinkkiä ei voitu lähettää: "+(err.message||"Virhe"),"error");}
-  finally{buttonEl.disabled=false;}
+   localStorage.setItem(PENDING_LOGIN_KEY,
+    JSON.stringify({email,until:Date.now()+60*60*1000}));
+   showLoginVerification(email);
+   $("login-proof").value="";
+   toast("Kirjautumisviesti lähetetty. Kopioi Gmailin linkki ja liitä se tähän sovellukseen.","success");
+  }catch(err){
+   toast("Kirjautumisviestin lähetys epäonnistui: "+(err.message||"Virhe"),"error");
+  }finally{buttonEl.disabled=false;}
+ }
+ function loginProof(raw){
+  const value=String(raw||"").trim();
+  if(/^\d{6,8}$/.test(value)){
+   return {email:pendingLoginEmail,token:value,type:"email"};
+  }
+  // Only accept a direct Supabase verification URL for this Kaurivo project.
+  // Never navigate to, log or send a pasted URL to a third-party host.
+  let url;
+  try{url=new URL(value);}catch(_){
+   throw Error("Liitä koko Gmailista kopioitu kirjautumislinkki tai numerokoodi.");
+  }
+  if(url.protocol!=="https:"||url.hostname!=="xhsfbcwpwbgdbatrcyuk.supabase.co"||
+     url.port||url.username||url.password||
+     !/^\/auth\/v1\/verify\/?$/.test(url.pathname)||
+     value.length>4096)
+   throw Error("Linkki ei ole Kaurivon virallinen vahvistuslinkki. Kopioi alkuperäinen Gmailista.");
+  const token_hash=url.searchParams.get("token")||url.searchParams.get("token_hash");
+  const type=url.searchParams.get("type");
+  if(!token_hash || token_hash.length>512 ||
+     !/^[A-Za-z0-9_-]{16,512}$/.test(token_hash) ||
+     !["email","magiclink","signup"].includes(type))
+   throw Error("Linkistä puuttuu kelvollinen vahvistustunnus. Tilaa uusi kirjautumisviesti.");
+  return {token_hash,type};
+ }
+ async function verifyLogin(){
+  const buttonEl=$("verify-login");
+  if(buttonEl.disabled)return;
+  buttonEl.disabled=true;
+  try{
+   if(!ADMIN_EMAILS.has(pendingLoginEmail))
+    throw Error("Tilaa kirjautumisviesti ensin.");
+   const proof=loginProof($("login-proof").value);
+   const {data,error}=await db.auth.verifyOtp(proof);
+   if(error)throw error;
+   const user=data?.user;
+   if(!user || !ADMIN_EMAILS.has(user.email?.toLowerCase()) ||
+      !user.email_confirmed_at){
+    await db.auth.signOut();
+    throw Error("Kaurivon vahvistettua hallintatiliä ei löytynyt.");
+   }
+   $("login-proof").value="";
+   localStorage.removeItem(PENDING_LOGIN_KEY);
+   pendingLoginEmail="";
+   toast("Kirjautuminen onnistui Kaurivo-sovelluksessa.","success");
+   await handleAuth();
+  }catch(err){
+   toast("Vahvistus epäonnistui: "+(err.message||"Vanhentunut tai jo käytetty linkki.")+
+    " Jos avasit linkin jo Safarissa, tilaa uusi viesti ja kopioi uusi linkki avaamatta sitä.","error");
+  }finally{buttonEl.disabled=false;}
  }
  async function init(){
   $("redirect-url").textContent=REDIRECT_URL;
@@ -418,7 +497,10 @@
   db=window.supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
   document.querySelectorAll("[data-dialog]").forEach(b=>b.addEventListener("click",()=>openEditor(b.dataset.dialog)));
+  restorePendingLogin();
   $("send-login").addEventListener("click",sendLogin);
+  $("verify-login").addEventListener("click",verifyLogin);
+  $("login-proof").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();verifyLogin();}});
   $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
   $("prospect-day").addEventListener("change",async event=>{
