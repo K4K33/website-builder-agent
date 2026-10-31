@@ -421,6 +421,80 @@
    }else localStorage.removeItem(PENDING_LOGIN_KEY);
   }catch(_){localStorage.removeItem(PENDING_LOGIN_KEY);}
  }
+
+ async function passwordLogin(event){
+  event.preventDefault();
+  const buttonEl=$("password-login");
+  if(buttonEl.disabled)return;
+  const email=$("admin-email").value.trim().toLowerCase();
+  const password=$("admin-password").value;
+  if(!ADMIN_EMAILS.has(email)){toast("Tämä ei ole Kaurivon hallintatili.","error");return;}
+  if(!password){toast("Anna tilin salasana.","error");return;}
+  buttonEl.disabled=true;
+  try{
+   const {data,error}=await db.auth.signInWithPassword({email,password});
+   if(error)throw error;
+   const user=data?.user;
+   if(!user||!ADMIN_EMAILS.has(user.email?.toLowerCase())||!user.email_confirmed_at){
+    await db.auth.signOut();
+    throw Error("Kirjautuminen ei ole sallittu tälle tilille.");
+   }
+   $("admin-password").value="";
+   toast("Kirjauduttu Kaurivoon ilman sähköpostivahvistusta.","success");
+   await handleAuth();
+  }catch(err){
+   // Never log passwords, authentication tokens or raw credentials.
+   toast("Kirjautuminen epäonnistui. Tarkista sähköposti ja salasana, "+
+    "tai varmista että olet asettanut salasanan Safari-istunnossa.","error");
+  }finally{buttonEl.disabled=false;}
+ }
+ async function openPasswordSetup(){
+  try{
+   const {data:{user},error}=await db.auth.getUser();
+   if(error||!user||!ADMIN_EMAILS.has(user.email?.toLowerCase())||!user.email_confirmed_at){
+    throw Error("Kirjaudu vahvistetulle ylläpitotilille ennen salasanan asettamista.");
+   }
+   $("password-account-notice").textContent=
+    "Salasana asetetaan nyt tilille "+user.email+
+    ". Käytä samaa sähköpostia PWA-sovelluksen kirjautumisessa.";
+   $("new-admin-password").value="";
+   $("confirm-admin-password").value="";
+   $("password-dialog").showModal();
+  }catch(err){toast(err.message||"Tilin vahvistus epäonnistui.","error");}
+ }
+ function closePasswordSetup(){
+  $("new-admin-password").value="";
+  $("confirm-admin-password").value="";
+  $("password-dialog").close();
+ }
+ async function savePassword(event){
+  event.preventDefault();
+  const buttonEl=$("save-password");
+  if(buttonEl.disabled)return;
+  const password=$("new-admin-password").value;
+  const check=$("confirm-admin-password").value;
+  if(password.length<12||password.length>128){
+   toast("Valitse vähintään 12-merkkinen salasana.","error");return;
+  }
+  if(password!==check){toast("Salasanat eivät täsmää.","error");return;}
+  buttonEl.disabled=true;
+  try{
+   const {data:{user},error:authError}=await db.auth.getUser();
+   if(authError||!user||!ADMIN_EMAILS.has(user.email?.toLowerCase())||!user.email_confirmed_at)
+    throw Error("Kirjaudu uudelleen vahvistettuun ylläpitotiliin.");
+   const {error}=await db.auth.updateUser({password});
+   if(error)throw error;
+   closePasswordSetup();
+   toast("Salasana asetettu tilille "+user.email+
+     ". Voit kirjautua sillä Kaurivon aloitusnäytön sovelluksessa.","success");
+  }catch(err){
+   $("new-admin-password").value="";
+   $("confirm-admin-password").value="";
+   toast("Salasanaa ei voitu asettaa: "+
+    (err?.message||"Tarkista, että Safari-istunto on voimassa.")+
+    ". Palvelu voi vaatia tuoreen kirjautumisen.","error");
+  }finally{buttonEl.disabled=false;}
+ }
  async function sendLogin(){
   const buttonEl=$("send-login");
   if(buttonEl.disabled)return;
@@ -438,7 +512,12 @@
    $("login-proof").value="";
    toast("Kirjautumisviesti lähetetty. Kopioi Gmailin linkki ja liitä se tähän sovellukseen.","success");
   }catch(err){
-   toast("Kirjautumisviestin lähetys epäonnistui: "+(err.message||"Virhe"),"error");
+   const limited=err?.code==="over_email_send_rate_limit"||
+     /email rate limit exceeded/i.test(err?.message||"");
+   toast(limited
+    ?"Supabasen sähköpostikiintiö täyttyi. Älä tilaa uutta viestiä vielä. "+
+     "Käytä salasanakirjautumista tai aseta salasana jo kirjautuneessa Safarissa."
+    :"Kirjautumisviestin lähetys epäonnistui: "+(err?.message||"Virhe"),"error");
   }finally{buttonEl.disabled=false;}
  }
  function loginProof(raw){
@@ -498,6 +577,11 @@
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
   document.querySelectorAll("[data-dialog]").forEach(b=>b.addEventListener("click",()=>openEditor(b.dataset.dialog)));
   restorePendingLogin();
+  $("password-login-form").addEventListener("submit",passwordLogin);
+  $("open-password-setup").addEventListener("click",openPasswordSetup);
+  $("password-setup-form").addEventListener("submit",savePassword);
+  $("close-password-dialog").addEventListener("click",closePasswordSetup);
+  $("cancel-password").addEventListener("click",closePasswordSetup);
   $("send-login").addEventListener("click",sendLogin);
   $("verify-login").addEventListener("click",verifyLogin);
   $("login-proof").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();verifyLogin();}});
