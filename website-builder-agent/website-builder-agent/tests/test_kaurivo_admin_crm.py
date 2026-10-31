@@ -31,7 +31,7 @@ class AdminSurfaceTests(unittest.TestCase):
   self.assertIn("supabase.auth.getUser()",js)
   self.assertIn("kaurivo_crm_prepare_invitation",js)
   self.assertIn("window.confirm",js)
-  self.assertIn("Kaurivo",css)
+  self.assertIn(".login-screen",css)
 
  def test_browser_login_gate_and_layout(self):
   try:
