@@ -5,9 +5,9 @@
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1017"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Kaurivo"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/kaurivo-mark.webp"><title>Kaurivo — asiakashallinta</title>
 <link rel="icon" href="../assets/kaurivo-mark.webp" type="image/webp">
-<link rel="stylesheet" href="../assets/crm.css?v=20261031-quality1">
+<link rel="stylesheet" href="../assets/crm.css?v=20261031-quality2">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
-<script defer src="../assets/crm.js?v=20261031-quality1"></script>
+<script defer src="../assets/crm.js?v=20261031-quality2"></script>
 </head>
 <body>
 <div class="crm-shell">
@@ -80,7 +80,7 @@
  <div><strong>Ilmoitukset puhelimeen</strong><p>Ilmoitus saapuu, kun uusi yrityslista on valmis. Avaa tämä sivu aloitusnäytön Kaurivo-kuvakkeesta.</p></div>
  <div class="push-actions"><button type="button" class="primary-button" id="enable-push">Salli ilmoitukset</button><button type="button" class="outline-button" id="test-push" hidden>Testaa ilmoitus</button><span class="push-status" id="push-status" aria-live="polite"></span></div>
 </div>
- <p>Yritykset haetaan PRH/YTJ-rekisteristä. Tiedot vaativat tarkistuksen ennen demoa tai yhteydenottoa. Jos PRH ei ilmoita verkkosivua, verkkosivun puuttumista ei ole vahvistettu. Automaattinen tuonti ei käytä AI-krediittejä eikä lähetä markkinointiviestejä.</p>
+ <p>Yritykset haetaan PRH/YTJ-rekisteristä. Asunto-, holding- ja muut vähäisen asiakashankinnan yritykset suodatetaan pois. Jos PRH ei ilmoita verkkosivua, verkkosivun puuttumista ei ole vahvistettu. Erillinen automaattinen verkkosivuehdotusten haku toimii vain, jos ilmaisen hakupalvelun avain on asetettu ylläpitoon; ehdotukset tarkistetaan aina itse. Automaattinen tuonti ei lähetä markkinointiviestejä.</p>
  <div class="record-actions"><button type="button" class="outline-button" id="import-prospects">Tuo yritykset JSON-tiedostosta</button><input type="file" accept=".json,application/json" id="prospect-file" hidden></div>
  <p class="form-hint">Aineistolähde: <a href="https://avoindata.prh.fi/" target="_blank" rel="noopener noreferrer">PRH/YTJ avoin data</a>, <a href="https://creativecommons.org/licenses/by/4.0/deed.fi" target="_blank" rel="noopener noreferrer">CC BY 4.0 -lisenssi</a>. Rekisteritiedot on muunnettu Kaurivon sisäiseksi tarkistuslistaksi, ei itsenäisesti vahvistetuiksi yrityshavainnoiksi. JSON-tuonti on varavaihtoehto yöajolle.</p>
 </details>
