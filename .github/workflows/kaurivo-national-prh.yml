@@ -109,6 +109,10 @@ jobs:
           echo "## National PRH discovery failed" >> "$GITHUB_STEP_SUMMARY"
           echo "Check logs. A failed download must not be treated as zero available leads." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Record failed scheduled PRH run to private admin health
+        if: ${{ failure() && github.event_name == 'schedule' }}
+        run: python -m utils.kaurivo_report_failure
+
       - name: Retain national discovery report for 14 days
         if: ${{ always() && steps.gate.outputs.should_scan == 'true' }}
         uses: actions/upload-artifact@v4
