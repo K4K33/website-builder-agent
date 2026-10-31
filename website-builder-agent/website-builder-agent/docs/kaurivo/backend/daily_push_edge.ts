@@ -6,7 +6,7 @@ import { createRemoteJWKSet, jwtVerify } from "npm:jose@6.1.0";
 
 const ORIGIN = "https://k4k33.github.io";
 const ADMIN_URL = ORIGIN + "/website-builder-agent/kaurivo/admin/";
-const URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_ENDPOINT = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const AUDIENCE = "kaurivo-morning-push-xhsfbcwpwbgdbatrcyuk";
 const WORKFLOW = "K4K33/website-builder-agent/.github/workflows/kaurivo-morning-push.yml@refs/heads/main";
@@ -38,13 +38,13 @@ function rest(path:string,init:RequestInit={}):Promise<Response> {
  headers.set("apikey",SERVICE_KEY);
  headers.set("authorization","Bearer "+SERVICE_KEY);
  if(init.body)headers.set("content-type","application/json");
- return fetch(URL+"/rest/v1/"+path,{...init,headers});
+ return fetch(SUPABASE_ENDPOINT+"/rest/v1/"+path,{...init,headers});
 }
 async function adminUser(req:Request):Promise<{id:string,email:string}|null>{
  const auth=req.headers.get("authorization")||"";
  const token=auth.startsWith("Bearer ")?auth.slice(7):"";
  if(!token||token.length>7000)return null;
- const result=await fetch(URL+"/auth/v1/user",{headers:{
+ const result=await fetch(SUPABASE_ENDPOINT+"/auth/v1/user",{headers:{
    apikey:SERVICE_KEY,authorization:"Bearer "+token
  }});
  if(!result.ok)return null;
@@ -152,7 +152,7 @@ async function notifyDaily(event:string):Promise<Response>{
  return reply(200,{ok:true,day,companies:count,notifications:delivered});
 }
 Deno.serve(async (req:Request)=>{
- if(!URL||!SERVICE_KEY)return reply(503,{ok:false,error:"server_configuration"});
+ if(!SUPABASE_ENDPOINT||!SERVICE_KEY)return reply(503,{ok:false,error:"server_configuration"});
  const origin=req.headers.get("origin");
  if(origin&&origin!==ORIGIN)return reply(403,{ok:false,error:"origin_denied"});
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:headers()});
