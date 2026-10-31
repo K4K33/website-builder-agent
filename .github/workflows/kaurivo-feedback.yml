@@ -1,0 +1,32 @@
+name: Kaurivo private feedback triage
+
+on:
+  schedule:
+    # Four times a day, inside FormSubmit's five-requests/day free API cap.
+    - cron: '5 0,6,12,18 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kaurivo-private-feedback
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    name: Anonymous feedback classification
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check feedback archive only when activated
+        working-directory: website-builder-agent/website-builder-agent
+        env:
+          KAURIVO_FORMSUBMIT_API_KEY: \u0024{{ secrets.KAURIVO_FORMSUBMIT_API_KEY }}
+        run: |
+          python -m utils.process_kaurivo_feedback

@@ -114,101 +114,120 @@ def _stars(value: int) -> str:
 def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
                               sale_confirmed_at: datetime, now: datetime,
                               sale_verified: bool, relationship_verified: bool,
-                              contact_first_name: str = "") -> dict:
-    """Draft for Gmail only when one Finnish calendar day has passed.
+                              contact_first_name: str = "", invitation_ref: str = "") -> dict:
+    """Prepare private post-sale Gmail message linked to a real feedback page.
 
-    Checks neither Gmail nor purchase authenticity itself. Sale + customer
-    verification are caller responsibilities. No sending or scheduling occurs.
-    The early feedback rates buying/onboarding, never unfinished site quality.
+    The five HTML star links PRESELECT the rating on Kaurivo's site.
+    Neither a click nor a draft saves an evaluation. Only a successful
+    form submission counts. This function never sends or schedules mail.
     """
     if not (sale_verified and relationship_verified):
-        raise ValueError("Verified sale and actual customer relationship required.")
+        raise ValueError("Verified sale and customer relationship required.")
     due = feedback_due_at(sale_confirmed_at)
     if not isinstance(now, datetime) or now.tzinfo is None:
-        raise ValueError("Provide timezone-aware current datetime.")
+        raise ValueError("A timezone-aware current datetime is required.")
     if now.astimezone(ZoneInfo("Europe/Helsinki")) < due:
-        raise ValueError("Review request is not due until the day after the sale.")
+        raise ValueError("Feedback request not due until one day after the sale.")
     if not isinstance(recipient_email, str) or not re.fullmatch(
         r"[^@\s]+@[^@\s]+\.[^@\s]+", recipient_email.strip()
     ):
-        raise ValueError("Verified recipient address is required.")
+        raise ValueError("Verified recipient email address required.")
     if not isinstance(company_name, str) or not company_name.strip():
-        raise ValueError("Confirmed client company is required.")
+        raise ValueError("Confirmed company required.")
+    if invitation_ref and not re.fullmatch(r"[A-Za-z0-9_-]{4,50}", invitation_ref):
+        raise ValueError("Invitation reference must be non-personal opaque ID.")
 
+    base_url = "https://k4k33.github.io/website-builder-agent/kaurivo/feedback/"
+    def feedback_url(value: int | None = None) -> str:
+        params = ["lang=fi"]
+        if value is not None:
+            params.append(f"rating={value}")
+        if invitation_ref:
+            params.append("ref=" + quote(invitation_ref, safe=""))
+        return base_url + "?" + "&".join(params)
+
+    subject = "Kaurivo | Miten asiointi sujui?"
     greeting = f"Hei {contact_first_name.strip()}," if contact_first_name.strip() else "Hei,"
-    subject = "Miten asiointi Kaurivon kanssa alkoi?"
     body = (
         f"{greeting}\n\n"
-        "Kiitos luottamuksesta! Haluaisin heti yhteistyön alussa "
-        "kuulla, miltä yhteydenpito, tarjous ja ostoprosessi tuntuivat.\n\n"
-        "Kuinka arvioisit asioinnin tähän asti asteikolla 1–5 tähteä?\n"
-        "★★★★★ = 5 / 5, ★★★★☆ = 4 / 5, ★★★☆☆ = 3 / 5\n"
-        "★★☆☆☆ = 2 / 5, ★☆☆☆☆ = 1 / 5\n\n"
-        "Vastaa tähän viestiin esimerkiksi näin:\n"
-        "4/5 – Kaikki sujui selkeästi, mutta aikatauluista voisi kertoa tarkemmin.\n\n"
-        "Yksi lyhyt lause riittää. Myös kriittinen palaute on arvokasta, "
-        "eikä tätä arviota julkaista ilman erillistä lupaasi.\n\n"
-        "Ystävällisin terveisin,\n"
-        "Kaurivo"
+        "Kiitos luottamuksesta! Haluaisimme kuulla, "
+        "miten yhteydenpito, tarjous ja kaupanteko sujuivat.\n\n"
+        "Valitse 1–5 tähteä ja kirjoita lyhyt palaute Kaurivon sivulla:\n"
+        + feedback_url() + "\n\n"
+        "Vastaaminen vie vain hetken. Palaute auttaa meitä kehittämään "
+        "palvelua ja pysyy yksityisenä.\n\n"
+        "Arvio koskee asiointia tähän asti, ei vielä keskeneräistä verkkosivustoa.\n\n"
+        "Kaurivo\nAsiakaskokemus"
     )
-    # Optional star links; mailto opens a draft, NEVER records a click as a vote.
-    # The primary, more reliable path is replying directly to the Gmail thread.
-    star_links = []
+
+    cells = []
     for value in range(1, 6):
-        message = f"Arvosana: {value}/5\nLyhyt palaute: "
-        link = "mailto:" + SENDER + "?subject=" + quote(subject) + "&body=" + quote(message)
-        star_links.append(
-            '<a href="' + escape(link, quote=True)
-            + '" style="display:inline-block;padding:9px 7px;margin:3px;'
-              'border:1px solid #c7d0d5;color:#172027;text-decoration:none;'
-              'font-size:17px;font-weight:700;white-space:nowrap"'
-            + ' aria-label="' + str(value) + ' tähteä">'
-            + _stars(value) + "</a>"
+        link = escape(feedback_url(value), quote=True)
+        cells.append(
+            '<td width="20%" align="center" style="padding:0 4px">'
+            '<a href="' + link + '" aria-label="' + str(value) + ' tähteä"'
+            ' style="display:block;border:1px solid #cbd3d9;'
+            'background:#f7f9fb;border-radius:5px;padding:12px 3px;'
+            'text-decoration:none;color:#202a34">'
+            '<span style="display:block;color:#b78f43;font-size:22px">★</span>'
+            '<span style="display:block;font-size:11px;font-weight:700">'
+            + str(value) + '/5</span></a></td>'
         )
+    url = escape(feedback_url(), quote=True)
     html_body = (
-        '<div style="max-width:540px;margin:0 auto;padding:24px;'
-        'background:#f6f7f8;color:#172027;font-family:Arial,sans-serif;'
-        'font-size:15px;line-height:1.7">'
-        '<div style="font-size:14px;letter-spacing:2px;font-weight:700;'
-        'padding-bottom:17px;border-bottom:1px solid #c8d0d5">KAURIVO</div>'
-        '<p>' + escape(greeting) + '</p>'
-        '<p>Kiitos luottamuksesta! Haluaisin kuulla, miten yhteydenpito,'
-        ' tarjous ja ostoprosessi sujuivat.</p>'
-        '<p><strong>Montako tähteä antaisit asioinnille tähän asti?</strong></p>'
-        '<div>' + "".join(star_links) + '</div>'
-        '<p style="font-size:13px;color:#46545f">'
-        'Voit klikata tähtimäärää, jolloin sähköpostiluonnos avautuu. '
-        'Arvosana tallentuu vasta, kun lähetät viestin.</p>'
-        '<p style="font-size:15px;font-weight:700">Kirjallinen palaute '
-        '<span style="color:#65717b;font-size:12px;font-weight:400">'
-        '(vapaaehtoinen)</span></p>'
-        '<a href="' + escape(
-            "mailto:" + SENDER + "?subject=" + quote(subject)
-            + "&body=" + quote("Arvosana: /5\n\nLyhyt palaute:\n"),
-            quote=True
-        ) + '" style="display:block;padding:19px 16px;'
-        'background:#ffffff;border:1px solid #b6c2cb;border-radius:5px;'
-        'color:#64737e;font-size:14px;text-decoration:none">'
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"'
+        ' style="background:#edf0f2;font-family:Arial,Helvetica,sans-serif">'
+        '<tr><td align="center" style="padding:22px 12px">'
+        '<table role="presentation" width="560" cellpadding="0" cellspacing="0"'
+        ' style="width:100%;max-width:560px;background:white;color:#1c2730">'
+        '<tr><td style="background:#0c121a;padding:27px 29px;color:#f6f8fa">'
+        '<div style="font-size:23px;letter-spacing:4px;font-weight:800">'
+        'KAURIVO</div><div style="font-size:10px;letter-spacing:2px;'
+        'color:#adbdc9;margin-top:7px">ASIAKASKOKEMUS</div></td></tr>'
+        '<tr><td style="padding:32px 29px 16px">'
+        '<div style="font-size:31px;font-weight:800;line-height:1.17">'
+        'Miten asiointi sujui?</div>'
+        '<p style="font-size:15px;line-height:1.8;color:#4a5b68">'
+        'Kiitos luottamuksesta! Miten tarjous, yhteydenpito ja '
+        'kaupanteko sujuivat tähän asti?</p></td></tr>'
+        '<tr><td style="padding:5px 23px 24px">'
+        '<div style="background:#f3f5f6;border:1px solid #dbe1e5;'
+        'padding:22px 15px">'
+        '<p style="text-align:center;font-size:15px;font-weight:700">'
+        'Anna arvosana 1–5 tähteä</p>'
+        '<table role="presentation" width="100%" cellpadding="0" '
+        'cellspacing="0"><tr>' + "".join(cells) + '</tr></table>'
+        '<p style="font-size:12px;color:#657481;line-height:1.7;text-align:center">'
+        'Tähti avaa Kaurivon palautelomakkeen valmiiksi valitulla '
+        'arvosanalla. Gmail ei avaudu.</p>'
+        '<p style="font-size:15px;font-weight:700;margin:24px 0 10px">'
+        'Kirjallinen palaute</p>'
+        '<a href="' + url + '" style="display:block;padding:18px 15px;'
+        'background:#fff;border:1px solid #bcc8d0;border-radius:5px;'
+        'font-size:14px;color:#65747e;text-decoration:none">'
         'Kirjoita lyhyt palaute tähän... ↗</a>'
-        '<p style="font-size:12px;color:#46545f">'
-        'Kentän painaminen avaa sähköpostin oikean kirjoitusnäkymän. '
-        'Voit myös vastata suoraan tähän viestiin, esimerkiksi '
-        '"4/5 – Kaikki sujui selkeästi". '
-        'Tähtivalinta ei itsessään tallenna palautetta.</p>'
-        '<p style="font-size:12px;color:#56626b">Arvio koskee vain '
-        'asiointia tähän asti, ei vielä keskeneräistä verkkosivustoa. '
-        'Palautetta ei julkaista ilman erillistä lupaa.</p>'
-        '<p style="padding-top:14px;border-top:1px solid #d4dade">Kaurivo<br>Asiakaskokemus</p></div>'
+        '<p style="font-size:12px;color:#657481;line-height:1.7">'
+        'Lomakkeella tähdet syttyvät valittaessa. '
+        'Palaute tallentuu vasta Lähetä-painikkeesta.</p>'
+        '</div></td></tr>'
+        '<tr><td style="padding:3px 29px 30px;font-size:13px;'
+        'line-height:1.7;color:#52636f">'
+        'Arvio koskee asiointia tähän asti, ei keskeneräistä '
+        'verkkosivustoa. Palautetta ei julkaista ilman erillistä lupaa.'
+        '<p style="margin-top:23px;color:#1f2b35"><strong>Kaurivo</strong>'
+        '<br>Asiakaskokemus</p></td></tr>'
+        '</table></td></tr></table>'
     )
     return {
         "from": SENDER, "to": recipient_email.strip(),
         "subject": subject, "body": body, "html_body": html_body,
+        "form_url": feedback_url(),
         "due_at": due.isoformat(),
         "feedback_stage": "day_after_confirmed_sale",
         "send_approved": False, "send_performed": False,
         "public_testimonial_permission": False,
-        "notes": ("Gmail draft only. Verify actual sale, contact, Kaurivo Gmail sender "
-                  "and explicit approval before sending; no scheduled automation active."),
+        "notes": ("Gmail draft only. Link requires a verified backend before durable "
+                  "first-party storage; no scheduled send exists yet."),
     }
 
 

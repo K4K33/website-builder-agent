@@ -12,46 +12,57 @@ Always make the lowest-friction alternative prominent: "Voitte myös vastata suo
 
 The first sales message must follow all outreach legal and human-review gates in OUTREACH.md. No autonomous sends.
 
-### 2. One day after a confirmed sale: Gmail stars + short comment
+### 2. One day after a confirmed sale: interactive stars on Kaurivo's website
 
-The primary feedback request is due **one day after the confirmed purchase**.
-It covers the quotation, purchasing process, communication and getting started,
-NOT the quality of a website that has not been delivered.
+After a verified sale, prepare a private, customer-specific Kaurivo Gmail
+feedback email ONE calendar day later in Finland time. It must rate the
+quotation and onboarding, not a website that hasn't been delivered.
 
-A private sale record needs a genuine confirmed timestamp, verified customer,
-recipient email and unique project reference. Calculate the review due datetime
-from the confirmed sale in Europe/Helsinki local time. The offline function
-`feedback_due_at()` and `draft_after_sale_feedback()` enforce this timing.
+The email's five star links and the rectangular writing prompt now open
+the dedicated Kaurivo page:
+https://k4k33.github.io/website-builder-agent/kaurivo/feedback/?lang=fi
 
-The Gmail email is deliberately very short:
+Each star link passes an integer preselection in the URL, but does not
+record anything by itself. On the page, the client can change the lit
+stars, enter a short written review, company and contact email, consent
+to private submission and press **Lähetä palaute**.
 
-Subject: Miten asiointi Kaurivon kanssa alkoi?
+The page uses the documented FormSubmit JSON AJAX endpoint and receives
+a success state only if FormSubmit explicitly reports success. It does
+NOT open Gmail or claim success based only on HTTP 200.
 
-Hei [nimi],
+**Activation:** Confirm hello.kaurivo@gmail.com in FormSubmit's first
+activation email, then test end-to-end submission. Before the receiving
+address is activated, the UI displays a failure/activation status; do
+not claim that customer reviews have been accepted.
 
-Kiitos luottamuksesta! Miltä tarjous, yhteydenpito ja kaupanteko
-tuntuivat tähän asti?
+**Storage:** As currently configured, reviews are retained by the
+external FormSubmit service (with 30-day archival retention) and
+delivered into the Kaurivo Gmail inbox. This is NOT yet a durable
+first-party Kaurivo database. We must not add any private review
+contents to the public GitHub repository.
 
-Anna 1–5 tähteä ja halutessasi yksi lyhyt kommentti. Voit vastata
-suoraan tähän viestiin esimerkiksi: 4/5, asiointi sujui hyvin,
-mutta aikataulut voisivat olla selkeämmät.
+**Optional automatic classification:** The private GitHub workflow
+kaurivo-feedback.yml is installed, but remains inert until an API
+secret named KAURIVO_FORMSUBMIT_API_KEY is configured. The workflow
+checks up to four times daily (under the provider's five-call free API
+quota), filters the last 24 hours and publishes only anonymous topic,
+rating and urgency counters to a GitHub Actions run. It sends no emails
+and makes no website edits. Individual reviews remain unverified until
+checked against private customer/project records. Duplicate provider
+entries in a single archive response are coalesced. The rolling window
+may overlap across runs; treat those counts as snapshots, not additive
+new-review notifications.
 
-Kiitos!
-Kaarlo Kaurivolta
+A durable, real-time customer-feedback system requires a SEPARATE
+Kaurivo backend, database and verified purchase invitation tokens.
+The only connected existing Supabase project belongs to OAVIR; do not
+touch or reuse it. Creating a distinct project needs the user's explicit
+choice of Supabase organization and any cost confirmation. Until then,
+the FormSubmit archive remains the temporary store.
 
-The optional polished HTML version places five clickable star choices inside
-the Gmail message. Each star choice opens an email draft addressed to
-hello.kaurivo@gmail.com with a prefilled rating and a blank one-line feedback
-field. **Clicking a star is NOT a submission.** The client confirms and sends
-the reply. The plain-text fallback is simply replying in the original Gmail
-thread with e.g. "4/5 – hyvä, mutta..." — no website or login required.
-
-Each sent request should be marked in a PRIVATE customer record so the same
-purchase does not produce duplicate requests. No automatic sender is currently
-installed; the helper only prepares a draft after a real sale. When Gmail
-sending is connected to verified private sale records, require sender account
-verification, applicable privacy rules, deduplication, and an authorized
-sending policy. Do not send an email to a prospect who has not purchased.
+The email sender and signoff are generic: Kaurivo / Asiakaskokemus.
+No personal name or title. No true client is contacted in tests.
 
 ### 3. After the actual website is delivered (optional second feedback)
 
@@ -88,7 +99,7 @@ Review feedback after each handover and in a weekly internal review. Address rec
 
 ## Tested HTML email appearance (2026-10-30)
 
-Two real TEST emails were sent using the verified Kaurivo Gmail account to the user-supplied test mailbox (one sample sales email, one purchase-experience feedback request). The feedback email uses KAURIVO as the generic sender identity instead of a person's signature, 1–5 clickable star options, and a rectangular clickable writing prompt beneath the text-feedback label. Both clickable elements use mailto links and open a compose view: **clicking does not transmit or store feedback; the recipient must send the resulting message**. The plain reply-in-thread alternative remains available. Sent-folder verification does not establish inbox delivery. No customer was contacted by this test.
+Two real TEST emails were sent using the verified Kaurivo Gmail account to the user-supplied test mailbox (one sample sales email, one purchase-experience feedback request). The feedback email uses KAURIVO as a generic sender identity. The star links and feedback prompt now open Kaurivo's interactive /feedback/ page; they no longer open Gmail drafts. The choice is recorded only when the form is submitted and provider delivery is confirmed. Sent-folder verification does not establish inbox delivery. No customer was contacted by this test.
 
 ## Privacy and publication
 

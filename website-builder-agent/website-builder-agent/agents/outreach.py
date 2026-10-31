@@ -53,10 +53,12 @@ Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
    demopalautelinkki, lisää se luontevasti toissijaiseksi vaihtoehdoksi.
    Älä koskaan keksi linkkiä, väitä lomaketta toimivaksi ilman
    toimitustestiä tai tee palautteen antamisesta ostamisen ehtoa.
-7. Päätä selkeään kysymykseen: 'Olisiko teillä kiinnostusta uudistaa
-   nykyisiä verkkosivujanne?' Voit sovittaa sanamuodon vastaanottajan
-   tilanteeseen. Älä piilota myyntitarjousta epämääräiseen
-   'miltä suunta tuntuu' -kysymykseen.
+7. Päätä DEMON KATSOMISEEN liittyvään suoraan kysymykseen:
+   'Haluaisitteko tällaiset verkkosivut yrityksellenne?'
+   Sama ajatus voidaan muotoilla yrityksen tilanteeseen sopivasti.
+   Viesti myy juuri tälle yritykselle tehtyä demosivustoa, EI
+   Kaurivon geneeristä portfolioesimerkkiä tai muiden yritysten
+   sivuja. Älä piilota kysymystä epämääräiseen pehmentelyyn.
 8. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
    hello.kaurivo@gmail.com'.
 
@@ -67,7 +69,7 @@ verkkosivua' vain jos tämä on lähteistä riippumattomasti varmistettu.
 Kerro yksi rehellinen syy uuden sivun hyötyyn (esimerkiksi palvelut,
 toimialue tai yhteydenotto löytyisi yhdestä paikasta), esittele
 juuri heille rakennettu demo, tarjoa toteutus ja kysy suoraan:
-'Olisiko oman verkkosivun toteuttaminen ajankohtaista?'
+'Haluaisitteko tällaiset verkkosivut yrityksellenne?'
 
 Tyyli: 85–140 sanaa, suomalaisessa yritysviestinnässä suora,
 ystävällinen, itsevarma, asiakasta kunnioittava, aito ihminen.
