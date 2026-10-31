@@ -79,6 +79,17 @@ jobs:
             --output-dir output/nightly-prh \
             --seen-path data/prh_seen_ids.json
 
+      - name: Find candidate websites through an optional bounded official search API
+        if: ${{ success() && github.event_name == 'schedule' && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        env:
+          KAURIVO_TAVILY_API_KEY: ${{ secrets.KAURIVO_TAVILY_API_KEY }}
+        run: |
+          # If no free-tier key is configured, this is a zero-request no-op.
+          # Maximum 12 basic searches per run; results are unverified suggestions.
+          python -m utils.kaurivo_website_research \
+            --packet output/nightly-prh/crm-shortlist.json \
+            --max-queries 12
+
       - name: Sync 50 unverified PRH company records into private Kaurivo CRM
         if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
         run: |
