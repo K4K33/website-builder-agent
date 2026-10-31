@@ -89,28 +89,44 @@
   const prospects=$("prospect-list");prospects.replaceChildren();
   $("prospect-day").value=selectedDay;
   const isToday=selectedDay===helsinkiToday();
+  const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
+  const visible=rows.prospects.filter(x=>x.review_status!=="skipped"||
+    $("show-skipped-prospects").checked);
   $("morning-summary").textContent=rows.prospects.length
-    ? rows.prospects.length+" yritystä · "+selectedDay
+    ? visible.length+" yritystä tarkistettavana"+(excluded&&!$("show-skipped-prospects").checked
+      ?" · "+excluded+" ohitettu":"")+" · "+selectedDay
     : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
-  if(!rows.prospects.length)empty(prospects,"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
-  for(const candidate of rows.prospects){
+  if(!visible.length)empty(prospects,rows.prospects.length
+    ?"Ei tässä näkymässä tarkistettavia yrityksiä. Voit näyttää myös ohitetut yritykset."
+    :"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
+  for(const candidate of visible){
    const row=record(prospects,candidate.company_name,
      (candidate.city_hint||"Kaupunki tuntematon")+" · Y-tunnus: "+candidate.business_id,
      stage(candidate.review_status));
-   const website=String(candidate.website_listed_url||"");
+   const verified=String(candidate.website_found_url||"");
+   const listed=String(candidate.website_listed_url||"");
+   const website=verified||listed;
    if(website){
     try{
      const url=new URL(website);
      if(url.protocol==="https:"||url.protocol==="http:"){
-      const link=append(row.main,"a","record-website","Avaa nykyinen verkkosivu ↗");
+      const link=append(row.main,"a","record-website",
+       verified?"Avaa löydetty verkkosivu ↗":"Avaa PRH:n ilmoittama verkkosivu ↗");
       link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";
-      append(row.main,"span","record-sub",url.hostname+" · PRH:n ilmoittama, ei tarkistettu");
+      append(row.main,"span","record-sub",url.hostname+" · "+
+       (verified?"Tallennettu käsin, vaatii asiakastarpeen arvioinnin":"PRH:n ilmoittama, ei vielä tarkistettu"));
      }
-    }catch(_){append(row.main,"div","record-sub","Verkkosivulinkki ei ole kelvollinen · tarkista käsin");}
-   }else append(row.main,"div","record-no-website","Ei verkkosivua löytynyt · ei vielä vahvistettu");
+    }catch(_){append(row.main,"div","record-sub","Verkkosivulinkki on virheellinen · tarkista käsin");}
+   }else{
+    append(row.main,"div","record-no-website","PRH ei ilmoita verkkosivua · ei todista sivuttomuutta");
+   }
+   const findUrl=new URL("https://www.google.com/search");
+   findUrl.searchParams.set("q",candidate.company_name+" yritys kotisivu "+candidate.business_id);
+   const find=append(row.actions,"a","small-action prospect-search-site","Etsi verkkosivu ↗");
+   find.href=findUrl.href;find.target="_blank";find.rel="noopener noreferrer";
    append(row.main,"div","record-sub","Toimiala: "+(candidate.industry_code_hint||"ei tietoa")+" · Lähde PRH/YTJ CC BY 4.0");
    if(candidate.research_notes)append(row.main,"div","record-note",candidate.research_notes);
-   row.actions.append(button("Tutkimusmuistiinpanot",()=>openEditor("prospect",candidate)));
+   row.actions.append(button("Tarkista ja tallenna sivu",()=>openEditor("prospect",candidate)));
   }
   const clients=$("client-list");clients.replaceChildren();
   if(!rows.clients.length)empty(clients,"Ei yrityksiä vielä. Aloita lisäämällä ensimmäinen.");
@@ -187,6 +203,7 @@
  const forms={
   prospect:{title:"Yrityksen taustatutkimus",table:"kaurivo_crm_prospects",fields:[
    ["review_status","Tutkimuksen vaihe","choice",true,["unverified","researching","needs_demo","ready_for_demo","skipped"]],
+   ["website_found_url","Oikea verkkosivu (itse tarkistettu, https://...)","url"],
    ["research_notes","Vahvistetut faktat, puutteet ja lähteet","textarea"]]},
   client:{title:"Yrityksen tiedot",table:"kaurivo_crm_clients",fields:[
    ["company_name","Yrityksen nimi","text",true],["contact_name","Yhteyshenkilö","text"],
@@ -243,7 +260,19 @@
    if(required&&!value){toast("Täytä pakolliset kentät.","error");return;}
    data[key]=type==="number"?Number(value):(value||null);
   }
-  if(kind==="prospect"){data.research_notes=data.research_notes||"";}
+  if(kind==="prospect"){
+   data.research_notes=data.research_notes||"";
+   data.website_found_url=data.website_found_url||"";
+   if(data.website_found_url){
+    let u;
+    try{u=new URL(data.website_found_url);}catch(_){toast("Tarkista verkkosivun osoite.","error");return;}
+    if(!["http:","https:"].includes(u.protocol)||u.username||u.password||
+       data.website_found_url.length>1200){
+     toast("Verkkosivun osoitteen on oltava kelvollinen HTTP(S)-osoite.","error");return;
+    }
+   }
+   data.website_verified=Boolean(data.website_found_url);
+  }
   if(kind==="sale"){data.status="proposal";data.source_verified=false;data.confirmed_at=null;}
   if(kind==="client"){data.contact_name=data.contact_name||"";data.website=data.website||"";data.notes=data.notes||"";}
   if(kind==="project"){data.demo_url=data.demo_url||"";data.delivered_url=data.delivered_url||"";data.must_haves=data.must_haves||"";data.editor_platform=data.editor_platform||"";}
@@ -711,6 +740,7 @@
   $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
   $("start-manual-scan").addEventListener("click",startManualScan);
+  $("show-skipped-prospects").addEventListener("change",render);
   $("prospect-day").addEventListener("change",async event=>{
    if(!/^\d{4}-\d{2}-\d{2}$/.test(event.target.value))return;
    selectedDay=event.target.value;await reload();showTab("prospects");
