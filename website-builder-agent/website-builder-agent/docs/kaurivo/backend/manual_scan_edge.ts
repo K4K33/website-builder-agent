@@ -10,6 +10,17 @@ const CITIES=["Helsinki","Espoo","Tampere","Turku","Oulu","Jyväskylä","Lahti",
  "Seinäjoki","Vantaa","Hämeenlinna","Salo","Kotka","Kajaani","Mikkeli","Kokkola",
  "Rauma","Lohja"];
 const MAX_REQUESTS=6;
+const PROPERTY_NAME=/(?:asunto[ -]?osake(?:yhtiö|yhtiö)|asunto[ -]?oy|\bas\.?\s*oy\b|bostads(?:aktiebolag|\s*ab|\s*aktiebolag)|kiinteistö(?:osake(?:yhtiö)?|[ -]+oy\b)|keskinäinen\s+kiinteistö|fastighets(?:aktiebolag|\s*ab)|\b(?:holding|investments?|sijoitusyhtiö|sijoitus\s*oy)\b)/i;
+const EXCLUDED_INDUSTRY=["6820","6810","6420","6430","6499"];
+const CUSTOMER_SECTORS=["41","42","43","45","47","49","55","56","69","71","73","74","75","77","79","80","81","82","85","86","90","93","95","96","6831","6832"];
+const OTHER_SECTORS=["10","11","13","14","16","18","20","22","23","25","26","27","28","29","31","32","33","46","50","52","58","59","60","62","63","70","72"];
+function businessScore(name:string,industry:string):number{
+ if(PROPERTY_NAME.test(name)||EXCLUDED_INDUSTRY.some(p=>industry.startsWith(p)))return -1;
+ if(CUSTOMER_SECTORS.some(p=>industry.startsWith(p)))return 4;
+ if(OTHER_SECTORS.some(p=>industry.startsWith(p)))return 2;
+ return 0;
+}
+
 function headers(){return {"Content-Type":"application/json","Cache-Control":"no-store",
  "Access-Control-Allow-Origin":ORIGIN,
  "Access-Control-Allow-Methods":"GET,POST,OPTIONS",
@@ -73,6 +84,7 @@ function normalize(rec:Record<string,unknown>){
  const industry=rec.mainBusinessLine;
  const industryCode=typeof industry==="object"&&industry?
   String((industry as {type?:unknown}).type||"").slice(0,20):"";
+ if(businessScore(name,industryCode)<2)return null;
  return {business_id:bid,company_name:name,city_hint:city,industry_code_hint:industryCode,
   website_listed_url:website,source_url:"https://avoindata.prh.fi/",
   source_kind:"prh_registry",discovery_date:today(),review_status:"unverified",
@@ -118,14 +130,35 @@ async function runSearch(day:string):Promise<Record<string,unknown>>{
    }
   }
   if(validQueries===0)throw Error("prh_unavailable");
-  const shuffled=Array.from(pool.values()).filter(Boolean) as NonNullable<ReturnType<typeof normalize>>[];
-  // Prefer companies without a PRH-listed website, but don't claim they have none.
-  shuffled.sort((a,b)=>{
-   const diff=Number(!b.website_listed_url)-Number(!a.website_listed_url);
-   if(diff)return diff;
-   return a.business_id.localeCompare(b.business_id);
+  const eligible=Array.from(pool.values()).filter(Boolean) as NonNullable<ReturnType<typeof normalize>>[];
+  // Score the actual business type first. Balance known and unknown website
+  // records only if the PRH source provides known websites.
+  eligible.sort((a,b)=>{
+   const score=businessScore(b.company_name,b.industry_code_hint)-
+    businessScore(a.company_name,a.industry_code_hint);
+   if(score)return score;
+   // Stable day-specific spread; avoid alphabetically returning the same oldest firms.
+   const hash=(x:string)=>{
+    let n=2166136261;for(const char of day+"|"+x){n^=char.charCodeAt(0);n=Math.imul(n,16777619);}
+    return n>>>0;
+   };
+   return hash(a.business_id)-hash(b.business_id);
   });
-  const selected=shuffled.slice(0,50);
+  const withUrl=eligible.filter(x=>!!x.website_listed_url);
+  const withoutUrl=eligible.filter(x=>!x.website_listed_url);
+  const selected:typeof eligible=[];
+  // Don't force exactly 50 or make up websites when the source has none.
+  const counts=new Map<string,number>();
+  for(let i=0;i<50;i++){
+   let next=null as (typeof eligible)[number]|null;
+   for(const pool of i%2?[withUrl,withoutUrl]:[withoutUrl,withUrl]){
+    const idx=pool.findIndex(x=>(counts.get(x.industry_code_hint)||0)<6);
+    if(idx>=0){next=pool.splice(idx,1)[0];break;}
+   }
+   if(!next)break;
+   selected.push(next);
+   counts.set(next.industry_code_hint,(counts.get(next.industry_code_hint)||0)+1);
+  }
   if(selected.length){
    const insert=await rest("kaurivo_crm_prospects?on_conflict=business_id",{
     method:"POST",headers:{"Prefer":"resolution=ignore-duplicates,return=representation"},
