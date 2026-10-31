@@ -23,12 +23,20 @@
   <div class="login-panel"><div class="pill">ADMIN ACCESS</div><h2>Tervetuloa takaisin.</h2>
   <p>Kirjautuminen sallitaan vain vahvistetulle Kaurivon hallintatilille.</p>
   <label class="form-hint" for="admin-email">Ylläpitotili</label><select id="admin-email" class="address" aria-label="Valitse ylläpitotili"><option value="hello.kaurivo@gmail.com">Kaurivo — hello.kaurivo@gmail.com</option><option value="kaarlo.kaukko1@gmail.com">Henkilökohtainen — kaarlo.kaukko1@gmail.com</option></select>
-  <button type="button" class="primary-button full" id="send-login">Lähetä kirjautumislinkki <span>↗</span></button>
-  <p class="form-hint">Kirjautumislinkki saapuu valitsemaasi ylläpidon sähköpostiin. Jos Supabasen sallittu paluuosoite ei ole vielä asetettu, katso asetusohje linkin alta.</p>
+  <button type="button" class="primary-button full" id="send-login">Lähetä kirjautumisviesti <span>↗</span></button>
+  <p class="form-hint">Kirjaudu tähän sovellukseen, älä Safariin. Valitse ylläpitotilisi ja tilaa kirjautumisviesti.</p>
+  <div id="login-verify" class="login-verify" hidden>
+    <div class="eyebrow">VAHVISTA TÄSSÄ SOVELLUKSESSA</div>
+    <p id="login-instructions">Avaa Gmail ja kopioi sähköpostin kirjautumislinkki painamalla linkkiä pitkään ja valitsemalla Kopioi linkki. Älä avaa linkkiä Safarissa.</p>
+    <label class="form-hint" for="login-proof">Kopioitu linkki tai vahvistuskoodi</label>
+    <input id="login-proof" class="login-proof-input" type="text" autocapitalize="none" autocomplete="one-time-code" spellcheck="false" enterkeyhint="go" placeholder="Liitä Gmailin linkki tai syötä koodi" aria-label="Sähköpostin kirjautumislinkki tai vahvistuskoodi">
+    <button type="button" class="primary-button full" id="verify-login">Vahvista ja avaa Kaurivo <span>↗</span></button>
+    <p class="form-hint">Jos sähköpostissa näkyy 6–8 numeroinen vahvistuskoodi, syötä vain koodi. Jos viestissä näkyy linkki, kopioi sen koko osoite avaamatta linkkiä.</p>
+  </div>
   <details><summary>Supabase-kirjautumisen käyttöönotto</summary>
   <p>Lisää Supabase-projektin Authentication → URL Configuration → Redirect URLs -kohtaan tämä täsmällinen osoite:</p>
   <code id="redirect-url">https://k4k33.github.io/website-builder-agent/kaurivo/admin/</code>
-  <p>Kirjautuminen vaatii myös Supabasen sähköpostitodennuksen.</p></details>
+  <p>Kaurivon admin-tilien on oltava vahvistettuja. Kertakäyttökoodin saa sähköpostiin, kun Supabase → Authentication → Email Templates → Magic Link -viestipohjaan lisätään <code>{{ .Token }}</code>.</p></details>
   </div>
 </section>
 <section id="dashboard" hidden>
