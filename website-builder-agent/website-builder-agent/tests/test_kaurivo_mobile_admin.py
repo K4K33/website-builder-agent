@@ -44,6 +44,28 @@ class MobileAdminTests(unittest.TestCase):
         self.assertIn('data-count="feedback"',html)
         self.assertIn('id="prospect-list"',html)
         self.assertIn('id="enable-push"',html)
+        from html.parser import HTMLParser
+        class CheckPushPlacement(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.details_depth=0
+                self.push_inside_details=False
+                self.push_count=0
+            def handle_starttag(self, tag, attrs):
+                attr=dict(attrs)
+                if tag=="details":
+                    self.details_depth+=1
+                if attr.get("class")=="push-settings":
+                    self.push_count+=1
+                    self.push_inside_details=self.details_depth>0
+            def handle_endtag(self, tag):
+                if tag=="details":
+                    self.details_depth-=1
+        parser=CheckPushPlacement()
+        parser.feed(html)
+        self.assertTrue(parser.push_inside_details)
+        self.assertEqual(parser.push_count,1)
+
         self.assertIn('id="import-prospects"',html)
         self.assertIn('prefers-reduced-motion',CSS.read_text(encoding="utf-8"))
 
@@ -75,6 +97,12 @@ class MobileAdminTests(unittest.TestCase):
                             self.assertFalse(page.locator(".workspace>.tabs").is_visible())
                             self.assertFalse(page.locator("#mobile-more-panel").is_visible())
                             self.assertTrue(page.locator("#morning-summary").is_visible())
+                            self.assertFalse(page.locator(".push-settings").is_visible())
+                            self.assertFalse(page.locator("#enable-push").is_visible())
+                            page.locator("#tab-prospects .morning-details summary").click()
+                            self.assertTrue(page.locator("#enable-push").is_visible())
+                            page.locator("#tab-prospects .morning-details summary").click()
+                            self.assertFalse(page.locator(".push-settings").is_visible())
                             # Morning leads precede large CRM statistics and notification setup.
                             self.assertLess(
                                 page.locator("#tab-prospects").evaluate("(node)=>node.getBoundingClientRect().top"),
