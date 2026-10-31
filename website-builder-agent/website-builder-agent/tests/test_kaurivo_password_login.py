@@ -77,7 +77,8 @@ class PasswordLoginTests(unittest.TestCase):
                     page.goto(HTML.as_uri(),wait_until="domcontentloaded")
                     if safari:
                         page.wait_for_function("document.querySelector('#dashboard').hidden === false")
-                        page.locator("#open-password-setup").click()
+                        page.locator("#mobile-more-button").click()
+                        page.locator("#mobile-password-setup").click()
                         self.assertTrue(page.locator("#password-dialog").is_visible())
                         page.locator("#new-admin-password").fill("a-new-unique-password")
                         page.locator("#confirm-admin-password").fill("a-new-unique-password")
