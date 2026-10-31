@@ -10,7 +10,10 @@
  const REVIEW_URL="https://k4k33.github.io/website-builder-agent/kaurivo/feedback/?lang=fi";
  const REDIRECT_URL="https://k4k33.github.io/website-builder-agent/kaurivo/admin/";
  const $=id=>document.getElementById(id);
- let db=null,activeTab="clients",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};
+ const helsinkiToday=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Helsinki",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+ let selectedDay=new URLSearchParams(location.search).get("day")||helsinkiToday();
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(selectedDay))selectedDay=helsinkiToday();
+ let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};
  let currentInvite=null,busy=false;
  const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava",unverified:"Tarkistamatta",researching:"Tutkitaan",needs_demo:"Demoehdokas",ready_for_demo:"Valmis demoon",skipped:"Ohitettu"};
  const fmtDate=x=>x?new Date(x).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"}):"Ei merkitty";
@@ -32,14 +35,27 @@
   $("m-feedback").textContent=rows.queue.filter(x=>x.status==="pending"||x.status==="prepared").length;
   $("now-label").textContent=new Date().toLocaleDateString("fi-FI",{day:"numeric",month:"long",year:"numeric"});
   const prospects=$("prospect-list");prospects.replaceChildren();
-  if(!rows.prospects.length)empty(prospects,"Liidijono on tyhjä. Tuo yön PRH-shortlist GitHub Actions -ajon paketista.");
+  $("prospect-day").value=selectedDay;
+  const isToday=selectedDay===helsinkiToday();
+  $("morning-summary").textContent=rows.prospects.length
+    ? rows.prospects.length+" yritystä · "+selectedDay
+    : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
+  if(!rows.prospects.length)empty(prospects,"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
   for(const candidate of rows.prospects){
    const row=record(prospects,candidate.company_name,
      (candidate.city_hint||"Kaupunki tuntematon")+" · Y-tunnus: "+candidate.business_id,
      stage(candidate.review_status));
-   append(row.main,"div","record-sub",candidate.website_listed_url
-     ? "PRH:n verkkosivuviite: "+candidate.website_listed_url
-     : "PRH:ssa ei verkkosivuosoitetta — sivuttomuutta ei vahvistettu");
+   const website=String(candidate.website_listed_url||"");
+   if(website){
+    try{
+     const url=new URL(website);
+     if(url.protocol==="https:"||url.protocol==="http:"){
+      const link=append(row.main,"a","record-website","Avaa nykyinen verkkosivu ↗");
+      link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";
+      append(row.main,"span","record-sub",url.hostname+" · PRH:n ilmoittama, ei tarkistettu");
+     }
+    }catch(_){append(row.main,"div","record-sub","Verkkosivulinkki ei ole kelvollinen · tarkista käsin");}
+   }else append(row.main,"div","record-no-website","Ei verkkosivua löytynyt · ei vielä vahvistettu");
    append(row.main,"div","record-sub","Toimiala: "+(candidate.industry_code_hint||"ei tietoa")+" · Lähde PRH/YTJ CC BY 4.0");
    if(candidate.research_notes)append(row.main,"div","record-note",candidate.research_notes);
    row.actions.append(button("Tutkimusmuistiinpanot",()=>openEditor("prospect",candidate)));
@@ -104,7 +120,11 @@
     ["sales","kaurivo_crm_sales"],["queue","kaurivo_crm_feedback_queue"],
     ["reviews","kaurivo_feedback_submissions"],["invitations","kaurivo_feedback_invitations"]
    ];
-   const results=await Promise.all(entities.map(([key,table])=>db.from(table).select("*").order(key==="reviews"?"submitted_at":"created_at",{ascending:false}).limit(250)));
+   const results=await Promise.all(entities.map(([key,table])=>{
+    let query=db.from(table).select("*");
+    if(key==="prospects")return query.eq("discovery_date",selectedDay).order("created_at",{ascending:false}).limit(100);
+    return query.order(key==="reviews"?"submitted_at":"created_at",{ascending:false}).limit(250);
+   }));
    for(let i=0;i<results.length;i++){
     const {data,error}=results[i];if(error)throw error;rows[entities[i][0]]=data||[];
    }
@@ -291,6 +311,81 @@
    await reload();showTab("prospects");
   }catch(err){toast("Liidien tuonti epäonnistui: "+(err.message||""),"error");}
  }
+
+ const PUSH_URL=SUPABASE_URL+"/functions/v1/kaurivo-daily-push";
+ const isStandalone=()=>window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
+ function toUint8(base64url){
+  const str=atob(base64url.replace(/-/g,"+").replace(/_/g,"/").padEnd(Math.ceil(base64url.length/4)*4,"="));
+  return Uint8Array.from(str,ch=>ch.charCodeAt(0));
+ }
+ async function pushRequest(method,body){
+  const {data:{session}}=await db.auth.getSession();
+  if(!session?.access_token)throw Error("Kirjaudu sisään ensin.");
+  const result=await fetch(PUSH_URL,{
+   method,headers:{"Content-Type":"application/json","apikey":PUBLIC_KEY,
+    "Authorization":"Bearer "+session.access_token},
+   ...(body?{body:JSON.stringify(body)}:{})
+  });
+  const data=await result.json().catch(()=>({}));
+  if(!result.ok||data.ok===false)throw Error("Ilmoituspalvelu ei vastannut ("+result.status+").");
+  return data;
+ }
+ async function syncPushStatus(){
+  const status=$("push-status"),test=$("test-push");
+  if(!status||!test)return;
+  if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window)){
+   status.textContent="iPhonessa: lisää ensin Safari-sivu aloitusnäytölle ja avaa sovelluksena.";
+   test.hidden=true;return;
+  }
+  try{
+   const reg=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
+   const sub=await reg.pushManager.getSubscription();
+   status.textContent=sub?"Ilmoitukset käytössä":"Ilmoitukset eivät vielä ole käytössä.";
+   test.hidden=!sub;
+   $("enable-push").textContent=sub?"Päivitä ilmoitustila":"Salli ilmoitukset";
+  }catch(_){status.textContent="Ilmoitustilan tarkistus ei onnistunut.";test.hidden=true;}
+ }
+ async function enablePush(){
+  const btn=$("enable-push");btn.disabled=true;
+  try{
+   if(!("Notification" in window)||!("PushManager" in window)||!("serviceWorker" in navigator))
+    throw Error("Avaa Kaurivo aloitusnäytölle lisättynä sovelluksena, ei tavallisessa Safari-välilehdessä.");
+   // The permission prompt is initiated from the admin's explicit tap.
+   const permission=await Notification.requestPermission();
+   if(permission!=="granted")throw Error("Ilmoitukset on estetty. Muuta lupa iPhonen asetuksissa.");
+   const reg=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
+   const key=await pushRequest("GET");
+   let sub=await reg.pushManager.getSubscription();
+   if(!sub)sub=await reg.pushManager.subscribe({
+    userVisibleOnly:true,applicationServerKey:toUint8(key.publicKey)
+   });
+   const data=await pushRequest("POST",{action:"subscribe",subscription:sub.toJSON()});
+   if(!data.subscribed)throw Error("Ilmoitustilausta ei voitu vahvistaa.");
+   toast("Ilmoitukset otettu käyttöön. Saat viestin, kun aamun lista on valmis.","success");
+  }catch(err){toast(err.message||"Ilmoituksia ei voitu sallia.","error");}
+  finally{btn.disabled=false;await syncPushStatus();}
+ }
+ async function testPush(){
+  const btn=$("test-push");btn.disabled=true;
+  try{
+   const result=await pushRequest("POST",{action:"test"});
+   if(!result.sent)throw Error("Testi-ilmoitus ei lähtenyt yhdellekään laitteelle.");
+   toast("Testi-ilmoitus lähetetty ("+result.sent+" laitetta).","success");
+  }catch(err){toast(err.message||"Testi epäonnistui.","error");}
+  finally{btn.disabled=false;}
+ }
+ async function unsubscribePush(){
+  try{
+   if(!("serviceWorker" in navigator))return;
+   const reg=await navigator.serviceWorker.getRegistration("./");
+   const sub=await reg?.pushManager?.getSubscription();
+   if(sub){
+    await pushRequest("POST",{action:"unsubscribe",endpoint:sub.endpoint});
+    await sub.unsubscribe();
+   }
+  }catch(_){ /* User can still revoke notifications via device settings. */ }
+ }
+
  function setLogin(isAuthenticated){
   $("login").hidden=isAuthenticated;$("dashboard").hidden=!isAuthenticated;
   $("sign-out").hidden=!isAuthenticated;
@@ -303,7 +398,7 @@
    if(user&&!ADMIN_EMAILS.has(user.email?.toLowerCase())){await db.auth.signOut();toast("Tämä ei ole Kaurivon hallintatili.","error");}
    return;
   }
-  setLogin(true);await reload();
+  setLogin(true);showTab("prospects");await reload();await syncPushStatus();
  }
  async function sendLogin(){
   const buttonEl=$("send-login");buttonEl.disabled=true;
@@ -324,8 +419,15 @@
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
   document.querySelectorAll("[data-dialog]").forEach(b=>b.addEventListener("click",()=>openEditor(b.dataset.dialog)));
   $("send-login").addEventListener("click",sendLogin);
-  $("sign-out").addEventListener("click",async()=>{await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};setLogin(false);});
+  $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
+  $("prospect-day").addEventListener("change",async event=>{
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(event.target.value))return;
+   selectedDay=event.target.value;await reload();showTab("prospects");
+  });
+  $("enable-push").addEventListener("click",enablePush);
+  $("test-push").addEventListener("click",testPush);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&$("dashboard").hidden===false)reload();});
   $("import-prospects").addEventListener("click",()=>$("prospect-file").click());
   $("prospect-file").addEventListener("change",async e=>{
    const file=e.target.files?.[0];e.target.value="";
