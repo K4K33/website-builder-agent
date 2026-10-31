@@ -166,7 +166,8 @@ class BulkPrhTests(unittest.TestCase):
             self.assertEqual(json.loads((Path(tmp)/"output"/"status.json").read_text())
                              ["emails_sent"], 0)
             second = run(**kwargs)
-            self.assertEqual(second["new"], 5)
+            # Only the reviewed shortlist counts as seen; remaining qualified firms stay eligible.
+            self.assertEqual(second["new"], 10)
 
     def test_offline_mode_zero_requests_and_no_lead_claims(self):
         with tempfile.TemporaryDirectory() as tmp:
