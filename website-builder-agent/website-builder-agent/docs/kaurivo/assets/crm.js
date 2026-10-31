@@ -27,12 +27,64 @@
  function stage(s){return label[s]||s||"—";}
  function record(container,title,sub,tag,kind){const card=append(container,"article","record");const main=append(card,"div","record-main");append(main,"div","record-title",title);append(main,"div","record-sub",sub);const actions=append(card,"div","record-actions");if(tag)append(actions,"span","tag "+(kind?"tag-"+kind:""),tag);return {card,main,actions};}
  function empty(target,text){append(target,"div","empty",text);}
- function showTab(tab){activeTab=tab;for(const t of ["prospects","clients","projects","sales","queue","reviews"]){$("tab-"+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');b.classList.toggle("current",t===tab);b.setAttribute("aria-selected",t===tab?"true":"false");}}
+ function closeMobileMore(restoreFocus=false){
+  const panel=$("mobile-more-panel");
+  if(!panel||panel.hidden)return;
+  panel.hidden=true;
+  $("mobile-more-button").setAttribute("aria-expanded","false");
+  if(restoreFocus)$("mobile-more-button").focus();
+ }
+ function openMobileMore(){
+  const panel=$("mobile-more-panel");
+  if(!panel.hidden){closeMobileMore(true);return;}
+  panel.hidden=false;
+  $("mobile-more-button").setAttribute("aria-expanded","true");
+  $("mobile-more-close").focus();
+ }
+ function showTab(tab){
+  if(!["prospects","clients","projects","sales","queue","reviews"].includes(tab))return;
+  activeTab=tab;
+  for(const t of ["prospects","clients","projects","sales","queue","reviews"]){
+   $("tab-"+t).hidden=t!==tab;
+   const desktopButton=document.querySelector('[data-tab="'+t+'"]');
+   desktopButton.classList.toggle("current",t===tab);
+   desktopButton.setAttribute("aria-selected",t===tab?"true":"false");
+   const mobileButton=document.querySelector('#mobile-dock [data-mobile-tab="'+t+'"]');
+   if(mobileButton){
+    mobileButton.classList.toggle("current",t===tab);
+    if(t===tab)mobileButton.setAttribute("aria-current","page");
+    else mobileButton.removeAttribute("aria-current");
+   }
+  }
+  const more=$("mobile-more-button");
+  if(more){
+   const secondary=["sales","queue","reviews"].includes(tab);
+   more.classList.toggle("current",secondary);
+   if(secondary)more.setAttribute("aria-current","page");
+   else more.removeAttribute("aria-current");
+  }
+  closeMobileMore();
+ }
+ function navigateMobile(tab){
+  showTab(tab);
+  if(window.matchMedia("(max-width: 850px)").matches){
+   document.querySelector(".workspace").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+ }
  function render(){
   $("m-clients").textContent=rows.clients.length;
   $("m-projects").textContent=rows.projects.length;
   $("m-sales").textContent=rows.sales.filter(x=>x.status==="won"&&x.source_verified).length;
   $("m-feedback").textContent=rows.queue.filter(x=>x.status==="pending"||x.status==="prepared").length;
+  const mobileCounts={
+   clients:rows.clients.length,projects:rows.projects.length,
+   sales:rows.sales.filter(x=>x.status==="won"&&x.source_verified).length,
+   feedback:rows.queue.filter(x=>x.status==="pending"||x.status==="prepared").length
+  };
+  for(const [name,value] of Object.entries(mobileCounts)){
+   const target=document.querySelector('[data-count="'+name+'"]');
+   if(target)target.textContent=String(value);
+  }
   $("now-label").textContent=new Date().toLocaleDateString("fi-FI",{day:"numeric",month:"long",year:"numeric"});
   const prospects=$("prospect-list");prospects.replaceChildren();
   $("prospect-day").value=selectedDay;
@@ -387,6 +439,7 @@
  }
 
  function setLogin(isAuthenticated){
+  if(!isAuthenticated)closeMobileMore();
   $("login").hidden=isAuthenticated;$("dashboard").hidden=!isAuthenticated;
   $("sign-out").hidden=!isAuthenticated;
  }
@@ -580,6 +633,17 @@
   if(!window.supabase?.createClient){toast("Turvallista kirjautumiskirjastoa ei voitu ladata. Päivitä sivu.","error");return;}
   db=window.supabase.createClient(SUPABASE_URL,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+  document.querySelectorAll("[data-mobile-tab]").forEach(b=>{
+   b.addEventListener("click",()=>navigateMobile(b.dataset.mobileTab));
+  });
+  $("mobile-more-button").addEventListener("click",openMobileMore);
+  $("mobile-more-close").addEventListener("click",()=>closeMobileMore(true));
+  document.querySelector("[data-close-more]").addEventListener("click",()=>closeMobileMore(true));
+  $("mobile-password-setup").addEventListener("click",()=>{closeMobileMore();openPasswordSetup();});
+  $("mobile-sign-out").addEventListener("click",()=>{closeMobileMore();$("sign-out").click();});
+  document.addEventListener("keydown",event=>{
+   if(event.key==="Escape")closeMobileMore(true);
+  });
   document.querySelectorAll("[data-dialog]").forEach(b=>b.addEventListener("click",()=>openEditor(b.dataset.dialog)));
   restorePendingLogin();
   $("password-login-form").addEventListener("submit",passwordLogin);
