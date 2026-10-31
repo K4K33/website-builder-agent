@@ -5,9 +5,9 @@
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1017"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Kaurivo"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/kaurivo-mark.webp"><title>Kaurivo — asiakashallinta</title>
 <link rel="icon" href="../assets/kaurivo-mark.webp" type="image/webp">
-<link rel="stylesheet" href="../assets/crm.css?v=20261031-mobile3">
+<link rel="stylesheet" href="../assets/crm.css?v=20261031-mobile4">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
-<script defer src="../assets/crm.js?v=20261031-mobile3"></script>
+<script defer src="../assets/crm.js?v=20261031-mobile4"></script>
 </head>
 <body>
 <div class="crm-shell">
@@ -68,6 +68,10 @@
 <div class="morning-toolbar">
  <div class="morning-day"><label for="prospect-day" class="eyebrow">PÄIVÄ</label><input type="date" id="prospect-day" aria-label="Yrityslistan päivä"></div>
  <div class="morning-counter" id="morning-summary" role="status">Haetaan aamun yrityksiä…</div>
+</div>
+<div class="manual-scan-tools">
+ <button type="button" class="outline-button" id="start-manual-scan">Käynnistä yrityshaku</button>
+ <p class="form-hint" id="manual-scan-status" role="status" aria-live="polite">Varahaku: enintään 3 yrityshakua päivässä, vähintään 25 min välein. Haku ei lähetä viestejä eikä käytä AI-krediittejä.</p>
 </div>
 <div id="prospect-list" class="records" aria-label="Valitun päivän yritykset"></div>
 <details class="morning-details"><summary>Lisätiedot ja asetukset</summary>
