@@ -137,3 +137,13 @@
 @media(min-width:851px){.mobile-dock,.mobile-more-panel{display:none!important}}
 @media(max-width:360px){#dashboard{padding-inline:10px}.workspace>.panel{padding:18px 12px}.dock-button{font-size:10px}.more-counts span{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.mobile-more-sheet{transition:none} }
+
+/* Clearly visible manual failover for morning company discovery. */
+.manual-scan-tools{display:flex;align-items:center;gap:13px;margin:3px 0 18px;flex-wrap:wrap}
+.manual-scan-tools .outline-button{min-height:44px;border-color:#82a3bb;background:#21394b;color:#f0f9ff;font-weight:750}
+.manual-scan-tools .form-hint{margin:0;line-height:1.5;font-size:11px;flex:1 1 230px}
+@media(max-width:850px){
+ .manual-scan-tools{margin:0 0 15px;gap:8px;display:grid;grid-template-columns:1fr}
+ .manual-scan-tools .outline-button{width:100%;min-height:48px;font-size:14px}
+ .manual-scan-tools .form-hint{font-size:11px}
+}
