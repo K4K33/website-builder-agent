@@ -98,13 +98,22 @@ After an actual customer handover, request **private service feedback by sending
 
 ## Gmail one-day-after-sale rating (2026-10-30)
 
-A verified client sale triggers eligibility for a private Gmail feedback draft **one Finnish calendar day later**. The formatted email offers five clickable stars; each opens a pre-addressed email draft for the client to send with optional short feedback. A plain reply such as 4/5 and a short comment also works. This rates the purchase/onboarding experience, not a site that has not yet been delivered. The offline helper does NOT schedule, send, or verify sales. A live automation requires a private verified sale record, sender confirmation, duplicate suppression, and authorized delivery.
+A verified client sale triggers eligibility for a private Gmail feedback draft **one Finnish calendar day later**. The formatted email offers five clickable stars; each opens Kaurivo's private web form with a selected rating (requires a verified one-use invitation). A plain reply such as 4/5 and a short comment also works. This rates the purchase/onboarding experience, not a site that has not yet been delivered. The offline helper does NOT schedule, send, or verify sales. A live automation requires a private verified sale record, sender confirmation, duplicate suppression, and authorized delivery.
 
-## Dedicated interactive feedback + privacy-safe polling (Oct 31, 2026)
+## Customer-review database, 31 Oct 2026
 
-The existing day-after-sale email template links to `/kaurivo/feedback/?lang=fi&rating=N` rather than a Gmail mailto draft. Tapping a star on the page lights it without sending; clicking Submit posts rating, written note and company/contact details to FormSubmit AJAX (provider email activation required). This **does not** create a Kaurivo-owned permanent database. A separate Kaurivo backend must be approved rather than mixing client data into OAVIR's Supabase project. A four-times-daily private FormSubmit archive digest is ready under `.github/workflows/kaurivo-feedback.yml` but makes no API requests until `KAURIVO_FORMSUBMIT_API_KEY` is added to repository Actions secrets. It publishes anonymous aggregate counts only, never raw comments or email addresses. Details: `docs/CUSTOMER_FEEDBACK.md`.
+Kaurivo's real separate Supabase organization (ocglllovgdlilgcpdmon)
+has its own active Free project (xhsfbcwpwbgdbatrcyuk; EU North).
+Two private tables and a one-time customer invitation RPC are installed
+with RLS and no anonymous table policies. The Edge Function
+kaurivo-feedback-submit is deployed; the GitHub Pages
+/kaurivo/feedback/ form now points to it. The form's approved star
+selection, feedback, company and email fields remain the same.
+A private invite token is required; no general visitor can insert a
+review merely by entering an email address.
 
-
-## Feedback setup status — verified Oct 31, 2026
-
-Static Pages and quality tests are deployed. FormSubmit activation is blocked by the provider when trying to submit from GitHub Actions (Cloudflare HTTP 403). The owner must submit a synthetic review in a normal browser and confirm the activation email in hello.kaurivo@gmail.com; only then can actual email delivery be checked. Automated Gmail monitoring is scheduled every six hours; the FormSubmit archive runner is disabled by default with a repository variable gate and requires a provider API key later. A private database implementation package is available in backend/ for a separate, approved Kaurivo Supabase project. No OAVIR data or project was touched.
+The legacy FormSubmit archive workflow remains disabled. Direct
+customer email replies have a separate scheduled Gmail review watcher.
+Real customer invitations still require purchase verification and
+approved sending. No new OAVIR resources were touched. See
+docs/CUSTOMER_FEEDBACK.md and docs/kaurivo/backend/README.md.

@@ -114,7 +114,8 @@ def _stars(value: int) -> str:
 def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
                               sale_confirmed_at: datetime, now: datetime,
                               sale_verified: bool, relationship_verified: bool,
-                              contact_first_name: str = "", invitation_ref: str = "") -> dict:
+                              contact_first_name: str = "", invitation_ref: str = "",
+                              invitation_token: str = "") -> dict:
     """Prepare private post-sale Gmail message linked to a real feedback page.
 
     The five HTML star links PRESELECT the rating on Kaurivo's site.
@@ -134,6 +135,8 @@ def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
         raise ValueError("Verified recipient email address required.")
     if not isinstance(company_name, str) or not company_name.strip():
         raise ValueError("Confirmed company required.")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{43}", invitation_token):
+        raise ValueError("A real one-time invitation token is required for a usable form link.")
     if invitation_ref and not re.fullmatch(r"[A-Za-z0-9_-]{4,50}", invitation_ref):
         raise ValueError("Invitation reference must be non-personal opaque ID.")
 
@@ -144,7 +147,7 @@ def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
             params.append(f"rating={value}")
         if invitation_ref:
             params.append("ref=" + quote(invitation_ref, safe=""))
-        return base_url + "?" + "&".join(params)
+        return base_url + "?" + "&".join(params) + "#invite=" + quote(invitation_token, safe="")
 
     subject = "Kaurivo | Miten asiointi sujui?"
     greeting = f"Hei {contact_first_name.strip()}," if contact_first_name.strip() else "Hei,"
@@ -226,8 +229,9 @@ def draft_after_sale_feedback(*, recipient_email: str, company_name: str,
         "feedback_stage": "day_after_confirmed_sale",
         "send_approved": False, "send_performed": False,
         "public_testimonial_permission": False,
-        "notes": ("Gmail draft only. Link requires a verified backend before durable "
-                  "first-party storage; no scheduled send exists yet."),
+        "notes": ("Gmail draft only. Never publish or log private invitation tokens. "
+                  "Send only to the verified buyer after confirming the private "
+                  "invitation exists in the Kaurivo database."),
     }
 
 

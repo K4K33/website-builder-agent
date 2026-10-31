@@ -22,8 +22,10 @@ class FeedbackMarkupTests(unittest.TestCase):
         self.assertIn('name="email"', html)
         self.assertIn('name="company"', html)
         self.assertIn('name="privacy_ack"', html)
-        self.assertIn("formsubmit.co/ajax/", html)
-        self.assertIn('data.success === true || data.success === "true"', script)
+        self.assertIn("xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-feedback-submit", html)
+        self.assertIn("data.success === true", script)
+        self.assertIn('get("invite")', script)
+        self.assertNotIn("formsubmit.co", html)
         self.assertIn("event.preventDefault()", script)
         self.assertIn("feedback-status-error", (ROOT / "assets" / "site-v3.css").read_text())
         self.assertNotIn("mailto:", script)
@@ -49,9 +51,9 @@ class FeedbackMarkupTests(unittest.TestCase):
                         page.add_init_script("""window.__feedbackMockSuccess=false;
 window.fetch=async () => ({
     ok:true,
-    json:async()=>({success:window.__feedbackMockSuccess?"true":"false"})
+    json:async()=>({success:window.__feedbackMockSuccess})
 });""")
-                        page.goto(PAGE.as_uri() + "?lang=fi&rating=2&ref=demo_test_01",
+                        page.goto(PAGE.as_uri() + "?lang=fi&rating=2#invite=" + "A"*43,
                                   wait_until="domcontentloaded")
                         page.wait_for_timeout(90)
                         self.assertEqual(page.locator("html").get_attribute("lang"), "fi")
@@ -59,7 +61,7 @@ window.fetch=async () => ({
                         page.locator(".feedback-star-options label").nth(3).click()
                         self.assertEqual(page.locator('input[name="rating"]:checked').input_value(), "4")
                         self.assertEqual(page.locator(".feedback-star-options label.is-lit").count(), 4)
-                        self.assertEqual(page.locator("#feedback-ref").input_value(), "demo_test_01")
+                        self.assertIn("#invite=", page.url)
                         page.locator("#feedback-message").fill("Hyvin alkanut yhteistyö.")
                         page.locator("#feedback-company").fill("Demo Oy")
                         page.locator("#feedback-email").fill("demo@example.invalid")
@@ -74,6 +76,7 @@ window.fetch=async () => ({
                         page.wait_for_timeout(120)
                         self.assertTrue(page.locator(".feedback-status-success").is_visible())
                         self.assertTrue(page.locator("#feedback-submit").is_disabled())
+                        self.assertNotIn("#invite=", page.url)
                         self.assertEqual(errors, [])
                         overflow = page.evaluate(
                             "Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth")

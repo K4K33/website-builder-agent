@@ -57,11 +57,16 @@ Deno.serve(async req => {
   const token = submission.invitation;
   const rating = submission.rating;
   const message = submission.message;
+  const email = submission.email;
+  const company = submission.company;
   // A 32-byte base64url token has 43 characters. Never accept human names or
   // email addresses as proof of a sale/invitation.
-  if (typeof token !== "string" || !/^[A-Za-z0-9_-]{42,64}$/.test(token) ||
+  if (typeof token !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(token) ||
       !Number.isInteger(rating) || (rating as number) < 1 || (rating as number) > 5 ||
-      typeof message !== "string" || message.trim().length < 3 || message.trim().length > 2000) {
+      typeof message !== "string" || message.trim().length < 3 || message.trim().length > 2000 ||
+      typeof email !== "string" || email.trim().length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+      typeof company !== "string" || company.trim().length < 1 || company.trim().length > 120) {
     return answer(400, { success: false, error: "invalid" });
   }
 
@@ -72,7 +77,7 @@ Deno.serve(async req => {
   // Token expiration and one-time use are checked inside the database.
   try {
     const result = await fetch(
-      supabaseUrl + "/rest/v1/rpc/kaurivo_submit_invited_feedback",
+      supabaseUrl + "/rest/v1/rpc/kaurivo_submit_invited_feedback_v2",
       {
         method: "POST",
         headers: {
@@ -84,6 +89,8 @@ Deno.serve(async req => {
           p_token_sha256: digest,
           p_rating: rating,
           p_comment: message.trim(),
+          p_email: email.trim(),
+          p_company: company.trim(),
         }),
       }
     );

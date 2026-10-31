@@ -1,32 +1,61 @@
-# Separate Kaurivo customer feedback backend
+# Kaurivo customer feedback backend
 
-**Status: prepared, NOT deployed.** The only connected Supabase project belongs to OAVIR. No Kaurivo data or schemas may be added there.
+Status on 31 October 2026: INSTALLED into the separate Kaurivo Supabase
+organization, NOT OAVIR. Organization ID: ocglllovgdlilgcpdmon.
+Project ID: xhsfbcwpwbgdbatrcyuk (Free, EU North).
 
-## Why
+## Live components
 
-FormSubmit.co is temporary: its archive lasts 30 days, and the mailbox must first confirm activation. The one-time GitHub activation request was rejected by FormSubmit's Cloudflare challenge (403). A durable private database is more appropriate for real EU client reviews.
+- PostgreSQL tables: public.kaurivo_feedback_invitations and
+  public.kaurivo_feedback_submissions, both with RLS enabled and no
+  anonymous read/write access.
+- Service-role-only SQL function:
+  public.kaurivo_submit_invited_feedback_v2.
+  It uses SECURITY INVOKER, row locking and a unique invitation ID.
+- Supabase Edge Function kaurivo-feedback-submit, public JWT check disabled
+  because the request carries a 43-character, one-use customer invitation.
+  The Edge Function checks exact origin, validates form fields and hashes
+  the invitation token before calling service-only RPC.
+- GitHub Pages /kaurivo/feedback/ page uses the Edge Function, not FormSubmit.
+  The same visual 1–5 stars and written feedback UI remains unchanged.
 
-## Architecture
+## Issuing an invitation
 
-1. When a genuine sale is confirmed, an authorized Kaurivo administrator creates a random one-use token (32 cryptographically random bytes, encoded in base64url). Only its SHA-256 hash is stored with the verified recipient, project and expiry in the dedicated Kaurivo database. Never commit real invitation links or tokens.
-2. A customer receives the private feedback link one day after sale, with the invitation token in the URL query parameter. The browser submits rating and written comment to a Kaurivo Edge Function, not directly to an exposed table.
-3. The Edge Function validates an exact allowed origin, token length, rating, comment and body size; computes token SHA-256; then calls a privileged atomic SQL RPC. The token is consumed once. Invalid, expired or reused tokens do not create reviews.
-4. The tables have row-level security enabled and no anonymous read/write policies. A verified buyer review remains private and is not automatically a public testimonial. Every serious issue requires human review, even if automatically tagged.
-5. The backend stores private feedback for authorized Kaurivo review. It is completely separate from OAVIR.
+Only after verifying a genuine customer purchase, generate a cryptographically
+secure 32-byte random token and deliver it solely to the correct customer's
+email address one Finnish calendar day after the purchase. The token's
+SHA-256 hex digest, recipient email, verified company, sale timestamp,
+expiry and internal project reference go in the private invitations table.
 
-## Activation checklist
+The customer-facing URL includes #invite=<base64url-token> after the language
+and optional preselected rating query parameters, e.g.
+https://k4k33.github.io/website-builder-agent/kaurivo/feedback/?lang=fi&rating=4#invite=TOKEN
 
-- First, the owner must choose which Supabase organization should own the new project. The assistant must verify costs and seek approval for nonzero charges. Name the distinct project **Kaurivo** (EU North preferred). No shared OAVIR resources.
-- Review relevant privacy and data-processing terms and complete the data-controller identity/privacy notice.
-- Apply schema.sql in the NEW project only. Check both RLS tables, restrict RPC EXECUTE to service_role, verify no anonymous select/insert access and inspect Supabase security advisors.
-- Deploy edge_function.ts as an Edge Function named kaurivo-feedback-submit with verify_jwt=false. Visitors are authenticated with one-use high-entropy invitation tokens. The service key stays entirely server-side.
-- Wire the existing Kaurivo /feedback/ form to the new Edge Function only after this project exists. Keep star selection and desktop/mobile appearance identical.
-- In a PRIVATE admin workflow, create an invitation tied to a genuinely verified purchase. Test a synthetic valid invitation, duplicate submit rejection, invalid/expired tokens, invalid star ratings, preflight CORS denial and mobile/desktop layout. Never print secret tokens or actual customer messages in public GitHub Actions output.
-- Disable the FormSubmit polling once the new backend is verified end-to-end; keep Gmail as an optional second feedback intake channel.
-- Feed categorized, privacy-safe improvements into the Builder QA checklist. Never auto-apply client design changes or publish endorsements.
+Do not put real tokens, customer names, emails, project metadata or raw
+comments into a public GitHub repository, URL query analytics, CI logs or
+source-control artifacts. HTML email drafts and copyable form links must only
+be created after a valid private invitation exists.
 
-## Security and business rules
+The customer must enter their matching verified email when submitting.
+The database validates that the token has not expired, has never been used
+before, belongs to the claimed email and is after the confirmed purchase.
 
-One subjective color preference is not necessarily a global design change. Repeated, reproducible usability problems should become QA regression checks. A critical functional or security incident should be reviewed promptly, even if only reported once. Never infer message truthfulness or client identity from stars or sentiment.
+## Operations
 
-No billable service was created by preparing this source code.
+The classification occurs in the SQL transaction, producing a topic and
+priority without using AI credits. A critical bug is flagged for human
+review. All feedback remains private and no review is automatically
+published or used to modify real customer sites.
+
+The FormSubmit GitHub Actions monitor is LEGACY and disabled.
+Direct Gmail feedback is separately checked by the scheduled email watcher.
+To automatically send invitation emails after genuine new purchases, a
+trusted and confirmed purchase/sales source is still required; there is no
+live payment-driven trigger yet.
+
+Security verification: validated the SQL function with rollback-only
+synthetic cases for valid, duplicate, invalid email and invalid rating.
+The full browser-to-Edge-to-database live submission with a synthetic
+invitation remains the next integration test.
+
+Never add the customer feedback data to OAVIR's project.

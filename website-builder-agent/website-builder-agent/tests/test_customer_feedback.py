@@ -98,13 +98,16 @@ class CustomerFeedbackTests(unittest.TestCase):
         self.assertEqual(due.hour, 15)
         kwargs = dict(recipient_email="client@example.org", company_name="Example Oy",
                       sale_confirmed_at=sale, sale_verified=True,
-                      relationship_verified=True, contact_first_name="Anna")
+                      relationship_verified=True, contact_first_name="Anna",
+                      invitation_token="A"*43)
         with self.assertRaises(ValueError):
             draft_after_sale_feedback(now=due-timedelta(minutes=1), **kwargs)
         with self.assertRaises(ValueError):
             draft_after_sale_feedback(now=due, **dict(kwargs, sale_verified=False))
         with self.assertRaises(ValueError):
             draft_after_sale_feedback(now=due, **dict(kwargs, relationship_verified=False))
+        with self.assertRaises(ValueError):
+            draft_after_sale_feedback(now=due, **dict(kwargs, invitation_token=""))
         draft = draft_after_sale_feedback(now=due, **kwargs)
         self.assertEqual(draft["feedback_stage"], "day_after_confirmed_sale")
         self.assertEqual(draft["due_at"], due.isoformat())
@@ -113,6 +116,7 @@ class CustomerFeedbackTests(unittest.TestCase):
         self.assertFalse(draft["send_approved"])
         self.assertFalse(draft["public_testimonial_permission"])
         self.assertIn("Hei Anna", draft["body"])
+        self.assertIn("#invite=" + "A"*43, draft["body"])
         self.assertIn("/kaurivo/feedback/?lang=fi", draft["body"])
         self.assertIn("Kirjoita lyhyt palaute tähän", draft["html_body"])
         self.assertIn("feedback/?lang=fi&amp;rating=5", draft["html_body"])

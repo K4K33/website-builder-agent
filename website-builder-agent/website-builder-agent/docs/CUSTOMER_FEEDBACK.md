@@ -12,57 +12,43 @@ Always make the lowest-friction alternative prominent: "Voitte myös vastata suo
 
 The first sales message must follow all outreach legal and human-review gates in OUTREACH.md. No autonomous sends.
 
-### 2. One day after a confirmed sale: interactive stars on Kaurivo's website
+### 2. One day after a confirmed sale: private Kaurivo database
 
-After a verified sale, prepare a private, customer-specific Kaurivo Gmail
-feedback email ONE calendar day later in Finland time. It must rate the
-quotation and onboarding, not a website that hasn't been delivered.
+The customer receives a polished, generic Kaurivo / Asiakaskokemus Gmail
+request ONE Finnish calendar day after a genuinely verified purchase. A
+unique cryptographically random 32-byte customer invitation is stored
+only as a SHA-256 digest and tied to the verified recipient, project and
+expiration in the dedicated Kaurivo Supabase database. A text or HTML
+email draft MUST NOT be offered for sending without a corresponding,
+valid private invitation in the database.
 
-The email's five star links and the rectangular writing prompt now open
-the dedicated Kaurivo page:
-https://k4k33.github.io/website-builder-agent/kaurivo/feedback/?lang=fi
+The five star links and a writing-field link open:
+https://k4k33.github.io/website-builder-agent/kaurivo/feedback/?lang=fi&rating=4#invite=TOKEN
+where TOKEN is a real one-time private invitation (never a public
+placeholder), inside the URL fragment rather than the HTTP request path.
+The user may change the highlighted stars, write a comment, fill the
+company and matching verified customer email, acknowledge privacy
+information and submit. Only a successful POST via Kaurivo's own Supabase
+Edge Function counts as a saved review. The Edge Function verifies
+request origin, data format and token before calling an atomic,
+single-use SQL function. Invalid, expired or repeated links do not
+create customer feedback. The browser never receives the database
+service-role key.
 
-Each star link passes an integer preselection in the URL, but does not
-record anything by itself. On the page, the client can change the lit
-stars, enter a short written review, company and contact email, consent
-to private submission and press **Lähetä palaute**.
+The **Kaurivo Supabase project is separate from OAVIR**: project
+xhsfbcwpwbgdbatrcyuk in organization ocglllovgdlilgcpdmon, EU North,
+Free plan. The two private feedback tables are RLS-protected and do not
+permit anonymous reading. The server categorizes urgency and subject.
+All reviews remain unverified statements until human review; they are
+not automatically posted as testimonials or turned into client changes.
 
-The page uses the documented FormSubmit JSON AJAX endpoint and receives
-a success state only if FormSubmit explicitly reports success. It does
-NOT open Gmail or claim success based only on HTTP 200.
-
-**Activation:** Confirm hello.kaurivo@gmail.com in FormSubmit's first
-activation email, then test end-to-end submission. Before the receiving
-address is activated, the UI displays a failure/activation status; do
-not claim that customer reviews have been accepted.
-
-**Storage:** As currently configured, reviews are retained by the
-external FormSubmit service (with 30-day archival retention) and
-delivered into the Kaurivo Gmail inbox. This is NOT yet a durable
-first-party Kaurivo database. We must not add any private review
-contents to the public GitHub repository.
-
-**Optional automatic classification:** The private GitHub workflow
-kaurivo-feedback.yml is installed, but remains inert until an API
-secret named KAURIVO_FORMSUBMIT_API_KEY is configured. The workflow
-checks up to four times daily (under the provider's five-call free API
-quota), filters the last 24 hours and publishes only anonymous topic,
-rating and urgency counters to a GitHub Actions run. It sends no emails
-and makes no website edits. Individual reviews remain unverified until
-checked against private customer/project records. Duplicate provider
-entries in a single archive response are coalesced. The rolling window
-may overlap across runs; treat those counts as snapshots, not additive
-new-review notifications.
-
-A durable, real-time customer-feedback system requires a SEPARATE
-Kaurivo backend, database and verified purchase invitation tokens.
-The only connected existing Supabase project belongs to OAVIR; do not
-touch or reuse it. Creating a distinct project needs the user's explicit
-choice of Supabase organization and any cost confirmation. Until then,
-the FormSubmit archive remains the temporary store.
-
-The email sender and signoff are generic: Kaurivo / Asiakaskokemus.
-No personal name or title. No true client is contacted in tests.
+The FormSubmit-based Gmail archive reader is now LEGACY, not the
+customer feedback collection path; its GitHub workflow remains disabled.
+The already connected Gmail watcher can separately process direct
+email feedback; it does not read Supabase table rows automatically.
+A verified sales/purchase source and admin invitation issuance are
+still required before automatic customer invitations can be sent.
+No real customer emails are sent by the code itself.
 
 ### 3. After the actual website is delivered (optional second feedback)
 
@@ -114,10 +100,13 @@ Once the form passes activation and end-to-end delivery checks, add its confirme
 The Python helpers create drafts and suggested triage only. They do not read Gmail, schedule reminders, spend AI credits, send mail, publish testimonials or apply code changes.
 
 
-## October 31, 2026: verified setup status and activation blocker
+## October 31, 2026: deployment and remaining verification
 
-- The live Kaurivo feedback form and its 1–5 stars passed browser tests. The AJAX request has been updated to regular URL-encoded form data to reduce cross-origin preflight issues.
-- GitHub datacenter POST to activate FormSubmit was **blocked by Cloudflare HTTP 403** with a JavaScript challenge. No activation confirmation was received by Kaurivo's Gmail. The one-time GitHub activation workflow has been removed. Activation requires one normal browser submission on the real Kaurivo form, then confirmation in hello.kaurivo@gmail.com. Do not describe delivery as live until a post-activation end-to-end submission arrives.
-- A recurring ChatGPT automation was created to check the connected Kaurivo Gmail every 6 hours, classify new non-test review messages and alert on significant issues. It does not send mail, publish customer data or modify any client websites. This operates independently of FormSubmit's archive API.
-- The FormSubmit GitHub workflow is now guarded by the repository variable KAURIVO_FEEDBACK_ENABLED == true; before activation it schedules no runner work and consumes no archive API credits. When later enabled, it needs the KAURIVO_FORMSUBMIT_API_KEY GitHub Actions secret. Maximum 4 archive requests daily, under the 5/day free cap. Do not enable until key and activation are both proven.
-- A dedicated Kaurivo-only Supabase schema and Edge Function package is prepared under docs/kaurivo/backend/. This is **not deployed**. It must go into a new Kaurivo organization-selected project, never OAVIR. Confirm any project costs and privacy terms before production deployment. The private backend uses cryptographically random one-time invitation tokens, atomic database consumption, RLS and no public access.
+Kaurivo's separate Supabase database and server submission function are
+installed, and database tests have confirmed accepted one-use token,
+rejected duplicate token, wrong email and invalid star rating (all
+transaction-rolled-back synthetic tests). The static website now uses
+the dedicated endpoint. CI browser tests and one real browser submission
+with a synthetic invitation are still part of deployment verification.
+FormSubmit activation is no longer required for this customer-review
+flow; it remains relevant to the separate demo-wishes form.

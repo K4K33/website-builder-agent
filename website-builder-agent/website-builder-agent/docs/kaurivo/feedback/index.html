@@ -3,6 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#05080e">
 <meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
 <meta name="description" content="Rate your experience with Kaurivo and share brief private feedback.">
 <meta property="og:title" content="Customer feedback — Kaurivo"><meta property="og:description" content="Private customer feedback for Kaurivo."><meta property="og:type" content="website">
 <title>Customer feedback — Kaurivo</title>
@@ -41,12 +42,8 @@
 <div><span class="feedback-promise-number">03</span><span>Your review stays private unless you separately allow it to be published.</span></div>
 </div>
 </div>
-<form class="form-panel customer-feedback-form" id="customer-feedback-form" action="https://formsubmit.co/ajax/hello.kaurivo@gmail.com" method="POST" accept-charset="UTF-8" data-feedback-mode="formsubmit">
-<input type="hidden" name="_subject" value="KAURIVO CUSTOMER FEEDBACK - PRIVATE">
-<input type="hidden" name="_template" value="table">
-<input type="hidden" name="feedback_stage" value="post_sale_experience">
-<input type="hidden" name="source" value="kaurivo_private_review_page">
-<input type="hidden" name="review_reference" id="feedback-ref" value="">
+<form class="form-panel customer-feedback-form" id="customer-feedback-form" action="https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-feedback-submit" method="POST" accept-charset="UTF-8" data-feedback-mode="kaurivo-private-db">
+
 <div class="honeypot" aria-hidden="true"><label for="review-honey">Leave this field empty</label><input type="text" id="review-honey" name="_honey" autocomplete="off" tabindex="-1"></div>
 <div class="feedback-form-heading"><span class="eyebrow">Private feedback</span><h3>Your rating</h3><p>How would you rate your experience with us so far?</p></div>
 <fieldset class="feedback-stars" id="feedback-star-field" aria-describedby="rating-help" required>
@@ -66,11 +63,11 @@
 <div class="field"><label for="feedback-company">Company *</label><input id="feedback-company" type="text" name="company" maxlength="120" autocomplete="organization" required placeholder="Your business"></div>
 <div class="field"><label for="feedback-email">Email address *</label><input id="feedback-email" type="email" name="email" maxlength="160" autocomplete="email" required placeholder="you@company.com"></div>
 </div>
-<div class="field v6-consent feedback-consent"><label><input type="checkbox" name="privacy_ack" value="acknowledged" required><span>I understand this form uses an external submission service to deliver my private feedback to Kaurivo. See the <a href="../privacy/">privacy information</a>.</span></label></div>
+<div class="field v6-consent feedback-consent"><label><input type="checkbox" name="privacy_ack" value="acknowledged" required><span>I understand this feedback is stored privately in Kaurivo’s dedicated database. See the <a href="../privacy/">privacy information</a>.</span></label></div>
 <button type="submit" class="btn feedback-submit" id="feedback-submit">Send private feedback <span aria-hidden="true">↗</span></button>
 <p class="feedback-status" id="feedback-status" role="status" aria-live="polite"></p>
-<p class="form-privacy">Your review is not published automatically. A member of Kaurivo verifies that the feedback belongs to an actual customer project before using it for service improvements. Do not include sensitive personal information.</p>
-<noscript><p class="feedback-status">JavaScript is required to submit this form without leaving the page. You can also email hello.kaurivo@gmail.com.</p></noscript>
+<p class="form-privacy">Only a private, one-use invitation sent to a verified Kaurivo customer can submit a review. A rating is not published automatically. Comments are reviewed before being used for service improvements. Do not include sensitive personal information.</p>
+<noscript><p class="feedback-status">JavaScript is required for private database submission. For help, email hello.kaurivo@gmail.com.</p></noscript>
 </form>
 </div>
 </section>

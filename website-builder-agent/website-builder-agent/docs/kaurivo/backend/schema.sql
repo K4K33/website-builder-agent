@@ -26,6 +26,8 @@ create table if not exists public.kaurivo_feedback_submissions (
   invitation_id uuid not null unique references public.kaurivo_feedback_invitations(id),
   rating smallint not null check (rating between 1 and 5),
   comment_text text not null check (length(btrim(comment_text)) between 3 and 2000),
+  submitted_email text not null check (length(submitted_email) between 3 and 254),
+  submitted_company text not null check (length(submitted_company) between 1 and 120),
   submitted_at timestamptz not null default now(),
   topic text not null,
   priority text not null check (priority in ('urgent_review', 'normal_review', 'clarify')),
@@ -46,13 +48,14 @@ grant select, insert, update on public.kaurivo_feedback_invitations to service_r
 grant select, insert, update on public.kaurivo_feedback_submissions to service_role;
 
 -- One-time invite submission is atomic (FOR UPDATE + used_at in one transaction).
--- This privileged function is kept in public only for the Edge Function's
--- service_role RPC call. Explicitly revoke the PUBLIC default EXECUTE grant.
-create or replace function public.kaurivo_submit_invited_feedback(
-  p_token_sha256 text, p_rating int, p_comment text
+-- The service-role-only security invoker function is callable solely by the
+-- privileged Edge Function. No RLS-bypassing SECURITY DEFINER code is exposed.
+create or replace function public.kaurivo_submit_invited_feedback_v2(
+  p_token_sha256 text, p_rating int, p_comment text,
+  p_email text, p_company text
 ) returns boolean
 language plpgsql
-security definer
+security invoker
 set search_path = pg_catalog, public
 as $function$
 declare
@@ -64,6 +67,9 @@ begin
   if p_token_sha256 is null or p_token_sha256 !~ '^[0-9a-f]{64}$'
     or p_rating is null or p_rating not between 1 and 5
     or p_comment is null or length(btrim(p_comment)) not between 3 and 2000
+    or p_email is null or length(btrim(p_email)) not between 3 and 254
+    or p_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
+    or p_company is null or length(btrim(p_company)) not between 1 and 120
   then
     return false;
   end if;
@@ -73,6 +79,7 @@ begin
   where token_sha256 = p_token_sha256
     and used_at is null and expires_at > now()
     and sale_confirmed_at <= now()
+    and lower(btrim(verified_client_email)) = lower(btrim(p_email))
   for update;
 
   if v_invitation is null then
@@ -98,8 +105,8 @@ begin
   end;
 
   insert into public.kaurivo_feedback_submissions (
-    invitation_id, rating, comment_text, topic, priority
-  ) values (v_invitation, p_rating, btrim(p_comment), v_topic, v_priority);
+    invitation_id, rating, comment_text, submitted_email, submitted_company, topic, priority
+  ) values (v_invitation, p_rating, btrim(p_comment), lower(btrim(p_email)), btrim(p_company), v_topic, v_priority);
   update public.kaurivo_feedback_invitations
     set used_at = now()
     where id = v_invitation and used_at is null;
@@ -107,9 +114,9 @@ begin
 end;
 $function$;
 
-revoke all on function public.kaurivo_submit_invited_feedback(text, int, text)
+revoke all on function public.kaurivo_submit_invited_feedback_v2(text, int, text, text, text)
   from public, anon, authenticated;
-grant execute on function public.kaurivo_submit_invited_feedback(text, int, text)
+grant execute on function public.kaurivo_submit_invited_feedback_v2(text, int, text, text, text)
   to service_role;
 
 -- Do not add anon SELECT/INSERT policies or expose raw feedback via a view.
