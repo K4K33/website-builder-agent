@@ -48,3 +48,92 @@
 
 /* Mobile login layout adjustment */
 @media(max-width:850px){.login-view{grid-template-columns:minmax(0,1fr)}.login-panel{min-width:0}.login-panel .address{display:block;width:100%;min-width:0;max-width:100%;text-overflow:ellipsis}.status{max-width:calc(100vw - 28px);right:14px}}
+
+/* Kaurivo mobile operations redesign (2026-10-31). Desktop stays unchanged. */
+.mobile-dock,.mobile-more-panel{display:none}
+.morning-details{border:1px solid #344a59;border-radius:10px;padding:16px 19px;margin-top:20px;background:#131f2a;color:#afc1cc}
+.morning-details>summary{cursor:pointer;list-style:none;font-weight:700;font-size:13px;color:#d3e5f1;min-height:30px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.morning-details>summary::-webkit-details-marker{display:none}
+.morning-details>summary:after{content:"+";font-size:23px;font-weight:400;line-height:1;color:#a3c1d3}
+.morning-details[open]>summary:after{content:"−"}
+.morning-details p{font-size:12px;line-height:1.7;margin:14px 0}
+.morning-details .record-actions{justify-content:start}
+.morning-details button{min-height:44px}
+.morning-head{margin-bottom:8px}
+.morning-head h2{margin:9px 0}
+.morning-toolbar{border-bottom:1px solid #293c4a;padding:10px 0 16px;margin-bottom:17px}
+.morning-counter{max-width:580px;line-height:1.5;font-size:13px}
+@media(max-width:850px){
+  html,body{overflow-x:clip}
+  .crm-header{min-height:64px;padding:13px 18px}
+  .crm-header .brand-word{font-size:15px}
+  .crm-header .account{display:none}
+  #dashboard{display:flex;flex-direction:column;gap:0;padding:0 15px 124px;max-width:600px;margin:0 auto;min-width:0}
+  #dashboard[hidden]{display:none!important}
+  .dashboard-top{order:0;display:flex;flex-direction:row;justify-content:space-between;align-items:center;padding:12px 3px 14px;min-height:51px}
+  .dashboard-top>div:first-child{display:none}
+  .dashboard-top .right-top{display:flex;align-items:center;justify-content:space-between;width:100%;gap:9px;color:#a6b9c8;font-size:11px}
+  .dashboard-top #now-label{white-space:nowrap;line-height:1.4}
+  .dashboard-top #open-password-setup{display:none}
+  .dashboard-top #refresh{font-size:12px;min-height:37px;padding:9px 12px;white-space:nowrap;background:transparent}
+  #dashboard>.workspace{order:1;background:transparent;overflow:visible;border:0;border-radius:0;min-width:0;width:100%}
+  #dashboard>.metrics{order:2;margin:26px 0 0;gap:9px}
+  #dashboard>.metrics .metric{padding:14px;min-height:94px;gap:8px;border-radius:10px}
+  #dashboard>.metrics .metric strong{font-size:27px}
+  #dashboard>.metrics .metric small{font-size:10px}
+  .workspace>.tabs{display:none}
+  .workspace>.panel{min-width:0;background:#111d28;border:1px solid #2d4050;border-radius:14px;padding:20px 17px 21px;min-height:0}
+  .workspace>.panel[hidden]{display:none!important}
+  .morning-head{margin-bottom:2px}
+  .morning-head h2{font-size:25px;margin:9px 0 5px;letter-spacing:-.055em}
+  .morning-head .eyebrow{font-size:10px}
+  .morning-head p{font-size:12px;line-height:1.5}
+  .morning-toolbar{display:grid;grid-template-columns:1fr;gap:8px;padding:14px 0;margin-bottom:16px}
+  .morning-toolbar>.morning-day{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .morning-toolbar label{margin:0;font-size:10px}
+  .morning-toolbar input{width:auto;max-width:195px;min-height:42px;font-size:14px}
+  .morning-counter{width:100%;font-size:14px;font-weight:700;color:#e6f1f7;line-height:1.5}
+  #prospect-list{gap:12px;margin:0 0 16px}
+  #prospect-list>.record{padding:16px;border-radius:11px;gap:13px}
+  #prospect-list .record-title{font-size:17px;line-height:1.25;overflow-wrap:anywhere}
+  #prospect-list .record-sub{font-size:12px;overflow-wrap:anywhere}
+  #prospect-list .record-website{min-height:45px;display:flex;align-items:center;justify-content:center;border-radius:8px;padding:10px 13px;background:#243c4c;border:1px solid #537a91;color:#dbf3ff;text-align:center;max-width:100%}
+  #prospect-list .record-no-website{font-size:12px;line-height:1.4}
+  #prospect-list .record-actions{width:100%}
+  #prospect-list .record-actions .small-action{min-height:44px;flex:1}
+  .records .empty{padding:23px 17px;border-radius:11px;line-height:1.6;font-size:13px}
+  .push-settings{margin:0 0 15px;padding:15px;gap:12px;display:grid;grid-template-columns:1fr;border-radius:11px}
+  .push-settings strong{font-size:15px}
+  .push-settings p{font-size:12px;margin:5px 0 0;line-height:1.55}
+  .push-actions{gap:7px;display:flex;flex-wrap:wrap;width:100%}
+  .push-actions button{min-height:44px;flex:1}
+  .push-actions .push-status{flex-basis:100%;font-size:11px}
+  .morning-details{margin-top:3px;padding:12px 14px}
+  .workspace>.panel:not(#tab-prospects)>.section-head{align-items:start}
+  .workspace>.panel:not(#tab-prospects)>.section-head .primary-button{width:100%;min-height:44px}
+  .workspace>.panel .record{border-radius:10px}
+  .workspace>.panel .small-action{min-height:44px}
+  .crm-footer{padding-bottom:104px;font-size:9px;line-height:1.7}
+  .status{z-index:115;left:14px;right:14px;max-width:none;bottom:calc(89px + env(safe-area-inset-bottom));max-height:40vh;overflow-y:auto}
+  .mobile-dock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;position:fixed;bottom:0;left:0;right:0;z-index:95;max-width:100%;padding:5px max(9px,env(safe-area-inset-left)) max(7px,env(safe-area-inset-bottom)) max(9px,env(safe-area-inset-right));background:#101c27f5;border-top:1px solid #344e60;box-shadow:0 -8px 35px #0006;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .dock-button{min-width:0;min-height:60px;border:0;border-radius:10px;background:transparent;color:#97abba;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;padding:7px 1px 5px;font-size:11px;font-weight:700;line-height:1.15}
+  .dock-button svg{width:21px;height:21px;flex:none}
+  .dock-button.current{color:#effaff;background:#233a4b}
+  .dock-button:focus-visible,.more-link:focus-visible{outline:2px solid #b6d9ee;outline-offset:2px}
+  .mobile-more-panel:not([hidden]){display:block;position:fixed;inset:0;z-index:102}
+  .mobile-more-scrim{position:absolute;inset:0;background:#050a10ba;border:0;width:100%;height:100%}
+  .mobile-more-sheet{position:absolute;bottom:0;left:0;right:0;padding:17px 18px calc(23px + env(safe-area-inset-bottom));max-height:calc(100dvh - 36px);overflow-y:auto;background:#152430;border-radius:21px 21px 0 0;border-top:1px solid #5c788b;box-shadow:0 -15px 75px #000b}
+  .more-heading{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px}
+  .more-heading strong{font:700 21px Manrope,sans-serif;letter-spacing:-.04em}
+  .more-close{width:42px;height:42px;background:#243948;border:1px solid #466076;color:white;border-radius:50%;font-size:25px}
+  .more-link{width:100%;min-height:53px;padding:13px 10px;border:0;border-bottom:1px solid #304552;background:transparent;color:#e5f2f9;font-size:15px;font-weight:650;display:flex;align-items:center;justify-content:space-between;text-align:left}
+  .more-link.danger{color:#f5b8b3}
+  .more-link>span:last-child{color:#91aaba}
+  .more-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:17px 0 9px}
+  .more-counts>div{padding:11px 3px;text-align:center;border:1px solid #344c5d;border-radius:10px;min-width:0}
+  .more-counts strong{display:block;font:700 23px Manrope,sans-serif;margin-bottom:5px}
+  .more-counts span{font-size:10px;line-height:1.4;color:#a9bdcb}
+}
+@media(min-width:851px){.mobile-dock,.mobile-more-panel{display:none!important}}
+@media(max-width:360px){#dashboard{padding-inline:10px}.workspace>.panel{padding:18px 12px}.dock-button{font-size:10px}.more-counts span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.mobile-more-sheet{transition:none} }
