@@ -144,7 +144,33 @@ async function notifyDaily(event:string):Promise<Response>{
  if(!result.ok)throw new Error("prospects_unavailable");
  const leads=await result.json();
  const count=leads.length;
- if(!count){await recordMorningEvent(day,"skipped","Ei saman päivän uusia rekisteriyrityksiä");return reply(200,{ok:true,day,companies:0,notifications:0,reason:"no_feed_for_today"});}
+ if(!count){
+  // Do not alarm before the main and backup discovery windows have passed.
+  // At the final 09:17 check, send a neutral missing-list warning.
+  if(event==="schedule"&&helsinkiHour()>=9){
+   const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date&limit=100");
+   const pending=subs.filter(sub=>sub.last_notified_date!==day);
+   let warned=0;
+   if(pending.length){
+    const keys=await vapidKeys();
+    for(const sub of pending){
+     if(await deliver(sub,{
+      title:"Kaurivo · aamun lista puuttuu",
+      body:"Uusia yrityksiä ei ole vielä tallennettu tänään. Tarkista yöhaun tila administa.",
+      url:ADMIN_URL+"?view=prospects&day="+day,
+      tag:"kaurivo-leads-"+day
+     },keys,day))warned++;
+    }
+   }
+   await recordMorningEvent(day,"skipped",
+    "Aamun lista puuttuu; tilanne tarkistettava",0,warned);
+   return reply(warned===pending.length?200:503,{
+    ok:warned===pending.length,day,companies:0,notifications:warned,
+    reason:"missing_morning_batch"});
+  }
+  await recordMorningEvent(day,"skipped","Ei vielä uusia rekisteriyrityksiä");
+  return reply(200,{ok:true,day,companies:0,notifications:0,reason:"no_feed_for_today"});
+ }
  const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date&limit=100");
  const pending=subs.filter(s=>s.last_notified_date!==day);
  if(!pending.length){
