@@ -64,10 +64,25 @@ def choose_shortlist(candidates, size=50, day=""):
     known=[c for c in eligible if c.get("website_listed_url")]
     unknown=[c for c in eligible if not c.get("website_listed_url")]
     selected=[]
-    for i in range(size):
-        target=known if i%2 else unknown
-        fallback=unknown if i%2 else known
-        if target: selected.append(target.pop(0))
-        elif fallback: selected.append(fallback.pop(0))
-        else: break
+    sector_counts={}
+    deferred=[]
+    # First pass: diversify major business groups when alternatives exist.
+    # The source may have only one sector; a second pass fills available
+    # capacity without inventing companies or failing on small samples.
+    for i in range(min(len(eligible),size*10)):
+        choices=(known,unknown) if i%2 else (unknown,known)
+        group=next((pool for pool in choices if pool),None)
+        if group is None: break
+        company=group.pop(0)
+        sector=str(company.get("industry_code_hint") or "")[:2]
+        if sector_counts.get(sector,0)>=8:
+            deferred.append(company)
+            continue
+        selected.append(company)
+        sector_counts[sector]=sector_counts.get(sector,0)+1
+        if len(selected)>=size: break
+    if len(selected)<size:
+        # Preserve balanced selection when the top list has a narrow market.
+        remaining=deferred+known+unknown
+        selected.extend(remaining[:size-len(selected)])
     return selected
