@@ -126,6 +126,14 @@ async function deliver(sub:Sub,payload:Record<string,unknown>,keys:Keys,day?:str
   return false;
  }
 }
+async function recordMorningEvent(day:string,outcome:"success"|"failure"|"skipped",details:string,records=0,notifications=0):Promise<void>{
+  // Never log endpoints, subscription keys, user IDs or other credentials.
+  await rest("kaurivo_pipeline_events",{method:"POST",
+   headers:{"prefer":"return=minimal"},
+   body:JSON.stringify({event_day:day,component:"morning_push",
+    outcome,details,records,notifications})
+  }).catch(()=>null);
+}
 async function notifyDaily(event:string):Promise<Response>{
  const day=helsinkiDay();
  // Accept delayed GitHub schedules later in the morning, rather than silently missing a day.
@@ -136,10 +144,15 @@ async function notifyDaily(event:string):Promise<Response>{
  if(!result.ok)throw new Error("prospects_unavailable");
  const leads=await result.json();
  const count=leads.length;
- if(!count)return reply(200,{ok:true,day,companies:0,notifications:0,reason:"no_verified_feed_for_today"});
+ if(!count){await recordMorningEvent(day,"skipped","Ei saman päivän uusia rekisteriyrityksiä");return reply(200,{ok:true,day,companies:0,notifications:0,reason:"no_feed_for_today"});}
  const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date&limit=100");
  const pending=subs.filter(s=>s.last_notified_date!==day);
- if(!pending.length)return reply(200,{ok:true,day,companies:count,notifications:0,reason:"already_sent"});
+ if(!pending.length){
+  await recordMorningEvent(day,"skipped",
+   subs.length?"Ilmoitukset jo lähetetty tänään":"Ei vahvistettuja laitetilauksia",count);
+  return reply(200,{ok:true,day,companies:count,notifications:0,
+    reason:subs.length?"already_sent":"no_device_subscriptions"});
+ }
  const keys=await vapidKeys();
  let delivered=0;
  for(const sub of pending){
@@ -150,7 +163,12 @@ async function notifyDaily(event:string):Promise<Response>{
   },keys,day);
   if(sent)delivered++;
  }
- return reply(200,{ok:true,day,companies:count,notifications:delivered});
+ await recordMorningEvent(day,delivered===pending.length?"success":"failure",
+  delivered===pending.length?"Ilmoitukset lähetetty":"Kaikkia ilmoituksia ei toimitettu",count,delivered);
+ return reply(delivered===pending.length?200:503,{
+  ok:delivered===pending.length,day,companies:count,notifications:delivered,
+  failed:pending.length-delivered});
+
 }
 Deno.serve(async (req:Request)=>{
  if(!SUPABASE_ENDPOINT||!SERVICE_KEY)return reply(503,{ok:false,error:"server_configuration"});
@@ -160,7 +178,11 @@ Deno.serve(async (req:Request)=>{
  if(req.method==="GET"){
   const user=await adminUser(req);
   if(!user)return reply(401,{ok:false,error:"admin_required"});
-  try{return reply(200,{ok:true,publicKey:(await vapidKeys()).public_key});}
+  try{
+   const keys=await vapidKeys();
+   const devices=await subscriptions("user_id=eq."+user.id+"&select=id&limit=8");
+   return reply(200,{ok:true,publicKey:keys.public_key,registeredDevices:devices.length});
+  }
   catch(_){return reply(503,{ok:false,error:"keys_unavailable"});}
  }
  if(req.method!=="POST")return reply(405,{ok:false,error:"method"});
@@ -178,7 +200,10 @@ Deno.serve(async (req:Request)=>{
   const oidc=await githubOIDC(req);
   if(!oidc)return reply(403,{ok:false,error:"workflow_not_authorized"});
   try{return await notifyDaily(oidc.event);}
-  catch(_){return reply(503,{ok:false,error:"delivery_unavailable"});}
+  catch(_){
+   await recordMorningEvent(helsinkiDay(),"failure","Ilmoituspalvelun suoritus epäonnistui");
+   return reply(503,{ok:false,error:"delivery_unavailable"});
+  }
  }
  const user=await adminUser(req);
  if(!user)return reply(401,{ok:false,error:"admin_required"});
