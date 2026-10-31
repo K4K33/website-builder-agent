@@ -93,18 +93,31 @@ Deno.serve(async req => {
   }
   if(used.has(c.business_id))continue;
   used.add(c.business_id);
+  // A search hit is NEVER proof of the site's owner, quality or activity.
+  const found=c.website_search_candidate as Record<string,unknown> | undefined;
+  const source=found&&typeof found==="object" && !Array.isArray(found)
+    ?clean(found.source,50):"";
+  const confidence=found&&Number.isInteger(found.confidence)
+    ?Number(found.confidence):0;
+  const candidate=source==="tavily_search" && confidence>=80 && confidence<=99 &&
+     typeof found?.url==="string" && validWebsite(clean(found.url,1200))
+     ?clean(found.url,1200):"";
   candidates.push({
    business_id:c.business_id,
    company_name:clean(c.name,160),
    city_hint:clean(c.city_hint,80),
    industry_code_hint:clean(c.industry_code_hint,20),
    website_listed_url:clean(c.website_listed_url,1200),
+   website_candidate_url:candidate,
+   website_candidate_source:candidate?source:"",
+   website_candidate_confidence:candidate?confidence:0,
+   website_candidate_checked_at:candidate?new Date().toISOString():null,
+   website_verified:false,
    source_url:"https://avoindata.prh.fi/",
    source_kind:"prh_registry",
    discovery_date:data.date,
    review_status:"unverified",
    activity_verified:false,
-   website_verified:false,
    financial_verified:false
   });
  }
