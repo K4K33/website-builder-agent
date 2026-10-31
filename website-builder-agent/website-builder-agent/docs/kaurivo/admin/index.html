@@ -75,6 +75,15 @@
  <p class="form-hint">Jos tapahtumaa ei näy, ajoa ei ole vahvistettu — se ei vielä todista virhettä. <a href="https://github.com/K4K33/website-builder-agent/actions" target="_blank" rel="noopener noreferrer">GitHubin ajoloki</a></p>
 </details>
 <div class="lead-pulse" id="lead-pulse" aria-live="polite">Tutkimustilanne haetaan…</div>
+<details class="ops-health sales-dashboard" id="sales-dashboard">
+ <summary><span class="ops-led" aria-hidden="true"></span><strong>Myyntiputki · kaikki päivät</strong><span class="ops-chevron" aria-hidden="true">+</span></summary>
+ <div class="sales-dashboard-body">
+  <p id="sales-overview-status" class="form-hint" role="status">Haetaan kaikkien päivien todennetut luvut…</p>
+  <div id="sales-overview-kpis" class="sales-kpi-grid" aria-label="Kaurivon asiakashankinnan kokonaistulos"></div>
+  <div id="sales-overview-bars" class="sales-overview-bars" aria-label="Uusien yritysten määrä päivittäin viimeisen 30 päivän aikana"></div>
+  <p class="form-hint">Luvut perustuvat Supabasen tallennettuihin tietoihin. Rekisteristä löydetty yritys ei vielä tarkoita hyväksyttyä asiakasta tai vahvistettua kauppaa. Euroissa näytetään vain erikseen vahvistetut kaupat.</p>
+ </div>
+</details>
 <div class="manual-scan-tools">
  <button type="button" class="outline-button" id="start-manual-scan">Käynnistä yrityshaku</button>
  <p class="form-hint" id="manual-scan-status" role="status" aria-live="polite">Varahaku: 3/päivä, 25 minuutin väli. Ei AI-krediittejä tai markkinointiviestejä.</p>
@@ -82,6 +91,16 @@
 <label class="prospect-filter"><input type="checkbox" id="show-skipped-prospects"> Näytä myös ohitetut yritykset</label>
 <div id="prospect-list" class="records" aria-label="Valitun päivän yritykset"></div>
 <details class="morning-details"><summary>Lisätiedot ja asetukset</summary>
+ <div class="suppression-controls">
+  <strong>Markkinointikieltojen estolista</strong>
+  <p class="form-hint">Kirjaa kiellon tehneen yrityksen Y-tunnus. Kaurivo estää yhteydenoton yritykseen myös tulevissa hauissa. Lista ei lähetä viestejä. Kieltoja ei voi poistaa vahingossa tavallisesta admin-näkymästä.</p>
+  <form id="suppression-form" class="suppression-form">
+   <label for="suppress-business-id">Yrityksen Y-tunnus</label>
+   <input id="suppress-business-id" type="text" required maxlength="9" inputmode="text" autocomplete="off" pattern="[0-9]{7}-[0-9]" placeholder="1234567-8" aria-describedby="suppression-note">
+   <button type="submit" class="outline-button" id="add-suppression">Tallenna markkinointikielto</button>
+  </form>
+  <p id="suppression-note" role="status" class="form-hint">Varmista Y-tunnus ja yrityksen tekemä kielto ennen tallennusta.</p>
+ </div>
 <div class="push-settings">
  <div><strong>Ilmoitukset puhelimeen</strong><p>Ilmoituslupa ja palvelimelle tallennettu push-tilaus ovat eri asioita. Tarkista alla molemmat ennen ensimmäistä aamua.</p></div>
  <div class="push-actions"><button type="button" class="primary-button" id="enable-push">Salli ilmoitukset</button><button type="button" class="outline-button" id="test-push" hidden>Testaa ilmoitus</button><span class="push-status" id="push-status" aria-live="polite"></span></div>
