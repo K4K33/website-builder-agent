@@ -11,3 +11,16 @@
 @media(max-width:850px){.login-view{grid-template-columns:1fr;padding:55px 22px;gap:40px}.login-copy h1{font-size:clamp(46px,9vw,70px)}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.product-label{display:none}.record{align-items:start;flex-direction:column}.record-actions{justify-content:start}.dashboard-top{align-items:start;flex-direction:column}.right-top{display:flex;align-items:center;text-align:left}}
 @media(max-width:520px){.crm-header{padding:15px}.secure{display:none}.brand-word{font-size:15px}.monogram{width:36px;height:36px}.login-view{padding:40px 18px}.login-panel{padding:24px}.metrics{gap:9px}.metric{min-height:130px;padding:17px}.metric strong{font-size:32px}.section-head{align-items:start;flex-direction:column}.tabs{padding:7px 9px 0}.tab{padding:15px 11px}.panel{padding:18px}.editor{padding:22px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Mobile-first private morning prospect inbox. */
+.morning-toolbar{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:18px;padding:19px 0 24px}
+.morning-toolbar label{display:block;margin:0 0 8px}
+.morning-toolbar input{color:#e9f3fa;background:#111e28;border:1px solid #546777;border-radius:8px;padding:11px 13px;font-size:15px;min-height:44px;color-scheme:dark}
+.morning-counter{font-weight:750;color:#d7e8f3;font-size:15px}
+.push-settings{display:flex;gap:18px;justify-content:space-between;align-items:center;flex-wrap:wrap;border:1px solid #486174;border-radius:12px;background:linear-gradient(120deg,#172635,#101b26);padding:22px;margin-bottom:22px}
+.push-settings strong{font-size:16px}.push-settings p{max-width:650px;line-height:1.6;font-size:13px;color:#c2d1dc;margin:8px 0 0}
+.push-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.push-status{font-size:12px;color:#bcd1e0}
+.record-website{display:inline-flex;align-items:center;gap:7px;margin:9px 0 5px;color:#b4e6ff;font-size:14px;font-weight:800;text-underline-offset:4px}
+.record-website:hover{color:#fff}
+.record-no-website{display:inline-flex;background:#28313a;color:#e9ca9a;border:1px solid #5b5041;border-radius:7px;padding:9px 11px;margin:9px 0;font-size:13px}
+@media(max-width:640px){.push-settings{padding:17px}.push-actions{width:100%}.push-actions button{flex:1}.morning-counter{width:100%}}
