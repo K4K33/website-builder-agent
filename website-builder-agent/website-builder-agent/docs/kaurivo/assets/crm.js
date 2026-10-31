@@ -15,7 +15,16 @@
  if(!/^\d{4}-\d{2}-\d{2}$/.test(selectedDay))selectedDay=helsinkiToday();
  let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[]};
  let currentInvite=null,busy=false;
- const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava",unverified:"Tarkistamatta",researching:"Tutkitaan",needs_demo:"Demoehdokas",ready_for_demo:"Valmis demoon",skipped:"Ohitettu"};
+ const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava",unverified:"Tarkistamatta",researching:"Tutkitaan",needs_demo:"Demoehdokas",ready_for_demo:"Valmis demoon",skipped:"Ohitettu",weak_evidence:"Selvä uudistustarpeen näyttö",
+ adequate_evidence:"Sivu vaikuttaa toimivalta",none_confirmed:"Sivun puuttuminen tarkistettu",
+ active_evidence:"Aktiivisuus havaittu",inactive_evidence:"Toiminta epävarmaa tai päättynyt",
+ positive_evidence:"Myönteinen maksukyvyn viite",negative_evidence:"Heikko maksukyvyn viite",
+ unknown:"Ei tietoa",unreviewed:"Tarkistamatta",strong:"Suuri tarve",moderate:"Kohtalainen tarve",
+ weak:"Pieni tarve",not_started:"Ei aloitettu",brief_prepared:"Demobrief valmisteltu",
+ reviewed:"Tarkistettu",not_reviewed:"Ei tarkistettu",
+ needs_legal_review:"Laillisuustarkistus kesken",human_approved:"Ihminen hyväksynyt laillisuustarkistuksen",
+ blocked:"Ei yhteydenottoa",not_contacted:"Ei kontaktoitu",drafted:"Luonnos",
+ sent_manually:"Lähetetty käsin",responded:"Vastannut",opted_out:"Markkinointikielto"};
  const fmtDate=x=>x?new Date(x).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"}):"Ei merkitty";
  const euro=x=>new Intl.NumberFormat("fi-FI",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Number(x)||0);
  function toast(text,kind="info") {const el=$("status");el.textContent=text;el.className="status "+kind;el.hidden=false;window.clearTimeout(toast.timer);toast.timer=window.setTimeout(()=>el.hidden=true,7000);}
@@ -192,9 +201,16 @@
   const isToday=selectedDay===helsinkiToday();
   const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
   const visible=rows.prospects.filter(x=>x.review_status!=="skipped"||
-    $("show-skipped-prospects").checked).sort((a,b)=>
-     Number(Boolean(b.website_found_url||b.website_listed_url||b.website_candidate_url))-
-     Number(Boolean(a.website_found_url||a.website_listed_url||a.website_candidate_url)));
+    $("show-skipped-prospects").checked).sort((a,b)=>{
+     if(Boolean(a.marketing_opt_out)!==Boolean(b.marketing_opt_out))
+      return Number(Boolean(a.marketing_opt_out))-Number(Boolean(b.marketing_opt_out));
+     const aScore=leadEvidenceScore(a),bScore=leadEvidenceScore(b);
+     if(aScore!==null&&bScore!==null)return bScore-aScore;
+     if(aScore!==null)return -1;
+     if(bScore!==null)return 1;
+     return Number(Boolean(b.website_found_url||b.website_listed_url||b.website_candidate_url))-
+      Number(Boolean(a.website_found_url||a.website_listed_url||a.website_candidate_url));
+    });
   const withSites=visible.filter(x=>x.website_found_url||x.website_listed_url).length;
   const suggestions=visible.filter(x=>!x.website_found_url&&!x.website_listed_url&&x.website_candidate_url).length;
   $("morning-summary").textContent=rows.prospects.length
