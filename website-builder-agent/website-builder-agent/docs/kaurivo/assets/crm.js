@@ -91,9 +91,12 @@
   const isToday=selectedDay===helsinkiToday();
   const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
   const visible=rows.prospects.filter(x=>x.review_status!=="skipped"||
-    $("show-skipped-prospects").checked);
+    $("show-skipped-prospects").checked).sort((a,b)=>
+     Number(Boolean(b.website_found_url||b.website_listed_url))-
+     Number(Boolean(a.website_found_url||a.website_listed_url)));
+  const withSites=visible.filter(x=>x.website_found_url||x.website_listed_url).length;
   $("morning-summary").textContent=rows.prospects.length
-    ? visible.length+" yritystä tarkistettavana"+(excluded&&!$("show-skipped-prospects").checked
+    ? visible.length+" yritystä tarkistettavana · "+withSites+" verkkosivulinkkiä"+(excluded&&!$("show-skipped-prospects").checked
       ?" · "+excluded+" ohitettu":"")+" · "+selectedDay
     : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
   if(!visible.length)empty(prospects,rows.prospects.length
