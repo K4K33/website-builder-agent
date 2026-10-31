@@ -1,0 +1,29 @@
+name: Kaurivo FormSubmit one-time activation test
+on:
+  push:
+    paths:
+      - .github/workflows/kaurivo-form-activate.yml
+permissions:
+  contents: read
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Send single synthetic form test
+        shell: bash
+        run: |
+          set -eu
+          RESPONSE=$(curl --silent --show-error --max-time 18 \
+            --request POST \
+            --header 'Origin: https://k4k33.github.io' \
+            --header 'Referer: https://k4k33.github.io/website-builder-agent/kaurivo/feedback/' \
+            --header 'Accept: application/json' \
+            --data-urlencode 'company=Kaurivo synthetic activation test' \
+            --data-urlencode 'email=hello.kaurivo@gmail.com' \
+            --data-urlencode 'feedback_stage=internal_activation_test' \
+            --data-urlencode 'rating=5' \
+            --data-urlencode 'message=Internal activation test, no real customer' \
+            --data-urlencode '_subject=KAURIVO - ACTIVATE FORM (TEST)' \
+            'https://formsubmit.co/ajax/hello.kaurivo@gmail.com')
+          printf '%s' "$RESPONSE" | python -c 'import sys,json; d=json.load(sys.stdin); print("Result:",d.get("success"),"; message:",str(d.get("message",""))[:200])'
