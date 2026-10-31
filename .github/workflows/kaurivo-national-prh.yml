@@ -5,6 +5,9 @@ on:
     # Europe/Helsinki local clock, DST-aware. Off the hour.
     - cron: "13 4 * * *"
       timezone: "Europe/Helsinki"
+    # Recovery only when no successful 04:13 run exists for this Finnish day.
+    - cron: "17 6 * * *"
+      timezone: "Europe/Helsinki"
   workflow_dispatch:
     inputs:
       mode:
@@ -18,6 +21,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   id-token: write  # Short-lived GitHub OIDC assertion to Kaurivo only; no static keys.
 
 concurrency:
@@ -45,7 +49,15 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Decide whether the 06:17 recovery is required
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCHEDULE_CRON: ${{ github.event.schedule }}
+        run: python -m utils.kaurivo_backup_gate
+
       - name: Restore previously considered business IDs (best effort)
+        if: ${{ steps.gate.outputs.should_scan == 'true' }}
         uses: actions/cache/restore@v4
         with:
           path: website-builder-agent/website-builder-agent/data/prh_seen_ids.json
@@ -54,9 +66,11 @@ jobs:
             prh-company-history-v1-
 
       - name: Install requirements
+        if: ${{ steps.gate.outputs.should_scan == 'true' }}
         run: pip install -r requirements.txt
 
       - name: National PRH ZIP, one request at most; process all records locally
+        if: ${{ steps.gate.outputs.should_scan == 'true' }}
         run: |
           python -m utils.prh_bulk_discovery \
             --mode "$KAURIVO_PRH_MODE" \
@@ -66,26 +80,26 @@ jobs:
             --seen-path data/prh_seen_ids.json
 
       - name: Sync 50 unverified PRH company records into private Kaurivo CRM
-        if: ${{ success() && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
         run: |
           python -m utils.prh_crm_sync \
             --packet output/nightly-prh/crm-shortlist.json
 
       - name: Show fresh lead report for manual review
-        if: success()
+        if: ${{ success() && steps.gate.outputs.should_scan == 'true' }}
         run: |
           cat output/nightly-prh/shortlist.md >> "$GITHUB_STEP_SUMMARY"
           echo "Kaurivo CRM: validated public PRH candidates are sent only to the private UNVERIFIED lead queue using GitHub OIDC; no static credentials." >> "$GITHUB_STEP_SUMMARY"
           echo "No AI credits, automatic demo claims or marketing sends." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Explain source failure without inventing search results
-        if: failure()
+        if: ${{ failure() && steps.gate.outputs.should_scan == 'true' }}
         run: |
           echo "## National PRH discovery failed" >> "$GITHUB_STEP_SUMMARY"
           echo "Check logs. A failed download must not be treated as zero available leads." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Retain national discovery report for 14 days
-        if: always()
+        if: ${{ always() && steps.gate.outputs.should_scan == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: kaurivo-national-leads-${{ github.run_id }}
@@ -96,7 +110,7 @@ jobs:
             website-builder-agent/website-builder-agent/data/prh_seen_ids.json
 
       - name: Cache only a successful history update
-        if: success()
+        if: ${{ success() && steps.gate.outputs.should_scan == 'true' }}
         uses: actions/cache/save@v4
         with:
           path: website-builder-agent/website-builder-agent/data/prh_seen_ids.json
