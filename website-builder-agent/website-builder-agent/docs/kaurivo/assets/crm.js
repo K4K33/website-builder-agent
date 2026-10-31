@@ -229,6 +229,29 @@
    toast("Estolistan tallennus epäonnistui.","error");
   }finally{b.disabled=false;}
  }
+
+ function personalizedOutreachDraft(company){
+  if(company.marketing_opt_out || company.outreach_review!=="human_approved" ||
+     company.business_activity_assessment!=="active_evidence" ||
+     !company.evidence_url ||
+     String(company.outreach_observation||"").trim().length<20)
+     throw Error("Lainmukainen, lähteisiin perustuva yhteydenotto ei ole vielä hyväksytty.");
+  const observation=String(company.outreach_observation).trim();
+  return [
+   "Hei,",
+   "",
+   "Tutustuin "+company.company_name+" -yrityksen verkkonäkyvyyteen ja huomasin yhden konkreettisen kehityskohdan: "+observation,
+   "",
+   "Olen Kaarlo Kaurivolta. Suunnittelemme yrityksille yksilöllisiä, nopeita ja helppokäyttöisiä verkkosivuja, joita yritys voi myös itse päivittää.",
+   "",
+   "Voisin valmistella teille lyhyen, yrityksenne palveluihin ja nykyiseen ilmeeseen sopivan uudistusehdotuksen. Olisiko tällaisesta hyötyä teille?",
+   "",
+   "Ystävällisin terveisin",
+   "Kaarlo Kaurivolta",
+   "",
+   "Jos ette halua Kaurivolta uusia markkinointiyhteydenottoja, voitte vastata tähän viestiin: ei yhteydenottoja."
+  ].join("\n");
+ }
  function draftDemoBrief(c){
   const url=c.website_found_url||c.website_listed_url||c.website_candidate_url||"Ei vahvistettua URL-osoitetta";
   return [
@@ -347,6 +370,19 @@
    }
    if(candidate.review_status!=="skipped"&&!candidate.marketing_opt_out)
     row.actions.append(button("Valmistele demobrief",()=>prepareDemoBrief(candidate)));
+   if(candidate.outreach_review==="human_approved" && !candidate.marketing_opt_out &&
+      candidate.business_activity_assessment==="active_evidence" &&
+      String(candidate.outreach_observation||"").trim().length>=20)
+    row.actions.append(button("Kopioi tarkistettu viestiluonnos",async()=>{
+     try{
+      const draft=personalizedOutreachDraft(candidate);
+      await navigator.clipboard.writeText(draft);
+      toast("Yksilöllinen myyntiviestiluonnos kopioitu. Tarkista vastaanottaja, laki ja sisältö ennen manuaalista lähetystä.","success");
+     }catch(err){
+      toast(err.message||"Viestiluonnoksen kopiointi ei onnistunut.","error");
+     }
+    }));
+
 
   }
   const clients=$("client-list");clients.replaceChildren();
@@ -434,6 +470,7 @@
    ["evidence_url","Havaintojen julkinen lähdelinkki (https://...)","url"],
    ["demo_stage","Demobriefin vaihe","choice",true,["not_started","brief_prepared","reviewed"]],
    ["demo_brief","Sisäinen demobrief ja QA-ohje","textarea"],
+   ["outreach_observation","Yksilöllinen havainto yrityksestä (tarkistettu, ei keksitty)","textarea"],
    ["outreach_review","Yhteydenoton lainmukaisuuden tarkistus","choice",true,["not_reviewed","needs_legal_review","human_approved","blocked"]],
    ["outreach_stage","Yhteydenoton vaihe (ei lähetä viestejä)","choice",true,["not_contacted","drafted","sent_manually","responded","won","opted_out"]],
    ["marketing_opt_out","Yritys on kieltänyt markkinoinnin","checkbox"],
@@ -537,8 +574,8 @@
    }
    if(data.outreach_review==="human_approved"&&!data.marketing_opt_out){
     if(data.business_activity_assessment!=="active_evidence"||!data.evidence_url||
-      data.customer_need==="unknown"){
-     toast("Yhteydenottoa ei voi hyväksyä ilman aktiivisuuden, tarpeen ja lähteen tarkistusta.","error");return;
+      data.customer_need==="unknown"||String(data.outreach_observation||"").trim().length<20){
+     toast("Yhteydenottoa ei voi hyväksyä ilman aktiivisuuden, tarpeen, lähteen ja konkreettisen yksilöllisen havainnon tarkistusta.","error");return;
     }
     if(!window.confirm("Vahvistatko, että vastaanottajatyyppi, soveltuva B2B-suoramarkkinoinnin laki, GDPR-tiedot, estolistat ja maksuton kielto-ohje on tarkistettu erikseen? Tämä EI lähetä viestiä."))return;
    }
