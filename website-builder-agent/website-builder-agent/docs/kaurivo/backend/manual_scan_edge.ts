@@ -97,6 +97,12 @@ function selectedCities(day:string,attempt:number):string[]{
  for(let i=0;i<MAX_REQUESTS;i++)picks.push(CITIES[(base+i*5)%CITIES.length]);
  return picks;
 }
+async function recordManualEvent(day:string,outcome:"success"|"failure",details:string,records:number){
+ await rest("kaurivo_pipeline_events",{method:"POST",
+  headers:{"Prefer":"return=minimal"},
+  body:JSON.stringify({event_day:day,component:"manual_search",outcome,details,records})
+ }).catch(()=>null);
+}
 async function runSearch(day:string):Promise<Record<string,unknown>>{
  const result=await rest("rpc/kaurivo_claim_manual_scan",{method:"POST",
   body:JSON.stringify({p_day:day})});
@@ -174,6 +180,7 @@ async function runSearch(day:string):Promise<Record<string,unknown>>{
    method:"PATCH",body:JSON.stringify({status:"succeeded",examined,added,updated_at:new Date().toISOString()})
   });
   if(!done.ok)throw Error("status_save_failed");
+  await recordManualEvent(day,"success","Rajattu PRH-varahaku valmis",added);
   return {ok:true,day,examined,added,requests,valid_queries:validQueries,
    ai_credits_used:0,marketing_emails_sent:0,
    note:"Varahaku kattaa kuusi aluehakua, ei koko valtakunnallista PRH-aineistoa."};
@@ -181,6 +188,7 @@ async function runSearch(day:string):Promise<Record<string,unknown>>{
   await rest("kaurivo_manual_scan_runs?run_day=eq."+day,{
    method:"PATCH",body:JSON.stringify({status:"failed",examined,added,updated_at:new Date().toISOString()})
   }).catch(()=>{});
+  await recordManualEvent(day,"failure","PRH-varahaun lähde tai tallennus epäonnistui",0);
   return {ok:false,reason:"provider_or_storage_failed",day,requests};
  }
 }
