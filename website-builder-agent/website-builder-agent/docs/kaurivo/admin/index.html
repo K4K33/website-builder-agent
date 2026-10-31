@@ -64,24 +64,45 @@
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="reviews">Palaute</button>
 </nav>
 <div class="panel" id="tab-prospects">
-<div class="section-head"><div><span class="eyebrow">JOKA AAMU / 08.00 HELSINKI</span><h2>Aamun yrityslista</h2><p>Yöllä löydetyt yritykset. Tiedot ovat PRH/YTJ-rekisteristä ja vaativat tarkistuksen ennen demoa tai yhteydenottoa.</p></div>
-<div class="record-actions"><button type="button" class="outline-button" id="import-prospects">Tuo yön 50 yritystä</button><input type="file" accept=".json,application/json" id="prospect-file" hidden></div></div>
-<div class="inline-alert">Yritykset tuodaan automaattisesti aamuksi, kun PRH-yöajo onnistuu. Manuaalinen JSON-tuonti jää varavaihtoehdoksi. Tuonti ei käytä AI-krediittejä eikä lähetä markkinointiviestejä.</div>
+<div class="section-head morning-head"><div><span class="eyebrow">JOKA AAMU / 08.00 HELSINKI</span><h2>Aamun yritykset</h2><p>Uudet yritysehdokkaat ja linkit nykyisille verkkosivuille.</p></div></div>
 <div class="morning-toolbar">
- <div><label for="prospect-day" class="eyebrow">VALITSE PÄIVÄ</label><input type="date" id="prospect-day" aria-label="Yrityslistan päivä"></div>
+ <div class="morning-day"><label for="prospect-day" class="eyebrow">PÄIVÄ</label><input type="date" id="prospect-day" aria-label="Yrityslistan päivä"></div>
  <div class="morning-counter" id="morning-summary" role="status">Haetaan aamun yrityksiä…</div>
 </div>
+<div id="prospect-list" class="records" aria-label="Valitun päivän yritykset"></div>
 <div class="push-settings">
- <div><strong>Ilmoitukset puhelimeen</strong><p>Lisää tämä admin-sivu iPhonen aloitusnäytölle, avaa kuvakkeesta ja salli ilmoitukset. Saat viestin, kun uusi yrityslista on valmis.</p></div>
+ <div><strong>Ilmoitukset puhelimeen</strong><p>Ilmoitus saapuu, kun uusi yrityslista on valmis. Avaa tämä sivu aloitusnäytön Kaurivo-kuvakkeesta.</p></div>
  <div class="push-actions"><button type="button" class="primary-button" id="enable-push">Salli ilmoitukset</button><button type="button" class="outline-button" id="test-push" hidden>Testaa ilmoitus</button><span class="push-status" id="push-status" aria-live="polite"></span></div>
 </div>
-<div id="prospect-list" class="records"></div><p class="form-hint">Lähde: PRH/YTJ open data (CC BY 4.0). Jos PRH ei ilmoita verkkosivua, sivuttomuutta ei ole vahvistettu. Lista ja ilmoitukset edellyttävät onnistunutta yöajoa.</p>
+<details class="morning-details"><summary>Mistä tiedot tulevat? · Lisätoiminnot</summary>
+ <p>Yritykset haetaan PRH/YTJ-rekisteristä. Tiedot vaativat tarkistuksen ennen demoa tai yhteydenottoa. Jos PRH ei ilmoita verkkosivua, verkkosivun puuttumista ei ole vahvistettu. Automaattinen tuonti ei käytä AI-krediittejä eikä lähetä markkinointiviestejä.</p>
+ <div class="record-actions"><button type="button" class="outline-button" id="import-prospects">Tuo yritykset JSON-tiedostosta</button><input type="file" accept=".json,application/json" id="prospect-file" hidden></div>
+ <p class="form-hint">Lähde: PRH/YTJ open data (CC BY 4.0). JSON-tuonti on varavaihtoehto, jos automaattinen yöajo ei onnistu.</p>
+</details>
 </div>
 <div class="panel" id="tab-clients" hidden><div class="section-head"><div><h2>Yritysrekisteri</h2><p>Potentiaaliset asiakkaat ja nykyiset asiakkaat.</p></div><button class="primary-button" data-dialog="client" type="button">+ Lisää yritys</button></div><div id="client-list" class="records"></div></div>
 <div class="panel" id="tab-projects" hidden><div class="section-head"><div><h2>Verkkosivuprojektit</h2><p>Demosta toteutukseen, asiakkaan brändi ja muokattavuus säilyttäen.</p></div><button class="primary-button" data-dialog="project" type="button">+ Lisää projekti</button></div><div id="project-list" class="records"></div></div>
 <div class="panel" id="tab-sales" hidden><div class="section-head"><div><h2>Kaupat</h2><p>Vahvista kauppa vain oikeaan ostotapahtumaan perustuen.</p></div><button class="primary-button" data-dialog="sale" type="button">+ Lisää tarjous</button></div><div id="sale-list" class="records"></div></div>
 <div class="panel" id="tab-queue" hidden><div class="section-head"><div><h2>Palautepyyntöjen jono</h2><p>Yksi yksilöllinen pyyntö per vahvistettu kauppa. Lähetys vasta määräaikana.</p></div></div><div class="inline-alert">Palautekutsun valmistelu ei lähetä sähköpostia. Järjestelmä tarjoaa kopioitavan, henkilökohtaisen viestin Kaurivon Gmailiin lähetettäväksi.</div><div id="queue-list" class="records"></div></div>
 <div class="panel" id="tab-reviews" hidden><div class="section-head"><div><h2>Asiakaspalaute</h2><p>Tähdet, kirjalliset kommentit ja automaattiset kehitysluokitukset — vain sisäiseen käyttöön.</p></div></div><div id="review-list" class="records"></div></div>
+</div>
+<nav id="mobile-dock" class="mobile-dock" aria-label="Kaurivon mobiilinavigaatio">
+ <button type="button" class="dock-button current" data-mobile-tab="prospects" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 15h3"/></svg><span>Aamu</span></button>
+ <button type="button" class="dock-button" data-mobile-tab="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V7l8-4 8 4v14M3 21h18M9 21v-6h4v6M7 10h1M15 10h1"/></svg><span>Yritykset</span></button>
+ <button type="button" class="dock-button" data-mobile-tab="projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Projektit</span></button>
+ <button type="button" class="dock-button" id="mobile-more-button" aria-expanded="false" aria-controls="mobile-more-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><span>Lisää</span></button>
+</nav>
+<div id="mobile-more-panel" class="mobile-more-panel" hidden>
+ <button type="button" class="mobile-more-scrim" aria-label="Sulje lisävalikko" data-close-more></button>
+ <div class="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="Kaurivon muut osiot">
+  <div class="more-heading"><strong>Muut osiot</strong><button type="button" class="more-close" id="mobile-more-close" aria-label="Sulje valikko">×</button></div>
+  <button type="button" class="more-link" data-mobile-tab="sales"><span>Kaupat</span><span aria-hidden="true">↗</span></button>
+  <button type="button" class="more-link" data-mobile-tab="queue"><span>Palautepyynnöt</span><span aria-hidden="true">↗</span></button>
+  <button type="button" class="more-link" data-mobile-tab="reviews"><span>Asiakaspalaute</span><span aria-hidden="true">↗</span></button>
+  <div class="more-counts" aria-label="Kaurivon tilanne"><div><strong data-count="clients">0</strong><span>Yritystä</span></div><div><strong data-count="projects">0</strong><span>Projektia</span></div><div><strong data-count="sales">0</strong><span>Kauppaa</span></div><div><strong data-count="feedback">0</strong><span>Palautepyyntöä</span></div></div>
+  <button type="button" class="more-link" id="mobile-password-setup"><span>Aseta salasana</span><span aria-hidden="true">↗</span></button>
+  <button type="button" class="more-link danger" id="mobile-sign-out"><span>Kirjaudu ulos</span><span aria-hidden="true">↗</span></button>
+ </div>
 </div>
 </section>
 <div role="status" aria-live="polite" id="status" class="status" hidden></div>
