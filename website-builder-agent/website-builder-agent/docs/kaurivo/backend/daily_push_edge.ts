@@ -128,8 +128,9 @@ async function deliver(sub:Sub,payload:Record<string,unknown>,keys:Keys,day?:str
 }
 async function notifyDaily(event:string):Promise<Response>{
  const day=helsinkiDay();
- if(event==="schedule"&&helsinkiHour()!==8)
-  return reply(200,{ok:true,skipped:"outside_08_helsinki",day});
+ // Accept delayed GitHub schedules later in the morning, rather than silently missing a day.
+ if(event==="schedule"&&(helsinkiHour()<8||helsinkiHour()>12))
+  return reply(200,{ok:true,skipped:"outside_morning_helsinki",day});
  const result=await rest("kaurivo_crm_prospects?discovery_date=eq."+day+
   "&select=business_id&limit=100");
  if(!result.ok)throw new Error("prospects_unavailable");
