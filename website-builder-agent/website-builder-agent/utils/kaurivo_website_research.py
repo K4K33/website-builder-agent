@@ -81,16 +81,22 @@ def rank_search_candidate(company, results):
         matched=set(distinctive)&source_tokens
         # Two distinct company-name tokens or a very distinctive single
         # name that appears both in domain and page title.
-        domain_tokens=set(tokens(urlsplit(url).hostname))
+        domain=(urlsplit(url).hostname or "").lower()
+        domain_compact="".join(re.findall(r"[a-z0-9]+", domain))
         title_tokens=set(tokens(item.get("title","")))
+        domain_match=any(t in domain_compact for t in distinctive)
+        title_match=bool(set(distinctive)&title_tokens)
+        # A directory or blog article mentioning the business is not its
+        # own website. Require an identifiable brand token in the HOSTNAME
+        # as well as the result title; full site ownership still unverified.
         strong_single=(len(distinctive)==1 and len(distinctive[0])>=7 and
-            distinctive[0] in domain_tokens and distinctive[0] in title_tokens)
-        strong_multi=len(matched)>=2 and bool(set(distinctive)&(domain_tokens|title_tokens))
+            domain_match and title_match)
+        strong_multi=len(matched)>=2 and domain_match and title_match
         if not strong_multi and not strong_single:
             continue
         pts=75+min(15,5*len(matched))
-        if set(distinctive)&domain_tokens: pts+=5
-        if set(distinctive)&title_tokens: pts+=3
+        if domain_match: pts+=5
+        if title_match: pts+=3
         candidates.append((min(99,pts),url))
     if not candidates:
         return None
