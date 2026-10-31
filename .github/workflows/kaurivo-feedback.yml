@@ -2,8 +2,9 @@ name: Kaurivo private feedback triage
 
 on:
   schedule:
-    # Four times a day, inside FormSubmit's five-requests/day free API cap.
+    # FormSubmit free API: max five calls per day; we use four.
     - cron: '5 0,6,12,18 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,6 +15,8 @@ concurrency:
 
 jobs:
   digest:
+    # An unactivated monitor costs zero runner minutes or API requests.
+    if: ${{ vars.KAURIVO_FEEDBACK_ENABLED == 'true' }}
     name: Anonymous feedback classification
     runs-on: ubuntu-latest
     timeout-minutes: 3
@@ -24,9 +27,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Check feedback archive only when activated
+      - name: Check activated archive
         working-directory: website-builder-agent/website-builder-agent
         env:
-          KAURIVO_FORMSUBMIT_API_KEY: \u0024{{ secrets.KAURIVO_FORMSUBMIT_API_KEY }}
+          KAURIVO_FORMSUBMIT_API_KEY: ${{ secrets.KAURIVO_FORMSUBMIT_API_KEY }}
         run: |
           python -m utils.process_kaurivo_feedback
