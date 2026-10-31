@@ -147,3 +147,16 @@
  .manual-scan-tools .outline-button{width:100%;min-height:48px;font-size:14px}
  .manual-scan-tools .form-hint{font-size:11px}
 }
+
+/* Prospect qualification: search actual websites before declaring a company website-less. */
+.prospect-filter{display:flex;gap:8px;align-items:center;min-height:40px;font-size:12px;color:#bacbd8;margin:0 0 11px;cursor:pointer}
+.prospect-filter input{width:17px;height:17px;accent-color:#c2e5ff}
+.prospect-search-site{display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;border-color:#4b7289;background:#1e3546}
+.prospect-search-site:hover{color:white;background:#2c5068}
+#prospect-list .record-actions{gap:8px}
+@media(max-width:850px){
+ #prospect-list .record-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ #prospect-list .record-actions .small-action{font-size:11px;text-align:center;padding:10px 7px;line-height:1.3;white-space:normal}
+ .record-no-website{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+}
+@media(max-width:360px){#prospect-list .record-actions{grid-template-columns:1fr}}
