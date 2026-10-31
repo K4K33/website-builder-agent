@@ -1,0 +1,19 @@
+{
+  "name": "Kaurivo · Studio Operations",
+  "short_name": "Kaurivo",
+  "id": "/website-builder-agent/kaurivo/admin/",
+  "description": "Kaurivon yksityinen yrityslista ja asiakashallinta",
+  "start_url": "./?view=prospects",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1118",
+  "theme_color": "#0b1118",
+  "icons": [
+    {
+      "src": "../assets/kaurivo-mark.webp",
+      "sizes": "any",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}
