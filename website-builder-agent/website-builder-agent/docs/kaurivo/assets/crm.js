@@ -431,7 +431,22 @@
   try{
    const reg=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
    const sub=await reg.pushManager.getSubscription();
-   status.textContent=sub?"Ilmoitukset käytössä":"Ilmoitukset eivät vielä ole käytössä.";
+   if(sub && Notification.permission==="granted"){
+    // Recover a browser subscription that was never saved because the earlier
+    // server deployment crashed. Re-registering needs no new Apple prompt.
+    try{
+     const result=await pushRequest("POST",{action:"subscribe",subscription:sub.toJSON()});
+     status.textContent=result.subscribed
+      ?"Ilmoitukset tilattu palvelimelle"
+      :"Ilmoitusten palvelintilaus puuttuu. Paina Salli ilmoitukset.";
+    }catch(_){
+     status.textContent="Puhelimen lupa on voimassa mutta palvelintilaus ei vahvistunut. Paina Salli ilmoitukset.";
+    }
+   }else if(Notification.permission==="granted"){
+    status.textContent="Ilmoituslupa sallittu. Viimeistele tilaaminen painamalla Salli ilmoitukset.";
+   }else{
+    status.textContent="Ilmoitukset eivät vielä ole käytössä.";
+   }
    test.hidden=!sub;
    $("enable-push").textContent=sub?"Päivitä ilmoitustila":"Salli ilmoitukset";
   }catch(_){status.textContent="Ilmoitustilan tarkistus ei onnistunut.";test.hidden=true;}
