@@ -130,9 +130,14 @@
   const demos=rows.prospects.filter(c=>c.demo_stage!=="not_started").length;
   const links=rows.prospects.filter(c=>c.website_found_url||c.website_listed_url).length;
   const optouts=rows.prospects.filter(c=>c.marketing_opt_out).length;
+  const sent=rows.prospects.filter(c=>["sent_manually","responded","won"].includes(c.outreach_stage)).length;
+  const answered=rows.prospects.filter(c=>["responded","won"].includes(c.outreach_stage)).length;
   $("lead-pulse").textContent=
    reviewed+" / "+rows.prospects.filter(c=>c.review_status!=="skipped").length+
-   " arvioitu · "+links+" sivulinkkiä · "+demos+" demobriefiä · "+optouts+" markkinointikieltoa";
+   " arvioitu · "+links+" sivulinkkiä · "+demos+" demobriefiä · "+
+   sent+" kirjattua yhteydenottoa · "+answered+" vastausta · "+
+   rows.sales.filter(c=>c.status==="won"&&c.source_verified).length+
+   " vahvistettua kauppaa · "+optouts+" kieltoa (valitun päivän liidit, kaupat koko CRM)";
  }
  function draftDemoBrief(c){
   const url=c.website_found_url||c.website_listed_url||c.website_candidate_url||"Ei vahvistettua URL-osoitetta";
@@ -416,6 +421,13 @@
     data.marketing_opt_out=true;
     data.outreach_review="blocked";
     data.outreach_stage="opted_out";
+   }
+   if(["sent_manually","responded","won"].includes(data.outreach_stage)&&
+      data.outreach_review!=="human_approved"){
+     toast("Yhteydenottoa ei voi kirjata lähetetyksi tai vastatuksi ennen erillistä laillisuushyväksyntää.","error");return;
+   }
+   if(data.outreach_stage==="opted_out"&&!data.marketing_opt_out){
+    toast("Merkitse markkinointikielto ennen luopumistilan tallennusta.","error");return;
    }
    if(data.outreach_review==="human_approved"&&!data.marketing_opt_out){
     if(data.business_activity_assessment!=="active_evidence"||!data.evidence_url||
