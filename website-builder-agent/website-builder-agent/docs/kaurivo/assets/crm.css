@@ -24,3 +24,12 @@
 .record-website:hover{color:#fff}
 .record-no-website{display:inline-flex;background:#28313a;color:#e9ca9a;border:1px solid #5b5041;border-radius:7px;padding:9px 11px;margin:9px 0;font-size:13px}
 @media(max-width:640px){.push-settings{padding:17px}.push-actions{width:100%}.push-actions button{flex:1}.morning-counter{width:100%}}
+
+/* Installed-PWA sign-in: keep email verification in the app rather than Safari. */
+.login-verify{margin-top:22px;padding:21px;border-radius:10px;border:1px solid #5c788a;background:#101f2a}
+.login-verify .eyebrow{font-size:10px}
+.login-verify p{font-size:13px;line-height:1.7;margin:12px 0}
+.login-proof-input{display:block;width:100%;border:1px solid #617889;border-radius:7px;background:#08131e;color:#fff;min-height:48px;padding:12px;font-size:15px;margin:7px 0 14px;outline-offset:3px}
+.login-proof-input:focus{outline:2px solid #9abccd}
+.login-verify .primary-button{margin:0 0 10px}
+@media(max-width:640px){.login-verify{padding:15px}.login-proof-input{font-size:16px}}
