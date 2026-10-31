@@ -443,9 +443,14 @@
    toast("Kirjauduttu Kaurivoon ilman sähköpostivahvistusta.","success");
    await handleAuth();
   }catch(err){
-   // Never log passwords, authentication tokens or raw credentials.
-   toast("Kirjautuminen epäonnistui. Tarkista sähköposti ja salasana, "+
-    "tai varmista että olet asettanut salasanan Safari-istunnossa.","error");
+   // Do not expose the entered password, session, or raw backend details.
+   const message=String(err?.message||"").toLowerCase();
+   const invalid=/invalid login credentials|invalid credentials|invalid_grant|wrong password/.test(message);
+   toast(invalid
+    ?"Sähköposti tai salasana ei kelpaa. Jos et ole vielä painanut hallintapaneelissa 'Aseta salasana', "+
+     "tämä kirjautuminen ei voi onnistua. Avaa alkuperäinen Safari-istunto tai käytä sähköpostilinkkiä kiintiön vapauduttua."
+    :"Kirjautuminen ei onnistunut. Varmista ylläpitotili, salasana ja yhteys. "+
+     "Jos salasanaa ei ole aiemmin asetettu, käytä kirjautunutta Safari-istuntoa tai sähköpostivahvistusta.","error");
   }finally{buttonEl.disabled=false;}
  }
  async function openPasswordSetup(){
