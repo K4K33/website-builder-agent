@@ -26,6 +26,8 @@ import zipfile
 import ijson
 import requests
 
+from .kaurivo_lead_quality import lead_score, choose_shortlist
+
 PRH_URL = "https://avoindata.prh.fi/opendata-ytj-api/v3/all_companies"
 PRH_SOURCE = "https://avoindata.prh.fi/fi/ytj/swagger-ui"
 MAX_ZIP_BYTES = 650 * 1024 * 1024
@@ -220,7 +222,7 @@ def rank_bulk(records, *, day, seen=(), max_candidates=5000, shortlist_size=50):
     for raw in records:
         scanned += 1
         company = normalize_company(raw)
-        if not company:
+        if not company or (lead_score(company["name"], company["industry_code_hint"]) or 0) < 2:
             continue
         valid += 1
         if company["identity"] in old:
@@ -244,17 +246,9 @@ def rank_bulk(records, *, day, seen=(), max_candidates=5000, shortlist_size=50):
         rest = sorted((item for group in pools.values() for item in group
                        if item[2]["identity"] not in selected_ids), reverse=True)
         selected += [v[2] for v in rest[:max_candidates-len(selected)]]
-    # Mix both kinds in the morning review list, rather than filling the
-    # first 50 slots exclusively with companies lacking a PRH website tag.
-    no_site = [c for c in selected if not c["website_listed_url"]]
-    known_site = [c for c in selected if c["website_listed_url"]]
-    shortlist = (no_site[:round(shortlist_size * .7)]
-                 + known_site[:shortlist_size-round(shortlist_size * .7)])
-    if len(shortlist) < shortlist_size:
-        chosen = {c["identity"] for c in shortlist}
-        shortlist += [c for c in selected if c["identity"] not in chosen][
-            :shortlist_size-len(shortlist)
-        ]
+    # Re-rank across all qualified sectors and website categories.
+    # PRH often leaves the website field empty; never invent a real website.
+    shortlist = choose_shortlist(selected, shortlist_size, day.isoformat())
     return {
         "scanned_registry_records": scanned,
         "valid_registry_records": valid,
@@ -374,7 +368,8 @@ def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
     selected = result["new_candidates"]
     # Keep prior IDs + genuinely selected new IDs, not *every* registry item
     # (otherwise businesses we have not yet evaluated would be lost).
-    merged_seen = (seen + [c["identity"] for c in selected])[-MAX_HISTORY:]
+    # Only shortlist is reviewed today. Do not mark all sampled candidates seen.
+    merged_seen = (seen + [c["identity"] for c in shortlist])[-MAX_HISTORY:]
     _write(out / "candidates.json", {
         "date": today.isoformat(), "mode": mode, "candidates": selected,
         "not_verified_for_outreach": True, "source": PRH_SOURCE,
