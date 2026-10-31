@@ -1,6 +1,7 @@
 // Kaurivo-only PWA Web Push. No credentials are exposed in the static website.
 // GitHub Actions OIDC authorizes daily delivery; Supabase Auth authorizes devices.
-import webpush from "npm:web-push@3.6.7";
+import { generateVapidKeys } from "npm:@mmmike/web-push@1.5.0/vapid";
+import { sendPushNotification } from "npm:@mmmike/web-push@1.5.0/send";
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@6.1.0";
 
 const ORIGIN = "https://k4k33.github.io";
@@ -78,7 +79,7 @@ async function vapidKeys():Promise<Keys>{
  if(!response.ok)throw new Error("vapid_read");
  let data=await response.json();
  if(data.length===1)return data[0] as Keys;
- const created=webpush.generateVAPIDKeys();
+ const created=await generateVapidKeys();
  response=await rest("kaurivo_push_vapid?on_conflict=id",{
   method:"POST",headers:{"prefer":"resolution=ignore-duplicates,return=minimal"},
   body:JSON.stringify({id:1,public_key:created.publicKey,private_key:created.privateKey})
@@ -97,12 +98,18 @@ async function subscriptions(query:string):Promise<Sub[]>{
  return await result.json();
 }
 async function deliver(sub:Sub,payload:Record<string,unknown>,keys:Keys,day?:string):Promise<boolean>{
- webpush.setVapidDetails("mailto:hello.kaurivo@gmail.com",keys.public_key,keys.private_key);
+
  try {
-  await webpush.sendNotification({
-   endpoint:sub.endpoint,expirationTime:null,
-   keys:{p256dh:sub.p256dh,auth:sub.auth_secret}
-  },JSON.stringify(payload),{TTL:60*60,urgency:"normal"});
+  const sent=await sendPushNotification({
+    endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth_secret}
+  },payload as {title:string;body:string;url:string;tag:string},{
+    publicKey:keys.public_key,privateKey:keys.private_key,
+    subject:"mailto:hello.kaurivo@gmail.com"
+  });
+  if(!sent){
+   await rest("kaurivo_push_subscriptions?id=eq."+encodeURIComponent(sub.id),{method:"DELETE"});
+   return false;
+  }
   if(day){
    const update=await rest("kaurivo_push_subscriptions?id=eq."+encodeURIComponent(sub.id),{
     method:"PATCH",body:JSON.stringify({last_notified_date:day,updated_at:new Date().toISOString()})
