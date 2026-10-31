@@ -624,24 +624,31 @@
   try{
    const reg=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
    const sub=await reg.pushManager.getSubscription();
-   if(sub && Notification.permission==="granted"){
-    // Recover a browser subscription that was never saved because the earlier
-    // server deployment crashed. Re-registering needs no new Apple prompt.
+   const permitted=Notification.permission==="granted";
+   let registered=false,deviceCount=0;
+   if(sub&&permitted){
+    // If permission was granted previously, repair a missing server-side
+    // subscription without triggering another iOS permission prompt.
     try{
-     const result=await pushRequest("POST",{action:"subscribe",subscription:sub.toJSON()});
-     status.textContent=result.subscribed
-      ?"Ilmoitukset tilattu palvelimelle"
-      :"Ilmoitusten palvelintilaus puuttuu. Paina Salli ilmoitukset.";
-    }catch(_){
-     status.textContent="Puhelimen lupa on voimassa mutta palvelintilaus ei vahvistunut. Paina Salli ilmoitukset.";
-    }
-   }else if(Notification.permission==="granted"){
-    status.textContent="Ilmoituslupa sallittu. Viimeistele tilaaminen painamalla Salli ilmoitukset.";
-   }else{
-    status.textContent="Ilmoitukset eivät vielä ole käytössä.";
+     const res=await pushRequest("POST",{action:"subscribe",subscription:sub.toJSON()});
+     registered=Boolean(res.subscribed);
+    }catch(_){}
    }
-   test.hidden=!sub;
-   $("enable-push").textContent=sub?"Päivitä ilmoitustila":"Salli ilmoitukset";
+   try{
+    const server=await pushRequest("GET");
+    deviceCount=Number(server.registeredDevices)||0;
+    registered=registered||Boolean(sub&&permitted&&deviceCount>0);
+   }catch(_){registered=false;}
+   if(permitted&&registered){
+    status.textContent="Push-tilaus vahvistettu palvelimella · "+
+       deviceCount+" laitetta. Voit tehdä testi-ilmoituksen.";
+   }else if(permitted){
+    status.textContent="iPhonen ilmoituslupa sallittu, mutta palvelimella ei ole vahvistettua tilausta. Paina Salli ilmoitukset.";
+   }else{
+    status.textContent="Ilmoitustilaus ei ole aktiivinen tässä sovelluksessa.";
+   }
+   test.hidden=!registered;
+   $("enable-push").textContent=registered?"Päivitä tila":"Salli ilmoitukset";
   }catch(_){status.textContent="Ilmoitustilan tarkistus ei onnistunut.";test.hidden=true;}
  }
  async function enablePush(){
