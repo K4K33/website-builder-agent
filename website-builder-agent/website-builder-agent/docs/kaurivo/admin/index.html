@@ -5,9 +5,9 @@
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1017"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Kaurivo"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/kaurivo-mark.webp"><title>Kaurivo — asiakashallinta</title>
 <link rel="icon" href="../assets/kaurivo-mark.webp" type="image/webp">
-<link rel="stylesheet" href="../assets/crm.css?v=20261031-mobile2">
+<link rel="stylesheet" href="../assets/crm.css?v=20261031-mobile3">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
-<script defer src="../assets/crm.js?v=20261031-mobile2"></script>
+<script defer src="../assets/crm.js?v=20261031-mobile3"></script>
 </head>
 <body>
 <div class="crm-shell">
@@ -70,11 +70,11 @@
  <div class="morning-counter" id="morning-summary" role="status">Haetaan aamun yrityksiä…</div>
 </div>
 <div id="prospect-list" class="records" aria-label="Valitun päivän yritykset"></div>
+<details class="morning-details"><summary>Lisätiedot ja asetukset</summary>
 <div class="push-settings">
  <div><strong>Ilmoitukset puhelimeen</strong><p>Ilmoitus saapuu, kun uusi yrityslista on valmis. Avaa tämä sivu aloitusnäytön Kaurivo-kuvakkeesta.</p></div>
  <div class="push-actions"><button type="button" class="primary-button" id="enable-push">Salli ilmoitukset</button><button type="button" class="outline-button" id="test-push" hidden>Testaa ilmoitus</button><span class="push-status" id="push-status" aria-live="polite"></span></div>
 </div>
-<details class="morning-details"><summary>Mistä tiedot tulevat? · Lisätoiminnot</summary>
  <p>Yritykset haetaan PRH/YTJ-rekisteristä. Tiedot vaativat tarkistuksen ennen demoa tai yhteydenottoa. Jos PRH ei ilmoita verkkosivua, verkkosivun puuttumista ei ole vahvistettu. Automaattinen tuonti ei käytä AI-krediittejä eikä lähetä markkinointiviestejä.</p>
  <div class="record-actions"><button type="button" class="outline-button" id="import-prospects">Tuo yritykset JSON-tiedostosta</button><input type="file" accept=".json,application/json" id="prospect-file" hidden></div>
  <p class="form-hint">Lähde: PRH/YTJ open data (CC BY 4.0). JSON-tuonti on varavaihtoehto, jos automaattinen yöajo ei onnistu.</p>
