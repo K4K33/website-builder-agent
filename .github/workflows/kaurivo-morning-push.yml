@@ -1,0 +1,39 @@
+name: Kaurivo morning lead notifications
+
+on:
+  schedule:
+    # Daily 08:00 Finnish local time. GitHub Actions may start late.
+    - cron: "0 8 * * *"
+      timezone: "Europe/Helsinki"
+    # Backup if primary was delayed or failed. Server deduplicates each day/device.
+    - cron: "27 8 * * *"
+      timezone: "Europe/Helsinki"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: kaurivo-morning-push
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Notify registered admin devices of new PRH leads
+        run: python -m utils.kaurivo_morning_push
+      - name: Document non-guaranteed exact delivery minute
+        if: always()
+        run: echo "Notifications are sent only for genuinely imported same-day records and only to opted-in admin PWA devices. GitHub schedules are best-effort, so 08:00 is a target, not an exact delivery guarantee." >> "$GITHUB_STEP_SUMMARY"
