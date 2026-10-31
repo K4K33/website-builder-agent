@@ -33,7 +33,7 @@ class KaurivoCRMTests(unittest.TestCase):
         self.assertIn('crypto.getRandomValues',js)
         self.assertIn('crypto.subtle.digest',js)
         self.assertIn('window.confirm(',js)
-        self.assertIn('status:"proposal"',js)
+        self.assertIn('data.status="proposal"',js)
         self.assertIn('source_verified:true',js)
         self.assertIn('status:"sent"',js)
         self.assertIn('[hidden]{display:none!important}',css)
