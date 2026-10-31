@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#0b1017"><title>Kaurivo — asiakashallinta</title>
+<meta name="theme-color" content="#0b1017"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Kaurivo"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/kaurivo-mark.webp"><title>Kaurivo — asiakashallinta</title>
 <link rel="icon" href="../assets/kaurivo-mark.webp" type="image/webp">
 <link rel="stylesheet" href="../assets/crm.css">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
@@ -41,20 +41,28 @@
 </div>
 <div class="workspace">
 <nav class="tabs" role="tablist" aria-label="Hallinnan osiot">
-<button type="button" class="tab" role="tab" aria-selected="false" data-tab="prospects">Liidijono</button>
-<button type="button" class="tab current" role="tab" aria-selected="true" data-tab="clients">Yritykset</button>
+<button type="button" class="tab current" role="tab" aria-selected="true" data-tab="prospects">Aamun yritykset</button>
+<button type="button" class="tab" role="tab" aria-selected="false" data-tab="clients">Yritykset</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="projects">Projektit</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="sales">Kaupat</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="queue">Palautepyynnöt</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="reviews">Palaute</button>
 </nav>
-<div class="panel" id="tab-prospects" hidden>
-<div class="section-head"><div><h2>Yöllä löydetyt yritykset</h2><p>PRH/YTJ-yrityshaun tulokset. Yrityksen toiminta, ostokyky ja verkkosivujen tila on aina tarkistettava ennen demoa tai yhteydenottoa.</p></div>
+<div class="panel" id="tab-prospects">
+<div class="section-head"><div><span class="eyebrow">JOKA AAMU / 08.00 HELSINKI</span><h2>Aamun yrityslista</h2><p>Yöllä löydetyt yritykset. Tiedot ovat PRH/YTJ-rekisteristä ja vaativat tarkistuksen ennen demoa tai yhteydenottoa.</p></div>
 <div class="record-actions"><button type="button" class="outline-button" id="import-prospects">Tuo yön 50 yritystä</button><input type="file" accept=".json,application/json" id="prospect-file" hidden></div></div>
-<div class="inline-alert">Lataa ensin GitHub Actions → Kaurivo national business discovery -ajon <strong>kaurivo-national-leads</strong>-artefakti. Valitse paketista <strong>crm-shortlist.json</strong>. Automaattinen yöajo kuluttaa 0 AI-krediittiä; tuonti ei lähetä sähköposteja eikä väitä yritystä aktiiviseksi.</div>
-<div id="prospect-list" class="records"></div><p class="form-hint">Lähde: PRH/YTJ open data (CC BY 4.0). Puuttuva verkkosivuosoite PRH:ssa ei todista ettei yrityksellä ole verkkosivua.</p>
+<div class="inline-alert">Yritykset tuodaan automaattisesti aamuksi, kun PRH-yöajo onnistuu. Manuaalinen JSON-tuonti jää varavaihtoehdoksi. Tuonti ei käytä AI-krediittejä eikä lähetä markkinointiviestejä.</div>
+<div class="morning-toolbar">
+ <div><label for="prospect-day" class="eyebrow">VALITSE PÄIVÄ</label><input type="date" id="prospect-day" aria-label="Yrityslistan päivä"></div>
+ <div class="morning-counter" id="morning-summary" role="status">Haetaan aamun yrityksiä…</div>
 </div>
-<div class="panel" id="tab-clients"><div class="section-head"><div><h2>Yritysrekisteri</h2><p>Potentiaaliset asiakkaat ja nykyiset asiakkaat.</p></div><button class="primary-button" data-dialog="client" type="button">+ Lisää yritys</button></div><div id="client-list" class="records"></div></div>
+<div class="push-settings">
+ <div><strong>Ilmoitukset puhelimeen</strong><p>Lisää tämä admin-sivu iPhonen aloitusnäytölle, avaa kuvakkeesta ja salli ilmoitukset. Saat viestin, kun uusi yrityslista on valmis.</p></div>
+ <div class="push-actions"><button type="button" class="primary-button" id="enable-push">Salli ilmoitukset</button><button type="button" class="outline-button" id="test-push" hidden>Testaa ilmoitus</button><span class="push-status" id="push-status" aria-live="polite"></span></div>
+</div>
+<div id="prospect-list" class="records"></div><p class="form-hint">Lähde: PRH/YTJ open data (CC BY 4.0). Jos PRH ei ilmoita verkkosivua, sivuttomuutta ei ole vahvistettu. Lista ja ilmoitukset edellyttävät onnistunutta yöajoa.</p>
+</div>
+<div class="panel" id="tab-clients" hidden><div class="section-head"><div><h2>Yritysrekisteri</h2><p>Potentiaaliset asiakkaat ja nykyiset asiakkaat.</p></div><button class="primary-button" data-dialog="client" type="button">+ Lisää yritys</button></div><div id="client-list" class="records"></div></div>
 <div class="panel" id="tab-projects" hidden><div class="section-head"><div><h2>Verkkosivuprojektit</h2><p>Demosta toteutukseen, asiakkaan brändi ja muokattavuus säilyttäen.</p></div><button class="primary-button" data-dialog="project" type="button">+ Lisää projekti</button></div><div id="project-list" class="records"></div></div>
 <div class="panel" id="tab-sales" hidden><div class="section-head"><div><h2>Kaupat</h2><p>Vahvista kauppa vain oikeaan ostotapahtumaan perustuen.</p></div><button class="primary-button" data-dialog="sale" type="button">+ Lisää tarjous</button></div><div id="sale-list" class="records"></div></div>
 <div class="panel" id="tab-queue" hidden><div class="section-head"><div><h2>Palautepyyntöjen jono</h2><p>Yksi yksilöllinen pyyntö per vahvistettu kauppa. Lähetys vasta määräaikana.</p></div></div><div class="inline-alert">Palautekutsun valmistelu ei lähetä sähköpostia. Järjestelmä tarjoaa kopioitavan, henkilökohtaisen viestin Kaurivon Gmailiin lähetettäväksi.</div><div id="queue-list" class="records"></div></div>
