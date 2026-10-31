@@ -380,7 +380,17 @@
    if(seen.has(c.business_id))continue;seen.add(c.business_id);
    const url=clean(c.website_listed_url);
    if(url&&!validUrl(url)){toast("PRH-verkkosivulinkki ei ole kelvollinen.","error");return;}
+   const suggestion=c.website_search_candidate;
+   const proposed=typeof suggestion==="object"&&suggestion!==null &&
+      suggestion.source==="tavily_search" && Number.isInteger(suggestion.confidence) &&
+      suggestion.confidence>=80 && suggestion.confidence<=99 &&
+      typeof suggestion.url==="string" && validUrl(suggestion.url) ?
+      clean(suggestion.url).slice(0,1200):"";
    items.push({
+    website_candidate_url:proposed,
+    website_candidate_source:proposed?"tavily_search":"",
+    website_candidate_confidence:proposed?suggestion.confidence:0,
+    website_candidate_checked_at:proposed?new Date().toISOString():null,
     business_id:c.business_id,company_name:clean(c.name).slice(0,160),
     city_hint:clean(c.city_hint).slice(0,80),
     industry_code_hint:clean(c.industry_code_hint).slice(0,20),
