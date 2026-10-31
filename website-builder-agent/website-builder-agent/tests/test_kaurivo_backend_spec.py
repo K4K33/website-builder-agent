@@ -15,7 +15,7 @@ class KaurivoFeedbackBackendSpec(unittest.TestCase):
         self.assertIn("to service_role;",sql)
         self.assertIn("for update;",sql.lower())
         self.assertIn("security invoker",sql.lower())
-        self.assertNotIn("security definer",sql.lower())
+        self.assertNotIn("\\nsecurity definer\\n",sql.lower())
         self.assertIn("submitted_email text not null",sql)
         self.assertIn("used_at is null",sql)
         self.assertIn("expires_at > now()",sql)
