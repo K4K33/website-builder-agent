@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           base="https://k4k33.github.io/website-builder-agent/kaurivo/admin/"
-          for file in "" "manifest.webmanifest" "sw.js"; do
+          for file in "" "manifest.webmanifest" "sw.js" "../assets/crm.css?v=20261031-mobile2" "../assets/crm.js?v=20261031-mobile2"; do
             url="${base}${file}"
             echo "Checking ${url}"
             ok="false"
@@ -33,9 +33,13 @@ jobs:
               echo "Attempt ${attempt}: HTTP ${code}"
               if [[ "${code}" == "200" ]]; then
                 if [[ -z "${file}" ]]; then
-                  if grep -q 'Aamun yrityslista' /tmp/kaurivo-live-check; then ok="true"; break; fi
+                  if grep -q 'id="mobile-dock"' /tmp/kaurivo-live-check && grep -q 'id="prospect-list"' /tmp/kaurivo-live-check; then ok="true"; break; fi
                 elif [[ "${file}" == "sw.js" ]]; then
                   if grep -q 'notificationclick' /tmp/kaurivo-live-check; then ok="true"; break; fi
+                elif [[ "${file}" == *"crm.css"* ]]; then
+                  if grep -q '.mobile-dock' /tmp/kaurivo-live-check; then ok="true"; break; fi
+                elif [[ "${file}" == *"crm.js"* ]]; then
+                  if grep -q 'navigateMobile' /tmp/kaurivo-live-check; then ok="true"; break; fi
                 elif grep -q 'Kaurivo' /tmp/kaurivo-live-check; then ok="true"; break; fi
               fi
               sleep 8
