@@ -84,8 +84,10 @@
     try {
       var response = await fetch(form.action, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payload),
+        // Use a standard form encoding supported by FormSubmit AJAX and avoid
+        // unnecessary CORS preflight requests from cross-origin JSON POST.
+        headers: { "Accept": "application/json" },
+        body: new URLSearchParams(payload),
         credentials: "omit"
       });
       var data;

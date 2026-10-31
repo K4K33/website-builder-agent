@@ -112,3 +112,12 @@ Private feedback is not automatically a public testimonial or a license to discl
 Once the form passes activation and end-to-end delivery checks, add its confirmed link below the actual QA-approved demo link and include the same form link in the email sending workflow. If not confirmed, use direct email reply. Do not add a fake review widget to fictional Kaurivo portfolio concepts or demand it in the middle of a sales pitch.
 
 The Python helpers create drafts and suggested triage only. They do not read Gmail, schedule reminders, spend AI credits, send mail, publish testimonials or apply code changes.
+
+
+## October 31, 2026: verified setup status and activation blocker
+
+- The live Kaurivo feedback form and its 1–5 stars passed browser tests. The AJAX request has been updated to regular URL-encoded form data to reduce cross-origin preflight issues.
+- GitHub datacenter POST to activate FormSubmit was **blocked by Cloudflare HTTP 403** with a JavaScript challenge. No activation confirmation was received by Kaurivo's Gmail. The one-time GitHub activation workflow has been removed. Activation requires one normal browser submission on the real Kaurivo form, then confirmation in hello.kaurivo@gmail.com. Do not describe delivery as live until a post-activation end-to-end submission arrives.
+- A recurring ChatGPT automation was created to check the connected Kaurivo Gmail every 6 hours, classify new non-test review messages and alert on significant issues. It does not send mail, publish customer data or modify any client websites. This operates independently of FormSubmit's archive API.
+- The FormSubmit GitHub workflow is now guarded by the repository variable KAURIVO_FEEDBACK_ENABLED == true; before activation it schedules no runner work and consumes no archive API credits. When later enabled, it needs the KAURIVO_FORMSUBMIT_API_KEY GitHub Actions secret. Maximum 4 archive requests daily, under the 5/day free cap. Do not enable until key and activation are both proven.
+- A dedicated Kaurivo-only Supabase schema and Edge Function package is prepared under docs/kaurivo/backend/. This is **not deployed**. It must go into a new Kaurivo organization-selected project, never OAVIR. Confirm any project costs and privacy terms before production deployment. The private backend uses cryptographically random one-time invitation tokens, atomic database consumption, RLS and no public access.

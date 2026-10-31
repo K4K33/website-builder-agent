@@ -103,3 +103,8 @@ A verified client sale triggers eligibility for a private Gmail feedback draft *
 ## Dedicated interactive feedback + privacy-safe polling (Oct 31, 2026)
 
 The existing day-after-sale email template links to `/kaurivo/feedback/?lang=fi&rating=N` rather than a Gmail mailto draft. Tapping a star on the page lights it without sending; clicking Submit posts rating, written note and company/contact details to FormSubmit AJAX (provider email activation required). This **does not** create a Kaurivo-owned permanent database. A separate Kaurivo backend must be approved rather than mixing client data into OAVIR's Supabase project. A four-times-daily private FormSubmit archive digest is ready under `.github/workflows/kaurivo-feedback.yml` but makes no API requests until `KAURIVO_FORMSUBMIT_API_KEY` is added to repository Actions secrets. It publishes anonymous aggregate counts only, never raw comments or email addresses. Details: `docs/CUSTOMER_FEEDBACK.md`.
+
+
+## Feedback setup status — verified Oct 31, 2026
+
+Static Pages and quality tests are deployed. FormSubmit activation is blocked by the provider when trying to submit from GitHub Actions (Cloudflare HTTP 403). The owner must submit a synthetic review in a normal browser and confirm the activation email in hello.kaurivo@gmail.com; only then can actual email delivery be checked. Automated Gmail monitoring is scheduled every six hours; the FormSubmit archive runner is disabled by default with a repository variable gate and requires a provider API key later. A private database implementation package is available in backend/ for a separate, approved Kaurivo Supabase project. No OAVIR data or project was touched.
