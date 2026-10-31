@@ -533,6 +533,8 @@
   }
   if(kind==="prospect"){
    data.research_notes=data.research_notes||"";
+   data.outreach_observation=data.outreach_observation||"";
+   if(data.outreach_observation.length>600){toast("Yksilöllinen havainto saa olla enintään 600 merkkiä.","error");return;}
    data.website_found_url=data.website_found_url||"";
    if(data.website_found_url){
     let u;
