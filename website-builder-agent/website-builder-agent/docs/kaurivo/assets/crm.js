@@ -148,6 +148,87 @@
    rows.sales.filter(c=>c.status==="won"&&c.source_verified).length+
    " vahvistettua kauppaa · "+optouts+" kieltoa (valitun päivän liidit, kaupat koko CRM)";
  }
+
+ async function refreshSalesMetrics(){
+  const status=$("sales-overview-status");
+  const container=$("sales-overview-kpis"),bars=$("sales-overview-bars");
+  if(!status||!container||!bars)return;
+  try{
+   if(!db||typeof db.rpc!=="function")throw Error("no_rpc");
+   const {data,error}=await db.rpc("kaurivo_get_sales_dashboard");
+   if(error||!data||typeof data!=="object"||Array.isArray(data))throw Error("missing_metrics");
+   const keys=[
+    ["discovered","Löydetty"],
+    ["reviewed","Tutkittu"],
+    ["site_links","Sivulinkki"],
+    ["suggested_sites","Sivuehdotus"],
+    ["demo_briefs","Demobrief"],
+    ["legal_approved","Lakiarvio hyväksytty"],
+    ["contacted","Käsin kontaktoitu"],
+    ["responses","Vastannut"],
+    ["wins","Vahvistettu kauppa"],
+    ["opted_out","Markkinointikielto"]
+   ];
+   container.replaceChildren();
+   for(const [key,title] of keys){
+    const value=Number(data[key]);
+    const item=append(container,"div","sales-kpi");
+    append(item,"strong",null,Number.isFinite(value)?String(Math.max(0,value)):"—");
+    append(item,"span",null,title);
+   }
+   const total=Number(data.won_eur);
+   const totalBox=append(container,"div","sales-kpi sales-kpi-revenue");
+   append(totalBox,"strong",null,Number.isFinite(total)?euro(total):"—");
+   append(totalBox,"span",null,"Vahvistetun kaupan arvo");
+   bars.replaceChildren();
+   const daily=Array.isArray(data.daily)?data.daily:[];
+   const clean=daily.filter(v=>v&&/^\d{4}-\d{2}-\d{2}$/.test(String(v.day))&&
+      Number.isFinite(Number(v.new_leads))).slice(-14);
+   if(clean.length){
+    const max=Math.max(1,...clean.map(x=>Number(x.new_leads)));
+    for(const day of clean){
+     const bucket=append(bars,"div","sales-day");
+     const bar=append(bucket,"div","sales-day-bar");
+     bar.style.height=(Math.max(5,Math.round(Number(day.new_leads)/max*45)))+"px";
+     bar.title=String(day.day)+": "+Number(day.new_leads)+" yritystä";
+     append(bucket,"span",null,String(day.day).slice(5));
+    }
+   }else append(bars,"p","form-hint","Ei vielä päiväkohtaisia hakutuloksia viimeiseltä 30 päivältä.");
+   status.textContent="Mittarit päivittyvät kaikista tallennetuista yrityksistä ja kaupoista.";
+  }catch(_){
+   // Never display guessed business totals if the verified database RPC fails.
+   status.textContent="Koko myyntiputken lukemia ei voitu vahvistaa. Kokeile Päivitä tiedot.";
+   container.replaceChildren();bars.replaceChildren();
+  }
+ }
+ async function addSuppression(event){
+  event.preventDefault();
+  const b=$("add-suppression"),field=$("suppress-business-id"),note=$("suppression-note");
+  if(b.disabled)return;
+  const businessId=String(field.value||"").trim();
+  if(!/^\d{7}-\d$/.test(businessId)){
+   note.textContent="Tarkista Y-tunnuksen muoto: 1234567-8.";
+   return;
+  }
+  if(!window.confirm("Vahvista yrityksen "+businessId+
+     " markkinointikielto. Esto säilyy myös myöhemmissä PRH-hauissa. "+
+     "Tämä ei lähetä mitään viestiä."))return;
+  b.disabled=true;
+  try{
+   const {error}=await db.from("kaurivo_marketing_suppressions").insert({
+    business_id:businessId,reason:"direct_marketing_objection"
+   });
+   if(error&&error.code!=="23505")throw error;
+   field.value="";
+   note.textContent="Yrityksen "+businessId+" markkinointikielto on tallennettu. "+
+     "Kielto on voimassa myös seuraavissa hauissa.";
+   toast("Markkinointikielto tallennettu turvalliseen estolistaan.","success");
+   await reload();
+  }catch(_){
+   note.textContent="Kiellon tallennusta ei voitu vahvistaa. Kokeile uudelleen.";
+   toast("Estolistan tallennus epäonnistui.","error");
+  }finally{b.disabled=false;}
+ }
  function draftDemoBrief(c){
   const url=c.website_found_url||c.website_listed_url||c.website_candidate_url||"Ei vahvistettua URL-osoitetta";
   return [
@@ -338,6 +419,7 @@
     const {data,error}=results[i];if(error)throw error;rows[entities[i][0]]=data||[];
    }
    render();
+   await refreshSalesMetrics();
   }catch(err){toast("Tietojen lataus epäonnistui. Tarkista käyttöoikeudet: "+(err.message||"tuntematon virhe"),"error");}
   finally{busy=false;}
  }
@@ -947,6 +1029,7 @@
   $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
   $("start-manual-scan").addEventListener("click",startManualScan);
+  $("suppression-form").addEventListener("submit",addSuppression);
   $("show-skipped-prospects").addEventListener("change",render);
   $("prospect-day").addEventListener("change",async event=>{
    if(!/^\d{4}-\d{2}-\d{2}$/.test(event.target.value))return;
