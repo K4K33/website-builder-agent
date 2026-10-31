@@ -364,6 +364,45 @@
   }catch(err){toast("Liidien tuonti epäonnistui: "+(err.message||""),"error");}
  }
 
+ const MANUAL_SCAN_URL=SUPABASE_URL+"/functions/v1/kaurivo-manual-scan";
+ async function startManualScan(){
+  const b=$("start-manual-scan");
+  if(b.disabled)return;
+  const status=$("manual-scan-status");
+  const email=(await db.auth.getUser()).data?.user?.email?.toLowerCase();
+  if(!ADMIN_EMAILS.has(email)){toast("Kirjaudu ylläpitotilille ennen yrityshakua.","error");return;}
+  b.disabled=true;
+  b.textContent="Haetaan yrityksiä…";
+  status.textContent="Haetaan yrityksiä PRH:sta. Älä sulje sovellusta ennen hakutulosta.";
+  try{
+   const {data:{session}}=await db.auth.getSession();
+   if(!session?.access_token)throw Error("Istunto päättyi, kirjaudu uudelleen.");
+   const response=await fetch(MANUAL_SCAN_URL,{
+    method:"POST",headers:{"Content-Type":"application/json",
+     "apikey":PUBLIC_KEY,"Authorization":"Bearer "+session.access_token},
+    body:JSON.stringify({action:"scan"})
+   });
+   const result=await response.json().catch(()=>({}));
+   if(response.status===429||result.reason==="cooldown_or_daily_limit"){
+    status.textContent="Varahaun raja tuli vastaan. Enintään 3 käynnistystä päivässä, vähintään 25 min välein.";
+    toast("Varahaku on tilapäisesti rajoitettu. Yöajo toimii erikseen.","error");
+    return;
+   }
+   if(!response.ok||!result.ok){
+    status.textContent="Varahaku epäonnistui. PRH:n rajapinta tai tallennus ei vastannut. Päivän yrityslistaa ei keksitä.";
+    throw Error("PRH-haku ei onnistunut. Tarkista myöhemmin tai odota yöajoa.");
+   }
+   const count=Number(result.added)||0;
+   const examined=Number(result.examined)||0;
+   status.textContent="Haku valmis. "+examined+" PRH-tietuetta tarkasteltu, "+
+    count+" uutta yritystä lisätty. Tiedot ovat tarkistamattomia.";
+   selectedDay=helsinkiToday();
+   await reload();
+   showTab("prospects");
+   toast(count>0?count+" yritystä lisätty päivän listalle.":"Haku valmis: ei uusia yrityksiä tällä kierroksella.","success");
+  }catch(err){toast("Yrityshaun virhe: "+(err.message||"Tuntematon virhe"),"error");}
+  finally{b.disabled=false;b.textContent="Käynnistä yrityshaku";}
+ }
  const PUSH_URL=SUPABASE_URL+"/functions/v1/kaurivo-daily-push";
  const isStandalone=()=>window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
  function toUint8(base64url){
@@ -656,6 +695,7 @@
   $("login-proof").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();verifyLogin();}});
   $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
+  $("start-manual-scan").addEventListener("click",startManualScan);
   $("prospect-day").addEventListener("change",async event=>{
    if(!/^\d{4}-\d{2}-\d{2}$/.test(event.target.value))return;
    selectedDay=event.target.value;await reload();showTab("prospects");
