@@ -68,7 +68,7 @@ window.supabase={createClient:()=>({
     signInWithOtp:async()=>({error:null}),
     onAuthStateChange:()=>({data:{subscription:{unsubscribe:()=>{}}}})
   },
-  from:(name)=>({select:()=>({order:()=>({limit:async()=>({data:[],error:null})})})})
+  from:(name)=>({select:()=>({eq(){return this;},order(){return this;},limit:async()=>({data:[],error:null})})})
 })};
 """
         with sync_playwright() as p:
@@ -106,6 +106,76 @@ window.supabase={createClient:()=>({
             finally:
                 browser.close()
 
+
+
+    def test_installed_pwa_verifies_email_in_same_window(self):
+        """Mock-only: copied token and emailed OTP work without Safari navigation."""
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            if os.getenv("REQUIRE_BROWSER_TESTS")=="1":
+                self.fail("Playwright unavailable")
+            self.skipTest("Playwright unavailable")
+        mock_js=r"""
+window.__proofs=[];
+window.__loggedIn=false;
+const user={id:'admin-id',email:'hello.kaurivo@gmail.com',
+            email_confirmed_at:'2026-10-31T12:00:00Z'};
+window.supabase={createClient:()=>({
+ auth:{
+   getUser:async()=>({data:{user:window.__loggedIn?user:null},error:null}),
+   signOut:async()=>{window.__loggedIn=false;return {error:null};},
+   signInWithOtp:async args=>{
+     window.__signupAllowed=args.options.shouldCreateUser;
+     return {error:null};
+   },
+   verifyOtp:async proof=>{
+     window.__proofs.push(proof);
+     window.__loggedIn=true;
+     return {data:{user,session:{access_token:"fake"}},error:null};
+   },
+   onAuthStateChange:()=>({data:{subscription:{unsubscribe:()=>{}}}})
+ },
+ from:()=>({select:()=>({eq(){return this;},order(){return this;},
+                         limit:async()=>({data:[],error:null})})})
+})};
+"""
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True,args=["--disable-gpu"])
+            try:
+                page=browser.new_page(viewport={"width":375,"height":844})
+                errors=[]
+                page.on("pageerror",lambda e:errors.append(str(e)))
+                page.add_init_script(mock_js)
+                page.route("https://cdn.jsdelivr.net/**",lambda r:r.abort())
+                page.route("https://fonts.googleapis.com/**",lambda r:r.abort())
+                page.goto(HTML.as_uri(),wait_until="domcontentloaded")
+                page.locator("#send-login").click()
+                self.assertTrue(page.locator("#login-verify").is_visible())
+                self.assertFalse(page.evaluate("window.__signupAllowed"))
+                page.locator("#login-proof").fill(
+                    "https://evil.example/auth/v1/verify?token="+("a"*64)+"&type=magiclink")
+                page.locator("#verify-login").click()
+                self.assertFalse(page.locator("#dashboard").is_visible())
+                self.assertEqual(page.evaluate("window.__proofs.length"),0)
+                page.locator("#login-proof").fill(
+                    "https://xhsfbcwpwbgdbatrcyuk.supabase.co/auth/v1/verify?"
+                    "token="+("a"*64)+"&type=magiclink")
+                page.locator("#verify-login").click()
+                page.wait_for_function("document.querySelector('#dashboard').hidden === false")
+                self.assertEqual(page.evaluate("window.__proofs[0].type"),"magiclink")
+                self.assertEqual(len(errors),0,errors)
+                page.locator("#sign-out").click()
+                page.locator("#send-login").click()
+                page.locator("#login-proof").fill("123456")
+                page.locator("#verify-login").click()
+                page.wait_for_function("document.querySelector('#dashboard').hidden === false")
+                self.assertEqual(page.evaluate("window.__proofs[1].type"),"email")
+                self.assertEqual(page.evaluate("window.__proofs[1].token"),"123456")
+                self.assertEqual(len(errors),0,errors)
+                page.close()
+            finally:
+                browser.close()
 
 if __name__=="__main__":
     unittest.main()
