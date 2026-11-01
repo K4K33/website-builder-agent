@@ -22,3 +22,50 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}.js .reveal{opacity:1!important;transform:none!important}}
 /* Narrow-phone contact details must never overflow the screen. */
 .contact-grid>*{min-width:0}.contact-detail strong{display:block;max-width:calc(100% - 22px);overflow-wrap:anywhere;word-break:break-word}.contact-form-wrap{min-width:0}
+
+/* V6 | calm service-led design, owner brand preserved */
+:root{--muted:#3d536a;--text:#102a45}
+.hero-image-card,.hero-side-label,.circle-arrow,.highlight-section,.process-section{display:none!important}
+.hero-image img,.page-hero-photo img{filter:saturate(.56) contrast(1.05) brightness(.98)}
+.hero-image,.page-hero-photo{position:relative;isolation:isolate}
+.hero-image:after,.page-hero-photo:after{content:"";position:absolute;inset:0;background:rgba(12,43,78,.11);pointer-events:none}
+.hero h1 em,.intro-row h2 em,.detail-copy h2 em,.page-hero h1 em,.closing-cta h2 em,.story-large h2 em,.story-copy h2 em,.about-story-section h2 em {font-family:inherit!important;font-style:normal!important;font-weight:inherit!important;letter-spacing:inherit!important}
+.service-cards{gap:16px}
+.service-tile{min-height:220px;padding:30px 29px 32px;border-radius:13px;box-shadow:none}
+.service-tile:before{content:"";display:block;width:42px;height:4px;background:#3287db;margin-bottom:32px}
+.service-tile:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(13,40,72,.08)}
+.service-tile .tile-meta{margin-top:0;display:block}
+.service-tile h3{font-size:clamp(22px,2.2vw,27px);margin-top:11px}
+.service-tile p{font-size:15px;color:#354f68;line-height:1.65}
+.intro-row .text-link{display:none}
+.services-detail{padding-block:38px 92px}
+.services-detail .wrap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+.services-detail .detail-row,.services-detail .detail-row.detail-reverse{display:block;border:1px solid #d7e4f1;background:#fff;padding:38px 30px;border-radius:15px;min-width:0;margin:0}
+.services-detail .detail-copy{width:100%;min-width:0;max-width:none}
+.services-detail .detail-copy h2{font-size:clamp(25px,2.6vw,34px);line-height:1.17}
+.services-detail .detail-copy p{font-size:15px}
+.services-detail .clean-list li{font-size:14px;line-height:1.7}
+.detail-photo,.tile-photo{display:none!important}
+.page-hero-photo{height:300px;border-radius:16px}
+.about-hero .page-hero-grid{display:block}
+.about-hero .page-hero-grid>div:first-child{max-width:860px}
+.hero-keywords{font-size:12px}
+.closing-cta:after{display:none}
+.closing-cta{background:#0b284a;padding:70px 0}
+.closing-cta h2{max-width:720px;line-height:1.2}
+.btn,.header-cta{gap:0;justify-content:center}
+.text-link{gap:0;border-bottom:1px solid currentColor}
+.text-link:hover{gap:0}
+.header-phone svg{flex-shrink:0}
+.contact-grid{gap:clamp(34px,5vw,80px)}
+.contact-form-wrap{background:#f1f6fb;border:1px solid #dae6f1}
+.contact-form-wrap label{color:#173856}
+.contact-form-wrap .form-intro,.form-note{color:#38546b;font-size:14px}
+.contact-form-wrap .honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.contact-form-wrap .test-consent{display:flex;gap:11px;align-items:flex-start;font-weight:500;line-height:1.5;font-size:13px;color:#34516c}
+.contact-form-wrap .test-consent input{margin-top:4px;flex:0 0 auto;width:18px;height:18px}
+.form-note[data-status="success"]{background:#e3f6e6;border-radius:9px;color:#175933;padding:14px;font-weight:700}
+.form-note[data-status="error"]{color:#ad2727;font-weight:700}
+.form-button:disabled{opacity:.65;cursor:progress}
+@media(max-width:1000px){.services-detail .wrap{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.services-detail .wrap{grid-template-columns:1fr}.services-detail .detail-row{padding:28px 22px}.service-tile{min-height:165px}.hero-image:after{display:none}}
