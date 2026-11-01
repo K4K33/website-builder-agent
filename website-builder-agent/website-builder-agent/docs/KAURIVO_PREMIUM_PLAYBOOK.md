@@ -4,6 +4,14 @@
 customer website, a live CMS or real paid delivery is operational. Applies to
 website-builder-agent and the Kaurivo website. Implemented in
 `utils/kaurivo_premium_site.py` and `utils/kaurivo_premium_sales.py`.
+**Universal premium design gate (every customer):**
+`docs/KAURIVO_GLOBAL_DESIGN_QA_CHECKLIST.md` and
+`docs/KAURIVO_DESIGN_STANDARD_V4.md`. A client-facing preview requires a
+reviewed and recorded checklist, including real first mobile viewport,
+logo fidelity, image-to-service relevance, navigability, distinct CTA paths,
+pricing/external links, genuine first load and no mechanical template repetition.
+This requirement is not met by static HTML validation alone.
+
 Existing human gates remain mandatory: `utils/pitch_quality.py`,
 `utils/client_handover.py`, `utils/marketing_compliance.py`.
 
@@ -45,6 +53,11 @@ Existing human gates remain mandatory: `utils/pitch_quality.py`,
   document which choices to adapt and which to avoid.
 - Each section answers a customer question. Make the offer, location,
   verified services and next appropriate step clear in the first view.
+- Verify 5-second mobile comprehension, genuine service-relevant imagery,
+  original branded logo (or approved text-only fallback), purposeful links
+  including pricing, and a coherent primary CTA in the browser.
+- Measure realistic hosted first load as well as animation smoothness;
+  slow preview cold starts must be called out and fixed before delivery.
 - Prioritize native scroll, accessible interaction, responsive typography,
   `transform`/`opacity` animation only when useful, and reduced-motion
   alternatives. Avoid generic AI-looking filler, fake awards, reviews,
