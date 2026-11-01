@@ -10,6 +10,7 @@ const SUPABASE_ENDPOINT = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const AUDIENCE = "kaurivo-morning-push-xhsfbcwpwbgdbatrcyuk";
 const WORKFLOW = "K4K33/website-builder-agent/.github/workflows/kaurivo-morning-push.yml@refs/heads/main";
+const NATIONAL_WORKFLOW = "K4K33/website-builder-agent/.github/workflows/kaurivo-national-prh.yml@refs/heads/main";
 const ALLOWED_EMAILS = new Set(["hello.kaurivo@gmail.com","kaarlo.kaukko1@gmail.com"]);
 const JWKS = createRemoteJWKSet(new URL("https://token.actions.githubusercontent.com/.well-known/jwks"));
 
@@ -53,7 +54,7 @@ async function adminUser(req:Request):Promise<{id:string,email:string}|null>{
    !ALLOWED_EMAILS.has(user.email.toLowerCase()) || !user.email_confirmed_at)return null;
  return {id:user.id,email:user.email.toLowerCase()};
 }
-async function githubOIDC(req:Request):Promise<{event:string}|null>{
+async function githubOIDC(req:Request):Promise<{event:string;source:"morning"|"national"}|null>{
  const auth=req.headers.get("authorization")||"";
  const token=auth.startsWith("Bearer ")?auth.slice(7):"";
  if(token.length<100||token.length>7000)return null;
@@ -68,9 +69,10 @@ async function githubOIDC(req:Request):Promise<{event:string}|null>{
     String(payload.repository_owner_id)!=="327952223"||
     payload.ref!=="refs/heads/main"||
     payload.ref_type!=="branch"||
-    payload.workflow_ref!==WORKFLOW||
+    (payload.workflow_ref!==WORKFLOW&&payload.workflow_ref!==NATIONAL_WORKFLOW)||
     !["schedule","workflow_dispatch"].includes(String(payload.event_name)))return null;
-  return {event:String(payload.event_name)};
+  return {event:String(payload.event_name),
+   source:payload.workflow_ref===NATIONAL_WORKFLOW?"national":"morning"};
  }catch(_){return null;}
 }
 type Keys={public_key:string,private_key:string};
@@ -134,11 +136,15 @@ async function recordMorningEvent(day:string,outcome:"success"|"failure"|"skippe
     outcome,details,records,notifications})
   }).catch(()=>null);
 }
-async function notifyDaily(event:string):Promise<Response>{
+async function notifyDaily(event:string,source:"morning"|"national"):Promise<Response>{
  const day=helsinkiDay();
  // Accept delayed GitHub schedules later in the morning, rather than silently missing a day.
- if(event==="schedule"&&(helsinkiHour()<8||helsinkiHour()>12))
+ if(event==="schedule"&&source==="morning"&&(helsinkiHour()<8||helsinkiHour()>12))
   return reply(200,{ok:true,skipped:"outside_morning_helsinki",day});
+ // Nightly PRH may finish late: never alert before 08:00, but deliver as
+ // soon as the verified list lands when that happens after 08:00.
+ if(source==="national"&&helsinkiHour()<8)
+   return reply(200,{ok:true,day,skipped:"national_batch_before_08"});
  const result=await rest("kaurivo_crm_prospects?discovery_date=eq."+day+
   "&select=business_id&limit=100");
  if(!result.ok)throw new Error("prospects_unavailable");
@@ -147,7 +153,7 @@ async function notifyDaily(event:string):Promise<Response>{
  if(!count){
   // Do not alarm before the main and backup discovery windows have passed.
   // At the final 09:17 check, send a neutral missing-list warning.
-  if(event==="schedule"&&helsinkiHour()>=9){
+  if(event==="schedule"&&source==="morning"&&helsinkiHour()>=9){
    const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date,last_missing_notice_date&limit=100");
    const pending=subs.filter(sub=>sub.last_missing_notice_date!==day);
    let warned=0;
@@ -225,7 +231,7 @@ Deno.serve(async (req:Request)=>{
  if(action==="notify"){
   const oidc=await githubOIDC(req);
   if(!oidc)return reply(403,{ok:false,error:"workflow_not_authorized"});
-  try{return await notifyDaily(oidc.event);}
+  try{return await notifyDaily(oidc.event,oidc.source);}
   catch(_){
    await recordMorningEvent(helsinkiDay(),"failure","Ilmoituspalvelun suoritus epäonnistui");
    return reply(503,{ok:false,error:"delivery_unavailable"});
