@@ -1,10 +1,9 @@
-name: Kaurivo nightly prospect review (zero AI credits)
+name: Kaurivo legacy OSM review (manual only; PRH replaces nightly search)
 
+# Legacy OSM + AI backend pipeline is no longer scheduled. It failed on
+# 2026-11-01 because FREE_ONLY correctly rejected a cloud AI backend.
+# The active nightly PRH workflow is kaurivo-national-prh.yml.
 on:
-  schedule:
-    # Local Europe/Helsinki time (DST-aware). Away from busiest top-of-hour.
-    - cron: "17 3 * * *"
-      timezone: "Europe/Helsinki"
   workflow_dispatch:
     inputs:
       mode:
