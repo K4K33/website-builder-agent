@@ -143,6 +143,30 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
 
+KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
+- Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
+  vahvistettu palvelu, kenelle se on ja miten asiakas jatkaa. Pelkkä
+  iskulause tai koristeellinen kuva ei riitä.
+- Näytä yrityksen oikeat tärkeimmät palvelut riittävän aikaisin; älä
+  peitä niitä pitkän koristeellisen tarinan tai toisteisen tekstin taakse.
+- Käytä TODELLISIA omistajan hyväksymiä brändiaineistoja ja työhön
+  liittyviä luvallisia kuvia. Älä pakota lifestyle-/luksuskuvaa
+  esimerkiksi käytännön palvelualan yritykselle.
+- Valitse yksi selkeä ensisijainen CTA käyttäjän tehtävän mukaan.
+  Tarkista mihin se ja muut navigointi-, yhteys- ja hinnastolinkit
+  oikeasti johtavat. Vanhan sivun linkki on sallittu vain jos se
+  on tarkoituksellinen, toimiva ja rehellisesti merkitty.
+- Poista toisteinen markkinointitäyte, koristeellinen numerointi,
+  tarpeettomat nuolimerkit ja keskenään samalta näyttävät kortit.
+- Visuaalinen liike tukee selkeyttä eikä peitä sisältöä. Varmista
+  staattisen ja reduced-motion-version toiminta. Ensilatauksen
+  mahdollinen hidas hosting-kylmäkäynnistys on testattava erikseen;
+  älä väitä nopeutta mittaamatta.
+- Tämä on Kaurivon KAIKILLE asiakkaille yhteinen tarkistuslista.
+  Tulos tulee hylätä tai palauttaa korjaukseen, jos brändi,
+  ensimmäisen näkymän ymmärrettävyys tai linkkien tarkoitus
+  ei ole todennettavissa. Älä täytä puuttuvia faktoja omilla arvauksilla.
+
 VISUAALISEN LAADUN PYSYVÄ V3-SÄÄNTÖ (koskee KAIKKIA uusia asiakasdemoja):
 Värien pitää näyttää tarkoituksellisilta, kirkkailta ja teräviltä,
 ei harmaalta, samealta tai automaattisten mallipohjien geneeriseltä.
@@ -305,6 +329,30 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
 - Human reviewer MUST reject a technically passing but visibly generic
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
+
+KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
+- Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
+  vahvistettu palvelu, kenelle se on ja miten asiakas jatkaa. Pelkkä
+  iskulause tai koristeellinen kuva ei riitä.
+- Näytä yrityksen oikeat tärkeimmät palvelut riittävän aikaisin; älä
+  peitä niitä pitkän koristeellisen tarinan tai toisteisen tekstin taakse.
+- Käytä TODELLISIA omistajan hyväksymiä brändiaineistoja ja työhön
+  liittyviä luvallisia kuvia. Älä pakota lifestyle-/luksuskuvaa
+  esimerkiksi käytännön palvelualan yritykselle.
+- Valitse yksi selkeä ensisijainen CTA käyttäjän tehtävän mukaan.
+  Tarkista mihin se ja muut navigointi-, yhteys- ja hinnastolinkit
+  oikeasti johtavat. Vanhan sivun linkki on sallittu vain jos se
+  on tarkoituksellinen, toimiva ja rehellisesti merkitty.
+- Poista toisteinen markkinointitäyte, koristeellinen numerointi,
+  tarpeettomat nuolimerkit ja keskenään samalta näyttävät kortit.
+- Visuaalinen liike tukee selkeyttä eikä peitä sisältöä. Varmista
+  staattisen ja reduced-motion-version toiminta. Ensilatauksen
+  mahdollinen hidas hosting-kylmäkäynnistys on testattava erikseen;
+  älä väitä nopeutta mittaamatta.
+- Tämä on Kaurivon KAIKILLE asiakkaille yhteinen tarkistuslista.
+  Tulos tulee hylätä tai palauttaa korjaukseen, jos brändi,
+  ensimmäisen näkymän ymmärrettävyys tai linkkien tarkoitus
+  ei ole todennettavissa. Älä täytä puuttuvia faktoja omilla arvauksilla.
 
 VISUAALISEN LAADUN PYSYVÄ V3-SÄÄNTÖ (koskee KAIKKIA uusia asiakasdemoja):
 Värien pitää näyttää tarkoituksellisilta, kirkkailta ja teräviltä,
