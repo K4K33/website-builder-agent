@@ -69,3 +69,7 @@
 .form-button:disabled{opacity:.65;cursor:progress}
 @media(max-width:1000px){.services-detail .wrap{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.services-detail .wrap{grid-template-columns:1fr}.services-detail .detail-row{padding:28px 22px}.service-tile{min-height:165px}.hero-image:after{display:none}}
+
+/* Never allow long Finnish compound headings to force horizontal scroll. */
+.contact-form-wrap h2,.contact-direct h2,.page-hero h1{overflow-wrap:anywhere;word-break:normal}
+.contact-form-wrap form,.contact-form-wrap form>*,.contact-form-wrap .form-row{min-width:0;max-width:100%}
