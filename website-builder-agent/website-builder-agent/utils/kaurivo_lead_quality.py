@@ -47,17 +47,25 @@ def lead_score(name, industry):
         return 2
     return 0
 
-def choose_shortlist(candidates, size=50, day=""):
+def choose_shortlist(candidates, size=50, day="", weights=None):
     """Select high-relevance businesses from all website categories.
 
     When registry URL data is absent, never fake known-website businesses.
     """
+    weights = weights if isinstance(weights, dict) else {}
     eligible = [c for c in candidates
                 if (lead_score(c.get("name"), c.get("industry_code_hint")) or 0)>=2]
     def key(c):
         # Website listing is a modest plus, but relevance is more important.
         h = int.from_bytes(sha256((day+"|"+c["business_id"]).encode()).digest()[:8],"big")
-        return (-lead_score(c["name"], c.get("industry_code_hint")),
+        industry=str(c.get("industry_code_hint") or "")[:2]
+        item=weights.get(industry,{})
+        boost=item.get("boost",0) if isinstance(item,dict) else 0
+        count=item.get("count",0) if isinstance(item,dict) else 0
+        if not isinstance(count,int) or count<8 or not isinstance(boost,int):
+            boost=0
+        boost=max(-4,min(4,boost))
+        return (-(lead_score(c["name"], c.get("industry_code_hint"))*10+boost),
                 -int(bool(c.get("website_listed_url"))), h)
     eligible.sort(key=key)
     # Interleave known and unknown URL where source metadata allows it.
