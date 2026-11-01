@@ -160,6 +160,11 @@ class EvidenceAndDeliveryTests(unittest.TestCase):
         self.assertEqual(result["counts"]["discovered"], 3)
         self.assertEqual(result["counts"]["contacted"], 1)
         self.assertEqual(result["counts"]["won"], 1)
+        self.assertEqual(result["counts"]["delivered"], 0,
+                         "A customer-acceptance flag without tested CMS handover must not count.")
+        self.assertIsNone(funnel_metrics({"x": {"sale": {"status": "won",
+            "source_verified": False}, "delivery": {"customer_acceptance": True}}})
+            ["conversion_rates"]["delivered_per_won_pct"])
         self.assertEqual(result["conversion_rates"]["won_per_contacted_pct"], 100.0)
         self.assertIsNone(funnel_metrics({})["conversion_rates"]["won_per_contacted_pct"])
 
