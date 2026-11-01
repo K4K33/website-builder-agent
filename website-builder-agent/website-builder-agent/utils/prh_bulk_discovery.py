@@ -33,7 +33,7 @@ PRH_SOURCE = "https://avoindata.prh.fi/fi/ytj/swagger-ui"
 MAX_ZIP_BYTES = 650 * 1024 * 1024
 MAX_UNPACKED_BYTES = 3 * 1024 * 1024 * 1024
 MAX_HISTORY = 250_000
-MAX_BATCH = 5000
+MAX_BATCH = 10000
 MAX_SHORTLIST = 50
 
 
@@ -221,7 +221,7 @@ def _offer(heap, item, max_size):
         heapq.heapreplace(heap, (neg_score, identity, company))
 
 
-def rank_bulk(records, *, day, seen=(), max_candidates=5000, shortlist_size=50):
+def rank_bulk(records, *, day, seen=(), max_candidates=5000, shortlist_size=50, feedback_weights=None):
     if not 1 <= max_candidates <= MAX_BATCH or not 1 <= shortlist_size <= MAX_SHORTLIST:
         raise ValueError("Invalid batch/shortlist limits")
     old = set(seen)
@@ -256,7 +256,7 @@ def rank_bulk(records, *, day, seen=(), max_candidates=5000, shortlist_size=50):
         selected += [v[2] for v in rest[:max_candidates-len(selected)]]
     # Re-rank across all qualified sectors and website categories.
     # PRH often leaves the website field empty; never invent a real website.
-    shortlist = choose_shortlist(selected, shortlist_size, day.isoformat())
+    shortlist = choose_shortlist(selected, shortlist_size, day.isoformat(), weights=feedback_weights)
     return {
         "scanned_registry_records": scanned,
         "valid_registry_records": valid,
@@ -343,13 +343,17 @@ def research_queue_md(shortlist, day):
 
 def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
         seen_path="data/prh_seen_ids.json", day=None,
-        max_candidates=5000, shortlist_size=50, get=requests.get):
+        max_candidates=5000, shortlist_size=50, feedback_file=None, get=requests.get):
     if mode not in ("offline", "fixture", "pilot-live"):
         raise ValueError("Unsupported mode")
     today = day or date.today()
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     seen = _read_seen(seen_path)
+    try:
+        feedback_weights=json.loads(Path(feedback_file).read_text(encoding="utf-8")) if feedback_file else {}
+        if not isinstance(feedback_weights,dict):feedback_weights={}
+    except (ValueError,OSError,TypeError):feedback_weights={}
     network_calls = 0
     with tempfile.TemporaryDirectory(prefix="prh-bulk-") as tmp:
         if mode == "pilot-live":
@@ -367,7 +371,8 @@ def run(*, mode="offline", archive=None, output_dir="output/nightly-prh",
         if zip_path:
             result = rank_bulk(iter_bulk_records(zip_path), day=today,
                                seen=seen, max_candidates=max_candidates,
-                               shortlist_size=shortlist_size)
+                               shortlist_size=shortlist_size,
+                               feedback_weights=feedback_weights)
         else:
             result = rank_bulk((), day=today, seen=seen,
                                max_candidates=max_candidates,
@@ -423,11 +428,13 @@ def main(argv=None):
     parser.add_argument("--seen-path", default="data/prh_seen_ids.json")
     parser.add_argument("--max-candidates", type=int, default=5000)
     parser.add_argument("--shortlist-size", type=int, default=50)
+    parser.add_argument("--feedback-file", default=None)
     args = parser.parse_args(argv)
     print(json.dumps(run(mode=args.mode, archive=args.archive,
                          output_dir=args.output_dir, seen_path=args.seen_path,
                          max_candidates=args.max_candidates,
-                         shortlist_size=args.shortlist_size), ensure_ascii=False))
+                         shortlist_size=args.shortlist_size,
+                         feedback_file=args.feedback_file), ensure_ascii=False))
 
 
 if __name__ == "__main__":
