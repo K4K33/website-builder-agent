@@ -112,6 +112,37 @@ Näytä vain VERIFIED FACTS -osiossa olevat yhteystiedot.
 DESIGN:
 
 
+PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
+- Älä numeroi tavallisia palvelukortteja, osioita, etikettejä, otsikoita
+  tai navigaatiota ("01 /", "02 /", "03 /" ja vastaavat). Se näyttää
+  toistuessaan keinotekoiselta ja mallipohjalta. Numeroita saa käyttää
+  aidosti järjestyksellisessä prosessissa (esim. kolme työvaihetta),
+  ei jokaisen otsikon koristeena.
+- Säilytä ja käytä asiakkaan oikeaa, vahvistettua bränditunnusta.
+  Älä keksi asiakkaalle uutta kuvaketta, merkkiä, tähtisymbolia tai
+  feikkilogoa vain siksi, että editori osaa generoida SVG:n. Jos
+  alkuperäistä logoa ei voi käyttää, näytä selkeä asiakkaan nimi
+  typografisesti ja merkitse oikea logo korvattavaksi ennen hyväksyntää.
+- Brändin säilyttäminen tarkoittaa alkuperäisiä värejä, nimeä,
+  tunnistettavaa logoa ja lukittuja fraaseja, EI vanhan sivun ulkoasun
+  tai rakenteen kopiointia. Tee tarvittaessa vahva uudelleensuunnittelu.
+- Poimi oikeista toimialan vertailusivustoista etenkin navigaation,
+  typografian, sisällön sijoittelun ja liikkeen laatutaso. Älä kopioi
+  niiden materiaaleja.
+- Suunnittele liike tarkoituksella: sivun avaus, navigaation tilat,
+  kuvan/kortin hover, hallittu sisääntulo, responsiiviset siirtymät.
+  Optimoi transform/opacity, tue reduced-motion ja varmista, ettei
+  animaatio peitä sisältöä ilman JavaScriptiä.
+- Päävalikko on selkeä ja käyttäjän tehtäviin perustuva. Älä piilota
+  olennaisia palveluita loputtoman yhden sivun vierityksen taakse.
+  Tämän nykyisen builderin toimitusmuoto on SILTI vain yksi HTML-tiedosto;
+  monisivuinen todellinen URL-toteutus vaatii erillisen hyväksytyn
+  monisivuista buildia tukevan toteutuspolun. Älä väitä yksisivuista
+  prototyyppiä monisivuiseksi premium-asiakastoimitukseksi.
+- Human reviewer MUST reject a technically passing but visibly generic
+  output. Visual review includes actual 320/390/768/1440 screenshots,
+  the menu, user flows and genuinely customer-specific brand identity.
+
 VISUAALISEN LAADUN PYSYVÄ V3-SÄÄNTÖ (koskee KAIKKIA uusia asiakasdemoja):
 Värien pitää näyttää tarkoituksellisilta, kirkkailta ja teräviltä,
 ei harmaalta, samealta tai automaattisten mallipohjien geneeriseltä.
@@ -243,6 +274,37 @@ DESIGN-RECOMMENDATIONS eivät ole yrityksen faktoja.
 
 Jos tieto puuttuu, jätä se pois.
 
+
+PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
+- Älä numeroi tavallisia palvelukortteja, osioita, etikettejä, otsikoita
+  tai navigaatiota ("01 /", "02 /", "03 /" ja vastaavat). Se näyttää
+  toistuessaan keinotekoiselta ja mallipohjalta. Numeroita saa käyttää
+  aidosti järjestyksellisessä prosessissa (esim. kolme työvaihetta),
+  ei jokaisen otsikon koristeena.
+- Säilytä ja käytä asiakkaan oikeaa, vahvistettua bränditunnusta.
+  Älä keksi asiakkaalle uutta kuvaketta, merkkiä, tähtisymbolia tai
+  feikkilogoa vain siksi, että editori osaa generoida SVG:n. Jos
+  alkuperäistä logoa ei voi käyttää, näytä selkeä asiakkaan nimi
+  typografisesti ja merkitse oikea logo korvattavaksi ennen hyväksyntää.
+- Brändin säilyttäminen tarkoittaa alkuperäisiä värejä, nimeä,
+  tunnistettavaa logoa ja lukittuja fraaseja, EI vanhan sivun ulkoasun
+  tai rakenteen kopiointia. Tee tarvittaessa vahva uudelleensuunnittelu.
+- Poimi oikeista toimialan vertailusivustoista etenkin navigaation,
+  typografian, sisällön sijoittelun ja liikkeen laatutaso. Älä kopioi
+  niiden materiaaleja.
+- Suunnittele liike tarkoituksella: sivun avaus, navigaation tilat,
+  kuvan/kortin hover, hallittu sisääntulo, responsiiviset siirtymät.
+  Optimoi transform/opacity, tue reduced-motion ja varmista, ettei
+  animaatio peitä sisältöä ilman JavaScriptiä.
+- Päävalikko on selkeä ja käyttäjän tehtäviin perustuva. Älä piilota
+  olennaisia palveluita loputtoman yhden sivun vierityksen taakse.
+  Tämän nykyisen builderin toimitusmuoto on SILTI vain yksi HTML-tiedosto;
+  monisivuinen todellinen URL-toteutus vaatii erillisen hyväksytyn
+  monisivuista buildia tukevan toteutuspolun. Älä väitä yksisivuista
+  prototyyppiä monisivuiseksi premium-asiakastoimitukseksi.
+- Human reviewer MUST reject a technically passing but visibly generic
+  output. Visual review includes actual 320/390/768/1440 screenshots,
+  the menu, user flows and genuinely customer-specific brand identity.
 
 VISUAALISEN LAADUN PYSYVÄ V3-SÄÄNTÖ (koskee KAIKKIA uusia asiakasdemoja):
 Värien pitää näyttää tarkoituksellisilta, kirkkailta ja teräviltä,
