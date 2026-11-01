@@ -1,6 +1,8 @@
 # Kaurivo Premium Design Standard V4 — brand-led and genuinely bespoke
 
-**Applies to all new premium pitches, revisions, previews, developer handoffs and QA.**
+**Applies to ALL clients: new premium pitches, revisions, previews, developer handoffs and QA.**
+**Mandatory per-client checklist:** `docs/KAURIVO_GLOBAL_DESIGN_QA_CHECKLIST.md`.
+Every real preview must receive a recorded PASS / FIX / N/A review; no score alone establishes production readiness.
 Derived from the 2026-11-01 Kotifixi owner-feedback and observed iPhone screen recording.
 This is a written acceptance standard, not evidence that every current auto-generated
 website already meets it.
@@ -42,6 +44,28 @@ Until a separate multi-page build/QA output contract is implemented, create
 multi-page demonstrations through a separate reviewed workflow and do not claim
 automatic agent parity. Never alter output format by prompt-only edits that
 would break QA, preview or the existing stable pipeline.
+
+## Cross-industry, human-first visual clarity and conversion gate
+
+- In the **first mobile viewport**, show what the business does, who it serves
+  and the next useful action in plain words. Brand slogans alone cannot
+  replace the offer. Reveal actual verified services early.
+- Prevent *generic premium aesthetic*: symbolic fake logos, luxury lifestyle
+  images unrelated to the work, repeated micro-labels and filler headings
+  undermine authenticity. Customer-owned authentic visual materials take
+  priority when rights and approval are verified.
+- Give one coherent, clearly named primary action per context. Make contact
+  and booking paths genuinely usable; test submissions if advertised.
+- Review **every link destination** in context, especially external pricing
+  pages, stale legacy-site URLs, contact endpoints and phone numbers.
+  A legacy link is acceptable only if correctly labeled and intentional.
+- Verify actual first-load/cold-start behavior on realistic hosting; a free
+  preview's slow startup is a demo problem, not an acceptable production
+  performance promise. Benchmarking must use real measurements and declare
+  device/network.
+- Independent AI review is evidence only when a distinct real reviewer/model
+  has actually reviewed the supplied artifact. Do not fabricate opinions,
+  prices or analysis. Human brand/customer approval remains necessary.
 
 ## Motion and visual polish
 
