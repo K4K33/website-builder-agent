@@ -70,7 +70,11 @@ jobs:
       RESEARCH_MODEL: ${{ vars.RESEARCH_MODEL }}
       BUILDER_MODEL: ${{ vars.BUILDER_MODEL }}
       QA_MODEL: ${{ vars.QA_MODEL }}
-      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      # Old shared Tavily secret intentionally retired. This legacy manual
+      # live pipeline does not use the new Kaurivo nightly API credential.
+      # Search features here must remain off until separately redesigned
+      # with the same atomic credit budgeting and explicit approval.
+      TAVILY_API_KEY: ""
       OPENROUTER_DAILY_LIMIT: '15'
       OPENROUTER_SAFETY_MARGIN: '2'
       TAVILY_MONTHLY_LIMIT: '12'
