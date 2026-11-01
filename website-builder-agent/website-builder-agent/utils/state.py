@@ -28,6 +28,7 @@ def _ensure_file():
         config.DATA_DIR,
         exist_ok=True,
     )
+    os.makedirs(os.path.dirname(os.path.abspath(config.COMPANIES_FILE)), exist_ok=True)
 
     if not os.path.exists(
         config.COMPANIES_FILE
@@ -144,7 +145,12 @@ def save_companies(data: dict) -> None:
         data
     )
 
-    descriptor, temporary = tempfile.mkstemp(dir=config.DATA_DIR, prefix="companies-", suffix=".tmp")
+    # The state file may be configured in another directory/volume (tests,
+    # backup restore or a mounted data directory). os.replace is atomic only
+    # when the staging file and final destination share a filesystem.
+    target_dir = os.path.dirname(os.path.abspath(config.COMPANIES_FILE))
+    os.makedirs(target_dir, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(dir=target_dir, prefix="companies-", suffix=".tmp")
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as file:
             json.dump(normalized, file, ensure_ascii=False, indent=2)
