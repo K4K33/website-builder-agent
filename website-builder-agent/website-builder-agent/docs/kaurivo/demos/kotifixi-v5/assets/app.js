@@ -27,16 +27,47 @@
   } else nodes.forEach(n=>n.classList.add('is-visible'));
   document.querySelectorAll('img').forEach(img => {img.addEventListener('error',()=>img.classList.add('image-unavailable'));if(img.complete&&!img.naturalWidth)img.classList.add('image-unavailable');});
   const form=document.getElementById('contact-form');
-  if(form)form.addEventListener('submit',e=>{
-    e.preventDefault();
-    if(!form.reportValidity())return;
-    const data=new FormData(form);
-    const name=String(data.get('name')||'').trim(),email=String(data.get('email')||'').trim(),service=String(data.get('service')||'').trim(),message=String(data.get('message')||'').trim();
-    if(!name||!email||!service||!message)return;
-    const subject=encodeURIComponent('Kotifixi – yhteydenotto: '+service);
-    const body=encodeURIComponent('Hei Kotifixi!\n\nPalvelu: '+service+'\n\n'+message+'\n\nNimi: '+name+'\nSähköposti: '+email);
+  if(form){
+    const startedAt=Date.now();
+    let sending=false;
     const status=document.getElementById('form-status');
-    if(status)status.textContent='Sähköpostisovellus avautuu. Varmista lähettäminen itse.';
-    window.location.href='mailto:kotifixi@gmail.com?subject='+subject+'&body='+body;
-  });
+    const button=form.querySelector('button[type="submit"]');
+    const endpoint='https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-kotifixi-demo-contact';
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      if(sending||!form.reportValidity())return;
+      const fd=new FormData(form);
+      const payload={
+        name:String(fd.get('name')||'').trim(),
+        email:String(fd.get('email')||'').trim(),
+        service:String(fd.get('service')||'').trim(),
+        message:String(fd.get('message')||'').trim(),
+        website:String(fd.get('website')||''),
+        test_consent:fd.get('test_consent')==='on',
+        started_at:startedAt
+      };
+      if(!payload.test_consent)return;
+      sending=true;
+      if(button){button.disabled=true;button.textContent='Lähetetään…';}
+      if(status){status.dataset.status='';status.textContent='Tallennetaan testiviestiä…';}
+      try{
+        const response=await fetch(endpoint,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(payload),cache:'no-store'
+        });
+        const result=await response.json();
+        if(!response.ok||result.ok!==true||!result.reference)
+          throw new Error(result.error||'Tallennusta ei vahvistettu.');
+        if(status){status.dataset.status='success';status.textContent='Testiviesti tallennettu onnistuneesti Kaurivon testiympäristöön. Tunnus: '+String(result.reference).slice(0,8)+'. Viestiä ei lähetetty Kotifixille.';}
+        form.reset();
+        if(button)button.textContent='Testiviesti tallennettu';
+      }catch(error){
+        if(status){status.dataset.status='error';status.textContent='Lähetys epäonnistui: '+String(error.message||'Yritä uudelleen.');}
+        if(button)button.textContent='Lähetä testiviesti';
+      }finally{
+        sending=false;
+        if(button)button.disabled=false;
+      }
+    });
+  }
 })();
