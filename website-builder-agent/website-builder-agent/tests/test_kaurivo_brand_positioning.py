@@ -43,6 +43,14 @@ class KaurivoPositioningTests(unittest.TestCase):
         ]:
             self.assertLess(first_contact.index(intro), first_contact.index(observation))
 
+    def test_prospect_can_open_company_site_without_searching(self):
+        js = (ASSET / "crm.js").read_text(encoding="utf-8")
+        translations = (ASSET / "i18n.js").read_text(encoding="utf-8")
+        site = "https://k4k33.github.io/website-builder-agent/kaurivo/"
+        self.assertIn(site + "?lang=fi", js)
+        self.assertGreaterEqual(js.count(site), 3)
+        self.assertIn('new URLSearchParams(location.search).get("lang")==="fi"', translations)
+
     def test_website_clarifies_new_sites_and_redesigns_in_two_languages(self):
         html = HOME.read_text(encoding="utf-8")
         translations = (ASSET / "i18n.js").read_text(encoding="utf-8")
