@@ -143,6 +143,31 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
 
+YLEINEN V6-KORJAUS ASIAKASPALAUTTEESTA:
+- Vältä sekalaisia eri vuodenaikojen, valaistusten ja tyylien
+  kuvapankkikuvia. Valitse yhtenäinen kuvallinen linja tai
+  käytä huomattavasti vähemmän kuvia. Älä esitä toisen
+  firman logoa tai työntekijää asiakkaan omana.
+- Asiakkaan oikeat logot, omat luvalliset kuvat ja iskulauseet
+  säilytetään, mutta iskulausetta ei toisteta kaikkialla.
+- ÄLÄ laita koristeellista nuolta jokaiseen korttiin,
+  painikkeeseen, sähköpostilinkkiin tai yhteystietoon.
+  Oletus on NOLLA koristeellista nuolta; käyttäjälle
+  kertoo painettavuudesta oikea painike- ja linkkityyli.
+- Vähennä päällekkäiset yhteydenottopainikkeet. Listaa
+  palvelut selkeästi ja ohjaa sitten yhdestä näkyvästä
+  toiminnosta todelliseen yhteydenottokanavaan.
+- Lomake, joka väittää lähettävänsä tietoa mutta avaa
+  pelkän mailto-sähköpostiohjelman, on HYLÄTTÄVÄ.
+  Hyväksy vain testattu serveritallennus ja kuitattu
+  vastaanotto tai selvästi erillinen suora mailto-linkki
+  ilman feikkilomaketta. Demo vastaanottaja tulee
+  merkitä, eikä yhteystietoja voi reitittää asiakkaalle
+  ilman tämän lupaa.
+- Varmista lomakkeen oikea POST, serverivastaus sekä
+  selaimessa näkyvä onnistumis- ja virhetila.
+  Pelkkä koodi tai ulkoasun arvio ei todista toimitusta.
+
 YLEINEN KUVA- JA SIIRTYMÄLAADUN TARKISTUS:
 - Samaa toimituksellista valokuvaa ei tule käyttää sankarikuvassa,
   palvelukortissa ja palvelun lisätietosivulla. Etsi uniikit,
@@ -344,6 +369,31 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
 - Human reviewer MUST reject a technically passing but visibly generic
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
+
+YLEINEN V6-KORJAUS ASIAKASPALAUTTEESTA:
+- Vältä sekalaisia eri vuodenaikojen, valaistusten ja tyylien
+  kuvapankkikuvia. Valitse yhtenäinen kuvallinen linja tai
+  käytä huomattavasti vähemmän kuvia. Älä esitä toisen
+  firman logoa tai työntekijää asiakkaan omana.
+- Asiakkaan oikeat logot, omat luvalliset kuvat ja iskulauseet
+  säilytetään, mutta iskulausetta ei toisteta kaikkialla.
+- ÄLÄ laita koristeellista nuolta jokaiseen korttiin,
+  painikkeeseen, sähköpostilinkkiin tai yhteystietoon.
+  Oletus on NOLLA koristeellista nuolta; käyttäjälle
+  kertoo painettavuudesta oikea painike- ja linkkityyli.
+- Vähennä päällekkäiset yhteydenottopainikkeet. Listaa
+  palvelut selkeästi ja ohjaa sitten yhdestä näkyvästä
+  toiminnosta todelliseen yhteydenottokanavaan.
+- Lomake, joka väittää lähettävänsä tietoa mutta avaa
+  pelkän mailto-sähköpostiohjelman, on HYLÄTTÄVÄ.
+  Hyväksy vain testattu serveritallennus ja kuitattu
+  vastaanotto tai selvästi erillinen suora mailto-linkki
+  ilman feikkilomaketta. Demo vastaanottaja tulee
+  merkitä, eikä yhteystietoja voi reitittää asiakkaalle
+  ilman tämän lupaa.
+- Varmista lomakkeen oikea POST, serverivastaus sekä
+  selaimessa näkyvä onnistumis- ja virhetila.
+  Pelkkä koodi tai ulkoasun arvio ei todista toimitusta.
 
 YLEINEN KUVA- JA SIIRTYMÄLAADUN TARKISTUS:
 - Samaa toimituksellista valokuvaa ei tule käyttää sankarikuvassa,
