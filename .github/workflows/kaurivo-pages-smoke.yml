@@ -62,7 +62,7 @@ jobs:
                 case "${target}" in
                   "") marker='class="hero-actions"' ;;
                   "palvelut/") marker='class="service-row"' ;;
-                  "hinnasto/") marker='class="pricing-grid"' ;;
+                  "hinnasto/") marker='pricing-grid' ;;
                   "meista/") marker='class="about-photo"' ;;
                   "yhteys/") marker='id="contact-form"' ;;
                   "assets/style.css") marker='--container:1240px' ;;
