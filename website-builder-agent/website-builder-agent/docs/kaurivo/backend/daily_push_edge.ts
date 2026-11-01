@@ -139,7 +139,7 @@ async function recordMorningEvent(day:string,outcome:"success"|"failure"|"skippe
 async function notifyDaily(event:string,source:"morning"|"national"):Promise<Response>{
  const day=helsinkiDay();
  // Accept delayed GitHub schedules later in the morning, rather than silently missing a day.
- if(event==="schedule"&&source==="morning"&&(helsinkiHour()<8||helsinkiHour()>12))
+ if(event==="schedule"&&source==="morning"&&(helsinkiHour()<8||helsinkiHour()>22))
   return reply(200,{ok:true,skipped:"outside_morning_helsinki",day});
  // Nightly PRH may finish late: never alert before 08:00, but deliver as
  // soon as the verified list lands when that happens after 08:00.
