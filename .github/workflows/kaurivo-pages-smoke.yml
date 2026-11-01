@@ -50,3 +50,35 @@ jobs:
             fi
           done
           echo "Live Kaurivo admin and PWA files are accessible." >> "$GITHUB_STEP_SUMMARY"
+          preview="https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v7/"
+          for target in "" "palvelut/" "hinnasto/" "meista/" "yhteys/" "assets/style.css" "assets/app.js"; do
+            url="${preview}${target}"
+            echo "Checking Kotifixi V7 deployed URL: ${url}"
+            ok="false"
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl --max-time 15 -sSL -o /tmp/kotifixi-v7-live -w '%{http_code}' "${url}" || true)
+              echo "Attempt ${attempt}: HTTP ${code}"
+              if [[ "${code}" == "200" ]]; then
+                case "${target}" in
+                  "") marker='class="hero-actions"' ;;
+                  "palvelut/") marker='class="service-row"' ;;
+                  "hinnasto/") marker='pricing-grid' ;;
+                  "meista/") marker='class="about-photo"' ;;
+                  "yhteys/") marker='id="contact-form"' ;;
+                  "assets/style.css") marker='--container:1240px' ;;
+                  "assets/app.js") marker='kaurivo-kotifixi-demo-contact' ;;
+                esac
+                if grep -Fq "${marker}" /tmp/kotifixi-v7-live; then
+                  ok="true"
+                  break
+                fi
+              fi
+              sleep 5
+            done
+            if [[ "${ok}" != "true" ]]; then
+              echo "::error::Kotifixi V7 URL missing, stale or inaccessible: ${url}"
+              exit 1
+            fi
+          done
+          echo "Kotifixi V7 home, subpages, CSS and contact JS are live." >> "$GITHUB_STEP_SUMMARY"
+
