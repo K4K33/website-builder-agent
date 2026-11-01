@@ -230,13 +230,64 @@
   }finally{b.disabled=false;}
  }
 
+
+ const languageNames={undetermined:"Ei tarkistettu",fi:"Suomi",sv:"Ruotsi",en:"Englanti",
+   fi_sv:"Suomi ja ruotsi"};
+ function swedishLanguageHint(c){
+  const name=String(c.company_name||"");
+  const place=String(c.city_hint||"").toUpperCase();
+  return /\bAb\b|Bostads|Busstrafik|Restaurangdrift|Försäljning|Norrgård|Västra/i.test(name)||
+   /JOMALA|MAARIANHAMINA|MARIEHAMN|ECKERÖ|LUMPARLAND|SOTTUNGA|ÅLAND/.test(place);
+ }
+ function companyHasMatchingObservation(c){
+  if(!c.language_evidence_url)return false;
+  const value=c.contact_language==="sv"?c.outreach_observation_sv:
+    c.contact_language==="en"?c.outreach_observation_en:
+    c.contact_language==="fi"?c.outreach_observation:"";
+  return String(value||"").trim().length>=20;
+ }
  function personalizedOutreachDraft(company){
+  const language=String(company.contact_language||"undetermined");
+  const observations={
+   fi:String(company.outreach_observation||"").trim(),
+   sv:String(company.outreach_observation_sv||"").trim(),
+   en:String(company.outreach_observation_en||"").trim()
+  };
   if(company.marketing_opt_out || company.outreach_review!=="human_approved" ||
      company.business_activity_assessment!=="active_evidence" ||
-     !company.evidence_url ||
-     String(company.outreach_observation||"").trim().length<20)
-     throw Error("Lainmukainen, lähteisiin perustuva yhteydenotto ei ole vielä hyväksytty.");
-  const observation=String(company.outreach_observation).trim();
+     !company.evidence_url || !company.language_evidence_url ||
+     !["fi","sv","en"].includes(language) ||
+     observations[language].length<20)
+     throw Error("Viestin kieli, oma havainto, lähteet ja laillisuustarkistus on vahvistettava ensin.");
+  const observation=observations[language];
+  if(language==="sv")return [
+    "Hej!",
+    "",
+    "Jag har tittat närmare på "+company.company_name+" och er webbplats. Jag lade märke till en konkret förbättringsmöjlighet: "+observation,
+    "",
+    "Jag heter Kaarlo och kommer från Kaurivo. Vi skapar moderna, snabba och lättanvända webbplatser som företaget också kan uppdatera själv.",
+    "",
+    "Jag skulle gärna visa en kort idé som utgår från er verksamhet och ert nuvarande varumärke. Skulle det vara intressant?",
+    "",
+    "Med vänliga hälsningar",
+    "Kaarlo från Kaurivo",
+    "",
+    "Om ni inte vill få fler marknadsföringsmeddelanden från Kaurivo kan ni svara på detta mejl med: ingen mer kontakt."
+   ].join("\n");
+  if(language==="en")return [
+    "Hello,",
+    "",
+    "I looked at "+company.company_name+"'s online presence and noticed a specific opportunity for improvement: "+observation,
+    "",
+    "I'm Kaarlo from Kaurivo. We create tailored, fast and easy-to-manage websites that companies can also update themselves.",
+    "",
+    "I'd be happy to share a short concept based on your services and existing brand. Would that be of interest?",
+    "",
+    "Best regards",
+    "Kaarlo from Kaurivo",
+    "",
+    "If you would prefer not to receive further marketing emails from Kaurivo, simply reply to this message with: no further contact."
+   ].join("\n");
   return [
    "Hei,",
    "",
@@ -260,10 +311,20 @@
    "Alue: "+(c.city_hint||"vahvistettava"),
    "Toimialatieto (PRH): "+(c.industry_code_hint||"tuntematon"),
    "Nykyinen verkkosivuehdotus: "+url,
+   "TARKISTETTU DEMON SIVUSTOKIELI: "+(languageNames[c.website_languages||"undetermined"]||"Tarkistettava"),
+   "TARKISTETTU YHTEYDENOTTOKIELI: "+(languageNames[c.contact_language||"undetermined"]||"Tarkistettava"),
+   "Kielen lähde: "+(c.language_evidence_url||"LISÄÄ KIELEN LÄHDE"),
    "Lähteet: "+(c.evidence_url||"LISÄÄ LÄHDE"),
    "",
    "1. VAHVISTA TOSIASIAT: yrityksen toiminta, palvelut, toimialan erityispiirteet, todellinen sivusto ja brändin oikeudet.",
-   "2. KOLME VERTAILUKOHTAA: etsi 3 saman toimialan vahvaa sivustoa; dokumentoi navigaatio, ulkoasu ja luottamuselementit.",
+   "2. KOLME VERTAILUKOHTAA: etsi 3 saman toimialan vahvaa sivustoa oikealla asiakaskielellä; dokumentoi navigaatio, ulkoasu ja luottamuselementit.",
+   (c.website_languages==="sv"?
+      "KIELIOHJE: toteuta koko asiakassivusto ja sisältö ruotsiksi (sv). Käytä luonnollista yrityksen toimialan sanastoa; älä julkaise suomenkielisiä paikkatekstejä.":
+    c.website_languages==="fi_sv"?
+      "KIELIOHJE: toteuta erilliset ruotsin- ja suomenkieliset sivut, näkyvä FI/SV-kielivalitsin, molemmilla kielillä koko navigaatio, lomakkeet, metatiedot ja omat URL:t.":
+    c.website_languages==="en"?
+      "KIELIOHJE: sivuston ensisijainen kieli on englanti; kaikki sivut, lomakkeet ja metatiedot vastaavat valittua kieltä.":
+      "KIELIOHJE: toteuta sivusto suomeksi vasta asiakaskielen erillisen vahvistuksen jälkeen."),
    "3. EHDOTUS: kirkas arvolupaus, mobiilikäyttö, toimiva yhteydenottoreitti ja relevantein palvelurakenne.",
    "4. SISÄLTÖ: vain julkisesti todennetut yritysfaktat, ei keksittyjä arvosteluja tai palveluita.",
    "5. TOTEUTUS: premium-yksilöllinen sivusto, responsiivisuus, nopeus, esteettömyys sekä asiakkaan CMS-muokattavuus.",
@@ -275,8 +336,9 @@
  }
  function prepareDemoBrief(c){
    if(!c.evidence_url||!["weak_evidence","none_confirmed"].includes(c.website_assessment)||
-      c.business_activity_assessment!=="active_evidence"||c.customer_need==="unknown"){
-     toast("Vahvista ensin sivuston tarve, aktiivisuus ja tutkimuksen lähde ennen demobriefiä.","error");
+      c.business_activity_assessment!=="active_evidence"||c.customer_need==="unknown"||
+      !c.language_evidence_url || !c.website_languages || c.website_languages==="undetermined"){
+     toast("Vahvista ensin sivuston tarve, aktiivisuus, kielivalinta ja niiden lähteet ennen demobriefiä.","error");
      openEditor("prospect",c);return;
    }
    openEditor("prospect",c);
@@ -352,6 +414,13 @@
    find.href=findUrl.href;find.target="_blank";find.rel="noopener noreferrer";
    append(row.main,"div","record-sub","Toimiala: "+(candidate.industry_code_hint||"ei tietoa")+" · Lähde PRH/YTJ CC BY 4.0");
    if(candidate.research_notes)append(row.main,"div","record-note",candidate.research_notes);
+   append(row.main,"div","record-sub","Yhteydenottokieli: "+
+     (languageNames[candidate.contact_language||"undetermined"]||"Tarkistamatta")+
+     " · Sivustokielet: "+
+     (languageNames[candidate.website_languages||"undetermined"]||"Tarkistamatta"));
+   if(candidate.contact_language==="undetermined"&&swedishLanguageHint(candidate))
+    append(row.main,"div","record-warning",
+      "Ruotsin kieli mahdollinen · tarkista yrityksen oma kieli ennen yhteydenottoa tai demoa. Nimi ja paikkakunta eivät yksin todista kieltä.");
    const score=leadEvidenceScore(candidate);
    append(row.main,"div","record-sub",score===null
      ?"Asiakasprioriteetti: tiedot tarkistamatta"
@@ -371,8 +440,7 @@
    if(candidate.review_status!=="skipped"&&!candidate.marketing_opt_out)
     row.actions.append(button("Valmistele demobrief",()=>prepareDemoBrief(candidate)));
    if(candidate.outreach_review==="human_approved" && !candidate.marketing_opt_out &&
-      candidate.business_activity_assessment==="active_evidence" &&
-      String(candidate.outreach_observation||"").trim().length>=20)
+      candidate.business_activity_assessment==="active_evidence" && companyHasMatchingObservation(candidate))
     row.actions.append(button("Kopioi tarkistettu viestiluonnos",async()=>{
      try{
       const draft=personalizedOutreachDraft(candidate);
@@ -470,7 +538,12 @@
    ["evidence_url","Havaintojen julkinen lähdelinkki (https://...)","url"],
    ["demo_stage","Demobriefin vaihe","choice",true,["not_started","brief_prepared","reviewed"]],
    ["demo_brief","Sisäinen demobrief ja QA-ohje","textarea"],
-   ["outreach_observation","Yksilöllinen havainto yrityksestä (tarkistettu, ei keksitty)","textarea"],
+   ["contact_language","Yhteydenottokieli (tarkista yrityksen omista tiedoista)","choice",true,["undetermined","fi","sv","en"]],
+   ["website_languages","Demon sivustokielet","choice",true,["undetermined","fi","sv","fi_sv","en"]],
+   ["language_evidence_url","Kielen lähde (yrityksen sivu tai rekisteritieto, HTTPS)","url"],
+   ["outreach_observation","Yksilöllinen havainto SUOMEKSI","textarea"],
+   ["outreach_observation_sv","Yksilöllinen havainto RUOTSIKSI (ruotsinkieliseen viestiin)","textarea"],
+   ["outreach_observation_en","Yksilöllinen havainto ENGLANNIKSI","textarea"],
    ["outreach_review","Yhteydenoton lainmukaisuuden tarkistus","choice",true,["not_reviewed","needs_legal_review","human_approved","blocked"]],
    ["outreach_stage","Yhteydenoton vaihe (ei lähetä viestejä)","choice",true,["not_contacted","drafted","sent_manually","responded","won","opted_out"]],
    ["marketing_opt_out","Yritys on kieltänyt markkinoinnin","checkbox"],
@@ -534,7 +607,18 @@
   if(kind==="prospect"){
    data.research_notes=data.research_notes||"";
    data.outreach_observation=data.outreach_observation||"";
-   if(data.outreach_observation.length>600){toast("Yksilöllinen havainto saa olla enintään 600 merkkiä.","error");return;}
+   data.outreach_observation_sv=data.outreach_observation_sv||"";
+   data.outreach_observation_en=data.outreach_observation_en||"";
+   data.language_evidence_url=data.language_evidence_url||"";
+   if([data.outreach_observation,data.outreach_observation_sv,data.outreach_observation_en].some(v=>v.length>600)){
+    toast("Yksilöllinen havainto saa olla enintään 600 merkkiä per kieli.","error");return;
+   }
+   if(data.language_evidence_url){
+    try{const u=new URL(data.language_evidence_url);
+     if(u.protocol!=="https:"||u.username||u.password||data.language_evidence_url.length>1200)
+      throw Error("invalid");
+    }catch(_){toast("Kielen lähteen pitää olla kelvollinen HTTPS-linkki.","error");return;}
+   }
    data.website_found_url=data.website_found_url||"";
    if(data.website_found_url){
     let u;
@@ -559,6 +643,10 @@
    if(observed.some(Boolean)&&!data.evidence_url){
     toast("Täytä lähdelinkki, kun vahvistat yrityksen arviointitietoja.","error");return;
    }
+   if(data.demo_stage!=="not_started"&&(
+      !data.language_evidence_url||data.website_languages==="undetermined")){
+    toast("Tarkista demon sivustokielet ja merkitse kielen lähde.","error");return;
+   }
    if(data.demo_stage!=="not_started"&&!data.demo_brief.trim()){
     toast("Kirjoita demobrief ennen valmisteluvaiheen tallentamista.","error");return;
    }
@@ -576,8 +664,9 @@
    }
    if(data.outreach_review==="human_approved"&&!data.marketing_opt_out){
     if(data.business_activity_assessment!=="active_evidence"||!data.evidence_url||
-      data.customer_need==="unknown"||String(data.outreach_observation||"").trim().length<20){
-     toast("Yhteydenottoa ei voi hyväksyä ilman aktiivisuuden, tarpeen, lähteen ja konkreettisen yksilöllisen havainnon tarkistusta.","error");return;
+      data.customer_need==="unknown"||data.contact_language==="undetermined"||
+      !data.language_evidence_url||!companyHasMatchingObservation(data)){
+     toast("Yhteydenotto vaatii tarkistetun kielen, oman kielisen havainnon, aktiivisuuden, tarpeen ja lähteet.","error");return;
     }
     if(!window.confirm("Vahvistatko, että vastaanottajatyyppi, soveltuva B2B-suoramarkkinoinnin laki, GDPR-tiedot, estolistat ja maksuton kielto-ohje on tarkistettu erikseen? Tämä EI lähetä viestiä."))return;
    }
