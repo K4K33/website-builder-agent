@@ -55,9 +55,15 @@ class BrowserPreviewTests(unittest.TestCase):
                                         self.assertEqual(response.status, 200)
                                         self.assertEqual(page.locator("h1").count(), 1)
                                         self.assertTrue(page.locator("h1").is_visible())
-                                        self.assertLessEqual(
-                                            page.evaluate("document.documentElement.scrollWidth - innerWidth"),
-                                            1)
+                                        width_error=page.evaluate("document.documentElement.scrollWidth - innerWidth")
+                                        if width_error>1:
+                                            offenders=page.evaluate("""() => [...document.querySelectorAll('*')]
+                                              .filter(e => e.getBoundingClientRect().right > innerWidth + 2)
+                                              .map(e => ({tag:e.tagName,cls:e.className, txt:(e.innerText||'').slice(0,35),
+                                                         right:Math.round(e.getBoundingClientRect().right),
+                                                         width:Math.round(e.getBoundingClientRect().width)})).slice(0,20)""")
+                                            print("OVERFLOW_DIAGNOSTIC",path,width,width_error,offenders,flush=True)
+                                        self.assertLessEqual(width_error,1)
                                         self.assertTrue(page.locator(".site-header a.brand").is_visible())
                                         self.assertEqual(page.locator(".desktop-nav a[href]").count(), 5)
                                         if width <= 768:

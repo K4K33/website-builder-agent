@@ -713,6 +713,31 @@ jotka kierrättävät käyttäjää ilman uutta tietoa.
 Älä väitä sivustonlaajuista tarkistusta tehdyksi, jos
 käytössä on vain yksittäisen sivun kuvakaappaus.
 
+YLEINEN V6-KORJAUS ASIAKASPALAUTTEESTA:
+- Vältä sekalaisia eri vuodenaikojen, valaistusten ja tyylien
+  kuvapankkikuvia. Valitse yhtenäinen kuvallinen linja tai
+  käytä huomattavasti vähemmän kuvia. Älä esitä toisen
+  firman logoa tai työntekijää asiakkaan omana.
+- Asiakkaan oikeat logot, omat luvalliset kuvat ja iskulauseet
+  säilytetään, mutta iskulausetta ei toisteta kaikkialla.
+- ÄLÄ laita koristeellista nuolta jokaiseen korttiin,
+  painikkeeseen, sähköpostilinkkiin tai yhteystietoon.
+  Oletus on NOLLA koristeellista nuolta; käyttäjälle
+  kertoo painettavuudesta oikea painike- ja linkkityyli.
+- Vähennä päällekkäiset yhteydenottopainikkeet. Listaa
+  palvelut selkeästi ja ohjaa sitten yhdestä näkyvästä
+  toiminnosta todelliseen yhteydenottokanavaan.
+- Lomake, joka väittää lähettävänsä tietoa mutta avaa
+  pelkän mailto-sähköpostiohjelman, on HYLÄTTÄVÄ.
+  Hyväksy vain testattu serveritallennus ja kuitattu
+  vastaanotto tai selvästi erillinen suora mailto-linkki
+  ilman feikkilomaketta. Demo vastaanottaja tulee
+  merkitä, eikä yhteystietoja voi reitittää asiakkaalle
+  ilman tämän lupaa.
+- Varmista lomakkeen oikea POST, serverivastaus sekä
+  selaimessa näkyvä onnistumis- ja virhetila.
+  Pelkkä koodi tai ulkoasun arvio ei todista toimitusta.
+
 PAKOLLINEN YLEINEN KAIKKIEN ASIAKKAIDEN VISUAALINEN TARKISTUS:
 Ensimmäinen mobiilinäkymä kertoo yrityksen vahvistetut palvelut,
 kohderyhmän ja ensisijaisen selkeän jatkotoimen. Vertaa todellista

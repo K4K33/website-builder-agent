@@ -58,6 +58,35 @@ mocked test, screenshot or design prompt never substitutes for browser evidence.
       current destination. Old-site links may be intentional, but must not be
       misleading or silently replace the new site's own promised content.
 
+## Shared V6 client-feedback guard: coherent imagery, restrained affordances, truthful forms
+
+- Each site's imagery MUST be art-directed as one coherent collection in
+  lighting, season, color grade, subject matter and composition. Mixing random
+  unrelated stock photos / branded employees from unrelated businesses is a
+  client-facing blocker. Owner-supplied licensed photos always take priority.
+  If real client photos are unavailable, prefer **fewer**, high-quality,
+  stylistically consistent illustrative images, accurately labeled; never
+  imply depicted models are the client's staff.
+- Assume **no decorative arrows** in every button, service card, contact
+  row or CTA. Only use an arrow when it conveys a genuine navigation/interaction
+  need and is selectively approved. Explicit destinations and actual click
+  styling are better than repeating arrow glyphs.
+- Contact UX must be task-based: visitors see services and optional prices,
+  then one clear enquiry path. Do not spam identical contact CTA buttons in
+  each card and content block; keep a single main CTA in each meaningful view.
+- Never ship a form that claims it sends the request but opens a prefilled
+  mailto composer. A form must POST to a tested backend and show confirmed
+  success/failure, or be explicitly replaced with honest direct phone/email
+  contact links. Draft/demo test endpoints must identify the recipient and
+  privacy context, and MUST NOT silently forward leads to a client.
+- Verify all form behaviors in a real browser and run a controlled synthetic
+  submission to confirm server-side receipt; do not claim functional form
+  delivery based only on CSS, JS tests, form validation or HTML.
+- Preserve real brand identity and locked slogans without using the
+  same tagline in repeated boxes/sections; preserve original client photos
+  by default unless explicitly approved otherwise. For customer-owned editing,
+  verify a real CMS editor independently; demos are not CMS deliveries.
+
 ## Quality of execution — BLOCKERS
 
 - [ ] Test with the **actual browser** on 320, 390, 768 and 1440 px,
