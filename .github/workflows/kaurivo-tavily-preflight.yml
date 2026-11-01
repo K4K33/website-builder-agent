@@ -18,6 +18,7 @@ jobs:
     env:
       # This is a BOOLEAN GitHub Actions expression, NEVER the secret.
       HAS_KAURIVO_TAVILY_SECRET: ${{ secrets.KAURIVO_TAVILY_API_KEY != '' }}
+      HAS_LEGACY_TAVILY_SECRET: ${{ secrets.TAVILY_API_KEY != '' }}
     steps:
       - name: Check secret is configured without revealing it or contacting Tavily
         shell: bash
@@ -27,5 +28,11 @@ jobs:
             echo "No Tavily calls, no search credits. Key validity is NOT verified."
           else
             echo "::error::KAURIVO_TAVILY_API_KEY is missing or empty in this repository."
+            exit 1
+          fi
+          if [[ "$HAS_LEGACY_TAVILY_SECRET" == "false" ]]; then
+            echo "PASS: Legacy TAVILY_API_KEY is NOT available to this workflow."
+          else
+            echo "::error::Legacy TAVILY_API_KEY still exists or is inherited by this workflow."
             exit 1
           fi
