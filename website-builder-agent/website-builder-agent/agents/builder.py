@@ -143,6 +143,21 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
 
+YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
+- Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat
+  saatavilla, olennaisia ja käyttöoikeudeltaan ihmisen vahvistamia.
+- Ellei sopivia ja luvallisia yrityskuvia ole, valitse laadukkaat,
+  keskenään yhtenäiset ja toimialaan osuvat ESIMERKKIKUVAT.
+- Älä esitä esimerkkikuvien henkilöitä asiakkaan henkilöstönä
+  tai esimerkkejä asiakkaan toteuttamina projekteina.
+- Jos demo käyttää esimerkkikuvia, sen lähetysviestissä
+  näkyy DEMOLINKIN/KUVAN ALLA lyhyt huomautus ja vapaaehtoinen
+  tarjous toimittaa omia kuvia lopullista sivustoa varten.
+  Jos kuvat ovat asiakkaan oikeita kuvia, älä kutsu niitä
+  esimerkkikuviksi. Yrityksen kuvia ei saa kopioida luvatta.
+- Tämän kuvahuomautuksen lisääminen ei ole automaattista
+  markkinointiviestin lähettämistä eikä pakollinen kuvapyyntö.
+
 YLEINEN V7-SUUNNITTELUSTANDARDI KAIKILLE ASIAKKAILLE:
 - Visuaalinen taso saa olla kunnianhimoinen ja persoonallinen ilman
   että se näyttää AI-mallipohjalta. Älä korvaa liiallista koristelua
@@ -392,6 +407,21 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
 - Human reviewer MUST reject a technically passing but visibly generic
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
+
+YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
+- Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat
+  saatavilla, olennaisia ja käyttöoikeudeltaan ihmisen vahvistamia.
+- Ellei sopivia ja luvallisia yrityskuvia ole, valitse laadukkaat,
+  keskenään yhtenäiset ja toimialaan osuvat ESIMERKKIKUVAT.
+- Älä esitä esimerkkikuvien henkilöitä asiakkaan henkilöstönä
+  tai esimerkkejä asiakkaan toteuttamina projekteina.
+- Jos demo käyttää esimerkkikuvia, sen lähetysviestissä
+  näkyy DEMOLINKIN/KUVAN ALLA lyhyt huomautus ja vapaaehtoinen
+  tarjous toimittaa omia kuvia lopullista sivustoa varten.
+  Jos kuvat ovat asiakkaan oikeita kuvia, älä kutsu niitä
+  esimerkkikuviksi. Yrityksen kuvia ei saa kopioida luvatta.
+- Tämän kuvahuomautuksen lisääminen ei ole automaattista
+  markkinointiviestin lähettämistä eikä pakollinen kuvapyyntö.
 
 YLEINEN V7-SUUNNITTELUSTANDARDI KAIKILLE ASIAKKAILLE:
 - Visuaalinen taso saa olla kunnianhimoinen ja persoonallinen ilman
