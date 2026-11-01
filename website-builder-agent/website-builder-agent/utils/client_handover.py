@@ -19,6 +19,69 @@ def _strings(values, limit=12, max_length=240):
     return result
 
 
+def client_photo_intake_plan(company):
+    """Pure, offline, non-sending decision for image gathering.
+
+    The project owner must explicitly set interest_confirmed=True after
+    receiving a genuine reply. A lead found by Scout is NOT interested.
+    An asset is considered usable only with human-verified rights and
+    client approval (plus consent for identifiable persons if applicable).
+    This plans a conversation; it does not request, upload or publish files.
+    """
+    prefs = company.get("client_preferences") or {}
+    if not isinstance(prefs, dict):
+        prefs = {}
+    slots = prefs.get("planned_photo_slots", 0)
+    if isinstance(slots, bool) or not isinstance(slots, int) or not 0 <= slots <= 30:
+        slots = 0
+    raw_assets = prefs.get("media_assets") or []
+    if not isinstance(raw_assets, list):
+        raw_assets = []
+    approved_count = 0
+    for item in raw_assets[:50]:
+        if not isinstance(item, dict) or item.get("kind") != "photo":
+            continue
+        if (item.get("rights_verified_by_human") is True
+                and item.get("client_approved") is True
+                and (item.get("identifiable_people") is False
+                     or item.get("subject_consent_verified") is True)):
+            approved_count += 1
+    gap = max(0, slots - approved_count)
+    interested = prefs.get("interest_confirmed") is True
+    should_request = bool(interested and gap > 0)
+    return {
+        "stage": "interested_client" if interested else "pre_interest",
+        "needed_photo_slots": slots,
+        "approved_usable_photos": approved_count,
+        "missing_photos": gap,
+        "request_owner_photos": should_request,
+        "request_policy": (
+            "draft_for_human_review_only_no_automatic_contact"
+            if should_request else "do_not_request_from_uninterested_leads"
+            if not interested else "no_media_gap_identified"
+        ),
+        "draft_request_fi": (
+            "Kiitos kiinnostuksesta! Huomasimme, että saisimme sivustosta "
+            "yrityksenne näköisen muutamalla omalla kuvalla. Löytyisikö "
+            "teiltä esimerkiksi kuvia tehdyistä töistä, työtiloista, "
+            "kalustosta tai tiimistä, joita saisimme käyttää sovitussa "
+            "verkkosivuprojektissa? Varmistamme käyttöoikeudet ja "
+            "kuvissa tunnistettavien henkilöiden suostumukset ennen "
+            "julkaisua. Jos kuvia ei ole, voimme ehdottaa teille "
+            "yhtenäistä, luvallista kuvitusta hyväksyttäväksi."
+        ) if should_request else None,
+        "fallback": (
+            "Use fewer coherent, licensed images or strong typography/layout; "
+            "do not claim stock photos are client staff or client work. "
+            "Never publish unapproved client photos."
+        ),
+        "limitations": (
+            "The supplied preference fields alone are not independently "
+            "verified rights or client consent, and this function sends nothing."
+        ),
+    }
+
+
 def client_design_brief(company):
     """Return a small bounded brief to include in generation/revision prompts.
 
@@ -59,6 +122,7 @@ def client_design_brief(company):
         "brand_policy": mode,
         "existing_colors_verified_by_client": color_hex if approved else [],
         "photo_policy": photo_policy,
+        "photo_intake": client_photo_intake_plan(company),
         "keep_client_logo_by_default": has_site,
         "keep_original_claims_and_taglines_by_default": has_site,
         "locked_copy": locked_copy,
