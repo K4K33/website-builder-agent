@@ -14,7 +14,7 @@ for(const el of placeholders){const original=el.dataset.originalPlaceholder;el.s
 document.querySelectorAll("[data-lang-set]").forEach(b=>b.setAttribute("aria-pressed",String(b.getAttribute("data-lang-set")===lang)));
 try{localStorage.setItem("kaurivo-language",lang)}catch(e){}
 }
-let chosen="en";try{const saved=localStorage.getItem("kaurivo-language");if(saved==="fi")chosen="fi";try{if(location.pathname.includes("/kaurivo/feedback/")&&new URLSearchParams(location.search).get("lang")==="fi")chosen="fi"}catch(e){}}catch(e){}
+let chosen="en";try{const saved=localStorage.getItem("kaurivo-language");if(saved==="fi")chosen="fi";try{if(new URLSearchParams(location.search).get("lang")==="fi")chosen="fi"}catch(e){}}catch(e){}
 document.querySelectorAll("[data-lang-set]").forEach(b=>b.addEventListener("click",()=>apply(b.dataset.langSet)));
 apply(chosen);
 })();
