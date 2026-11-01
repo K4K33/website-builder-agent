@@ -40,6 +40,15 @@ mocked test, screenshot or design prompt never substitutes for browser evidence.
       confusing jargon and template-looking recurring section intros.
 - [ ] Eliminate decorative numbers and repeating micro-labels from every card,
       hero and heading. Number only a **genuine ordered sequence**.
+- [ ] Audit every editorial photo across **all pages**, not just one page:
+      prevent accidental reuse of the same stock photo in hero, cards and
+      detail content. Intentional editorial reuse requires a documented
+      reason (logos and identity assets are exempt). Record a sitewide
+      duplicate-image count before client presentation.
+- [ ] Audit the navigation journey as real user tasks (service → price →
+      contact), avoiding circular clicks, unnecessary intermediate pages
+      and multiple vague "Learn more" / "Tutustu" links with similar
+      destinations. Give meaningful link names and remove redundant CTAs.
 - [ ] Imagery is directly relevant to actual company work and target users,
       plausible for the specific sector, legally usable and visually coherent.
       A luxury interior / stock lifestyle scene must not displace evidence of
