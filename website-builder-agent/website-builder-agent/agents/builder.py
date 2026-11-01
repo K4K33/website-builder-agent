@@ -143,6 +143,29 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
 
+YLEINEN V7-SUUNNITTELUSTANDARDI KAIKILLE ASIAKKAILLE:
+- Visuaalinen taso saa olla kunnianhimoinen ja persoonallinen ilman
+  että se näyttää AI-mallipohjalta. Älä korvaa liiallista koristelua
+  täysin paljaalla, vaatimattomalla taitolla. Rakenna johdonmukainen
+  art direction, vahva hierarkia, tarkka typografia, aito brändi
+  ja laadukas, käyttöä tukeva liike.
+- Jos yrityksestä ei ole riittävästi omia luvallisia kuvia,
+  käytä vähemmän mutta yhteen sopivaa kuvitusta. Älä keksi
+  valokuvattuja työntekijöitä tai asiakkaan toteuttamia töitä.
+- Kun yritys on todistetusti kiinnostunut, sen omia kuvia
+  saa PYYTÄÄ tarkistettavalla, ihmiselle annetulla
+  luonnoksella. Älä lähetä automaattista kuvapyyntöä
+  kylmälle liidille; älä esitä asiakkaan kuvia käyttöluvallisina
+  ilman todellista hyväksyntää.
+- Ensimmäisessä mobiilinäkymässä tulee olla oikea asiakkaan
+  toimintaan sopiva pää-CTA (esim. Kysy arviota tai Soita),
+  ei pelkästään Palvelut ja Hinnasto. Toissijaiset linkit
+  pitää erottua painettaviksi ilman koristeellisia nuolia.
+- Ulkoisen tekoälyn pisteet ovat vain näkemyksiä. Jos se
+  katsoi vain mobiilivideon eikä tunne asiakkaan lupia,
+  sitä ei saa esittää täytenä auditointina tai suoraan
+  toteutettavana käskynä.
+
 YLEINEN V6-KORJAUS ASIAKASPALAUTTEESTA:
 - Vältä sekalaisia eri vuodenaikojen, valaistusten ja tyylien
   kuvapankkikuvia. Valitse yhtenäinen kuvallinen linja tai
@@ -369,6 +392,29 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
 - Human reviewer MUST reject a technically passing but visibly generic
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
+
+YLEINEN V7-SUUNNITTELUSTANDARDI KAIKILLE ASIAKKAILLE:
+- Visuaalinen taso saa olla kunnianhimoinen ja persoonallinen ilman
+  että se näyttää AI-mallipohjalta. Älä korvaa liiallista koristelua
+  täysin paljaalla, vaatimattomalla taitolla. Rakenna johdonmukainen
+  art direction, vahva hierarkia, tarkka typografia, aito brändi
+  ja laadukas, käyttöä tukeva liike.
+- Jos yrityksestä ei ole riittävästi omia luvallisia kuvia,
+  käytä vähemmän mutta yhteen sopivaa kuvitusta. Älä keksi
+  valokuvattuja työntekijöitä tai asiakkaan toteuttamia töitä.
+- Kun yritys on todistetusti kiinnostunut, sen omia kuvia
+  saa PYYTÄÄ tarkistettavalla, ihmiselle annetulla
+  luonnoksella. Älä lähetä automaattista kuvapyyntöä
+  kylmälle liidille; älä esitä asiakkaan kuvia käyttöluvallisina
+  ilman todellista hyväksyntää.
+- Ensimmäisessä mobiilinäkymässä tulee olla oikea asiakkaan
+  toimintaan sopiva pää-CTA (esim. Kysy arviota tai Soita),
+  ei pelkästään Palvelut ja Hinnasto. Toissijaiset linkit
+  pitää erottua painettaviksi ilman koristeellisia nuolia.
+- Ulkoisen tekoälyn pisteet ovat vain näkemyksiä. Jos se
+  katsoi vain mobiilivideon eikä tunne asiakkaan lupia,
+  sitä ei saa esittää täytenä auditointina tai suoraan
+  toteutettavana käskynä.
 
 YLEINEN V6-KORJAUS ASIAKASPALAUTTEESTA:
 - Vältä sekalaisia eri vuodenaikojen, valaistusten ja tyylien

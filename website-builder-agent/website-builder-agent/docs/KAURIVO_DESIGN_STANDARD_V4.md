@@ -80,6 +80,23 @@ would break QA, preview or the existing stable pipeline.
   direct contact. No maze of redundant subpages, mystery buttons or
   repeated destination links.
 
+## V7 premium visual richness without synthetic AI aesthetics
+
+The goal is deliberately high visual quality **and** a human, company-specific
+appearance. Less AI-looking does **not** mean bare white cards, removed
+typographic hierarchy, or weak business CTAs. Build a consistent art direction
+with strong authentic brand colors, a recognizable silhouette and composition,
+considered whitespace, functional animation, responsive contrast and real
+service evidence. Where company pictures are unavailable, ask only interested
+clients for approved photos using
+`docs/KAURIVO_CLIENT_PHOTOGRAPHY_INTAKE.md` or design with fewer,
+coherently sourced images. Do not mix unrelated stock imagery.
+
+Remove *decorative* arrows without removing the actual visual affordances
+of links and buttons. The important first action must remain prominent.
+An external mobile-video-only AI review is not proof of desktop visual
+performance, photo rights, real CMS, brand approval or conversion outcomes.
+
 ## Motion and visual polish
 
 - Design a deliberate motion choreography: opening entrance, section

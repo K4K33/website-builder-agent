@@ -42,6 +42,26 @@ Existing human gates remain mandatory: `utils/pitch_quality.py`,
 7. Keep weekend research and drafts in the queue; release on a suitable
    weekday *after* the same legal and human review. No automatic bulk sends.
 
+### Media intake after a genuine interested-company reply
+
+Follow `docs/KAURIVO_CLIENT_PHOTOGRAPHY_INTAKE.md` throughout all projects.
+The initial free demo must not depend on requesting photos from unresponsive
+cold leads. Once the company's interest is confirmed, assess how many
+approved/rights-cleared pictures the actual art direction needs, then draft
+a short optional request for owner-owned project/workspace/team assets.
+Request cannot be automated from mere discovery status. Record website
+use permission and separate portfolio/demo use, avoid private/public repo
+leaks, and offer a coherent licensed no-photo alternative. Ask only for
+pictures relevant to the real industry. The helper
+`client_photo_intake_plan` calculates a draft trigger offline;
+it does not contact the company or prove legal permission.
+
+**Visual performance acceptance:** a simpler, less AI-looking page is
+only an improvement when it retains clear primary CTA, legible links,
+business relevance, human brand identity, purposeful motion and original
+composition. Check mobile and desktop; an external AI score based on an
+iPhone-only recording does not establish full-site quality.
+
 ## 2. Design direction (brand first, never template first)
 
 - Start from the real brand, assets owned/licensed by the customer and locked

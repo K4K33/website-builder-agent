@@ -1,11 +1,44 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+**Learning history:** `docs/KAURIVO_DESIGN_LEARNING_LOG.md`. New owner/external feedback must be recorded there with review scope and regression checks before altering the universal rules.
+
 **Scope:** ALL clients, new builds, redesigns, demo revisions, private previews,
 full site deliveries. Not a special rule set for any single company.
 **Use:** Designer + agent + independent QA + human reviewer. Record each as
 PASS / FIX / N/A (with reason and evidence). Any **BLOCKER** means **do not**
 approve for customer-facing presentation or production. A static/AI score,
 mocked test, screenshot or design prompt never substitutes for browser evidence.
+
+## Universal V7 learning: interest-triggered asset intake and visual premium gate
+
+**Always use** `docs/KAURIVO_CLIENT_PHOTOGRAPHY_INTAKE.md` for every
+prospect and client workflow. The media request is an optional,
+human-reviewed draft **only after verified customer interest**, and only
+when approved images are insufficient for the proposed visual design.
+Never auto-ask cold prospects or assume they own rights to public pictures.
+
+- [ ] Owner/client pictures are requested *only after explicit interest*
+      and a documented image gap. Offer a no-photo alternative; never
+      delay a free speculative demo because the prospect hasn't supplied images.
+- [ ] The client has authorized website image use, purpose and licensing
+      scope; identifiable people and separate portfolio/public-demo
+      usage are checked where relevant.
+- [ ] Images follow a coherent creative direction, not random stock; if
+      no genuine photo assets exist, prefer fewer coordinated illustrations
+      and premium typographic/layout/motion design over misleading filler.
+- [ ] Raising visual richness MUST NOT reintroduce manufactured AI
+      symbols, repeated number badges, decorative arrow spam, false
+      testimonial imagery, overlong scroll or duplicated content.
+- [ ] Check primary CTA and obvious click styling in the first viewport.
+      "De-AI-ifying" must not replace a useful `Kysy arviota` or
+      `Soita` path with only `Palvelut` / `Hinnasto` buttons.
+      A plain text link must look clearly interactive without arrows.
+- [ ] Confirm CTA, secondary link, text contrast and useful business facts
+      in a real mobile browser. No invented service area, reviews,
+      tax-deduction claims, awards or metrics.
+- [ ] Record what the external reviewer actually saw, including mobile-only
+      evidence and missing context of client approvals, before accepting
+      suggestions. A score cannot replace owner preference and functionality.
 
 ## Discovery and brand — BLOCKERS
 
