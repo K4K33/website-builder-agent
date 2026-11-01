@@ -1,0 +1,43 @@
+name: Kotifixi demo contact endpoint real receipt smoke test
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'website-builder-agent/website-builder-agent/docs/kaurivo/demos/kotifixi-v5/**'
+      - '.github/workflows/kotifixi-demo-contact-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-test-submission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Confirm CORS and actual server-side persistence with a synthetic test
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.request
+          endpoint = 'https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-kotifixi-demo-contact'
+          email = 'kaurivo-smoke-' + os.environ['RUN_ID'] + '@example.invalid'
+          data = {
+              'name': 'Kaurivo CI Test', 'email': email,
+              'service': 'Muu apu',
+              'message': 'AUTOMATED Kaurivo harmless synthetic contact test; not a customer.',
+              'website': '', 'test_consent': True,
+              'started_at': int(time.time() * 1000) - 5000,
+          }
+          request = urllib.request.Request(
+              endpoint,
+              data=json.dumps(data).encode('utf-8'),
+              method='POST',
+              headers={'Origin': 'https://k4k33.github.io', 'Content-Type': 'application/json'},
+          )
+          with urllib.request.urlopen(request, timeout=18) as response:
+              result = json.load(response)
+              print('HTTP status', response.status, 'database reference', str(result.get('reference',''))[:8])
+              assert response.status == 201 and result.get('ok') is True, result
+              assert result.get('test') is True and result.get('reference'), result
+          print('Persisted test submission was acknowledged by backend.')
+          PY
