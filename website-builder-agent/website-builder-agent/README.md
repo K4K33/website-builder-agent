@@ -1,3 +1,7 @@
+> **Kaurivo premium delivery / sales safety (2026-11-01):** [Premium launch & QA playbook](docs/KAURIVO_PREMIUM_PLAYBOOK.md) and [Private client offer template](docs/KAURIVO_CUSTOMER_OFFER_TEMPLATE.md).
+> Zero-cost local gates: `python main.py demo-evidence SLUG`, `premium-pitch-check SLUG`, `premium-audit --html PATH --root ROOT`, `project-terms --file PRIVATE_JSON`, `handover-check SLUG`, `delivery-preflight SLUG --html PATH --root ROOT`, and `sales-funnel`. **No automatic sends, client CMS activation, paid API calls, site publication or invented analytics.**
+> The Kaurivo demo review form asks for the client's conversion goals, editing priorities and brand/photo preferences, without treating these as rights or signed approval.
+
 > Current quality controls, model setup, costs and remaining validation: [QUALITY.md](QUALITY.md).
 > Client brand preservation, approved image/copy changes, editable websites and CMS handover: [CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md).
 > **Mandatory for every final client delivery:** the customer can personally edit text, services, images and contact details via a secure CMS. Static demos are allowed for review, never labelled as editable delivered sites. Verify with `python main.py handover-check COMPANY_SLUG` before the actual client handover.\n> Customer-specific email research, persuasive copy and sending safeguards: [OUTREACH.md](docs/OUTREACH.md).

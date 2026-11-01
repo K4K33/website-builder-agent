@@ -50,6 +50,13 @@
 <div class="form-fields">
 <div class="field"><label for="review-company">Company *</label><input id="review-company" name="company" type="text" maxlength="120" autocomplete="organization" required placeholder="Company name"></div>
 <div class="field"><label for="review-email">Your email *</label><input id="review-email" name="email" type="email" maxlength="200" autocomplete="email" required placeholder="you@company.com"></div>
+<div class="field"><label for="review-goal">Main goal for the website (optional)</label>
+<select id="review-goal" name="main_goal"><option value="">Choose a goal</option><option value="contact">More enquiries</option><option value="bookings">Bookings or appointments</option><option value="information">Clearer service information</option><option value="sales">Online sales</option></select></div>
+<div class="field"><label for="review-editing">What would you edit yourself? (optional)</label>
+<select id="review-editing" name="editing_priority"><option value="">Choose editing priority</option><option value="services">Services and prices</option><option value="images">Images and portfolio</option><option value="contact">Contact details and opening hours</option><option value="all">All website content</option></select></div>
+<div class="field full"><label for="review-brand">Existing brand and photos (optional)</label>
+<select id="review-brand" name="brand_preference"><option value="">Please select</option><option value="preserve">Keep our current logo, colours and photos</option><option value="review_changes">Discuss brand and photo updates before any changes</option></select>
+<p class="form-privacy">These are planning preferences, not permission to use or replace images. We will verify ownership and agree on any changes separately.</p></div>
 <div class="field full"><label for="review-must-haves">What must be included in the final site? *</label><textarea id="review-must-haves" name="must_haves" maxlength="3000" minlength="5" required placeholder="For example: keep our logo and colours, add a booking button and make our services easy to find."></textarea></div>
 <div class="field full"><label for="review-optional">Other wishes or things you'd change (optional)</label><textarea id="review-optional" name="other_wishes" maxlength="2000" placeholder="Anything you liked, disliked or want to explore further."></textarea></div>
 </div>
