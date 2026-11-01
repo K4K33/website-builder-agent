@@ -52,6 +52,13 @@ class StaticPreflightTests(unittest.TestCase):
         self.assertFalse(result["pass"])
         self.assertTrue(any("Unlabelled" in x for x in result["errors"]))
 
+    def test_kaurivo_public_home_and_demo_review_static_preflight(self):
+        root = Path(__file__).resolve().parents[1] / "docs" / "kaurivo"
+        for page in (root / "index.html", root / "demo-review" / "index.html"):
+            with self.subTest(page=page.name):
+                result = inspect_site_file(page, site_root=root)
+                self.assertTrue(result["pass"], result["errors"])
+
     def test_no_files_outside_root(self):
         with TemporaryDirectory() as d:
             root = Path(d) / "site"
