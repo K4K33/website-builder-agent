@@ -52,6 +52,23 @@ class KotifixiV5StaticPreviewTests(unittest.TestCase):
                     target_ids = {x.get('id') for x in BeautifulSoup(target.read_text(encoding='utf-8'), 'html.parser').select('[id]')}
                     self.assertIn(url.fragment, target_ids, f'{rel}: broken target {raw}')
 
+    def test_unique_editorial_photos_and_no_redundant_homepage_maze(self):
+        from collections import Counter
+        from urllib.parse import urlsplit
+        all_images = []
+        for rel in PAGES:
+            doc = BeautifulSoup((ROOT / rel).read_text(encoding='utf-8'), 'html.parser')
+            all_images.extend(urlsplit(img['src']).path for img in doc.select('img[src]'))
+        photos = Counter(all_images)
+        self.assertEqual(len(all_images), len(photos),
+                         "Editorial photos must not repeat across home and detail pages: "
+                         + repr({p: n for p, n in photos.items() if n > 1}))
+        home = (ROOT / 'index.html').read_text(encoding='utf-8')
+        self.assertNotIn('Tutustu Kotifixiin', home)
+        self.assertNotIn('Tutustu palveluihin', home)
+        self.assertNotIn('highlight-section', home)
+        self.assertIn('href="tel:+358443632429"', home)
+
     def test_brand_and_unverified_publish_claims_not_fabricated(self):
         home = (ROOT / 'index.html').read_text(encoding='utf-8')
         price = (ROOT / 'hinnasto' / 'index.html').read_text(encoding='utf-8')
