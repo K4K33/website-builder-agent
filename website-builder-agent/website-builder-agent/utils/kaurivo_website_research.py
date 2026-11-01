@@ -12,11 +12,41 @@ import os
 from pathlib import Path
 import re
 import unicodedata
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlencode
 import requests
 
 API = "https://api.tavily.com/search"
 MAX_QUERIES_PER_RUN = 12
+OIDC_AUDIENCE="kaurivo-prh-ingest-xhsfbcwpwbgdbatrcyuk"
+CLAIM_URL="https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-prh-ingest"
+MONTHLY_QUOTA=750
+
+def make_credit_reservation(*,env=None,get=requests.get,post=requests.post):
+    env=os.environ if env is None else env
+    token_url=env.get("ACTIONS_ID_TOKEN_REQUEST_URL","")
+    token_secret=env.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN","")
+    if not token_url.startswith("https://") or not token_secret:return None
+    try:
+        query=urlencode({"audience":OIDC_AUDIENCE})
+        r=get(token_url+("&" if "?" in token_url else "?")+query,
+            headers={"Authorization":"bearer "+token_secret,
+                     "Accept":"application/json"},timeout=(4,12))
+        r.raise_for_status()
+        token=r.json().get("value")
+        if not isinstance(token,str) or not 100<=len(token)<=7000:return None
+    except (requests.RequestException,ValueError,TypeError):return None
+    def reserve():
+        try:
+            result=post(CLAIM_URL,json={"schema":"kaurivo_tavily_credit_claim_v1"},
+                headers={"Authorization":"Bearer "+token,"Content-Type":"application/json"},
+                timeout=(4,12))
+            if not result.ok:return False
+            data=result.json()
+            return data.get("ok") is True and data.get("granted") is True
+        except (requests.RequestException,ValueError,TypeError):
+            return False
+    return reserve
+
 MAX_PACKET_BYTES = 200_000
 DISALLOWED = (
     "facebook.com", "instagram.com", "linkedin.com", "tiktok.com",
@@ -120,7 +150,7 @@ def search_once(company,*,key,post=requests.post):
         return None, False
     return rank_search_candidate(company,data.get("results") or []),False
 
-def enrich(packet_path,*,key="",max_queries=MAX_QUERIES_PER_RUN,post=requests.post):
+def enrich(packet_path,*,key="",max_queries=MAX_QUERIES_PER_RUN,post=requests.post,claim=None):
     packet_path=Path(packet_path)
     if not packet_path.is_file() or packet_path.stat().st_size>MAX_PACKET_BYTES:
         raise RuntimeError("Missing or oversized PRH shortlist")
@@ -130,8 +160,9 @@ def enrich(packet_path,*,key="",max_queries=MAX_QUERIES_PER_RUN,post=requests.po
     leads=packet.get("candidates")
     if not isinstance(leads,list) or len(leads)>50:
         raise RuntimeError("Invalid source shortlist")
-    if not key:
-        return {"enabled":False,"searched":0,"suggested":0,"credits_budgeted":0}
+    if not key or claim is None:
+        return {"enabled":False,"searched":0,"suggested":0,"credits_budgeted":0,
+                "reason":"search_key_or_secure_quota_unavailable"}
     limit=min(max(0,int(max_queries)),MAX_QUERIES_PER_RUN)
     searched=suggested=0
     for candidate in leads:
@@ -141,6 +172,10 @@ def enrich(packet_path,*,key="",max_queries=MAX_QUERIES_PER_RUN,post=requests.po
             continue
         if not candidate.get("name"):
             continue
+        # Fail closed on quota-system trouble; every external search call must
+        # first atomically reserve one credit in the server-side monthly ledger.
+        if not claim():
+            break
         searched+=1
         try:
             found,stop=search_once(candidate,key=key,post=post)
@@ -166,8 +201,9 @@ def main(argv=None):
     parser.add_argument("--packet",required=True)
     parser.add_argument("--max-queries",type=int,default=MAX_QUERIES_PER_RUN)
     args=parser.parse_args(argv)
-    result=enrich(args.packet,key=os.environ.get("KAURIVO_TAVILY_API_KEY",""),
-                  max_queries=args.max_queries)
+    key=os.environ.get("KAURIVO_TAVILY_API_KEY","")
+    reserve=make_credit_reservation() if key else None
+    result=enrich(args.packet,key=key,max_queries=args.max_queries,claim=reserve)
     print(json.dumps(result,ensure_ascii=False))
 
 if __name__=="__main__":
