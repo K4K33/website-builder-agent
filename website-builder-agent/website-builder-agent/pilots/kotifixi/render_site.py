@@ -71,7 +71,7 @@ def render(*, data_path=None, template_path=None, output_dir=None):
         raise ValueError("Template/CMS schema mismatch: " + repr(sorted(tokens ^ set(FIELDS))))
     # All fields inserted as plain text / HTML-attribute text; none as raw HTML.
     rendered = TOKEN.sub(lambda m: html.escape(values[m.group(1)], quote=True), template)
-    if "{{" in rendered or "}}" in rendered:
+    if TOKEN.search(rendered):
         raise ValueError("Unresolved or unexpected template token.")
     if '<meta name="robots" content="noindex,nofollow">' not in rendered:
         raise ValueError("Pilot must remain visibly noindex.")
