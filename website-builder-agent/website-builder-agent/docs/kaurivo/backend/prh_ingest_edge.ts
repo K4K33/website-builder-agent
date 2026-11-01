@@ -60,6 +60,23 @@ Deno.serve(async req => {
   data=JSON.parse(text);
   if(!data||typeof data!=="object"||Array.isArray(data))throw Error("format");
  } catch(_){return send(400,{ok:false,error:"invalid_json"});}
+ // Privacy-preserving feedback: only aggregates from >=8 individually
+ // reviewed leads per industry. No personal records or company names leave
+ // the server, and the GitHub OIDC gate above applies to this operation.
+ if(data.schema==="kaurivo_feedback_weights_v1"){
+  if(Object.keys(data).length!==1)return send(400,{ok:false,error:"invalid_feedback_request"});
+  try{
+   const r=await fetch(SUPABASE_URL+"/rest/v1/rpc/kaurivo_review_feedback_weights",{
+    method:"POST",headers:{"apikey":SERVICE_ROLE,"authorization":"Bearer "+SERVICE_ROLE,
+     "content-type":"application/json","cache-control":"no-store"},body:"{}"
+   });
+   if(!r.ok)return send(503,{ok:false,error:"feedback_not_available"});
+   const result=await r.json();
+   if(!result||typeof result!=="object"||Array.isArray(result))
+    return send(503,{ok:false,error:"invalid_feedback"});
+   return send(200,{ok:true,weights:result});
+  }catch(_){return send(503,{ok:false,error:"feedback_unavailable"});}
+ }
  // Separate workflow-failure event. Only the same verified GitHub OIDC
  // workflow may report it; the public PWA cannot submit operational events.
  if(data.schema==="kaurivo_prh_run_status_v1"){
@@ -119,11 +136,52 @@ Deno.serve(async req => {
   const candidate=source==="tavily_search" && confidence>=80 && confidence<=99 &&
      typeof found?.url==="string" && validWebsite(clean(found.url,1200))
      ?clean(found.url,1200):"";
+  const rawAudit=c.site_technical_audit as Record<string,unknown> | undefined;
+  const allowedStatuses=new Set(["html_checked","redirect_not_followed",
+   "blocked_or_limited","non_html","html_too_large","temporarily_unavailable",
+   "unsafe_or_unresolvable_url"]);
+  const status=rawAudit&&typeof rawAudit==="object"&&!Array.isArray(rawAudit)
+   ?clean(rawAudit.status,50):"";
+  if(status.startsWith("http_status_")&&/^http_status_\d{3}$/.test(status))allowedStatuses.add(status);
+  const auditIssues=status==="html_checked"&&Array.isArray(rawAudit?.issues)
+   ?rawAudit.issues.filter((i:unknown)=>typeof i==="string" &&
+     ["title_missing","meta_description_missing","viewport_missing",
+      "heading_missing","contact_link_missing"].includes(i)).slice(0,5):[];
+  const technicalAudit=status&&allowedStatuses.has(status)?
+   {status,issues:auditIssues,
+    title_present:rawAudit?.title_present===true,
+    meta_description_present:rawAudit?.meta_description_present===true,
+    viewport_present:rawAudit?.viewport_present===true,
+    h1_present:rawAudit?.h1_present===true,
+    contact_link_present:rawAudit?.contact_link_present===true,
+    html_language_hint:["fi","sv","fi_sv","en"].includes(String(rawAudit?.html_language_hint))
+     ?rawAudit?.html_language_hint:"undetermined",
+    method:"one_public_homepage_html_only"}:{};
+  const industry=clean(c.industry_code_hint,20);
+  const isTarget=["41","42","43","45","47","49","55","56","69","71","73","74",
+    "75","77","79","80","81","82","85","86","90","93","95","96"].some(
+       prefix=>industry.startsWith(prefix));
+  // Provisional 0..60 research ordering. It is not a prediction of sale,
+  // proof of a design flaw, or an actual Lighthouse performance measurement.
+  const siteListed=Boolean(clean(c.website_listed_url,1200));
+  const preliminary=Math.min(60,(isTarget?25:12)+(siteListed?8:0)+
+   (status==="html_checked"?8:0)+Math.min(15,auditIssues.length*3));
+  const reasons=[isTarget?"Asiakaspalvelutoimiala":"Toimiala selvitettävä",
+    siteListed?"PRH-verkkosivulinkki":"PRH ei ilmoita sivua",
+    status==="html_checked"?auditIssues.length+" HTML-metatiedon puutetta (tarkistettava)":
+      "Sivuston tekninen tarkistus ei vielä valmis"];
+  const screenedReason=reasons.join(" · ").slice(0,500);
   candidates.push({
    business_id:c.business_id,
    company_name:clean(c.name,160),
    city_hint:clean(c.city_hint,80),
    industry_code_hint:clean(c.industry_code_hint,20),
+   website_technical_audit:technicalAudit,
+   website_audit_checked_at:status&&typeof c.website_audit_checked_at==="string" &&
+     !Number.isNaN(Date.parse(c.website_audit_checked_at))?
+     new Date(c.website_audit_checked_at).toISOString():null,
+   screening_priority:preliminary,
+   screening_reason:screenedReason,
    website_listed_url:clean(c.website_listed_url,1200),
    website_candidate_url:candidate,
    website_candidate_source:candidate?source:"",
