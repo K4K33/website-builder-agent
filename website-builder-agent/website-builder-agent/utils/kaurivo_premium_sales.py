@@ -156,7 +156,12 @@ def funnel_metrics(companies):
         if ((company.get("sale") or {}).get("status") == "won"
                 and (company.get("sale") or {}).get("source_verified") is True):
             counts["won"] += 1
-        if (company.get("delivery") or {}).get("customer_acceptance") is True:
+        # A checkbox alone cannot prove a client-owned, editable delivery.
+        # Require both a source-verified sale and the existing full handover
+        # evidence gate; otherwise do not report a delivered customer.
+        sale = company.get("sale") or {}
+        if (sale.get("status") == "won" and sale.get("source_verified") is True
+                and inspect_client_delivery(company)["ready_to_handover"]):
             counts["delivered"] += 1
     rate = lambda a, b: round(100 * counts[a] / counts[b], 1) if counts[b] else None
     return {"counts": counts,
