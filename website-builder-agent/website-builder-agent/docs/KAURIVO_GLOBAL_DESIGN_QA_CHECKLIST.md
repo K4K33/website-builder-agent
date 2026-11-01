@@ -40,6 +40,21 @@ Never auto-ask cold prospects or assume they own rights to public pictures.
       evidence and missing context of client approvals, before accepting
       suggestions. A score cannot replace owner preference and functionality.
 
+## Demo pictures and optional photo note in outreach
+
+- [ ] Actual client/company pictures with reviewed rights are used
+      wherever suitable and available; coherent, licensed **example**
+      photography fills any remaining appropriate slots.
+- [ ] The demo's **actual** photo source status is checked by a human
+      before claiming pictures are client-owned or examples.
+- [ ] If the demo uses example images, the recipient can read a short
+      "esimerkkikuvia" clarification **directly beneath the image or
+      preview link** in the email, with a *no-obligation* option to
+      provide their own preferred images for the final site.
+- [ ] The image clarification is not a separate pushy cold-lead photo
+      request. No photos are gathered/sent automatically and the email
+      itself still requires per-recipient manual approval.
+
 ## Discovery and brand — BLOCKERS
 
 - [ ] VERIFIED real business identity, logo file or written approval for

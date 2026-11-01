@@ -51,13 +51,27 @@ Kaarlo is and why this business has been contacted.
 4. State that a company-specific demo has been built and show a genuine
    approved demo link/card. Never invent a URL or pretend mockups are
    a complete production launch.
-5. Make a clear commercial offer: "Jos pidätte ehdotuksesta,
+5. **Media note immediately below the demo image/card or demo URL:**
+   favor existing company-owned photos with confirmed rights; otherwise
+   use coherent, licensed example photos. When demo contains example
+   photos, show the short Finnish note:
+   "Demon kuvat ovat esimerkkikuvia. Halutessanne voitte lähettää
+   meille omia kuvia, joita toivoisitte käytettävän lopullisilla
+   verkkosivuilla." For a mixed demo say "Osa demon kuvista...".
+   This is an optional invitation, not a compulsory content request;
+   no extra follow-up or uploading required before the firm replies.
+   The outreach draft stores this as `demo_card_caption` and also
+   inserts it beneath the demo link/mention in plain-text email.
+   HTML renderers must display that caption directly below the demo
+   card. Do not invent client ownership or assert permissions
+   when the final image sources are unverified.
+6. Make a clear commercial offer: "Jos pidätte ehdotuksesta,
    voin toteuttaa uuden sivuston teille kokonaan."
-6. End with a **direct sales question**, for example "Olisiko teillä
+7. End with a **direct sales question**, for example "Olisiko teillä
    kiinnostusta uudistaa nykyisiä verkkosivujanne?" or, for a
    verified no-website business, "Olisiko oman verkkosivun
    toteuttaminen ajankohtaista?"
-7. Close as Kaarlo at Kaurivo with the Kaurivo contact details. Never add a founder or CEO title.
+8. Close as Kaarlo at Kaurivo with the Kaurivo contact details. Never add a founder or CEO title.
 
 **Sender account:** All client-facing drafts and approved commercial mail must
 be created and sent using only **hello.kaurivo@gmail.com**. NEVER use
