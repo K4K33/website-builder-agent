@@ -90,7 +90,7 @@ class WebsiteResearchTests(unittest.TestCase):
             def provider(url,**kw):
                 calls.append(kw)
                 return FakeResponse([],200)
-            result=enrich(path,key="mock",max_queries=500,post=provider)
+            result=enrich(path,key="mock",max_queries=500,post=provider,claim=lambda:True)
             self.assertEqual(result["searched"],MAX_QUERIES_PER_RUN)
             self.assertEqual(len(calls),MAX_QUERIES_PER_RUN)
             packet2=json.loads(path.read_text())
@@ -99,9 +99,25 @@ class WebsiteResearchTests(unittest.TestCase):
             def blocked(url,**kw):
                 calls.append(kw)
                 return FakeResponse([],429)
-            result=enrich(path,key="mock",post=blocked)
+            result=enrich(path,key="mock",post=blocked,claim=lambda:True)
             self.assertEqual(result["searched"],1)
             self.assertEqual(len(calls),1)
+
+
+    def test_optional_search_requires_real_server_quota_reservation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/"packet.json"
+            path.write_text(json.dumps({
+                "schema":"kaurivo_prh_shortlist_v1","mode":"pilot-live",
+                "candidates":[candidate()]}),encoding="utf-8")
+            def no_provider(*args,**kwargs):
+                self.fail("External search must not run without a quota claim.")
+            result=enrich(path,key="mock",post=no_provider)
+            self.assertEqual(result["searched"],0)
+            self.assertFalse(result["enabled"])
+            result=enrich(path,key="mock",post=no_provider,claim=lambda:False)
+            self.assertEqual(result["searched"],0)
+            self.assertEqual(result["credits_budgeted"],0)
 
     def test_pipeline_and_frontend_are_consistent(self):
         workflow=(ROOT.parents[1]/".github/workflows/kaurivo-national-prh.yml").read_text()
