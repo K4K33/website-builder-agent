@@ -103,7 +103,7 @@ window.__fakeCompany=company;
                 page.locator("#prospect-day").dispatch_event("change")
                 page.wait_for_function("document.querySelector('#ops-brief').textContent.includes('Yöhaku vahvistettu')")
                 self.assertTrue(page.locator("#lead-pulse").is_visible())
-                self.assertIn("Asiakasprioriteetti: tiedot tarkistamatta",
+                self.assertIn("Tutkimusprioriteetti: tiedot tarkistamatta",
                               page.locator("#prospect-list").inner_text())
                 page.locator("#prospect-list button").last.click()
                 self.assertTrue(page.locator("#editor").is_visible())
