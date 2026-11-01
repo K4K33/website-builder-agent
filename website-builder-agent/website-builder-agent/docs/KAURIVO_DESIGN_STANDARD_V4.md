@@ -67,6 +67,19 @@ would break QA, preview or the existing stable pipeline.
   has actually reviewed the supplied artifact. Do not fabricate opinions,
   prices or analysis. Human brand/customer approval remains necessary.
 
+## Sitewide media and wayfinding QA
+
+- Review the **whole website**, not each page in isolation. Repeating the
+  same editorial photograph in multiple places creates a template impression.
+  Deduplicate by normalized asset URL/source image ID, including query
+  string variants; preserve repeated verified company logo/icons as identity.
+- Replace unnecessary "Tutustu" / "Learn more" links with specific user
+  tasks such as "Palvelut", "Hinnasto", "Soita" or "Kysy arviota".
+  Every CTA must advance the visitor, not just lead to another generic panel.
+- Check the shortest natural route: offer and services → pricing if useful →
+  direct contact. No maze of redundant subpages, mystery buttons or
+  repeated destination links.
+
 ## Motion and visual polish
 
 - Design a deliberate motion choreography: opening entrance, section
