@@ -91,7 +91,7 @@ class ClientMediaIntakeTests(unittest.TestCase):
         self.assertNotIn("requests.post", source)
         guidelines = (ROOT / "docs/KAURIVO_CLIENT_PHOTOGRAPHY_INTAKE.md").read_text(encoding="utf-8")
         self.assertIn("DO NOT ask every cold prospect", guidelines)
-        self.assertIn("not automatically sent", guidelines)
+        self.assertIn("NOT automatically sent", guidelines)
 
 
 if __name__ == "__main__":
