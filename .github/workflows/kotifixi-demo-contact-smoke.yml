@@ -1,10 +1,5 @@
 name: Kotifixi demo contact endpoint real receipt smoke test
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'website-builder-agent/website-builder-agent/docs/kaurivo/demos/kotifixi-v5/**'
-      - '.github/workflows/kotifixi-demo-contact-smoke.yml'
   workflow_dispatch:
 permissions:
   contents: read
