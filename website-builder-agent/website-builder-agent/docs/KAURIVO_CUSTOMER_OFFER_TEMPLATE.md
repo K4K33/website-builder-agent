@@ -14,6 +14,14 @@ yhteystietoja repositorioon. Muokkaa ja toimita vain yksityisesti.
 - Sivut ja toimitettavat sisällöt: [yksilöity sivukartta]
 - Kieliversiot, kielikäännösten vastuut: [sovitaan]
 - Hinnat, tuotekuvat, yrityksen faktat ja käyttöoikeudet: [asiakas hyväksyy]
+- Yrityksen omien kuvien tarve: [kartoitettu kiinnostuksen jälkeen / ei tarvita].
+- Asiakkaan toimittamat kuvat: [työnäytteet / tilat / kalusto / tiimi, jos soveltuu].
+- Kuvaoikeudet ja tarvittavat henkilölupatiedot: [omistaja vahvistaa
+  käyttölaajuuden ja erillisen portfolio/demo-luvan tarvittaessa].
+- Ellei kuvia ole: [yhtenäinen vaihtoehtoinen luvallinen kuvitus
+  hyväksytettäväksi, ei sekalaisia kuvapankkikuvia].
+- Kaurivon kuvapyyntö on ehdotus, ei pakollinen lisähankinta eikä
+  automaattisesti lähetetty markkinointiviesti.
 
 ## 2. Toteutus ja editointi
 
