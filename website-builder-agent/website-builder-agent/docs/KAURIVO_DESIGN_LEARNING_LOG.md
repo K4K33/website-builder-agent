@@ -6,6 +6,22 @@ scope/model, verified issues, chosen change, measured/visual retest,
 and whether the change introduced a regression. Do not overwrite
 previous findings when one version scores differently.
 
+## 2026-11-02 — clarification: company photos first, examples second
+
+The user explicitly clarified the precedence:
+1) Use actual company photos wherever properly available and permitted.
+2) Otherwise use curated, licensed, stylistically coherent example photos.
+3) Under the demo visual/link in the personalized outreach, disclose
+   example images and give a short **optional** invitation to send
+   desired company photos for the final site. Don't demand pictures
+   or launch an unsolicited image collection.
+4) The statement must match the verified *actual demo*, not merely
+   the presence of source photos somewhere on the company's website.
+
+General implementation: `demo_photo_source_policy`,
+`demo_image_caption`, `place_demo_caption`, `demo_card_caption`
+and the global outreach & design QA standards. No automatic sending.
+
 ## 2026-11-01 / 2026-11-02 — Kotifixi pilot
 
 **Customer-owner feedback context**
