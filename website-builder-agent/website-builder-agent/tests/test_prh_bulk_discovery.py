@@ -194,7 +194,7 @@ class BulkPrhTests(unittest.TestCase):
                     ".github/workflows/kaurivo-national-prh.yml").read_text()
         self.assertIn("Europe/Helsinki", workflow)
         self.assertIn('OPENROUTER_API_KEY: ""', workflow)
-        self.assertIn("max-candidates 5000", workflow)
+        self.assertIn("max-candidates 9000", workflow)
         self.assertIn("shortlist-size 50", workflow)
         self.assertNotIn("send_email", workflow)
 
