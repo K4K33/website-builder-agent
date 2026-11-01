@@ -65,17 +65,31 @@ jobs:
           restore-keys: |
             prh-company-history-v1-
 
+      - name: Restore previously checked website metadata (best effort)
+        if: ${{ steps.gate.outputs.should_scan == 'true' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: website-builder-agent/website-builder-agent/data/kaurivo_site_audit_cache.json
+          key: kaurivo-site-cache-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            kaurivo-site-cache-v1-
+
       - name: Install requirements
         if: ${{ steps.gate.outputs.should_scan == 'true' }}
         run: pip install -r requirements.txt
+
+      - name: Fetch privacy-safe feedback preferences (neutral if unavailable)
+        if: ${{ steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        run: python -m utils.kaurivo_feedback_priors
 
       - name: National PRH ZIP, one request at most; process all records locally
         if: ${{ steps.gate.outputs.should_scan == 'true' }}
         run: |
           python -m utils.prh_bulk_discovery \
             --mode "$KAURIVO_PRH_MODE" \
-            --max-candidates 5000 \
+            --max-candidates 9000 \
             --shortlist-size 50 \
+            --feedback-file output/nightly-prh/feedback-priors.json \
             --output-dir output/nightly-prh \
             --seen-path data/prh_seen_ids.json
 
@@ -89,6 +103,14 @@ jobs:
           python -m utils.kaurivo_website_research \
             --packet output/nightly-prh/crm-shortlist.json \
             --max-queries 12
+
+      - name: Check up to 12 publicly listed business homepages (no paid APIs)
+        if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        run: |
+          python -m utils.kaurivo_site_audit \
+            --packet output/nightly-prh/crm-shortlist.json \
+            --cache data/kaurivo_site_audit_cache.json \
+            --max-checks 12
 
       - name: Sync 50 unverified PRH company records into private Kaurivo CRM
         if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
@@ -137,6 +159,13 @@ jobs:
           path: |
             website-builder-agent/website-builder-agent/output/nightly-prh/
             website-builder-agent/website-builder-agent/data/prh_seen_ids.json
+
+      - name: Cache successful bounded website metadata for 30-day reuse
+        if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        uses: actions/cache/save@v4
+        with:
+          path: website-builder-agent/website-builder-agent/data/kaurivo_site_audit_cache.json
+          key: kaurivo-site-cache-v1-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Cache only a successful history update
         if: ${{ success() && steps.gate.outputs.should_scan == 'true' }}
