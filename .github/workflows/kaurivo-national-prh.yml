@@ -96,6 +96,15 @@ jobs:
           python -m utils.prh_crm_sync \
             --packet output/nightly-prh/crm-shortlist.json
 
+      - name: Notify iPhones when delayed national lead batch is ready
+        if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        continue-on-error: true
+        run: |
+          # Reuse a short-lived GitHub OIDC token and daily server-side
+          # deduplication. Before 08:00 the service correctly defers delivery
+          # to the separate morning workflow; late batches notify immediately.
+          python -m utils.kaurivo_morning_push
+
       - name: Show fresh lead report for manual review
         if: ${{ success() && steps.gate.outputs.should_scan == 'true' }}
         run: |
