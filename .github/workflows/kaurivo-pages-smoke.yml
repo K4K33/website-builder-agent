@@ -68,7 +68,7 @@ jobs:
                   "assets/style.css") marker='--container:1240px' ;;
                   "assets/app.js") marker='kaurivo-kotifixi-demo-contact' ;;
                 esac
-                if grep -Fq "${marker}" /tmp/kotifixi-v7-live; then
+                if grep -Fq -- "${marker}" /tmp/kotifixi-v7-live; then
                   ok="true"
                   break
                 fi
