@@ -96,6 +96,28 @@ class EvidenceAndDeliveryTests(unittest.TestCase):
         record["research"]["design_benchmark"] = []
         self.assertFalse(demo_improvement_packet(record)["ready_for_human_sales_review"])
 
+    def test_no_site_needs_independent_absence_evidence(self):
+        record = self._record()
+        record["url"] = ""
+        self.assertFalse(demo_improvement_packet(record)["ready_for_human_sales_review"])
+        record["site_verification"] = {
+            "confirmed_absent": True, "verified_by_human": True,
+            "source_url": "https://registry.example.org/verified-check",
+        }
+        for improvement in record["research"]["verified_improvements"]:
+            improvement["source_url"] = "https://registry.example.org/verified-check"
+        self.assertTrue(demo_improvement_packet(record)["ready_for_human_sales_review"])
+
+    def test_demo_review_form_exposes_goal_editing_and_brand_choices(self):
+        page = (Path(__file__).resolve().parents[1] / "docs" / "kaurivo"
+                / "demo-review" / "index.html").read_text(encoding="utf-8")
+        translation = (Path(__file__).resolve().parents[1] / "docs" / "kaurivo"
+                       / "assets" / "i18n.js").read_text(encoding="utf-8")
+        for name in ("main_goal", "editing_priority", "brand_preference"):
+            self.assertIn('name="' + name + '"', page)
+        self.assertIn("These are planning preferences", page)
+        self.assertIn("Verkkosivun tärkein tavoite", translation)
+
     def test_agreement_requires_all_terms_and_scope_version(self):
         self.assertFalse(agreement_gate({})["ready_to_start_work"])
         terms = {
@@ -124,7 +146,7 @@ class EvidenceAndDeliveryTests(unittest.TestCase):
         result = funnel_metrics({
             "a": {"status": "found", "owner_review": {"decision": "select"},
                   "approval": {"approved": True}},
-            "b": {"status": "contacted", "sale": {"status": "won"},
+            "b": {"status": "contacted", "sale": {"status": "won", "source_verified": True},
                   "delivery": {"customer_acceptance": True}},
             "c": {"status": "found", "outreach": {"draft": "looks good"}},
         })
