@@ -713,6 +713,30 @@ jotka kierrättävät käyttäjää ilman uutta tietoa.
 Älä väitä sivustonlaajuista tarkistusta tehdyksi, jos
 käytössä on vain yksittäisen sivun kuvakaappaus.
 
+YLEINEN V7-LAATURIMA KAIKKIEN ASIAKKAIDEN VISUAALISEEN QA:HUN:
+- Testaa visuaalinen omaperäisyys ja premium-viimeistely
+  yhdessä selkeyden kanssa. Geneeriset AI-koristeet on
+  kielletty, mutta täysin paljas ja myynnillisesti heikko
+  layout ei myöskään ole premium.
+- Arvioi koko sivuston kuvituksen yhtenäisyys.
+  Vahvistetut asiakkaan omat kuvat ovat ensisijaisia.
+  Luvallinen pelkistetty kuvitus on parempi kuin
+  ristiriitaiset stock-kuvat, mutta kuvausköyhyys on
+  ratkaistava sommittelulla eikä täytekuvilla.
+- Varmista ensisijainen toimintaan ohjaava CTA, esim.
+  Kysy arviota tai Soita, etusivulla. Palvelut ja
+  Hinnasto eivät aina korvaa yhteydenottokehotusta.
+  Linkkien pitää selvästi näyttää painettavilta,
+  vaikka koristeellisia nuolia ei käytettäisi.
+- Kuvat tulee pyytää yritykseltä vasta, kun kiinnostus
+  on nimenomaisesti vahvistettu ja kuva-aineiston puute
+  todettu. Pyynnöt ovat ihmisen tarkistettavia
+  luonnoksia, eivät automaattisia lähetyksiä.
+- Ulkoinen arvio pelkän mobiilitallenteen pohjalta ei
+  todista desktop-laatua, todellista kuvaluokitusta,
+  käyttöoikeuksia, asiakkaan hyväksyntää tai konversiota.
+  Merkitse tällainen epävarmuus oikein.
+
 YLEINEN V6-KORJAUS ASIAKASPALAUTTEESTA:
 - Vältä sekalaisia eri vuodenaikojen, valaistusten ja tyylien
   kuvapankkikuvia. Valitse yhtenäinen kuvallinen linja tai
