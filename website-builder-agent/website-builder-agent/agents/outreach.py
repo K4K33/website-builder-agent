@@ -13,6 +13,7 @@ kun käyttäjä antaa siihen nimenomaisen hyväksynnän.
 
 from utils.claude_client import ask_claude_json
 from utils.lead_intelligence import evaluate_prospect
+from utils.client_handover import demo_image_caption, demo_photo_source_policy
 from utils.marketing_compliance import company_is_suppressed
 from utils.state import (
     get_company,
@@ -46,20 +47,29 @@ Pakollinen runko, luonnollisena tekstinä ilman luetelmia:
 5. Kerro SUORA kaupallinen tarjous: 'Jos pidätte ehdotuksesta, voin
    toteuttaa uuden sivuston teille kokonaan.' Tämä ei ole väite
    siitä, että valmis tuotantosivu olisi jo toimitettu.
-6. Kun asiakkaalle esitellään QA-hyväksytty demo, anna mahdollisuus
+6. Asiakkaan oikeat, käytettäväksi hyväksytyt omat valokuvat
+   käytetään ensisijaisesti. Jos niitä ei ole, valitaan
+   keskenään yhtenäiset, toimialaan liittyvät esimerkkikuvat.
+   Lyhyt kuvahuomautus tulee demon ALAPUOLELLE viestissä:
+   esimerkkikuvat ovat havainnollistavia ja yritys voi
+   HALUTESSAAN toimittaa toivomiaan kuvia lopulliselle sivulle.
+   Tämä ei ole pakollinen pyyntö, eikä yritystä pidä painostaa.
+   Kuvahuomautus lisätään ohjelmallisesti ja toimitetaan
+   myös HTML-demokortin yhteyteen; älä itse toista sitä.
+7. Kun asiakkaalle esitellään QA-hyväksytty demo, anna mahdollisuus
    kertoa mitä ominaisuuksia tai sisältöjä lopullisella sivulla PITÄÄ
    ehdottomasti olla. Helpoin tapa on vastata samaan sähköpostiin.
    Jos yrityskohtaisissa tiedoissa on erikseen vahvistettu toimiva
    demopalautelinkki, lisää se luontevasti toissijaiseksi vaihtoehdoksi.
    Älä koskaan keksi linkkiä, väitä lomaketta toimivaksi ilman
    toimitustestiä tai tee palautteen antamisesta ostamisen ehtoa.
-7. Päätä DEMON KATSOMISEEN liittyvään suoraan kysymykseen:
+8. Päätä DEMON KATSOMISEEN liittyvään suoraan kysymykseen:
    'Haluaisitteko tällaiset verkkosivut yrityksellenne?'
    Sama ajatus voidaan muotoilla yrityksen tilanteeseen sopivasti.
    Viesti myy juuri tälle yritykselle tehtyä demosivustoa, EI
    Kaurivon geneeristä portfolioesimerkkiä tai muiden yritysten
    sivuja. Älä piilota kysymystä epämääräiseen pehmentelyyn.
-8. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
+9. Lopeta 'Ystävällisin terveisin, Kaarlo, Kaurivo,
    hello.kaurivo@gmail.com'.
 
 Jos yrityksellä ei ole TODETUSTI verkkosivuja, älä väitä nähneesi
@@ -93,6 +103,27 @@ Sähköposti lähetetään vain ihmisen erillisellä hyväksynnällä.
 Palauta VAIN validi JSON:
 {"subject":"lyhyt yrityskohtainen suora otsikko","body":"valmis sähköpostin runko"}
 """
+
+
+def place_demo_caption(body: str, note: str, demo_url: str = "") -> str:
+    """Insert source-accurate caption beneath the demo link/paragraph.
+
+    Store the caption separately as demo_card_caption for HTML email cards.
+    Never sends a message; draft remains subject to manual approval.
+    """
+    if not note or note in body:
+        return body
+    if demo_url and demo_url in body:
+        index = body.index(demo_url) + len(demo_url)
+        return body[:index] + "\n" + note + body[index:]
+    paragraphs = body.split("\n\n")
+    for index, paragraph in enumerate(paragraphs):
+        lower = paragraph.casefold()
+        if any(term in lower for term in ("demo", "esikatselu", "verkkosivuehdotus", "sivustoehdotus")):
+            paragraphs.insert(index + 1, note)
+            return "\n\n".join(paragraphs)
+    paragraphs.append(note)
+    return "\n\n".join(paragraphs)
 
 
 def draft_outreach(
@@ -246,6 +277,11 @@ Valmis julkinen demolinkki (ei anneta ellei vahvistettu):
 {company.get("demo_url", "")}
 Jos tämä on tyhjä, viesti voi viitata kuvan ja linkin sisältävään
 erilliseen hyväksyttyyn HTML-demokorttiin. Älä keksi URLia.
+Demon kuvavalinnan periaate:
+{demo_photo_source_policy(company)}
+Demon todella käytetyt kuvat vain ihmisen tarkistaman metatiedon perusteella:
+{company.get("demo_media", {})}
+Kuvateksti lisätään demon alle ohjelmallisesti, älä toista sitä.
 Jokainen asiakkaan hyöty ja havainto tarkistetaan ennen lähettämistä.
 """
 
@@ -308,6 +344,14 @@ Jokainen asiakkaan hyöty ja havainto tarkistetaan ennen lähettämistä.
             "not in the personal sales copy."
         )
 
+    # Put the source-accurate image note directly beneath the linked demo
+    # and expose it as a separate caption for the HTML demo card.
+    media_note = demo_image_caption(company)
+    demo_url = company.get("demo_url")
+    body = place_demo_caption(
+        body, media_note, demo_url if isinstance(demo_url, str) else ""
+    )
+
     # ---------------------------------------------------------
     # 5. Tallenna luonnos
     # ---------------------------------------------------------
@@ -315,6 +359,7 @@ Jokainen asiakkaan hyöty ja havainto tarkistetaan ennen lähettämistä.
     outreach_data = {
         "subject": subject,
         "body": body,
+        "demo_card_caption": media_note,
         "approved": False,
     }
 
