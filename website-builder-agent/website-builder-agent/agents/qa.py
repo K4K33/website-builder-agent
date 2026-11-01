@@ -713,6 +713,21 @@ jotka kierrättävät käyttäjää ilman uutta tietoa.
 Älä väitä sivustonlaajuista tarkistusta tehdyksi, jos
 käytössä on vain yksittäisen sivun kuvakaappaus.
 
+YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
+- Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat
+  saatavilla, olennaisia ja käyttöoikeudeltaan ihmisen vahvistamia.
+- Ellei sopivia ja luvallisia yrityskuvia ole, valitse laadukkaat,
+  keskenään yhtenäiset ja toimialaan osuvat ESIMERKKIKUVAT.
+- Älä esitä esimerkkikuvien henkilöitä asiakkaan henkilöstönä
+  tai esimerkkejä asiakkaan toteuttamina projekteina.
+- Jos demo käyttää esimerkkikuvia, sen lähetysviestissä
+  näkyy DEMOLINKIN/KUVAN ALLA lyhyt huomautus ja vapaaehtoinen
+  tarjous toimittaa omia kuvia lopullista sivustoa varten.
+  Jos kuvat ovat asiakkaan oikeita kuvia, älä kutsu niitä
+  esimerkkikuviksi. Yrityksen kuvia ei saa kopioida luvatta.
+- Tämän kuvahuomautuksen lisääminen ei ole automaattista
+  markkinointiviestin lähettämistä eikä pakollinen kuvapyyntö.
+
 YLEINEN V7-LAATURIMA KAIKKIEN ASIAKKAIDEN VISUAALISEEN QA:HUN:
 - Testaa visuaalinen omaperäisyys ja premium-viimeistely
   yhdessä selkeyden kanssa. Geneeriset AI-koristeet on
