@@ -124,8 +124,10 @@ class NightlyDiscoveryTests(unittest.TestCase):
     def test_schedule_and_credentials_are_separated(self):
         path = Path(__file__).resolve().parents[3] / ".github/workflows/kaurivo-nightly.yml"
         workflow = path.read_text(encoding="utf-8")
-        self.assertIn('timezone: "Europe/Helsinki"', workflow)
-        self.assertIn('cron: "17 3 * * *"', workflow)
+        self.assertNotIn('schedule:', workflow)
+        self.assertIn('workflow_dispatch:', workflow)
+        national=(Path(__file__).resolve().parents[3] / ".github/workflows/kaurivo-national-prh.yml").read_text(encoding="utf-8")
+        self.assertIn('cron: "13 4 * * *"', national)
         self.assertIn("contents: read", workflow)
         self.assertIn('OPENROUTER_API_KEY: ""', workflow)
         self.assertNotIn("mcp__Gmail__", workflow)
