@@ -6,6 +6,36 @@ photo upload portal, publishing, or consent collection is implemented by this
 document alone. The helper `client_photo_intake_plan` returns an offline,
 non-sending decision and a **draft**, never sends it.
 
+## Default image source and the short note below EVERY example-image demo
+
+**First choice:** use real client/company photography when it is available,
+appropriate for the design, and its rights/permission have been verified.
+**Fallback:** use legally usable, high-quality *example photos* with one
+coherent look, matching the actual sector and brand. The existence of
+an image on a public business website does NOT itself authorize Kaurivo
+to copy or republish it in a public pitch demo.
+
+For demos containing example photography, put this short note **right below
+the demo preview image/link in the first message**, in normal small text:
+
+> Demon kuvat ovat esimerkkikuvia. Halutessanne voitte lähettää meille omia
+> kuvia, joita toivoisitte käytettävän lopullisilla verkkosivuilla.
+
+If only SOME pictures are examples, use "Osa demon kuvista on
+esimerkkikuvia." If reviewed final demo uses approved client photos only,
+don't falsely label them examples or add an unnecessary image disclaimer.
+Where photo sources have not been human-verified, use a neutral truth:
+"Demon kuvitus on alustava." The caption is automatically attached to
+the draft via `demo_image_caption`, stored under `demo_card_caption`
+for the actual HTML card, and inserted below the real demo link in
+the text body when available. The actual HTML email sender must render
+`demo_card_caption` beneath the demo card; storing the field alone
+is not proof that a separate sender integrates it.
+
+The mention is an **optional offer**, not a demand to send photos in a
+cold email. A separate detailed photo request may be drafted only
+after demonstrated interest and a documented design need, as before.
+
 ## When to request company pictures
 
 **Before demonstrated interest:** research and create a compelling initial
