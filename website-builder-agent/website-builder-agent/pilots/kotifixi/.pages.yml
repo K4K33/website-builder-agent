@@ -1,0 +1,43 @@
+# This file becomes active only after the whole pilots/kotifixi/ folder is
+# copied into its OWN separate GitHub repository root. Do not grant a
+# customer's account access to the Kaurivo source repository.
+media:
+  input: media
+  output: /media
+  rename: safe
+  categories: [image]
+settings:
+  content:
+    merge: true
+content:
+  - name: kotifixi-site
+    label: Kotifixin verkkosivujen sisältö
+    type: file
+    path: content/site.json
+    format: json
+    operations:
+      create: false
+      delete: false
+    fields:
+      - { name: seo_title, label: Hakutuloksen otsikko, type: string, required: true }
+      - { name: seo_description, label: Hakutuloksen kuvaus, type: text, required: true }
+      - { name: hero_heading, label: Etusivun pääotsikko, type: string, required: true }
+      - { name: hero_emphasis, label: Pääotsikon korostettu osa, type: string, required: true }
+      - { name: hero_intro, label: Etusivun esittelyteksti, type: text, required: true }
+      - { name: hero_image, label: Etusivun iso kuva, type: image, required: true }
+      - { name: service1_title, label: Palvelu 1 nimi, type: string, required: true }
+      - { name: service1_description, label: Palvelu 1 kuvaus, type: text, required: true }
+      - { name: service1_image, label: Palvelu 1 kuva, type: image, required: true }
+      - { name: service2_title, label: Palvelu 2 nimi, type: string, required: true }
+      - { name: service2_description, label: Palvelu 2 kuvaus, type: text, required: true }
+      - { name: service2_image, label: Palvelu 2 kuva, type: image, required: true }
+      - { name: service3_title, label: Palvelu 3 nimi, type: string, required: true }
+      - { name: service3_description, label: Palvelu 3 kuvaus, type: text, required: true }
+      - { name: service3_image, label: Palvelu 3 kuva, type: image, required: true }
+      - { name: about_image, label: Tietoa meistä -osion kuva, type: image, required: true }
+      - { name: pricing_url, label: Hinnaston osoite https, type: string, required: true }
+      - { name: phone_tel, label: Puhelin (+358...), type: string, required: true }
+      - { name: phone_display, label: Puhelin näytettävässä muodossa, type: string, required: true }
+      - { name: email, label: Sähköposti, type: string, required: true }
+      - { name: hours, label: Aukioloajat, type: string, required: true }
+      - { name: company_id, label: Y-tunnus (vahvistettava), type: string, required: true }
