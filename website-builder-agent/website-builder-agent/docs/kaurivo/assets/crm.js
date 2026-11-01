@@ -452,6 +452,8 @@
     const problems=Array.isArray(audit.issues)?audit.issues:[];
     append(row.main,"div","record-sub",
       "Automaattinen HTML-tarkistus: "+problems.length+" mahdollista perustietojen puutetta"+
+      " · "+(Number(audit.checked_internal_links)||0)+" sisälinkin pistotarkistusta"+
+      " · "+(Number(audit.possible_broken_internal_links)||0)+" mahdollista HEAD-virhettä"+
       " · Ei Lighthouse-/visuaalinen arvio");
     if(audit.html_language_hint&&audit.html_language_hint!=="undetermined")
       append(row.main,"div","record-sub","Sivuston kielivihje: "+
