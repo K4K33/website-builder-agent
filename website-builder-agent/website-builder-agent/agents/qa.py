@@ -215,6 +215,33 @@ järkevästi.
 sisältöä ei ole researchissä.
 
 ========================================
+YLEINEN ASIAKASSIVUJEN SISÄLLÖN JA POLKUJEN QA
+========================================
+
+Kaikille asiakasprojekteille yhteinen vaatimus:
+- Vahvistetun tarjonnan pitää näkyä heti ensimmäisellä
+  mobiilinäkymällä: mitä yritys tekee, kenelle ja miten edetään.
+- Oikeat tärkeimmät palvelut on löydettävä helposti. Älä
+  palkitse koristeellista sisältöä palvelujen piilottamisesta.
+- Kaikki CTA-, navigointi-, yhteystieto- ja hinnastolinkit
+  pitää tarkistaa niiden tarkoitetun tehtävän kannalta.
+  Ulkoista linkkiä ei saa väittää sisäiseksi palveluksi.
+  Älä väitä todellisen kohdepalvelun toimivuutta, jos
+  ulkoista URLia ei ole erikseen avattu/testattu.
+- Poista toistuvat tyhjät markkinointiväitteet,
+  geneeriset prosessimerkinnät ja epäselvät seuraavat vaiheet.
+- Varmista logon alkuperäisyys ja yrityksen oikeaa toimintaa
+  vastaava kuvitus. Epäselvä tai keksitty brändimateriaali
+  on hyväksyntää estävä selvittämätön asia.
+- Näkyvä lomake ei todista viestin perillemenoa.
+  Väitetty toimiva lomake vaatii oikean lähetys- ja
+  vastaanottotestin ennen tuotantohyväksyntää.
+- Hidas live-esikatselun kylmäkäynnistys voi heikentää
+  vaikutelmaa: älä väitä nopeutta ilman oikeita mittauksia.
+Älä keksi puuttuvia palveluita tai väitteitä. Raportoi
+todelliset puutteet ja erottele todistamattomat asiat.
+
+========================================
 PALAUTUS
 ========================================
 
@@ -673,6 +700,27 @@ ratkaisu voi saada korkean arvion. Kuvista ei voi todistaa animaation toimivuutt
 tarkista mukaan annettu motion_plan ja HTML/CSS/JS; älä väitä näkemättä todennetuksi.
 Tavallinen siisti tekstisivu ei yksin vastaa vaativaa visuaalista laatutavoitetta.
 Jokainen design_decisions-päätös on tarkistettava omassa design_checks-rivissään.
+PAKOLLINEN YLEINEN KAIKKIEN ASIAKKAIDEN VISUAALINEN TARKISTUS:
+Ensimmäinen mobiilinäkymä kertoo yrityksen vahvistetut palvelut,
+kohderyhmän ja ensisijaisen selkeän jatkotoimen. Vertaa todellista
+asiakkaan logoa ja värejä vahvistettuihin brändiaineistoihin.
+Älä hyväksy itse keksittyä symbolia oikeana logona.
+Tarkista kuvien merkityksellisyys OIKEALLE työlle: geneerinen
+luksus-/lifestyle-visualisointi ilman yhteyttä yrityksen tarjoamiin
+palveluihin alentaa imagery/art_direction-pisteitä ja voi olla blocker.
+Vähennä toistuvia numerointeja, etikettejä, koristeellisia nuolia
+ja täytetekstiä: huomioi erityisesti navigaation helppous.
+Tarkista CTA-polku ja todelliset hinnasto-/yhteyslinkkien kohteet
+niin pitkälle kuin aineisto mahdollistaa. Jos kohdetta ei ole
+voitu avata, merkitse se todentamattomaksi; älä keksi varmistusta.
+Jos mobiilin ensisijainen palvelupolku jää epäselväksi,
+brändi on väärennetty tai kuva-aihe johtaa harhaan, merkitse
+konkreettinen blocker ja palaute. Älä palkitse generoitua ulkoasua
+yksinomaan koristeista tai hyvistä pisteistä.
+Animaatio ja hosting-latausaika vaativat oikean selaimen,
+myös heikolla yhteydellä/kylmäkäynnistyksellä. Still-kuva ja
+HTML eivät yksin todista niitä. Mainitse testirajaus.
+
 Tämä palautusskeema korvaa aiemman esimerkkiskeeman:
 {
   "content_ok": true,
