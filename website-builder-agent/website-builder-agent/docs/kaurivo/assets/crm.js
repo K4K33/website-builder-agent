@@ -287,6 +287,7 @@
     "",
     "Med vänliga hälsningar",
     "Kaarlo från Kaurivo",
+    "Kaurivo – webbdesign och tjänster: https://k4k33.github.io/website-builder-agent/kaurivo/",
     "",
     "Om ni inte vill få fler marknadsföringsmeddelanden från Kaurivo kan ni svara på detta mejl med: ingen mer kontakt."
    ].join("\n");
@@ -303,6 +304,7 @@
     "",
     "Best regards",
     "Kaarlo from Kaurivo",
+    "Kaurivo – website design and services: https://k4k33.github.io/website-builder-agent/kaurivo/",
     "",
     "If you would prefer not to receive further marketing emails from Kaurivo, simply reply to this message with: no further contact."
    ].join("\n");
@@ -319,6 +321,7 @@
    "",
    "Ystävällisin terveisin",
    "Kaarlo Kaurivolta",
+   "Kaurivo – verkkosivut ja palvelut: https://k4k33.github.io/website-builder-agent/kaurivo/?lang=fi",
    "",
    "Jos ette halua Kaurivolta uusia markkinointiyhteydenottoja, voitte vastata tähän viestiin: ei yhteydenottoja."
   ].join("\n");
