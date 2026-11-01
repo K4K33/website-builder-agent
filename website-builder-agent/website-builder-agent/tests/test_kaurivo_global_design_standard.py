@@ -11,7 +11,7 @@ class UniversalDesignStandardTests(unittest.TestCase):
     def test_every_client_has_one_checklist_and_evidence_requirements(self):
         checklist = (ROOT / "docs" / "KAURIVO_GLOBAL_DESIGN_QA_CHECKLIST.md").read_text(encoding="utf-8")
         for required in (
-            "ALL clients", "Five-second comprehension", "customer work",
+            "ALL clients", "Five-second comprehension", "actual company work",
             "verified services", "genuine ordered sequence", "external URL",
             "pricing", "cold-start", "320, 390, 768 and 1440",
             "CMS", "independently reviewed", "NOT TESTED",
