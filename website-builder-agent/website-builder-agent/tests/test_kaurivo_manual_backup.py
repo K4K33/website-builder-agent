@@ -43,7 +43,14 @@ class BackupTests(unittest.TestCase):
             token="mock",run_id="32",local_day=day,fetch=remote([])))
         self.assertTrue(should_scan(event="schedule",cron=BACKUP_CRON,
             token="mock",run_id="32",local_day=day,fetch=lambda *_: (_ for _ in ()).throw(OSError())))
-        self.assertTrue(should_scan(event="schedule",cron="13 4 * * *",token="mock"))
+        # GitHub delayed the 04:13 local run until 11:12 on 2026-11-01.
+        late_success={**ok,"created_at":"2026-11-01T09:12:11Z"}
+        self.assertFalse(should_scan(event="schedule",cron=BACKUP_CRON,
+            token="mock",run_id="33",local_day=day,fetch=remote([late_success])))
+        self.assertFalse(should_scan(event="schedule",cron="13 4 * * *",
+            token="mock",run_id="33",local_day=day,fetch=remote([late_success])))
+        self.assertTrue(should_scan(event="schedule",cron="13 4 * * *",
+            token="mock",run_id="33",local_day=day,fetch=remote([])))
         self.assertTrue(should_scan(event="workflow_dispatch",cron="",token="mock"))
 
     def test_workflow_has_two_local_scans_and_recovery_gate(self):
