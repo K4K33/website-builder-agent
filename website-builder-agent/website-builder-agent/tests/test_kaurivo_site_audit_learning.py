@@ -53,6 +53,28 @@ class SiteLearningTests(unittest.TestCase):
         self.assertIn("contact_link_missing",result["issues"])
         self.assertEqual(result["html_language_hint"],"undetermined")
 
+    def test_same_origin_broken_links_are_only_head_hints(self):
+        class LinkSite(FakeSite):
+            def iter_content(self,chunk_size=None):
+                yield (b'<html lang="fi"><head><title>Ammattipalvelu Oy</title>'
+                 b'<meta name="viewport" content="width=device-width">'
+                 b'<meta name="description" content="Ammattipalvelut kaikille asiakkaille Suomessa.">'
+                 b'</head><body><h1>Palvelut</h1><a href="/yhteystiedot">Yhteystiedot</a>'
+                 b'<a href="https://external.example/contact">External</a>'
+                 b'<a href="/palvelut">Palvelut</a></body></html>')
+        calls=[]
+        class H:
+            def __init__(self,status):self.status_code=status
+            def close(self):pass
+        def head(url,**kwargs):
+            calls.append(url)
+            return H(404 if "yhteystiedot" in url else 200)
+        result=inspect_site("https://firm.fi",get=lambda *a,**k:LinkSite(),
+            head=head,resolve=public_dns)
+        self.assertEqual(result["checked_internal_links"],2)
+        self.assertEqual(result["possible_broken_internal_links"],1)
+        self.assertTrue(all(x.startswith("https://firm.fi/") for x in calls))
+
     def test_packet_cache_reuses_results_without_http(self):
         with tempfile.TemporaryDirectory() as temp:
             packet=Path(temp)/"shortlist.json";cache=Path(temp)/"cache.json"
