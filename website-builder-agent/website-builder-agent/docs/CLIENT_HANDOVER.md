@@ -5,6 +5,22 @@ Kaurivo redesign demo. The owner liked the layout but would not necessarily
 approve changing company colors, photographs or slogans. They also asked
 how the business could edit its own site after delivery.
 
+## Interested-client photo request (new universal standard)
+
+See `docs/KAURIVO_CLIENT_PHOTOGRAPHY_INTAKE.md`.
+When a company shows explicit interest, check whether it has enough
+permitted, suitable original pictures for the agreed design. Ask for
+optional owner photos of work, premises, products/equipment or team
+(if lawful and appropriate), only after confirming that the request
+fits their actual business. Do not make the initial demo depend on
+their reply. Keep brand, slogans and owner-selected photos by default,
+but redesign the layout boldly. If no pictures are available,
+use fewer coordinated licensed illustrations and distinctive
+typography/composition; do not force assorted stock photos.
+Record use rights, recognizable-person permission and separate
+public demo/portfolio authorization. Do not put raw client photos
+or private consent details in public repositories.
+
 ## Default policy for **every** future client
 
 **A bold redesign does not require a rebrand.**
