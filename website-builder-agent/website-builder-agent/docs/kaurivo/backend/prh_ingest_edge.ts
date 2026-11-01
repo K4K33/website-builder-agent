@@ -169,6 +169,10 @@ Deno.serve(async req => {
     viewport_present:rawAudit?.viewport_present===true,
     h1_present:rawAudit?.h1_present===true,
     contact_link_present:rawAudit?.contact_link_present===true,
+    checked_internal_links:Number.isInteger(rawAudit?.checked_internal_links)?
+      Math.max(0,Math.min(2,Number(rawAudit?.checked_internal_links))):0,
+    possible_broken_internal_links:Number.isInteger(rawAudit?.possible_broken_internal_links)?
+      Math.max(0,Math.min(2,Number(rawAudit?.possible_broken_internal_links))):0,
     html_language_hint:["fi","sv","fi_sv","en"].includes(String(rawAudit?.html_language_hint))
      ?rawAudit?.html_language_hint:"undetermined",
     method:"one_public_homepage_html_only"}:{};
@@ -179,11 +183,14 @@ Deno.serve(async req => {
   // Provisional 0..60 research ordering. It is not a prediction of sale,
   // proof of a design flaw, or an actual Lighthouse performance measurement.
   const siteListed=Boolean(clean(c.website_listed_url,1200));
+  const possibleBroken=technicalAudit&&typeof technicalAudit==="object"&&
+    "possible_broken_internal_links" in technicalAudit?
+     Math.max(0,Math.min(2,Number(technicalAudit.possible_broken_internal_links)||0)):0;
   const preliminary=Math.min(60,(isTarget?25:12)+(siteListed?8:0)+
-   (status==="html_checked"?8:0)+Math.min(15,auditIssues.length*3));
+   (status==="html_checked"?8:0)+Math.min(15,auditIssues.length*3)+possibleBroken*2);
   const reasons=[isTarget?"Asiakaspalvelutoimiala":"Toimiala selvitettävä",
     siteListed?"PRH-verkkosivulinkki":"PRH ei ilmoita sivua",
-    status==="html_checked"?auditIssues.length+" HTML-metatiedon puutetta (tarkistettava)":
+    status==="html_checked"?auditIssues.length+" HTML-metatiedon puutetta, "+possibleBroken+" mahdollista HEAD-linkkivirhettä":
       "Sivuston tekninen tarkistus ei vielä valmis"];
   const screenedReason=reasons.join(" · ").slice(0,500);
   candidates.push({
