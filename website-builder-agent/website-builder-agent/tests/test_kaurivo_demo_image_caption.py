@@ -103,7 +103,7 @@ class PhotoPriorityTests(unittest.TestCase):
         self.assertEqual(saved["body"].count("Demon kuvat ovat esimerkkikuvia."), 1)
         self.assertIn("https://example.org/demo\nDemon kuvat", saved["body"])
         self.assertEqual(saved["demo_card_caption"], demo_image_caption(c))
-        self.assertIn("demo_media", ask.call_args.args[1])
+        self.assertIn("examples_only", ask.call_args.args[1])
 
     def test_quality_docs_require_caption_below_demo(self):
         outreach_rules = (ROOT / "docs/OUTREACH.md").read_text(encoding="utf-8")
