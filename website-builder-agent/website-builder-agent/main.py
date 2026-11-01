@@ -24,6 +24,11 @@ from agents import outreach
 from utils import publisher
 from utils.production_readiness import readiness_report
 from utils.client_handover import inspect_client_delivery
+from utils.kaurivo_premium_site import inspect_site_file
+from utils.kaurivo_premium_sales import (
+    demo_improvement_packet, agreement_gate, delivery_gate, funnel_metrics,
+)
+from utils.pitch_quality import assess_pitch_packet
 from utils.lead_intelligence import evaluate_prospect, site_signal
 from utils.company_registry import lookup_by_business_id, lookup_by_name_and_location
 from utils.free_enrichment import enrich_queue
@@ -265,6 +270,60 @@ def cmd_handover_check(args):
             "Client delivery BLOCKED: CMS self-editing is not proven. "
             "A website demo can still be reviewed without this check."
         )
+
+
+# =========================================================
+# PREMIUM CLIENT QUALITY — OFFLINE, NO PAID CREDITS OR CUSTOMER MESSAGES
+# =========================================================
+
+def cmd_premium_site_audit(args):
+    result = inspect_site_file(args.html, site_root=args.root, production=args.production)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    if not result["pass"]:
+        raise RuntimeError("Premium static preflight BLOCKED. Fix listed errors.")
+
+
+def cmd_demo_evidence(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Lead not found.")
+    packet = demo_improvement_packet(company)
+    print(json.dumps({"company_slug": slug, **packet}, ensure_ascii=False, indent=2))
+    if not packet["ready_for_human_sales_review"]:
+        raise RuntimeError("Demo evidence incomplete; never send an unverified comparison.")
+
+
+def cmd_premium_pitch_gate(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Lead not found.")
+    packet = assess_pitch_packet(company)
+    print(json.dumps({"company_slug": slug, **packet}, ensure_ascii=False, indent=2))
+    if not packet["premium_demo_ready_for_outreach_review"]:
+        raise RuntimeError("Premium demo pitch is not approved; do not contact the customer.")
+
+
+def cmd_project_terms(args):
+    terms = json.loads(Path(args.file).read_text(encoding="utf-8"))
+    result = agreement_gate(terms)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    if not result["ready_to_start_work"]:
+        raise RuntimeError("Project terms incomplete; do not start paid customer work.")
+
+
+def cmd_delivery_preflight(args):
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Customer not found.")
+    site = inspect_site_file(args.html, site_root=args.root, production=True)
+    result = delivery_gate(company, site)
+    print(json.dumps({"company_slug": slug, "site": site, **result}, ensure_ascii=False, indent=2))
+    if not result["ready_to_deliver"]:
+        raise RuntimeError("Client delivery blocked; live CMS and quality not proven.")
+
+
+def cmd_sales_funnel(args):
+    print(json.dumps(funnel_metrics(load_companies()), ensure_ascii=False, indent=2))
 
 
 # =========================================================
@@ -653,6 +712,34 @@ def build_parser():
     )
     handover.add_argument("company", help="Company name or slug")
     handover.set_defaults(func=cmd_handover_check)
+
+    # Premium gates use only local files, never paid APIs or customer email.
+    premium = subparsers.add_parser("premium-audit", help="Static HTML, SEO, accessibility and links preflight.")
+    premium.add_argument("--html", required=True, help="Path to index.html.")
+    premium.add_argument("--root", default=None, help="Site root containing local images/styles/pages.")
+    premium.add_argument("--production", action="store_true", help="Block noindex.")
+    premium.set_defaults(func=cmd_premium_site_audit)
+
+    demo = subparsers.add_parser("demo-evidence", help="3 genuine before/after opportunities and industry references.")
+    demo.add_argument("company")
+    demo.set_defaults(func=cmd_demo_evidence)
+
+    pitch = subparsers.add_parser("premium-pitch-check", help="Existing rendered demo approval gate.")
+    pitch.add_argument("company")
+    pitch.set_defaults(func=cmd_premium_pitch_gate)
+
+    terms = subparsers.add_parser("project-terms", help="Check a local versioned project agreement checklist.")
+    terms.add_argument("--file", required=True)
+    terms.set_defaults(func=cmd_project_terms)
+
+    delivery = subparsers.add_parser("delivery-preflight", help="Production site + real client CMS evidence.")
+    delivery.add_argument("company")
+    delivery.add_argument("--html", required=True)
+    delivery.add_argument("--root", default=None)
+    delivery.set_defaults(func=cmd_delivery_preflight)
+
+    funnel = subparsers.add_parser("sales-funnel", help="Local aggregate counts; no public prospect data.")
+    funnel.set_defaults(func=cmd_sales_funnel)
 
     # -----------------------------------------------------
     # LIST
