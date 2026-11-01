@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from urllib.parse import urlsplit
 from utils.client_handover import client_design_brief, inspect_client_delivery
-from utils.pitch_quality import assess_pitch_packet
+from utils.lead_intelligence import site_signal
 
 
 def _https(value):
@@ -51,6 +51,10 @@ def demo_improvement_packet(company):
         errors.append("At least three reviewed same-industry design references required.")
     observations = []
     current_url = company.get("url") or company.get("website") or ""
+    no_site = site_signal(company) == "confirmed_no_website"
+    absence_source = (company.get("site_verification") or {}).get("source_url")
+    if not current_url and not no_site:
+        errors.append("No site listed is NOT proof of absence: verify independently first.")
     for item in research.get("verified_improvements") or []:
         if not isinstance(item, dict) or item.get("human_verified") is not True:
             continue
@@ -58,7 +62,8 @@ def demo_improvement_packet(company):
         after = str(item.get("after_proposal") or "").strip()
         source = str(item.get("source_url") or "").strip()
         if (len(before) >= 12 and len(after) >= 12 and _https(source)
-                and (not current_url or urlsplit(source).hostname == urlsplit(current_url).hostname)):
+                and ((current_url and urlsplit(source).hostname == urlsplit(current_url).hostname)
+                     or (no_site and source == absence_source))):
             observations.append({"before": before[:350], "after_proposal": after[:350],
                                  "source_url": source, "benefit_type": "proposed_not_measured"})
     if len(observations) < 3:
@@ -112,7 +117,12 @@ def delivery_gate(company, site_audit):
     problems = list(delivery["issues"])
     if site_audit.get("pass") is not True:
         problems.append("Automated HTML site preflight is not passing.")
-    if site_audit.get("warnings"):
+    delivery_record = (company.get("delivery") or {}) if isinstance(company, dict) else {}
+    if site_audit.get("warnings") and not (
+        delivery_record.get("quality_warnings_reviewed") is True
+        and isinstance(delivery_record.get("quality_warning_notes"), str)
+        and len(delivery_record["quality_warning_notes"].strip()) >= 15
+    ):
         problems.append("Site preflight warnings require human documented resolution.")
     return {"ready_to_deliver": not problems, "issues": sorted(set(problems)),
             "cms_platform": delivery["cms_platform"],
@@ -143,7 +153,8 @@ def funnel_metrics(companies):
             counts["contacted"] += 1
         if company.get("status") == "proposal" or (company.get("sale") or {}).get("status") == "proposal":
             counts["proposal"] += 1
-        if (company.get("sale") or {}).get("status") == "won":
+        if ((company.get("sale") or {}).get("status") == "won"
+                and (company.get("sale") or {}).get("source_verified") is True):
             counts["won"] += 1
         if (company.get("delivery") or {}).get("customer_acceptance") is True:
             counts["delivered"] += 1
