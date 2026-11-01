@@ -1,5 +1,7 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+**Learning history:** `docs/KAURIVO_DESIGN_LEARNING_LOG.md`. New owner/external feedback must be recorded there with review scope and regression checks before altering the universal rules.
+
 **Scope:** ALL clients, new builds, redesigns, demo revisions, private previews,
 full site deliveries. Not a special rule set for any single company.
 **Use:** Designer + agent + independent QA + human reviewer. Record each as
