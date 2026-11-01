@@ -60,6 +60,21 @@ Deno.serve(async req => {
   data=JSON.parse(text);
   if(!data||typeof data!=="object"||Array.isArray(data))throw Error("format");
  } catch(_){return send(400,{ok:false,error:"invalid_json"});}
+ // Atomically reserve one optional search API credit per outgoing query.
+ // Only this verified GitHub Actions workflow can request it. The service
+ // account's private ledger hard-stops the budget at 750/month.
+ if(data.schema==="kaurivo_tavily_credit_claim_v1"){
+  if(Object.keys(data).length!==1)return send(400,{ok:false,error:"invalid_claim"});
+  try{
+   const r=await fetch(SUPABASE_URL+"/rest/v1/rpc/kaurivo_claim_search_credit",{
+    method:"POST",headers:{"apikey":SERVICE_ROLE,"authorization":"Bearer "+SERVICE_ROLE,
+      "content-type":"application/json","cache-control":"no-store"},body:"{}"
+   });
+   if(!r.ok)return send(503,{ok:false,error:"budget_unavailable"});
+   const granted=await r.json();
+   return send(200,{ok:true,granted:granted===true});
+  }catch(_){return send(503,{ok:false,error:"budget_unavailable"});}
+ }
  // Privacy-preserving feedback: only aggregates from >=8 individually
  // reviewed leads per industry. No personal records or company names leave
  // the server, and the GitHub OIDC gate above applies to this operation.
