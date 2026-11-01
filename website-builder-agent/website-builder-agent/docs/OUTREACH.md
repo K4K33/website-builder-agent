@@ -32,8 +32,18 @@ pitch. Before the second sentence ends, the recipient should know who
 Kaarlo is and why this business has been contacted.
 
 1. Short recipient-specific subject, e.g. "Verkkosivuidea [Company]lle".
-2. Introduce sender immediately: "Olen Kaarlo Kaurivolta.
-   Suunnittelen ja toteutan verkkosivuja yrityksille."
+2. Answer **"Mikä Kaurivo on?"** immediately and in plain language:
+   "Olen Kaarlo Kaurivolta. Kaurivo on uuden sukupolven
+   verkkosivustudio, joka toteuttaa yrityksille uusia verkkosivuja
+   ja uudistaa nykyisiä." Follow with one concrete, verifiable benefit
+   (a site reflecting their brand, straightforward mobile use and
+   content the company can maintain itself). Don't describe Kaurivo
+   vaguely as a "teknologiayritys" or imply an established client roster,
+   staff size, revenue results, or completed commissions without evidence.
+   Write the same clear answer in **Swedish or English** when the
+   prospect's reviewed contact language requires it. Do not assume
+   that a company has an existing website merely because its name
+   appears in search results.
 3. State why THIS company was contacted; for an existing site, reference
    one or two factual, specific modernization opportunities. Connect
    the observation to an actual customer's practical task without
