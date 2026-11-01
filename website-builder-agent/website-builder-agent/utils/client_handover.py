@@ -82,6 +82,66 @@ def client_photo_intake_plan(company):
     }
 
 
+def demo_photo_source_policy(company):
+    """Plan demo imagery without falsely asserting image rights.
+
+    'Company first' means only actual human-verified, client-approved
+    photos with appropriate permissions may be treated as usable.
+    Any additional images must be coherent, legally usable *examples*.
+    This helper does not fetch assets or prove their presence in the build.
+    """
+    intake = client_photo_intake_plan(company)
+    available = intake["approved_usable_photos"]
+    return {
+        "priority": ("approved_company_photos_first_then_licensed_examples_if_needed"
+                     if available > 0 else "coherent_licensed_example_photos_if_needed"),
+        "usable_company_photo_count": available,
+        "example_photo_policy": (
+            "Only if approved company photos are absent/insufficient; "
+            "choose industry-relevant images with consistent visual style. "
+            "Never present stock models or work as client staff/work."
+        ),
+        "first_contact_note": (
+            "If the approved demo contains example photos, explain this "
+            "immediately below the demo in the outreach email and "
+            "invite OPTIONAL photos for the final design."
+        ),
+        "rights_note": (
+            "Photos from the client's existing website are not automatically "
+            "licensed to Kaurivo for a public demo. Verify permission first."
+        ),
+    }
+
+
+def demo_image_caption(company):
+    """Honest short Finnish note under a demo card / URL.
+
+    Source classification requires actual human review of the final demo.
+    If unavailable, do not claim client images or stock as verified.
+    No photo request is sent by this pure helper.
+    """
+    media = company.get("demo_media") or {}
+    if not isinstance(media, dict):
+        media = {}
+    verified = media.get("reviewed_by_human") is True
+    source = media.get("source") if verified else "unverified"
+    if source == "company_only" and media.get("rights_verified") is True:
+        return ""
+    if source == "examples_only":
+        opening = "Demon kuvat ovat esimerkkikuvia."
+    elif source == "mixed":
+        opening = "Osa demon kuvista on esimerkkikuvia."
+    elif source == "no_photos":
+        return ""
+    else:
+        opening = "Demon kuvitus on alustava."
+    return (
+        opening
+        + " Halutessanne voitte lähettää meille omia kuvia, "
+        "joita toivoisitte käytettävän lopullisilla verkkosivuilla."
+    )
+
+
 def client_design_brief(company):
     """Return a small bounded brief to include in generation/revision prompts.
 
@@ -123,6 +183,7 @@ def client_design_brief(company):
         "existing_colors_verified_by_client": color_hex if approved else [],
         "photo_policy": photo_policy,
         "photo_intake": client_photo_intake_plan(company),
+        "demo_photo_source": demo_photo_source_policy(company),
         "keep_client_logo_by_default": has_site,
         "keep_original_claims_and_taglines_by_default": has_site,
         "locked_copy": locked_copy,
