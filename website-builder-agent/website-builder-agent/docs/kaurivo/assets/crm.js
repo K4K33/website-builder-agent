@@ -83,18 +83,32 @@
  
  // Evidence-based research priority, NOT a forecast of purchase or solvency.
  function leadEvidenceScore(c){
-  const ready=Boolean(c.evidence_url)&&
-   ["weak_evidence","adequate_evidence","none_confirmed"].includes(c.website_assessment)&&
-   c.business_activity_assessment!=="unreviewed"&&c.customer_need!=="unknown";
-  if(!ready)return null;
-  let score=0;
-  if(["weak_evidence","none_confirmed"].includes(c.website_assessment))score+=30;
-  if(c.customer_need==="strong")score+=25;
-  if(c.customer_need==="moderate")score+=13;
-  if(c.business_activity_assessment==="active_evidence")score+=15;
-  if(c.payment_signal==="positive_evidence")score+=15;
-  if(c.demo_stage==="reviewed")score+=15;
-  return Math.min(score,100);
+  // 0-100 research priority, not buying probability. Unreviewed/inactive
+  // businesses never receive a verified recommendation score.
+  if(!c.evidence_url || c.business_activity_assessment!=="active_evidence" ||
+     c.customer_need==="unknown" || c.website_assessment==="unreviewed")return null;
+  const need={strong:35,moderate:21,weak:8}[c.customer_need]||0; // 35
+  const code=String(c.industry_code_hint||"");
+  const priority=["41","42","43","45","47","49","55","56","69","71","73","74",
+    "75","77","79","80","81","82","85","86","90","93","95","96",
+    "6831","6832"].some(prefix=>code.startsWith(prefix))?25:12; // 25
+  const activity=15; // active_evidence, human-confirmed
+  const commercial={weak_evidence:15,none_confirmed:10,adequate_evidence:0}
+    [c.website_assessment]||0; // 15
+  const quality=c.language_evidence_url&&
+    (c.website_found_url||c.website_listed_url)?10:5; // 10 evidence clarity
+  return Math.min(100,need+priority+activity+commercial+quality);
+ }
+ function preliminaryScore(c){
+  return Math.max(0,Math.min(60,Number(c.screening_priority)||0));
+ }
+ function leadReviewBand(c){
+  const verified=leadEvidenceScore(c);
+  if(verified!==null)return "Tutkittu · "+verified+"/100";
+  const provisional=preliminaryScore(c);
+  return provisional?
+    "Alustava tutkimusjärjestys · "+provisional+"/60 (ei myyntiennuste)"
+    :"Tutkimusprioriteetti: tiedot tarkistamatta";
  }
  function opsLabel(e){
   const kind={national_search:"Yöhaku",manual_search:"Varahaku",morning_push:"Aamuilmoitus"};
@@ -366,7 +380,7 @@
   $("prospect-day").value=selectedDay;
   const isToday=selectedDay===helsinkiToday();
   const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
-  const visible=rows.prospects.filter(x=>x.review_status!=="skipped"||
+  let visible=rows.prospects.filter(x=>x.review_status!=="skipped"||
     $("show-skipped-prospects").checked).sort((a,b)=>{
      if(Boolean(a.marketing_opt_out)!==Boolean(b.marketing_opt_out))
       return Number(Boolean(a.marketing_opt_out))-Number(Boolean(b.marketing_opt_out));
@@ -374,18 +388,27 @@
      if(aScore!==null&&bScore!==null)return bScore-aScore;
      if(aScore!==null)return -1;
      if(bScore!==null)return 1;
+     const provisional=preliminaryScore(b)-preliminaryScore(a);
+     if(provisional)return provisional;
      return Number(Boolean(b.website_found_url||b.website_listed_url||b.website_candidate_url))-
       Number(Boolean(a.website_found_url||a.website_listed_url||a.website_candidate_url));
     });
+  const mode=$("lead-view").value;
+  if(mode==="top")visible=visible.filter(x=>!x.marketing_opt_out&&
+    x.screening_feedback!=="already_good_website"&&
+    leadEvidenceScore(x)!==null&&leadEvidenceScore(x)>=65).slice(0,10);
+  else if(mode==="research")visible=visible.filter(x=>!x.marketing_opt_out).slice(0,20);
   const withSites=visible.filter(x=>x.website_found_url||x.website_listed_url).length;
   const suggestions=visible.filter(x=>!x.website_found_url&&!x.website_listed_url&&x.website_candidate_url).length;
   $("morning-summary").textContent=rows.prospects.length
     ? visible.length+" yritystä tarkistettavana · "+withSites+" rekisteri-/tarkistuslinkkiä"+(suggestions?" · "+suggestions+" sivuehdotusta":"")+(excluded&&!$("show-skipped-prospects").checked
       ?" · "+excluded+" ohitettu":"")+" · "+selectedDay
     : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
-  if(!visible.length)empty(prospects,rows.prospects.length
-    ?"Ei tässä näkymässä tarkistettavia yrityksiä. Voit näyttää myös ohitetut yritykset."
-    :"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
+  if(!visible.length)empty(prospects,mode==="top"
+     ?"Ei vielä tarkistettuja, vähintään 65/100-pisteen myyntimahdollisuuksia. Tarkista ensin yritykset ja verkkosivut."
+     :rows.prospects.length
+      ?"Ei tässä näkymässä tarkistettavia yrityksiä. Voit näyttää myös ohitetut yritykset."
+      :"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
   for(const candidate of visible){
    const row=record(prospects,candidate.company_name,
      (candidate.city_hint||"Kaupunki tuntematon")+" · Y-tunnus: "+candidate.business_id,
@@ -421,10 +444,28 @@
    if(candidate.contact_language==="undetermined"&&swedishLanguageHint(candidate))
     append(row.main,"div","record-warning",
       "Ruotsin kieli mahdollinen · tarkista yrityksen oma kieli ennen yhteydenottoa tai demoa. Nimi ja paikkakunta eivät yksin todista kieltä.");
-   const score=leadEvidenceScore(candidate);
-   append(row.main,"div","record-sub",score===null
-     ?"Asiakasprioriteetti: tiedot tarkistamatta"
-     :"Tutkimusprioriteetti: "+score+" / 100 (ei ostotodennäköisyys)");
+   append(row.main,"div","record-sub",leadReviewBand(candidate));
+   if(candidate.screening_reason)
+    append(row.main,"div","record-sub","Hakuperusteet: "+String(candidate.screening_reason).slice(0,500));
+   const audit=candidate.website_technical_audit||{};
+   if(audit.status==="html_checked"){
+    const problems=Array.isArray(audit.issues)?audit.issues:[];
+    append(row.main,"div","record-sub",
+      "Automaattinen HTML-tarkistus: "+problems.length+" mahdollista perustietojen puutetta"+
+      " · Ei Lighthouse-/visuaalinen arvio");
+    if(audit.html_language_hint&&audit.html_language_hint!=="undetermined")
+      append(row.main,"div","record-sub","Sivuston kielivihje: "+
+       (languageNames[audit.html_language_hint]||"tuntematon")+
+       " · tarkista ennen viestejä");
+   }else if(audit.status&&audit.status!=="html_checked")
+    append(row.main,"div","record-sub","Sivuston automaattinen tarkistus ei onnistunut ("+
+      String(audit.status).slice(0,50)+")");
+   if(candidate.screening_feedback&&candidate.screening_feedback!=="unrated")
+    append(row.main,"div","record-sub","Oma asiakasarvio: "+({
+     promising:"Lupaava",not_suitable:"Ei sopiva",
+     already_good_website:"Nykyinen sivu jo hyvä",
+     unresponsive:"Ei vastausta",client_won:"Asiakas saatu"
+    }[candidate.screening_feedback]||"Merkitty"));
    if(candidate.marketing_opt_out)append(row.main,"div","record-warning","MARKKINOINTIKIELTO · ei yhteydenottoa");
    if(candidate.demo_stage!=="not_started")
     append(row.main,"div","record-sub","Demobrief: "+(candidate.demo_stage==="reviewed"?"tarkistettu":"valmisteltu, odottaa tarkistusta"));
@@ -530,6 +571,7 @@
  const forms={
   prospect:{title:"Yrityksen taustatutkimus",table:"kaurivo_crm_prospects",fields:[
    ["review_status","Tutkimuksen vaihe","choice",true,["unverified","researching","needs_demo","ready_for_demo","skipped"]],
+   ["screening_feedback","Asiakasvalinnan palaute (vain tarkistettu tieto)","choice",true,["unrated","promising","not_suitable","already_good_website","unresponsive","client_won"]],
    ["website_found_url","Oikea verkkosivu (itse tarkistettu, https://...)","url"],
    ["website_assessment","Verkkosivun arvio","choice",true,["unreviewed","weak_evidence","adequate_evidence","none_confirmed"]],
    ["business_activity_assessment","Yrityksen aktiivisuuden näyttö","choice",true,["unreviewed","active_evidence","inactive_evidence"]],
@@ -642,6 +684,20 @@
      data.payment_signal!=="unknown",data.customer_need!=="unknown"];
    if(observed.some(Boolean)&&!data.evidence_url){
     toast("Täytä lähdelinkki, kun vahvistat yrityksen arviointitietoja.","error");return;
+   }
+   if(["promising","not_suitable","already_good_website"].includes(data.screening_feedback)&&
+      (!data.evidence_url||data.review_status==="unverified")){
+    toast("Kirjaa palautteen perusteeksi tutkimuksen lähde ja tarkistettu vaihe.","error");return;
+   }
+   if(data.screening_feedback==="already_good_website"&&
+      data.website_assessment!=="adequate_evidence"){
+    toast("Hyvä verkkosivu -palaute edellyttää erikseen tarkistettua sivustoa.","error");return;
+   }
+   if(data.screening_feedback==="client_won"&&data.outreach_stage!=="won"){
+    toast("Asiakkaaksi saaminen edellyttää vahvistettua kaupan tilaa.","error");return;
+   }
+   if(data.screening_feedback==="unresponsive"&&data.outreach_stage!=="sent_manually"){
+    toast("Ei vastausta -merkintä vaatii ensin laillisen, käsin lähetetyn viestin.","error");return;
    }
    if(data.demo_stage!=="not_started"&&(
       !data.language_evidence_url||data.website_languages==="undetermined")){
@@ -1159,6 +1215,7 @@
   $("start-manual-scan").addEventListener("click",startManualScan);
   $("suppression-form").addEventListener("submit",addSuppression);
   $("show-skipped-prospects").addEventListener("change",render);
+  $("lead-view").addEventListener("change",render);
   $("prospect-day").addEventListener("change",async event=>{
    if(!/^\d{4}-\d{2}-\d{2}$/.test(event.target.value))return;
    selectedDay=event.target.value;await reload();showTab("prospects");
