@@ -325,3 +325,9 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 @media(prefers-reduced-motion:reduce){
  *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+/* Graceful photo-fallback, including blocked third-party images. */
+.hero-photo-frame.image-unavailable,.editorial-media.image-unavailable,.about-photo.image-unavailable{background:linear-gradient(135deg,#dcebf6,#aec8e1);display:flex;justify-content:center;align-items:center}
+.image-fallback{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-weight:700;font-size:13px;color:#214d73;max-width:240px;text-align:center;line-height:1.6}
+.image-unavailable .photo-caption{display:none}
+/* Accessible focus indicators on every full-card anchor. */
+.editorial-card:focus-visible{outline:3px solid #237ad0;outline-offset:4px}
