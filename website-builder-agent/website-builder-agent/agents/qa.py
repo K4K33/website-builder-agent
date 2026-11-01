@@ -700,6 +700,19 @@ ratkaisu voi saada korkean arvion. Kuvista ei voi todistaa animaation toimivuutt
 tarkista mukaan annettu motion_plan ja HTML/CSS/JS; älä väitä näkemättä todennetuksi.
 Tavallinen siisti tekstisivu ei yksin vastaa vaativaa visuaalista laatutavoitetta.
 Jokainen design_decisions-päätös on tarkistettava omassa design_checks-rivissään.
+SIVUSTON LAAJUISEN KÄYTTÖPOLUN JA KUVATOISTON LISÄVAATIMUS:
+Kun arvioit useita sivuja, vertaa kaikkia sivuja keskenään:
+sama toimituksellinen valokuva ei saa toistua eri
+sivuilla tai saman sivun osioissa ilman harkittua perustetta.
+Saman kuvan eri kokoiset URL-variantit ovat sama kuva.
+Yrityksen oikeaa logoa saa toistaa. Turhat ja epämääräiset
+"Tutustu"-linkit eri kohteisiin sekä useat samanarvoiset CTA:t
+tekevät käyttöpolusta sokkeloisen. Tarkista lyhin luonnollinen
+polku palvelusta hintaan ja yhteydenottoon; hylkää linkit,
+jotka kierrättävät käyttäjää ilman uutta tietoa.
+Älä väitä sivustonlaajuista tarkistusta tehdyksi, jos
+käytössä on vain yksittäisen sivun kuvakaappaus.
+
 PAKOLLINEN YLEINEN KAIKKIEN ASIAKKAIDEN VISUAALINEN TARKISTUS:
 Ensimmäinen mobiilinäkymä kertoo yrityksen vahvistetut palvelut,
 kohderyhmän ja ensisijaisen selkeän jatkotoimen. Vertaa todellista
