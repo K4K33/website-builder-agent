@@ -1,6 +1,6 @@
 # Kaurivo — yrityshaun laatu ja verkkosivujen tutkiminen
 
-Päivitetty 31.10.2026. Koodi on GitHub mainissa. Haku ei käynnistä
+Päivitetty 1.11.2026. Koodi on GitHub mainissa. Haku ei käynnistä
 automaattista markkinointia, myyntiviestejä tai demojen julkaisemista.
 
 ## Miten yritykset valitaan?
@@ -42,14 +42,15 @@ Käyttöönotto (vapaaehtoinen; ÄLÄ syötä avainta keskusteluun):
    palveluntarjoajalle ei tehdä **yhtään** hakupyyntöä.
 
 Kiintiö: yksi **basic**-haku yritystä kohden, **enintään 12
-hakua per ajo**. Pääajon ja vara-ajon toteutuessa samana päivänä
-enimmäinen ilman manuaalisia uudelleenajoja on 24 hakua/päivä;
-31 päivän kuukautena enintään 744 hakua. Mahdolliset ylimääräiset
-rerun-ajot voivat nostaa kulutusta, joten tämä ei ole globaalisti
-atominen kuukausilukko; käytä Tavily-tilin ilmaistasoa/kovaa rajaa
-maksullisen laskutuksen estämiseksi. Päättele ilmaiskiintiö toimittajan
-voimassa olevasta tilauksesta. Älä kytke maksullista PAYG-tiliä
-automaattisesti.
+hakua per ajo**. Lisäksi Supabasen `kaurivo_claim_search_credit()`
+varaa atomisesti yhden krediitin ennen jokaista ulkoista hakukutsua.
+Tietokannan **750 varauksen kuukausikattoa ei voi ylittää edes
+samanaikaisilla ajoilla**. Jos GitHubin lyhytikäistä tunnistetta,
+kiintiövarausta tai API-avainta ei ole, haku pysähtyy turvallisesti
+ennen maksullista API-kutsua. Varaus voi kulua myös epäonnistuneeseen
+toimittajakutsuun, mikä on turvallinen yliarvion suunta.
+Tarkista toimittajan todellinen ilmaiskiintiö ennen avaimen asentamista,
+äläkä aktivoi maksullista PAYG-sopimusta automaattisesti.
 
 Hakutulos tallennetaan **ehdotuksena**, ei vahvistettuna yrityksen
 sivuna: \`website_candidate_url\`, \`website_candidate_source\`,
@@ -89,3 +90,36 @@ muistiinpanot. Pelkkä URL:n tallentaminen ei merkitse
 - Tavily API: https://docs.tavily.com/documentation/api-reference/endpoint/search
 - Tavily käyttöehdot: https://www.tavily.com/terms
 - Yhteydenoton laki-/GDPR-portit: \`docs/KAURIVO_LEGAL_COMPLIANCE.md\`
+
+## Lisätty tekninen tutkimus ja pisteytys (1.11.2026)
+
+- PRH-arkisto ladataan yhä vain kerran ajossa, mutta offline-vertailu
+  voi käsitellä **9 000 kelvollista ehdokasta** ennen 50:n nimeämistä
+  tarkistukseen. Tämä ei ole 9 000 ulkoista pyyntöä.
+- Tallenna vain uusi Y-tunnus; ei aiemman ihmisen tutkimuksen ylikirjoitusta.
+- Julkisen yritysetusivun HTML-metatiedot tarkistetaan maksutta:
+  title, description, viewport, H1, yhteystietolinkin olemassaolo ja
+  HTML-lang/hreflang-kielivihje. Enintään 12 sivua ajossa,
+  max 512 kB/sivu, yksittäinen GET, enintään kaksi samaan
+  verkkotunnukseen rajattua HEAD-linkkipistokoetta. Ei selain-/JS-ajona
+  tehtyä Lighthouse-testitulosta, ei todistettua myynnillistä sivustovikaa.
+- Sivuston tarkistustietoa säilytetään GitHub Actions -välimuistissa
+  enintään 30 päivää. Sivun estäessä botit tarkistus jää epävarmaksi,
+  ei miinuspisteeksi.
+- Admin näyttää erikseen **alustavan 0–60 tutkimusjärjestyksen**
+  ja havaintoihin perustuvan **0–100 tutkimusprioriteetin**. Jälkimmäisen
+  painot ovat verkkosivu-uudistuksen tarve 35, asiakaspalvelualan
+  asiakashankinta 25, todistettu toiminnan aktiivisuus 15,
+  vahvistetut kaupalliset sivupuutteet 15 ja näyttöjen selkeys 10.
+  Kumpikaan ei ole maksukyky-, ostotodennäköisyys- tai tulosennuste.
+- Päivälistassa voi valita kaikki, 20 seuraavaa tutkittavaa ja
+  enintään 10 aidosti tarkistettua (vähintään 65/100) mahdollisuutta.
+  Jos näyttöä ei ole, viimeinen lista on tyhjä — sitä ei täytetä
+  kuvitteellisilla pisteillä.
+- Kun ihminen on antanut saman toimialan yrityksille vähintään
+  8 lähteisiin perustuvaa palautetta, päiväajo voi muuttaa
+  toimialan painoa erittäin vähän (-4..+4). Alle 8 havainnolla
+  muutos on nolla. Muutokset eivät saa kiertää PRH:n tai
+  markkinointilain perustason suodattimia.
+- Näyttöjen ja vastaanottajakielen varmistus ennen sähköpostiviestejä
+  pysyy pakollisena. Kielivihje ei yksin ole vahvistus.
