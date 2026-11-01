@@ -224,3 +224,12 @@
  .suppression-form input,.suppression-form button{width:100%}
 }
 @media(max-width:340px){.sales-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Kaurivo research triage: small, accessible lead controls on iPhone. */
+.research-priority-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0}
+.research-priority-toolbar label{font-size:10px;font-weight:750;letter-spacing:.08em;color:#a8bdca}
+.research-priority-toolbar select{min-height:44px;border-radius:8px;padding:10px 12px;font-size:13px;font-weight:650;color:#e7f3fc;background:#1b3140;border:1px solid #4b6b80;flex:1 1 215px;min-width:0}
+@media(max-width:850px){
+ .research-priority-toolbar{display:grid;grid-template-columns:1fr;gap:7px;width:100%}
+ .research-priority-toolbar select{width:100%;min-height:48px;max-width:100%;font-size:14px}
+}
