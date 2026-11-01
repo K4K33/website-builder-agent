@@ -1,4 +1,4 @@
-"""Skip Kaurivo's 06:17 PRH backup only after a proven successful 04:13 run.
+"""Skip redundant PRH national runs after any proven success on the same Finnish day.
 
 One read-only GitHub API request. No PRH, AI, SMTP or database credits used.
 On API errors we run the backup rather than silently lose that day's leads.
@@ -13,10 +13,14 @@ from zoneinfo import ZoneInfo
 API=("https://api.github.com/repos/K4K33/website-builder-agent/actions/"
      "workflows/kaurivo-national-prh.yml/runs?event=schedule&per_page=40")
 BACKUP_CRON="17 6 * * *"
+PRIMARY_CRON="13 4 * * *"
 
 def should_scan(*, event="schedule", cron="", token="", run_id="", fetch=urlopen,
                 local_day=None):
-    if event!="schedule" or cron!=BACKUP_CRON:
+    # Both scheduled slots share the same daily budget. GitHub can start
+    # a 04:13 run many hours late (observed 2026-11-01 at 11:12 Helsinki).
+    # Never assume a successful 04:13 run starts before 06:00.
+    if event!="schedule" or cron not in (BACKUP_CRON,PRIMARY_CRON):
         return True
     if not token: return True
     day=local_day or dt.datetime.now(ZoneInfo("Europe/Helsinki")).date()
@@ -32,9 +36,10 @@ def should_scan(*, event="schedule", cron="", token="", run_id="", fetch=urlopen
             if str(run.get("id"))==str(run_id): continue
             created=dt.datetime.fromisoformat(run["created_at"].replace("Z","+00:00"))
             local=created.astimezone(ZoneInfo("Europe/Helsinki"))
-            # Only a successful PRH bulk run from the *same Finnish day*
-            # that started before the backup satisfies the recovery gate.
-            if (local.date()==day and local.hour<6 and
+            # A completed successful national scan from ANY earlier run
+            # today is enough. Do not duplicate if GitHub delayed it until
+            # 11:12 or if the recovery happened to run before the primary.
+            if (local.date()==day and
                 run.get("event")=="schedule" and run.get("conclusion")=="success"):
                 return False
         return True
