@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 import re
 import socket
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urljoin
 import requests
 from bs4 import BeautifulSoup
 
@@ -90,7 +90,7 @@ def extract_html_signals(html, checked_url):
        "html_language_hint":lang_suggestion,"language_hints":sorted(languages),
        "issues":issues,"method":"one_public_homepage_html_only"}
 
-def inspect_site(url, *,get=requests.get,resolve=socket.getaddrinfo):
+def inspect_site(url, *,get=requests.get,head=None,resolve=socket.getaddrinfo):
     safe=safe_homepage(url,resolve=resolve)
     if not safe:return {"status":"unsafe_or_unresolvable_url","issues":[]}
     try:
@@ -114,7 +114,39 @@ def inspect_site(url, *,get=requests.get,resolve=socket.getaddrinfo):
                     return {"status":"html_too_large","issues":[]}
                 chunks.append(chunk)
             encoding=response.encoding or "utf-8"
-            return extract_html_signals(b"".join(chunks).decode(encoding,"replace"),safe)
+            html=b"".join(chunks).decode(encoding,"replace")
+            result=extract_html_signals(html,safe)
+            # Optional HEAD checks are only a small same-host sample.
+            # Never call cross-domain links or treat HEAD failures as proof.
+            result["checked_internal_links"]=0
+            result["possible_broken_internal_links"]=0
+            if head is not None:
+                home_host=urlsplit(safe).hostname
+                paths=set()
+                soup=BeautifulSoup(html,"html.parser")
+                for a in soup.find_all("a",href=True,limit=100):
+                    target=urljoin(safe,a["href"])
+                    parsed=urlsplit(target)
+                    if (parsed.scheme!="https" or parsed.hostname!=home_host
+                        or parsed.port not in (None,443) or
+                        not parsed.path.startswith("/") or parsed.path=="/"
+                        or parsed.query):
+                        continue
+                    paths.add(parsed._replace(query="",fragment="").geturl())
+                    if len(paths)>=2:break
+                for target in list(paths)[:2]:
+                    # The initial public DNS check still applies; the sample
+                    # host is exactly the original validated homepage host.
+                    try:
+                        response_head=head(target,headers={"User-Agent":USER_AGENT},
+                            timeout=(4,6),allow_redirects=False)
+                        result["checked_internal_links"]+=1
+                        if response_head.status_code in (404,410):
+                            result["possible_broken_internal_links"]+=1
+                        response_head.close()
+                    except requests.RequestException:
+                        pass
+            return result
     except (requests.RequestException,UnicodeError,LookupError,ValueError):
         return {"status":"temporarily_unavailable","issues":[]}
 
@@ -124,7 +156,7 @@ def _read_cache(path):
         return obj if isinstance(obj,dict) else {}
     except (OSError,ValueError):return {}
 
-def audit_packet(packet_path,cache_path,*,get=requests.get,
+def audit_packet(packet_path,cache_path,*,get=requests.get,head=None,
                  resolve=socket.getaddrinfo,max_checks=MAX_CHECKS,now=None):
     packet_path,cache_path=Path(packet_path),Path(cache_path)
     if not packet_path.is_file() or packet_path.stat().st_size>MAX_PACKET_BYTES:
@@ -154,7 +186,7 @@ def audit_packet(packet_path,cache_path,*,get=requests.get,
         if audit is None:
             if attempts>=max_checks:continue
             attempts+=1
-            audit=inspect_site(url,get=get,resolve=resolve)
+            audit=inspect_site(url,get=get,head=head,resolve=resolve)
             cache[key]={"at":now.isoformat(),"audit":audit}
         lead["site_technical_audit"]=audit
         lead["website_audit_checked_at"]=cache[key]["at"]
@@ -177,6 +209,7 @@ def main(argv=None):
     parser.add_argument("--cache",default="data/kaurivo_site_audit_cache.json")
     parser.add_argument("--max-checks",type=int,default=MAX_CHECKS)
     args=parser.parse_args(argv)
-    print(json.dumps(audit_packet(args.packet,args.cache,max_checks=args.max_checks)))
+    print(json.dumps(audit_packet(args.packet,args.cache,max_checks=args.max_checks,
+      head=requests.head)))
 
 if __name__=="__main__":main()
