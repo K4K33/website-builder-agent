@@ -143,6 +143,21 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
 
+YLEINEN KUVA- JA SIIRTYMÄLAADUN TARKISTUS:
+- Samaa toimituksellista valokuvaa ei tule käyttää sankarikuvassa,
+  palvelukortissa ja palvelun lisätietosivulla. Etsi uniikit,
+  työhön sopivat ja luvalliset kuvat; samojen kuva-ID:iden
+  eri rajaukset lasketaan edelleen toistoksi. Yrityksen logo
+  saa esiintyä johdonmukaisesti kaikkialla.
+- Vältä turhia ja toistuvia "Tutustu"-linkkejä. Nimeä painike
+  käyttäjän todellisen toiminnan mukaan (Palvelut, Hinnasto,
+  Kysy arviota, Soita) ja minimoi siirtymät palveluista
+  hintaan ja yhteydenottoon. Älä luo sokkeloista sivurakennetta
+  tai koristetarkoituksessa uusia CTA-painikkeita.
+- Jos rakennetaan vain yksi HTML-sivu, älä keksi
+  toisia sivuja eikä ulkopuolista sisällönhallintaa.
+  Monisivuisen toteutuksen laatutarkistus on erillinen.
+
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
   vahvistettu palvelu, kenelle se on ja miten asiakas jatkaa. Pelkkä
@@ -329,6 +344,21 @@ PREMIUM-ESTETIIKAN V4-PAKOLLINEN LAATURAJA (Kotifixi-korjauspalaute):
 - Human reviewer MUST reject a technically passing but visibly generic
   output. Visual review includes actual 320/390/768/1440 screenshots,
   the menu, user flows and genuinely customer-specific brand identity.
+
+YLEINEN KUVA- JA SIIRTYMÄLAADUN TARKISTUS:
+- Samaa toimituksellista valokuvaa ei tule käyttää sankarikuvassa,
+  palvelukortissa ja palvelun lisätietosivulla. Etsi uniikit,
+  työhön sopivat ja luvalliset kuvat; samojen kuva-ID:iden
+  eri rajaukset lasketaan edelleen toistoksi. Yrityksen logo
+  saa esiintyä johdonmukaisesti kaikkialla.
+- Vältä turhia ja toistuvia "Tutustu"-linkkejä. Nimeä painike
+  käyttäjän todellisen toiminnan mukaan (Palvelut, Hinnasto,
+  Kysy arviota, Soita) ja minimoi siirtymät palveluista
+  hintaan ja yhteydenottoon. Älä luo sokkeloista sivurakennetta
+  tai koristetarkoituksessa uusia CTA-painikkeita.
+- Jos rakennetaan vain yksi HTML-sivu, älä keksi
+  toisia sivuja eikä ulkopuolista sisällönhallintaa.
+  Monisivuisen toteutuksen laatutarkistus on erillinen.
 
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
