@@ -5,9 +5,9 @@
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1017"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Kaurivo"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/kaurivo-mark.webp"><title>Kaurivo — asiakashallinta</title>
 <link rel="icon" href="../assets/kaurivo-mark.webp" type="image/webp">
-<link rel="stylesheet" href="../assets/crm.css?v=20261031-operations2">
+<link rel="stylesheet" href="../assets/crm.css?v=20261101-leads1">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
-<script defer src="../assets/crm.js?v=20261101-sv1"></script>
+<script defer src="../assets/crm.js?v=20261101-leads1"></script>
 </head>
 <body>
 <div class="crm-shell">
@@ -68,6 +68,14 @@
 <div class="morning-toolbar">
  <div class="morning-day"><label for="prospect-day" class="eyebrow">PÄIVÄ</label><input type="date" id="prospect-day" aria-label="Yrityslistan päivä"></div>
  <div class="morning-counter" id="morning-summary" role="status">Haetaan aamun yrityksiä…</div>
+ <div class="research-priority-toolbar">
+  <label for="lead-view">NÄYTÄ EHDOKKAAT</label>
+  <select id="lead-view" aria-label="Yritysten tutkimusprioriteetti">
+   <option value="all">Kaikki yritykset</option>
+   <option value="research">20 seuraavaa tutkimukseen</option>
+   <option value="top">Enintään 10 vahvistettua mahdollisuutta</option>
+  </select>
+ </div>
 </div>
 <details class="ops-health" id="ops-health">
  <summary><span class="ops-led" aria-hidden="true"></span><strong>Automaation tila</strong><span id="ops-brief">Ei vielä todistettua ajoa valitulle päivälle</span><span class="ops-chevron" aria-hidden="true">+</span></summary>
