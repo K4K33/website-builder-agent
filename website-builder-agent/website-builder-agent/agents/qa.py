@@ -31,6 +31,7 @@ from utils.site_architecture import (
 )
 from utils.creative_directions import validate_creative_directions
 from utils.visual_originality import audit_design_originality
+from utils.site_integrity import site_sha256
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
 from utils.global_feedback import (
@@ -1203,6 +1204,7 @@ def run_qa(slug_or_name: str) -> dict:
         "unimplemented_global_feedback": pending_general_rules,
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
+        "site_sha256": site_sha256(site_root,list(rendered_pages)),
         "overall_pass": (parity["pass"] and source_fidelity["pass"]
                          and nav["pass"] and originality["pass"]
                          and universal["automated_pass"]
@@ -1257,10 +1259,17 @@ def approve_company(slug_or_name):
         digest = hashlib.sha256(file.read()).hexdigest()
     if not qa.get("html_sha256") or digest != qa["html_sha256"]:
         raise RuntimeError("Sivustoa on muutettu QA:n jälkeen. Aja QA uudelleen.")
+    full_digest = ""
+    routes = (company.get("build") or {}).get("page_paths") or []
+    if routes:
+        full_digest = site_sha256(Path(path).resolve().parent,routes)
+        if not qa.get("site_sha256") or full_digest != qa["site_sha256"]:
+            raise RuntimeError("A non-homepage page or image changed after QA.")
     upsert_company(slug, {"approval": {
         "approved": True,
         "build_version": qa["build_version"],
         "html_sha256": digest,
+        "site_sha256": full_digest or qa.get("site_sha256",""),
         "approved_at": datetime.now(timezone.utc).isoformat(),
     }})
     set_status(slug, "approved")
