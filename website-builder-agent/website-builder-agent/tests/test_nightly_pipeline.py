@@ -155,7 +155,8 @@ class PremiumSalesGateTests(unittest.TestCase):
                          "design_benchmark":[
                              {"url":f"https://peer-{i}.example.org"} for i in range(3)
                          ]},
-            "demo": {"published": True, "url": "https://demo.example.org"},
+            "demo": {"published": True, "url": "https://demo.example.org",
+                      "branded_domain_verified": True},
             "demo_quality_review": q,
         }
 
