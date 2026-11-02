@@ -692,6 +692,7 @@ def run_research(
     source_excerpts = [
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
          "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
+         "price_faq_evidence": p.get("price_faq_evidence") or {},
          "header_assets": p["header_assets"],
          "footer_assets": p["footer_assets"]}
         for p in source_inventory["pages"]
