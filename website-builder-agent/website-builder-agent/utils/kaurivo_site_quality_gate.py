@@ -14,9 +14,9 @@ import re
 from bs4 import BeautifulSoup
 
 CONTRAST_PATTERNS = (
-    re.compile(r"\\bvähemmän\\b.{0,140}\\benemmän\\b|\\benemmän\\b.{0,140}\\bvähemmän\\b", re.I),
-    re.compile(r"\\bei\\s+(?:vain|pelkästään)\\b.{0,130}\\bvaan\\b", re.I),
-    re.compile(r"\\bnot\\s+(?:only|just)\\b.{0,130}\\bbut\\b", re.I),
+    re.compile(r"\bvähemmän\b.{0,140}\benemmän\b|\benemmän\b.{0,140}\bvähemmän\b", re.I),
+    re.compile(r"\bei\s+(?:vain|pelkästään)\b.{0,130}\bvaan\b", re.I),
+    re.compile(r"\bnot\s+(?:only|just)\b.{0,130}\bbut\b", re.I),
 )
 MIN_INDEPENDENT_SCORE = 9.5
 MIN_REFERENCE_CLIENTS = 3
