@@ -28,6 +28,7 @@ from utils.design_benchmark import validate_benchmark, validate_design_plan, ref
 from utils.screenshot import capture_website
 from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
+from utils.source_identity import validate_brand_preservation_plan
 from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
 
@@ -690,7 +691,8 @@ def run_research(
     ) or {}
     source_excerpts = [
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
-         "text": p["text"][:2600], "header_assets": p["header_assets"],
+         "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
+         "header_assets": p["header_assets"],
          "footer_assets": p["footer_assets"]}
         for p in source_inventory["pages"]
     ]
@@ -721,6 +723,18 @@ Yrityksen URL:
 --- ALISIVUJEN LÄHTEET, TEKSTIT JA KUMPPANI/LOGO-KANDIDAATIT ---
 
 {json.dumps(source_excerpts, ensure_ascii=False)}
+
+--- PAKOLLINEN BRÄNDIN SÄILYTYSSUUNNITELMA ---
+Lisää vastaukseen brand_preservation_plan, jossa on:
+logo_treatment, color_treatment, typography_treatment, photography_treatment
+(kukin vähintään 24 merkkiä), sekä source_urls (kaikki lähdesivut joilla
+havaittiin logo tai theme-color), original_logo_candidates (täsmälleen
+havaitut alkuperäiset logourlit) ja original_theme_colors (havaitut värit).
+Säilytä todellinen brändi, myös jos visuaalinen sommittelu muuttuu.
+Älä korvaa aitoja henkilökuvia geneerisillä AI/stock-kuvilla.
+Havaitut tähtiarvosanat ja lainatut asiakasarviot säilytetään täsmälleen
+niiden alkuperäisen lähteen mukaisina, ei keksittyinä arvosanoina.
+
 
 --- Tekniset tiedot ---
 
@@ -944,6 +958,7 @@ Tärkeää:
     validate_source_plan(research_data, source_url=url)
     validate_creative_directions(research_data)
     validate_site_architecture(research_data)
+    validate_brand_preservation_plan(research_data)
 
     updated_company = upsert_company(
         slug,
