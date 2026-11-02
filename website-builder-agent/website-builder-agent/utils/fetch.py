@@ -993,6 +993,32 @@ def _build_audit_signals(
     }
 
 
+
+def _extract_frame_assets(soup: BeautifulSoup, selector: str, limit: int) -> list[dict]:
+    """Record logo and affiliation image evidence without assuming the role.
+
+    An img in the footer can be decorative, a chain logo or a sponsor.
+    The operator must verify both actual relationship and reuse rights.
+    """
+    assets = []
+    for frame in soup.select(selector):
+        for image in frame.find_all("img"):
+            source = (image.get("src") or image.get("data-src")
+                      or image.get("data-lazy-src") or "").strip()
+            if not source:
+                continue
+            parent = image.find_parent("a", href=True)
+            assets.append({
+                "src": source[:500],
+                "alt": _clean_text(image.get("alt", ""))[:250],
+                "href": (parent.get("href", "")[:500] if parent else ""),
+                "role": "unverified_image_in_" + selector.replace(",", "_").replace(" ", "_"),
+            })
+            if len(assets) >= limit:
+                return assets
+    return assets
+
+
 def extract_text_and_meta(
     html: str,
     base_url: str = "",
@@ -1006,6 +1032,9 @@ def extract_text_and_meta(
         html,
         "html.parser",
     )
+
+    header_assets = _extract_frame_assets(soup, "header", 20)
+    footer_assets = _extract_frame_assets(soup, "footer", 40)
 
     for tag in soup(
         [
@@ -1167,6 +1196,8 @@ def extract_text_and_meta(
             forms
         ),
         "images": images,
+        "header_assets": header_assets,
+        "footer_assets": footer_assets,
         "image_count": len(
             images
         ),

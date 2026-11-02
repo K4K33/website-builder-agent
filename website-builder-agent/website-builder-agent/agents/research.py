@@ -26,12 +26,13 @@ from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.screenshot import capture_website
+from utils.industry_workflow import crawl_original_website
 
 import requests
 
 from utils import resource_manager
 from utils.claude_client import ask_claude_json
-from utils.fetch import analyze_url
+from utils.fetch import analyze_url, normalize_url
 from utils.state import (
     get_company,
     upsert_company,
@@ -598,6 +599,27 @@ def run_research(
         "  [Research] Nykyinen sivu haettu."
     )
 
+    # The no-credit bounded crawl reuses the homepage fetch and audits
+    # subpages, source assets and footer marks before paid AI/Tavily calls.
+    source_inventory = crawl_original_website(
+        normalize_url(url), analyze_url, first_page=site_data, max_pages=12
+    )
+    if not source_inventory["pages"]:
+        raise RuntimeError("No source-backed pages found.")
+    source_gaps = (source_inventory["failed_urls"]
+                   + source_inventory["priority_unvisited_urls"])
+    if source_gaps:
+        raise RuntimeError(
+            "Original-site content research incomplete; review these pages: "
+            + ", ".join(source_gaps[:8])
+        )
+    source_excerpts = [
+        {"url": p["url"], "title": p["title"], "headings": p["headings"],
+         "text": p["text"][:2600], "header_assets": p["header_assets"],
+         "footer_assets": p["footer_assets"]}
+        for p in source_inventory["pages"]
+    ]
+
     # ---------------------------------------------------------
     # FACT EXTRACTION
     # ---------------------------------------------------------
@@ -620,6 +642,10 @@ Yrityksen URL:
 --- Sivun näkyvä teksti ---
 
 {site_data.get("visible_text", "")[:10000]}
+
+--- ALISIVUJEN LÄHTEET, TEKSTIT JA KUMPPANI/LOGO-KANDIDAATIT ---
+
+{json.dumps(source_excerpts, ensure_ascii=False)}
 
 --- Tekniset tiedot ---
 
@@ -747,6 +773,10 @@ URL:
 
 {extracted.get("current_site_weaknesses", [])}
 
+--- NYKYISEN KOKO SIVUSTON INVENTAARIO ---
+
+{json.dumps(source_excerpts, ensure_ascii=False)}
+
 --- TAVILYN REFERENSSIT ---
 
 {_format_search_results(references)}
@@ -802,6 +832,7 @@ Tärkeää:
         "design_benchmark": benchmark,
         # The design pass must not rewrite or invent extracted company facts.
         "company_facts": company_facts,
+        "source_inventory": source_inventory,
         "fact_sources": [{"url": url, "title": site_data.get("title", ""),
                           "text": site_data.get("visible_text", "")[:12000]}],
         "reference_sources": [

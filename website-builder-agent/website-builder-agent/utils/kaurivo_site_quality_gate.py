@@ -13,6 +13,24 @@ import re
 
 from bs4 import BeautifulSoup
 
+# Decorative numbering on repeated service cards is not content.
+# Real menu dates, prices, explicit documented processes remain allowed.
+DECORATIVE_NUMBER_CLASSES = ("count", "card-number", "card-index", "service-number",
+                             "card-count", "sequence", "card-numeral")
+
+
+def _decorative_numbering(soup: BeautifulSoup) -> list[str]:
+    found = []
+    for el in soup.select("article,div,section"):
+        for child in el.find_all(["span", "small", "b"], recursive=False):
+            classes = set(child.get("class", []))
+            value = child.get_text(" ", strip=True)
+            if classes.intersection(DECORATIVE_NUMBER_CLASSES) and re.fullmatch(
+                    r"0\d|[1-9]\d?", value):
+                found.append(value)
+    return found
+
+
 CONTRAST_PATTERNS = (
     re.compile(r"\bvähemmän\b.{0,140}\benemmän\b|\benemmän\b.{0,140}\bvähemmän\b", re.I),
     re.compile(r"\bei\s+(?:vain|pelkästään)\b.{0,130}\bvaan\b", re.I),
@@ -37,6 +55,10 @@ def lint_site_copy(html_pages: dict[str, str], *, max_contrasts: int = 1) -> dic
     issues: list[str] = []
     for page, html in html_pages.items():
         soup = BeautifulSoup(html, "html.parser")
+        decorative = _decorative_numbering(soup)
+        if decorative:
+            issues.append(f"{page}: decorative card numbering: "
+                          + ", ".join(decorative[:8]))
         for tag in soup(["script", "style", "noscript", "header", "footer", "nav"]):
             tag.decompose()
         for elem in soup.select("h1,h2,h3,p"):

@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
+from utils.industry_workflow import create_industry_brief
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 import json
@@ -1164,6 +1165,8 @@ def build_site(
             f"Aja ensin: python main.py research {slug}"
         )
 
+    industry_brief = create_industry_brief(company, research)
+
     benchmark = validate_benchmark(research, company.get("url", ""))
     decisions = validate_design_plan(research, company.get("url", ""))
     reference_images, image_labels = reference_image_inputs(benchmark)
@@ -1198,6 +1201,16 @@ Rakenna verkkosivu tämän research-datan perusteella.
 
 ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
 {json.dumps(brand_brief, ensure_ascii=False)}
+
+TOIMIALAN JA YRITYKSEN OMA SUUNNITTELUBRIEFI:
+{json.dumps(industry_brief, ensure_ascii=False)}
+Tämä kuvaa kohdeyrityksen todelliset tehtävät ja lähdeaineiston,
+ei valmista HTML- tai korttipohjaa. Kehitä oma omaperäinen sommittelu.
+Varmista, että alisivujen tärkeät palvelut, alkuperäinen logo,
+footerin ketjutunnukset ja yhteistyökumppanit, oikea varauspolku,
+aito projektigalleria ja ajantasaiset erityisruokavaliotiedot säilyvät
+vain todennettuina. Ei koristeellista 01/02/03-numerointia.
+
 Asiakasbrändi menee referenssien tyylipalettien edelle.
 Jos design_scope on major_visual_and_structural_redesign_keep_brand,
 uudista layout, hero, navigointi, osioiden hierarkia ja mobiili näyttävästi.
@@ -1384,6 +1397,7 @@ Palauta VAIN koko HTML.
                 "version": version,
                 "model": config.model_for_stage("builder"),
                 "design_decisions": decisions,
+                "industry_brief": industry_brief,
             },
             "qa": None,
             "approval": None,
@@ -1427,6 +1441,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     """
     slug, company = _resolve_company(slug_or_name)
     research = company.get("research") or {}
+    industry_brief = create_industry_brief(company, research)
     validate_design_plan(research, company.get("url", ""))
     facts = research.get("company_facts")
     if not isinstance(facts, dict) or not facts:
@@ -1443,7 +1458,8 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
                   "version": company.get("build", {}).get("version", 0) + 1,
                   "generation_mode": "external_agent_response",
                   "producer": producer.strip(),
-                  "design_decisions": research["design_decisions"]},
+                  "design_decisions": research["design_decisions"],
+                  "industry_brief": industry_brief},
         "qa": None, "approval": None, "outreach": None, "demo": None,
     })
     set_status(slug, "built")
@@ -1476,6 +1492,8 @@ def revise_site(
         {},
     )
 
+    industry_brief = create_industry_brief(company, research)
+
     company_facts = research.get(
         "company_facts",
         {},
@@ -1489,6 +1507,12 @@ def revise_site(
     user_prompt = f"""
 ASIAKKAAN BRÄNDI JA SISÄLLÖN SÄILYTTÄMINEN:
 {json.dumps(brand_brief, ensure_ascii=False)}
+
+TOIMIALAN JA YRITYKSEN AIKAISEMMAT SISÄLTÖ- JA KUVATIEDOT:
+{json.dumps(industry_brief, ensure_ascii=False)}
+Älä muuta asiakasidentiteettiä tai katoa vanhojen sivujen tietoja.
+Älä kopioi muiden asiakkaiden rakennetta.
+
 Älä anna referenssien väreille, kuville tai iskulauseille etusijaa
 asiakkaan jo valitsemaan identiteettiin nähden.
 Uudista nykyinen sivu ROHKEASTI: rakenne, hero, sommittelu, navigointi,
@@ -1613,6 +1637,7 @@ Palauta koko HTML.
                 "model": config.model_for_stage("builder"),
                 "design_decisions": decisions,
                 "last_feedback": feedback,
+                "industry_brief": industry_brief,
             },
             "qa": None,
             "approval": None,
