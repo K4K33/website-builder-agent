@@ -52,6 +52,20 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+KRIITTINEN BRÄNDI-, ARVOSTELU- JA SISÄLTÖUSKOLLISUUS:
+Vertaa myös alkuperäisen yrityksen logoja, brändivärejä, työntekijä- ja
+referenssikuvia sekä alkuperäistä visuaalista identiteettiä uuteen.
+Jos alkuperäisestä sivustosta on havaittu oikea arvostelu ja tähtiarvosana,
+lainaus ja sama tähtimäärä pitää löytyä uudesta sivustosta. Tarkista että
+viiden tähden graafinen esitys on sidottu juuri oikeaan arvosteluun.
+Älä keksi tai nosta arvosanoja, käännä asiakaslainauksia toisen lausumaksi
+äläkä poista alkuperäistä sosiaalista todistusaineistoa.
+Tarkista kaikki olennaiset hinnastorivit, palvelu- ja tuoteryhmät,
+pitkät hoito-ohjeet, FAQ-kysymykset ja alkuperäiset asiakaspolut.
+Jos lähdesisältö on aiemmin katkaistu tai JS-lataus puuttuu, merkitse
+sisällön täydellisyys todentamattomaksi. Todellinen brändi on kilpailijan
+inspiraation edellä.
+
 Source-fidelity numeric/category QA: verify that every price, weight band,
 species/breed, product name and service example used in the redesign matches
 an observed old-site category. 'lagotto mini/medium' is not equivalent to
