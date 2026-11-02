@@ -103,6 +103,9 @@ REQUEST_DELAY = float(
 
 DATA_DIR = "data"
 OUTPUT_DIR = "output"
+# Only local, explicitly supplied images can be packaged into a generated
+# website. No third-party hotlinks or image downloads by the Builder.
+MEDIA_INTAKE_DIR = os.getenv("KAURIVO_MEDIA_INTAKE_DIR", "media_intake")
 
 COMPANIES_FILE = os.path.join(
     DATA_DIR,
