@@ -233,7 +233,7 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 @media(max-width:700px){
  .container{width:calc(100% - 40px)}
  .concept-strip>.container{font-size:10px;padding-block:8px}
- .concept-strip>.container span:last-child{display:none}
+ .concept-strip>.container{flex-wrap:wrap;gap:4px 12px}.concept-strip>.container span:last-child{display:inline}
  .header-inner{height:68px}
  .brand{font-size:31px}
  .header-cta{font-size:12px;padding:12px 14px}
@@ -344,3 +344,23 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 
 /* Keep long Finnish headings within 320px mobile layouts. */
 .page-intro h1,.about-text h1,.service-index h2,.section-heading h2,.approach-large h2{overflow-wrap:anywhere;hyphens:auto}
+
+/* V8 mobile credibility: the preview disclaimer must NEVER disappear. */
+@media(max-width:700px){
+ .concept-strip>.container{padding-block:8px;line-height:1.35}
+ .concept-strip>.container span{font-size:10px}
+ .hero-grid{padding-top:47px}
+ .hero-copy h1{letter-spacing:-.048em;line-height:1.12}
+ .hero-contact{font-size:14px}
+ .visual-photo-note{font-size:11px}
+ .section-heading p:last-child{max-width:31rem}
+}
+@media(max-width:360px){
+ .brand{font-size:27px}
+ .header-right{gap:3px}
+ .header-cta{font-size:11px;padding:11px 9px}
+ .menu-toggle{width:36px;min-width:36px;padding:6px}
+ .header-inner{gap:5px}
+ .concept-strip>.container{gap:3px 8px}
+ .hero-copy h1{font-size:41px}
+}
