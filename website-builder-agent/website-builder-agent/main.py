@@ -177,6 +177,34 @@ def cmd_revise(args):
 # QA
 # =========================================================
 
+def cmd_learn_global_rule(args):
+    """Record owner-wide feedback for all subsequent clients without AI calls."""
+    from utils.global_feedback import (
+        load_ledger, save_ledger, record_owner_feedback,
+        universal_rules_pending_implementation,
+    )
+    ledger_path = Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
+    ledger = load_ledger(ledger_path)
+    result = record_owner_feedback(
+        ledger, text=args.text, applies_to_all=True,
+        checker=args.checker, regression_test=args.regression_test
+    )
+    save_ledger(ledger_path, ledger)
+    print(json.dumps({
+        "feedback": result,
+        "pending_checker": universal_rules_pending_implementation(ledger),
+        "note": "Local QA ledger updated. Changes to code/checkers must be "
+                "tested and committed for durable deployment.",
+    }, ensure_ascii=False, indent=2))
+
+
+def cmd_global_quality_issues(args):
+    """Inspect cross-project QA problems without any paid service."""
+    from utils.global_feedback import load_ledger
+    ledger_path = Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
+    print(json.dumps(load_ledger(ledger_path), ensure_ascii=False, indent=2))
+
+
 def cmd_qa(args):
     _require_paid_consent(args)
     qa.run_qa(args.company)
@@ -892,6 +920,21 @@ def build_parser():
     # -----------------------------------------------------
     # QA
     # -----------------------------------------------------
+
+    parser_learn = subparsers.add_parser(
+        "learn-global-rule",
+        help="Register general owner feedback for all Kaurivo customer sites.",
+    )
+    parser_learn.add_argument("--text", required=True)
+    parser_learn.add_argument("--checker", default="")
+    parser_learn.add_argument("--regression-test", default="")
+    parser_learn.set_defaults(func=cmd_learn_global_rule)
+
+    parser_issues = subparsers.add_parser(
+        "global-quality-issues",
+        help="Show recurring QA problems and universal feedback (free, offline).",
+    )
+    parser_issues.set_defaults(func=cmd_global_quality_issues)
 
     parser_qa = subparsers.add_parser(
         "qa",

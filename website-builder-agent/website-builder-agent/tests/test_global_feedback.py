@@ -48,6 +48,15 @@ class GeneralLearningTests(unittest.TestCase):
             regression_test="tests/test_design_distinctness.py")
         self.assertEqual(fixed["status"], "active")
 
+    def test_nonexistent_regression_does_not_activate_global_rule(self):
+        ledger = {"schema_version": 1, "issues": {}, "user_rules": []}
+        result = record_owner_feedback(
+            ledger, text="Avoid decorative card numbering", applies_to_all=True,
+            checker="no_decorative_numbering",
+            regression_test="tests/test_made_up_checker_file.py",
+        )
+        self.assertEqual(result["status"], "needs_implementation")
+
     def test_company_specific_preference_not_spread(self):
         ledger = {"schema_version": 1, "issues": {}, "user_rules": []}
         rule = record_owner_feedback(ledger, text="Use purple for this client",

@@ -97,7 +97,12 @@ def record_owner_feedback(
         return {"scope": "company", "company_slug": company_slug,
                 "rule": text.strip(), "status": "local_only"}
     known_checker = checker in CATEGORIES and checker == category
-    has_test = bool(regression_test.strip())
+    # Test filenames are not sufficient without an actual checked-in source.
+    relative = Path(regression_test)
+    safe_path = (regression_test.startswith("tests/test_")
+                 and regression_test.endswith(".py")
+                 and ".." not in relative.parts)
+    has_test = safe_path and (Path(__file__).resolve().parents[1] / relative).is_file()
     status = "active" if known_checker and has_test else "needs_implementation"
     rule = {"scope": "universal", "category": category, "rule": text.strip(),
             "status": status, "checker": checker, "regression_test": regression_test}
