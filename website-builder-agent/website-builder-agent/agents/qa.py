@@ -26,6 +26,7 @@ from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.quality import normalize_facts, canonical_url
+from utils.content_parity import audit_content_parity
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.state import (
     get_company,
@@ -35,6 +36,17 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+VERIFY SOURCE CONTENT PARITY:
+The old site may have multiple pages. Compare ALL supplied original
+source excerpts and known verified facts with the NEW page. Identify
+important omissions, incorrect or stale services, prices, opening hours,
+business identity, brand marks, menu dietary labels and sponsor/partner
+roles. Give a source URL for each material concern. A changed layout
+is allowed; a missing important confirmed fact is not. Do not invent
+details, infer allergens or claim image rights without proof.
+When source coverage has not been signed off, report that QA is pending
+even if the visual design appears good.
+
 Olet verkkosivuston QA-tarkastaja.
 
 Tarkistat tutkimusdatan perusteella rakennetun
@@ -902,11 +914,21 @@ def run_qa(slug_or_name: str) -> dict:
     with open(path, "rb") as file:
         html_bytes = file.read()
     html = html_bytes.decode("utf-8")
+    research = company.get("research") or {}
+    parity = audit_content_parity(html, research)
     automated = _automated_checks(html)
+    # Never spend browser/AI review credits when guaranteed critical
+    # source-backed fields are absent.
+    parity_hard_missing = bool(parity["missing"] or any(
+        item.startswith(("Unverified content requirement",
+                         "Invalid content requirement",
+                         "Unsupported content requirement"))
+        for item in parity["review_required"]
+    ))
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
     benchmark_urls, decisions = [], []
-    if automated["automated_pass"]:
+    if automated["automated_pass"] and not parity_hard_missing:
         browser = inspect_site(path)
         if browser["pass"]:
             research = company.get("research") or {}
@@ -929,6 +951,16 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(image_labels, ensure_ascii=False)
                     + "\nREQUIRED DESIGN DECISIONS (check each with visible evidence):\n"
                     + json.dumps(decisions, ensure_ascii=False)
+                    + "\nORIGINAL SOURCE PAGES (check for omitted important services, prices, menus, images, partnerships and content; report exact source URL):\n"
+                    + json.dumps([
+                        {"url": p.get("url"), "headings": p.get("headings"),
+                         "text": str(p.get("text") or "")[:3800],
+                         "footer_assets": p.get("footer_assets"),
+                         "header_assets": p.get("header_assets")}
+                        for p in (research.get("source_inventory") or {}).get("pages", [])
+                    ], ensure_ascii=False)
+                    + "\nCONTENT PARITY EVIDENCE & OPEN REVIEW: \n"
+                    + json.dumps(parity, ensure_ascii=False)
                     + "\nPAGE CONTENT:\n" + _build_ai_snapshot(html),
                     max_tokens=5000, stage="qa",
                     image_paths=list(browser["screenshots"].values()) + benchmark_images,
@@ -937,9 +969,10 @@ def run_qa(slug_or_name: str) -> dict:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
     result = {
         "automated": automated, "browser": browser, "content_review": review,
+        "content_parity": parity,
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
-        "overall_pass": automated["automated_pass"] and browser["pass"] and review_passes(review, benchmark_urls, decisions),
+        "overall_pass": parity["pass"] and automated["automated_pass"] and browser["pass"] and review_passes(review, benchmark_urls, decisions),
     }
     upsert_company(slug, {"qa": result})
     set_status(slug, "qa_passed" if result["overall_pass"] else "built")

@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
+from utils.content_parity import audit_content_parity
 from utils.industry_workflow import create_industry_brief, validate_design_intent
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
@@ -1370,6 +1371,15 @@ Palauta VAIN koko HTML.
         cleaned,
         company_facts,
     )
+
+    parity = audit_content_parity(cleaned, research, require_source_review=False)
+    if parity["missing"] or parity["review_required"]:
+        problems = ([x["label"] for x in parity["missing"]]
+                    + parity["review_required"])
+        raise RuntimeError(
+            "Old-to-new content preservation failed before writing HTML: "
+            + "; ".join(problems[:12])
+        )
     validate_locked_copy(cleaned, brand_brief)
 
     _validate_plan_sections(cleaned, research, company.get("url", ""))
@@ -1611,6 +1621,15 @@ Palauta koko HTML.
         cleaned,
         company_facts,
     )
+
+    parity = audit_content_parity(cleaned, research, require_source_review=False)
+    if parity["missing"] or parity["review_required"]:
+        problems = ([x["label"] for x in parity["missing"]]
+                    + parity["review_required"])
+        raise RuntimeError(
+            "Old-to-new content preservation failed before writing HTML: "
+            + "; ".join(problems[:12])
+        )
     validate_locked_copy(cleaned, brand_brief)
 
     _validate_plan_sections(cleaned, research, company.get("url", ""))
