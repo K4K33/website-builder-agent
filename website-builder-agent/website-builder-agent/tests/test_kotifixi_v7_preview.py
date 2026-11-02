@@ -55,7 +55,7 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertEqual(len(soup.select(".intro-band")), 0)
         self.assertNotIn("Vähemmän tekemättömiä töitä", str(soup))
         self.assertNotIn("KOTIFIXIN IDEA", str(soup))
-        self.assertIn("Kotifixiltä apua", soup.select_one("h1").get_text(" ", strip=True))
+        self.assertIn("Tarvitsetko apua", soup.select_one("h1").get_text(" ", strip=True))
         self.assertIn("hinnastoon", soup.select_one(".approach-section").get_text(" ",strip=True))
         self.assertNotIn("photo-caption", str(soup))
         self.assertIn("apua", soup.select_one(".hero-copy h1").get_text(" ", strip=True).lower())
@@ -146,7 +146,7 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
             self.assertNotIn("Kotifixin omilla verkkosivuilla kerrotaan", html)
         home = BeautifulSoup(pages[0], "html.parser")
         self.assertEqual(home.select_one("h1").get_text(" ", strip=True),
-                         "Kotifixiltä apua arjen töihin.")
+                         "Tarvitsetko apua kotitöissä tai pihatöissä?")
         self.assertIn("31755424", pages[3])
         css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
         js = (ROOT / "assets/app.js").read_text(encoding="utf-8")
@@ -155,6 +155,33 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertIn("IntersectionObserver", js)
         self.assertIn("prefers-reduced-motion: reduce", js)
         self.assertNotIn("window.addEventListener('scroll'", js)
+
+    def test_v11_hero_navigation_and_pointer_only_depth(self):
+        home = BeautifulSoup((ROOT / "index.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(home.h1.get_text(" ", strip=True),
+                         "Tarvitsetko apua kotitöissä tai pihatöissä?")
+        self.assertEqual(len(home.select(".hero-visual-3d .hero-photo-frame")), 1)
+        css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        js = (ROOT / "assets/app.js").read_text(encoding="utf-8")
+        for expected in (
+            ".site-nav a{font-size:17px",
+            "@media(min-width:1280px){.site-nav a{font-size:18px",
+            "perspective:1200px", "rotateX(var(--hero-tilt-x,0deg))",
+            "@media(hover:hover) and (pointer:fine)",
+            "@media(prefers-reduced-motion:reduce)",
+        ):
+            self.assertIn(expected, css)
+        self.assertIn("heroArt.addEventListener('pointermove'", js)
+        self.assertIn("window.requestAnimationFrame(", js)
+        self.assertNotIn("addEventListener('wheel'", js)
+        self.assertNotIn("window.addEventListener('scroll'", js)
+        for filename in FILES:
+            document = (ROOT / filename).read_text(encoding="utf-8")
+            self.assertIn('>Näin toimimme</a>', document)
+            self.assertNotIn('>Meistä</a>', document)
+        about = BeautifulSoup((ROOT / "meista/index.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertIn("Näin voit sopia työstä", about.h1.get_text(" ", strip=True))
+        self.assertNotIn("Työstä sopiminen", about.get_text(" ", strip=True))
 
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
