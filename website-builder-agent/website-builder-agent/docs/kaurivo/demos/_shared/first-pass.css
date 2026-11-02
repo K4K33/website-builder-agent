@@ -27,3 +27,13 @@ figure.photo{margin:0}
 .build .card h3{font-weight:700}
 .auto .card small{color:#977b27}
 @media(prefers-reduced-motion:reduce){.grid>.card:hover,.photo:hover img{transform:none!important}}
+
+/* Narrow-phone content safety: keep real company names, contact details and long
+   Finnish service terms readable rather than allowing horizontal page overflow. */
+@media(max-width:620px){
+  .top{min-width:0;gap:10px}
+  .top .brand{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;font-size:clamp(17px,5.4vw,23px)}
+  .hero-grid>*,.split>*,.footcols>*,.callout>*{min-width:0}
+  .hero h1,.pagehero h1,.section h2,.split h2,.callout h2,.card h3,.btn,.footcols a{overflow-wrap:anywhere}
+  .buttons>a{max-width:100%}
+}
