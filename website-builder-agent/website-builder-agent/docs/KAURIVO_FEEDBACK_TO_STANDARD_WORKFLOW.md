@@ -49,6 +49,16 @@ User supplied a ~12.5-second iPhone screen recording of a **Claude Sonnet 5.5 Me
 
 **Quality status:** independent designer's scope-limited ~9/10 is useful qualitative evidence. It cannot count as full ≥9.5/10 exact-commit desktop+mobile evaluation or three-distinct-client consistency. Current candidate release remains **HOLD**.
 
+## 2026-11-02 — V9 review, friend feedback and Claude Sonnet 5.5 Medium
+
+**Source evidence:** owner provided a 52.9-second 1916x880 walk-through of the currently published internal V9 review and a 38.4-second recording of an external AI critique. A friend who independently saw the site identified excessively small top-navigation options and a loose, unintegrated phone number. Owner finds the repeated "kotona tai pihalla" phrasing unnatural and agrees on adding purposeful motion.
+
+**External AI observations:** navigation was around 12–13px and some card text felt too small; Meistä wording was third-person and explicitly reported what the company's own website said; unrelated product branding was visible on the About photograph; motion was almost absent except hover. It suggested one-shot subtle scroll entrances and better focus/click states. It also recommended not inventing reviews, client stories, staff or optional pages until real content is supplied. The AI's indicative site sale-price estimates were **not** adopted as Kaurivo pricing.
+
+**V10 fixes:** replace the repetitive home headline with direct natural Finnish, simplify service title and About passage; group the contact phone with a clear "Soita" label and a bordered header action; raise desktop nav text to 15px, improve contrast and focus; replace branded handbook stock with a neutral, source-checked Pexels furniture-assembly photo; use small IntersectionObserver reveals only for below-the-fold sections, with native scroll, no hidden first viewport and full reduced-motion fallback.
+
+**Scope:** outcomes are code and offline browser checks, not an independent current V10 >=9.5/10 certification. Link users proactively after successful publishing; never send raw GitHub Pages to a prospect.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.
