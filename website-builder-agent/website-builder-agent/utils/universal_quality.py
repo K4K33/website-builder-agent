@@ -23,6 +23,7 @@ UNIVERSAL_STANDARDS = (
     ("content_parity", "Current services, pricing, FAQ, contacts, hours and dynamic content", "content"),
     ("natural_copy", "Natural and non-repetitive language without source narration", "content"),
     ("no_decorative_numbering", "No gratuitous 01/02/03 cards", "content"),
+    ("non_repetitive_cta_icons", "No repeated decorative arrows on links and calls to action", "visual"),
     ("real_testimonials", "No invented customer reviews, results or staff", "trust"),
     ("accurate_media", "Licensed, true company photos and paired before/after evidence", "media"),
     ("dietary_accuracy", "Full sourced menu and verified G/L/M or allergen details", "safety"),
@@ -79,6 +80,27 @@ def audit_universal_standards(
 
     def needs(key: str, reason: str) -> None:
         pending.setdefault(key, []).append(reason)
+
+    # User-validated cross-company rule: decorative ↗/→ in every CTA is
+    # template-like visual noise. Count across ALL rendered pages, including
+    # repeated headers/footers. Rare directional controls are allowed; recurring
+    # arrow-labelled links fail before the demo can be approved.
+    arrow_chars = "↗→➜⇒⟶⇢↪"
+    arrow_links = []
+    for route, page_html in pages.items():
+        page_soup = BeautifulSoup(page_html, "html.parser")
+        for link in page_soup.find_all("a"):
+            label = " ".join(link.get_text(" ", strip=True).split())
+            if any(char in label for char in arrow_chars):
+                arrow_links.append((route, label))
+    if len(arrow_links) > 2 or any(
+        sum(label == other_label for _, other_label in arrow_links) > 1
+        for _, label in arrow_links
+    ):
+        examples = ", ".join(f"{route}: {label[:72]}" for route, label in arrow_links[:4])
+        fail("non_repetitive_cta_icons",
+             f"Repeated decorative CTA arrows across site ({len(arrow_links)} links): {examples}. "
+             "Use readable links and distinct button hierarchy without generic arrow suffixes.")
 
     copy_result = lint_site_copy(pages)
     for error in copy_result["issues"]:

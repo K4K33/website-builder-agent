@@ -42,6 +42,14 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+PYSYVÄ YLEINEN DESIGN-SÄÄNTÖ: ÄLÄ RIPOTTELE NUOLIA LINKKEIHIN.
+- CTA-, navigaatio-, palvelu- ja footer-linkkeihin ei lisätä toistuvia ↗/→-nuolia.
+- Älä piilota samaa tapaa CSS ::after -contentin, round-arrow-korttien tai SVG-ikonien sisään.
+- Oikeaan suuntaa osoittavaan erilliseen toiminnalliseen ohjaimeen voi tulla harkittu nuoli,
+  jos sillä on todellinen tehtävä, saavutettava nimi eikä se toistu koristeena.
+- Huolehdi klikattavuudesta linkkitekstillä, kontrastilla, tilalla ja hover/focus-tiloilla.
+- Tämä on kaikille yrityksille yhteinen laatukriteeri, ei yhden demon tyylivalinta.
+
 FOOTERIN SPONSORIT/KUMPPANIT — PAKOLLINEN KAIKILLE SIVUILLE:
 - Tarkista aina sivuston alareuna ja kaikki muut logolistat. Inventoi
   sponsorit, yhteistyökumppanit, ketjujäsenet, sertifikaatit, nimet,
