@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup
 
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
+from utils.visual_media_gate import audit_visual_media
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
 from utils.global_feedback import (
@@ -930,6 +931,19 @@ def run_qa(slug_or_name: str) -> dict:
     ledger = load_ledger(ledger_file)
     pending_general_rules = universal_rules_pending_implementation(ledger)
     automated = _automated_checks(html)
+    # Fail objectively broken images and HOLD unverified external imagery
+    # before using a browser run or consuming any limited review credits.
+    # External checks must match the exact immutable HTML being reviewed.
+    media_evidence = research.get("public_media_verification") or {}
+    verified_images = (
+        set(media_evidence.get("verified_image_urls") or [])
+        if media_evidence.get("verified") is True
+        and media_evidence.get("html_sha256") == hashlib.sha256(html_bytes).hexdigest()
+        else set()
+    )
+    visual_media = audit_visual_media(
+        html, html_path=path, verified_public_images=verified_images
+    )
     # Never spend browser/AI review credits when guaranteed critical
     # source-backed fields are absent.
     parity_hard_missing = bool(parity["missing"] or any(
@@ -941,7 +955,8 @@ def run_qa(slug_or_name: str) -> dict:
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
     benchmark_urls, decisions = [], []
-    if automated["automated_pass"] and not parity_hard_missing and universal["automated_pass"]:
+    if (automated["automated_pass"] and not parity_hard_missing
+            and universal["automated_pass"] and visual_media["owner_preview_ready"]):
         browser = inspect_site(path)
         if browser["pass"]:
             research = company.get("research") or {}
@@ -983,7 +998,8 @@ def run_qa(slug_or_name: str) -> dict:
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
     result = {
-        "automated": automated, "browser": browser, "content_review": review,
+        "automated": automated, "visual_media": visual_media,
+        "browser": browser, "content_review": review,
         "content_parity": parity,
         "universal_quality": universal,
         "unimplemented_global_feedback": pending_general_rules,
@@ -991,13 +1007,16 @@ def run_qa(slug_or_name: str) -> dict:
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "overall_pass": (parity["pass"] and universal["automated_pass"]
                          and not pending_general_rules
-                         and automated["automated_pass"] and browser["pass"]
+                         and automated["automated_pass"]
+                         and visual_media["owner_preview_ready"] and browser["pass"]
                          and review_passes(review, benchmark_urls, decisions)),
     }
     # Every future general failure is recorded without a new model request.
     # Repeating the same category across different clients makes it a
     # candidate for a universal regression check, not an invented fix.
     issues = (list(automated.get("automated_issues") or [])
+              + list(visual_media["blockers"])
+              + list(visual_media["needs_public_verification"])
               + [x["label"] for x in parity["missing"]]
               + [m for values in universal["blocking_problems"].values() for m in values]
               + list(browser.get("issues") or []))
