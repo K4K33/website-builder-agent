@@ -612,7 +612,7 @@ def cmd_pipeline(args):
             registry_path=Path(config.OUTPUT_DIR) / "_kaurivo_unseen_trials.json",
         )
         print("Reserved one unseen first-pass company: "
-              + (trial["domain"] or trial["slug"]))
+              + (trial.get("url") or trial.get("slug") or selected_slug))
     website_state = site_signal(selected_company)
     intelligence = evaluate_prospect(selected_company)
     if website_state != "has_website":
