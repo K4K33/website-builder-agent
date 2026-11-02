@@ -55,6 +55,31 @@ Never auto-ask cold prospects or assume they own rights to public pictures.
       request. No photos are gathered/sent automatically and the email
       itself still requires per-recipient manual approval.
 
+## Universal 9.5 quality threshold and human copy — BLOCKERS
+
+Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
+- [ ] Overall rating ≥9.5/10 comes from a real independent AI evaluation
+      of the *current* version, with reviewer and evidence identified.
+      No model may grade its own work and substitute that as external.
+- [ ] Full-screen real mobile **and desktop** review includes the home
+      page and at least two inner pages. Single iPhone recordings are
+      useful feedback but insufficient for 9.5 acceptance.
+- [ ] At least THREE distinct recent client-demo projects independently
+      pass ≥9.5. A single exceptional demo cannot approve
+      Kaurivo's builder; hold customer-facing release until consistency proven.
+- [ ] Sitewide contrast/antithesis taglines are at most ONE across every
+      route ("Vähemmän X. Enemmän Y.", "Ei vain X vaan Y" etc.).
+      Prefer zero if unnatural. Protect approved client slogans.
+- [ ] Copy reads as a real business speaking naturally, without
+      formulaic motivational marketing, duplicated content, copied
+      rhythms or generic AI-written section fillers.
+- [ ] Editorial photos have correct industry-specific subjects, licensing
+      and captions; a dark overlay sticker with "Kuvituskuva" is not
+      premium presentation. Keep disclosure in subtle nearby text.
+- [ ] Human QA, source rights, independently recorded evidence and real
+      browser QA must all pass. Independent score alone cannot approve
+      emails, site delivery, CMS or production.
+
 ## Discovery and brand — BLOCKERS
 
 - [ ] VERIFIED real business identity, logo file or written approval for

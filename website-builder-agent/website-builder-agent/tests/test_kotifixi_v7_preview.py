@@ -41,7 +41,12 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertEqual(soup.select_one(".hero-copy .button-primary").get_text(strip=True), "Kysy arviota")
         self.assertEqual(soup.select_one(".hero-copy .button-secondary").get_text(strip=True), "Katso palvelut")
         self.assertEqual(len(soup.select(".editorial-card[href]")), 3)
-        self.assertEqual(len(soup.select(".intro-band")), 1)
+        # The old tagline-heavy band was intentionally removed.
+        self.assertEqual(len(soup.select(".intro-band")), 0)
+        self.assertNotIn("Vähemmän tekemättömiä töitä", str(soup))
+        self.assertNotIn("KOTIFIXIN IDEA", str(soup))
+        self.assertNotIn("photo-caption", str(soup))
+        self.assertIn("Apua", soup.select_one(".hero-copy h1").get_text(" ", strip=True))
         for filename in FILES:
             text = (ROOT / filename).read_text(encoding="utf-8")
             for arrow in ("↗", "→", "➜", "➝"):

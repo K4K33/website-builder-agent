@@ -7,6 +7,25 @@ Derived from the 2026-11-01 Kotifixi owner-feedback and observed iPhone screen r
 This is a written acceptance standard, not evidence that every current auto-generated
 website already meets it.
 
+## Universal text discipline and proven consistent 9.5 quality
+
+See `docs/KAURIVO_QUALITY_95_GATE.md`. Across the WHOLE site (not
+per page), use **at most one** obvious antithesis structure such as
+"Vähemmän X. Enemmän Y.", and omit it if not excellent.
+Do not chain slogans, symmetrical two-clause hero lines, repeated
+"yksi...monenlaisia..." phrasing or filler micro-labels. Prefer
+a straightforward statement of concrete services and actual client
+benefits. Review authentic Finnish and cross-page repetition.
+
+Visual density must feel purposeful, not sparse from removing AI
+decorations: build consistent editorial images, precise typography,
+coherent mobile rhythm, real customer tasks and visible main CTA.
+Image disclaimers can be plain adjacent microcopy, not dark
+overlay "Kuvituskuva" badges. A good score for one client or on
+one mobile video never represents reliable agency-wide design.
+Require independent ≥9.5 and three distinct recent client demos
+to meet the same standard; record any unfinished evidence as HOLD.
+
 ## Brand integrity ≠ conservative visuals
 
 Verify the customer's **real** logo, brand color, imagery and locked copy before
