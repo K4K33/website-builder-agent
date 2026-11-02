@@ -66,6 +66,46 @@ class CopyAuditTests(unittest.TestCase):
         self.assertTrue(any("Repeated paragraph" in x for x in check["issues"]))
 
 
+class ClientPreviewTrustTests(unittest.TestCase):
+    def test_raw_and_developer_hosts_rejected_but_branded_domain_possible(self):
+        from utils.pitch_quality import customer_safe_preview_url
+        unsafe = (
+            "https://raw.githack.com/K4K33/repo/sha/index.html",
+            "https://rawgit.hack/test/demo",
+            "https://k4k33.github.io/website-builder-agent/demo/",
+            "https://agency.pages.dev/demo/",
+            "https://agency.vercel.app/demo/",
+            "https://github.com/K4K33/website-builder-agent",
+            "http://kaurivo.fi/demo",
+            "https://localhost:8000/demo",
+        )
+        for url in unsafe:
+            with self.subTest(url=url):
+                self.assertFalse(customer_safe_preview_url(url))
+        self.assertTrue(customer_safe_preview_url("https://demo.kaurivo.fi/yritys/"))
+        self.assertTrue(customer_safe_preview_url("https://brand.example.com/"))
+
+    def test_pitch_gate_requires_verified_non_developer_domain(self):
+        from utils.pitch_quality import assess_pitch_packet
+        r = assess_pitch_packet({
+            "demo": {
+                "published": True,
+                "url": "https://raw.githack.com/K4K33/repo/sha/index.html",
+                "branded_domain_verified": True,
+            }
+        }, check_local_files=False)
+        self.assertFalse(r["premium_demo_ready_for_outreach_review"])
+        self.assertTrue(any("Unbranded/developer" in issue for issue in r["issues"]))
+        r2 = assess_pitch_packet({
+            "demo": {
+                "published": True,
+                "url": "https://demo.kaurivo.fi/yritys/",
+                "branded_domain_verified": False,
+            }
+        }, check_local_files=False)
+        self.assertTrue(any("Owner-verified" in issue for issue in r2["issues"]))
+
+
 class EvidenceGateTests(unittest.TestCase):
     def test_single_high_scoring_project_cannot_certify_agency(self):
         result = assess_quality_consistency([review("kotifixi")], current_project_id="kotifixi")
