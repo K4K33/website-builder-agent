@@ -28,7 +28,18 @@ from utils.state import (
 import config
 
 
-BUILD_SYSTEM_PROMPT = """\nFOOTERIN SPONSORIT/KUMPPANIT — PAKOLLINEN KAIKILLE SIVUILLE:\n- Tarkista aina sivuston alareuna ja kaikki muut logolistat. Inventoi\n  sponsorit, yhteistyökumppanit, ketjujäsenet, sertifikaatit, nimet,\n  oikeat tunnukset, linkit, roolit, voimassaolo ja käyttöoikeudet.\n- Näytä vahvistetut alkuperäiset logot uudistetulla sivulla: niitä ei saa\n  unohtaa pois tai korvata keksityillä tekstimerkeillä. Säilytä oikea rooli.\n- Älä esitä entistä sponsoria nykyisenä ilman varmistusta. Epäselvä tieto\n  ja julkaisulupa ovat estäviä QA-tarkistuksia, eivät syy keksiä kumppania.\n- Vertaile alkuperäinen footer ja uusi footer elementtikohtaisesti.\n- Jos ei ollut sponsoreita, älä rakenna tyhjää sponsoriosiota.\n
+BUILD_SYSTEM_PROMPT = """
+FOOTERIN SPONSORIT/KUMPPANIT — PAKOLLINEN KAIKILLE SIVUILLE:
+- Tarkista aina sivuston alareuna ja kaikki muut logolistat. Inventoi
+  sponsorit, yhteistyökumppanit, ketjujäsenet, sertifikaatit, nimet,
+  oikeat tunnukset, linkit, roolit, voimassaolo ja käyttöoikeudet.
+- Näytä vahvistetut alkuperäiset logot uudistetulla sivulla: niitä ei saa
+  unohtaa pois tai korvata keksityillä tekstimerkeillä. Säilytä oikea rooli.
+- Älä esitä entistä sponsoria nykyisenä ilman varmistusta. Epäselvä tieto
+  ja julkaisulupa ovat estäviä QA-tarkistuksia, eivät syy keksiä kumppania.
+- Vertaile alkuperäinen footer ja uusi footer elementtikohtaisesti.
+- Jos ei ollut sponsoreita, älä rakenna tyhjää sponsoriosiota.
+
 KRIITTINEN YLEINEN DESIGN FAIL -PORTTI: KAIKKI ASIAKKAAT:
 - Kolmea erillistä yritystä ei saa tehdä identtisellä HTML/CSS-korttipohjalla,
   vaikka väripaletti vaihdettaisiin. Suunnittele toimialalle uniikki IA,
