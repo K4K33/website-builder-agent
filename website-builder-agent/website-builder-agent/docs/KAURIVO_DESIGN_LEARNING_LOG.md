@@ -1,5 +1,11 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — Kotifixi V15 approved as design baseline by owner
+
+Owner says "tämä on jo hyvä mielestäni" and supplied a ~31.4-second desktop walkthrough of V15 across the home page, service list, pricing, process page and contact/test form. Treat this as **owner design approval**, not customer approval, measured independent >=9.5, validated live form delivery, or a mobile audit. No V16 purely to chase AI scores. Keep V15 unchanged and available as the reference for the agency's first cross-industry quality-consistency tests.
+
+Next builder learning step: create three distinct, source-faithful company demos through the automated research → same-industry inspiration → original art direction → internal free QA → first owner-preview cycle. Benchmark actual first-preview quality without manually editing the same site 14 times. Avoid copying Kotifixi's blue branding to unrelated companies.
+
 ## 2026-11-02 — Kotifixi V15 final design pass
 
 Owner requested one final **small** visual refinement after V14 approval, not a new concept. Preserve the accepted brand palette, balanced header, primary question and truthful service copy. Changes in this version: coordinate subject-focused crops in hero, about and three service photographs; add responsive image candidates, explicit dimensions and lazy loading as appropriate to reduce waste on mobile and image layout shifts; unify card text rhythm at 15px and soften hover lift/zoom from more aggressive 3D into a restrained state. Do not introduce new JS scroll listeners or costly full-image filters. Keep no-JS and prefers-reduced-motion support. Do not claim a certified independent >=9.5/10 without evidence.

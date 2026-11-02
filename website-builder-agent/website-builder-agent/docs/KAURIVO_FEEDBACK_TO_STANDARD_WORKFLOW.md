@@ -1,5 +1,9 @@
 # Kaurivo — mandatory feedback-to-standard workflow
 
+## 2026-11-02 — Kotifixi V15 owner design approval, stop unnecessary iterations
+
+User approved V15's appearance ("tämä on jo hyvä mielestäni") with a 31.4-second desktop walkthrough. Videos show the principal pages and contact test UI, but don't independently establish mobile readiness, production CMS access, direct customer lead routing or an external >=9.5 score. Decision: freeze V15 visual design as the owner-accepted *internal demo reference*; do not invent a V16 or score-chase. Carry forward learned universal rules and measure repeatability on three unrelated industry projects. Keep truthful demo labels, client content permission and branded-domain/outreach gates independent from design approval.
+
 ## 2026-11-02 — final Kotifixi art-direction pass (V15)
 
 User approved the V14 design and asked for the last version. Scope intentionally restricted to small crop/typography/micro-interaction improvements previously discussed: responsive srcset/sizes and intrinsic dimensions for editorial photos, balanced image composition with CSS object-position, readable 15px service-card copy and softer hover lift/zoom without reintroducing heavy scroll effects. Header/button system, page architecture, main headline, prices, example-photo disclosures and demo-only backend are unchanged. Final snapshot is a **design-review candidate**; it is not a new customer production deployment or proof of external 9.5.
