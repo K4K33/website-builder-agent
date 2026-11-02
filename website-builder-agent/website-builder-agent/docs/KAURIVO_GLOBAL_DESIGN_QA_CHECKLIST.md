@@ -1,5 +1,13 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## Decorative-arrow repetition: agency-wide blocking rule (2026-11-03)
+- [ ] No generic ↗/→/➜ arrow appended to every CTA, service row, contact link or footer link. Repeated arrow-led button design is a **failed visual QA**, even if all functional tests pass.
+- [ ] The shared `non_repetitive_cta_icons` code gate rejects more than two arrow-labelled links across any rendered site, or any repeated same arrow link. A functional single directional navigation control can be justified; screenshots still receive independent review.
+- [ ] Review pseudo-element `content: '↗'`, CSS icon masks, SVG arrows and hover states: HTML glyph counting alone cannot establish clean visual design.
+- [ ] For every user report, add the generalized code check, a unit regression and a specific demo regression. A green build without the new regression test is insufficient.
+
+
+
 
 ## AUTOMATIC UNIVERSAL QA (2026-11-02)
 
