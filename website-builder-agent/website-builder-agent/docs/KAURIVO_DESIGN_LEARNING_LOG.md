@@ -1,5 +1,9 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — V14: integrated call + quote actions
+
+Owner showed V13 in an 84.5-second desktop recording, liked overall layout but disliked the pair of top-right buttons as visually disconnected from each other and the rest of the site. A separate 17.3-second Gemini review praised minimal structure, truthful service/pricing/contact content and some usability, while critiquing stock/template/disclaimer appearance and proposing sales tactics. V14 addresses exactly the actionable visual discrepancy with a shared understated action grouping, secondary real telephone button and one primary quote CTA. Keep two distinct links, keyboard focus, mobile menu access, native scroll, good brand colors. Do not remove truthful demo disclaimers, fabricate founder reviews or treat external indicative sales prices as approved. Need an exact-build real mobile/desktop review to justify a premium score.
+
 ## 2026-11-02 — V13: fill unusable horizontal whitespace in premium headers
 
 Owner's 65.5-second V12 desktop recording clearly illustrates a broad white dead zone after the logo while hovering the pointer near the end. Claude's 3-second screen recording praises overall visual structure but disagrees with the user-selected homepage headline and admits no fresh mobile review. Preserve user-approved text and treat browser-generated WhatsApp notification as unrelated to the website. Architectural update: content-sized left and right tracks, a flexible menu column with space-between distribution, real gap bounds and more viewport coverage. Aesthetic symmetry does not excuse a poorly utilized clickable navigation region. Include the published versioned URL without a follow-up question. No fabricated client proof, launch or independent score.

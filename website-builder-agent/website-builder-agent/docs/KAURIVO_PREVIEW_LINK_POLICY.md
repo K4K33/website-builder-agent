@@ -67,3 +67,11 @@ Every version gets its working direct link in the completion reply automatically
 https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v13/
 
 Latest external 3s AI video did not review mobile. User's long 65s recording ends by highlighting an empty header gap. V13 reallocates header space between the brand and contact action area with flexible navigation, plus explicit gap measurements. It keeps user-approved Finnish hero and functional light 3D. New version URL must be sent automatically in the completion reply, and is for the owner's INTERNAL review ONLY, not prospective customers. Mark QA/review scores as unverified until tested. No domain purchase, outreach or production changes.
+
+## 2026-11-02 — V14 owner-reviewed contact buttons
+
+**Internal owner preview:** https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v14/
+
+User-submitted V13 84.5-second desktop walkthrough found two visually disconnected header buttons. Separate 17.3-second Gemini review provided useful design/marketing observations, but no verified V14 score. V14 groups quiet phone and one strong blue quote CTA into a coherent two-link surface while retaining existing copy, responsive menu, native scroll and 3D. Never hide the honest internal-demo disclaimer or invent business claims to appease an AI reviewer. Only a branded approved HTTPS link is acceptable for actual customer outreach.
+
+Every new completed version includes its direct preview link automatically after confirming the published snapshot. This internal GitHub Pages path must NOT be emailed to a client.

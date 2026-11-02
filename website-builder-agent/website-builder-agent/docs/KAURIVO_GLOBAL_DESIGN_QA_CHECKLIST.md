@@ -91,6 +91,15 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
 - [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
 
+## 2026-11-02 V14 — coherent contact-action styling and useful external review
+
+- [ ] **Integrated header actions:** the phone and quote/contact CTA must visually belong to the same intentional system. When both appear, one lightly outlined group with consistent button heights, corner radii, typographic weights and clear space can outperform separate default-looking boxes. Each action remains independently accessible and clickable.
+- [ ] **Do not create false dual CTAs:** only the primary conversion action uses strong brand color; the telephone action stays quieter but still visibly interactive. Never sacrifice contrast/focus, hide the caller behind a hover-only affordance or make both buttons look like competing primaries.
+- [ ] **Responsive fallback:** on smaller desktops, the top bar may show only the main action, with the telephone still reachable in mobile navigation and elsewhere. At 320–430px the menu toggle must remain separate, functional and a comfortable target. Check that the action group does not overlap the logo or navigation.
+- [ ] **Owner's actual visual feedback overrides template taste:** an AI can compliment a technically correct site and still miss mismatched buttons. Review phone/button grouping in genuine desktop and mobile screenshots; reject a fix if the controls are merely nested in another decorative card.
+- [ ] **External AI observations, not automatic changes:** demo disclaimers and Kaurivo labels are legally important honest disclosures in owner previews, not "AI mistakes" to delete. Generic stock is acceptable only when truthful, rights-cleared and locally plausible; seek original client media after genuine interest. Do not fabricate staff, testimonials, service promises or turnaround metrics to look human.
+- [ ] **Sales-readiness separate from design polish:** free internal review links, test contact backend, website design score and a hypothetical offer do not prove a real customer-facing CMS, own domain, live lead routing or client-approved pricing. Verify all before handover/outreach.
+
 ## 2026-11-02 V13 — use the real available header width, not false geometric symmetry
 
 - [ ] **Eliminate dead pointer zones:** inspect the actual first-link gap after the brand and the last-link gap before contact actions. Equal-width outside grid columns can mathematically center navigation while leaving a 200–300px void by the logo. Prefer content-sized brand/action tracks with a flexible distributed navigation track when it better balances the visible composition.

@@ -176,6 +176,29 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V14 YHTENÄINEN YLÄPALKIN CTA-SOMMITTELU:
+- Puhelinnumeron ja tarjous-/yhteydenottopainikkeen tulee
+  näyttää tarkoituksella samaan järjestelmään suunnitelluilta.
+  Irralliset eriväriset ja erimuotoiset nappulat näyttävät
+  geneeriseltä UI-mallipohjalta.
+- Käytä tarvittaessa yhteistä erittäin hillittyä taustaa,
+  yhtenäisiä kulmia, fontteja ja elementtikorkeuksia.
+  Jätä vain yksi vahva brändivärinen ensisijainen CTA.
+  Puhelun pitää olla toinen oikeasti klikattava linkki,
+  ei koriste tai yhteisen napin sisällä väärä toiminto.
+- Näyttöjen kaventuessa säilytä pää-CTA ja mobiilivalikko.
+  Puhelu löytyy mobiilivalikosta ja yhteystietosivulta.
+  Testaa käytännössä kaikki kohteet ja näppäimistöfokus.
+- Ulkoisen tekoälyn kritiikki stock-kuvista ja AI-ilmeestä
+  saa johtaa oikean lisensoidun asiakasmedian käyttöön
+  vasta luvalla. Ei poisteta totuudenmukaista demoilmoitusta
+  eikä keksitä oikeita asiakastöitä, henkilöhistoriaa,
+  arvosteluja tai toimituslupauksia.
+- Arvioijan ehdottamia hintoja tai myyntipuheita ei
+  oteta automaattisesti Kaurivon hinnastoksi.
+- Julkaise tarkistettava versiokohtainen esikatselulinkki
+  ja anna se käyttäjälle automaattisesti, kun versio valmistuu.
+
 V13 YLEINEN HEADER-TILANKÄYTTÖOHJE KAIKILLE ASIAKKAILLE:
 - Tasapainoinen ei tarkoita matemaattisesti keskitettyä.
   Esim. 1fr auto 1fr voi jättää satojen pikseleiden
