@@ -17,13 +17,18 @@ CONTRAST_PATTERNS = (
     re.compile(r"\bvähemmän\b.{0,140}\benemmän\b|\benemmän\b.{0,140}\bvähemmän\b", re.I),
     re.compile(r"\bei\s+(?:vain|pelkästään)\b.{0,130}\bvaan\b", re.I),
     re.compile(r"\bnot\s+(?:only|just)\b.{0,130}\bbut\b", re.I),
+    # A short, symmetrical slogan can feel templated even without antonyms.
+    re.compile(r"\byksi\b[^.!?]{2,85}[.!?]\s*(?:monta|monenlaista|kaikenlaista|kaikki)\b", re.I),
 )
 MIN_INDEPENDENT_SCORE = 9.5
 MIN_REFERENCE_CLIENTS = 3
 
 
-def lint_site_copy(html_pages: dict[str, str], *, max_contrasts: int = 1) -> dict:
-    """Detect repetitive copy and total contrast-pair usage across a SITE.
+def lint_site_copy(html_pages: dict[str, str], *, max_contrasts: int = 0) -> dict:
+    """Detect repetitive copy and template-sounding formula usage across a SITE.
+
+    Zero formulaic slogans is the default agency standard. Only an explicitly
+    justified, documented exception may pass max_contrasts=1; never per page.
 
     Do not score visual design via regex: this catches only objective
     copy-writing patterns and requires separate editorial/browser review.
@@ -51,7 +56,7 @@ def lint_site_copy(html_pages: dict[str, str], *, max_contrasts: int = 1) -> dic
                 paragraphs.append((page, raw.casefold()))
     if contrast_count > max_contrasts:
         issues.append(
-            f"Contrast-pair formula repeated sitewide {contrast_count} times, "
+            f"Formulaic slogan used sitewide {contrast_count} times, "
             f"limit {max_contrasts}: " + " | ".join(contrast_examples)
         )
     collisions = Counter(text for _page, text in paragraphs)
