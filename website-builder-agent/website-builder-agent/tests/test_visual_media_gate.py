@@ -110,6 +110,30 @@ class VisualMediaGateTests(unittest.TestCase):
                 browser.assert_not_called()
                 ai.assert_not_called()
 
+    def test_owner_preview_requires_95_in_each_dimension(self):
+        from agents.qa import owner_preview_visual_passes
+        dimensions = (
+            "desktop", "tablet", "mobile", "small_mobile",
+            "brand_specificity", "typography", "hierarchy",
+            "art_direction", "imagery", "motion",
+        )
+        review = {
+            "content_ok": True, "issues": [],
+            "reference_comparison": {
+                "reviewed_urls": ["https://a.example", "https://b.example", "https://c.example"],
+                "company_specific": True, "ready_for_client_review": True,
+                "remaining_gaps": [],
+            },
+            "visual_review": {**{dimension: 96 for dimension in dimensions},
+                              "blockers": [], "improvements": []},
+        }
+        self.assertTrue(owner_preview_visual_passes(review))
+        review["visual_review"]["imagery"] = 90
+        self.assertFalse(owner_preview_visual_passes(review))
+        review["visual_review"]["imagery"] = 96
+        review["visual_review"]["mobile"] = 94
+        self.assertFalse(owner_preview_visual_passes(review))
+
     def test_no_company_template_is_encoded_in_the_gate(self):
         source = (Path(__file__).resolve().parents[1] /
                   "utils" / "visual_media_gate.py").read_text(encoding="utf-8")
