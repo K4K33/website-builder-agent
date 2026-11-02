@@ -15,6 +15,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
+from utils.design_distinctness import assert_unique_against_output
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 import json
@@ -944,6 +945,10 @@ def _write_html(slug: str, html: str) -> str:
                 "AI:n HTML sisältää ulkoisen resurssin. "
                 "Sivun pitää olla täysin itsenäinen."
             )
+
+    # Prevent copy-paste layouts before any new customer's HTML is saved.
+    # No paid APIs and no external requests.
+    assert_unique_against_output(cleaned, slug, config.OUTPUT_DIR)
 
     out_dir = _output_dir(slug)
 

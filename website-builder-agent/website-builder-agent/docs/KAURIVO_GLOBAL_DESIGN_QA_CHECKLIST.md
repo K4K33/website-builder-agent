@@ -8,6 +8,14 @@
 - [ ] Old→new audit: name, relationship, link, image source and approval status. Missing/mismatched logos or unknown permission = release HOLD, not fabricated substitutions.
 - [ ] Include these checks for all future customer sites, not only the three current demos.
 
+## Automatic client-to-client originality gate
+
+- [ ] Before saving a generated site, compare its actual main-content DOM layout against other companies' site designs. The Builder now calls `utils.design_distinctness.assert_unique_against_output`.
+- [ ] A shared color palette change or logo change does not make a repeated hero/grid/card layout unique. A detected duplicate blocks saving, even if the text differs.
+- [ ] Shared technical accessibility/security components are allowed; layouts, content hierarchy, brand photography, navigation and art direction must be unique per customer.
+- [ ] Auto-similarity detection does NOT replace actual screenshot review or independent quality scoring. Human reviewers must compare desktop and mobile side-by-side.
+- [ ] The three V1 sites (TE-Service, Rosanne, RI-LI) are rejected as repeated templates until fully redesigned; do not claim successful first-pass 9/10 results.
+
 ## 2026-11-02 hard stop: three industry demo failure and new universal rule
 
 See `docs/KAURIVO_NO_TEMPLATES_BRAND_CONTENT_GUARD_2026-11-02.md`. HARD FAIL if decorative service numbering, wrong/replaced company logo or color identity, shared same grid recipe across unlike sectors, invented/partial menu, missing G/L/M labels, low-contrast text, invented before/after pairs, third-person "company website says" copy, or content missing from older pages. Research, unique visual direction, factual inventory and accessible browsing precede first owner-facing link. Scope: all companies.

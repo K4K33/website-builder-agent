@@ -1,7 +1,13 @@
 # Kaurivo — kolmen eri toimialan ensiversiotesti
 
 Päiväys: 2026-11-02
-Tila: yritykset VALITTU; demosivustoja ei ole vielä rakennettu tai esitelty asiakkaille.
+Tila 2.11.2026: kolmen yrityksen V1-sivustot rakennettiin ja näytettiin
+käyttäjälle, mutta ne **HYLÄTTIIN** saman pohjan kierrättämisen vuoksi.
+Niissä on sama `_shared/first-pass.css`-runko, hero, palvelukortit ja
+sisältöjärjestys eri väreissä. V1:t ovat sisäisiä hylättyjä kokeita,
+eivät hyväksyttyjä 9/10 ensiversioita tai asiakkaille lähetettäviä demoja.
+Uudet V2-versiot edellyttävät yrityskohtaisia art-direction-briefejä,
+alkuperäisiä logoja, toisistaan erottuvaa rakennetta ja riippumatonta QA:ta.
 
 ## Tavoite
 
