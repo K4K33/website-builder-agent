@@ -1,0 +1,64 @@
+name: Kaurivo source-fidelity and unseen-company QA
+
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/agents/**"
+      - "website-builder-agent/website-builder-agent/utils/source_fidelity.py"
+      - "website-builder-agent/website-builder-agent/utils/blind_trials.py"
+      - "website-builder-agent/website-builder-agent/utils/browser_qa.py"
+      - "website-builder-agent/website-builder-agent/utils/content_parity.py"
+      - "website-builder-agent/website-builder-agent/utils/industry_workflow.py"
+      - "website-builder-agent/website-builder-agent/utils/fetch.py"
+      - "website-builder-agent/website-builder-agent/main.py"
+      - "website-builder-agent/website-builder-agent/tests/test_source_fidelity.py"
+      - "website-builder-agent/website-builder-agent/tests/test_blind_trials.py"
+      - "website-builder-agent/website-builder-agent/tests/test_browser_legibility.py"
+      - ".github/workflows/kaurivo-source-fidelity-blind-qa.yml"
+  push:
+    branches: [main]
+    paths:
+      - "website-builder-agent/website-builder-agent/utils/source_fidelity.py"
+      - "website-builder-agent/website-builder-agent/utils/blind_trials.py"
+      - ".github/workflows/kaurivo-source-fidelity-blind-qa.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  offline-content:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install beautifulsoup4
+      - name: Validate real Builder and Research Python syntax
+        run: python -m py_compile agents/builder.py agents/qa.py agents/research.py utils/source_fidelity.py utils/blind_trials.py utils/browser_qa.py utils/fetch.py utils/industry_workflow.py main.py
+      - name: Preserve content, sponsor images, visible affiliate links, original task paths
+        run: python -m unittest tests.test_source_fidelity -v
+      - name: Reject repeated experiment firms and fabricated quality metrics
+        run: python -m unittest tests.test_blind_trials -v
+      - name: Existing source parity and industry crawl regressions
+        run: python -m unittest tests.test_content_parity -v
+
+  viewport-legibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install playwright beautifulsoup4
+      - run: python -m playwright install --with-deps chromium
+      - name: Contrast and text-size browser regression on 4 viewports
+        run: python -m unittest tests.test_browser_legibility -v
