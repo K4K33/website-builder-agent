@@ -27,6 +27,15 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## V9: honest premium page rhythm, native scroll and client-ready preview trust
+
+- Design information blocks according to **reading priority**, not a repeating card recipe. Separate source notes and tax guidance from pricing actions, keep enough line length and spacing, and avoid stacks of pale-grey full-width strips.
+- Trackpad/wheel/touch interaction should feel native. Do not use blanket smooth scrolling, per-scroll paint changes or backdrop-filter-heavy sticky UI merely for polish. Measure actual physical-device performance before claiming speed.
+- The first viewport should show real services and coherent photos, with natural Finnish, readable small text and restrained heading treatments. An illustration must not accidentally imply an employee, owner or past client work.
+- An **internal technical URL** is not a customer-appropriate preview: raw.githack warning/interstitial, github.io repository paths and developer-domain URLs cannot go in outreach. Check the actual first-open URL, direct HTTPS load and verified branded domain, then secure explicit send approval. Do not assume a domain or DNS is already purchased.
+- Human context (founder name, photos, verified reviews, service areas, tax eligibility) raises credibility *only if factual*. Missing evidence must be reported as such rather than filled with stock claims. Do not add personal-data form fields without purpose and backend/privacy support.
+- Preserve QA gate: client outreach cannot proceed until externally verified >=9.5/10 on latest exact build and stable cross-project quality.
+
 ## Brand integrity ≠ conservative visuals
 
 Verify the customer's **real** logo, brand color, imagery and locked copy before
