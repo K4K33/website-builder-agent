@@ -29,6 +29,7 @@ def delivery_fixture():
             "client_owns_editor_access": True,
             "owner_guide_delivered": True,
             "customer_acceptance": True,
+            "demo_content_removed_and_contact_flow_verified": True,
             "build_version": 3,
             "html_sha256": "demo-hash",
         }
@@ -63,7 +64,8 @@ class RequiredSelfEditingTests(unittest.TestCase):
                   "text_edit_published_tested", "image_edit_published_tested",
                   "contact_edit_published_tested", "mobile_layout_after_edit_tested",
                   "backup_and_rollback_tested", "client_owns_editor_access",
-                  "owner_guide_delivered", "customer_acceptance"]
+                  "owner_guide_delivered", "customer_acceptance",
+                  "demo_content_removed_and_contact_flow_verified"]
         for field in fields:
             with self.subTest(field=field):
                 site = delivery_fixture()

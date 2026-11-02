@@ -31,6 +31,38 @@ def _https(value):
             and not p.username and not p.password)
 
 
+# Developer/raw-content preview hosts are acceptable for internal QA ONLY.
+# A prospective customer must see an approved brand-domain HTTPS preview.
+UNBRANDED_HOST_SUFFIXES = (
+    ".github.io", ".pages.dev", ".vercel.app", ".netlify.app",
+    ".onrender.com", ".render.com", ".herokuapp.com", ".surge.sh",
+    ".replit.app", ".glitch.me", ".web.app", ".firebaseapp.com",
+    ".gitlab.io", ".bitbucket.io",
+)
+UNBRANDED_HOSTS = {
+    "raw.githack.com", "rawgit.hack", "cdn.jsdelivr.net", "gist.github.com",
+    "raw.githubusercontent.com", "github.com", "localhost",
+}
+
+
+def customer_safe_preview_url(value: str) -> bool:
+    """Syntactic local guard, not a live DNS, trademark or ownership check."""
+    if not _https(value):
+        return False
+    p = urlsplit(value)
+    hostname = (p.hostname or "").lower().rstrip(".")
+    if (hostname in UNBRANDED_HOSTS
+            or any(hostname.endswith(s) for s in UNBRANDED_HOST_SUFFIXES)
+            or hostname.endswith(".localhost")
+            or hostname.endswith(".local")
+            or hostname.endswith(".test")
+            or hostname.endswith(".invalid")
+            or "." not in hostname
+            or p.port is not None and p.port != 443):
+        return False
+    return True
+
+
 def assess_pitch_packet(company, *, today=None, check_local_files=True):
     """Conservatively gate the actual customer outreach stage.
 
@@ -59,6 +91,10 @@ def assess_pitch_packet(company, *, today=None, check_local_files=True):
         problems.append("User has not approved this exact demo build.")
     if not (demo.get("published") is True and _https(demo.get("url"))):
         problems.append("Public real HTTPS demo preview is missing.")
+    if not customer_safe_preview_url(demo.get("url")):
+        problems.append("Unbranded/developer preview URL is unsuitable for client outreach.")
+    if demo.get("branded_domain_verified") is not True:
+        problems.append("Owner-verified branded HTTPS preview domain is missing.")
     refs = research.get("design_benchmark") or []
     if not isinstance(refs, list) or len({
         item.get("url") for item in refs

@@ -37,7 +37,7 @@ class CopyAuditTests(unittest.TestCase):
     def test_kotifixi_v7_has_no_formulaic_opposite_pairs(self):
         check = lint_site_directory(ROOT / "docs" / "kaurivo" / "demos" / "kotifixi-v7")
         self.assertTrue(check["pass"], check["issues"])
-        self.assertLessEqual(check["contrast_count"], 1)
+        self.assertEqual(check["contrast_count"], 0)
 
     def test_contrast_limit_applies_across_entire_site(self):
         pages = {
@@ -47,8 +47,16 @@ class CopyAuditTests(unittest.TestCase):
         check = lint_site_copy(pages)
         self.assertFalse(check["pass"])
         self.assertEqual(check["contrast_count"], 2)
-        self.assertIn("limit 1", check["issues"][0])
-        self.assertTrue(lint_site_copy({"index.html": pages["index.html"]})["pass"])
+        self.assertIn("limit 0", check["issues"][0])
+        # Editorial exception needs explicit one-off permission, never implicit.
+        self.assertFalse(lint_site_copy({"index.html": pages["index.html"]})["pass"])
+        self.assertTrue(lint_site_copy({"index.html": pages["index.html"]}, max_contrasts=1)["pass"])
+
+    def test_symmetric_one_many_ai_slogan_is_flagged(self):
+        page = {"index.html": "<h2>Yksi yhteydenotto. Monenlaisia arjen hommia.</h2>"}
+        check = lint_site_copy(page)
+        self.assertFalse(check["pass"])
+        self.assertEqual(check["contrast_count"], 1)
 
     def test_identical_long_paragraphs_rejected_sitewide(self):
         sentence = "Kotifixi auttaa kodin ja pihan töissä ja tarjoaa yksittäisiin projekteihin apua tarpeen mukaan."
@@ -56,6 +64,46 @@ class CopyAuditTests(unittest.TestCase):
         check = lint_site_copy({"a/index.html": html, "b/index.html": html})
         self.assertFalse(check["pass"])
         self.assertTrue(any("Repeated paragraph" in x for x in check["issues"]))
+
+
+class ClientPreviewTrustTests(unittest.TestCase):
+    def test_raw_and_developer_hosts_rejected_but_branded_domain_possible(self):
+        from utils.pitch_quality import customer_safe_preview_url
+        unsafe = (
+            "https://raw.githack.com/K4K33/repo/sha/index.html",
+            "https://rawgit.hack/test/demo",
+            "https://k4k33.github.io/website-builder-agent/demo/",
+            "https://agency.pages.dev/demo/",
+            "https://agency.vercel.app/demo/",
+            "https://github.com/K4K33/website-builder-agent",
+            "http://kaurivo.fi/demo",
+            "https://localhost:8000/demo",
+        )
+        for url in unsafe:
+            with self.subTest(url=url):
+                self.assertFalse(customer_safe_preview_url(url))
+        self.assertTrue(customer_safe_preview_url("https://demo.kaurivo.fi/yritys/"))
+        self.assertTrue(customer_safe_preview_url("https://brand.example.com/"))
+
+    def test_pitch_gate_requires_verified_non_developer_domain(self):
+        from utils.pitch_quality import assess_pitch_packet
+        r = assess_pitch_packet({
+            "demo": {
+                "published": True,
+                "url": "https://raw.githack.com/K4K33/repo/sha/index.html",
+                "branded_domain_verified": True,
+            }
+        }, check_local_files=False)
+        self.assertFalse(r["premium_demo_ready_for_outreach_review"])
+        self.assertTrue(any("Unbranded/developer" in issue for issue in r["issues"]))
+        r2 = assess_pitch_packet({
+            "demo": {
+                "published": True,
+                "url": "https://demo.kaurivo.fi/yritys/",
+                "branded_domain_verified": False,
+            }
+        }, check_local_files=False)
+        self.assertTrue(any("Owner-verified" in issue for issue in r2["issues"]))
 
 
 class EvidenceGateTests(unittest.TestCase):

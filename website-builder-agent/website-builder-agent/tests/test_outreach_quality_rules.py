@@ -73,6 +73,7 @@ class OutreachQualityTests(unittest.TestCase):
     def test_prompt_passes_existing_demo_link_without_inventing_one(self):
         record = company_record()
         record["demo_url"] = "https://example.org/demo-for-salon"
+        record["demo"] = {"branded_domain_verified": True}
         with patch.object(outreach, "ask_claude_json",
                           return_value={"subject": "Site example",
                                         "body": "Hei, olen Kaarlo. Tein ehdotuksen. Olisiko kiinnostusta?"}) as ask:
