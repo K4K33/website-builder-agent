@@ -724,18 +724,6 @@ Yrityksen URL:
 
 {json.dumps(source_excerpts, ensure_ascii=False)}
 
---- PAKOLLINEN BRÄNDIN SÄILYTYSSUUNNITELMA ---
-Lisää vastaukseen brand_preservation_plan, jossa on:
-logo_treatment, color_treatment, typography_treatment, photography_treatment
-(kukin vähintään 24 merkkiä), sekä source_urls (kaikki lähdesivut joilla
-havaittiin logo tai theme-color), original_logo_candidates (täsmälleen
-havaitut alkuperäiset logourlit) ja original_theme_colors (havaitut värit).
-Säilytä todellinen brändi, myös jos visuaalinen sommittelu muuttuu.
-Älä korvaa aitoja henkilökuvia geneerisillä AI/stock-kuvilla.
-Havaitut tähtiarvosanat ja lainatut asiakasarviot säilytetään täsmälleen
-niiden alkuperäisen lähteen mukaisina, ei keksittyinä arvosanoina.
-
-
 --- Tekniset tiedot ---
 
 Viewport-meta:
@@ -880,6 +868,18 @@ tarkistetaan ennen maksullista Builder-ajoa.
 --- TAVILYN REFERENSSIT ---
 
 {_format_search_results(references)}
+
+--- PAKOLLINEN BRÄNDIN SÄILYTYSSUUNNITELMA ---
+Lisää vastaukseen brand_preservation_plan, jossa on:
+logo_treatment, color_treatment, typography_treatment, photography_treatment
+(kukin vähintään 24 merkkiä), sekä source_urls (kaikki lähdesivut joilla
+havaittiin logo tai theme-color), original_logo_candidates (täsmälleen
+havaitut alkuperäiset logourlit) ja original_theme_colors (havaitut värit).
+Säilytä todellinen brändi, myös jos visuaalinen sommittelu muuttuu.
+Älä korvaa aitoja henkilökuvia geneerisillä AI/stock-kuvilla.
+Havaitut tähtiarvosanat ja lainatut asiakasarviot säilytetään täsmälleen
+niiden alkuperäisen lähteen mukaisina, ei keksittyinä arvosanoina.
+
 
 Muodosta nyt lopullinen design brief.
 
