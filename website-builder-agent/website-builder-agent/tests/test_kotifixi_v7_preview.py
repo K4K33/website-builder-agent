@@ -81,6 +81,24 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
             self.assertIn("Ei Kotifixin virallinen", (ROOT / filename).read_text())
             self.assertIn("Esimerkkikuvat: Pexels.", (ROOT / filename).read_text())
 
+    def test_mobile_headline_quality_and_verified_benefits(self):
+        stylesheet = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        self.assertIn("hyphens:manual", stylesheet)
+        self.assertIn("text-wrap:balance", stylesheet)
+        self.assertNotIn("hyphens:auto", stylesheet)
+        index = BeautifulSoup((ROOT / "index.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertLessEqual(len(index.select("h1 .serif, h2 .serif")), 2)
+        prices = BeautifulSoup((ROOT / "hinnasto/index.html").read_text(encoding="utf-8"), "html.parser")
+        notice = prices.select_one(".tax-info")
+        self.assertIsNotNone(notice)
+        self.assertIn("40 %", notice.get_text(" ", strip=True))
+        self.assertIn("ennakkoperintärekister", notice.get_text(" ", strip=True))
+        self.assertIsNotNone(notice.select_one('a[href*="vero.fi"]'))
+        for filename in FILES:
+            body = (ROOT / filename).read_text(encoding="utf-8").lower()
+            self.assertNotIn("35 %", body)
+            self.assertNotIn("arvostelu: 5/5", body)
+
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
         self.assertEqual(len(soup.select(".service-row")), 3)
