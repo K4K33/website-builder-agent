@@ -60,3 +60,10 @@ Every version gets its working direct link in the completion reply automatically
 - The Chrome Translate popup is browser UI; document language is already Finnish. No browser-translation-blocking hack.
 - New no-credit real Chromium checks measure nav geometry, font weight, responsive collisions; mobile and reduced-motion and pointer-only 3D remain supported.
 - Preview is internal owner review only, never send the GitHub Pages developer URL to prospective customers. No paid components, customer outreach or production deployment.
+
+
+## 2026-11-02 — Kotifixi V13 owner-review preview
+
+https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v13/
+
+Latest external 3s AI video did not review mobile. User's long 65s recording ends by highlighting an empty header gap. V13 reallocates header space between the brand and contact action area with flexible navigation, plus explicit gap measurements. It keeps user-approved Finnish hero and functional light 3D. New version URL must be sent automatically in the completion reply, and is for the owner's INTERNAL review ONLY, not prospective customers. Mark QA/review scores as unverified until tested. No domain purchase, outreach or production changes.

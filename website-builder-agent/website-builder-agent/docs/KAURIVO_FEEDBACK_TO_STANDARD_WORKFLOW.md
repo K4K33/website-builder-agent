@@ -79,6 +79,16 @@ User supplied a ~12.5-second iPhone screen recording of a **Claude Sonnet 5.5 Me
 
 **Universal V12 action:** real 3-column CSS grid with equally sized outer tracks and center nav, right-aligned contact actions, consistent centered gutters, desktop 16–17px DM Sans menu at weight 600 and deliberate Manrope 700 headings. Active underline refined. At narrower desktop widths hide only the header phone and keep it in the mobile nav. Add Playwright geometry/text-style regression coverage and compare width variants before calling complete. Keep native scroll and pointer-only 3D as already implemented. No automatic customer outreach, no invented founder history.
 
+## 2026-11-02 — V12 → V13: empty header zone, real mouse walkthrough and Claude
+
+**Evidence:** owner uploaded a 65.5-second desktop walkthrough at 1916×874 and a 3.0-second Claude Sonnet 5.5 Medium response screen recording at 1386×762. Near the end of the owner video the pointer deliberately circles a blank horizontal region between the Kotifixi logo and the first navigation link. This is the real issue, not a missing navbar item or an inactive button. Owner prefers redistributing existing links across the empty space without reducing their font sizes.
+
+**Claude findings:** service/process/price area was judged coherent and broadly ready aesthetically, but the review recommends a different three-line headline using the previously rejected wording "kotona tai pihalla", more unique brand identity, and a mobile review it explicitly has not done. It sees a private WhatsApp notification overlay in the owner's screen recording; this is capture/browser UI, not a defect in Kotifixi HTML. Claude's speculative €1,300–€3,000 implementation prices and monthly maintenance estimates are not evidence of Kaurivo's prices. Screenshot blur during fast scroll is not proof that on-page type is blurred.
+
+**Fix and reusable standard:** V12's CSS Grid `1fr auto 1fr` centered the middle nav mathematically, but left a visibly dead region between the logo and the first link. V13 uses `max-content minmax(0,1fr) max-content`, distributed link positions and measured maximum actual gaps. Keep 16–17px DM Sans semibold, right-aligned cohesive contact buttons and native scroll/3D performance. Extend no-credit Chromium coverage to 12 viewport widths and verify menu interactions and overflow. Preserve the user-approved direct question headline and factual/nonfictional About content.
+
+**Gates:** release is still an internal review candidate; do not conflate passing tests with external independent >=9.5, an on-device mobile review or a customer-ready branded domain. Include direct link automatically after publishing.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.

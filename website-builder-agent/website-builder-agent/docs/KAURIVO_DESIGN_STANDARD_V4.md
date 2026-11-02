@@ -27,6 +27,12 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## V13 — visual distribution beats mathematical centering
+
+A perfectly centered navigation can still look awkward when its first link sits hundreds of pixels away from the logo. Select the layout by measured content bounds and user feedback, not by a rigid grid pattern. In a horizontal three-area header, try `max-content minmax(0,1fr) max-content`: let site navigation distribute its links naturally between brand and contact actions. Preserve 16–17px body/nav weights, visible focus and appropriate minimum click targets and logo safety space. Review genuine desktop and mobile screenshots at multiple widths and browser zoom levels, especially the blank region the reviewer points at, before acceptance.
+
+Keep proven motion and native scrolling; do not add motion to solve a spacing problem. Respect source language and the owner's accepted copy even when a model prefers a rejected alternative. Do not mistake private screen-capture notifications for website UI.
+
 ## V12 — proportional navigation and matching fonts
 
 Premium headers balance a real brand/logo area, precisely centered five-link navigation, and independently right-justified call-to-action/contact elements. A three-track CSS Grid is often stronger than a flex menu pushed away by margin-left:auto. The exact solution may differ between brands, but test geometry rather than assuming that equal gutters imply balanced middle content. Handle responsive widths by hiding secondary header phone contact, not shrinking all links or creating overlap.

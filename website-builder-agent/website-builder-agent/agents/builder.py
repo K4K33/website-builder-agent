@@ -176,6 +176,27 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V13 YLEINEN HEADER-TILANKÄYTTÖOHJE KAIKILLE ASIAKKAILLE:
+- Tasapainoinen ei tarkoita matemaattisesti keskitettyä.
+  Esim. 1fr auto 1fr voi jättää satojen pikseleiden
+  kuolleen tilan logon ja ensimmäisen nav-linkin väliin.
+- Kun käyttäjä osoittaa hiirellä tyhjää aluetta, korjaa
+  todellinen elementtiväli. Harkitse CSS Grid -jakoa
+  max-content minmax(0,1fr) max-content ja jaa linkit
+  nav-sarakkeen sisällä tilan mukaan.
+- Mittaa logon oikean reunan ja ensimmäisen nav-linkin
+  välinen todellinen px-ero sekä viimeisen linkin ja CTA:n
+  väli eri desktop-leveyksillä. Tyypillinen tavoite
+  korkeintaan noin 50px, mutta asiakasbrändi ratkaisee.
+- Säilytä riittävä fonttikoko (16-17px), klikattavat alueet,
+  fokus ja brändin tunnistettavuus. Testaa leveydet
+  320/360/390/430/768/940/960/1024/1180/1280/1440/1920.
+- Älä sekoita käyttäjän näytölle tullutta WhatsApp-viestiä
+  sivuston virheeseen. Älä palauta aiemmin hylättyä
+  otsikkotekstiä pelkän AI-mielipiteen takia.
+- Julkaise uusi versio ja anna toimiva, suora linkki
+  automaattisesti jokaisella iterointikierroksella.
+
 V12 HEADER-SOMMITTELU JA TYPOGRAFIA KAIKILLE ASIAKKAILLE:
 - Logo, päävalikko ja oikeanpuoleiset yhteydenottotoiminnot ovat
   kolme tasapainoista aluetta. Keskitetty valikko ei saa riippua

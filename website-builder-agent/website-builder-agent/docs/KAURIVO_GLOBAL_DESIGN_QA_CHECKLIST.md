@@ -91,6 +91,15 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
 - [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
 
+## 2026-11-02 V13 — use the real available header width, not false geometric symmetry
+
+- [ ] **Eliminate dead pointer zones:** inspect the actual first-link gap after the brand and the last-link gap before contact actions. Equal-width outside grid columns can mathematically center navigation while leaving a 200–300px void by the logo. Prefer content-sized brand/action tracks with a flexible distributed navigation track when it better balances the visible composition.
+- [ ] **Measured criteria:** check the gap from logo right edge to first link and from last link to contact action at the actual desktop rendered size. In a five-link evenly distributed menu these should normally be under about 50 CSS pixels (adjust for specific client art direction), with nonoverlapping hit areas, sufficient whitespace and matching page gutters. Do not equate CSS `justify-content:center` with visual balance.
+- [ ] **Responsive breadth:** verify widths 320/360/390/430/768/940/960/1024/1180/1280/1440/1920, horizontal overflow, the 940px mobile-menu breakpoint, keyboard/tab order, 44px touch areas where appropriate, and zoom/font scaling. Browser tests support a visual review, not replace it.
+- [ ] **Reviewer disagreement:** do not change a user-approved headline because a model prefers a previously rejected locative phrase. Distinguish a screen recording's browser WhatsApp overlay and capture blur from actual site defects. Model price estimates are not approved service quotes.
+- [ ] **Independent feedback scope:** if an external reviewer did not inspect the latest mobile build, record that explicitly and do not certify mobile or 9.5/10 based on desktop or a model's "ready to sell" claim.
+- [ ] **Every version's working link:** give the exact versioned owner preview proactively and verify published source and first-load behavior; internal GitHub Pages addresses are never links for sales prospects.
+
 ## 2026-11-02 V12 review — symmetrical header and compatible type system
 
 - [ ] **Horizontal balance:** use a centered navigation region with independent logo and action regions on wide screens, not a growing logo-to-menu gap caused by `margin-left:auto`. At 1024, 1180, 1280 and 1440 px measure actual rendered menu midpoint, element bounds and clipping. Do not rely on a subjective "looks centered" note alone.
