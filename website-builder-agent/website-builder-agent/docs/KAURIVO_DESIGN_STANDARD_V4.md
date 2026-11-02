@@ -27,6 +27,14 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## Subsequent V9 audit — distinguish delivery quality from client-supplied materials
+
+Assess the actual scope the agency can control: visual hierarchy, accurate business information supplied so far, navigation, device usability, accessibility, performance and frontend integration. Keep unknown customer-specific people/credentials/reviews visibly **absent**, not invented, until consent/verified assets arrive. Mark them as *customer content pending*, not a reason to insert fake text or a stock portrait.
+
+Photo areas need stable responsive aspect ratios, cropping, light color treatment and consistent radii so authorized client images can be substituted without redesigning layouts. Omit empty optional team/review/FAQ sections until content exists.
+
+Preview mode must state that the site is a demo and use only clearly identified test pathways. Production mode cannot be enabled by hiding banners; require signed-off content, domain, secure live form and backend, privacy/SEO, real CMS/owner editing and removal of **all** preview/test text and endpoints at build time. Do not publish the customer variant until verified.
+
 ## V9: honest premium page rhythm, native scroll and client-ready preview trust
 
 - Design information blocks according to **reading priority**, not a repeating card recipe. Separate source notes and tax guidance from pricing actions, keep enough line length and spacing, and avoid stacks of pale-grey full-width strips.
