@@ -1,5 +1,9 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — V11: more dimensional design without hijacking scroll
+
+Two owner-uploaded videos evaluated V10 (desktop 41.9 seconds) and Claude Sonnet 5.5 Medium qualitative desktop review (17.1 seconds). Owner observed still-small nav and insufficient depth and animation, and rejected overly generic "Kotifixiltä apua arjen töihin." Claude likewise noted a weaker headline, "Meistä" page not really about the team, overly neutral visual style and browser-managed Chrome translate popup. Follow-up: target explicit question "Tarvitsetko apua kotitöissä tai pihatöissä?", 17–18px nav when space allows, consistent labeled "Näin toimimme" page, layered cobalt/white perspective hero, hover 3D on service cards and small one-shot reveals. No window scroll handler, no WebGL; preserve no-JS and reduced-motion paths. Do not add unsupported social proof. Independent latest-build and mobile reviews are pending.
+
 ## 2026-11-02 — V10: human first impression, legibility and Finnish copy
 
 External owner video of V9, owner's friend's independent feedback, and Claude Sonnet 5.5 Medium critique: 12–13px header links are too small, detached plain phone number breaks hierarchy, repetitive "kotona tai pihalla" feels unnatural. About source-report phrasing lacks confident visitor-oriented voice. Some stock imagery visibly contains third-party brands. Scroll interaction was intentionally light but could gain subtle, low-cost entrances.
