@@ -217,6 +217,29 @@ def audit_source_fidelity(
         if original["source_text_truncated"]:
             pending.append(f"Original page text was truncated during source capture: {src_url}")
 
+    # A large site reduced to a tiny brochure is NOT content preservation.
+    # Word-count cannot certify meaning and source navigation can inflate it,
+    # so use only a conservative severe-shrinkage guard plus human evidence.
+    originals=[p for p in (research.get("source_inventory") or {}).get("pages") or []
+               if isinstance(p,dict)]
+    original_words=sum(len(str(p.get("text") or "").split()) for p in originals)
+    new_words=sum(len(soup.get_text(" ",strip=True).split()) for soup in soup_pages.values())
+    if original_words>=650 and new_words<0.38*original_words:
+        signoff=research.get("approved_content_condensation") or {}
+        accepted=bool(isinstance(signoff,dict)
+                      and signoff.get("reviewer_kind")=="client"
+                      and str(signoff.get("reviewer") or "").strip()
+                      and str(signoff.get("reason") or "").strip()
+                      and signoff.get("source_sha256")==source_sha
+                      and signoff.get("build_sha256")==digest)
+        if not accepted:
+            missing.append({
+                "kind":"suspicious_content_collapse",
+                "old_word_count":original_words,
+                "new_word_count":new_words,
+                "issue":"Large reduction in useful text must be independently checked and specifically client-approved; not proof of automatic failure."
+            })
+
     # The image and its link must remain together. A separately printed name
     # cannot silently stand in for the old partner/brand mark.
     mapping_entries=research.get("approved_asset_replacements") or []
