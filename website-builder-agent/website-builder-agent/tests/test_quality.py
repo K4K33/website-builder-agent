@@ -35,7 +35,13 @@ def review():
         "company_specific": True, "remaining_gaps": [], "ready_for_client_review": True
     }, "design_checks": [{"id":d,"passed":True,"evidence":"Concrete visible result"} for d in ("hero","services","contact","mobile")], "visual_review": dict.fromkeys(
         ("desktop", "tablet", "mobile", "small_mobile", "brand_specificity", "typography", "hierarchy", "art_direction", "imagery", "motion"), 90
-    ) | {"blockers": [], "improvements": []}}
+    ) | {"blockers": [], "improvements": []},
+        "ai_style_review": {"risk_score": 1, "evidence": [
+            "Verified offline fixture uses a single documented editorial layout",
+            "Copy and navigation follow the synthetic company task, not competitor templates"],
+            "prior_patterns_compared": ["kotifixi", "helsingin-koiratrimmaamo"],
+            "company_authenticity": "Only synthetic research fixture facts are displayed, with no real business claims.",
+            "unresolved": []}}
 
 
 class QualityTests(unittest.TestCase):
