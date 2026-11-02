@@ -22,6 +22,8 @@ def _safe_svg(source: Path) -> bool:
     """Reject SVG scripting, external references and embedded HTML."""
     try:
         document = ET.parse(source)
+        if document.getroot().tag.split('}')[-1].lower() != 'svg':
+            return False
         for node in document.iter():
             name = node.tag.split("}")[-1].lower()
             if name in {"script", "foreignobject", "iframe", "image", "animate",
@@ -36,6 +38,27 @@ def _safe_svg(source: Path) -> bool:
         return True
     except (ET.ParseError, OSError, ValueError):
         return False
+
+
+def _valid_raster_signature(source: Path, extension: str) -> bool:
+    try:
+        with source.open("rb") as file:
+            header = file.read(32)
+        if extension == ".png":
+            return header.startswith(b"\\x89PNG\\r\\n\\x1a\\n")
+        if extension in (".jpg", ".jpeg"):
+            return header.startswith(b"\\xff\\xd8\\xff")
+        if extension == ".gif":
+            return header[:6] in (b"GIF87a", b"GIF89a")
+        if extension == ".webp":
+            return header.startswith(b"RIFF") and header[8:12] == b"WEBP"
+        if extension == ".avif":
+            return len(header) >= 16 and header[4:8] == b"ftyp" and (
+                b"avif" in header[8:28] or b"avis" in header[8:28]
+            )
+    except OSError:
+        return False
+    return False
 
 
 def stage_local_media(
@@ -84,6 +107,8 @@ def stage_local_media(
             raise ValueError(f"Missing, empty or oversized media asset: {rel}")
         if extension == ".svg" and not _safe_svg(source):
             raise ValueError(f"SVG contains unsafe or external elements: {rel}")
+        if extension != ".svg" and not _valid_raster_signature(source, extension):
+            raise ValueError(f"Image file signature does not match extension: {rel}")
         content_digest = sha256(source.read_bytes()).hexdigest()
         filename_part = re.sub(r"[^a-z0-9]+", "-", source.stem.lower()).strip("-")[:40] or "media"
         target_name = f"{filename_part}-{content_digest[:12]}{extension}"
