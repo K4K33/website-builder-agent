@@ -285,8 +285,12 @@ class QualityTests(unittest.TestCase):
         path = builder._write_html('testi', HTML)
         state.upsert_company('testi', {'build': {'output_path':path,'version':1},'research':self.research_fixture()})
         shots = {k:k+'.png' for k in ('desktop','tablet','mobile','small_mobile')}
+        premium = review()
+        for dimension in ('desktop','tablet','mobile','small_mobile','brand_specificity',
+                          'typography','hierarchy','art_direction','imagery','motion'):
+            premium['visual_review'][dimension] = 97
         with patch.object(qa,'inspect_site',return_value={'pass':True,'issues':[],'screenshots':shots}), patch.object(
-                qa,'ask_claude_json',return_value=review()) as ask:
+                qa,'ask_claude_json',return_value=premium) as ask:
             self.assertTrue(qa.run_qa('testi')['overall_pass'])
             self.assertEqual(len(ask.call_args.kwargs['image_paths']), 10)
             self.assertEqual(ask.call_args.kwargs['stage'], 'qa')
