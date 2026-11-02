@@ -18,7 +18,7 @@ CONTRAST_PATTERNS = (
     re.compile(r"\bei\s+(?:vain|pelkästään)\b.{0,130}\bvaan\b", re.I),
     re.compile(r"\bnot\s+(?:only|just)\b.{0,130}\bbut\b", re.I),
     # A short, symmetrical slogan can feel templated even without antonyms.
-    re.compile(r"\byksi\b[^.!?]{2,85}[.!?]\s*(?:monta|monenlaista|kaikenlaista|kaikki)\b", re.I),
+    re.compile(r"\byksi\b[^.!?]{2,85}[.!?]\s*(?:monta|monenlaista|monenlaisia|kaikenlaista|kaikki)\b", re.I),
 )
 MIN_INDEPENDENT_SCORE = 9.5
 MIN_REFERENCE_CLIENTS = 3
