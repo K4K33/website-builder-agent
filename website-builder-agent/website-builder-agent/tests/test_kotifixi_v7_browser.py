@@ -35,7 +35,7 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                 except Exception as exc:
                     raise unittest.SkipTest("Chromium unavailable: " + str(exc)) from exc
                 try:
-                    for width in (320, 390, 768, 1440):
+                    for width in (320, 390, 768, 1024, 1180, 1280, 1440):
                         with self.subTest(width=width):
                             context = browser.new_context(
                                 viewport={"width": width, "height": 850},
@@ -82,6 +82,16 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                                             self.assertFalse(nav.is_visible())
                                         else:
                                             self.assertTrue(page.locator(".site-nav").is_visible())
+                                        if width >= 1024:
+                                            font_px = page.locator(".site-nav a").first.evaluate(
+                                                "(el) => parseFloat(getComputedStyle(el).fontSize)"
+                                            )
+                                            self.assertGreaterEqual(font_px, 15)
+                                            if width >= 1280:
+                                                phone = page.locator(".site-header .phone-link")
+                                                self.assertTrue(phone.is_visible())
+                                                self.assertIn("Soita", phone.inner_text())
+                                        self.assertEqual(page.locator(".scroll-reveal").count(), 0)
                                         if route == "/":
                                             self.assertTrue(page.locator(".hero-copy .button-primary").is_visible())
                                             self.assertEqual(page.locator(".editorial-card").count(), 3)
