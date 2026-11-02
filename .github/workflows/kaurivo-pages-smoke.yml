@@ -126,3 +126,24 @@ jobs:
             fi
             echo "Public dog salon preview verified: ${url}" >> "$GITHUB_STEP_SUMMARY"
           done
+
+          # New unrelated company demo: exact live page routes and static assets.
+          shoe_demo="https://k4k33.github.io/website-builder-agent/kaurivo/demos/jakomaen-suutari-ja-pyora-v1/"
+          for entry in             "|Kengät."             "suutari-hinnasto/|Abloy avain"             "pyorahuolto-hinnasto/|Jarrulänkiparin asennus"             "yhteystiedot/|Huokotie 1"             "assets/site.css|--burnt:#b4522e"             "assets/site.js|priceSearch"; do
+            file="${entry%%|*}"
+            marker="${entry#*|}"
+            url="${shoe_demo}${file}"
+            ok="false"
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl --max-time 15 -sSL -o /tmp/jakomaen-live -w '%{http_code}' "${url}" || true)
+              if [[ "${code}" == "200" ]] && grep -Fq -- "${marker}" /tmp/jakomaen-live; then
+                ok="true"; break
+              fi
+              sleep 7
+            done
+            if [[ "${ok}" != "true" ]]; then
+              echo "::error::Jakomäki demo missing, stale or inaccessible: ${url}"
+              exit 1
+            fi
+            echo "Verified live Jakomäki demo: ${url}" >> "$GITHUB_STEP_SUMMARY"
+          done
