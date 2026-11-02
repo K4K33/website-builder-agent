@@ -1,6 +1,7 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
 **Learning history:** `docs/KAURIVO_DESIGN_LEARNING_LOG.md`. New owner/external feedback must be recorded there with review scope and regression checks before altering the universal rules.
+**Mandatory feedback loop:** `docs/KAURIVO_FEEDBACK_TO_STANDARD_WORKFLOW.md`. Every new owner/customer/external comment is routed into the global QA system unless its application is legitimately client-specific (with the reason recorded).
 
 **Scope:** ALL clients, new builds, redesigns, demo revisions, private previews,
 full site deliveries. Not a special rule set for any single company.
@@ -67,9 +68,9 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] At least THREE distinct recent client-demo projects independently
       pass ≥9.5. A single exceptional demo cannot approve
       Kaurivo's builder; hold customer-facing release until consistency proven.
-- [ ] Sitewide contrast/antithesis taglines are at most ONE across every
+- [ ] Sitewide contrast/antithesis taglines default to ZERO; at most ONE explicitly justified exception across every
       route ("Vähemmän X. Enemmän Y.", "Ei vain X vaan Y" etc.).
-      Prefer zero if unnatural. Protect approved client slogans.
+      Do not approve a formulaic line just because the count is ≤1. Protect approved client slogans.
 - [ ] Copy reads as a real business speaking naturally, without
       formulaic motivational marketing, duplicated content, copied
       rhythms or generic AI-written section fillers.
@@ -79,6 +80,57 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] Human QA, source rights, independently recorded evidence and real
       browser QA must all pass. Independent score alone cannot approve
       emails, site delivery, CMS or production.
+
+## Independent mobile review learning (2026-11-02) — universal blockers
+
+- [ ] **Finish Finnish headings manually:** no mid-syllable / mid-word forced breaks in prominent headings. Test real wrapping at 320, 390, 768 and 1440 px; CSS `hyphens: auto` / `overflow-wrap: anywhere` is not a universal fix. Prefer shorter headings, natural breaks and `text-wrap: balance` where supported.
+- [ ] **Use italics sparingly:** avoid repeated cursive/serif italic fragments in every section; retain only genuine editorial emphasis (normally at most two primary heading accents on a single page) and verify readability on phones.
+- [ ] **Vary authentic sentence structure:** avoid repeated company-name openers, repeated third-person distance and formulaic section rhythm. Write natural Finnish appropriate for the company's verified voice. Do not impersonate an unapproved client or fabricate commitments.
+- [ ] **Image-subject plausibility:** a picture must reflect the likely scale of the actual service and audience, not merely loosely match a keyword (e.g. giant commercial mower for small household lawn service). Prefer a better-fit licensed example or remove the misleading image; never pretend stock is client work.
+- [ ] **Proof over praise:** add genuine verified client reviews or identifiable case-study evidence only when available and permissioned. If unavailable, omit; no fictional 5-star reviews, numbers or anonymous testimonials to raise an AI score.
+- [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
+- [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
+
+## 2026-11-02 V11 review — question-first service copy, deeper interaction, no scroll jank
+
+- [ ] **Hero is specific and human:** state verifiable service categories in natural Finnish, ideally as a customer question or another direct task-focused title. Avoid a vague self-referential company-name slogan, but keep approved brand language unchanged. Watch repetition sitewide rather than swapping between two equally awkward synonyms.
+- [ ] **Desktop legibility:** re-evaluate header after every revision: where it fits cleanly aim for 17–18px top-level navigation. At narrower widths select smaller readable labels or the mobile menu; never squeeze navigation with tiny font, overlap buttons or clip the header.
+- [ ] **Dimensionality without sluggish scroll:** use purposeful CSS perspective, layered image framing, small hover-depth interactions, subtle one-time section reveals and tactile focus/press states. Pointer-follow may use a capped requestAnimationFrame tied to a single element; no window scroll handlers, scroll hijack, canvas/WebGL defaults, huge backdrop blurs or permanent repaints.
+- [ ] **Accessible fallback:** first viewport usable immediately, no-JS contents visible, reduced-motion motionless, touch device 3D static and clear, keyboard navigation never relies on hover movement.
+- [ ] **Navigation semantics:** page named "Meistä" must contain verified information about the real business; when none is available, call the route "Näin toimimme" or another honest label without inventing biographies, reviews or certifications. Content and URL label should correspond.
+- [ ] **Translation browser overlay:** Chrome translate bar is browser-controlled; verify `html lang="fi"`, UTF-8 and real language consistency, but do not misrepresent browser UI as a broken website or block translation for accessibility.
+- [ ] **External AI feedback** is qualitative, not a release certificate. User/independent-human criticism takes priority for actual perceived font scale, readability and animation; benchmark on real devices and record physical scroll smoothness separately from synthetic CSS tests.
+
+## 2026-11-02 independent human navigation and plain Finnish
+
+- [ ] **Independent human first impression:** ask a non-building reviewer to evaluate the real site on their own device. Do not discount their response because an AI review rated it highly. Apply actionable UX feedback to every client.
+- [ ] **Desktop main navigation:** meaningful primary menu text is generally 15–16px with adequate contrast, spacing and keyboard focus. Review at 1024/1180/1280/1440px, not only a single 1440px viewport. Never use tiny 12–13px site-navigation text to make an overfull header fit.
+- [ ] **Phone/contact belongs to header composition:** phone link, contact CTA and brand use one coherent visual system and obvious grouping. A detached, unstyled phone number should not appear stranded between navigation and CTA. At tablet widths the number can move to a clearly labeled mobile menu while the main contact action remains visible.
+- [ ] **Natural Finnish language:** check headings for awkward local idioms ("kotona tai pihalla" when repeated), exact service terms and semantically duplicate claims sitewide, not only the narrow regexes for AI antithesis slogans. Edit as real Finnish, with business facts intact.
+- [ ] **Motion is subtle and performance-conscious:** optional one-shot section reveals using IntersectionObserver, transform and opacity, plus responsive focus/hover/click feedback. Keep native trackpad/touch wheel input. Initial viewport and all content remain visible without JavaScript, IntersectionObserver or with prefers-reduced-motion. Do not use scroll handlers that drive layout/position.
+- [ ] **Photo brand contamination:** review legible manufacturer/product brands in stock photos, not just file license; a visible unrelated third-party logo can imply an endorsement. Prefer neutral photos and approved client-owned assets; crop only if truthful and rights-compatible.
+- [ ] **About voice:** source business facts in third person where needed but write for the visitor, not as a clumsy outsider report such as "yrityksen omilla verkkosivuilla kerrotaan". Do not falsely impersonate the business's team or invent first-person claims.
+- [ ] **Link delivery:** after every reviewed version publish and verify the internal preview link, then include it in the same response automatically. Sales still require a branded custom URL and explicit approval. See `docs/KAURIVO_PREVIEW_LINK_POLICY.md`.
+
+## 2026-11-02 client-content-scoped second review — agency-wide quality standards
+
+- [ ] **Score in scope:** review actual delivered design, layout, navigation, accessibility, performance, implementation and source-faithful content separately from facts/assets the client alone must provide. Explicitly list client-dependent missing materials rather than penalizing the builder for not inventing names, staff photos or reviews. A scope-limited ~9/10 desktop review is **not** the full ≥9.5 independently verified release threshold.
+- [ ] **Photography slots:** consistent intentional image ratios (e.g. 4:3), `object-fit:cover`, coherent border radii, stable image boxes at 320/390/768/1440. Client-supplied rights-cleared photos should fit without rearranging the site's structure. Review crop/subjects manually; no dummy portrait, no broken or blank placeholder grid.
+- [ ] **Optional sections are conditional:** testimonials, team and FAQ appear only when the client supplies truthful, authorized content. Do not auto-create fake names, company history or service claims, and do not leave conspicuous empty slots.
+- [ ] **Demo/publication modes:** demo badges, test-form notices, Kaurivo's test endpoint and fake/technical demonstration labels are retained in a clearly marked preview. A real delivery MUST remove or replace all demo-only content at build time *after* owner approval, including meta descriptions and footer; it must use the real approved domain, real contact handling, privacy disclosures and proven client CMS. Never suppress a demo-only legal notice by a hidden CSS class while still deploying a demo form.
+- [ ] **Visual patterns:** no repeated purposeless italic heading fragments. Default zero; if an actual client brand warrants one, at most one deliberate focal use per page with human signoff. Eliminate remaining displaced decorative hero shapes and ensure nearby pricing links/text don't visually collide.
+- [ ] **Small text:** body, descriptive captions and form instructions should normally be at least 14–15 px, or 13 px for secondary metadata with verified sufficient contrast. Do not use pale grey 10–11 px content copy on phones. Check actual WCAG contrast, not just hex color intent.
+- [ ] **Optional location/telephone form fields:** only when the business has confirmed a legitimate need and the backend, consent and privacy storage/handling support them; do not add new personal-data collection to make a demo look more complete.
+- [ ] **Pricing suggestions are not verified commercial terms:** model-generated €1,800–€3,000 / €20–€50 estimates are ideas, not Kaurivo prices. Present an actual quote only when scope, costs, VAT and owner approval are established.
+
+## External desktop V8 review: interaction, layout and link trust — 2026-11-02
+
+- [ ] **Natural input handling:** desktop trackpad, wheel, touch and keyboard scroll with no script-driven jank, unnecessary global smooth scrolling, hover-only transformations or paint-heavy sticky blur. Test actual physical device when possible and record measured evidence; do not claim an optimization guarantees 60 fps.
+- [ ] **Real editorial hierarchy:** avoid chains of wide pale-grey bands, cramped sticky pricing sidebars, badge-like text panels, visually touching links and copy in narrow columns. Price notes, verified tax guidance and action links must have genuine breathing room on desktop and 320px mobile.
+- [ ] **First-open trust is a blocker:** never link a prospect to raw.githack/rawgit.hack warning pages or any developer URL (`github.io`, `pages.dev`, `vercel.app` etc). Client-facing preview requires verified branded HTTPS domain, direct load without extra clicks/warnings and actual human/owner review. Internal free technical preview URLs are not customer links.
+- [ ] **Keep tax guidance separate from pricing claims:** present official-source eligibility conditions without promising a business is registered or that every service qualifies.
+- [ ] **Do not manufacture founder story:** add named real operator, portraits, reviews, service locations, FAQs, turnaround guarantees and tax eligibility only with source/owner approval. The absence of such evidence is a content gap, not an excuse to fabricate it.
+- [ ] **No PII-collecting fields for optics:** do not add phone, postcode or locality to a test/demo form merely to raise a design score without a privacy and backend plan.
 
 ## Discovery and brand — BLOCKERS
 

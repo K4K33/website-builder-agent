@@ -151,12 +151,14 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   pisteitä tai väitä AI:n arvioineen työtä ilman näyttöä.
   Mobiilin ja desktopin sekä alisivujen arvioinnit
   tehdään aina ennen hyväksyntää.
-- VASTAKOHTAPARIEN (esim. "Vähemmän X, enemmän Y"
-  tai "Ei vain X vaan Y") EHDOTON MAKSIMI ON 1 KOKO
-  VERKKOSIVUSTOLLA, ei yksi per sivu. Jos pari kuulostaa
-  teennäiseltä, käytä 0. Toistuvat mainoslauseet ja
-  kahden iskulauseen rinnakkaisrytmi eivät korvaa
-  luonnollista suomen kieltä.
+- VASTAKOHTAPARIEN JA AI-KAAVOJEN OLETUS ON 0 KOKO
+  VERKKOSIVUSTOLLA. Vain aidosti poikkeuksellisen hyvä ja
+  erikseen perusteltu ilmaus voi olla poikkeus: EHDOTON
+  MAKSIMI ON 1 KOKO SIVUSTOLLA, ei yksi per sivu.
+  Vältä mm. "Vähemmän X. Enemmän Y.", "Ei vain X vaan Y"
+  ja "Yksi yhteydenotto. Monenlaisia..." -iskulauseita.
+  Kirjoita jokainen otsikko konkreettisen asiakkaan tarpeesta,
+  älä generatiivisen mainoskaavan mukaan.
 - Älä toista samaa ideaa hero-osiossa, palvelukorteissa,
   toisessa vaaleassa lohkossa ja lopun bannerissa.
   Jokaisella osiolla täytyy olla oma oikea tehtävänsä.
@@ -173,6 +175,87 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   maksuttomien rakenteen ja selaimen testien kautta
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
+
+V11 KAIKKIEN TULEVIEN ASIAKASSIVUJEN LAATU:
+- Selkeä sankariotsikko puhuu asiakkaan arjesta ja vahvistetuista
+  palveluista. Älä kirjoita geneeristä yritysnimen toistavaa fraasia.
+  Tarkista kielioppi ja mielekkyys, kuten "Tarvitsetko apua
+  kotitöissä tai pihatöissä?" vain jos molemmat palvelut totta.
+- Työpöydän navigaation pitää näyttää riittävän suurelta:
+  noin 17–18px tilan salliessa; alemmilla leveyksillä valitaan
+  luettava pienempi vaihtoehto tai mobiilivalikko, ei ahtausta.
+- Premium 3D: korkeintaan harkittua CSS-perspektiiviä, taustalle
+  kerrostettu kuva, pieni interaktiivinen kortin kallistus, pehmeä
+  siirtymä ja tarkoituksenmukaiset focus-/hover-tilat.
+- 3D ei saa hidastaa scrollausta. Älä tee scroll-hijackia,
+  window-scroll-tyylipäivityksiä, oletuksena WebGL-renderöintiä
+  tai jatkuvia raskaita animaatioita. Pointer-efekti voidaan
+  rajata yhteen elementtiin ja requestAnimationFrameen.
+  Testaa käyttäen oikeaa touchpadia ja mobiilia.
+- Jos asiakasta tai perustajaa ei voi kuvata vahvistetuilla
+  tiedoilla, ÄLÄ keksi "Meistä"-historiaa. Nimeä sivu sen
+  todellisen sisällön mukaan, esimerkiksi "Näin toimimme".
+- Chrome-käännöspalkki on selaimen käyttöliittymä.
+  Aseta html lang ja charset oikein, mutta älä estä käännöstä
+  vain piilottaaksesi selaimen kyselyn.
+- Jokainen valmis versio julkaistaan tarkistettavaan omaan
+  esikatseluosoitteeseen, joka annetaan käyttäjälle pyytämättä.
+  Asiakaslinkki vaatii erikseen hyväksytyn brändidomainin.
+
+V10 YLEISEN LAADUNTARKISTUKSEN UUSI PALAUTE:
+- Oikean ulkopuolisen ihmisen havainto navigoinnin luettavuudesta
+  on yhtä tärkeää kuin AI:n antama arvosana. Desktop-valikoissa
+  suositaan vähintään noin 15px selkeää tekstiä.
+- Puhelinnumero ja yhteydenottopainike liittyvät selkeästi
+  samaan yläpalkin toimintojen ryhmään.
+- Suomenkieliset tekstit kirjoitetaan aidosti luonteviksi.
+  Tarkista sijaintiin viittaavien fraasien toisto koko sivustolla.
+- Kohtuulliset scroll-reveal-efektit näyttävät sisällön yhdellä
+  kerralla, eivät ohjaa vieritystä; sisältö näkyy ilman JS:ää.
+  Kunnioita vähennettyä liikettä ja tee selkeät fokustilat.
+- Valokuvissa ei saa olla asiaankuulumattoman yrityksen näkyvää
+  brändiä; valitse sopiva luvallinen kuvitus.
+- Anna uuden version sisäinen tarkistettu esikatselulinkki
+  automaattisesti samassa vastauksessa, ei erillisestä pyynnöstä.
+  Asiakkaalle toimitettava linkki vaatii vahvistetun HTTPS-domainin.
+
+V9 TARKENNETTU ULKOINEN PALAUTE KAIKILLE ASIAKKAILLE:
+- Arvioi suunnittelun, layoutin, saavutettavuuden, navigoinnin,
+  suorituskyvyn ja teknisen laadun objektiivisesti suhteessa tehtyyn työhön.
+  Asiakkaan toimittamatta jääneet omat valokuvat, yrityshistoria,
+  arvostelut ja tiimitiedot eivät oikeuta keksittyä sisältöä.
+- Suunnittele kuvapaikoille vakaat responsiiviset kuvasuhteet,
+  object-fit:cover, yhtenäiset kulmat ja järkevät kuvien rajaukset.
+- Älä näytä tyhjiä tiimi-, arvostelu- tai UKK-osioita:
+  vain varmennetulla ja luvallisella sisällöllä täytetyt osiot.
+- Pidä konseptidemo selvästi merkittynä; demo- ja testitekstit,
+  API-testiyhteydet ja metatiedot poistetaan hyväksytyssä
+  tuotantobuildissä kerralla. Pelkkä CSS-piilotus ei riitä.
+- Pienet kuvatekstit ja lomakeohjeet selkeästi luettaviksi,
+  yleisesti vähintään 14–15px, metadata ≥13px + hyvä kontrasti.
+- Vapaaehtoisia puhelin- tai paikkakuntakenttiä ei lisätä ilman
+  perusteltua käsittelytarkoitusta ja toimivaa tietosuojattua backendiä.
+- Tekoälyn antama hinta-arvio on vain idea, ei vahvistettu hinnasto.
+
+V9 YLEISET LAATUSÄÄNNÖT (uusi V8 desktop-palaute):
+- Taiton pitää tuntua harkitulta eikä isojen vaaleanharmaiden
+  tekstipalkkien ketjulta. Erota hinnasto, huomautukset, lähteet ja
+  verovähennystiedot toisistaan; vältä ahtaita sticky-sivupalkkeja.
+- Älä lisää joka otsikkoon samaa kursiivia tai serif-korostusta.
+  Tee luonnollinen suomenkielinen otsikko ilman pakotettuja tavutuksia.
+- Pidä touchpad/wheel/touch-scroll natiivina: ei yleistä
+  smooth-scrollia, pyöritystä ohjaavaa JS:ää tai raskaita
+  backdrop-filtereitä kiinteissä/sticky-osissa. Testaa oikealla laitteella.
+- Esimerkkikuvien aiheen ja työn mittakaavan on vastattava oikeita
+  vahvistettuja palveluja. Esimerkkikuvaa ei saa markkinoida
+  asiakkaan henkilöstön tai toteutettujen töiden kuvana.
+- Asiakkaan ESITTELY- JA MYYNTILINKKI: ei raw.githack/rawgit.hack-
+  välisivuja, github.io-osoitteita eikä deployment-tarjoajan
+  geneerisiä kehittäjäosoitteita. Sisäisessä QA:ssa sallittuja,
+  ei asiakasviestissä. Vaadi omistettu ja hyväksytty HTTPS-brändidomain
+  sekä tarkista avautuminen ilman välivaroituksia.
+- Älä keksi yrittäjän nimeä, valokuvaa, arvosteluja, toimialuetta,
+  kotitalousvähennyskelpoisuutta tai nopeuslupausta.
 
 YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
 - Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat

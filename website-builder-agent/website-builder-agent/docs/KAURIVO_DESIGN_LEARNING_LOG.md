@@ -1,5 +1,34 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — V11: more dimensional design without hijacking scroll
+
+Two owner-uploaded videos evaluated V10 (desktop 41.9 seconds) and Claude Sonnet 5.5 Medium qualitative desktop review (17.1 seconds). Owner observed still-small nav and insufficient depth and animation, and rejected overly generic "Kotifixiltä apua arjen töihin." Claude likewise noted a weaker headline, "Meistä" page not really about the team, overly neutral visual style and browser-managed Chrome translate popup. Follow-up: target explicit question "Tarvitsetko apua kotitöissä tai pihatöissä?", 17–18px nav when space allows, consistent labeled "Näin toimimme" page, layered cobalt/white perspective hero, hover 3D on service cards and small one-shot reveals. No window scroll handler, no WebGL; preserve no-JS and reduced-motion paths. Do not add unsupported social proof. Independent latest-build and mobile reviews are pending.
+
+## 2026-11-02 — V10: human first impression, legibility and Finnish copy
+
+External owner video of V9, owner's friend's independent feedback, and Claude Sonnet 5.5 Medium critique: 12–13px header links are too small, detached plain phone number breaks hierarchy, repetitive "kotona tai pihalla" feels unnatural. About source-report phrasing lacks confident visitor-oriented voice. Some stock imagery visibly contains third-party brands. Scroll interaction was intentionally light but could gain subtle, low-cost entrances.
+
+Next candidate: 15px desktop nav, integrated bordered "Soita + number" action, readable button/focus states, concise Finnish hero and About text, neutral furniture-assembly photo, one-shot below-fold IntersectionObserver reveals honoring reduced motion. Preserve proper demo disclosure, no fabricated business proof, exact contact/price facts. Add multi-width browser tests and programmatic permanent QA rules. No independent exact V10 >=9.5 review yet.
+
+## 2026-11-02 — Kotifixi desktop V8 review → V9 refinement
+
+User review: "ihan ok" visually, scrolling felt somewhat slow on trackpad, some pale text bars looked below premium, and raw.githack's warning page must never be presented to prospects. External Claude Sonnet 5.5 desktop video assessed approximately 8.5/10. Verified video contains the "One more step" raw.githack interstitial, real content, and overly crowded pricing sidebar. Sitewide changes: reduced paint-heavy filters/backdrop and scroll-listener overhead; removed offset hero decoration; separated source-link and tax info to distinct sections; clearer editorial hierarchy and readable copy. Add regression tests and sales-ready branded-domain gate. Maintain owner's preference of zero generic antithesis formulas and client-authentic content. Do not invent owner biography, ratings, photos or tax benefits.
+
+**Status:** candidate only. GitHub integration confirms files, not a real perceptual performance measurement. Reviewer saw prior version; actual latest-commit mobile+desktop independent rating ≥9.5 and three-project consistency are not proven. No client production launch or outreach. For full review, profile with real physical trackpad and complete first-load without interstitial.
+
+
+
+## 2026-11-02 — Kotifixi V8: concrete copy, mobile disclosure, feedback as global QA rule
+
+**User instruction:** continue iterative development until quality is good and convert every piece of feedback into cross-project standards, without copying client-specific brands to other customers.
+
+**Findings on merged V7:** slogan repetition was reduced but home section headings still repeated the same "apua" message; the pricing section added little new information; the main demo warning was intentionally hidden on <=700 px mobile layouts. Visual premium and cross-browser evidence remained incomplete.
+
+**Changes in next candidate:** customer-question hero, factual service examples, service-specific descriptions, pricing discovery in a purposeful home section, less duplicated About narrative; preserve verified contact, price source, official brand phrase and explicit test-only form. Keep the demo notice fully visible on narrow phones, fix narrow header spacing. Implement no-credit regression covering rhythmic one–many and contrast formulas with default ZERO tolerated, plus explicit single-exception API. Link a mandatory feedback-to-standard workflow to the cross-client design checklist and builder prompt.
+
+**Evidence limitations:** Checked repo source and real business's public informational page, and noted the earlier iPhone-review feedback; no actual independent reviewer has scored this V8 build, no real browser/screenshots have been executed for the new branch yet. No client production site, sales outreach or customer CMS was changed. Status: **HOLD** pending actual browser QA + independent review of new commit and three-project consistency sample.
+
+
 Every future customer concept and redesign should append:
 date, build/commit, real customer feedback, independent review
 scope/model, verified issues, chosen change, measured/visual retest,

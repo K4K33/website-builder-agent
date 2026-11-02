@@ -44,3 +44,9 @@ This is an internal design review path, NOT a client-sales URL.
 - Customer-sales links STILL require a separately verified branded HTTPS domain without an interstitial. Public GitHub Pages is for the owner review only.
 
 **Internal review link:** https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v10/
+
+## V11 owner-review snapshot — 2026-11-02
+
+New version: https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v11/
+
+Every version gets its working direct link in the completion reply automatically. The GitHub Pages technical host is permitted for **owner/internal preview only**, never for emails to prospective customers. See the latest 2026-11-02 V11 QA/feedback standards for the natural-Finnish headline, 17–18px desktop menu, page-title honesty and optional pointer-only CSS 3D effects with uncompromised native scroll. Every new implementation must pass device/browser tests and independent review; none of this represents an accepted >=9.5 score or production/CMS readiness.
