@@ -143,7 +143,8 @@ def validate_brand_preservation_plan(research: dict) -> dict:
         identity = page.get("source_identity") or {}
         if not isinstance(identity, dict):
             continue
-        if identity.get("theme_color") or identity.get("original_logo_candidates"):
+        if (identity.get("theme_color") or identity.get("original_logo_candidates")
+                or identity.get("original_content_photos")):
             observed.append((str(page.get("url") or ""), identity))
     if not observed:
         return {"required": False, "source_pages": 0}
