@@ -149,8 +149,9 @@ class BrowserFirstPass(unittest.TestCase):
         page=context.new_page()
         try:
             page.goto(self.base,wait_until="domcontentloaded")
-            button=page.get_by_role("button",name="Avaa valikko")
+            button=page.locator("[data-menu-toggle]")
             self.assertTrue(button.is_visible())
+            self.assertEqual(button.get_attribute("aria-label"),"Avaa valikko")
             button.click()
             self.assertEqual(button.get_attribute("aria-expanded"),"true")
             self.assertTrue(page.locator("#mobiili-nav").is_visible())
