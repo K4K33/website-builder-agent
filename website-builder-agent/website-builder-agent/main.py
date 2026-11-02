@@ -573,12 +573,29 @@ def cmd_pipeline(args):
     selected_slug = None
     selected_company = None
 
+    # Blind quality trials must not repeatedly pick the first already-tested
+    # lead in the queue. Search returned candidates for a previously unseen
+    # identity. Real customer jobs are not subject to this experimental rule.
+    seen_trials = []
+    if getattr(args, "benchmark_mode", False):
+        from utils.blind_trials import trial_history, assess_new_company
+        seen_trials = trial_history(
+            Path(__file__).resolve().parent / "docs" /
+                "KAURIVO_HISTORICAL_DEMO_TRIALS.json",
+            Path(config.OUTPUT_DIR) / "_kaurivo_unseen_trials.json",
+        )
     for result in results:
         candidate_slug = result.get("slug")
-        if candidate_slug in companies:
-            selected_slug = candidate_slug
-            selected_company = companies[candidate_slug]
-            break
+        if candidate_slug not in companies:
+            continue
+        candidate = companies[candidate_slug]
+        if (getattr(args, "benchmark_mode", False)
+                and not assess_new_company(candidate, slug=candidate_slug,
+                                           history=seen_trials)["eligible"]):
+            continue
+        selected_slug = candidate_slug
+        selected_company = candidate
+        break
 
     if selected_company is None:
         raise RuntimeError("Scout returned no company with a saved record.")
