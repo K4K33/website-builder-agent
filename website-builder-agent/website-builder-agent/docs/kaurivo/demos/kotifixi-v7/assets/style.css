@@ -646,3 +646,89 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
   .site-header .header-inner{column-gap:18px}
   .site-header .site-nav{gap:6px}
 }
+
+
+/* V14: one editorial contact control, consistent with the site's blue system.
+   Two independent destinations, visually integrated; no floating pill clash. */
+.site-header .header-right{gap:10px;align-items:center}
+.site-header .header-action-set{
+  display:inline-flex;
+  align-items:stretch;
+  gap:0;
+  padding:3px;
+  background:#f2f6fa;
+  border:1px solid #d8e4ef;
+  border-radius:10px;
+  box-shadow:0 2px 12px rgba(15,48,80,.035);
+  white-space:nowrap;
+}
+.site-header .header-action-set .phone-link{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin:0;
+  min-height:43px;
+  padding:0 13px;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  box-shadow:none;
+  color:#1b344d;
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:600;
+  transition:background .2s ease,color .2s ease;
+}
+.site-header .header-action-set .phone-link .phone-label{
+  color:#2765b3;
+  font-weight:700;
+}
+.site-header .header-action-set .phone-link:hover,
+.site-header .header-action-set .phone-link:focus-visible{
+  background:#e5f0fa;color:#10395b;
+}
+.site-header .header-action-set .header-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:43px;
+  margin:0;
+  padding:0 18px;
+  border:1px solid #2668bb;
+  border-radius:7px;
+  background:#2269cb;
+  box-shadow:none;
+  color:#fff;
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:0;
+  transition:background .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.site-header .header-action-set .header-cta:hover,
+.site-header .header-action-set .header-cta:focus-visible{
+  background:#1758ae;
+  box-shadow:0 3px 8px rgba(27,89,151,.12);
+  transform:none;
+}
+.site-header .header-action-set a:focus-visible{
+  outline:3px solid #2d75ce;
+  outline-offset:2px;
+}
+@media(min-width:941px) and (max-width:1279px){
+  .site-header .header-action-set{border:0;padding:0;background:transparent;box-shadow:none}
+  .site-header .header-action-set .phone-link{display:none}
+  .site-header .header-action-set .header-cta{min-height:46px;padding-inline:17px}
+}
+@media(max-width:940px){
+  .site-header .header-right{gap:10px}
+  .site-header .header-action-set{border:0;padding:0;box-shadow:none;background:transparent}
+  .site-header .header-action-set .phone-link{display:none}
+  .site-header .header-action-set .header-cta{min-height:43px;padding-inline:14px}
+}
+@media(max-width:390px){
+  .site-header .header-action-set .header-cta{min-height:42px;font-size:12px;padding-inline:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-header .header-action-set a{transition:none!important;transform:none!important}
+}
