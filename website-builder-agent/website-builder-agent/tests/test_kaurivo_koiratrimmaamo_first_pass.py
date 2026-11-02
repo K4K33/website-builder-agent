@@ -154,7 +154,7 @@ class BrowserFirstPass(unittest.TestCase):
             self.assertEqual(button.get_attribute("aria-label"),"Avaa valikko")
             button.click()
             self.assertEqual(button.get_attribute("aria-expanded"),"true")
-            self.assertTrue(page.locator("#mobiili-nav").is_visible())
+            page.locator("#mobiili-nav").wait_for(state="visible",timeout=2000)
             page.keyboard.press("Escape")
             self.assertEqual(button.get_attribute("aria-expanded"),"false")
             button.click()
