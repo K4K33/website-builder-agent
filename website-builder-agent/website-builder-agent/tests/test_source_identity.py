@@ -112,6 +112,21 @@ class SourceIdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "logo"):
             validate_brand_preservation_plan(research)
 
+    def test_original_staff_or_work_photos_require_manual_rights_mapping(self):
+        source = SOURCE_HTML.replace(
+            "<main><h1>",
+            '<main><img src="/photos/our-groomer.jpg" alt="Actual employee at work"><h1>'
+        )
+        captured = extract_source_identity(source, SOURCE_URL)
+        self.assertEqual(captured["original_content_photos"][0]["src"],
+                         SOURCE_URL + "photos/our-groomer.jpg")
+        research = {"source_inventory": {"pages": [{
+            "url": SOURCE_URL, "source_identity": captured
+        }]}}
+        report = audit_universal_standards("<main>About our team</main>", research)
+        self.assertIn("accurate_media", report["pending_evidence"])
+        self.assertNotIn("accurate_media", report["blocking_problems"])
+
     def test_original_price_row_and_faq_are_structured(self):
         from utils.source_identity import extract_price_faq_evidence
         source = """<html><body><table>
