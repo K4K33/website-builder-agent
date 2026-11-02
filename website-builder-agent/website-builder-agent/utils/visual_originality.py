@@ -99,6 +99,16 @@ def audit_design_originality(
                     references.setdefault(group,p.read_text(encoding="utf-8"))
                 except OSError:
                     pass
+    reference_signatures=[]
+    for name,other in list(references.items())[:24]:
+        signature=_structure(other)
+        if signature:
+            reference_signatures.append({
+                "site":name,"first_view_structure":_hero_type(other),
+                "section_count":len(signature),
+                "section_rhythm":[str(item[:4]) for item in signature[:6]],
+                "formulaic_copy_examples":_cliche_evidence(other)[:2],
+            })
     matches=[]
     for name,other in references.items():
         if name==site_slug: continue
@@ -125,6 +135,7 @@ def audit_design_originality(
         warnings.append("Review formulaic sales copy: "+"; ".join(generic_copy))
     return {"pass":not problems,"blocking_problems":problems,
             "warnings":warnings,"similar_sites":matches[:8],
+            "reference_signatures":reference_signatures[:16],
             "hero_composition":_hero_type(html),
             "generic_copy_examples":generic_copy,
             "note":"Heuristic duplication/copy check, NOT proof of human design or AI origin."}
