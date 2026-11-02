@@ -27,6 +27,12 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## V14 — header controls form one deliberate system
+
+Match action color hierarchy, button height, corner shape, inset and font weights to the website's actual typography. One grouped phone + quote control is often calmer than two differently styled floating boxes: use a shared subtle tint/border where helpful, a secondary phone action and one primary branded CTA, with two real accessible click targets and appropriate focus states. Do not universally force this exact Kotifixi design on other brands; verify on desktop, tablet and mobile.
+
+Independent review notes about generic stock or sample notices should lead to factual photography and real client content collection **after actual interest**, never hiding preview warnings or generating fake proof. Test a real CMS, branded HTTPS link and lead contact behavior before claiming sales readiness.
+
 ## V13 — visual distribution beats mathematical centering
 
 A perfectly centered navigation can still look awkward when its first link sits hundreds of pixels away from the logo. Select the layout by measured content bounds and user feedback, not by a rigid grid pattern. In a horizontal three-area header, try `max-content minmax(0,1fr) max-content`: let site navigation distribute its links naturally between brand and contact actions. Preserve 16–17px body/nav weights, visible focus and appropriate minimum click targets and logo safety space. Review genuine desktop and mobile screenshots at multiple widths and browser zoom levels, especially the blank region the reviewer points at, before acceptance.
