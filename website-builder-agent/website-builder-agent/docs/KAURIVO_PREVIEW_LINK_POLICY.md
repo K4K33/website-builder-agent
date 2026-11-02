@@ -31,3 +31,16 @@ the web link after the agent reports a version is ready for review.
 **Kotifixi V9 owner-review preview**:
 https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v9/
 This is an internal design review path, NOT a client-sales URL.
+
+
+## 2026-11-02 — Kotifixi V10 human + independent AI feedback
+
+- Every release note automatically includes a published, verified preview URL.
+- Independently gathered human observations count equally with AI: desktop navigation must be readable, typically 15–16px, and not tiny 12px links.
+- Phone and contact CTA must be a visually integrated header action group.
+- Plain, authentic Finnish; reject repeated awkward phrases such as "kotona tai pihalla" and outside-reporter descriptions of a business.
+- Restrained animation: one-shot below-the-fold reveals via IntersectionObserver, native scrolling, reduced-motion and content shown when JS is off; intentional hover/focus/click feedback.
+- Example photos must be on-topic, licensed and free of misleading third-party brands in visible print; no fake business facts, reviews or staff.
+- Customer-sales links STILL require a separately verified branded HTTPS domain without an interstitial. Public GitHub Pages is for the owner review only.
+
+**Internal review link:** https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v10/
