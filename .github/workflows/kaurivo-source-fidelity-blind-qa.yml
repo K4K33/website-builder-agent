@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install beautifulsoup4
+      - run: python -m pip install beautifulsoup4 requests
       - name: Validate real Builder and Research Python syntax
         run: python -m py_compile agents/builder.py agents/qa.py agents/research.py utils/source_fidelity.py utils/blind_trials.py utils/browser_qa.py utils/fetch.py utils/industry_workflow.py main.py
       - name: Preserve content, sponsor images, visible affiliate links, original task paths
