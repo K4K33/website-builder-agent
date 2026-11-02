@@ -67,6 +67,7 @@ def source_inventory_sha256(inventory: dict) -> str:
         "footer_links": p.get("footer_links") or [],
         "images": p.get("images") or [],
         "links": p.get("links") or [],
+        "source_identity": p.get("source_identity") or {},
     } for p in pages if isinstance(p, dict)]
     raw = json.dumps(records, sort_keys=True, ensure_ascii=False, default=str)
     return sha256(raw.encode("utf-8")).hexdigest()
