@@ -112,6 +112,39 @@ class SourceIdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "logo"):
             validate_brand_preservation_plan(research)
 
+    def test_original_price_row_and_faq_are_structured(self):
+        from utils.source_identity import extract_price_faq_evidence
+        source = """<html><body><table>
+        <tr><td>Labradoodle mini/medium</td><td>93–120 €</td></tr>
+        </table><details><summary>Voinko varata ajan?</summary>
+        <p>Varaa puhelimitse.</p></details></body></html>"""
+        data = extract_price_faq_evidence(source)
+        self.assertEqual(data["price_rows"][0]["label"], "Labradoodle mini/medium")
+        self.assertEqual(data["price_rows"][0]["price"], "93–120 €")
+        self.assertEqual(data["faq_questions"], ["Voinko varata ajan?"])
+
+    def test_lost_price_breed_and_faq_fail(self):
+        from utils.source_identity import extract_price_faq_evidence, audit_price_faq_preservation
+        source = """<table><tr><td>Labradoodle mini/medium</td>
+                    <td>93–120 €</td></tr></table>
+                    <details><summary>Mitä mukaan käynnille?</summary><p>Turkki</p></details>"""
+        research = {"source_inventory": {"pages": [{
+            "url": SOURCE_URL, "price_faq_evidence": extract_price_faq_evidence(source)}]}}
+        new = "<main><article>Lagotto mini/medium: 93–120 €</article></main>"
+        report = audit_price_faq_preservation({"index.html": new}, research)
+        self.assertFalse(report["pass"])
+        self.assertEqual(len(report["missing"]), 2)
+        universal = audit_universal_standards(new, research)
+        self.assertIn("content_parity", universal["blocking_problems"])
+
+    def test_source_price_row_passes_when_label_and_price_stay_together(self):
+        from utils.source_identity import extract_price_faq_evidence, audit_price_faq_preservation
+        source = "<table><tr><td>Labradoodle mini/medium</td><td>93–120 €</td></tr></table>"
+        research = {"source_inventory": {"pages": [{
+            "url": SOURCE_URL, "price_faq_evidence": extract_price_faq_evidence(source)}]}}
+        new = "<main><article>Labradoodle mini/medium — 93–120 €</article></main>"
+        self.assertTrue(audit_price_faq_preservation({"index.html": new}, research)["pass"])
+
     def test_review_evidence_alters_source_approval_hash(self):
         research = self.source_research()
         inventory = research["source_inventory"]
