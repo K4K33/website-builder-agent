@@ -1,5 +1,11 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — V10: human first impression, legibility and Finnish copy
+
+External owner video of V9, owner's friend's independent feedback, and Claude Sonnet 5.5 Medium critique: 12–13px header links are too small, detached plain phone number breaks hierarchy, repetitive "kotona tai pihalla" feels unnatural. About source-report phrasing lacks confident visitor-oriented voice. Some stock imagery visibly contains third-party brands. Scroll interaction was intentionally light but could gain subtle, low-cost entrances.
+
+Next candidate: 15px desktop nav, integrated bordered "Soita + number" action, readable button/focus states, concise Finnish hero and About text, neutral furniture-assembly photo, one-shot below-fold IntersectionObserver reveals honoring reduced motion. Preserve proper demo disclosure, no fabricated business proof, exact contact/price facts. Add multi-width browser tests and programmatic permanent QA rules. No independent exact V10 >=9.5 review yet.
+
 ## 2026-11-02 — Kotifixi desktop V8 review → V9 refinement
 
 User review: "ihan ok" visually, scrolling felt somewhat slow on trackpad, some pale text bars looked below premium, and raw.githack's warning page must never be presented to prospects. External Claude Sonnet 5.5 desktop video assessed approximately 8.5/10. Verified video contains the "One more step" raw.githack interstitial, real content, and overly crowded pricing sidebar. Sitewide changes: reduced paint-heavy filters/backdrop and scroll-listener overhead; removed offset hero decoration; separated source-link and tax info to distinct sections; clearer editorial hierarchy and readable copy. Add regression tests and sales-ready branded-domain gate. Maintain owner's preference of zero generic antithesis formulas and client-authentic content. Do not invent owner biography, ratings, photos or tax benefits.
