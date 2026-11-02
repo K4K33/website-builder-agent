@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "note": "Previously reviewed companies excluded from future blind new-company experiments; this is not a customer or outreach list.",
+  "trials": [
+    {
+      "slug": "te-service",
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "automotive"
+    },
+    {
+      "slug": "ravintola-rosanne",
+      "url": "https://www.ravintolarosanne.fi/",
+      "mode": "historical_demo",
+      "sector": "restaurant"
+    },
+    {
+      "slug": "rakennuspalvelu-rili",
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "construction"
+    },
+    {
+      "slug": "visan-pyorahuolto-v1",
+      "url": "https://visainen.com/",
+      "mode": "historical_demo",
+      "sector": "bicycle service"
+    },
+    {
+      "slug": "kukkakauppa-villiviini-v1",
+      "url": "https://www.kukkakauppavilliviini.com/",
+      "mode": "historical_demo",
+      "sector": "florist"
+    },
+    {
+      "slug": "verhoomo-kudelma-v1",
+      "url": "https://www.kudelma.fi/",
+      "mode": "historical_demo",
+      "sector": "upholstery"
+    }
+  ]
+}

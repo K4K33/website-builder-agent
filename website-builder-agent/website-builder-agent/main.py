@@ -573,15 +573,46 @@ def cmd_pipeline(args):
     selected_slug = None
     selected_company = None
 
+    # Blind quality trials must not repeatedly pick the first already-tested
+    # lead in the queue. Search returned candidates for a previously unseen
+    # identity. Real customer jobs are not subject to this experimental rule.
+    seen_trials = []
+    if getattr(args, "benchmark_mode", False):
+        from utils.blind_trials import trial_history, assess_new_company
+        seen_trials = trial_history(
+            Path(__file__).resolve().parent / "docs" /
+                "KAURIVO_HISTORICAL_DEMO_TRIALS.json",
+            Path(config.OUTPUT_DIR) / "_kaurivo_unseen_trials.json",
+        )
     for result in results:
         candidate_slug = result.get("slug")
-        if candidate_slug in companies:
-            selected_slug = candidate_slug
-            selected_company = companies[candidate_slug]
-            break
+        if candidate_slug not in companies:
+            continue
+        candidate = companies[candidate_slug]
+        if (getattr(args, "benchmark_mode", False)
+                and not assess_new_company(candidate, slug=candidate_slug,
+                                           history=seen_trials)["eligible"]):
+            continue
+        selected_slug = candidate_slug
+        selected_company = candidate
+        break
 
     if selected_company is None:
         raise RuntimeError("Scout returned no company with a saved record.")
+    if getattr(args, "benchmark_mode", False):
+        # Only unseen companies are eligible for first-pass creative trials.
+        # No same-client V2/V3 retuning to make a score look artificially good.
+        if int(getattr(args, "max_revisions", 0) or 0) != 0:
+            raise RuntimeError("Blind design benchmark allows zero same-company revision rounds.")
+        from utils.blind_trials import reserve_blind_trial
+        trial = reserve_blind_trial(
+            selected_company, slug=selected_slug,
+            history_path=Path(__file__).resolve().parent /
+                         "docs" / "KAURIVO_HISTORICAL_DEMO_TRIALS.json",
+            registry_path=Path(config.OUTPUT_DIR) / "_kaurivo_unseen_trials.json",
+        )
+        print("Reserved one unseen first-pass company: "
+              + (trial.get("url") or trial.get("slug") or selected_slug))
     website_state = site_signal(selected_company)
     intelligence = evaluate_prospect(selected_company)
     if website_state != "has_website":
@@ -1143,7 +1174,7 @@ def build_parser():
     parser_pipeline.add_argument("--company", default="",
         help="Run a previously researched or source-screened lead (skips Scout discovery).")
     parser_pipeline.add_argument("--benchmark-mode", action="store_true",
-        help="Explicitly use unscreened leads ONLY for an internal quality benchmark; no customer outreach.")
+        help="Use ONE unseen company per quality trial. Repeats and same-company revision loops are blocked; no customer outreach.")
     parser_pipeline.add_argument(
         "--count",
         type=int,

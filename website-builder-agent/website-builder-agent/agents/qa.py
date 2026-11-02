@@ -36,6 +36,7 @@ from pathlib import Path
 
 from utils.quality import normalize_facts, canonical_url
 from utils.content_parity import audit_content_parity
+from utils.source_fidelity import audit_source_fidelity
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.state import (
     get_company,
@@ -733,6 +734,19 @@ HTML END:
 VISUAL_REVIEW_PROMPT = """
 Lisäksi arvioi mukana olevat aidot renderöidyt desktop-, tablet- ja mobiilikuvat.
 HTML:n sisältötarkistus yksin ei riitä hyväksyntään.
+Kun alkuperäisen yrityssivuston desktop/mobiilikuvat ovat mukana, vertaa
+kirjaimellisesti vanhan ja uuden brändin logoa, alkuperäisiä korostusvärejä,
+kuvamaailmaa, tekijän persoonallisuutta ja kuvien merkitystä. Jos vanhan
+yrityksen tunnistettavat värit on vaihdettu ilman asiakkaan todistettua
+hyväksyntää, lisää blocker ja anna brand_specificity <95. Älä hyväksy
+geneeristä beigeä/murrettua palettia vain trendikkyyden vuoksi.
+Vertaa myös vanhan ja uuden sivuston palveluja, kumppanilogoja, hinnastoja,
+tuotemyyntiä, kielivalintoja ja toimintapolkuja. Kadonneet sisällöt
+pudottavat content_ok-arvon epätodeksi ja kirjoita täsmällinen lähde-URL.
+Jos uusi sivu linkittää tärkeässä tehtävässä takaisin vanhaan
+lukukelvottomaan palvelu-/myyntinäkymään, estä hyväksyntä.
+Jos alkuperäisiä kuvakaappauksia ei ole, älä väitä brändivertailua
+todennetuksi; pidä se erillisenä vahvistusta odottavana puutteena.
 Arvioi typografia, sommittelu, sisältöhierarkia, yrityskohtaisuus, luettavuus,
 mobiilin viimeistely, käyttötarkoituksen selkeys ja visuaalinen yhtenäisyys.
 0–49: keskeneräinen, 50–69: perustoteutus, 70–84: käyttökelpoinen mutta korjattava,
@@ -972,6 +986,9 @@ def run_qa(slug_or_name: str) -> dict:
     html = html_bytes.decode("utf-8")
     research = company.get("research") or {}
     parity = audit_content_parity(html, research, source_url=company.get("url", ""))
+    source_fidelity = audit_source_fidelity(
+        html, research, source_url=company.get("url", "")
+    )
     universal = audit_universal_standards(
         html, research, company=company, stage="internal_demo"
     )
@@ -994,7 +1011,7 @@ def run_qa(slug_or_name: str) -> dict:
     )
     # Never spend browser/AI review credits when guaranteed critical
     # source-backed fields are absent.
-    parity_hard_missing = bool(parity["missing"] or any(
+    parity_hard_missing = bool(source_fidelity["missing"] or parity["missing"] or any(
         item.startswith(("Unverified content requirement",
                          "Invalid content requirement",
                          "Unsupported content requirement"))
@@ -1015,6 +1032,12 @@ def run_qa(slug_or_name: str) -> dict:
                 from agents.builder import _validate_plan_sections
                 _validate_plan_sections(html, research, company.get("url", ""))
                 benchmark_images, image_labels = reference_image_inputs(benchmark)
+                original_images = [
+                    research.get("original_screenshots", {}).get(view)
+                    for view in ("desktop", "mobile")
+                    if isinstance(research.get("original_screenshots", {}).get(view), str)
+                    and os.path.isfile(research["original_screenshots"][view])
+                ]
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
@@ -1023,7 +1046,10 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(research.get("design_recommendations", {}), ensure_ascii=False)
                     + "\nINDUSTRY REFERENCES (not company facts; their images follow generated views):\n"
                     + json.dumps(benchmark, ensure_ascii=False)
-                    + "\nREFERENCE IMAGE ORDER (after the four generated views):\n"
+                    + "\nIMAGE ORDER: first four new-page screenshots; then ORIGINAL company-site "
+                    "desktop/mobile (when available); THEN sector benchmarks. Compare real client "
+                    "brand colors, identity, photo usage and text readability.\n"
+                    + "\nREFERENCE IMAGE ORDER (after the original site):\n"
                     + json.dumps(image_labels, ensure_ascii=False)
                     + "\nREQUIRED DESIGN DECISIONS (check each with visible evidence):\n"
                     + json.dumps(decisions, ensure_ascii=False)
@@ -1037,11 +1063,13 @@ def run_qa(slug_or_name: str) -> dict:
                     ], ensure_ascii=False)
                     + "\nCONTENT PARITY EVIDENCE & OPEN REVIEW: \n"
                     + json.dumps(parity, ensure_ascii=False)
+                    + "\nORIGINAL SOURCE FIDELITY (all pages, sections, brand/partner logos, old-site task handoffs): \n"
+                    + json.dumps(source_fidelity, ensure_ascii=False)
                     + "\nALL-SITE QA STANDARD STATUS (unverified stays pending):\n"
                     + json.dumps(universal, ensure_ascii=False)
                     + "\nPAGE CONTENT:\n" + _build_ai_snapshot(html),
                     max_tokens=5000, stage="qa",
-                    image_paths=list(browser["screenshots"].values()) + benchmark_images,
+                    image_paths=list(browser["screenshots"].values()) + original_images + benchmark_images,
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
@@ -1049,11 +1077,13 @@ def run_qa(slug_or_name: str) -> dict:
         "automated": automated, "visual_media": visual_media,
         "browser": browser, "content_review": review,
         "content_parity": parity,
+        "source_fidelity": source_fidelity,
         "universal_quality": universal,
         "unimplemented_global_feedback": pending_general_rules,
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
-        "overall_pass": (parity["pass"] and universal["automated_pass"]
+        "overall_pass": (parity["pass"] and source_fidelity["pass"]
+                         and universal["automated_pass"]
                          and not pending_general_rules
                          and automated["automated_pass"]
                          and visual_media["owner_preview_ready"] and browser["pass"]
@@ -1067,6 +1097,8 @@ def run_qa(slug_or_name: str) -> dict:
               + list(visual_media["blockers"])
               + list(visual_media["needs_public_verification"])
               + [x["label"] for x in parity["missing"]]
+              + [str(x.get("kind","unknown"))+": "+str(x.get("source","")) for x in source_fidelity["missing"]]
+              + list(source_fidelity["pending"])
               + [m for values in universal["blocking_problems"].values() for m in values]
               + list(browser.get("issues") or []))
     record_qa_findings(ledger, slug, [str(x) for x in issues])

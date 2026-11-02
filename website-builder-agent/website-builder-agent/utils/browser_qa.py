@@ -88,7 +88,7 @@ def inspect_site(path):
                                                     (Math.min(lum(a),lum(b))+0.05);
                             const visible = e => !!e.getClientRects().length
                                 && getComputedStyle(e).visibility !== 'hidden';
-                            let checked=0, skipped=0, poor=[];
+                            let checked=0, skipped=0, poor=[], ambiguous=[], tinyText=[];
                             const nodes = [...document.querySelectorAll(
                                 'h1,h2,h3,h4,p,li,a,button,label,small,span')].slice(0,650);
                             for (const el of nodes) {
@@ -97,22 +97,37 @@ def inspect_site(path):
                                 // that would repeat the same color measurements.
                                 if ([...el.children].some(ch => ch.textContent?.trim())) continue;
                                 const style = getComputedStyle(el), foreground=parse(style.color);
+                                const size=parseFloat(style.fontSize);
+                                // Core content should remain legible at standard mobile size.
+                                if (size < 12 && el.matches('p,a,button,li,label')
+                                    && tinyText.length<8) {
+                                    tinyText.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
+                                                   fontSize:Math.round(size*10)/10});
+                                }
                                 if (!foreground) {skipped++;continue;}
-                                let bg=null, uncertain=false, current=el;
+                                let bg=null, uncertain=false, current=el, complexLayer=false;
                                 while(current && current.nodeType===1) {
                                     const st=getComputedStyle(current);
                                     if(st.backgroundImage!=='none' || st.opacity!=='1') {
-                                        uncertain=true;break;
+                                        uncertain=true;complexLayer=true;break;
                                     }
                                     const candidate=parse(st.backgroundColor);
                                     if(candidate) { bg=candidate;break; }
                                     if(st.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
-                                       st.backgroundColor !== 'transparent') { uncertain=true;break; }
+                                       st.backgroundColor !== 'transparent') {
+                                        uncertain=true;complexLayer=true;break;
+                                    }
                                     current=current.parentElement;
                                 }
-                                if (uncertain) {skipped++;continue;}
+                                if (uncertain) {
+                                    skipped++;
+                                    if(complexLayer && ambiguous.length<12)
+                                        ambiguous.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
+                                            reason:'image/gradient/translucent layer; requires visual proof'});
+                                    continue;
+                                }
                                 if (!bg) bg=[255,255,255];
-                                const size=parseFloat(style.fontSize), weight=parseFloat(style.fontWeight)||400;
+                                const weight=parseFloat(style.fontWeight)||400;
                                 const large=size >= 24 || (size>=18.66 && weight>=700);
                                 const required=large?3:4.5, value=ratio(foreground,bg);
                                 checked++;
@@ -124,11 +139,23 @@ def inspect_site(path):
                             const body=getComputedStyle(document.body);
                             const scrollBlocked=document.documentElement.scrollHeight>innerHeight+100 &&
                                 (root.overflowY==='hidden'||body.overflowY==='hidden');
-                            return {poor,checked,skipped,scrollBlocked};
+                            return {poor,checked,skipped,ambiguous,tinyText,scrollBlocked};
                         }""")
                         if color_review["poor"]:
                             issues.append(f"{name}: measurable WCAG AA text contrast failures: "
                                           + json.dumps(color_review["poor"], ensure_ascii=False))
+                        if color_review["tinyText"]:
+                            issues.append(f"{name}: essential copy below readable 12px floor: "
+                                          + json.dumps(color_review["tinyText"], ensure_ascii=False))
+                        # A contrast ratio cannot be inferred from CSS when text
+                        # is layered over a photo, gradient, or translucent panel.
+                        # Do not quietly count it as a pass; demand an actual
+                        # screenshot check or make the text panel solid.
+                        if color_review["ambiguous"]:
+                            issues.append(f"{name}: text/background contrast NOT VERIFIABLE; "
+                                          "use a legible opaque text panel or independently "
+                                          "review the real rendered image: "
+                                          + json.dumps(color_review["ambiguous"], ensure_ascii=False))
                         if color_review["scrollBlocked"]:
                             issues.append(f"{name}: native vertical scrolling blocked")
                         for key, message in (("overflow", "horizontal overflow"),

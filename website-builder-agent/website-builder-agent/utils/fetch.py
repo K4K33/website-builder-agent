@@ -1001,6 +1001,7 @@ def _extract_frame_assets(soup: BeautifulSoup, selector: str, limit: int) -> lis
     The operator must verify both actual relationship and reuse rights.
     """
     assets = []
+    seen = set()
     for frame in soup.select(selector):
         for image in frame.find_all("img"):
             source = (image.get("src") or image.get("data-src")
@@ -1008,6 +1009,10 @@ def _extract_frame_assets(soup: BeautifulSoup, selector: str, limit: int) -> lis
             if not source:
                 continue
             parent = image.find_parent("a", href=True)
+            href = parent.get("href", "") if parent else ""
+            if (source, href) in seen:
+                continue
+            seen.add((source, href))
             assets.append({
                 "src": source[:500],
                 "alt": _clean_text(image.get("alt", ""))[:250],
@@ -1033,8 +1038,24 @@ def extract_text_and_meta(
         "html.parser",
     )
 
-    header_assets = _extract_frame_assets(soup, "header", 20)
-    footer_assets = _extract_frame_assets(soup, "footer", 40)
+    # Many SME sites use footer-like <div> containers or ARIA landmarks,
+    # not a semantic <footer>. Detect those before de-duplicating nested marks.
+    header_assets = _extract_frame_assets(
+        soup, 'header,[role="banner"],[class*="site-header"],[id*="header"]', 20
+    )
+    footer_selector = 'footer,[role="contentinfo"],[class*="footer"],[id*="footer"]'
+    footer_assets = _extract_frame_assets(soup, footer_selector, 40)
+    footer_links = []
+    footer_seen = set()
+    for frame in soup.select(footer_selector):
+        for link in frame.find_all("a", href=True):
+            href = str(link.get("href") or "").strip()
+            label = _clean_text(link.get_text(" ", strip=True))[:150]
+            if href and (href,label) not in footer_seen:
+                footer_seen.add((href,label))
+                footer_links.append({"href":href[:500], "text":label})
+                if len(footer_links)>=75:
+                    break
 
     for tag in soup(
         [
@@ -1198,6 +1219,7 @@ def extract_text_and_meta(
         "images": images,
         "header_assets": header_assets,
         "footer_assets": footer_assets,
+        "footer_links": footer_links,
         "image_count": len(
             images
         ),

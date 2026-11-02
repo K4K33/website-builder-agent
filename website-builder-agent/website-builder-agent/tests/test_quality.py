@@ -303,7 +303,12 @@ class QualityTests(unittest.TestCase):
     def test_design_pass_cannot_modify_company_facts(self):
         state.upsert_company('testi', {'name':'Testi','url':'https://testi.fi'})
         extracted = {'company_facts':{'name':'Testi','industry':'transport','services':['Oikea palvelu']}}
-        brief = {**self.research_fixture(), 'company_facts':{'name':'Invented','services':['Fake service']},'reference_comparison':self.benchmark()}
+        brief = {**self.research_fixture(), 'company_facts':{'name':'Invented','services':['Fake service']},
+                 'reference_comparison':self.benchmark(),
+                 'source_content_map': {'pages':[
+                     {'source_url':'https://testi.fi/','status':'retain',
+                      'target':'index.html#main','sections':[]}
+                 ]}}
         with patch.object(research,'analyze_url',return_value={'success':True,'visible_text':'Oikea palvelu'}), patch.object(
                 research,'_search_tavily',return_value=[]), patch.object(research,'_select_reference_candidates',return_value=[]), patch.object(research,'_collect_reference_evidence',return_value=[dict(record,title='Reference') for record in self.benchmark()]), patch.object(
                 research,'ask_claude_json',side_effect=[extracted,brief]):

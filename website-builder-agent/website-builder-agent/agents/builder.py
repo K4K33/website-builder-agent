@@ -19,6 +19,7 @@ from utils.design_distinctness import assert_unique_against_output
 from utils.visual_media_gate import audit_visual_media
 from utils.local_media_intake import stage_local_media
 from utils.content_parity import audit_content_parity
+from utils.source_fidelity import (source_manifest, validate_source_plan, audit_source_fidelity)
 from utils.universal_quality import audit_universal_standards
 from utils.global_feedback import (load_ledger, global_instructions,
                                    universal_rules_pending_implementation)
@@ -1037,6 +1038,16 @@ def _validate_all_universal_rules(html: str, research: dict, company: dict) -> N
         errors = [f"{category}: {', '.join(messages)}"
                   for category, messages in result["blocking_problems"].items()]
         raise RuntimeError("Kaurivo universal QA failed: " + "; ".join(errors)[:1800])
+    fidelity = audit_source_fidelity(
+        html, research, source_url=company.get("url", ""),
+        require_human_review=False
+    )
+    if fidelity["missing"]:
+        raise RuntimeError(
+            "Kaurivo original-source content, brand and partner fidelity failed: "
+            + "; ".join(str(item.get("kind"))+": "+str(item.get("source",""))
+                        for item in fidelity["missing"][:10])[:1800]
+        )
 
 
 def _validate_generated_content(
@@ -1202,6 +1213,8 @@ def build_site(
 
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
+    # All old pages and observed sections must have a plan BEFORE paid Build.
+    validate_source_plan(research, source_url=company.get("url", ""))
 
     benchmark = validate_benchmark(research, company.get("url", ""))
     decisions = validate_design_plan(research, company.get("url", ""))
@@ -1253,6 +1266,15 @@ tuotantoon hyväksytyksi.
 
 TOIMIALAN JA YRITYKSEN OMA SUUNNITTELUBRIEFI:
 {json.dumps(industry_brief, ensure_ascii=False)}
+
+KAIKKIEN ALKUPERÄISTEN SIVUJEN JA OSA-ALUEIDEN SÄILYTYSVAATIMUKSET:
+{json.dumps(source_manifest(research), ensure_ascii=False)}
+HYVÄKSYTTY TOTEUTUSSUUNNITELMA (älä korvaa oikeita sisältöjä vain linkillä vanhalle sivulle):
+{json.dumps(research.get("source_content_map") or {}, ensure_ascii=False)}
+Näytä oikeat asiakkaan tuotteet, hinnat ja palvelut uudella sivulla.
+Älä piilota sponsoreita/yhteistyökumppaneita tai muuta niiden todellista roolia.
+Jos alkuperäinen sisältö ei mahdu yhdelle sivulle, vaadi alasivujen
+rakentaminen. Älä lyhennä pois todellista hyötysisältöä.
 Tämä kuvaa kohdeyrityksen todelliset tehtävät ja lähdeaineiston,
 ei valmista HTML- tai korttipohjaa. Kehitä oma omaperäinen sommittelu.
 Varmista, että alisivujen tärkeät palvelut, alkuperäinen logo,
@@ -1510,6 +1532,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     research = company.get("research") or {}
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
+    validate_source_plan(research, source_url=company.get("url", ""))
     validate_design_plan(research, company.get("url", ""))
     facts = research.get("company_facts")
     if not isinstance(facts, dict) or not facts:
@@ -1563,6 +1586,7 @@ def revise_site(
 
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
+    validate_source_plan(research, source_url=company.get("url", ""))
 
     company_facts = research.get(
         "company_facts",
@@ -1590,6 +1614,14 @@ ellei sitä korjata annetun palautteen perusteella.
 
 TOIMIALAN JA YRITYKSEN AIKAISEMMAT SISÄLTÖ- JA KUVATIEDOT:
 {json.dumps(industry_brief, ensure_ascii=False)}
+
+KAIKKIEN ALKUPERÄISTEN SIVUJEN JA OSA-ALUEIDEN SÄILYTYSVAATIMUKSET:
+{json.dumps(source_manifest(research), ensure_ascii=False)}
+HYVÄKSYTTY SÄILYTYSSUUNNITELMA:
+{json.dumps(research.get("source_content_map") or {}, ensure_ascii=False)}
+Kaikki alkuperäiset keskeiset tehtävät toteutetaan uudessa ympäristössä;
+älä siirrä vanhalle sivulle esimerkiksi tuotemyyntiä vain siksi, että
+uudessa sivussa ei ole tilaa. Sponsori- ja kumppanilogoja ei saa pudottaa.
 Älä muuta asiakasidentiteettiä tai katoa vanhojen sivujen tietoja.
 Älä kopioi muiden asiakkaiden rakennetta.
 

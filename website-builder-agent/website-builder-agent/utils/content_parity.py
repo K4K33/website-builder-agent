@@ -64,6 +64,7 @@ def source_inventory_sha256(inventory: dict) -> str:
         "headings": p.get("headings") or {},
         "header_assets": p.get("header_assets") or [],
         "footer_assets": p.get("footer_assets") or [],
+        "footer_links": p.get("footer_links") or [],
         "images": p.get("images") or [],
         "links": p.get("links") or [],
     } for p in pages if isinstance(p, dict)]
