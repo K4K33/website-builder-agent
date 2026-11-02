@@ -86,6 +86,14 @@ failure if the text is lost. HTML semantic source validation does not
 automatically prove logo identity, color fidelity, asset rights or overall
 brand quality. Those still require comparison screenshots and client approval.
 
+## Demo-to-production release mode (new universal requirement)
+
+The QA/demo preview **retains** obvious labels that it is an unapproved concept, uses noindex, explains example photos honestly and may offer a Kaurivo-only test form. This is deliberately not production-ready.
+
+Before client handover, a **separately built and client-approved production variant** must be verified to remove/replace the preview banner, footer/meta demo references, test-only form copy, test API endpoint and noindex settings where indexing was approved. Verify live contact delivery, legal/privacy notices, accurate domain/brand, CMS editing and images with confirmed rights. Avoid simply hiding the demo banner with CSS: this could still expose test endpoints and mislead visitors.
+
+`utils.client_handover.inspect_client_delivery` now requires a true, human-evidenced `delivery.demo_content_removed_and_live_forms_verified` flag in addition to the previous CMS, backup and approval checks. This is a gate, not a claim that the Kotifixi demo already has a production conversion or a branded domain.
+
 ## Editability after handover: real CMS required
 
 The current Builder generates a standalone static `index.html` and **does not
