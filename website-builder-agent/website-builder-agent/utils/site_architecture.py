@@ -108,3 +108,49 @@ def pages_for_validation(pages: dict[str,str]) -> str:
         BeautifulSoup(pages[key], "html.parser").get_text(" ", strip=True)
         for key in sorted(pages)
     ) + "</body></html>"
+
+def validate_site_navigation(pages: dict[str,str], architecture: dict) -> dict:
+    """Resolve internal links from EACH HTML file and prove all routes reachable."""
+    import posixpath
+    from urllib.parse import urlsplit, unquote
+    from bs4 import BeautifulSoup
+    expected=set(architecture["page_paths"])
+    if set(pages)!=expected:
+        raise RuntimeError("Page navigation input differs from approved architecture.")
+    soups={route:BeautifulSoup(html,"html.parser") for route,html in pages.items()}
+    linked={route:set() for route in pages}
+    problems=[]
+    for route,soup in soups.items():
+        targets={str(x.get("id")) for x in soup.find_all(id=True)}
+        for a in soup.find_all("a",href=True):
+            href=str(a.get("href") or "").strip()
+            if not href or href=="#" or href.lower().startswith(("javascript:","data:")):
+                problems.append(route+": blank or unsafe navigation")
+                continue
+            parsed=urlsplit(href)
+            if parsed.scheme in ("https","mailto","tel"): continue
+            if parsed.scheme or parsed.netloc or href.startswith("/"):
+                problems.append(route+": unsafe absolute/internal navigation "+href[:120])
+                continue
+            if parsed.path:
+                dest=posixpath.normpath(posixpath.join(posixpath.dirname(route),unquote(parsed.path)))
+            else:
+                dest=route
+            if dest not in expected:
+                problems.append(route+": missing linked page "+href[:120])
+                continue
+            if parsed.fragment and not soups[dest].find(id=unquote(parsed.fragment)):
+                problems.append(route+": missing target section "+href[:120])
+            linked[route].add(dest)
+    reachable={"index.html"}
+    for _ in range(len(pages)):
+        reachable.update(other for r in list(reachable) for other in linked[r])
+    for unreachable in sorted(expected-reachable):
+        problems.append("Orphan page not accessible from homepage: "+unreachable)
+    for page in architecture["pages"]:
+        route=page["path"]
+        for section in page.get("section_ids") or []:
+            if not soups[route].find(id=section):
+                problems.append(route+": planned section missing: "+section)
+    return {"pass":not problems,"issues":problems,
+            "reachable":sorted(reachable),"routes":sorted(expected)}
