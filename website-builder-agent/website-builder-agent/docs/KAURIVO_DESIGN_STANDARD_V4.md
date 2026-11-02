@@ -27,6 +27,14 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## V11: premium depth, motion and Finnish clarity without scroll cost
+
+Natural language comes before slogans. Prefer a first-screen question describing verified household work, services or the visitor's next action over repeated business name or generic motivational lines. Check consistency across all pages.
+
+Use premium but measured depth where visual storytelling calls for it: one hero layered photo/backplate, a slight CSS 3D tilt for pointer-capable desktop users, meaningful card elevation and sensitive one-time reveals. No continuous 3D scene, default heavy WebGL, scroll hijacking or unconditional animation. Transforms are local and disabled for touch/reduced-motion/no-JS as appropriate. Test real scrolling and load speed rather than claiming improvement from source changes.
+
+Keep navigation typography intentionally large, 17–18px when spatially feasible, keyboard readable and not crammed. Route labels must match actual provided content (a genuine About page needs genuine verified people/business history; process pages should be named for process). Treat browser translation controls as browser UI; do not disable legitimate translation without consent or reason.
+
 ## V10 — independent human assessment and legibility
 
 Independent human first-impression feedback counts alongside model reviews. Desktop navigation uses comfortably readable text, typically 15–16px, verified at tablet and desktop widths. Phone/contact controls should be presented as one deliberate set of actions, not an orphaned phone number.
