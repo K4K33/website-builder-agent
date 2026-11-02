@@ -27,6 +27,14 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## V14 feedback boundary — no score-chasing redesigns
+
+An AI's "10/10 selling demo" tips may be useful for **presentation** or **customer onboarding** rather than the website itself. When the owner approves the existing art direction, preserve it unless there is a verifiable design, accessibility, factual or technical defect. Separate current UI quality from prospect-specific materials, signed-off CMS production, genuine lead capture, and marketing performance. Convert only grounded generalizable findings into QA.
+
+For a real prospect, use verified original logo/name, locality, phone/mail and approved imagery, never invent those facts. Do not put sample "5-star reviews" or imaginary quotes into public demos; review sections appear only when a truthful source and permission exist. Show the site live on mobile and demonstrate honest workflows as part of a real sales presentation, but do not add fake interactive conversion theater to the page.
+
+An accessible success/error message in a test-only form must truthfully say the interaction is **test-only**. Do not claim it reached a customer unless delivery was proven. Keep the approved existing Kotifixi V14 unchanged based on this feedback alone; owners receive the same preview URL until an actual next version is warranted.
+
 ## V14 — header controls form one deliberate system
 
 Match action color hierarchy, button height, corner shape, inset and font weights to the website's actual typography. One grouped phone + quote control is often calmer than two differently styled floating boxes: use a shared subtle tint/border where helpful, a secondary phone action and one primary branded CTA, with two real accessible click targets and appropriate focus states. Do not universally force this exact Kotifixi design on other brands; verify on desktop, tablet and mobile.

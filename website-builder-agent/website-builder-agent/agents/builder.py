@@ -176,6 +176,29 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V14 JATKOARVIO: OLE KRIITTINEN TEKOÄLYPALAUTTEELLE:
+- Käyttäjä pitää sivustoa jo hyvänä. ÄLÄ muuta asiakkaan
+  hyväksymää ulkoasua saadaksesi 10/10 AI-arvosanan.
+  Tarkista ehdotusten todellinen hyöty ja soveltuvuus.
+- Erottele verkkosivun design-laatu, myyntidemon tehokkuus,
+  asiakaskohtaiset aineistot ja lopullisen tuotantosivun vaatimukset.
+  Myyntidemosta annettu 8,5 ei ole designin auditoitu pistemäärä.
+- Uudelle yritykselle näytetään vain vahvistettu ja luvallinen
+  brändi, logo, yhteystiedot, paikkakunta ja työalue.
+  Älä muuta jo oikein kuvattua yritystä toiseksi!
+- Tekoälyn ehdottamia KUVITTEELLISIA asiakasarvosteluja tai
+  viiden tähden sitaattipohjia ei saa julkaista demossakaan.
+  Todelliset arvostelut vaativat oikean lähteen ja luvan.
+- Myyntipalaverissa voi osoittaa oikeasti toimivat
+  mobiilinäkymät ja yhteydenottotavat. Älä esitä testitoimintoa
+  aidosti asiakkaalle toimitettuna tai lupaa kauppoja.
+- Lomakkeen onnistumis-, validointi- ja virhetilat testataan
+  paikallisesti / mockilla. Demo kertoo selvästi, että kyse on
+  TESTISTÄ; tuotantotoiminto on erillinen hyväksyttävä vaihe.
+- Jos asiakas on tyytyväinen, älä jatka turhia visuaalisia
+  versioita. Säilytä riippumattoman >=9,5 laaduntarkistuksen
+  tavoite ja muut hyväksytyt luovutusportit, älä keksi näyttöä.
+
 V14 YHTENÄINEN YLÄPALKIN CTA-SOMMITTELU:
 - Puhelinnumeron ja tarjous-/yhteydenottopainikkeen tulee
   näyttää tarkoituksella samaan järjestelmään suunnitelluilta.

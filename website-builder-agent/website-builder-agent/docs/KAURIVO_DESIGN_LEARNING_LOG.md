@@ -1,5 +1,9 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — V14 selective adoption, no design churn
+
+Owner's ~64-second Gemini Auto video scored the V14 **sales demo** overall 8.5/10 (first impression 9, conversion potential 8.5, personalization 7.5) and proposed conditions for a hypothetical 10/10. User likes V14 and does not want every AI recommendation applied. Accepted: verified business identity, authentic approved photos and locality only when sourced, practical mobile demo in human sales conversation, safe success/error form QA. Rejected: fabricated 5-star testimonial placeholders, unsupported geographic claims, hiding transparent concept/test warnings or treating the sales score as a certified independent design score. Do not replace the intended subject business's name/branding with an unrelated prospect. V14 remains the current preview, no V15 needed just to chase a score. Maintain >=9.5 formal gate separately.
+
 ## 2026-11-02 — V14: integrated call + quote actions
 
 Owner showed V13 in an 84.5-second desktop recording, liked overall layout but disliked the pair of top-right buttons as visually disconnected from each other and the rest of the site. A separate 17.3-second Gemini review praised minimal structure, truthful service/pricing/contact content and some usability, while critiquing stock/template/disclaimer appearance and proposing sales tactics. V14 addresses exactly the actionable visual discrepancy with a shared understated action grouping, secondary real telephone button and one primary quote CTA. Keep two distinct links, keyboard focus, mobile menu access, native scroll, good brand colors. Do not remove truthful demo disclaimers, fabricate founder reviews or treat external indicative sales prices as approved. Need an exact-build real mobile/desktop review to justify a premium score.

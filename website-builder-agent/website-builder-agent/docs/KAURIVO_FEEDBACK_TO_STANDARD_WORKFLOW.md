@@ -99,6 +99,16 @@ Owner uploaded an 84.5-second desktop recording of the V13 site (1910×868) and 
 
 **Universalization:** added actionable header consistency, responsive interaction checks, truthful demo vs production distinctions and evidence boundaries into global QA/design/builder systems. New versions must include preview URL automatically. Hold customer release pending branded domain, owner approval, independent quality proof and working CMS.
 
+## 2026-11-02 — Owner selective approval of Gemini's V14 → "10/10" feedback
+
+**Evidence and scope:** user-uploaded 63.97-second screen recording of Gemini Auto discussion of Kotifixi V14, first an 8.5/10 **sales-demo** overall summary (visual first impression 9/10; sales/conversion 8.5/10; personalization before purchase 7.5/10), then a reply to "mikä veisi tämän 10/10 tasolle". The user considers V14 already good, agrees only with SOME suggestions and explicitly rejects blind execution of the full list. These ratings are not verified current-version independent >=9.5 ratings, nor a user conversion study.
+
+**Accept conditionally:** for a future actual prospect, source and verify their approved company brand, contacts and actual operating area; never invent location ("Turun alueella" was only the reviewer example). In authorized sales conversations, demonstrate the real mobile view, clickable phone action and other practical interactions. Confirm real form success/error states offline and their truthful destination; this is worth testing regardless of site design. Continue real client photo and permission intake after genuine interest, not before.
+
+**Reject:** Gemini proposed sample reviews with made-up 5-star quotes to be replaced later: fabricated testimonials are still misleading and cannot appear even in a public sales demo. Don't add review sections without verified testimonials, fake customers, inflated performance metrics or empty content. The suggestion to replace "Kotifixi" with a different prospect's branding confuses the **subject company** with the agency's next lead; Kotifixi V14 appropriately depicts Kotifixi and its actual verified details. Do not quietly erase Kaurivo concept/testing disclosure, send the technical GitHub Pages link to customers, or activate a test-only form as production. A "10/10" sales-demo promise has no proven causal relation to signed sales.
+
+**Decision:** Keep V14 website design unchanged on this review; no V15 exists. Fold evidence-based presentation and QA lessons into the universal Builder, design standard and global QA. Later changes only if the owner identifies a concrete issue or a genuine independent current-version audit finds a material blocker. Formal >=9.5 multi-project release gate still applies.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.
