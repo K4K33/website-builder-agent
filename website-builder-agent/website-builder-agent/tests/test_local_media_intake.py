@@ -95,7 +95,7 @@ class LocalMediaIntakeTests(unittest.TestCase):
                 body = ('<!doctype html><html lang="fi"><head><title>New client</title>'
                         '<meta name="description" content="Real business">'
                         '<meta name="viewport" content="width=device-width"></head>'
-                        '<body><nav><a href="#main">Home</a></nav>'
+                        '<body><header><nav><a href="#main">Home</a></nav></header>'
                         f'<main id="main"><h1>Client service</h1><img src="{asset["src"]}" alt="Work"></main>'
                         '<footer>Verified contact pending</footer></body></html>')
                 result = _write_html("new-customer", body)
