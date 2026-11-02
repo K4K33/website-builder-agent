@@ -183,6 +183,26 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertIn("Näin voit sopia työstä", about.h1.get_text(" ", strip=True))
         self.assertNotIn("Työstä sopiminen", about.get_text(" ", strip=True))
 
+    def test_v12_balanced_header_design_and_finnish_metadata(self):
+        stylesheet = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        self.assertIn("grid-template-columns:minmax(0,1fr) max-content minmax(0,1fr)", stylesheet)
+        self.assertIn("font-family:var(--sans);", stylesheet)
+        self.assertIn("font-size:16px;", stylesheet)
+        self.assertIn("font-weight:600;", stylesheet)
+        self.assertIn("letter-spacing:-.042em", stylesheet)
+        for filename in FILES:
+            text = (ROOT / filename).read_text(encoding="utf-8")
+            soup = BeautifulSoup(text, "html.parser")
+            self.assertEqual(soup.html.get("lang"), "fi")
+            self.assertEqual(soup.select_one('meta[charset]')["charset"], "utf-8")
+            self.assertEqual(len(soup.select(".site-header .header-right .header-cta")), 1)
+            self.assertEqual(len(soup.select(".site-header .site-nav a")), 5)
+        self.assertEqual(
+            BeautifulSoup((ROOT / "index.html").read_text(encoding="utf-8"), "html.parser")
+            .select_one("h1").get_text(" ", strip=True),
+            "Tarvitsetko apua kotitöissä tai pihatöissä?"
+        )
+
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
         self.assertEqual(len(soup.select(".service-row")), 3)
