@@ -3,6 +3,7 @@ from pathlib import Path
 import struct
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from utils.visual_media_gate import audit_visual_media
 
@@ -67,6 +68,47 @@ class VisualMediaGateTests(unittest.TestCase):
             result = audit_visual_media(html, html_path=path)
             self.assertEqual(len(result["blockers"]), 2)
             self.assertFalse(result["owner_preview_ready"])
+
+    def test_unverified_hero_blocks_qa_before_any_paid_ai_review(self):
+        from agents import qa
+        with TemporaryDirectory() as directory:
+            page = Path(directory) / "index.html"
+            page.write_text(
+                '<!doctype html><html lang="fi"><head><title>Sample</title>'
+                '<meta name="viewport" content="width=device-width">'
+                '<meta name="description" content="Sample"></head>'
+                '<body><main><h1>Professional service</h1>'
+                '<section class="hero"><img src="https://media.example/hero.jpg"'
+                ' alt="Service photo"></section></main></body></html>',
+                encoding="utf-8",
+            )
+            company = {
+                "name": "Generic Test Business", "url": "",
+                "research": {},
+                "build": {"output_path": str(page), "version": 1},
+            }
+            with (
+                patch.object(qa, "get_company", return_value=("generic", company)),
+                patch.object(qa, "audit_content_parity",
+                             return_value={"pass": True, "missing": [], "review_required": []}),
+                patch.object(qa, "audit_universal_standards",
+                             return_value={"automated_pass": True, "blocking_problems": {}}),
+                patch.object(qa, "_automated_checks",
+                             return_value={"automated_pass": True, "automated_issues": []}),
+                patch.object(qa, "inspect_site") as browser,
+                patch.object(qa, "ask_claude_json") as ai,
+                patch.object(qa, "load_ledger", return_value={"issues": {}}),
+                patch.object(qa, "save_ledger"),
+                patch.object(qa, "record_qa_findings"),
+                patch.object(qa, "universal_rules_pending_implementation", return_value=[]),
+                patch.object(qa, "upsert_company"),
+                patch.object(qa, "set_status"),
+            ):
+                result = qa.run_qa("generic")
+                self.assertFalse(result["overall_pass"])
+                self.assertFalse(result["visual_media"]["owner_preview_ready"])
+                browser.assert_not_called()
+                ai.assert_not_called()
 
     def test_no_company_template_is_encoded_in_the_gate(self):
         source = (Path(__file__).resolve().parents[1] /
