@@ -55,7 +55,7 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertEqual(len(soup.select(".intro-band")), 0)
         self.assertNotIn("Vähemmän tekemättömiä töitä", str(soup))
         self.assertNotIn("KOTIFIXIN IDEA", str(soup))
-        self.assertIn("Tarvitsetko apua", soup.select_one("h1").get_text(" ", strip=True))
+        self.assertIn("Kotifixiltä apua", soup.select_one("h1").get_text(" ", strip=True))
         self.assertIn("hinnastoon", soup.select_one(".approach-section").get_text(" ",strip=True))
         self.assertNotIn("photo-caption", str(soup))
         self.assertIn("apua", soup.select_one(".hero-copy h1").get_text(" ", strip=True).lower())
@@ -133,6 +133,28 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         for filename in FILES:
             html = (ROOT / filename).read_text(encoding="utf-8")
             self.assertIn("Ei Kotifixin virallinen sivusto", html)
+
+    def test_v10_copy_header_contact_and_motion(self):
+        pages = [(ROOT / filename).read_text(encoding="utf-8") for filename in FILES]
+        for html in pages:
+            page = BeautifulSoup(html, "html.parser")
+            phone = page.select_one(".site-header .phone-link")
+            self.assertIsNotNone(phone)
+            self.assertEqual(phone.get_text(" ", strip=True), "Soita 044 363 2429")
+            self.assertEqual(phone["href"], "tel:+358443632429")
+            self.assertNotIn("kotona tai pihalla", html.casefold())
+            self.assertNotIn("Kotifixin omilla verkkosivuilla kerrotaan", html)
+        home = BeautifulSoup(pages[0], "html.parser")
+        self.assertEqual(home.select_one("h1").get_text(" ", strip=True),
+                         "Kotifixiltä apua arjen töihin.")
+        self.assertIn("31755424", pages[3])
+        css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        js = (ROOT / "assets/app.js").read_text(encoding="utf-8")
+        self.assertIn(".site-nav a{font-size:15px", css)
+        self.assertIn(".phone-link{display:inline-flex", css)
+        self.assertIn("IntersectionObserver", js)
+        self.assertIn("prefers-reduced-motion: reduce", js)
+        self.assertNotIn("window.addEventListener('scroll'", js)
 
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
