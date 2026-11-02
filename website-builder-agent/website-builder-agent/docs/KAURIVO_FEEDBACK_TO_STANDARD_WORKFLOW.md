@@ -39,6 +39,16 @@ V8 already addressed the old contrast slogan and several repeated phrases. This 
 
 **Evidence limitations:** a subjective user trackpad sensation is not a confirmed measured page-performance regression. CSS/JS complexity reductions are hypotheses to verify with actual device profiling. The independent reviewer saw V8, not this subsequent V9 code. Keep the ≥9.5 and three-client consistency gate on HOLD until authentic full-device assessment.
 
+## 2026-11-02 — Third video: Claude recalibrates scope of desktop V8 assessment
+
+User supplied a ~12.5-second iPhone screen recording of a **Claude Sonnet 5.5 Medium** conversation evaluating Kotifixi. The reviewer explicitly scopes assessment to the web agency's layout, design, usability and technical execution; client-dependent portraits, real team biography, customer testimonials and business-specific photos are not fabricated. This *scope-limited* appraisal is **about 9/10**, not an audited release certificate and not a score for the newer V9 candidate.
+
+**Actionable design/engineering suggestions:** (1) developer/raw.githack interstitial still a blocker for customers; use verified branded HTTPS preview, (2) uniform stable photo slots with `object-fit: cover`, coordinated crop and radii, no hidden empty photo holes, (3) optional reviews, people/teams and FAQ only with genuine approved content, (4) built-in demo vs production mode so test-form labels, not-official-site badge and Kaurivo test-endpoint behavior disappear only as part of a properly approved production build, never just via CSS, (5) reduce italic headlines, offset hero decoration and crowded price sidebar, (6) readable small text, and (7) retest mobile widths. Suggested optional phone/town input fields remain **deferred** until data need, privacy notice, storage schema and permissions are proven.
+
+**No invented business content:** sale-ready content requirements should be delivered to the customer as a checklist (work photos, operator bio/name if desired, proof/feedback with consent, service coverage, opening hours, correct quoted prices and verified eligibility if tax deductions claimed). Empty sections do not go live. The video's indicative pricing ranges are not adopted into Kaurivo's price list.
+
+**Quality status:** independent designer's scope-limited ~9/10 is useful qualitative evidence. It cannot count as full ≥9.5/10 exact-commit desktop+mobile evaluation or three-distinct-client consistency. Current candidate release remains **HOLD**.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.
