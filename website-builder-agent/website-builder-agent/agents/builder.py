@@ -1542,17 +1542,23 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
         raise RuntimeError("Research company facts are required before completion.")
     if not producer.strip():
         raise ValueError("External response producer must be identified.")
+    validate_creative_directions(research)
+    validate_site_architecture(
+        research, no_site=research.get("research_mode")=="verified_no_website"
+    )
     cleaned = _clean_html(Path(response_path).read_text(encoding="utf-8"))
-    _validate_generated_content(cleaned, facts)
-    _validate_all_universal_rules(cleaned, research, company)
-    validate_locked_copy(cleaned, client_design_brief(company))
-    _validate_plan_sections(cleaned, research, company.get("url", ""))
-    path = _write_html(slug, cleaned)
+    site_result = build_pages_from_response(
+        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR
+    )
+    path = site_result["output_path"]
     upsert_company(slug, {
         "build": {"output_path": path,
                   "version": company.get("build", {}).get("version", 0) + 1,
                   "generation_mode": "external_agent_response",
                   "producer": producer.strip(),
+                  "page_paths": site_result["page_paths"],
+                  "creative_selection": research["creative_selection"],
+                  "originality_preflight": site_result["visual_originality"],
                   "design_decisions": research["design_decisions"],
                   "industry_brief": industry_brief},
         "qa": None, "approval": None, "outreach": None, "demo": None,
@@ -1575,12 +1581,19 @@ def revise_site(
             f"Aja ensin: python main.py build {slug}"
         )
 
-    with open(
-        path,
-        "r",
-        encoding="utf-8",
-    ) as file:
-        current_html = file.read()
+    research = company.get(
+        "research", {}
+    ) or {}
+    architecture = validate_site_architecture(
+        research, no_site=research.get("research_mode")=="verified_no_website"
+    )
+    current_pages = {}
+    for route in architecture["page_paths"]:
+        current_path = Path(_output_dir(slug)) / route
+        if not current_path.is_file():
+            raise RuntimeError("Revision cannot find previously approved page "+route)
+        current_pages[route] = current_path.read_text(encoding="utf-8")
+    current_html = json.dumps({"pages":current_pages},ensure_ascii=False)
 
     research = company.get(
         "research",
@@ -1590,6 +1603,7 @@ def revise_site(
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
     validate_source_plan(research, source_url=company.get("url", ""))
+    creative = validate_creative_directions(research)
 
     company_facts = research.get(
         "company_facts",
@@ -1638,6 +1652,14 @@ Jos kyseessä on uusi sivu, suunnittele koko kokemus alkuperäisesti.
 
 TOIMIALAN VERTAILU (vain design-dataa):
 {json.dumps(benchmark, ensure_ascii=False)}
+
+VALITTU LUOVA SUUNTA (kolmesta lähdeperustaisesti verratusta):
+{json.dumps(creative, ensure_ascii=False)}
+
+KOKO SIVUSTON TOTEUTETTAVAT REITIT:
+{json.dumps(architecture, ensure_ascii=False)}
+Säilytä ja palauta kaikki nämä sivut JSON:n pages-kentässä,
+myös ne joihin palaute ei kohdistu. Pidä linkit oikein.
 
 PAKOLLINEN SUUNNITELMA ENNEN RAKENTAMISTA:
 {json.dumps(decisions, ensure_ascii=False)}
@@ -1700,7 +1722,8 @@ Säilytä:
 - responsiivisuus
 - accessibility.
 
-Palauta koko HTML.
+Palauta KAIKKI sivut yhden JSON-objektin pages-sanakirjassa,
+sama tapa kuin ensimmäisessä rakentamisessa. Älä palauta vain index.html.
 """
 
     user_prompt += "\n\nPYSYVÄT KAIKKIA ASIAKKAITA KOSKEVAT PALAUTESÄÄNNÖT:\n" + _global_build_instructions()
@@ -1720,42 +1743,10 @@ Palauta koko HTML.
     )
 
     cleaned = _clean_html(new_html)
-
-    _validate_generated_content(
-        cleaned,
-        company_facts,
+    site_result = build_pages_from_response(
+        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR
     )
-
-    parity = audit_content_parity(
-        cleaned, research, require_source_review=False,
-        source_url=company.get("url", "")
-    )
-    if parity["missing"] or parity["review_required"]:
-        raise RuntimeError(
-            "Source facts lost in revision: "
-            + "; ".join(
-                [item["label"] for item in parity["missing"]]
-                + parity["review_required"]
-            )[:1600]
-        )
-
-    parity = audit_content_parity(cleaned, research, require_source_review=False,
-                                 source_url=company.get("url", ""))
-    if parity["missing"] or parity["review_required"]:
-        problems = ([x["label"] for x in parity["missing"]]
-                    + parity["review_required"])
-        raise RuntimeError(
-            "Old-to-new content preservation failed before writing HTML: "
-            + "; ".join(problems[:12])
-        )
-    _validate_all_universal_rules(cleaned, research, company)
-    validate_locked_copy(cleaned, brand_brief)
-
-    _validate_plan_sections(cleaned, research, company.get("url", ""))
-    new_path = _write_html(
-        slug,
-        cleaned,
-    )
+    new_path = site_result["output_path"]
 
     old_build = company.get(
         "build",
@@ -1779,6 +1770,9 @@ Palauta koko HTML.
                 "design_decisions": decisions,
                 "last_feedback": feedback,
                 "industry_brief": industry_brief,
+                "page_paths": site_result["page_paths"],
+                "creative_selection": research["creative_selection"],
+                "originality_preflight": site_result["visual_originality"],
             },
             "qa": None,
             "approval": None,
