@@ -110,6 +110,20 @@ class VisualMediaGateTests(unittest.TestCase):
                 browser.assert_not_called()
                 ai.assert_not_called()
 
+    def test_css_hero_and_srcset_assets_must_exist(self):
+        with TemporaryDirectory() as directory:
+            page = Path(directory) / "index.html"
+            html = (
+                '<style>.hero{background-image:url("assets/hero.jpg")}</style>'
+                '<main><div class="hero"><h1>Trusted work</h1></div>'
+                '<picture><source srcset="assets/picture.webp 2x">'
+                '<img src="assets/fallback.png" alt="Original photo"></picture></main>'
+            )
+            result = audit_visual_media(html, html_path=page)
+            self.assertFalse(result["owner_preview_ready"])
+            self.assertTrue(any("CSS image" in value for value in result["blockers"]))
+            self.assertTrue(any("srcset" in value for value in result["blockers"]))
+
     def test_owner_preview_requires_95_in_each_dimension(self):
         from agents.qa import owner_preview_visual_passes
         dimensions = (
