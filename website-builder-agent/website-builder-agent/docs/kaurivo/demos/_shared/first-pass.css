@@ -10,3 +10,20 @@
 /* Final QA: default figure margins must not displace CSS grid image columns. */
 figure.photo{margin:0}
 @media(max-width:620px){.hero-grid>.photo,.hero-grid>figure.photo{max-width:100%}}
+
+/* Final art-direction audit: avoid orphan fourth service tile on wide screens. */
+@media(min-width:1051px){
+  .grid:has(> .card:nth-child(4):last-child){grid-template-columns:repeat(4,minmax(0,1fr))}
+  .food .hero-grid{grid-template-columns:minmax(0,1.14fr) minmax(0,.86fr)}
+  .food .hero .photo{max-width:460px;margin-inline:auto;box-shadow:14px 14px 0 #cda78d}
+  .build .hero-grid{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+  .build .hero .photo{box-shadow:22px 22px 0 #c9a82b}
+}
+.food .card{border-radius:0;border-color:#e2d4c5}
+.food .card small{color:#91564a}
+.food .card h3{font-weight:600}
+.food .pagehero{background:#efe6da;border-bottom:1px solid #d9c3ac}
+.build .section-title h2{max-width:900px}
+.build .card h3{font-weight:700}
+.auto .card small{color:#977b27}
+@media(prefers-reduced-motion:reduce){.grid>.card:hover,.photo:hover img{transform:none!important}}
