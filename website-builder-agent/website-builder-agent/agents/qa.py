@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup
 
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
+from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.quality import normalize_facts, canonical_url
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.state import (
@@ -280,6 +281,10 @@ issues saa sisältää enintään 8 tärkeintä ongelmaa.
 
 def _automated_checks(html: str) -> dict:
     issues = []
+
+    # This free, deterministic copy audit runs before any paid AI review.
+    # For a multi-page delivery, lint_site_directory checks ALL routes.
+    issues.extend(lint_site_copy({"index.html": html})["issues"])
 
     if not html or not html.strip():
         return {
