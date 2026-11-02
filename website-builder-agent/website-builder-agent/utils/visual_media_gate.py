@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 import struct
+import re
 from urllib.parse import unquote, urlsplit
 
 from bs4 import BeautifulSoup
@@ -128,6 +129,41 @@ def audit_visual_media(
                 pending.append(
                     f"brand: actual bitmap resolution could not be determined: {source[:120]}"
                 )
+
+    # Image-like resources can be in picture/srcset and inline CSS, not only
+    # in <img>. Check their exact local paths too so a decorative background
+    # cannot silently become another empty hero rectangle.
+    supplemental = []
+    for node in soup.select("img[srcset],source[srcset]"):
+        for candidate in str(node.get("srcset") or "").split(","):
+            part = candidate.strip().split()
+            if part:
+                supplemental.append(("srcset", part[0]))
+    for node in soup.find_all("style"):
+        supplemental.extend(
+            ("CSS image", m.strip().strip("\\\"'"))
+            for m in re.findall(r"url\\(\\s*([^)]*)\\)", node.get_text(), flags=re.I)
+        )
+    for node in soup.find_all(style=True):
+        supplemental.extend(
+            ("CSS image", m.strip().strip("\\\"'"))
+            for m in re.findall(r"url\\(\\s*([^)]*)\\)", str(node.get("style") or ""), flags=re.I)
+        )
+    for placement, value in supplemental:
+        if not value or value.startswith(("data:", "#")):
+            continue
+        parsed = urlsplit(value)
+        if parsed.scheme in ("https", "http") or value.startswith("//"):
+            if value not in verified:
+                pending.append(f"{placement}: remote asset unverified in published preview: {value[:190]}")
+        elif parsed.scheme or value.startswith(("/", "\\\\")):
+            blockers.append(f"{placement}: unsupported asset path: {value[:150]}")
+        elif root is None:
+            pending.append(f"{placement}: local asset not checked without html_path: {value[:150]}")
+        else:
+            local = (root / unquote(parsed.path)).resolve()
+            if not local.is_file() or local.stat().st_size == 0:
+                blockers.append(f"{placement}: missing or empty local asset: {value[:150]}")
 
     # A repeated hero photo used as another section's main image is a creative
     # warning, not a fabricated failure: multiple placements can be deliberate.
