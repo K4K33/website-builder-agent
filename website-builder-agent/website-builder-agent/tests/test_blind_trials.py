@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 import json
 import unittest
 from utils.blind_trials import (
-    assess_new_company, reserve_blind_trial, trial_history, first_pass_metrics
+    assess_new_company, reserve_blind_trial, trial_history, first_pass_metrics, record_first_pass_qa
 )
 
 class BlindTrialTests(unittest.TestCase):
@@ -36,6 +36,36 @@ class BlindTrialTests(unittest.TestCase):
                                     slug="any",registry_path=registry,history_path=known)
             self.assertEqual(len(trial_history(known,registry)),2)
             self.assertEqual(first_pass_metrics(trial_history(known,registry))["first_pass_trials"],1)
+
+    def test_first_pass_is_recorded_once_without_fabricating_independent_score(self):
+        with TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            history=root/"history.json"
+            history.write_text(json.dumps({"trials":[]}))
+            registry=root/"trials.json"
+            reserve_blind_trial(
+                {"name":"Brand new maker","url":"https://brand-new-maker.example.fi"},
+                slug="brand-new-maker",registry_path=registry,history_path=history,
+                now="2026-11-02T00:00:00Z"
+            )
+            qa={"overall_pass":False,
+                "site_pages":["index.html","palvelut/index.html"],
+                "source_fidelity":{"missing":[{"kind":"missing_original_affiliation_image"}],
+                    "manifest":{"source_page_count":5}},
+                "content_parity":{"missing":[]},
+                "browser":{"issues":["mobile overflow"]},
+                "originality":{"warnings":["Generic hero"],"blocking_problems":[]},
+                "content_review":{"ai_style_review":{"risk_score":4.5},
+                    "visual_review":{"desktop":85}}}
+            metrics=record_first_pass_qa(registry,slug="brand-new-maker",qa_report=qa)
+            self.assertEqual(metrics["generated_page_count"],2)
+            self.assertEqual(metrics["source_page_count"],5)
+            self.assertEqual(metrics["missing_original_content"],1)
+            self.assertEqual(metrics["ai_style_risk"],4.5)
+            self.assertIsNone(metrics["independent_quality_score"])
+            with self.assertRaisesRegex(RuntimeError,"overwrite"):
+                record_first_pass_qa(registry,slug="brand-new-maker",
+                                     qa_report={"overall_pass":True})
 
     def test_absent_independent_review_does_not_fake_a_good_score(self):
         results=first_pass_metrics([
