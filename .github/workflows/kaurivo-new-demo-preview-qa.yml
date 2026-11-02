@@ -76,11 +76,21 @@ jobs:
                     errors=[]
                     page.on('pageerror',lambda exc:errors.append(str(exc)))
                     response=page.goto(url,wait_until='domcontentloaded',timeout=25000)
-                    page.wait_for_timeout(2000 if not route else 650)
+                    page.evaluate("""() => { for (const img of document.querySelectorAll('main img')) img.loading='eager'; }""")
+                    # Lazy-loading images below the fold must be requested before
+                    # judging whether their URL really returns an image.
+                    page.wait_for_timeout(2700 if not route else 650)
                     data=page.evaluate("""() => {
                       const images=[...document.querySelectorAll('main img')];
                       return {
                         horizontalOverflow: document.documentElement.scrollWidth>innerWidth+2,
+                        overflowOffenders: [...document.querySelectorAll('body *')]
+                          .filter(el => {const r=el.getBoundingClientRect();
+                            return (r.right>innerWidth+2 || r.left < -2) &&
+                              getComputedStyle(el).position!=='absolute';})
+                          .slice(0,12).map(el => ({tag:el.tagName,cls:String(el.className||'').slice(0,70),
+                            width:Math.round(el.getBoundingClientRect().width),
+                            right:Math.round(el.getBoundingClientRect().right)})),
                         mainH1: document.querySelectorAll('main h1').length,
                         brokenImages: images.filter(i=>!i.complete||!i.naturalWidth)
                           .map(i=>(i.currentSrc||i.src||'').slice(0,190)),
