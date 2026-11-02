@@ -97,6 +97,42 @@ def _is_exact_human_approval(approval: object, *, source_sha: str,
         and (not build_sha or approval.get("build_sha256") == build_sha)
     )
 
+def validate_source_plan(research: dict, *, source_url: str = "") -> dict:
+    """Fail BEFORE a Builder API request if source pages/topics have no map.
+
+    This is intentionally a completeness check, not a fake semantic judgment.
+    """
+    manifest=source_manifest(research)
+    if not manifest["pages"]:
+        if source_url and research.get("research_mode")!="verified_no_website":
+            raise RuntimeError("Missing original-site inventory before Builder.")
+        return {"pages":0,"topics":0}
+    plan=research.get("source_content_map") or {}
+    entries={str(item.get("source_url") or ""):item for item in plan.get("pages") or []
+             if isinstance(item,dict)}
+    problems=[]
+    topics=0
+    for page in manifest["pages"]:
+        record=entries.get(page["source_url"])
+        if not record or record.get("status") not in ("retain","merge"):
+            problems.append(page["source_url"]+": source page not mapped for preservation")
+            continue
+        dest=str(record.get("target") or "")
+        if not dest or dest.startswith(("http:","https:")):
+            problems.append(page["source_url"]+": missing local destination")
+        mapped={_s(x.get("source_heading")) for x in record.get("sections") or []
+                if isinstance(x,dict) and x.get("target")}
+        for heading in page["headings"]:
+            topics+=1
+            if _s(heading) not in mapped:
+                problems.append(page["source_url"]+": unmapped source section "+heading)
+    if problems:
+        raise RuntimeError("Original-site preservation plan incomplete before paid Builder: "+
+                           "; ".join(problems[:12]))
+    return {"pages":len(manifest["pages"]),"topics":topics,
+            "source_sha256":manifest["source_sha256"]}
+
+
 def audit_source_fidelity(
     html: str, research: dict, *, source_url: str = "",
     rendered_pages: dict[str,str] | None = None,
@@ -229,8 +265,21 @@ def audit_source_fidelity(
                             "original_href":original_dest,
                             "issue":"Original mark and linked destination must survive or have owner-approved removal"})
         if asset["placement"]=="affiliation":
-            # Source frame assets do NOT prove active sponsorship.
-            pending.append("Affiliation role and logo reproduction permission need confirmation: "+src)
+            # The frame alone proves only that a graphic was on the old site.
+            # Verified role and lawful reuse require a source-specific client
+            # record, not a generic approval boolean.
+            reviewed=any(
+                isinstance(item,dict)
+                and _url(item.get("original_src") or "",item.get("source_url") or "")==src
+                and item.get("source_sha256")==source_sha
+                and item.get("reviewer_kind")=="client"
+                and str(item.get("reviewer") or "").strip()
+                and str(item.get("relationship_role") or "").strip()
+                and item.get("reuse_authorized") is True
+                for item in research.get("affiliation_reviews") or []
+            )
+            if not reviewed:
+                pending.append("Affiliation role and logo reproduction permission need confirmation: "+src)
 
     original_host=urlsplit(source_url or original_pages[0]["source_url"]).hostname or ""
     original_host=original_host.lower().removeprefix("www.")
