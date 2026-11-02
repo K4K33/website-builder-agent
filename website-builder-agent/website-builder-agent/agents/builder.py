@@ -24,6 +24,7 @@ from utils.local_media_intake import stage_local_media
 from utils.content_parity import audit_content_parity
 from utils.source_fidelity import (source_manifest, validate_source_plan, audit_source_fidelity)
 from utils.universal_quality import audit_universal_standards
+from utils.source_identity import validate_brand_preservation_plan
 from utils.global_feedback import (load_ledger, global_instructions,
                                    universal_rules_pending_implementation)
 
@@ -42,6 +43,21 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+KAIKILLE ASIAKKAILLE PAKOLLINEN BRÄNDI-, SISÄLTÖ- JA ARVOSTELUUSKOLLISUUS:
+- Vanhan sivuston todellinen logo, brändivärit, tunnistettava typografia
+  ja asiakkaan oikea kuvallinen identiteetti on tunnistettava uudelta sivulta.
+- Kun omistajan kuvia ei voi käyttää luvallisesti, ÄLÄ korvaa niitä keksityillä
+  henkilökunnalla tai asiakkaan työnä esiintyvillä stock-kuvilla; merkitse puute.
+- Vanhan sivuston palvelut, tuotteet, hinnat, rotu-/tuotenimet, FAQ, varauspolut,
+  kumppanit sekä yhteystiedot on säilytettävä alkuperäisessä tarkkuudessa.
+- Jos alkuperäisellä sivulla esitettiin aito asiakaspalaute ja viisi tähteä,
+  näytä vastaava aito lainaus VIIDEN TÄHDEN KANSSA. Älä keksi arvosanoja,
+  arvioijia tai lainauksia. Jos arvosanaa ei ole alkuperäislähteessä, ei tähtiä.
+- Välitä oikeat aiemmin näkyneet luottamussignaalit osaksi uutta sommittelua,
+  mutta käyttöoikeudet ja asiakashyväksyntä on vielä varmennettava.
+- Uudistuksen graafinen suunta saa olla moderni, mutta alkuperäisen yrityksen
+  identiteettiä ei saa vaihtaa geneeriseksi suunnittelutoimiston malliksi.
+
 PYSYVÄ YLEINEN DESIGN-SÄÄNTÖ: ÄLÄ RIPOTTELE NUOLIA LINKKEIHIN.
 - CTA-, navigaatio-, palvelu- ja footer-linkkeihin ei lisätä toistuvia ↗/→-nuolia.
 - Älä piilota samaa tapaa CSS ::after -contentin, round-arrow-korttien tai SVG-ikonien sisään.
@@ -1243,6 +1259,7 @@ def build_site(
 
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
+    validate_brand_preservation_plan(research)
     # All old pages and observed sections must have a plan BEFORE paid Build.
     validate_source_plan(research, source_url=company.get("url", ""))
     creative = validate_creative_directions(research)
@@ -1543,6 +1560,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     research = company.get("research") or {}
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
+    validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
     validate_design_plan(research, company.get("url", ""))
     facts = research.get("company_facts")
@@ -1610,6 +1628,7 @@ def revise_site(
 
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
+    validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
     creative = validate_creative_directions(research)
 
