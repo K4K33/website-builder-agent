@@ -16,6 +16,7 @@ from utils.lead_intelligence import evaluate_prospect
 from utils.client_handover import demo_image_caption, demo_photo_source_policy
 from utils.kaurivo_site_quality_gate import assess_quality_consistency
 from utils.marketing_compliance import company_is_suppressed
+from utils.pitch_quality import customer_safe_preview_url
 from utils.state import (
     get_company,
     upsert_company,
@@ -142,6 +143,19 @@ def draft_outreach(
 
     if company_is_suppressed(company):
         raise RuntimeError("Marketing opt-out: do not draft or contact this business.")
+
+    # Prevent costly AI drafting that would send prospects to developer-hosted
+    # warning/interstitial pages. Internal QA links never enter sales messages.
+    demo_link = company.get("demo_url") or (company.get("demo") or {}).get("url")
+    if demo_link and not customer_safe_preview_url(demo_link):
+        raise RuntimeError(
+            "Asiakkaalle ei saa lähettää GitHub/raw.githack- tai muuta "
+            "kehittäjän esikatselulinkkiä. Vahvista siisti brändidomain ensin."
+        )
+    if demo_link and (company.get("demo") or {}).get("branded_domain_verified") is not True:
+        raise RuntimeError(
+            "Demon oma HTTPS-brändidomain on tarkistettava ennen asiakkaan viestiluonnosta."
+        )
 
     # ---------------------------------------------------------
     # 1. Tarkista QA
