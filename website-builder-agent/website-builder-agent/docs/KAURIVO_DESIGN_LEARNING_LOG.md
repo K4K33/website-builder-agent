@@ -1,5 +1,16 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — Kotifixi V8: concrete copy, mobile disclosure, feedback as global QA rule
+
+**User instruction:** continue iterative development until quality is good and convert every piece of feedback into cross-project standards, without copying client-specific brands to other customers.
+
+**Findings on merged V7:** slogan repetition was reduced but home section headings still repeated the same "apua" message; the pricing section added little new information; the main demo warning was intentionally hidden on <=700 px mobile layouts. Visual premium and cross-browser evidence remained incomplete.
+
+**Changes in next candidate:** customer-question hero, factual service examples, service-specific descriptions, pricing discovery in a purposeful home section, less duplicated About narrative; preserve verified contact, price source, official brand phrase and explicit test-only form. Keep the demo notice fully visible on narrow phones, fix narrow header spacing. Implement no-credit regression covering rhythmic one–many and contrast formulas with default ZERO tolerated, plus explicit single-exception API. Link a mandatory feedback-to-standard workflow to the cross-client design checklist and builder prompt.
+
+**Evidence limitations:** Checked repo source and real business's public informational page, and noted the earlier iPhone-review feedback; no actual independent reviewer has scored this V8 build, no real browser/screenshots have been executed for the new branch yet. No client production site, sales outreach or customer CMS was changed. Status: **HOLD** pending actual browser QA + independent review of new commit and three-project consistency sample.
+
+
 Every future customer concept and redesign should append:
 date, build/commit, real customer feedback, independent review
 scope/model, verified issues, chosen change, measured/visual retest,
