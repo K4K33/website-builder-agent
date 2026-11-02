@@ -301,7 +301,7 @@ issues saa sisältää enintään 8 tärkeintä ongelmaa.
 """
 
 
-def _automated_checks(html: str) -> dict:
+def _automated_checks(html: str, *, page_path: str = 'index.html') -> dict:
     issues = []
 
     # This free, deterministic copy audit runs before any paid AI review.
@@ -587,12 +587,20 @@ def _automated_checks(html: str) -> dict:
     # File existence and MIME/signature are checked again by the central
     # visual-media gate, which has access to the exact generated page path.
     def permitted_asset(value):
+        import posixpath
         parsed = urlsplit(value)
-        parts = parsed.path.split("/")
-        return (not parsed.scheme and not parsed.netloc and
-                parts[0] == "assets" and len(parts) > 1 and
-                all(part not in ("", ".", "..") for part in parts[1:]) and
-                not parsed.path.startswith("//"))
+        # Nested routes use ../assets/file; homepage uses assets/file.
+        expected_prefix = "../" * (len(page_path.split("/")) - 1) + "assets/"
+        if (parsed.scheme or parsed.netloc or parsed.query or parsed.fragment
+                or not parsed.path.startswith(expected_prefix)):
+            return False
+        resolved = posixpath.normpath(posixpath.join(
+            posixpath.dirname(page_path), parsed.path
+        ))
+        parts = resolved.split("/")
+        return (len(parts) >= 2 and parts[0] == "assets"
+                and all(part not in ("", ".", "..") for part in parts[1:])
+                and not parsed.path.startswith("//"))
 
     for tag in soup.find_all(True):
         for attribute in ("src", "srcset", "poster"):
