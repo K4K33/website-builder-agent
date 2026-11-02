@@ -17,6 +17,9 @@ from bs4 import BeautifulSoup
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
 from utils.visual_media_gate import audit_visual_media
+from utils.creative_directions import validate_creative_directions
+from utils.site_architecture import validate_site_architecture
+from utils.site_build_pipeline import build_pages_from_response
 from utils.local_media_intake import stage_local_media
 from utils.content_parity import audit_content_parity
 from utils.source_fidelity import (source_manifest, validate_source_plan, audit_source_fidelity)
@@ -864,6 +867,22 @@ Palauta VAIN koko HTML.
 
 
 BUILD_SYSTEM_PROMPT += DESIGN_CONTRACT
+BUILD_SYSTEM_PROMPT += """
+
+LOPULLINEN TULOSTUSMUOTO VOITTAA YKSITTÄISEEN HTML:ÄÄN VIITTAAVAT
+VANHAT OHJEET: tuota YKSI JSON-objekti:
+{"pages":{"index.html":"<!doctype html> ...", "palvelut/index.html":"<!doctype html> ..."}}
+Kaikki site_architecture.pages-polut täsmälleen kerran, ei ylimääräisiä.
+JOKAINEN sivu sisältää oman doctype/html/head/body/header/nav/main/footer,
+toimivan title/meta description/viewportin, mielekkään H1:n ja sisällöt.
+Tyylit sisäiseen style-elementtiin; samat CSS-muuttujat voi toistaa.
+Alisivulla kuvapolku ../assets/tiedosto; etusivulla assets/tiedosto,
+tarvittavan syvyyden mukaan. Linkit ovat suhteellisia ja johtavat
+oikeasti luotuihin sivuihin/ankkureihin. Älä lisää muuta tekstiä JSON:n
+ulkopuolelle. Useiden sivujen sisältö saa olla laaja, mutta pysyy
+tarkistettujen faktojen rajoissa.
+"""
+
 REVISE_SYSTEM_PROMPT += DESIGN_CONTRACT
 
 
@@ -1190,9 +1209,12 @@ def _validate_generated_content(
     _ = industry
 
 
-def _validate_plan_sections(html, research, target_url=""):
+def _validate_plan_sections(html, research, target_url="", *, rendered_pages=None):
     decisions = validate_design_plan(research, target_url)
-    ids = {tag["id"] for tag in BeautifulSoup(html, "html.parser").find_all(id=True)}
+    documents = rendered_pages.values() if rendered_pages else [html]
+    ids = set()
+    for doc in documents:
+        ids.update(tag["id"] for tag in BeautifulSoup(doc, "html.parser").find_all(id=True))
     missing = {decision["section_id"] for decision in decisions} - ids
     if missing:
         raise RuntimeError("Missing planned sections: " + ", ".join(sorted(missing)))
@@ -1215,6 +1237,10 @@ def build_site(
     validate_design_intent(research)
     # All old pages and observed sections must have a plan BEFORE paid Build.
     validate_source_plan(research, source_url=company.get("url", ""))
+    creative = validate_creative_directions(research)
+    architecture = validate_site_architecture(
+        research, no_site=research.get("research_mode")=="verified_no_website"
+    )
 
     benchmark = validate_benchmark(research, company.get("url", ""))
     decisions = validate_design_plan(research, company.get("url", ""))
@@ -1299,6 +1325,16 @@ TOIMIALAN VERTAILU (vain suunnittelua, ei yritysfaktoja):
 
 PAKOLLINEN SUUNNITELMA ENNEN RAKENTAMISTA:
 {json.dumps(decisions, ensure_ascii=False)}
+
+KOLME JO ARVIOITUA LUOVAA SUUNTAA JA YRITYSKOHTAINEN VALINTA:
+{json.dumps(creative, ensure_ascii=False)}
+Toteuta valittu konsepti. Älä yhdistä hylättyjen suuntien
+pintakoristeita yrityksen tyyliksi. Brändi ja palveluiden todellinen
+sisältö määrittävät sommittelun, eivät alan yleinen valmis mallipohja.
+
+KOKO UUDEN VERKKOSIVUSTON PAKOLLINEN RAKENNE:
+{json.dumps(architecture, ensure_ascii=False)}
+Tee kaikki sivut ja sisällöt täsmälleen sovittuihin reitteihin.
 Toteuta suunnitelman section_id-tunnukset ja hyväksymiskriteerit. Älä lisää täyteosioita.
 VERTAILUKUVAT ENSIN, tässä järjestyksessä; kohdeyrityksen kuvat niiden jälkeen:
 {json.dumps(image_labels, ensure_ascii=False)}
@@ -1392,35 +1428,16 @@ design-suosituksessa niitä ehdotetaan.
 TEKNINEN TOTEUTUS
 ========================================
 
-Yksi itsenäinen index.html.
-
-Ei:
-- Google Fonts -linkkiä
-- ulkoisia kuvalinkkejä tai hotlinkkejä
-- ulkoisia JavaScript-kirjastoja
-- ulkoisia CSS-tiedostoja.
-
-Sallitut kuvat: VAIN yllä kuvamanifestissa luetellut paikalliset
-assets/-polut. Kuvia ei saa keksiä, piilottaa tai korvata tyhjillä
-laatikoilla. Muilla img-src -poluilla rakentaminen epäonnistuu.
-
-Kaikki CSS inline <style>-elementissä.
-
-Tarvittaessa JavaScript inline <script>-elementissä.
-
-Varmista:
-- <!DOCTYPE html>
-- <html lang="fi">
-- <head>
-- title
-- meta description
-- nav
-- main
-- footer
-- responsiivisuus
-- accessibility.
-
-Palauta VAIN koko HTML.
+Tuota yksi JSON-objekti, jossa "pages" on HTML-tiedostonimi -> kokonainen
+HTML-dokumentti -sanakirja. HTML:t käyttävät vain inline-CSS/JS:ää ja
+luvanvaraiset paikalliset assets/-kuvat ovat oikeita sivustotiedostoja.
+Kaikki site_architecture-polut pitää olla JSON:n pages-kentässä.
+Linkit ja navigaatio pitää oikeasti toimia sivulta toiselle.
+Esimerkiksi sivulta palvelut/index.html:
+<a href="../index.html">Etusivu</a>
+Kuva vastaavalla sivulla: <img src="../assets/logo.svg" alt="...">
+Varmista 320, 390, 768 ja 1440px sekä reduced-motion.
+Palauta vain validi JSON ilman markdownia.
 """
 
     # Newly accepted cross-project rules are read fresh for every build.
@@ -1442,29 +1459,12 @@ Palauta VAIN koko HTML.
 
     cleaned = _clean_html(html)
 
-    # Ohjelmallinen faktaturva ennen tiedoston kirjoittamista.
-    _validate_generated_content(
-        cleaned,
-        company_facts,
+    # Validate every planned route, source topic, real asset and link before
+    # writing a single new HTML file or marking the company 'built'.
+    site_result = build_pages_from_response(
+        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR
     )
-
-    parity = audit_content_parity(cleaned, research, require_source_review=False,
-                                 source_url=company.get("url", ""))
-    if parity["missing"] or parity["review_required"]:
-        problems = ([x["label"] for x in parity["missing"]]
-                    + parity["review_required"])
-        raise RuntimeError(
-            "Old-to-new content preservation failed before writing HTML: "
-            + "; ".join(problems[:12])
-        )
-    _validate_all_universal_rules(cleaned, research, company)
-    validate_locked_copy(cleaned, brand_brief)
-
-    _validate_plan_sections(cleaned, research, company.get("url", ""))
-    path = _write_html(
-        slug,
-        cleaned,
-    )
+    path = site_result["output_path"]
 
     old_build = company.get(
         "build",
@@ -1487,6 +1487,9 @@ Palauta VAIN koko HTML.
                 "model": config.model_for_stage("builder"),
                 "design_decisions": decisions,
                 "industry_brief": industry_brief,
+                "page_paths": site_result["page_paths"],
+                "creative_selection": research["creative_selection"],
+                "originality_preflight": site_result["visual_originality"],
             },
             "qa": None,
             "approval": None,
