@@ -23,16 +23,7 @@
     const breakpoint = window.matchMedia('(min-width: 941px)');
     if (typeof breakpoint.addEventListener === 'function') breakpoint.addEventListener('change', e => { if (e.matches) close(); });
   }
-  const header = document.getElementById('site-header');
-  let scrollFrame = false;
-  window.addEventListener('scroll', () => {
-    if (scrollFrame) return;
-    scrollFrame = true;
-    requestAnimationFrame(() => {
-      header?.classList.toggle('scrolled', window.scrollY > 7);
-      scrollFrame = false;
-    });
-  }, { passive: true });
+  // Native wheel/touchpad/touch scrolling needs no scroll-position listener.
   document.querySelectorAll('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
 
   // If an external example photo is unavailable, keep the editorial
