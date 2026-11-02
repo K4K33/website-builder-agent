@@ -45,9 +45,9 @@ def _valid_raster_signature(source: Path, extension: str) -> bool:
         with source.open("rb") as file:
             header = file.read(32)
         if extension == ".png":
-            return header.startswith(b"\\x89PNG\\r\\n\\x1a\\n")
+            return header.startswith(b"\x89PNG\r\n\x1a\n")
         if extension in (".jpg", ".jpeg"):
-            return header.startswith(b"\\xff\\xd8\\xff")
+            return header.startswith(b"\xff\xd8\xff")
         if extension == ".gif":
             return header[:6] in (b"GIF87a", b"GIF89a")
         if extension == ".webp":
