@@ -27,6 +27,16 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## V10 — independent human assessment and legibility
+
+Independent human first-impression feedback counts alongside model reviews. Desktop navigation uses comfortably readable text, typically 15–16px, verified at tablet and desktop widths. Phone/contact controls should be presented as one deliberate set of actions, not an orphaned phone number.
+
+Write natural, non-repetitive Finnish. Avoid mechanically repeating locative phrases and avoid third-person reporting of the client's own website. Do not invent unverified first-person company claims.
+
+Allow tasteful one-time reveals on below-the-fold content using IntersectionObserver, opacity and transforms, while retaining native scrolling, a disabled-animation path and visible content without JavaScript. Include purposeful hover, click and keyboard focus states. Review all visible third-party marks in example photography.
+
+Every completed reviewable version must have a published, verified internal preview URL delivered in the same response. A customer-sales URL still requires separately approved branded HTTPS hosting.
+
 ## Subsequent V9 audit — distinguish delivery quality from client-supplied materials
 
 Assess the actual scope the agency can control: visual hierarchy, accurate business information supplied so far, navigation, device usability, accessibility, performance and frontend integration. Keep unknown customer-specific people/credentials/reviews visibly **absent**, not invented, until consent/verified assets arrive. Mark them as *customer content pending*, not a reason to insert fake text or a stock portrait.
