@@ -538,3 +538,86 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
  .hero-photo-frame,.editorial-card,.editorial-media img{transform:none!important;transition:none!important}
  .editorial-card:hover .editorial-media img{transform:none!important}
 }
+
+
+
+/* V12 — balanced editorial header, quiet typographic contrast.
+   Three equal outer columns keep the navigation centered independently
+   of the visual width of the logo and the two contact actions. */
+@media(min-width:941px){
+  .site-header .header-inner{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) max-content minmax(0,1fr);
+    align-items:center;
+    column-gap:clamp(20px,2.25vw,32px);
+    min-height:88px;
+    height:auto;
+    padding-block:14px;
+  }
+  .site-header .brand{justify-self:start;line-height:1}
+  .site-header .site-nav{
+    justify-self:center;
+    margin:0;
+    gap:clamp(16px,1.55vw,24px);
+  }
+  .site-header .header-right{
+    justify-self:end;
+    margin:0;
+    gap:10px;
+  }
+}
+.site-header .site-nav a{
+  font-family:var(--sans);
+  font-size:16px;
+  font-weight:600;
+  letter-spacing:0;
+  line-height:1.35;
+  position:relative;
+  padding:13px 1px 16px;
+  color:#263d52;
+  text-decoration:none;
+  transition:color .18s ease;
+}
+.site-header .site-nav a::after{
+  content:"";position:absolute;bottom:7px;left:0;right:0;
+  height:2px;border-radius:1px;background:#2269cb;
+  transform:scaleX(0);transform-origin:center;
+  transition:transform .22s var(--ease);
+  pointer-events:none;
+}
+.site-header .site-nav a[aria-current="page"]{color:#175cae;text-decoration:none}
+.site-header .site-nav a:hover::after,
+.site-header .site-nav a:focus-visible::after,
+.site-header .site-nav a[aria-current="page"]::after{transform:scaleX(1)}
+.site-header .site-nav a:hover{color:#175cae}
+.site-header .header-cta,.site-header .phone-link{
+  min-height:46px;border-radius:7px;font-family:var(--sans);font-size:14px;
+  line-height:1.2;font-weight:700;letter-spacing:0;
+}
+.site-header .header-cta{box-shadow:0 4px 13px rgba(24,91,163,.11)}
+.site-header .phone-link{background:#f7fafc;color:#203a50}
+.site-header .phone-link .phone-label{color:#205eab}
+.hero-copy h1,.page-intro h1,.about-text h1{font-weight:700;letter-spacing:-.042em;line-height:1.13}
+.section-heading h2,.approach-large h2,.about-content h2,.service-index h2,.closing-inner h2{
+  font-weight:700;letter-spacing:-.04em
+}
+@media(min-width:1280px){
+  .site-header .site-nav a{font-size:17px;font-weight:600}
+  .site-header .site-nav{gap:clamp(16px,1.45vw,24px)}
+}
+@media(min-width:941px) and (max-width:1279px){
+  .site-header .site-nav a{font-size:16px;font-weight:600}
+  .site-header .phone-link{display:none}
+  .site-header .header-inner{column-gap:18px}
+}
+@media(max-width:940px){
+  .site-header .header-inner{display:flex}
+  .site-header .site-nav{display:none}
+  .site-header .header-right{margin-left:auto}
+}
+@media(max-width:700px){
+  .hero-copy h1,.page-intro h1,.about-text h1{letter-spacing:-.035em;line-height:1.13}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-header .site-nav a::after{transition:none}
+}
