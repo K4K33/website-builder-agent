@@ -205,7 +205,23 @@ def audit_universal_standards(
     # allowed with visibly pending subjective/live evidence, never certified.
     coverage = source_coverage_matrix(rendered_pages if isinstance(rendered_pages, dict)
                                      and rendered_pages else {"index.html": html}, research)
-    if coverage["status"] != "verified":
+    from utils.premium_quality_gate import site_digest
+    premium_build_hash = site_digest(rendered_pages if isinstance(rendered_pages, dict)
+                                     and rendered_pages else {"index.html": html})
+    if coverage["status"] == "no_original_site":
+        fact_review = research.get("no_site_fact_review") or {}
+        valid_no_site = (
+            bool(research.get("fact_sources"))
+            and fact_review.get("approved") is True
+            and fact_review.get("reviewer_kind") == "human"
+            and str(fact_review.get("reviewer") or "").strip()
+            and fact_review.get("build_sha256") == premium_build_hash
+        )
+        if not valid_no_site:
+            needs("source_to_destination_matrix",
+                  "No-site company: verified third-party factual inventory and "
+                  "exact-build human signoff still required.")
+    elif coverage["status"] != "verified":
         needs("source_to_destination_matrix",
               f"Original source/build coverage {coverage['status']}: "
               f"{len(coverage['missing'])} missing, {len(coverage['pending'])} pending.")
