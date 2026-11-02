@@ -34,6 +34,10 @@ from utils.visual_originality import audit_design_originality
 from utils.site_integrity import site_sha256
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
+from utils.premium_quality_gate import (
+    source_coverage_matrix, verify_independent_premium_reviews,
+    audit_primary_journeys, site_digest,
+)
 from utils.global_feedback import (
     load_ledger, save_ledger, record_qa_findings,
     universal_rules_pending_implementation,
@@ -1303,6 +1307,38 @@ def approve_company(slug_or_name):
         full_digest = site_sha256(Path(path).resolve().parent,routes)
         if not qa.get("site_sha256") or full_digest != qa["site_sha256"]:
             raise RuntimeError("A non-homepage page or image changed after QA.")
+    # New premium projects must not be owner-approved on self-assessed QA.
+    # Every build and every researched source snapshot has its own digest.
+    research = company.get("research") or {}
+    if research.get("premium_protocol") == "v2":
+        site_root = Path(path).resolve().parent
+        rendered = {}
+        for route in routes or ["index.html"]:
+            file = (site_root / route).resolve()
+            if not file.is_relative_to(site_root) or not file.is_file():
+                raise RuntimeError("Premium acceptance: missing or unsafe reviewed page.")
+            rendered[route] = file.read_text(encoding="utf-8")
+        coverage = source_coverage_matrix(rendered, research)
+        if coverage["status"] == "no_original_site":
+            profile = research.get("fact_sources") or []
+            fact_signoff = research.get("no_site_fact_review") or {}
+            if (not profile or fact_signoff.get("reviewer_kind") != "human"
+                    or not fact_signoff.get("approved")
+                    or fact_signoff.get("build_sha256") != site_digest(rendered)):
+                raise RuntimeError("Premium acceptance: no-site factual profile not independently verified.")
+        elif coverage["status"] != "verified":
+            raise RuntimeError("Premium acceptance: old-to-new source coverage remains "
+                               "missing or unverified; review the matrix.")
+        reviews = verify_independent_premium_reviews(
+            research.get("premium_independent_reviews"), rendered, research
+        )
+        if not reviews["pass"]:
+            raise RuntimeError("Premium acceptance: 9.5/10 two-reviewer evidence is incomplete: "
+                               + "; ".join(reviews["issues"][:4]))
+        tasks = research.get("primary_user_journeys")
+        journeys = audit_primary_journeys(rendered, tasks)
+        if not tasks or not journeys["pass"]:
+            raise RuntimeError("Premium acceptance: primary visitor actions are not independently mapped.")
     upsert_company(slug, {"approval": {
         "approved": True,
         "build_version": qa["build_version"],
