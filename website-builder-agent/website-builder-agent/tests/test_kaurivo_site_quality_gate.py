@@ -65,7 +65,7 @@ class EvidenceGateTests(unittest.TestCase):
         self.assertIn("at least 3 distinct", " ".join(result["issues"]))
 
     def test_all_recent_three_projects_must_score_95_or_above(self):
-        reports = [review("kotifixi"), review("a"), review("client-b")]
+        reports = [review("kotifixi"), review("client-a"), review("client-b")]
         self.assertTrue(assess_quality_consistency(reports, current_project_id="kotifixi")["accepted"])
         reports[2]["overall_score"] = 9.4
         result = assess_quality_consistency(reports, current_project_id="kotifixi")
@@ -93,6 +93,15 @@ class EvidenceGateTests(unittest.TestCase):
         reports[0]["image_rights_checked"] = False
         self.assertFalse(assess_quality_consistency(reports, current_project_id="kotifixi")["accepted"])
 
+    def test_external_review_must_match_exact_current_build(self):
+        reports = [review("kotifixi"), review("client-b"), review("client-c")]
+        result = assess_quality_consistency(
+            reports, current_project_id="kotifixi",
+            expected_current_build="another-build-digest"
+        )
+        self.assertFalse(result["accepted"])
+        self.assertTrue(any("does not match" in issue for issue in result["issues"]))
+
     def test_no_self_rating_or_ai_call_in_gate_module(self):
         src = (ROOT / "utils" / "kaurivo_site_quality_gate.py").read_text(encoding="utf8")
         self.assertNotIn("ask_claude", src)
@@ -107,6 +116,7 @@ class OutreachReleaseGateTests(unittest.TestCase):
             "outreach": {"subject": "Web demo", "body": "Approved content",
                          "approved": False},
             "agency_quality_reviews": reviews,
+            "qa": {"html_sha256": "a012345678bcdef0"},
         }
 
     def test_outreach_approval_blocked_without_external_95_and_sample(self):
