@@ -70,6 +70,20 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
             if url not in logo_candidates:
                 logo_candidates.append(url[:500])
 
+    # Preserve real original work/staff photography as source candidates.
+    # Their presence does not imply the agency has permission to republish.
+    content_photos = []
+    main = soup.find("main") or soup
+    for img in main.find_all("img"):
+        raw = str(img.get("src") or img.get("data-src") or "").strip()
+        if not raw:
+            continue
+        url = urljoin(source_url, raw) if source_url else raw
+        if url in logo_candidates or any(p["src"] == url for p in content_photos):
+            continue
+        alt = " ".join(str(img.get("alt") or "").split())[:200]
+        content_photos.append({"src": url[:500], "alt": alt})
+
     candidates = soup.select(REVIEW_SELECTOR)
     # Some themes render individual testimonials as blockquotes without classes.
     for block in soup.select("blockquote"):
@@ -106,6 +120,7 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
     return {
         "theme_color": theme_color,
         "original_logo_candidates": logo_candidates[:12],
+        "original_content_photos": content_photos[:70],
         "reviews": reviews,
         "dynamic_review_widget": dynamic_review_widget,
         "source_url": source_url,
