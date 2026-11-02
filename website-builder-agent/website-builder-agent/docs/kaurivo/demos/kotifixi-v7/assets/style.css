@@ -621,3 +621,28 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 @media(prefers-reduced-motion:reduce){
   .site-header .site-nav a::after{transition:none}
 }
+
+
+/* V13 — content-distributed navigation, eliminates the dead pointer region
+   between the brand and the first link at wide desktop resolutions.
+   Unlike V12 equal 1fr outer columns, the middle column uses ALL spare
+   horizontal space between actual logo and contact-action widths. */
+@media(min-width:941px){
+  .site-header .header-inner{
+    grid-template-columns:max-content minmax(0,1fr) max-content;
+    column-gap:clamp(20px,1.7vw,34px);
+  }
+  .site-header .site-nav{
+    width:100%;
+    min-width:0;
+    justify-content:space-between;
+    justify-self:stretch;
+    margin:0;
+    gap:clamp(5px,.6vw,14px);
+  }
+  .site-header .header-right{justify-self:end}
+}
+@media(min-width:941px) and (max-width:1279px){
+  .site-header .header-inner{column-gap:18px}
+  .site-header .site-nav{gap:6px}
+}
