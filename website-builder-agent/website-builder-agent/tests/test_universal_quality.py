@@ -32,6 +32,29 @@ class UniversalStandardsTest(unittest.TestCase):
         self.assertIn("no_decorative_numbering", result["blocking_problems"])
         self.assertIn("natural_copy", result["blocking_problems"])
 
+    def test_repeated_decorative_cta_arrows_are_blocked_across_pages(self):
+        repeated = {
+            "index.html": '<html><body><main><a href="/booking">Varaa aika ↗</a>'
+                          '<a href="/prices">Hinnasto ↗</a></main></body></html>',
+            "services.html": '<html><body><main><a href="/booking">Varaa aika ↗</a>'
+                             '<a href="/contact">Yhteys ↗</a></main></body></html>',
+        }
+        result = audit_universal_standards(repeated["index.html"], rendered_pages=repeated)
+        self.assertFalse(result["automated_pass"])
+        self.assertIn("non_repetitive_cta_icons", result["blocking_problems"])
+        self.assertIn("4 links", result["blocking_problems"]["non_repetitive_cta_icons"][0])
+
+    def test_single_meaningful_directional_link_is_not_automatically_rejected(self):
+        html = self.html.replace("</main>", '<a href="/next">Seuraava →</a></main>')
+        result = audit_universal_standards(html)
+        self.assertNotIn("non_repetitive_cta_icons", result["blocking_problems"])
+
+    def test_duplicate_directional_link_is_detected_even_with_only_two_occurrences(self):
+        html = self.html.replace("</main>", '<a href="/next">Seuraava →</a>'
+                                 '<a href="/next">Seuraava →</a></main>')
+        result = audit_universal_standards(html)
+        self.assertIn("non_repetitive_cta_icons", result["blocking_problems"])
+
     def test_approved_logo_missing_is_real_error(self):
         research = {"brand_assets": {"approved_original_logo_url": "/brand.svg"}}
         result = audit_universal_standards(self.html, research)
