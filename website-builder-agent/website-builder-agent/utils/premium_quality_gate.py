@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 
 from utils.content_parity import source_inventory_sha256
 from utils.source_identity import audit_price_faq_preservation, audit_source_reviews
+from utils.source_content_blocks import audit_source_content_blocks
 
 
 SCORE_DIMENSIONS = (
@@ -92,6 +93,15 @@ def source_coverage_matrix(rendered_pages: dict[str, str], research: dict) -> di
                 items.append({"source_url": url, "kind": "review",
                               "label": str(item.get("quote") or "")[:100],
                               "status": "checked_by_static_evidence"})
+    block_audit = audit_source_content_blocks(rendered_pages, research)
+    if block_audit["pending"]:
+        pending.append(
+            f"{len(block_audit['pending'])} original content blocks need a source-to-build "
+            "rewrite mapping and human review."
+        )
+    if block_audit["truncated_pages"]:
+        pending.append("Source content block inventory was bounded; check pages manually: "
+                       + ", ".join(block_audit["truncated_pages"][:5]))
     for report in (audit_source_reviews(rendered_pages, research),
                    audit_price_faq_preservation(rendered_pages, research)):
         missing.extend(report["missing"])
@@ -111,7 +121,7 @@ def source_coverage_matrix(rendered_pages: dict[str, str], research: dict) -> di
     return {"status": ("fail" if missing else "pending" if pending else "verified"),
             "items": items, "missing": missing, "pending": pending,
             "source_pages": len(old_pages), "source_sha256": source_hash,
-            "build_sha256": build_hash, "observed_items": len(items)}
+            "build_sha256": build_hash, "observed_items": len(items), "content_blocks": block_audit}
 
 
 def verify_independent_premium_reviews(
