@@ -1,5 +1,9 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — V13: fill unusable horizontal whitespace in premium headers
+
+Owner's 65.5-second V12 desktop recording clearly illustrates a broad white dead zone after the logo while hovering the pointer near the end. Claude's 3-second screen recording praises overall visual structure but disagrees with the user-selected homepage headline and admits no fresh mobile review. Preserve user-approved text and treat browser-generated WhatsApp notification as unrelated to the website. Architectural update: content-sized left and right tracks, a flexible menu column with space-between distribution, real gap bounds and more viewport coverage. Aesthetic symmetry does not excuse a poorly utilized clickable navigation region. Include the published versioned URL without a follow-up question. No fabricated client proof, launch or independent score.
+
 ## 2026-11-02 — V12: balanced header and type hierarchy
 
 V11 video evidence (34.8 s desktop site + 8.4 s external model review). Owner's positive overall impression is outweighed by a visible lopsided header and competing font weights. Review shows a big flex gap between logo and navigation, the CTA group at the right, and a visually heavy nav font. V12 response: symmetric three-region CSS grid with nav centered in the container independently of unequal logo/button widths; right-aligned grouped CTA; comfortable 16–17px DM Sans 600 nav text; Manrope 700 headings with gentler tracking. Confirm geometry at 1024/1180/1280/1440 and no overflow on mobile. Chrome translation panel is browser-owned; source already has correct Finnish language and UTF-8. Do not revert rejected copy or invent "branding" via a fake logo. Maintain internal-only preview and independent 9.5 release threshold.
