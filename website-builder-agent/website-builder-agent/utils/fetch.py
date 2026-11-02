@@ -29,6 +29,8 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
+from utils.source_identity import extract_source_identity
+
 
 HEADERS = {
     "User-Agent": (
@@ -1037,6 +1039,7 @@ def extract_text_and_meta(
         html,
         "html.parser",
     )
+    source_identity = extract_source_identity(html, base_url)
 
     # Many SME sites use footer-like <div> containers or ARIA landmarks,
     # not a semantic <footer>. Detect those before de-duplicating nested marks.
@@ -1127,7 +1130,7 @@ def extract_text_and_meta(
         text
     )
 
-    visible_text = text[:12000]
+    visible_text = text[:30000]
 
     contact_signals = (
         _extract_contact_signals(
@@ -1218,6 +1221,7 @@ def extract_text_and_meta(
         ),
         "images": images,
         "header_assets": header_assets,
+        "source_identity": source_identity,
         "footer_assets": footer_assets,
         "footer_links": footer_links,
         "image_count": len(
