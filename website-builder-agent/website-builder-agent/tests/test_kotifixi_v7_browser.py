@@ -129,6 +129,29 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                                                 phone = page.locator(".site-header .phone-link")
                                                 self.assertTrue(phone.is_visible())
                                                 self.assertIn("Soita", phone.inner_text())
+                                        group = page.locator(".site-header .header-action-set")
+                                        self.assertTrue(group.is_visible())
+                                        self.assertEqual(group.locator("a[href]").count(), 2)
+                                        self.assertEqual(
+                                            group.locator(".phone-link").get_attribute("href"),
+                                            "tel:+358443632429"
+                                        )
+                                        self.assertTrue(
+                                            group.locator(".header-cta").get_attribute("href").endswith("yhteys/")
+                                        )
+                                        if width >= 1280:
+                                            self.assertTrue(group.locator(".phone-link").is_visible())
+                                            phone_box = group.locator(".phone-link").bounding_box()
+                                            quote_box = group.locator(".header-cta").bounding_box()
+                                            self.assertLessEqual(
+                                                abs(phone_box["y"] + phone_box["height"] / 2 -
+                                                    quote_box["y"] - quote_box["height"] / 2), 2
+                                            )
+                                            self.assertLessEqual(
+                                                quote_box["x"] - phone_box["x"] - phone_box["width"], 5
+                                            )
+                                        else:
+                                            self.assertFalse(group.locator(".phone-link").is_visible())
                                         self.assertEqual(page.locator(".scroll-reveal").count(), 0)
                                         if route == "/":
                                             self.assertTrue(page.locator(".hero-copy .button-primary").is_visible())
