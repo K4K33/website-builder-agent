@@ -36,7 +36,8 @@ class LocalMediaIntakeTests(unittest.TestCase):
             self.assertEqual(len(assets), 1)
             self.assertTrue(assets[0]["src"].startswith("assets/work-"))
             self.assertEqual((site / assets[0]["src"]).read_bytes(), PNG_1PX)
-            self.assertTrue(assets[0]["production_rights_verified"])
+            self.assertFalse(assets[0]["production_rights_verified"])
+            self.assertTrue(assets[0]["requires_release_rights_review"])
             html = f'<main><section class="hero"><img src="{assets[0]["src"]}" alt="Service work"></section></main>'
             self.assertTrue(audit_visual_media(
                 html, html_path=site / "index.html"
