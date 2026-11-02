@@ -67,6 +67,16 @@ class JakomaenFirstPassQA(unittest.TestCase):
                        "Tavaratelineen asennus"):
             self.assertIn(phrase, bike)
 
+    def test_sitewide_ai_copy_and_decorative_numbering_check(self):
+        from utils.kaurivo_site_quality_gate import lint_site_copy
+        pages = {route: (ROOT / route).read_text(encoding="utf-8")
+                 for route in ROUTES}
+        report = lint_site_copy(pages)
+        self.assertTrue(report["pass"], report["issues"])
+        for route, soup in self.pages.items():
+            self.assertFalse(soup.select(".ordinal"), route)
+            self.assertNotIn("01 / 04", soup.get_text(" ", strip=True))
+
     def test_source_notices_are_truthful_and_no_reviews_invented(self):
         text = " ".join(soup.get_text(" ", strip=True) for soup in self.pages.values())
         self.assertIn("1377762-8", text)
