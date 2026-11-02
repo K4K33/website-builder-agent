@@ -706,7 +706,6 @@ def cmd_pipeline(args):
         if qa_result.get("unimplemented_global_feedback"):
             print("[Pipeline] A new agency-wide rule needs a real checker/test.")
             break
-        import json
         feedback = {
             "static": qa_result.get("automated", {}).get("automated_issues", []),
             "browser": qa_result.get("browser", {}).get("issues", []),

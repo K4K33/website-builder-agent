@@ -6,7 +6,7 @@
 The 18 universal categories and exact pass/fail/pending matrix are
 documented in `docs/KAURIVO_AUTOMATIC_MASTER_QA_2026-11-02.md`.
 All three Builder entry points and the independent QA stage must use the
-same global checks; previous Kotifixi and three-sector feedback remains
+same global checks; previous owner and three-sector feedback remains
 permanent. New owner-declared universal issues must be registered, and
 recurring findings from different clients must enter the common learning
 ledger automatically. No new general issue may be marked implemented

@@ -43,7 +43,7 @@ SECTORS = {
     },
     "wellness": {
         "terms": ("hyvinvointi", "hieronta", "kauneus", "wellness", "salon"),
-        "visitor_tasks": ("understand actual treatments", "find prices and appointment path",
+        "visitor_tasks": ("understand actual treatments", "find prices and booking/appointment path",
                           "assess appropriate practitioner qualifications"),
         "source_focus": ("service qualifications", "prices", "booking system",
                          "staff credentials if verified", "service limitations"),
