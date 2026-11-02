@@ -231,3 +231,62 @@ def audit_source_reviews(rendered_pages: dict[str, str], research: dict) -> dict
         "pending": pending,
         "note": "Only observed original reviews and explicit ratings; no fabricated stars.",
     }
+
+
+def extract_price_faq_evidence(html: str) -> dict:
+    """Inventory explicit source price table rows and FAQ disclosure questions."""
+    soup = BeautifulSoup(html, "html.parser")
+    rows = []
+    for tr in soup.find_all("tr"):
+        cells = [" ".join(tag.get_text(" ", strip=True).split())
+                 for tag in tr.find_all(["td", "th"], recursive=False)]
+        if not 2 <= len(cells) <= 8 or len(cells[0]) < 3:
+            continue
+        price = next((cell for cell in reversed(cells[1:])
+                      if any(char.isdigit() for char in cell)
+                      and ("€" in cell or " eur" in cell.lower())), "")
+        if price:
+            row = {"label": cells[0][:320], "price": price[:100]}
+            if row not in rows:
+                rows.append(row)
+    questions = []
+    for details in soup.find_all("details"):
+        summary = details.find("summary")
+        if summary:
+            value = " ".join(summary.get_text(" ", strip=True).split())[:300]
+            if len(value) >= 7 and value not in questions:
+                questions.append(value)
+    return {"price_rows": rows[:120], "faq_questions": questions[:80]}
+
+
+def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict) -> dict:
+    """Compare high-value facts in each source table row, not unrelated tokens."""
+    source = (research.get("source_inventory") or {}).get("pages") or []
+    rows, questions = [], []
+    for page in source:
+        if isinstance(page, dict):
+            evidence = page.get("price_faq_evidence") or {}
+            rows.extend((page.get("url", ""), row) for row in evidence.get("price_rows") or []
+                        if isinstance(row, dict))
+            questions.extend((page.get("url", ""), question)
+                             for question in evidence.get("faq_questions") or [])
+    soup = BeautifulSoup("<html><body>" + "\n".join(rendered_pages.values()) +
+                         "</body></html>", "html.parser")
+    units = []
+    for node in soup.select("tr,li,article,details,[class*='pricing'],[class*='price-row']"):
+        value = plain(node.get_text(" ", strip=True))
+        if 1 <= len(value) <= 700:
+            units.append(value)
+    visible = plain(soup.get_text(" ", strip=True))
+    missing = []
+    for url, row in rows:
+        label, price = plain(row.get("label")), plain(row.get("price"))
+        if label and price and not any(label in unit and price in unit for unit in units):
+            missing.append({"kind": "lost_source_price_row", "source_url": url,
+                            "label": row.get("label"), "price": row.get("price")})
+    for url, question in questions:
+        if plain(question) not in visible:
+            missing.append({"kind": "lost_source_faq_question", "source_url": url,
+                            "question": question})
+    return {"pass": not missing, "missing": missing,
+            "price_rows_checked": len(rows), "faq_questions_checked": len(questions)}
