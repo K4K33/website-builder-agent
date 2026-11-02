@@ -35,7 +35,13 @@ def review():
         "company_specific": True, "remaining_gaps": [], "ready_for_client_review": True
     }, "design_checks": [{"id":d,"passed":True,"evidence":"Concrete visible result"} for d in ("hero","services","contact","mobile")], "visual_review": dict.fromkeys(
         ("desktop", "tablet", "mobile", "small_mobile", "brand_specificity", "typography", "hierarchy", "art_direction", "imagery", "motion"), 90
-    ) | {"blockers": [], "improvements": []}}
+    ) | {"blockers": [], "improvements": []},
+        "ai_style_review": {"risk_score": 1, "evidence": [
+            "Verified offline fixture uses a single documented editorial layout",
+            "Copy and navigation follow the synthetic company task, not competitor templates"],
+            "prior_patterns_compared": ["kotifixi", "helsingin-koiratrimmaamo"],
+            "company_authenticity": "Only synthetic research fixture facts are displayed, with no real business claims.",
+            "unresolved": []}}
 
 
 class QualityTests(unittest.TestCase):
@@ -58,6 +64,38 @@ class QualityTests(unittest.TestCase):
                  "avoid":["Do not copy competitor claims"]}
                 for url in ("https://reference-a.fi", "https://reference-b.fi", "https://reference-c.fi")]
 
+    def creative_fixture(self):
+        # Three structurally different mock strategies; not customer content.
+        strategies = [
+            ("editorial", "Full-width text editorial introduction",
+             "Short about narrative followed by practical service evidence",
+             "Top navigation directly to the main content",
+             "Typographic first view without decorative photography"),
+            ("directory", "Compact service directory at the top of the page",
+             "Service-first practical information grouped by visitor needs",
+             "Service-index navigation with immediate task links",
+             "Clear information-led blocks without any photo"),
+            ("contact", "Contact-led left rail and clear right-hand description",
+             "Contact information presented before supporting descriptions",
+             "Persistent contact navigation and named content sections",
+             "Small support illustration only if licensed assets exist"),
+        ]
+        directions = []
+        for identifier, first, architecture, navigation, images in strategies:
+            directions.append({
+                "id": identifier,
+                "concept": identifier + " service-specific mock design",
+                "business_reason": "Make a customer's actual service task findable in a clear offline fixture.",
+                "source_anchor": "Synthetic company brief and observed visitor task in the unit fixture.",
+                "first_view": first, "information_architecture": architecture,
+                "navigation": navigation, "image_strategy": images,
+                "typography": "Consistent large title and readable compact body text",
+                "brand_continuity": "Keep verified company identity and preserve actual source facts",
+                "non_goals": "Do not invent reviews, services or company photography",
+                "mobile_behavior": "Readable stacked content with native touch navigation",
+            })
+        return directions
+
     def research_fixture(self, facts=None):
         records = self.benchmark()
         decisions = [{"id":key, "dimension":dimension, "reference_url":records[n % 3]["url"],
@@ -66,9 +104,39 @@ class QualityTests(unittest.TestCase):
                       "section_id":"main", "acceptance_check":"The real service/contact are visibly readable"}
                      for n,(key,dimension) in enumerate((("hero","first_view"),("services","service_hierarchy"),
                                                         ("contact","contact_path"),("mobile","mobile")))]
-        return {"company_facts":{"industry":"transport", **(facts or {})},
-                "design_benchmark": records, "design_decisions":decisions,
-                "design_recommendations":{"motion_plan":{"purpose":"Readable service flow", "implementation":"Static by deliberate choice", "reduced_motion":"All content visible", "verification":"Check navigation and disclosure"}}}
+        return {
+            "research_mode": "verified_no_website",
+            "fact_sources": [{"url": "https://fixtures.example.org/qa",
+                              "text": "Synthetic offline test company, not a real client"}],
+            "company_facts": {"industry": "transport", **(facts or {})},
+            "design_benchmark": records, "design_decisions": decisions,
+            "creative_directions": self.creative_fixture(),
+            "creative_selection": {
+                "selected_id": "editorial",
+                "rejected_ids": ["directory", "contact"],
+                "business_reason": "For this small synthetic company, direct hierarchy fits the one-page offline fixture better than either contact-first or directory-first navigation.",
+            },
+            "site_architecture": {"pages": [{
+                "path": "index.html",
+                "purpose": "Display the unit-fixture company identity and verified services",
+                "user_task": "Find the mock company information and its simple main page",
+                "section_ids": ["main"],
+            }]},
+            "design_recommendations": {
+                "visual_concept": "Company-specific and readable editorial introduction to a service",
+                "typography_scale": "Strong typographic headings and legible body typography",
+                "spacing_and_layout": "Single clear information column for a short page",
+                "mobile_plan": "Simple touch navigation and no horizontal scrolling on phones",
+                "section_plan": [{"id": "main", "purpose": "Show fixture identity and information",
+                                  "layout": "One evidence-led text column with service information"},
+                                 {"id": "footer", "purpose": "Present supplementary information safely",
+                                  "layout": "A compact legal and contact footer below the main content"}],
+                "motion_plan": {"purpose": "Readable service flow",
+                                "implementation": "Static by deliberate choice",
+                                "reduced_motion": "All content visible",
+                                "verification": "Check navigation and disclosure"},
+            },
+        }
 
     def test_benchmark_rejects_empty_duplicate_and_unobserved_sources(self):
         for records in ([], self.benchmark()[:1], [self.benchmark()[0]] * 2,
@@ -291,7 +359,13 @@ class QualityTests(unittest.TestCase):
             premium['visual_review'][dimension] = 97
         with patch.object(qa,'inspect_site',return_value={'pass':True,'issues':[],'screenshots':shots}), patch.object(
                 qa,'ask_claude_json',return_value=premium) as ask:
-            self.assertTrue(qa.run_qa('testi')['overall_pass'])
+            result = qa.run_qa('testi')
+            self.assertTrue(result['overall_pass'], {
+                key: result.get(key) for key in (
+                    'automated', 'browser', 'content_parity', 'source_fidelity',
+                    'universal_quality', 'originality', 'content_review',
+                )
+            })
             self.assertEqual(len(ask.call_args.kwargs['image_paths']), 10)
             self.assertEqual(ask.call_args.kwargs['stage'], 'qa')
 

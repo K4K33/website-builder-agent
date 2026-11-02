@@ -43,11 +43,78 @@ def research_fixture(directory, industry):
         for i, name in enumerate(DIMENSIONS)
     ]
     return {
+        "research_mode": "verified_no_website",
+        "fact_sources": [{"url": "https://fixtures.example.org/offline-no-site",
+                          "text": "Synthetic offline test company; no real customer claimed."}],
         "company_facts": {"name": "Demo yritys", "industry": industry},
         "design_benchmark": refs, "design_decisions": decisions,
         "design_recommendations": {"motion_plan": {
             "purpose": "Clarity", "implementation": "Static intentionally",
             "reduced_motion": "All content remains visible", "verification": "Inspect desktop and mobile"}}
+    }
+
+
+def complete_rebuild_research():
+    """Real strict preflight inputs for the external-rebuild approval test.
+
+    This uses a synthetic company; never represents a real customer or
+    replaces the production creativity/architecture/source validators.
+    """
+    variants = [
+        ("editorial", "Large typography before service summary",
+         "One coherent company story and task-based service information",
+         "Top links directly to the most useful service sections",
+         "Purposeful text-led composition without decorative images"),
+        ("service", "Quick visual service index before business background",
+         "Services arranged by visitor need and requested work type",
+         "Task-oriented navigation into named service sections",
+         "Functional service illustrations where verified media exists"),
+        ("contact", "Compact contact column before supporting overview",
+         "Contact and directions precede the more detailed company story",
+         "Contact-first navigation with persistent accessible links",
+         "Focused source-backed photography placed after essential details"),
+    ]
+    directions = [{
+        "id": key,
+        "concept": key + " distinct synthetic business design concept",
+        "business_reason": "The customer must easily find the true business information and contact path.",
+        "source_anchor": "The offline test company has only a research fixture, no real business site.",
+        "first_view": first,
+        "information_architecture": layout,
+        "navigation": navigation,
+        "image_strategy": images,
+        "typography": "High contrast readable display and supporting body typography",
+        "brand_continuity": "Only the documented synthetic company identity appears",
+        "non_goals": "No invented reviews, achievements, sponsors or customer images",
+        "mobile_behavior": "Stacked content and accessible touch targets at small widths",
+    } for key, first, layout, navigation, images in variants]
+    return {
+        "creative_directions": directions,
+        "creative_selection": {
+            "selected_id": "editorial", "rejected_ids": ["service", "contact"],
+            "business_reason": "A short offline research fixture is most usable as clear editorial information, whereas dense directory and contact-rail layouts add unnecessary complexity.",
+        },
+        "site_architecture": {"pages": [{
+            "path": "index.html",
+            "purpose": "Show the synthetic service and tested brand identity",
+            "user_task": "Read the test company details and navigate to the main page",
+            "section_ids": ["main"],
+        }]},
+        "design_recommendations": {
+            "visual_concept": "A type-led editorial layout for a short business fixture",
+            "typography_scale": "Readable section headings and explicit body text sizing",
+            "spacing_and_layout": "Wide whitespace and single task-focused main column",
+            "mobile_plan": "Natural mobile flow without horizontal overflow or overlays",
+            "section_plan": [
+                {"id": "main", "purpose": "Present known synthetic business information",
+                 "layout": "Readable main content and clear navigation targets"},
+                {"id": "footer", "purpose": "Make supporting information identifiable",
+                 "layout": "A separate compact footer below the visitor's main task"},
+            ],
+            "motion_plan": {"purpose": "Clarity", "implementation": "Static deliberately",
+                            "reduced_motion": "All elements remain visible",
+                            "verification": "Inspect mobile and desktop"},
+        },
     }
 
 
@@ -58,7 +125,7 @@ def approved_review():
             "design_checks": [{"id": name, "passed": True, "evidence": "Visible main content"}
                               for name in DIMENSIONS],
             "visual_review": {
-                **{name: 90 for name in ("desktop", "tablet", "mobile", "small_mobile",
+                **{name: 97 for name in ("desktop", "tablet", "mobile", "small_mobile",
                                         "brand_specificity", "typography", "hierarchy",
                                         "art_direction", "imagery", "motion")},
                 "blockers": [], "improvements": []}}
@@ -83,7 +150,7 @@ class ProductionGates(unittest.TestCase):
 
     def create_build(self, industry="transport", slug="demo"):
         state.upsert_company(slug, {
-            "name": "Demo yritys", "url": "https://demo-example.fi", "status": "researched",
+            "name": "Demo yritys", "url": "", "status": "researched",
             "research": research_fixture(self.root, industry)
         })
         path = builder._write_html(slug, HTML)
@@ -172,6 +239,10 @@ class ProductionGates(unittest.TestCase):
     def test_external_rebuild_revokes_approval(self):
         self.create_build()
         self.qa_and_approve()
+        # The *new* external build must pass all real source/design preflights.
+        # The earlier approved fixture deliberately did not claim a creative review.
+        current = state.get_company("demo")[1]["research"]
+        state.upsert_company("demo", {"research": {**current, **complete_rebuild_research()}})
         response = self.root / "response.html"
         response.write_text(HTML)
         builder.run_build_from_response("demo", str(response), "offline fixture")
@@ -190,12 +261,14 @@ class ProductionGates(unittest.TestCase):
             self.skipTest("Real Chromium integration runs on CI")
         for sector in ("transport", "restaurant", "home services"):
             with self.subTest(sector=sector):
-                self.create_build(industry=sector)
+                slug = "offline-" + sector.replace(" ", "-")
+                self.create_build(industry=sector, slug=slug)
                 args = SimpleNamespace(confirm_live_run=True, benchmark_mode=True, count=1,
                                        industry="ravintola", location="Tampere", max_revisions=0)
                 with patch.object(config, "model_for_stage", return_value="fixed/mock"), \
                      patch.dict(os.environ, {"OPENROUTER_API_KEY": "offline", "TAVILY_API_KEY": "offline"}), \
-                     patch.object(main.scout, "run_scout", return_value=[{"slug": "demo"}]), \
+                     patch.object(main.scout, "run_scout", return_value=[{"slug": slug}]), \
+                     patch.object(main, "site_signal", return_value="has_website"), \
                      patch.object(main.research, "run_research"), \
                      patch.object(main.builder, "run_build"), \
                      patch.object(qa, "ask_claude_json", return_value=approved_review()), \
@@ -206,7 +279,7 @@ class ProductionGates(unittest.TestCase):
                     network_post.assert_not_called()
                     network_get.assert_not_called()
                     contact.assert_not_called()
-                company = state.get_company("demo")[1]
+                company = state.get_company(slug)[1]
                 self.assertEqual(company["status"], "qa_passed")
                 self.assertTrue(company["qa"]["overall_pass"])
                 self.assertFalse((company.get("approval") or {}).get("approved"))
