@@ -6,6 +6,32 @@ scope/model, verified issues, chosen change, measured/visual retest,
 and whether the change introduced a regression. Do not overwrite
 previous findings when one version scores differently.
 
+## 2026-11-02 — Kotifixi V7 review: anti-formula copy and consistent quality
+
+The user rejected recurring AI-sounding antonym/contrast formulas:
+"Vähemmän tekemättömiä töitä. Enemmän omaa aikaa." They prefer
+ordinary human-written business language, fewer repeated headings
+and slogans, and **max 1** useful contrast pair per ENTIRE site,
+or zero by default. This rule applies to ALL customers, not Kotifixi only.
+
+Independent Claude Sonnet 5.5 Medium review of the earlier V7
+via an iPhone recording: about 8.5/10. Positives: genuine service-led
+structure and much less AI-generated feel, clear quote CTA, better
+pricing presentation and transparent demo. Unresolved:
+inconsistent service photography, oversized dark stock-photo
+labels, repeated idiomatic slogan fragments and need for optional
+additional verified content. Claude did not independently test desktop,
+media ownership or customer permissions. No fabricated 9.5 score.
+
+**Global decision:** don't claim Kaurivo has achieved a repeatable
+premium standard until an independently validated ≥9.5/10 score
+is achieved on the actual current build and the same threshold is
+proven across at least THREE distinct recent customer demos.
+The offline gate records HOLD until evidence exists. User-approved
+image/brand rights, real forms, source checks, CMS and sales law
+remain separate. Iteration consumes free local resources first;
+external reviews are only requested after meaningful revisions.
+
 ## 2026-11-02 — clarification: company photos first, examples second
 
 The user explicitly clarified the precedence:
