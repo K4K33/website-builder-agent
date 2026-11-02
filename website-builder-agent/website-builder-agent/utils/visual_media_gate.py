@@ -142,12 +142,12 @@ def audit_visual_media(
     for node in soup.find_all("style"):
         supplemental.extend(
             ("CSS image", m.strip().strip("\\\"'"))
-            for m in re.findall(r"url\\(\\s*([^)]*)\\)", node.get_text(), flags=re.I)
+            for m in re.findall(r"url\(\s*([^)]*)\)", node.get_text(), flags=re.I)
         )
     for node in soup.find_all(style=True):
         supplemental.extend(
             ("CSS image", m.strip().strip("\\\"'"))
-            for m in re.findall(r"url\\(\\s*([^)]*)\\)", str(node.get("style") or ""), flags=re.I)
+            for m in re.findall(r"url\(\s*([^)]*)\)", str(node.get("style") or ""), flags=re.I)
         )
     for placement, value in supplemental:
         if not value or value.startswith(("data:", "#")):
