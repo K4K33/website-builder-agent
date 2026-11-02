@@ -31,8 +31,10 @@ def site_files(root: str | Path, page_paths: list[str]) -> list[tuple[str,Path]]
         if not assets.is_dir() or assets.is_symlink():
             raise RuntimeError("Unsafe assets directory.")
         for target in sorted(assets.rglob("*")):
+            if target.is_symlink():
+                raise RuntimeError("Symlink cannot be a published site asset.")
             if target.is_dir(): continue
-            if (not target.is_file() or target.is_symlink()
+            if (not target.is_file()
                 or not target.resolve().is_relative_to(base)
                 or target.suffix.lower() not in ALLOWED_ASSET_EXTENSIONS):
                 raise RuntimeError("Untrusted asset in site bundle: "+str(target))
