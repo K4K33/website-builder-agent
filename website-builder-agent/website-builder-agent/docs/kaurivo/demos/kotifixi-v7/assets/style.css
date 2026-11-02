@@ -416,3 +416,29 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 @media(hover:none){
  .editorial-card:hover,.button:hover,.header-cta:hover{transform:none;box-shadow:none}
 }
+
+
+/* V9 follow-up — cohesive image slots and legible supporting typography.
+   Fixed shape/consistent crop accepts approved client photography later;
+   never fake a real staff or project portrait. */
+.hero-photo-frame{height:auto;aspect-ratio:1.06;overflow:hidden}
+.hero-photo-frame img,.editorial-media img,.about-photo img{object-fit:cover;object-position:center;display:block}
+.editorial-media,.editorial-card-main .editorial-media{height:auto;aspect-ratio:4/3}
+.about-photo{height:auto;aspect-ratio:4/3}
+.editorial-card,.hero-photo-frame,.about-photo{border-radius:9px}
+.editorial-card-content span{font-size:12px;letter-spacing:.095em}
+.eyebrow,.overline,.service-index span,.footer-column b{font-size:12px}
+.visual-photo-note,.photo-disclaimer{font-size:13px;line-height:1.65;color:#40586b}
+.form-intro,.form-status,.contact-note{font-size:14px;color:#3a5367}
+.pricing-aside p:not(.eyebrow){font-size:15px;color:#3a5367}
+.footer-bottom{font-size:13px;color:#d4e2ed}
+@media(max-width:700px){
+ .hero-photo-frame{height:auto;aspect-ratio:1.15}
+ .editorial-media,.editorial-card-main .editorial-media{height:auto;aspect-ratio:4/3}
+ .about-photo{height:auto;aspect-ratio:4/3}
+ .visual-photo-note,.photo-disclaimer{font-size:13px}
+ .editorial-card-content span{font-size:12px}
+}
+@media(max-width:390px){
+ .editorial-card-main .editorial-media,.editorial-media{height:auto;aspect-ratio:4/3}
+}
