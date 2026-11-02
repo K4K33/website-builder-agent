@@ -29,6 +29,16 @@ Universal actions: headline wrapping and typographic restraint, context-specific
 
 V8 already addressed the old contrast slogan and several repeated phrases. This follow-up must not invent reviews, publish without signoff, or treat CSS/tests as a real independent >=9.5 design review.
 
+## 2026-11-02 — Second external V8 desktop review and owner feedback (V9 candidate)
+
+**Observed evidence:** user shared a ~56.7-second desktop browser walkthrough of V8 through raw.githack and a ~19.9-second Claude Sonnet 5.5 review recording. Claude estimated ~8.5/10 for the reviewed desktop view. Main critic: raw.githack's warning/interstitial before the site; a sales-prospect must never see a developer host. It also identified a crowded pricing sidebar where a source link and the tax heading visually touched; persistent template-like serif accents and pale offset hero photo decoration; sparse human/business proof on About; absent genuine reviews/service area; small low-contrast copy. The owner separately reported slow trackpad scrolling and unconvincing text bands.
+
+**Site fixes:** reduce heavy sticky/filter/blur/scroll effects; move tax guidance out of the sidebar into its own readable editorial block, restyle pricing notice and other feature bands, improve text contrast and remove the hero's decorative offset. Keep the existing real service/price facts and test-form honesty. Human image choices must reflect service; do not invent founder identity, reviews or discounts. Use the latest Verohallinto 2026 source (40% / 2100 EUR / 150 EUR), not an obsolete original-site 35% figure.
+
+**Universal policy:** customer-facing demos must open directly on an appropriate verified HTTPS brand domain. Raw.githack, github.io and other generic developer-domain URLs remain INTERNAL only and fail the sales gate. An internal GitHub PR or test PASS does not establish customer-ready hosting.
+
+**Evidence limitations:** a subjective user trackpad sensation is not a confirmed measured page-performance regression. CSS/JS complexity reductions are hypotheses to verify with actual device profiling. The independent reviewer saw V8, not this subsequent V9 code. Keep the ≥9.5 and three-client consistency gate on HOLD until authentic full-device assessment.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.
