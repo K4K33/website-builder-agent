@@ -3,6 +3,14 @@
 Customer communication is not a generic website sales pitch. A real company
 with a ready demo deserves a fully individualized note.
 
+## Customer-visible preview URL policy — mandatory
+
+- **Never** place `raw.githack.com`, `rawgit.hack`, `github.io`, GitHub repository/file URLs, GitHub Pages developer domains, or public deployment-provider subdomains in a prospect's email, HTML demo card, QR code or sales deck.
+- These can be used in **internal technical review only**. The raw.githack warning/interstitial in the 2026-11-02 Kotifixi review is a customer-trust blocker even though the HTML looked sound after clicking through.
+- Client demos must have a clean **company-appropriate Kaurivo-controlled HTTPS custom domain** (or separately approved client-owned domain), verified ownership, verified no-warning initial load, approved demo contents and a real landing page. DNS/domain fees must wait until launch is authorized; do not invent a domain or imply that it exists.
+- If no branded demo URL is ready, **do not send a demo URL or sales email claiming it is ready**. Continue internal QA for free; no automatic send.
+- Run the `customer_safe_preview_url` / `assess_pitch_packet` checks and a real human first-open check on the exact link, including mobile. Link shorteners and redirect chains do not bypass the policy.
+
 ## Review before drafting
 
 1. Confirm that the company is still operating, that its identity and
