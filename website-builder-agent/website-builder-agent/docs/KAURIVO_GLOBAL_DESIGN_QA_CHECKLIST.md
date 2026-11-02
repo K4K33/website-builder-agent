@@ -1,6 +1,7 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
 **Learning history:** `docs/KAURIVO_DESIGN_LEARNING_LOG.md`. New owner/external feedback must be recorded there with review scope and regression checks before altering the universal rules.
+**Mandatory feedback loop:** `docs/KAURIVO_FEEDBACK_TO_STANDARD_WORKFLOW.md`. Every new owner/customer/external comment is routed into the global QA system unless its application is legitimately client-specific (with the reason recorded).
 
 **Scope:** ALL clients, new builds, redesigns, demo revisions, private previews,
 full site deliveries. Not a special rule set for any single company.
@@ -67,9 +68,9 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] At least THREE distinct recent client-demo projects independently
       pass ≥9.5. A single exceptional demo cannot approve
       Kaurivo's builder; hold customer-facing release until consistency proven.
-- [ ] Sitewide contrast/antithesis taglines are at most ONE across every
+- [ ] Sitewide contrast/antithesis taglines default to ZERO; at most ONE explicitly justified exception across every
       route ("Vähemmän X. Enemmän Y.", "Ei vain X vaan Y" etc.).
-      Prefer zero if unnatural. Protect approved client slogans.
+      Do not approve a formulaic line just because the count is ≤1. Protect approved client slogans.
 - [ ] Copy reads as a real business speaking naturally, without
       formulaic motivational marketing, duplicated content, copied
       rhythms or generic AI-written section fillers.
