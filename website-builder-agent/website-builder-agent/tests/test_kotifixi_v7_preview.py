@@ -99,6 +99,24 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
             self.assertNotIn("35 %", body)
             self.assertNotIn("arvostelu: 5/5", body)
 
+    def test_v9_editorial_layout_and_native_scroll(self):
+        css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        js = (ROOT / "assets/app.js").read_text(encoding="utf-8")
+        self.assertIn("html{scroll-behavior:auto", css)
+        self.assertNotIn("window.addEventListener('scroll'", js)
+        self.assertIn(".site-header{background:#fff;backdrop-filter:none;", css)
+        self.assertIn(".hero-visual-edge{display:none}", css)
+        prices = BeautifulSoup((ROOT / "hinnasto/index.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(len(prices.select(".tax-section .tax-info")), 1)
+        self.assertEqual(len(prices.select(".pricing-aside .tax-info")), 0)
+        self.assertIsNotNone(prices.select_one(".tax-section a[href*='vero.fi']"))
+        home = BeautifulSoup((ROOT / "index.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(len(home.select(".hero-visual-edge")), 0)
+        self.assertIsNotNone(home.select_one(".hero-photo-frame img[srcset][sizes]"))
+        for filename in FILES:
+            page = BeautifulSoup((ROOT / filename).read_text(encoding="utf-8"), "html.parser")
+            self.assertLessEqual(len(page.select("main .serif")), 1)
+
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
         self.assertEqual(len(soup.select(".service-row")), 3)
