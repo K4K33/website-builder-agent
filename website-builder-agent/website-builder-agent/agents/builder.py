@@ -176,6 +176,32 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V11 KAIKKIEN TULEVIEN ASIAKASSIVUJEN LAATU:
+- Selkeä sankariotsikko puhuu asiakkaan arjesta ja vahvistetuista
+  palveluista. Älä kirjoita geneeristä yritysnimen toistavaa fraasia.
+  Tarkista kielioppi ja mielekkyys, kuten "Tarvitsetko apua
+  kotitöissä tai pihatöissä?" vain jos molemmat palvelut totta.
+- Työpöydän navigaation pitää näyttää riittävän suurelta:
+  noin 17–18px tilan salliessa; alemmilla leveyksillä valitaan
+  luettava pienempi vaihtoehto tai mobiilivalikko, ei ahtausta.
+- Premium 3D: korkeintaan harkittua CSS-perspektiiviä, taustalle
+  kerrostettu kuva, pieni interaktiivinen kortin kallistus, pehmeä
+  siirtymä ja tarkoituksenmukaiset focus-/hover-tilat.
+- 3D ei saa hidastaa scrollausta. Älä tee scroll-hijackia,
+  window-scroll-tyylipäivityksiä, oletuksena WebGL-renderöintiä
+  tai jatkuvia raskaita animaatioita. Pointer-efekti voidaan
+  rajata yhteen elementtiin ja requestAnimationFrameen.
+  Testaa käyttäen oikeaa touchpadia ja mobiilia.
+- Jos asiakasta tai perustajaa ei voi kuvata vahvistetuilla
+  tiedoilla, ÄLÄ keksi "Meistä"-historiaa. Nimeä sivu sen
+  todellisen sisällön mukaan, esimerkiksi "Näin toimimme".
+- Chrome-käännöspalkki on selaimen käyttöliittymä.
+  Aseta html lang ja charset oikein, mutta älä estä käännöstä
+  vain piilottaaksesi selaimen kyselyn.
+- Jokainen valmis versio julkaistaan tarkistettavaan omaan
+  esikatseluosoitteeseen, joka annetaan käyttäjälle pyytämättä.
+  Asiakaslinkki vaatii erikseen hyväksytyn brändidomainin.
+
 V10 YLEISEN LAADUNTARKISTUKSEN UUSI PALAUTE:
 - Oikean ulkopuolisen ihmisen havainto navigoinnin luettavuudesta
   on yhtä tärkeää kuin AI:n antama arvosana. Desktop-valikoissa
