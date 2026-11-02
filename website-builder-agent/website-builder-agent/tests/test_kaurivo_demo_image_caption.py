@@ -88,6 +88,7 @@ class PhotoPriorityTests(unittest.TestCase):
                 "services": ["Cuts"], "location": "Helsinki"}},
             "outreach_research": {"verified_by_human": True},
             "demo_url": "https://example.org/demo",
+            "demo": {"branded_domain_verified": True},
             "demo_media": {"reviewed_by_human": True, "source": "examples_only"},
         }
         with TemporaryDirectory() as folder:
