@@ -218,6 +218,24 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertEqual(len(home.select(".phone-link")), 1)
         self.assertEqual(len(home.select(".header-cta")), 1)
 
+    def test_v14_single_contact_control_with_independent_destinations(self):
+        css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        self.assertIn(".site-header .header-action-set{", css)
+        self.assertIn("background:#f2f6fa", css)
+        self.assertIn(".site-header .header-action-set .phone-link{", css)
+        self.assertIn(".site-header .header-action-set .header-cta{", css)
+        self.assertIn(".site-header .header-action-set a:focus-visible{", css)
+        for filename in FILES:
+            page = BeautifulSoup((ROOT / filename).read_text(encoding="utf-8"),
+                                 "html.parser")
+            group = page.select_one(".site-header .header-action-set")
+            self.assertIsNotNone(group)
+            self.assertEqual(len(group.select("a")), 2)
+            self.assertEqual(group.select_one(".phone-link")["href"], "tel:+358443632429")
+            self.assertTrue(group.select_one(".header-cta")["href"].endswith("yhteys/"))
+            self.assertEqual(len(page.select(".header-right .menu-toggle")), 1)
+            self.assertEqual(len(page.select(".mobile-menu a[href^='tel:']")), 1)
+
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
         self.assertEqual(len(soup.select(".service-row")), 3)
