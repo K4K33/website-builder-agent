@@ -1019,6 +1019,12 @@ def run_qa(slug_or_name: str) -> dict:
                 from agents.builder import _validate_plan_sections
                 _validate_plan_sections(html, research, company.get("url", ""))
                 benchmark_images, image_labels = reference_image_inputs(benchmark)
+                original_images = [
+                    research.get("original_screenshots", {}).get(view)
+                    for view in ("desktop", "mobile")
+                    if isinstance(research.get("original_screenshots", {}).get(view), str)
+                    and os.path.isfile(research["original_screenshots"][view])
+                ]
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
@@ -1027,7 +1033,10 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(research.get("design_recommendations", {}), ensure_ascii=False)
                     + "\nINDUSTRY REFERENCES (not company facts; their images follow generated views):\n"
                     + json.dumps(benchmark, ensure_ascii=False)
-                    + "\nREFERENCE IMAGE ORDER (after the four generated views):\n"
+                    + "\nIMAGE ORDER: first four new-page screenshots; then ORIGINAL company-site "
+                    "desktop/mobile (when available); THEN sector benchmarks. Compare real client "
+                    "brand colors, identity, photo usage and text readability.\n"
+                    + "\nREFERENCE IMAGE ORDER (after the original site):\n"
                     + json.dumps(image_labels, ensure_ascii=False)
                     + "\nREQUIRED DESIGN DECISIONS (check each with visible evidence):\n"
                     + json.dumps(decisions, ensure_ascii=False)
@@ -1047,7 +1056,7 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(universal, ensure_ascii=False)
                     + "\nPAGE CONTENT:\n" + _build_ai_snapshot(html),
                     max_tokens=5000, stage="qa",
-                    image_paths=list(browser["screenshots"].values()) + benchmark_images,
+                    image_paths=list(browser["screenshots"].values()) + original_images + benchmark_images,
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
