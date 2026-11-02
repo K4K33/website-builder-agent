@@ -36,6 +36,7 @@ from pathlib import Path
 
 from utils.quality import normalize_facts, canonical_url
 from utils.content_parity import audit_content_parity
+from utils.source_fidelity import audit_source_fidelity
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.state import (
     get_company,
@@ -972,6 +973,9 @@ def run_qa(slug_or_name: str) -> dict:
     html = html_bytes.decode("utf-8")
     research = company.get("research") or {}
     parity = audit_content_parity(html, research, source_url=company.get("url", ""))
+    source_fidelity = audit_source_fidelity(
+        html, research, source_url=company.get("url", "")
+    )
     universal = audit_universal_standards(
         html, research, company=company, stage="internal_demo"
     )
@@ -994,7 +998,7 @@ def run_qa(slug_or_name: str) -> dict:
     )
     # Never spend browser/AI review credits when guaranteed critical
     # source-backed fields are absent.
-    parity_hard_missing = bool(parity["missing"] or any(
+    parity_hard_missing = bool(source_fidelity["missing"] or parity["missing"] or any(
         item.startswith(("Unverified content requirement",
                          "Invalid content requirement",
                          "Unsupported content requirement"))
@@ -1037,6 +1041,8 @@ def run_qa(slug_or_name: str) -> dict:
                     ], ensure_ascii=False)
                     + "\nCONTENT PARITY EVIDENCE & OPEN REVIEW: \n"
                     + json.dumps(parity, ensure_ascii=False)
+                    + "\nORIGINAL SOURCE FIDELITY (all pages, sections, brand/partner logos, old-site task handoffs): \n"
+                    + json.dumps(source_fidelity, ensure_ascii=False)
                     + "\nALL-SITE QA STANDARD STATUS (unverified stays pending):\n"
                     + json.dumps(universal, ensure_ascii=False)
                     + "\nPAGE CONTENT:\n" + _build_ai_snapshot(html),
@@ -1049,11 +1055,13 @@ def run_qa(slug_or_name: str) -> dict:
         "automated": automated, "visual_media": visual_media,
         "browser": browser, "content_review": review,
         "content_parity": parity,
+        "source_fidelity": source_fidelity,
         "universal_quality": universal,
         "unimplemented_global_feedback": pending_general_rules,
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
-        "overall_pass": (parity["pass"] and universal["automated_pass"]
+        "overall_pass": (parity["pass"] and source_fidelity["pass"]
+                         and universal["automated_pass"]
                          and not pending_general_rules
                          and automated["automated_pass"]
                          and visual_media["owner_preview_ready"] and browser["pass"]
@@ -1067,6 +1075,8 @@ def run_qa(slug_or_name: str) -> dict:
               + list(visual_media["blockers"])
               + list(visual_media["needs_public_verification"])
               + [x["label"] for x in parity["missing"]]
+              + [str(x.get("kind","unknown"))+": "+str(x.get("source","")) for x in source_fidelity["missing"]]
+              + list(source_fidelity["pending"])
               + [m for values in universal["blocking_problems"].values() for m in values]
               + list(browser.get("issues") or []))
     record_qa_findings(ledger, slug, [str(x) for x in issues])
