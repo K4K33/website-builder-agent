@@ -934,6 +934,10 @@ Tämä palautusskeema korvaa aiemman esimerkkiskeeman:
 }
 Tekoälymäisyyden riski 0 = ei havaittuja geneerisiä piirteitä ja
 10 = vahvasti tunnistettavaa pohjagenerointia. Tämä EI todista tekijää.
+Kirjaa prior_patterns_compared-listaan täsmälleen kaksi eri
+sivuston slugia, jotka on annettu originality_preflight.reference_signatures
+-listassa (älä keksi vertailukohteita). Jos alle kaksi on käytettävissä,
+ilmoita unresolved-puutteena eikä hyväksyntää saa myöntää.
 Kirjaa konkreettisia toistuvia tekstin/kuvien/elementtien piirteitä.
 Älä päättele tekijää ulkoasusta. Tavoite <=2/10. Samankaltainen
 toimiala EI yksin ole hylkäysperuste.
@@ -1000,7 +1004,8 @@ def owner_preview_visual_passes(review: dict, *, minimum: int | None = None) -> 
 
 
 
-def ai_style_review_passes(review: dict, *, required: bool = True) -> bool:
+def ai_style_review_passes(review: dict, *, required: bool = True,
+                            available_patterns: list[dict] | None = None) -> bool:
     """Check evidence behind a conservative anti-template reviewer score."""
     if not required:
         return True
@@ -1010,6 +1015,11 @@ def ai_style_review_passes(review: dict, *, required: bool = True) -> bool:
     score=data.get("risk_score")
     evidence=data.get("evidence")
     patterns=data.get("prior_patterns_compared")
+    if available_patterns is not None:
+        grounded={str(item.get("site") or "") for item in available_patterns
+                  if isinstance(item,dict)}
+        if len(grounded)<2 or not isinstance(patterns,list) or not set(patterns).issubset(grounded):
+            return False
     return (isinstance(score,(int,float)) and not isinstance(score,bool)
             and 0<=score<=2
             and isinstance(evidence,list) and len(evidence)>=2
@@ -1214,7 +1224,9 @@ def run_qa(slug_or_name: str) -> dict:
                          and review_passes(review, benchmark_urls, decisions)
                          and owner_preview_visual_passes(review)
                          and ai_style_review_passes(
-                             review,required=bool(research.get("creative_directions"))
+                             review,required=bool(research.get("creative_directions")),
+                             available_patterns=originality["reference_signatures"]
+                             if research.get("creative_directions") else None
                          )),
     }
     # Every future general failure is recorded without a new model request.
