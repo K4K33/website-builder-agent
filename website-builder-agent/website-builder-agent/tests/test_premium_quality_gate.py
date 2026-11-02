@@ -9,7 +9,7 @@ from utils.content_parity import source_inventory_sha256
 from utils.premium_quality_gate import (
     SCORE_DIMENSIONS, VIEWPORTS, site_digest, source_coverage_matrix,
     verify_independent_premium_reviews, verify_field_performance,
-    audit_primary_journeys,
+    audit_primary_journeys, discover_source_journeys,
 )
 from utils.source_content_blocks import (
     extract_source_content_blocks, audit_source_content_blocks,
@@ -168,6 +168,27 @@ class PremiumGateTests(unittest.TestCase):
         }]}
         result = audit_universal_standards(self.html["index.html"], research)
         self.assertIn("primary_user_journeys", result["blocking_problems"])
+
+    def test_source_booking_cta_discovery_avoids_root_and_internal_placeholder(self):
+        self.research["source_inventory"]["pages"][0]["links"] = [
+            {"text": "Varaa aika", "href": "/ajanvaraus/"},
+            {"text": "Varaa aika", "href": "https://appointments.example.net/book/4832"},
+            {"text": "Soita meille", "href": "tel:+358401234567"},
+            {"text": "Send email", "href": "mailto:info@local-example.org"},
+        ]
+        tasks = discover_source_journeys(self.research)
+        self.assertEqual([t["kind"] for t in tasks],
+                         ["booking", "phone", "email"])
+        self.assertEqual(tasks[0]["destination"],
+                         "https://appointments.example.net/book/4832")
+        self.assertTrue(all(t["source_route"] == "index.html" for t in tasks))
+
+    def test_unverified_booking_destination_not_invented(self):
+        self.research["source_inventory"]["pages"][0]["links"] = [
+            {"text": "Book", "href": "/booking"},
+            {"text": "Book", "href": "javascript:alert('fake')"},
+        ]
+        self.assertEqual(discover_source_journeys(self.research), [])
 
     def test_verified_no_website_still_needs_external_factual_review(self):
         coverage = source_coverage_matrix(self.html, {"research_mode": "verified_no_website"})
