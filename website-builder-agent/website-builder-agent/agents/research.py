@@ -573,6 +573,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     ]
     research_data = {
         **brief,
+        "premium_protocol": "v2",  # Owner acceptance requires independent evidence.
         "company_facts": facts,  # The AI design response cannot change verified facts.
         "design_benchmark": benchmark,
         "fact_sources": verified["fact_sources"],
@@ -931,6 +932,7 @@ Tärkeää:
                  for record in reference_evidence]
     research_data = {
         **brief,
+        "premium_protocol": "v2",  # Owner acceptance requires independent evidence.
         "design_benchmark": benchmark,
         # The design pass must not rewrite or invent extracted company facts.
         "company_facts": company_facts,
