@@ -65,7 +65,7 @@ class EvidenceGateTests(unittest.TestCase):
         self.assertIn("at least 3 distinct", " ".join(result["issues"]))
 
     def test_all_recent_three_projects_must_score_95_or_above(self):
-        reports = [review("kotifixi"), review("a"), review("b")]
+        reports = [review("kotifixi"), review("a"), review("client-b")]
         self.assertTrue(assess_quality_consistency(reports, current_project_id="kotifixi")["accepted"])
         reports[2]["overall_score"] = 9.4
         result = assess_quality_consistency(reports, current_project_id="kotifixi")
@@ -80,14 +80,14 @@ class EvidenceGateTests(unittest.TestCase):
         self.assertTrue(any("Both real mobile and desktop" in x for x in result["issues"]))
 
     def test_independence_and_provenance_are_required(self):
-        reports = [review("kotifixi", independence_human_verified=False), review("b"), review("c")]
+        reports = [review("kotifixi", independence_human_verified=False), review("client-b"), review("client-c")]
         self.assertFalse(assess_quality_consistency(reports, current_project_id="kotifixi")["accepted"])
         reports[0]["independence_human_verified"] = True
         reports[0]["evidence_reference"] = ""
         self.assertFalse(assess_quality_consistency(reports, current_project_id="kotifixi")["accepted"])
 
     def test_concurrent_critical_issue_or_unchecked_licenses_holds(self):
-        reports = [review("kotifixi"), review("b"), review("c", critical_issues=["Form broken"])]
+        reports = [review("kotifixi"), review("client-b"), review("c", critical_issues=["Form broken"])]
         self.assertFalse(assess_quality_consistency(reports, current_project_id="kotifixi")["accepted"])
         reports[2]["critical_issues"] = []
         reports[0]["image_rights_checked"] = False
@@ -116,7 +116,7 @@ class OutreachReleaseGateTests(unittest.TestCase):
                     outreach.approve_outreach("kotifixi")
 
     def test_outreach_approval_requires_three_good_distinct_reviewed_demos(self):
-        record = self._record([review("kotifixi"), review("b"), review("c")])
+        record = self._record([review("kotifixi"), review("client-b"), review("client-c")])
         with patch.object(outreach, "get_company", return_value=("kotifixi", record)):
             with patch.object(outreach, "company_is_suppressed", return_value=False):
                 with patch.object(outreach, "upsert_company") as persist:
