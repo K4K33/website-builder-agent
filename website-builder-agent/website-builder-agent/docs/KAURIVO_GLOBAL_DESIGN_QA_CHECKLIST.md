@@ -81,6 +81,16 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
       browser QA must all pass. Independent score alone cannot approve
       emails, site delivery, CMS or production.
 
+## Independent mobile review learning (2026-11-02) — universal blockers
+
+- [ ] **Finish Finnish headings manually:** no mid-syllable / mid-word forced breaks in prominent headings. Test real wrapping at 320, 390, 768 and 1440 px; CSS `hyphens: auto` / `overflow-wrap: anywhere` is not a universal fix. Prefer shorter headings, natural breaks and `text-wrap: balance` where supported.
+- [ ] **Use italics sparingly:** avoid repeated cursive/serif italic fragments in every section; retain only genuine editorial emphasis (normally at most two primary heading accents on a single page) and verify readability on phones.
+- [ ] **Vary authentic sentence structure:** avoid repeated company-name openers, repeated third-person distance and formulaic section rhythm. Write natural Finnish appropriate for the company's verified voice. Do not impersonate an unapproved client or fabricate commitments.
+- [ ] **Image-subject plausibility:** a picture must reflect the likely scale of the actual service and audience, not merely loosely match a keyword (e.g. giant commercial mower for small household lawn service). Prefer a better-fit licensed example or remove the misleading image; never pretend stock is client work.
+- [ ] **Proof over praise:** add genuine verified client reviews or identifiable case-study evidence only when available and permissioned. If unavailable, omit; no fictional 5-star reviews, numbers or anonymous testimonials to raise an AI score.
+- [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
+- [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
+
 ## Discovery and brand — BLOCKERS
 
 - [ ] VERIFIED real business identity, logo file or written approval for
