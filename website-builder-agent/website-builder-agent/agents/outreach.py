@@ -476,7 +476,8 @@ def approve_outreach(
     # A draft can still be created and iterated with offline tests.
     independent_reviews = company.get("agency_quality_reviews") or []
     gate = assess_quality_consistency(
-        independent_reviews, current_project_id=slug
+        independent_reviews, current_project_id=slug,
+        expected_current_build=(company.get("qa") or {}).get("html_sha256"),
     )
     if not gate["accepted"]:
         raise RuntimeError(
