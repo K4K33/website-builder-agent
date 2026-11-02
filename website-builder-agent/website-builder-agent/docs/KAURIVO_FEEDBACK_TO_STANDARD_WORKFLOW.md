@@ -69,6 +69,16 @@ User supplied a ~12.5-second iPhone screen recording of a **Claude Sonnet 5.5 Me
 
 **Generalization:** update universal QA and builder prompts, not only this source. Distinguish verified owner-reviewed usability from an unmeasured performance assertion. HOLD for exact-version external >=9.5, measured real hardware performance and customer branded URL.
 
+## 2026-11-02 — V11 desktop review + brief Claude review → V12
+
+**User input:** desktop screen recording (~34.8 s) and Claude Sonnet 5.5 Medium critique (~8.4 s). Owner likes V11 overall but sees the header as asymmetrical (unused whitespace toward the right) and feels the typography does not form a premium, coherent system.
+
+**Reviewed site:** public Kaurivo-owned GitHub Pages V11 internal concept, not client production. Desktop footage reveals a large logo-to-menu gap caused by the `margin-left:auto` flex pattern and visually forceful navigation lettering. User feedback demands layout/typographic refinement, not a wholesale redesign.
+
+**Claude critique:** 9/10-level subjective rating (not independent verified >=9.5 on all devices). Video notes browser Chrome Translate bar; claims that means `lang=fi` failed, which is unsupported because V11 source declares `<html lang="fi">` and UTF-8. It also suggests a more branded visual accent, additional mobile/motion QA, and variants of a headline including the previously rejected phrase "kotona tai pihalla". Retain the owner's preferred naturally worded specific question rather than automatically accepting a conflicting AI suggestion. Indicative external price estimates are not verified Kaurivo pricing and are not adopted.
+
+**Universal V12 action:** real 3-column CSS grid with equally sized outer tracks and center nav, right-aligned contact actions, consistent centered gutters, desktop 16–17px DM Sans menu at weight 600 and deliberate Manrope 700 headings. Active underline refined. At narrower desktop widths hide only the header phone and keep it in the mobile nav. Add Playwright geometry/text-style regression coverage and compare width variants before calling complete. Keep native scroll and pointer-only 3D as already implemented. No automatic customer outreach, no invented founder history.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.

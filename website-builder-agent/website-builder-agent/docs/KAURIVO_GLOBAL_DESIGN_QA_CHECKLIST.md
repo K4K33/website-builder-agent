@@ -91,6 +91,15 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
 - [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
 
+## 2026-11-02 V12 review — symmetrical header and compatible type system
+
+- [ ] **Horizontal balance:** use a centered navigation region with independent logo and action regions on wide screens, not a growing logo-to-menu gap caused by `margin-left:auto`. At 1024, 1180, 1280 and 1440 px measure actual rendered menu midpoint, element bounds and clipping. Do not rely on a subjective "looks centered" note alone.
+- [ ] **Typography belongs to one coherent system:** select one compatible sans family for navigation/body and a deliberate heading face; avoid mismatched 800-weight condensed-looking menu letters beside a lighter button. Check weight, x-height, tracking, active state and line height on rendered devices. Font uniformity does not mean every element has identical weight.
+- [ ] **Header CTA grouping:** keep the contact button group right aligned with proper right gutter, while independently centering navigation. Phone and quote link must share visual language; at narrow desktop widths collapse the phone into the responsive menu if required rather than shrinking the nav.
+- [ ] **Brand presence without invented assets:** keep authorized logo/palette and refine subtle blue framing, focus, underline and alignment rather than adding fake symbols. Use eye-catching yet restrained accents only if they support actual brand.
+- [ ] **Reported browser translation bar:** `<html lang="fi">` and UTF-8 already define the website language; browser translation prompts may still be caused by browser state or bilingual browser preferences. Inspect actual page source before blaming the site, never attempt to suppress user translation UI, and avoid unsupported diagnosis.
+- [ ] **Avoid unrequested product scope:** suggestions to stop iteration or set package pricing are not verified technical fixes or authorized customer offers. Independent reviewers assess actual version and scope; measured performance and current mobile QA remain independent blockers.
+
 ## 2026-11-02 V11 review — question-first service copy, deeper interaction, no scroll jank
 
 - [ ] **Hero is specific and human:** state verifiable service categories in natural Finnish, ideally as a customer question or another direct task-focused title. Avoid a vague self-referential company-name slogan, but keep approved brand language unchanged. Watch repetition sitewide rather than swapping between two equally awkward synonyms.

@@ -1,5 +1,9 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — V12: balanced header and type hierarchy
+
+V11 video evidence (34.8 s desktop site + 8.4 s external model review). Owner's positive overall impression is outweighed by a visible lopsided header and competing font weights. Review shows a big flex gap between logo and navigation, the CTA group at the right, and a visually heavy nav font. V12 response: symmetric three-region CSS grid with nav centered in the container independently of unequal logo/button widths; right-aligned grouped CTA; comfortable 16–17px DM Sans 600 nav text; Manrope 700 headings with gentler tracking. Confirm geometry at 1024/1180/1280/1440 and no overflow on mobile. Chrome translation panel is browser-owned; source already has correct Finnish language and UTF-8. Do not revert rejected copy or invent "branding" via a fake logo. Maintain internal-only preview and independent 9.5 release threshold.
+
 ## 2026-11-02 — V11: more dimensional design without hijacking scroll
 
 Two owner-uploaded videos evaluated V10 (desktop 41.9 seconds) and Claude Sonnet 5.5 Medium qualitative desktop review (17.1 seconds). Owner observed still-small nav and insufficient depth and animation, and rejected overly generic "Kotifixiltä apua arjen töihin." Claude likewise noted a weaker headline, "Meistä" page not really about the team, overly neutral visual style and browser-managed Chrome translate popup. Follow-up: target explicit question "Tarvitsetko apua kotitöissä tai pihatöissä?", 17–18px nav when space allows, consistent labeled "Näin toimimme" page, layered cobalt/white perspective hero, hover 3D on service cards and small one-shot reveals. No window scroll handler, no WebGL; preserve no-JS and reduced-motion paths. Do not add unsupported social proof. Independent latest-build and mobile reviews are pending.

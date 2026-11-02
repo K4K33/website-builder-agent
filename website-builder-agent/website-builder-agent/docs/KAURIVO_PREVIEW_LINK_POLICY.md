@@ -50,3 +50,13 @@ This is an internal design review path, NOT a client-sales URL.
 New version: https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v11/
 
 Every version gets its working direct link in the completion reply automatically. The GitHub Pages technical host is permitted for **owner/internal preview only**, never for emails to prospective customers. See the latest 2026-11-02 V11 QA/feedback standards for the natural-Finnish headline, 17–18px desktop menu, page-title honesty and optional pointer-only CSS 3D effects with uncompromised native scroll. Every new implementation must pass device/browser tests and independent review; none of this represents an accepted >=9.5 score or production/CMS readiness.
+
+## 2026-11-02 — V12 owner preview
+
+**Preview:** https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v12/
+
+- V11 external feedback: visual imbalance between logo, site navigation and contact actions, and mismatched/bulky heading/menu typography. V12 creates a balanced three-track grid, naturally centered main nav, equal-gutter right-aligned CTA group and DM Sans semibold navigation with Manrope 700 display headlines.
+- User review overrides conflicting AI suggestion to return to the rejected "kotona tai pihalla" heading. Current factual V11 customer-question headline remains.
+- The Chrome Translate popup is browser UI; document language is already Finnish. No browser-translation-blocking hack.
+- New no-credit real Chromium checks measure nav geometry, font weight, responsive collisions; mobile and reduced-motion and pointer-only 3D remain supported.
+- Preview is internal owner review only, never send the GitHub Pages developer URL to prospective customers. No paid components, customer outreach or production deployment.
