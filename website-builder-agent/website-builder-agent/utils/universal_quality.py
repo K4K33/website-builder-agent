@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
 from utils.kaurivo_site_quality_gate import lint_site_copy
-from utils.source_identity import audit_source_reviews
+from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 
 
 # Categories that apply across all sectors, not design layouts.
@@ -103,6 +103,9 @@ def audit_universal_standards(
              f"Repeated decorative CTA arrows across site ({len(arrow_links)} links): {examples}. "
              "Use readable links and distinct button hierarchy without generic arrow suffixes.")
 
+    source_detail_fidelity = audit_price_faq_preservation(pages, research)
+    for item in source_detail_fidelity["missing"]:
+        fail("content_parity", str(item))
     source_review_fidelity = audit_source_reviews(pages, research)
     for item in source_review_fidelity["missing"]:
         fail("real_testimonials", str(item))
