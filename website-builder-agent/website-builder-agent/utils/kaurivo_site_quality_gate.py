@@ -125,7 +125,8 @@ def _review_issues(entry: dict) -> list[str]:
 
 
 def assess_quality_consistency(reviews: list[dict], *, current_project_id: str,
-                               reference_clients: int = MIN_REFERENCE_CLIENTS) -> dict:
+                               reference_clients: int = MIN_REFERENCE_CLIENTS,
+                               expected_current_build: str | None = None) -> dict:
     """Fail closed: >=9.5 on this site AND recent >=3 distinct client sites.
 
     A single excellent client demo cannot certify the *agency-wide* process.
@@ -142,6 +143,8 @@ def assess_quality_consistency(reviews: list[dict], *, current_project_id: str,
     else:
         latest = sorted(current, key=lambda x: str(x.get("review_date", "")))[-1]
         problems.extend(_review_issues(latest))
+        if expected_current_build is not None and latest.get("reviewed_build") != expected_current_build:
+            problems.append("External review does not match the latest approved build digest.")
     by_project = {}
     for r in valid:
         project = r.get("client_project_id")
