@@ -153,6 +153,18 @@ def audit_universal_standards(
     if footer_media and not (research.get("footer_affiliations_review") or {}).get("approved"):
         needs("sponsor_and_partner_marks",
               "Verify original footer logos, role, URL, ongoing relationship and reuse rights.")
+    # A redesigned company must account for real original staff/work photos.
+    # Matching and reproduction rights require a source-bound human media map.
+    source_photos = [
+        photo for page in pages if isinstance(page, dict)
+        for photo in (page.get("source_identity") or {}).get("original_content_photos") or []
+        if isinstance(photo, dict) and photo.get("src")
+    ]
+    if source_photos and not (research.get("original_photo_continuity_review") or {}).get("approved"):
+        needs("accurate_media",
+              f"{len(source_photos)} original source content photos need a licensed "
+              "retain/replace mapping and human review before client release.")
+
     header_media = [
         asset for page in pages if isinstance(page, dict)
         for asset in page.get("header_assets") or []
