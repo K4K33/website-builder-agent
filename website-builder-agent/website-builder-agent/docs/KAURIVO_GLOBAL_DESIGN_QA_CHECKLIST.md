@@ -91,6 +91,15 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
 - [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
 
+## External desktop V8 review: interaction, layout and link trust — 2026-11-02
+
+- [ ] **Natural input handling:** desktop trackpad, wheel, touch and keyboard scroll with no script-driven jank, unnecessary global smooth scrolling, hover-only transformations or paint-heavy sticky blur. Test actual physical device when possible and record measured evidence; do not claim an optimization guarantees 60 fps.
+- [ ] **Real editorial hierarchy:** avoid chains of wide pale-grey bands, cramped sticky pricing sidebars, badge-like text panels, visually touching links and copy in narrow columns. Price notes, verified tax guidance and action links must have genuine breathing room on desktop and 320px mobile.
+- [ ] **First-open trust is a blocker:** never link a prospect to raw.githack/rawgit.hack warning pages or any developer URL (`github.io`, `pages.dev`, `vercel.app` etc). Client-facing preview requires verified branded HTTPS domain, direct load without extra clicks/warnings and actual human/owner review. Internal free technical preview URLs are not customer links.
+- [ ] **Keep tax guidance separate from pricing claims:** present official-source eligibility conditions without promising a business is registered or that every service qualifies.
+- [ ] **Do not manufacture founder story:** add named real operator, portraits, reviews, service locations, FAQs, turnaround guarantees and tax eligibility only with source/owner approval. The absence of such evidence is a content gap, not an excuse to fabricate it.
+- [ ] **No PII-collecting fields for optics:** do not add phone, postcode or locality to a test/demo form merely to raise a design score without a privacy and backend plan.
+
 ## Discovery and brand — BLOCKERS
 
 - [ ] VERIFIED real business identity, logo file or written approval for
