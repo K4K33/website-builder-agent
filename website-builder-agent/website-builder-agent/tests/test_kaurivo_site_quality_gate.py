@@ -37,7 +37,7 @@ class CopyAuditTests(unittest.TestCase):
     def test_kotifixi_v7_has_no_formulaic_opposite_pairs(self):
         check = lint_site_directory(ROOT / "docs" / "kaurivo" / "demos" / "kotifixi-v7")
         self.assertTrue(check["pass"], check["issues"])
-        self.assertLessEqual(check["contrast_count"], 1)
+        self.assertEqual(check["contrast_count"], 0)
 
     def test_contrast_limit_applies_across_entire_site(self):
         pages = {
@@ -47,8 +47,16 @@ class CopyAuditTests(unittest.TestCase):
         check = lint_site_copy(pages)
         self.assertFalse(check["pass"])
         self.assertEqual(check["contrast_count"], 2)
-        self.assertIn("limit 1", check["issues"][0])
-        self.assertTrue(lint_site_copy({"index.html": pages["index.html"]})["pass"])
+        self.assertIn("limit 0", check["issues"][0])
+        # Editorial exception needs explicit one-off permission, never implicit.
+        self.assertFalse(lint_site_copy({"index.html": pages["index.html"]})["pass"])
+        self.assertTrue(lint_site_copy({"index.html": pages["index.html"]}, max_contrasts=1)["pass"])
+
+    def test_symmetric_one_many_ai_slogan_is_flagged(self):
+        page = {"index.html": "<h2>Yksi yhteydenotto. Monenlaisia arjen hommia.</h2>"}
+        check = lint_site_copy(page)
+        self.assertFalse(check["pass"])
+        self.assertEqual(check["contrast_count"], 1)
 
     def test_identical_long_paragraphs_rejected_sitewide(self):
         sentence = "Kotifixi auttaa kodin ja pihan töissä ja tarjoaa yksittäisiin projekteihin apua tarpeen mukaan."
