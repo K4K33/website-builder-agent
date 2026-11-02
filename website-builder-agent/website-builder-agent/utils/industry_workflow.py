@@ -167,6 +167,7 @@ def crawl_original_website(
             "forms": (data.get("forms") or [])[:15],
             "links": (links if isinstance(links, list) else [])[:150],
             "footer_assets": (data.get("footer_assets") or [])[:30],
+            "footer_links": (data.get("footer_links") or [])[:75],
             "header_assets": (data.get("header_assets") or [])[:15],
         })
     unvisited = sorted(known - visited, key=_priority)
@@ -234,6 +235,7 @@ def create_industry_brief(company: dict, research: dict) -> dict:
         "image_candidates": (p.get("images") or [])[:14],
         "header_assets": (p.get("header_assets") or [])[:10],
         "footer_assets": (p.get("footer_assets") or [])[:16],
+        "footer_links": (p.get("footer_links") or [])[:25],
         "form_count": len(p.get("forms") or []),
     } for p in pages]
     return {
