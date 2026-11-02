@@ -135,5 +135,79 @@ class KotifixiV7BrowserTests(unittest.TestCase):
             runner.join(timeout=5)
 
 
+    def test_v11_pointer_3d_depth_does_not_intercept_native_scroll(self):
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError as exc:
+            raise unittest.SkipTest("Playwright unavailable") from exc
+        server = ThreadingHTTPServer(("127.0.0.1", 0),
+                                     partial(Handler, directory=str(ROOT)))
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        base = f"http://127.0.0.1:{server.server_port}"
+        try:
+            with sync_playwright() as pw:
+                try:
+                    browser = pw.chromium.launch(headless=True)
+                except Exception as exc:
+                    raise unittest.SkipTest("Chromium unavailable: " + str(exc)) from exc
+                try:
+                    context = browser.new_context(
+                        viewport={"width": 1440, "height": 860},
+                        reduced_motion="no-preference",
+                    )
+                    context.route("**/*", lambda route: (
+                        route.continue_() if route.request.url.startswith(base)
+                        else route.abort()
+                    ))
+                    page = context.new_page()
+                    page.goto(base + "/", wait_until="domcontentloaded")
+                    self.assertTrue(page.locator(".hero-visual-3d").is_visible())
+                    self.assertEqual(page.evaluate("scrollY"), 0)
+                    frame = page.locator(".hero-photo-frame")
+                    box = frame.bounding_box()
+                    page.mouse.move(box["x"] + box["width"] * .75,
+                                    box["y"] + box["height"] * .35)
+                    page.wait_for_function("""() => {
+                        const el=document.querySelector('.hero-photo-frame');
+                        return el.style.getPropertyValue('--hero-tilt-y') !== '';
+                    }""")
+                    self.assertNotEqual(
+                        frame.evaluate("(el)=>el.style.getPropertyValue('--hero-tilt-y')"), ""
+                    )
+                    self.assertEqual(page.evaluate("scrollY"), 0)
+                    page.mouse.wheel(0, 550)
+                    page.wait_for_function("window.scrollY > 0")
+                    self.assertGreater(page.evaluate("scrollY"), 0)
+                    self.assertEqual(page.evaluate("getComputedStyle(document.documentElement).scrollBehavior"),
+                                     "auto")
+                    page.close()
+                    context.close()
+                    motionless = browser.new_context(
+                        viewport={"width": 390, "height": 844},
+                        reduced_motion="reduce", has_touch=True,
+                    )
+                    motionless.route("**/*", lambda route: (
+                        route.continue_() if route.request.url.startswith(base)
+                        else route.abort()
+                    ))
+                    mobile = motionless.new_page()
+                    mobile.goto(base + "/", wait_until="domcontentloaded")
+                    self.assertEqual(mobile.locator(".scroll-reveal").count(), 0)
+                    self.assertEqual(mobile.locator(".hero-photo-frame").evaluate(
+                        "(el) => getComputedStyle(el).transform"
+                    ), "none")
+                    self.assertTrue(mobile.locator("h1").is_visible())
+                    mobile.close()
+                    motionless.close()
+                finally:
+                    browser.close()
+        finally:
+            server.shutdown()
+            server.server_close()
+            worker.join(timeout=5)
+
+
+
 if __name__ == "__main__":
     unittest.main()
