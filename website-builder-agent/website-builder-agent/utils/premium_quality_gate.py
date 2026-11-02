@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 from utils.content_parity import source_inventory_sha256
 from utils.source_identity import audit_price_faq_preservation, audit_source_reviews
 from utils.source_content_blocks import audit_source_content_blocks
+from utils.source_fidelity import _headings, _page_key
 
 
 SCORE_DIMENSIONS = (
@@ -59,19 +60,14 @@ def source_coverage_matrix(rendered_pages: dict[str, str], research: dict) -> di
         url = original["url"]
         record = mapped.get(url) or {}
         destination = str(record.get("target") or "")
-        path = destination.split("#", 1)[0] or "index.html"
+        path = _page_key(destination)
         page_ok = (record.get("status") in {"retain", "merge"}
                    and path in rendered_pages)
         items.append({"source_url": url, "kind": "page",
                       "target": destination, "status": "mapped" if page_ok else "missing"})
         if not page_ok:
             missing.append({"source_url": url, "kind": "source_page", "target": destination})
-        headings = original.get("headings") or {}
-        source_headings = []
-        if isinstance(headings, dict):
-            for values in headings.values():
-                if isinstance(values, list):
-                    source_headings.extend(str(x).strip() for x in values if str(x).strip())
+        source_headings = _headings(original)
         sections = {str(item.get("source_heading") or "").casefold().strip(): item
                     for item in record.get("sections") or [] if isinstance(item, dict)}
         for heading in source_headings:
