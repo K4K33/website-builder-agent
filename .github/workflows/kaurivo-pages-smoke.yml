@@ -104,3 +104,25 @@ jobs:
             fi
             echo "Verified V4 demo live: ${url} and ${suburl}" >> "$GITHUB_STEP_SUMMARY"
           done
+
+          # New unseen-company first-pass dog salon: all 7 real routes and assets.
+          new_demo="https://k4k33.github.io/website-builder-agent/kaurivo/demos/helsingin-koiratrimmaamo-v1/"
+          for entry in             "|Turkinhoitoa"             "palvelut/|Turkin nyppiminen"             "hinnasto/|93–120 €"             "trimmaajat/|Eveliina Tissari"             "tarina/|Anja Luoso"             "sijainti/|Viipurinkatu 18"             "ajanvaraus/|www.varaaheti.fi/helsinginkoiratrimmaamo/fi"             "assets/style.css|--forest:#20362d"             "assets/app.js|data-menu-toggle"; do
+            path="${entry%%|*}"
+            marker="${entry#*|}"
+            url="${new_demo}${path}"
+            ok="false"
+            for attempt in 1 2 3 4 5; do
+              code=$(curl --max-time 15 -sSL -o /tmp/kaurivo-new-trimmer-live -w '%{http_code}' "${url}" || true)
+              echo "Live ${path:-home} attempt ${attempt}: HTTP ${code}"
+              if [[ "${code}" == "200" ]] && grep -Fq -- "${marker}" /tmp/kaurivo-new-trimmer-live; then
+                ok="true"; break
+              fi
+              sleep 7
+            done
+            if [[ "${ok}" != "true" ]]; then
+              echo "::error::New 7-page dog salon unavailable or stale: ${url}"
+              exit 1
+            fi
+            echo "Public dog salon preview verified: ${url}" >> "$GITHUB_STEP_SUMMARY"
+          done
