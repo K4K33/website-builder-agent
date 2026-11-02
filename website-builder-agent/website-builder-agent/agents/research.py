@@ -29,6 +29,7 @@ from utils.screenshot import capture_website
 from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
+from utils.premium_quality_gate import discover_source_journeys
 from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
 
@@ -586,6 +587,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
             for item in references
         ],
     }
+    research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, "")
     validate_creative_directions(research_data)
     validate_site_architecture(research_data, no_site=True)
@@ -956,6 +958,7 @@ Tärkeää:
         "reference_search_query": search_query,
     }
 
+    research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, url)
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
