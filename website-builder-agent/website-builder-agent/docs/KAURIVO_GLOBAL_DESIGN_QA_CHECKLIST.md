@@ -65,7 +65,7 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
       page and at least two inner pages. Single iPhone recordings are
       useful feedback but insufficient for 9.5 acceptance.
 - [ ] At least THREE distinct recent client-demo projects independently
-      pass ≥9.5. A single Kotifixi-quality exception cannot approve
+      pass ≥9.5. A single exceptional demo cannot approve
       Kaurivo's builder; hold customer-facing release until consistency proven.
 - [ ] Sitewide contrast/antithesis taglines are at most ONE across every
       route ("Vähemmän X. Enemmän Y.", "Ei vain X vaan Y" etc.).
