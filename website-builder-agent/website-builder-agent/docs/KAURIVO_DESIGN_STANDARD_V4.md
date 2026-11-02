@@ -27,6 +27,14 @@ one mobile video never represents reliable agency-wide design.
 Require independent ≥9.5 and three distinct recent client demos
 to meet the same standard; record any unfinished evidence as HOLD.
 
+## V12 — proportional navigation and matching fonts
+
+Premium headers balance a real brand/logo area, precisely centered five-link navigation, and independently right-justified call-to-action/contact elements. A three-track CSS Grid is often stronger than a flex menu pushed away by margin-left:auto. The exact solution may differ between brands, but test geometry rather than assuming that equal gutters imply balanced middle content. Handle responsive widths by hiding secondary header phone contact, not shrinking all links or creating overlap.
+
+One deliberate typography system: body/nav DM Sans around 600, strong but less bulky Manrope display headings around 700, intentional letter spacing and active states. Adapt to the specific client's brand rather than universally copying a font. Respect natural Finnish and the approved current heading; a third-party AI suggestion contradicting explicit owner feedback does not override it.
+
+Keep good existing CSS depth and native scroll. Verify full desktop, mobile and animation states on the exact version. Treat browser-generated translation overlays as external UI unless page language/markup facts prove otherwise.
+
 ## V11: premium depth, motion and Finnish clarity without scroll cost
 
 Natural language comes before slogans. Prefer a first-screen question describing verified household work, services or the visitor's next action over repeated business name or generic motivational lines. Check consistency across all pages.
