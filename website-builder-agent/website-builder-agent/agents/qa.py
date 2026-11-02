@@ -911,6 +911,28 @@ def review_passes(review, benchmark_urls=None, decisions=None):
     return True
 
 
+# Only the stricter score is eligible for the first owner preview.
+# The generic QA score and the independently verified agency-wide score are
+# separate stages; this code must not invent or self-assert external review.
+def owner_preview_visual_passes(review: dict, *, minimum: int | None = None) -> bool:
+    minimum = (config.QA_MIN_OWNER_PREVIEW_VISUAL_SCORE
+               if minimum is None else minimum)
+    if not review_passes(review):
+        return False
+    visual = review["visual_review"]
+    keys = (
+        "desktop", "tablet", "mobile", "small_mobile",
+        "brand_specificity", "typography", "hierarchy",
+        "art_direction", "imagery", "motion",
+    )
+    return all(
+        isinstance(visual.get(key), (int, float))
+        and not isinstance(visual.get(key), bool)
+        and minimum <= visual[key] <= 100
+        for key in keys
+    )
+
+
 def run_qa(slug_or_name: str) -> dict:
     slug, company = get_company(slug_or_name)
     if company is None:
@@ -1009,7 +1031,8 @@ def run_qa(slug_or_name: str) -> dict:
                          and not pending_general_rules
                          and automated["automated_pass"]
                          and visual_media["owner_preview_ready"] and browser["pass"]
-                         and review_passes(review, benchmark_urls, decisions)),
+                         and review_passes(review, benchmark_urls, decisions)
+                         and owner_preview_visual_passes(review)),
     }
     # Every future general failure is recorded without a new model request.
     # Repeating the same category across different clients makes it a
