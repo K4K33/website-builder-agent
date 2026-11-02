@@ -1,5 +1,9 @@
 # Kaurivo Premium Design Standard V4 — brand-led and genuinely bespoke
 
+## Final visual pass: polish without redoing a good design
+
+After the owner accepts a working site, keep improvements proportional. Standardize responsive image sizing and attentive art direction first, then refine typography and short transform-only hover cues if they measurably improve legibility. Preserve native scrolling, touch/reduced-motion fallback and coherent brand/copy. Do not inject new animation libraries or WebGL just to earn a model's extra half point. Verify images are not mislabeled as actual staff or past projects. A successful Kotifixi final pass is a reusable *process*, not an instruction to copy its specific blue palette onto every next client.
+
 **Applies to ALL clients: new premium pitches, revisions, previews, developer handoffs and QA.**
 **Mandatory per-client checklist:** `docs/KAURIVO_GLOBAL_DESIGN_QA_CHECKLIST.md`.
 **Feedback-to-standards workflow:** `docs/KAURIVO_FEEDBACK_TO_STANDARD_WORKFLOW.md`.

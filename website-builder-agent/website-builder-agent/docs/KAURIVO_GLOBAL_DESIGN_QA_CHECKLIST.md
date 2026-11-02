@@ -1,5 +1,14 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## 2026-11-02 final visual pass before first-owner-preview
+
+- [ ] Preserve user-approved art direction; only change supported defects or specific requested final details. Stop gratuitous visual rewrites after acceptance.
+- [ ] Image selection and crop are intentional across all service photos (subject retained, similar framing, coherent ratios), but do not apply expensive image filters to simulate one photographic style.
+- [ ] Responsive stock photo requests use appropriate `srcset` and `sizes` with dimensions or stable aspect ratio to limit bytes, CLS and layout reflow; document original licensing and avoid invented photos of staff/real jobs.
+- [ ] Card headings and descriptions share readable typographic rhythm across 320/390/768/1440px; metadata captions remain understandable and legal demo labels visible.
+- [ ] Pointer-only interactive transforms are small and do not alter layout or override native scrolling. Hover-disabled/reduced-motion environments must show the real full content without animation dependency.
+- [ ] Final acceptance: exact-version no-credit browser tests and independent desktop+mobile evaluation, and verified HTTP first-load preview. Release/pitch gating still includes client-approved media, branded domain, real contact handling and editable CMS.
+
 **Learning history:** `docs/KAURIVO_DESIGN_LEARNING_LOG.md`. New owner/external feedback must be recorded there with review scope and regression checks before altering the universal rules.
 **Mandatory feedback loop:** `docs/KAURIVO_FEEDBACK_TO_STANDARD_WORKFLOW.md`. Every new owner/customer/external comment is routed into the global QA system unless its application is legitimately client-specific (with the reason recorded).
 

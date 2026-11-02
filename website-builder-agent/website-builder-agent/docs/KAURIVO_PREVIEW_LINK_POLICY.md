@@ -75,3 +75,10 @@ Latest external 3s AI video did not review mobile. User's long 65s recording end
 User-submitted V13 84.5-second desktop walkthrough found two visually disconnected header buttons. Separate 17.3-second Gemini review provided useful design/marketing observations, but no verified V14 score. V14 groups quiet phone and one strong blue quote CTA into a coherent two-link surface while retaining existing copy, responsive menu, native scroll and 3D. Never hide the honest internal-demo disclaimer or invent business claims to appease an AI reviewer. Only a branded approved HTTPS link is acceptable for actual customer outreach.
 
 Every new completed version includes its direct preview link automatically after confirming the published snapshot. This internal GitHub Pages path must NOT be emailed to a client.
+
+
+## 2026-11-02 — Kotifixi final V15 internal preview
+
+https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v15/
+
+Small final polish preserves V14 owner approval. New image srcset/sizes, source-aware crops, typographic rhythm and subtle pointer-only hover. Maintain demo disclaimer and test-only backend. This is an internal owner review URL, not a sales-prospect link or production website. Exact HTTP and independent review evidence must be verified before claiming a fully ready release. Always include the preview link automatically in the completed task answer.

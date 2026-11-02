@@ -1,5 +1,11 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — Kotifixi V15 final design pass
+
+Owner requested one final **small** visual refinement after V14 approval, not a new concept. Preserve the accepted brand palette, balanced header, primary question and truthful service copy. Changes in this version: coordinate subject-focused crops in hero, about and three service photographs; add responsive image candidates, explicit dimensions and lazy loading as appropriate to reduce waste on mobile and image layout shifts; unify card text rhythm at 15px and soften hover lift/zoom from more aggressive 3D into a restrained state. Do not introduce new JS scroll listeners or costly full-image filters. Keep no-JS and prefers-reduced-motion support. Do not claim a certified independent >=9.5/10 without evidence.
+
+**Agency-wide lesson:** last-mile art direction should be a controlled adjustment informed by user feedback, with concrete regression tests and no more gratuitous iterations. Next test of consistency is a new company project reaching 9/10 on its first owner-facing preview after internal QA.
+
 ## 2026-11-02 — V14 selective adoption, no design churn
 
 Owner's ~64-second Gemini Auto video scored the V14 **sales demo** overall 8.5/10 (first impression 9, conversion potential 8.5, personalization 7.5) and proposed conditions for a hypothetical 10/10. User likes V14 and does not want every AI recommendation applied. Accepted: verified business identity, authentic approved photos and locality only when sourced, practical mobile demo in human sales conversation, safe success/error form QA. Rejected: fabricated 5-star testimonial placeholders, unsupported geographic claims, hiding transparent concept/test warnings or treating the sales score as a certified independent design score. Do not replace the intended subject business's name/branding with an unrelated prospect. V14 remains the current preview, no V15 needed just to chase a score. Maintain >=9.5 formal gate separately.

@@ -1,5 +1,11 @@
 # Kaurivo — mandatory feedback-to-standard workflow
 
+## 2026-11-02 — final Kotifixi art-direction pass (V15)
+
+User approved the V14 design and asked for the last version. Scope intentionally restricted to small crop/typography/micro-interaction improvements previously discussed: responsive srcset/sizes and intrinsic dimensions for editorial photos, balanced image composition with CSS object-position, readable 15px service-card copy and softer hover lift/zoom without reintroducing heavy scroll effects. Header/button system, page architecture, main headline, prices, example-photo disclosures and demo-only backend are unchanged. Final snapshot is a **design-review candidate**; it is not a new customer production deployment or proof of external 9.5.
+
+Policy for future clients: do internal iterations before first owner-facing preview; test multiple unrelated sectors to validate first-pass ~9/10 aspirations instead of iterating one demo forever. Keep all factual client approval and outreach gates.
+
 Applies to every customer, demo, template, agent-generated draft, QA iteration and published project. Owner/customer feedback takes precedence over generic model taste unless it conflicts with verified facts, accessibility, legal requirements or another explicitly approved constraint.
 
 ## For EVERY new feedback item
