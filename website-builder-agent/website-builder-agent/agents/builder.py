@@ -151,12 +151,14 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   pisteitä tai väitä AI:n arvioineen työtä ilman näyttöä.
   Mobiilin ja desktopin sekä alisivujen arvioinnit
   tehdään aina ennen hyväksyntää.
-- VASTAKOHTAPARIEN (esim. "Vähemmän X, enemmän Y"
-  tai "Ei vain X vaan Y") EHDOTON MAKSIMI ON 1 KOKO
-  VERKKOSIVUSTOLLA, ei yksi per sivu. Jos pari kuulostaa
-  teennäiseltä, käytä 0. Toistuvat mainoslauseet ja
-  kahden iskulauseen rinnakkaisrytmi eivät korvaa
-  luonnollista suomen kieltä.
+- VASTAKOHTAPARIEN JA AI-KAAVOJEN OLETUS ON 0 KOKO
+  VERKKOSIVUSTOLLA. Vain aidosti poikkeuksellisen hyvä ja
+  erikseen perusteltu ilmaus voi olla poikkeus: EHDOTON
+  MAKSIMI ON 1 KOKO SIVUSTOLLA, ei yksi per sivu.
+  Vältä mm. "Vähemmän X. Enemmän Y.", "Ei vain X vaan Y"
+  ja "Yksi yhteydenotto. Monenlaisia..." -iskulauseita.
+  Kirjoita jokainen otsikko konkreettisen asiakkaan tarpeesta,
+  älä generatiivisen mainoskaavan mukaan.
 - Älä toista samaa ideaa hero-osiossa, palvelukorteissa,
   toisessa vaaleassa lohkossa ja lopun bannerissa.
   Jokaisella osiolla täytyy olla oma oikea tehtävänsä.
