@@ -91,7 +91,7 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
 - [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
 
-## 2026-11-02 Kotifixi V9 → V10: independent human navigation and plain Finnish
+## 2026-11-02 independent human navigation and plain Finnish
 
 - [ ] **Independent human first impression:** ask a non-building reviewer to evaluate the real site on their own device. Do not discount their response because an AI review rated it highly. Apply actionable UX feedback to every client.
 - [ ] **Desktop main navigation:** meaningful primary menu text is generally 15–16px with adequate contrast, spacing and keyboard focus. Review at 1024/1180/1280/1440px, not only a single 1440px viewport. Never use tiny 12–13px site-navigation text to make an overfull header fit.
@@ -99,7 +99,7 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] **Natural Finnish language:** check headings for awkward local idioms ("kotona tai pihalla" when repeated), exact service terms and semantically duplicate claims sitewide, not only the narrow regexes for AI antithesis slogans. Edit as real Finnish, with business facts intact.
 - [ ] **Motion is subtle and performance-conscious:** optional one-shot section reveals using IntersectionObserver, transform and opacity, plus responsive focus/hover/click feedback. Keep native trackpad/touch wheel input. Initial viewport and all content remain visible without JavaScript, IntersectionObserver or with prefers-reduced-motion. Do not use scroll handlers that drive layout/position.
 - [ ] **Photo brand contamination:** review legible manufacturer/product brands in stock photos, not just file license; a visible unrelated third-party logo can imply an endorsement. Prefer neutral photos and approved client-owned assets; crop only if truthful and rights-compatible.
-- [ ] **About voice:** source business facts in third person where needed but write for the visitor, not as a clumsy outsider report such as "Kotifixin omilla verkkosivuilla kerrotaan". Do not falsely impersonate the business's team or invent first-person claims.
+- [ ] **About voice:** source business facts in third person where needed but write for the visitor, not as a clumsy outsider report such as "yrityksen omilla verkkosivuilla kerrotaan". Do not falsely impersonate the business's team or invent first-person claims.
 - [ ] **Link delivery:** after every reviewed version publish and verify the internal preview link, then include it in the same response automatically. Sales still require a branded custom URL and explicit approval. See `docs/KAURIVO_PREVIEW_LINK_POLICY.md`.
 
 ## 2026-11-02 client-content-scoped second review — agency-wide quality standards
