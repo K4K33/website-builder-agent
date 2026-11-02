@@ -26,6 +26,11 @@ from bs4 import BeautifulSoup
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
 from utils.visual_media_gate import audit_visual_media
+from utils.site_architecture import (
+    validate_site_architecture, validate_site_navigation, pages_for_validation
+)
+from utils.creative_directions import validate_creative_directions
+from utils.visual_originality import audit_design_originality
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
 from utils.global_feedback import (
@@ -917,8 +922,20 @@ Tämä palautusskeema korvaa aiemman esimerkkiskeeman:
     "brand_specificity": 0, "typography": 0, "hierarchy": 0,
     "art_direction": 0, "imagery": 0, "motion": 0,
     "blockers": [], "improvements": []
+  },
+  "ai_style_review": {
+    "risk_score": 0,
+    "evidence": ["concrete design observations from rendered screenshots"],
+    "company_authenticity": "how original branding and real services dominate",
+    "prior_patterns_compared": ["other known client design compositions"],
+    "unresolved": []
   }
 }
+Tekoälymäisyyden riski 0 = ei havaittuja geneerisiä piirteitä ja
+10 = vahvasti tunnistettavaa pohjagenerointia. Tämä EI todista tekijää.
+Kirjaa konkreettisia toistuvia tekstin/kuvien/elementtien piirteitä.
+Älä päättele tekijää ulkoasusta. Tavoite <=2/10. Samankaltainen
+toimiala EI yksin ole hylkäysperuste.
 """
 
 
@@ -980,6 +997,27 @@ def owner_preview_visual_passes(review: dict, *, minimum: int | None = None) -> 
         for key in keys
     )
 
+
+
+def ai_style_review_passes(review: dict, *, required: bool = True) -> bool:
+    """Check evidence behind a conservative anti-template reviewer score."""
+    if not required:
+        return True
+    data=review.get("ai_style_review") if isinstance(review,dict) else None
+    if not isinstance(data,dict):
+        return False
+    score=data.get("risk_score")
+    evidence=data.get("evidence")
+    patterns=data.get("prior_patterns_compared")
+    return (isinstance(score,(int,float)) and not isinstance(score,bool)
+            and 0<=score<=2
+            and isinstance(evidence,list) and len(evidence)>=2
+            and all(isinstance(item,str) and len(item.strip())>=12 for item in evidence)
+            and isinstance(patterns,list) and len(patterns)>=2
+            and all(isinstance(item,str) and item.strip() for item in patterns)
+            and isinstance(data.get("company_authenticity"),str)
+            and len(data["company_authenticity"].strip())>=25
+            and data.get("unresolved")==[])
 
 def run_qa(slug_or_name: str) -> dict:
     slug, company = get_company(slug_or_name)
