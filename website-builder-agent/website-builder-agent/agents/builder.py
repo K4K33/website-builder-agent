@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
-from utils.industry_workflow import create_industry_brief
+from utils.industry_workflow import create_industry_brief, validate_design_intent
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 import json
@@ -1166,6 +1166,7 @@ def build_site(
         )
 
     industry_brief = create_industry_brief(company, research)
+    validate_design_intent(research)
 
     benchmark = validate_benchmark(research, company.get("url", ""))
     decisions = validate_design_plan(research, company.get("url", ""))
@@ -1442,6 +1443,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     slug, company = _resolve_company(slug_or_name)
     research = company.get("research") or {}
     industry_brief = create_industry_brief(company, research)
+    validate_design_intent(research)
     validate_design_plan(research, company.get("url", ""))
     facts = research.get("company_facts")
     if not isinstance(facts, dict) or not facts:
@@ -1493,6 +1495,7 @@ def revise_site(
     )
 
     industry_brief = create_industry_brief(company, research)
+    validate_design_intent(research)
 
     company_facts = research.get(
         "company_facts",

@@ -251,3 +251,38 @@ def create_industry_brief(company: dict, research: dict) -> dict:
             "This brief does not imply an accepted or customer-ready website."
         ),
     }
+
+def validate_design_intent(research: dict) -> dict:
+    """Reject a generic or empty visual plan before running the Builder model.
+
+    This checks completeness, not artistic quality; a separate independent
+    screenshot-based review is still mandatory.
+    """
+    recs = research.get("design_recommendations") or {}
+    if not isinstance(recs, dict):
+        raise RuntimeError("Missing customer-specific visual design recommendations.")
+    required = ("visual_concept", "typography_scale", "spacing_and_layout", "mobile_plan")
+    missing = [key for key in required if not isinstance(recs.get(key), str)
+               or len(recs[key].strip()) < 20]
+    if missing:
+        raise RuntimeError("Customer-specific visual brief incomplete: " + ", ".join(missing))
+    plan = recs.get("section_plan")
+    if not isinstance(plan, list) or len(plan) < 2:
+        raise RuntimeError("Client-specific section plan is missing or too generic.")
+    seen = set()
+    for item in plan:
+        if not isinstance(item, dict):
+            raise RuntimeError("Invalid client section plan entry.")
+        key = str(item.get("id") or "").strip()
+        purpose = str(item.get("purpose") or "").strip()
+        layout = str(item.get("layout") or "").strip()
+        if not key or key in seen or len(purpose) < 12 or len(layout) < 16:
+            raise RuntimeError("Each section needs a unique id, reason and concrete layout.")
+        seen.add(key)
+    return {
+        "visual_concept": recs["visual_concept"].strip(),
+        "section_ids": sorted(seen),
+        "layout_explanations": [p["layout"].strip() for p in plan],
+        "note": "Structure verified; independently review visual originality.",
+    }
+

@@ -26,7 +26,7 @@ from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.screenshot import capture_website
-from utils.industry_workflow import crawl_original_website
+from utils.industry_workflow import crawl_original_website, sector_guidance
 
 import requests
 
@@ -481,6 +481,8 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
         "Follow the same full same-industry comparison and unique design plan.\n"
         + "FACTS:\n" + json.dumps(facts, ensure_ascii=False)
         + "\nFACT SOURCES:\n" + json.dumps(verified["fact_sources"], ensure_ascii=False)
+        + "\nINDUSTRY TASK GUIDANCE (not an HTML template):\n"
+        + json.dumps(sector_guidance(industry), ensure_ascii=False)
         + "\nREFERENCE IMAGE ORDER:\n" + json.dumps(labels, ensure_ascii=False)
         + "\nOBSERVED INDEPENDENT OPERATORS:\n" + json.dumps(evidence, ensure_ascii=False)
         + "\nREFERENCES SEARCH:\n" + _format_search_results(references)
@@ -750,6 +752,9 @@ Raaka HTML:
     reference_images, image_labels = reference_image_inputs(reference_evidence)
 
     final_prompt = f"""
+SOURCE-LED INDUSTRY CUSTOMER TASKS (not a layout template):
+{json.dumps(sector_guidance(industry), ensure_ascii=False)}
+
 OBSERVED INDUSTRY REFERENCES (not facts about the target):
 Image order: {json.dumps(image_labels, ensure_ascii=False)}
 {json.dumps(reference_evidence, ensure_ascii=False)}

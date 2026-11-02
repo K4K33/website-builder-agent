@@ -6,7 +6,7 @@ import unittest
 from utils.fetch import extract_text_and_meta
 from utils.industry_workflow import (
     crawl_original_website, create_industry_brief, sector_guidance,
-    validate_inventory,
+    validate_inventory, validate_design_intent,
 )
 
 
@@ -106,6 +106,25 @@ class IndustryWorkflowTests(unittest.TestCase):
         self.assertEqual(brief["inventory_status"]["mode"], "verified_no_website")
         self.assertEqual(brief["source_pages"], [])
         self.assertEqual(brief["sector"], "restaurant")
+
+    def test_generic_design_plan_fails_before_paid_builder(self):
+        with self.assertRaisesRegex(RuntimeError, "visual brief incomplete"):
+            validate_design_intent({"design_recommendations": {
+                "visual_concept": "Blue hero and services."}})
+        recs = {
+            "visual_concept": "Original photographic project-led editorial layout for the client",
+            "typography_scale": "Long-format title with comfortable high-contrast body copy",
+            "spacing_and_layout": "Asymmetric primary story and project gallery composition",
+            "mobile_plan": "Mobile image-first sequence with accessible sticky navigation",
+            "section_plan": [
+                {"id": "story", "purpose": "Explain distinctive client offer",
+                 "layout": "Editorial two-level narrative with varied text lengths"},
+                {"id": "contact", "purpose": "Provide the verified contact path",
+                 "layout": "Separate compact inquiry module following real work examples"},
+            ],
+        }
+        self.assertEqual(validate_design_intent({
+            "design_recommendations": recs})["section_ids"], ["contact", "story"])
 
     def test_header_footer_logo_evidence_without_inventing_relationship(self):
         doc = """<!doctype html><html><head><title>Source</title></head><body>
