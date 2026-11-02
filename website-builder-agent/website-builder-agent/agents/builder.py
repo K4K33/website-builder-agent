@@ -176,6 +176,26 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V9 YLEISET LAATUSÄÄNNÖT (uusi V8 desktop-palaute):
+- Taiton pitää tuntua harkitulta eikä isojen vaaleanharmaiden
+  tekstipalkkien ketjulta. Erota hinnasto, huomautukset, lähteet ja
+  verovähennystiedot toisistaan; vältä ahtaita sticky-sivupalkkeja.
+- Älä lisää joka otsikkoon samaa kursiivia tai serif-korostusta.
+  Tee luonnollinen suomenkielinen otsikko ilman pakotettuja tavutuksia.
+- Pidä touchpad/wheel/touch-scroll natiivina: ei yleistä
+  smooth-scrollia, pyöritystä ohjaavaa JS:ää tai raskaita
+  backdrop-filtereitä kiinteissä/sticky-osissa. Testaa oikealla laitteella.
+- Esimerkkikuvien aiheen ja työn mittakaavan on vastattava oikeita
+  vahvistettuja palveluja. Esimerkkikuvaa ei saa markkinoida
+  asiakkaan henkilöstön tai toteutettujen töiden kuvana.
+- Asiakkaan ESITTELY- JA MYYNTILINKKI: ei raw.githack/rawgit.hack-
+  välisivuja, github.io-osoitteita eikä deployment-tarjoajan
+  geneerisiä kehittäjäosoitteita. Sisäisessä QA:ssa sallittuja,
+  ei asiakasviestissä. Vaadi omistettu ja hyväksytty HTTPS-brändidomain
+  sekä tarkista avautuminen ilman välivaroituksia.
+- Älä keksi yrittäjän nimeä, valokuvaa, arvosteluja, toimialuetta,
+  kotitalousvähennyskelpoisuutta tai nopeuslupausta.
+
 YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
 - Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat
   saatavilla, olennaisia ja käyttöoikeudeltaan ihmisen vahvistamia.
