@@ -127,6 +127,17 @@ class SourceIdentityTests(unittest.TestCase):
         self.assertIn("accurate_media", report["pending_evidence"])
         self.assertNotIn("accurate_media", report["blocking_problems"])
 
+    def test_real_photography_alone_requires_company_specific_brand_plan(self):
+        html = ('<html><body><main><img src="/team.jpg" alt="Real team photo">'
+                '<h1>Actual company</h1></main></body></html>')
+        profile = extract_source_identity(html, SOURCE_URL)
+        self.assertFalse(profile["original_logo_candidates"])
+        self.assertFalse(profile["theme_color"])
+        research = {"source_inventory": {"pages": [{
+            "url": SOURCE_URL, "source_identity": profile}]}}
+        with self.assertRaisesRegex(RuntimeError, "brand preservation plan"):
+            validate_brand_preservation_plan(research)
+
     def test_original_price_row_and_faq_are_structured(self):
         from utils.source_identity import extract_price_faq_evidence
         source = """<html><body><table>
