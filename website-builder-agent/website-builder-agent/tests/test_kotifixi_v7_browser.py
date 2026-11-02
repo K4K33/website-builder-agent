@@ -55,6 +55,13 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                                         self.assertEqual(res.status, 200)
                                         self.assertTrue(page.locator("h1").is_visible())
                                         self.assertEqual(page.locator(".site-nav a").count(), 5)
+                                        # The concept/legal status must remain visible on real phones.
+                                        warning = page.get_by_text("Ei Kotifixin virallinen sivusto", exact=True)
+                                        self.assertTrue(warning.is_visible())
+                                        box = warning.bounding_box()
+                                        self.assertIsNotNone(box)
+                                        self.assertGreaterEqual(box["x"], 0)
+                                        self.assertLessEqual(box["x"] + box["width"], width + 1)
                                         overflow = page.evaluate(
                                             "document.documentElement.scrollWidth - window.innerWidth")
                                         if overflow > 1:
