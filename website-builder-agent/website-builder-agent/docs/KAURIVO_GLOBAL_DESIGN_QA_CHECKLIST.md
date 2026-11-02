@@ -91,6 +91,16 @@ Follow `docs/KAURIVO_QUALITY_95_GATE.md` for **every** customer demo.
 - [ ] **Legal/financial customer benefits:** verify every tax percentage and threshold from a dated primary authority, distinguish eligible work from excluded work and verify seller registration before claiming eligibility. Source-linked neutral guidance may be used with an explicit eligibility caveat; never copy stale figures from other AI reviews.
 - [ ] **Reviewer scope and version:** video review of V7 is NOT a score for V8. Compare criticism with latest exact source before editing and record fixes versus already-addressed issues.
 
+## 2026-11-02 V11 review — question-first service copy, deeper interaction, no scroll jank
+
+- [ ] **Hero is specific and human:** state verifiable service categories in natural Finnish, ideally as a customer question or another direct task-focused title. Avoid a vague self-referential company-name slogan, but keep approved brand language unchanged. Watch repetition sitewide rather than swapping between two equally awkward synonyms.
+- [ ] **Desktop legibility:** re-evaluate header after every revision: where it fits cleanly aim for 17–18px top-level navigation. At narrower widths select smaller readable labels or the mobile menu; never squeeze navigation with tiny font, overlap buttons or clip the header.
+- [ ] **Dimensionality without sluggish scroll:** use purposeful CSS perspective, layered image framing, small hover-depth interactions, subtle one-time section reveals and tactile focus/press states. Pointer-follow may use a capped requestAnimationFrame tied to a single element; no window scroll handlers, scroll hijack, canvas/WebGL defaults, huge backdrop blurs or permanent repaints.
+- [ ] **Accessible fallback:** first viewport usable immediately, no-JS contents visible, reduced-motion motionless, touch device 3D static and clear, keyboard navigation never relies on hover movement.
+- [ ] **Navigation semantics:** page named "Meistä" must contain verified information about the real business; when none is available, call the route "Näin toimimme" or another honest label without inventing biographies, reviews or certifications. Content and URL label should correspond.
+- [ ] **Translation browser overlay:** Chrome translate bar is browser-controlled; verify `html lang="fi"`, UTF-8 and real language consistency, but do not misrepresent browser UI as a broken website or block translation for accessibility.
+- [ ] **External AI feedback** is qualitative, not a release certificate. User/independent-human criticism takes priority for actual perceived font scale, readability and animation; benchmark on real devices and record physical scroll smoothness separately from synthetic CSS tests.
+
 ## 2026-11-02 independent human navigation and plain Finnish
 
 - [ ] **Independent human first impression:** ask a non-building reviewer to evaluate the real site on their own device. Do not discount their response because an AI review rated it highly. Apply actionable UX feedback to every client.
