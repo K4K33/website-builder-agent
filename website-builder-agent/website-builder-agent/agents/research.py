@@ -27,6 +27,7 @@ from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.screenshot import capture_website
 from utils.industry_workflow import crawl_original_website, sector_guidance
+from utils.source_fidelity import validate_source_plan, source_manifest
 
 import requests
 
@@ -166,6 +167,19 @@ Palauta VAIN validi JSON tässä muodossa:
       "reference_note": ""
     }
   ],
+  "source_content_map": {
+    "pages": [
+      {
+        "source_url": "exact URL from source inventory",
+        "status": "retain or merge",
+        "target": "index.html#existing-section-id from section_plan",
+        "sections": [
+          {"source_heading": "exact observed H2/H3 heading",
+           "target": "index.html#existing-section-id from section_plan"}
+        ]
+      }
+    ]
+  },
   "design_recommendations": {
     "color_palette": [
       "#hexcode"
@@ -195,7 +209,18 @@ Sääntöjä:
 - Referenssien URL-osoitteet kuuluvat vain reference_comparison- ja design_decisions-kenttiin.
 - design_decisions käyttää JOKAISTA valittua referenssiä ja kattaa ulottuvuudet first_view, service_hierarchy, contact_path ja mobile.
 - Jokainen päätös yhdistää tarkan havainnon, yrityskohtaisen sovelluksen, HTML-osion tunnuksen ja näkyvän hyväksymiskriteerin.
-- color_palette sisältää 3-5 väriä.
+- source_content_map sisältää JOKAISEN alkuperäisestä lähdesivustosta
+  kerätyn URL:n ja sen kaikki h2/h3-otsikot. Kunkin kohdan target on
+  toimiva uuden sivuston section_plan-id. Älä keksi alkuperäisiä osioita.
+- Yhtään palvelua, tuoteryhmää, hinnastoa, tuoteluetteloa, sponsorimerkkiä,
+  yhteistyölinkkiä, kieliversiota tai asiakasreferenssiä EI SAA poistaa
+  uuden sivuston kaunistamiseksi. Kaikki alkuperäiset sivut on huomioitava.
+- Vanhan sivuston palvelu-/myyntinäkymään linkittäminen ei korvaa
+  sisällön siirtämistä ja luettavuuden korjaamista.
+- Jos lähdesisältö vaatii useampia alasivuja, merkitse ne suunnitelmaan,
+  älä yritä tiivistää sisällön määrää murto-osaan.
+- color_palette sisältää 3-5 väriä. Ne pohjautuvat alkuperäiseen
+  tunnistettavaan brändiin, ellei asiakkaalta ole rebrand-hyväksyntää.
 - key_sections sisältää Builder-agentille hyödylliset sivuston pääosiot.
 - Älä keksi yrityksen faktoja.
 - Jos yhteystieto puuttuu, jätä se tyhjäksi.
@@ -782,6 +807,14 @@ URL:
 
 {json.dumps(source_excerpts, ensure_ascii=False)}
 
+--- PAKOLLINEN LÄHDEKOHTAINEN SÄILYTYSLISTA ---
+
+{json.dumps(source_manifest({"source_inventory":source_inventory}), ensure_ascii=False)}
+
+Laadi source_content_map jokaiselle lähdesivulle ja h2/h3-otsikolle,
+älä poista osioita pelkän visualisoinnin vuoksi. Tämä suunnitelma
+tarkistetaan ennen maksullista Builder-ajoa.
+
 --- TAVILYN REFERENSSIT ---
 
 {_format_search_results(references)}
@@ -857,6 +890,9 @@ Tärkeää:
     }
 
     validate_design_plan(research_data, url)
+    # Do not spend a Builder request on a redesign that never planned to
+    # preserve each originally observed content page and topic.
+    validate_source_plan(research_data, source_url=url)
 
     updated_company = upsert_company(
         slug,
