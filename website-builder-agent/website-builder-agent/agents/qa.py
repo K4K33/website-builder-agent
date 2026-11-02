@@ -1031,17 +1031,53 @@ def run_qa(slug_or_name: str) -> dict:
         html_bytes = file.read()
     html = html_bytes.decode("utf-8")
     research = company.get("research") or {}
-    parity = audit_content_parity(html, research, source_url=company.get("url", ""))
+    page_paths = build.get("page_paths") or ["index.html"]
+    site_root = Path(path).resolve().parent
+    rendered_pages = {}
+    for route in page_paths:
+        file = site_root / route
+        if not file.is_file() or not file.resolve().is_relative_to(site_root):
+            raise RuntimeError("Missing or unsafe generated site route: "+str(route))
+        rendered_pages[route] = file.read_text(encoding="utf-8")
+    if "index.html" not in rendered_pages:
+        raise RuntimeError("Missing site homepage in built page manifest.")
+    planned_architecture = None
+    if research.get("site_architecture") or build.get("page_paths"):
+        planned_architecture = validate_site_architecture(
+            research, no_site=research.get("research_mode")=="verified_no_website"
+        )
+        if set(planned_architecture["page_paths"]) != set(rendered_pages):
+            raise RuntimeError("Generated pages no longer match approved architecture.")
+        nav = validate_site_navigation(rendered_pages,planned_architecture)
+    else:
+        nav = {"pass":True,"issues":[]}
+    combined_html = pages_for_validation(rendered_pages)
+    parity = audit_content_parity(combined_html, research, source_url=company.get("url", ""))
     source_fidelity = audit_source_fidelity(
-        html, research, source_url=company.get("url", "")
+        html, research, source_url=company.get("url", ""),
+        rendered_pages=rendered_pages
     )
     universal = audit_universal_standards(
-        html, research, company=company, stage="internal_demo"
+        html, research, company=company, stage="internal_demo",
+        rendered_pages=rendered_pages
     )
     ledger_file = Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
     ledger = load_ledger(ledger_file)
     pending_general_rules = universal_rules_pending_implementation(ledger)
-    automated = _automated_checks(html)
+    per_page_automated = {
+        route: _automated_checks(body,page_path=route)
+        for route,body in rendered_pages.items()
+    }
+    automated = {"automated_pass":all(x["automated_pass"] for x in per_page_automated.values())
+                 and nav["pass"],
+                 "automated_issues":[route+": "+issue
+                    for route,report in per_page_automated.items()
+                    for issue in report["automated_issues"]] + nav["issues"],
+                 "pages":per_page_automated}
+    originality = audit_design_originality(
+        html,site_slug=slug,
+        reference_demos=Path(__file__).resolve().parents[1]/"docs"/"kaurivo"/"demos"
+    )
     # Fail objectively broken images and HOLD unverified external imagery
     # before using a browser run or consuming any limited review credits.
     # External checks must match the exact immutable HTML being reviewed.
@@ -1052,9 +1088,21 @@ def run_qa(slug_or_name: str) -> dict:
         and media_evidence.get("html_sha256") == hashlib.sha256(html_bytes).hexdigest()
         else set()
     )
-    visual_media = audit_visual_media(
-        html, html_path=path, verified_public_images=verified_images
-    )
+    media_results={
+        route:audit_visual_media(body,html_path=site_root/route,
+                                verified_public_images=verified_images)
+        for route,body in rendered_pages.items()
+    }
+    visual_media={
+        "owner_preview_ready":all(report["owner_preview_ready"]
+                                  for report in media_results.values()),
+        "static_pass":all(report["static_pass"] for report in media_results.values()),
+        "blockers":[route+": "+item for route,report in media_results.items()
+                    for item in report["blockers"]],
+        "needs_public_verification":[route+": "+item for route,report in media_results.items()
+                    for item in report["needs_public_verification"]],
+        "pages":media_results,
+    }
     # Never spend browser/AI review credits when guaranteed critical
     # source-backed fields are absent.
     parity_hard_missing = bool(source_fidelity["missing"] or parity["missing"] or any(
@@ -1067,8 +1115,18 @@ def run_qa(slug_or_name: str) -> dict:
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
     benchmark_urls, decisions = [], []
     if (automated["automated_pass"] and not parity_hard_missing
-            and universal["automated_pass"] and visual_media["owner_preview_ready"]):
-        browser = inspect_site(path)
+            and universal["automated_pass"] and visual_media["owner_preview_ready"]
+            and originality["pass"]):
+        page_browsers={
+            route:inspect_site(site_root/route)
+            for route in rendered_pages
+        }
+        browser=dict(page_browsers["index.html"])
+        browser["pages"]=page_browsers
+        browser["pass"]=all(item.get("pass") for item in page_browsers.values())
+        browser["issues"]=[route+": "+item
+                            for route,result in page_browsers.items()
+                            for item in result.get("issues") or []]
         if browser["pass"]:
             research = company.get("research") or {}
             try:
@@ -1076,7 +1134,8 @@ def run_qa(slug_or_name: str) -> dict:
                 benchmark_urls = [record["url"] for record in benchmark]
                 decisions = validate_design_plan(research, company.get("url", ""))
                 from agents.builder import _validate_plan_sections
-                _validate_plan_sections(html, research, company.get("url", ""))
+                _validate_plan_sections(html, research, company.get("url", ""),
+                                        rendered_pages=rendered_pages)
                 benchmark_images, image_labels = reference_image_inputs(benchmark)
                 original_images = [
                     research.get("original_screenshots", {}).get(view)
@@ -1084,6 +1143,12 @@ def run_qa(slug_or_name: str) -> dict:
                     if isinstance(research.get("original_screenshots", {}).get(view), str)
                     and os.path.isfile(research["original_screenshots"][view])
                 ]
+                other_page_shots=[
+                    p for route,report in page_browsers.items()
+                    if route!="index.html"
+                    for key,p in (report.get("screenshots") or {}).items()
+                    if key in ("desktop","mobile") and p and os.path.isfile(p)
+                ][:12]
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
@@ -1113,14 +1178,24 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(source_fidelity, ensure_ascii=False)
                     + "\nALL-SITE QA STANDARD STATUS (unverified stays pending):\n"
                     + json.dumps(universal, ensure_ascii=False)
-                    + "\nPAGE CONTENT:\n" + _build_ai_snapshot(html),
+                    + "\nALL NEW ROUTES, SOURCE MIGRATION AND NAVIGATION:\n"
+                    + json.dumps({"page_paths":list(rendered_pages),"navigation":nav,
+                                  "creative_directions":research.get("creative_directions"),
+                                  "creative_selection":research.get("creative_selection"),
+                                  "originality_preflight":originality},ensure_ascii=False)
+                    + "\nALL PAGE VISIBLE CONTENT:\n"
+                    + "\n".join(route+": "+_build_ai_snapshot(body)
+                                for route,body in rendered_pages.items()),
                     max_tokens=5000, stage="qa",
-                    image_paths=list(browser["screenshots"].values()) + original_images + benchmark_images,
+                    image_paths=list(browser["screenshots"].values()) + other_page_shots
+                                + original_images + benchmark_images,
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
     result = {
         "automated": automated, "visual_media": visual_media,
+        "originality": originality, "site_navigation": nav,
+        "site_pages":list(rendered_pages),
         "browser": browser, "content_review": review,
         "content_parity": parity,
         "source_fidelity": source_fidelity,
@@ -1129,17 +1204,22 @@ def run_qa(slug_or_name: str) -> dict:
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "overall_pass": (parity["pass"] and source_fidelity["pass"]
+                         and nav["pass"] and originality["pass"]
                          and universal["automated_pass"]
                          and not pending_general_rules
                          and automated["automated_pass"]
                          and visual_media["owner_preview_ready"] and browser["pass"]
                          and review_passes(review, benchmark_urls, decisions)
-                         and owner_preview_visual_passes(review)),
+                         and owner_preview_visual_passes(review)
+                         and ai_style_review_passes(
+                             review,required=bool(research.get("creative_directions"))
+                         )),
     }
     # Every future general failure is recorded without a new model request.
     # Repeating the same category across different clients makes it a
     # candidate for a universal regression check, not an invented fix.
     issues = (list(automated.get("automated_issues") or [])
+              + list(originality["blocking_problems"])
               + list(visual_media["blockers"])
               + list(visual_media["needs_public_verification"])
               + [x["label"] for x in parity["missing"]]
