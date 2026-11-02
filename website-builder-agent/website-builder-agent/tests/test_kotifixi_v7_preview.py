@@ -117,6 +117,23 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
             page = BeautifulSoup((ROOT / filename).read_text(encoding="utf-8"), "html.parser")
             self.assertLessEqual(len(page.select("main .serif")), 1)
 
+    def test_v9_photo_slot_and_label_quality(self):
+        css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        for rule in (
+            ".editorial-media,.editorial-card-main .editorial-media{height:auto;aspect-ratio:4/3}",
+            ".hero-photo-frame img,.editorial-media img,.about-photo img{object-fit:cover",
+            ".about-photo{height:auto;aspect-ratio:4/3}",
+            ".visual-photo-note,.photo-disclaimer{font-size:13px",
+        ):
+            self.assertIn(rule, css)
+        home = BeautifulSoup((ROOT / "index.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(len(home.select(".hero-photo-frame img")), 1)
+        self.assertEqual(len(home.select(".editorial-media img")), 3)
+        self.assertFalse(home.select(".testimonial, .fake-staff, .empty-photo-placeholder"))
+        for filename in FILES:
+            html = (ROOT / filename).read_text(encoding="utf-8")
+            self.assertIn("Ei Kotifixin virallinen sivusto", html)
+
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
         self.assertEqual(len(soup.select(".service-row")), 3)
