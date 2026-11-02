@@ -56,6 +56,17 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+INDEPENDENT PREMIUM REVIEW PROTOCOL:
+Evaluate this exact build and all pages at desktop/tablet/mobile/320px,
+against the original company's source brand and all available screenshots.
+Report independent scores per: visual design, originality, brand fidelity,
+content fidelity, real photography, natural copy, usability, mobile,
+accessibility and interaction quality. An average does not hide a weak area.
+List exact source URLs for any dropped services, instructions, reviews or
+logos; report unresolved variants, wrong deep links, suspiciously generic
+text, stock replacements and missing stars. Never claim 9.5/10 merely because
+automated unit tests passed, and never self-certify external reviewer results.
+
 KRIITTINEN BRÄNDI-, ARVOSTELU- JA SISÄLTÖUSKOLLISUUS:
 Vertaa myös alkuperäisen yrityksen logoja, brändivärejä, työntekijä- ja
 referenssikuvia sekä alkuperäistä visuaalista identiteettiä uuteen.
