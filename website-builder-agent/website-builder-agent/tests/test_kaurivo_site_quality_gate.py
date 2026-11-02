@@ -2,6 +2,8 @@
 from datetime import date
 from pathlib import Path
 import unittest
+from unittest.mock import patch
+from agents import outreach
 
 from utils.kaurivo_site_quality_gate import (
     assess_quality_consistency, lint_site_copy, lint_site_directory
@@ -96,6 +98,31 @@ class EvidenceGateTests(unittest.TestCase):
         self.assertNotIn("ask_claude", src)
         self.assertNotIn("requests.", src)
         self.assertNotIn("openai.ChatCompletion", src)
+
+
+class OutreachReleaseGateTests(unittest.TestCase):
+    def _record(self, reviews):
+        return {
+            "name": "Test Company",
+            "outreach": {"subject": "Web demo", "body": "Approved content",
+                         "approved": False},
+            "agency_quality_reviews": reviews,
+        }
+
+    def test_outreach_approval_blocked_without_external_95_and_sample(self):
+        with patch.object(outreach, "get_company", return_value=("kotifixi", self._record([]))):
+            with patch.object(outreach, "company_is_suppressed", return_value=False):
+                with self.assertRaisesRegex(RuntimeError, "HOLD"):
+                    outreach.approve_outreach("kotifixi")
+
+    def test_outreach_approval_requires_three_good_distinct_reviewed_demos(self):
+        record = self._record([review("kotifixi"), review("b"), review("c")])
+        with patch.object(outreach, "get_company", return_value=("kotifixi", record)):
+            with patch.object(outreach, "company_is_suppressed", return_value=False):
+                with patch.object(outreach, "upsert_company") as persist:
+                    with patch.object(outreach, "set_status"):
+                        outreach.approve_outreach("kotifixi")
+                        self.assertTrue(persist.call_args.args[1]["outreach"]["approved"])
 
 
 if __name__ == "__main__":
