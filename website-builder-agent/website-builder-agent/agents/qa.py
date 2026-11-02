@@ -734,6 +734,19 @@ HTML END:
 VISUAL_REVIEW_PROMPT = """
 Lisäksi arvioi mukana olevat aidot renderöidyt desktop-, tablet- ja mobiilikuvat.
 HTML:n sisältötarkistus yksin ei riitä hyväksyntään.
+Kun alkuperäisen yrityssivuston desktop/mobiilikuvat ovat mukana, vertaa
+kirjaimellisesti vanhan ja uuden brändin logoa, alkuperäisiä korostusvärejä,
+kuvamaailmaa, tekijän persoonallisuutta ja kuvien merkitystä. Jos vanhan
+yrityksen tunnistettavat värit on vaihdettu ilman asiakkaan todistettua
+hyväksyntää, lisää blocker ja anna brand_specificity <95. Älä hyväksy
+geneeristä beigeä/murrettua palettia vain trendikkyyden vuoksi.
+Vertaa myös vanhan ja uuden sivuston palveluja, kumppanilogoja, hinnastoja,
+tuotemyyntiä, kielivalintoja ja toimintapolkuja. Kadonneet sisällöt
+pudottavat content_ok-arvon epätodeksi ja kirjoita täsmällinen lähde-URL.
+Jos uusi sivu linkittää tärkeässä tehtävässä takaisin vanhaan
+lukukelvottomaan palvelu-/myyntinäkymään, estä hyväksyntä.
+Jos alkuperäisiä kuvakaappauksia ei ole, älä väitä brändivertailua
+todennetuksi; pidä se erillisenä vahvistusta odottavana puutteena.
 Arvioi typografia, sommittelu, sisältöhierarkia, yrityskohtaisuus, luettavuus,
 mobiilin viimeistely, käyttötarkoituksen selkeys ja visuaalinen yhtenäisyys.
 0–49: keskeneräinen, 50–69: perustoteutus, 70–84: käyttökelpoinen mutta korjattava,
