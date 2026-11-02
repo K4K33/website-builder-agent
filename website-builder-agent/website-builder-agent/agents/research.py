@@ -640,6 +640,11 @@ def run_research(
             "Original-site content research incomplete; review these pages: "
             + ", ".join(source_gaps[:8])
         )
+    # Capture the CLIENT'S ORIGINAL actual desktop/mobile visual identity
+    # before any redesign. Reference screenshots alone cannot prove fidelity.
+    original_screenshots = capture_website(
+        normalize_url(url), "original-client-" + slug
+    ) or {}
     source_excerpts = [
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
          "text": p["text"][:2600], "header_assets": p["header_assets"],
@@ -871,6 +876,7 @@ Tärkeää:
         # The design pass must not rewrite or invent extracted company facts.
         "company_facts": company_facts,
         "source_inventory": source_inventory,
+        "original_screenshots": original_screenshots,
         "fact_sources": [{"url": url, "title": site_data.get("title", ""),
                           "text": site_data.get("visible_text", "")[:12000]}],
         "reference_sources": [
