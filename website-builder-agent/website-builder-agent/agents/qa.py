@@ -52,6 +52,11 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+Tarkasta koko sivuston CTA-painikkeiden ja linkkien nuolten toistuminen.
+Koristeellinen ↗ tai → joka painikkeessa ja footer-linkissä on yleinen design-virhe.
+Arvioi lisäksi CSS:n ::after-nuolet ja SVG-koristeet; toiminnallinen suuntaohjain
+on eri asia kuin toistuva nuoli-ikoni. Älä hyväksy tällaista mallimaisuutta.
+
 VERIFY SOURCE CONTENT PARITY:
 The old site may have multiple pages. Compare ALL supplied original
 source excerpts and known verified facts with the NEW page. Identify
