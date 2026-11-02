@@ -1,12 +1,12 @@
 # Kaurivo — tiedon säilymisen ehdoton standardi
 
-Voimassa 2.11.2026 alkaen kaikissa asiakkaan nykyisen verkkosivuston
+**Footer-tunnusten tarkistus:** inventoi nimi, rooli, alkuperäinen logotiedosto, linkki, lähdesivu, suhteen ajantasaisuus ja kuvan käyttöoikeus. Säilytä vahvistetut kumppani-/sponsoritunnukset visuaalisesti uudessa footerissa tai muussa sovitussa osiossa. Älä väitä vanhentunutta suhdetta aktiiviseksi. Jos käyttöoikeus tai suhteen ajantasaisuus puuttuu, pysäytä asiakasjulkaisu ja pyydä vahvistus.\n\nVoimassa 2.11.2026 alkaen kaikissa asiakkaan nykyisen verkkosivuston
 uudistuksissa, ilman että käyttäjän tarvitsee erikseen muistuttaa.
 
 1. ENNEN DESIGNIA kerää nykyisen verkkosivuston kaikki olennaiset sivut,
    ankkurit, kuvat, PDF:t, palvelulistaukset, hinnat, tuotetiedot, FAQ,
-   yhteystiedot, aukioloajat, yritystiedot, referenssit, varaukset, lomakkeet
-   ja mahdolliset ajankohtais-/uutissisällöt.
+   yhteystiedot, aukioloajat, yritystiedot, referenssit, varaukset, lomakkeet,
+   ajankohtais-/uutissisällöt sekä footerissa olevat sponsorien,\n   yhteistyökumppaneiden, ketjujen ja sertifikaattien logot ja linkit.
 2. Tee sivukohtainen **sisältöinventaario ja lähde-linkki** jokaiselle
    tiedolle. Jaottele: varmistettu, ristiriitainen/vanhentunut, dynaaminen,
    asiakkaan hyväksyntää vaativa tai poistettu perustellusti.

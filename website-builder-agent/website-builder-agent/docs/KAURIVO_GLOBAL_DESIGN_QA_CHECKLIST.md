@@ -1,6 +1,13 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
 
+## Footer sponsor / partner completeness — universal mandatory check
+- [ ] Inspect every original footer, small-print logo strip and partner page, including mobile variants; identify sponsor logos, partner logos, chains, certificates, memberships, original role, outgoing URL and original asset.
+- [ ] For each source logo, map to an approved current destination section in the new site; **no silent disappearance**. Prefer the original real logo with correct rights, alt text, legible size, mobile layout and accessible link.
+- [ ] Distinguish verified active sponsorship, affiliation, supply partner, chain membership and certificate; do not recast old logos as endorsements or claim expired affiliations.
+- [ ] Old→new audit: name, relationship, link, image source and approval status. Missing/mismatched logos or unknown permission = release HOLD, not fabricated substitutions.
+- [ ] Include these checks for all future customer sites, not only the three current demos.
+
 ## 2026-11-02 hard stop: three industry demo failure and new universal rule
 
 See `docs/KAURIVO_NO_TEMPLATES_BRAND_CONTENT_GUARD_2026-11-02.md`. HARD FAIL if decorative service numbering, wrong/replaced company logo or color identity, shared same grid recipe across unlike sectors, invented/partial menu, missing G/L/M labels, low-contrast text, invented before/after pairs, third-person "company website says" copy, or content missing from older pages. Research, unique visual direction, factual inventory and accessible browsing precede first owner-facing link. Scope: all companies.

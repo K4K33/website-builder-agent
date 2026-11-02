@@ -22,6 +22,13 @@ Päivitetty 2026-11-02 usean täysin eri yrityksen V1-testausten ja 8 videon per
 - Tarvittaessa käyttäjälle avautuva, selkeä sanasto: G gluteeniton, L laktoositon, M maidoton vain lähteen käyttämän merkityksen mukaan. Allergeenit vahvistetaan henkilökunnalta eikä G/L/M korvaa 14 allergeenin täydellistä selvitystä.
 - Esitä aidot asiakkaan referenssit / työt galleriana. Jos on varmasti saman projektin ennen/jälkeen kuvat ja niihin lupa, suunnittele vertailukomponentti; älä keksi tapahtumia tai muokkaa kuvia harhaanjohtavasti.
 
+## Sponsorit, yhteistyökumppanit ja alatunnukset: ei sisältökatoa
+- **Pakollinen inventaario koko nykyisestä sivustosta, myös footerista:** sponsorien, yhteistyökumppaneiden, toimialaketjujen, jäsenyyksien, tavarantoimittajien, sertifikaattien ja muiden logorivien nimet, alkuperäiset logot, linkkikohteet, rooli ja mahdollinen esitysjärjestys. Ota lähde-URL ja kuvakaappaus; älä sivuuta pieniä logoja alareunassa.
+- Jos alkuperäisen sivun alakulmassa on sponsorien tai kumppanien logoja, **uudessa sivussa on vastaava selkeä brändin mukainen osio**, jossa säilyvät olennaiset logot ja linkit, kun suhde ja käyttölupa ovat vahvistettuja. Sijoittelu voi parantua, mutta osio ei saa kadota uudistuksessa.
+- Älä sekoita rooleja: sponsori, yhteistyökumppani, ketjujäsen, virallinen sertifikaatti tai asiakkaan oma tuotemerkki eivät tarkoita samaa. Älä kutsu kumppania sponsoriksi tai väitä sertifikaattia aktiiviseksi ilman varmistusta.
+- Tarkista, onko suhde voimassa ja saako tunnusta käyttää uudessa esitysyhteydessä. Vanhenneille/epäselville suhteille merkitään asiakkaan vahvistus tarvittavaksi, ei keksitä aktiivista sponsorointia. Älä korvaa todellisia kumppanilogoja geneerisillä tekstimerkeillä.
+- QA vertaa vanhan ja uuden footerin logoja **nimi + todellinen logotiedosto + linkki + rooli**; puuttuva tai vaihtunut tunnus on korjattava ennen luovutusta. Tarkista logojen luettavuus, alt-teksti, kontrasti ja mobiilirivitys.
+
 ## Julkaisua estävä QA
 - Värit ja kontrastit käytännössä: otsikko, sisällön leipäteksti, linkki, palvelukortti, kuvateksti ja painike kaikissa tiloissa. Tarkista vähintään WCAG AA 4.5:1 normaalille tekstille, 3:1 isolle tekstille sekä kohteen näkyvyys.
 - Kaikki 320/390/768/1024/1440/1920px; varmista kuvat, kontrasti, scrollin sujuvuus, nav, toiminnallisuus, jokainen linkki ja keyboard focus.
