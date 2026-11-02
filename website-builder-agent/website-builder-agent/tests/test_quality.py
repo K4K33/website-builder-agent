@@ -359,7 +359,13 @@ class QualityTests(unittest.TestCase):
             premium['visual_review'][dimension] = 97
         with patch.object(qa,'inspect_site',return_value={'pass':True,'issues':[],'screenshots':shots}), patch.object(
                 qa,'ask_claude_json',return_value=premium) as ask:
-            self.assertTrue(qa.run_qa('testi')['overall_pass'])
+            result = qa.run_qa('testi')
+            self.assertTrue(result['overall_pass'], {
+                key: result.get(key) for key in (
+                    'automated', 'browser', 'content_parity', 'source_fidelity',
+                    'universal_quality', 'originality', 'content_review',
+                )
+            })
             self.assertEqual(len(ask.call_args.kwargs['image_paths']), 10)
             self.assertEqual(ask.call_args.kwargs['stage'], 'qa')
 
