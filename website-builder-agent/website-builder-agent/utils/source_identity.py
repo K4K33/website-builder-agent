@@ -113,6 +113,54 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
     }
 
 
+
+def validate_brand_preservation_plan(research: dict) -> dict:
+    """Require an evidence-linked brand plan before spending Builder credits.
+
+    The source is authoritative; a new visual style is allowed, but ignoring
+    original colors/logos is not. Human media rights approval is separate.
+    Offline test fixtures without observable source identity remain unchanged.
+    """
+    observed = []
+    for page in (research.get("source_inventory") or {}).get("pages") or []:
+        if not isinstance(page, dict):
+            continue
+        identity = page.get("source_identity") or {}
+        if not isinstance(identity, dict):
+            continue
+        if identity.get("theme_color") or identity.get("original_logo_candidates"):
+            observed.append((str(page.get("url") or ""), identity))
+    if not observed:
+        return {"required": False, "source_pages": 0}
+    plan = research.get("brand_preservation_plan")
+    if not isinstance(plan, dict):
+        raise RuntimeError("Missing evidence-linked original brand preservation plan.")
+    required = ("logo_treatment", "color_treatment",
+                "typography_treatment", "photography_treatment")
+    missing = [key for key in required
+               if len(str(plan.get(key) or "").strip()) < 24]
+    if missing:
+        raise RuntimeError("Original brand plan incomplete: " + ", ".join(missing))
+    urls = set(str(x) for x in plan.get("source_urls") or [])
+    if not all(url and url in urls for url, _ in observed):
+        raise RuntimeError("Original brand plan does not cite every brand-evidence source page.")
+    originals = {
+        logo for _, identity in observed
+        for logo in identity.get("original_logo_candidates") or []
+        if isinstance(logo, str) and logo.strip()
+    }
+    cited = set(str(x) for x in plan.get("original_logo_candidates") or [])
+    if not originals.issubset(cited):
+        raise RuntimeError("Original brand plan omitted one or more sourced logo assets.")
+    colors = {str(identity.get("theme_color"))
+              for _, identity in observed if identity.get("theme_color")}
+    if not colors.issubset(set(map(str, plan.get("original_theme_colors") or []))):
+        raise RuntimeError("Original brand plan omitted a source theme color.")
+    return {"required": True, "source_pages": len(observed),
+            "observed_logos": len(originals), "observed_colors": sorted(colors)}
+
+
+
 def audit_source_reviews(rendered_pages: dict[str, str], research: dict) -> dict:
     """Require original observed review text and its true star score to survive.
 
