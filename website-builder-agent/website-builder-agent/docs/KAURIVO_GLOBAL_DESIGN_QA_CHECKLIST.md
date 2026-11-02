@@ -1,5 +1,11 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## Verbatim customer facts in prices, services, and products (2026-11-03)
+- [ ] Compare source and redesigned product/service tables row-by-row: full verified prices, units, size bands, weight limits, breed/product names, dates, eligibility and exceptions.
+- [ ] Creative shortening must not invent a different real-world category. The salon's published labradoodle mini/medium was incorrectly changed to lagotto mini / medium and caught in expert review; regression test now blocks recurrence in that demo.
+- [ ] Put high-risk source labels and price examples into evidence-bound content_requirements for every new build, and keep separate human source-inventory signoff. A green generic unit suite cannot substitute for business-specific source accuracy.
+
+
 ## Decorative-arrow repetition: agency-wide blocking rule (2026-11-03)
 - [ ] No generic ↗/→/➜ arrow appended to every CTA, service row, contact link or footer link. Repeated arrow-led button design is a **failed visual QA**, even if all functional tests pass.
 - [ ] The shared `non_repetitive_cta_icons` code gate rejects more than two arrow-labelled links across any rendered site, or any repeated same arrow link. A functional single directional navigation control can be justified; screenshots still receive independent review.
