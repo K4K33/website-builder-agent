@@ -102,12 +102,18 @@ def parse_generated_site(raw: str, architecture: dict) -> dict[str, str]:
     return pages
 
 def pages_for_validation(pages: dict[str,str]) -> str:
-    """Visible text across routes for parity; each route needs separate QA."""
+    """Aggregate real body DOM for *whole-site* source parity.
+
+    Keep real hrefs, src/alt and visible text: a text-only concatenation would
+    falsely report missing contact links, product links and sponsor images.
+    Each route STILL gets separate semantic HTML and browser checks.
+    """
     from bs4 import BeautifulSoup
-    return "<html><body>" + "\n".join(
-        BeautifulSoup(pages[key], "html.parser").get_text(" ", strip=True)
-        for key in sorted(pages)
-    ) + "</body></html>"
+    bodies=[]
+    for key in sorted(pages):
+        soup=BeautifulSoup(pages[key],"html.parser")
+        bodies.append(str(soup.body or soup))
+    return "<html><body>"+"\n".join(bodies)+"</body></html>"
 
 def validate_site_navigation(pages: dict[str,str], architecture: dict) -> dict:
     """Resolve internal links from EACH HTML file and prove all routes reachable."""
