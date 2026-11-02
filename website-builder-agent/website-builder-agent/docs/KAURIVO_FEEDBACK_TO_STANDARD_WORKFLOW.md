@@ -59,6 +59,16 @@ User supplied a ~12.5-second iPhone screen recording of a **Claude Sonnet 5.5 Me
 
 **Scope:** outcomes are code and offline browser checks, not an independent current V10 >=9.5/10 certification. Link users proactively after successful publishing; never send raw GitHub Pages to a prospect.
 
+## 2026-11-02 — V10 desktop and Claude review → V11
+
+**Sources:** owner supplied two screen recordings: V10 desktop walkthrough (~41.9 s, 1914×884) and a separate Claude Sonnet 5.5 Medium text-review recording (~17.1 s, 1480×882). Owner reports top navigation still looks small, would welcome *more* layered movement and 3D that does not slow scrolling, and rejects generic headline "Kotifixiltä apua arjen töihin." A better direction is a concrete customer-question headline about household and yard tasks.
+
+**Reviewer positives:** the internal Pages link opens without raw.githack interstitial; the caller/button group and no-longer-third-person text improved; services, price guidance and honest sample photography are clear. **Reviewer criticisms:** the new business-name-repeat headline is weaker than the prior question, Meistä page is actually a contact-process page, style is too plain after stripping every serif accent, desktop Chrome translation popup is seen, animated transitions are not obvious on their reduced movement or narrow capture, mobile view was not evaluated. Reviewer prices are not adopted into Kaurivo offers.
+
+**Changes in V11 candidate:** "Tarvitsetko apua kotitöissä tai pihatöissä?" on the home hero; increase wide-screen nav to 17–18px (keep 16px for narrower desktop); change visible "Meistä" menu label to factual "Näin toimimme" and rewrite the corresponding page without invented owner history. Add branded cobalt image-backplate depth, 3D image frame and cursor-limited hero tilt on desktop, CSS card hover depth, paced small entrance transitions and focus feedback. All heavy work is isolated to transform/opacity and pointer hover; browser scroll stays native. Reduced motion/touch/no-JS fallbacks and no-credit tests are compulsory. In HTML, `lang=fi` and UTF-8 are already present; Chrome's toolbar is user/browser UI, not page code.
+
+**Generalization:** update universal QA and builder prompts, not only this source. Distinguish verified owner-reviewed usability from an unmeasured performance assertion. HOLD for exact-version external >=9.5, measured real hardware performance and customer branded URL.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.
