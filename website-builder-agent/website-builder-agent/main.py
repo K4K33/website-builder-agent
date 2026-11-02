@@ -631,11 +631,22 @@ def cmd_pipeline(args):
             break
         if any("Browser QA unavailable" in issue for issue in qa_result.get("browser", {}).get("issues", [])):
             break
+        # A human/content rights signoff cannot be fixed by asking the model
+        # to regenerate HTML: stop instead of burning capped AI credits.
+        if qa_result.get("content_parity", {}).get("review_required"):
+            print("[Pipeline] Source-content verification is pending; stop paid retries.")
+            break
+        if qa_result.get("unimplemented_global_feedback"):
+            print("[Pipeline] A new agency-wide rule needs a real checker/test.")
+            break
         import json
         feedback = {
             "static": qa_result.get("automated", {}).get("automated_issues", []),
             "browser": qa_result.get("browser", {}).get("issues", []),
             "review": qa_result.get("content_review", {}),
+            "source_content": qa_result.get("content_parity", {}),
+            "universal": qa_result.get("universal_quality", {}),
+            "general_lessons": qa_result.get("global_learning", {}),
         }
         print(f"[Pipeline] Korjauskierros {attempt + 1}/{args.max_revisions}")
         builder.run_revise(selected_slug, json.dumps(feedback, ensure_ascii=False))

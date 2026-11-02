@@ -41,6 +41,68 @@ def inspect_site(path):
                                 emptyMain: !document.querySelector('main')?.innerText.trim(),
                             };
                         }""")
+                        # WCAG AA contrast on genuinely measurable solid backgrounds.
+                        # Image/gradient/translucent layers are intentionally sent to
+                        # visual review rather than given an invented CSS score.
+                        color_review = page.evaluate("""() => {
+                            const parse = value => {
+                                const m = /^rgba?\\(\\s*(\\d+)[, ]+\\s*(\\d+)[, ]+\\s*(\\d+)(?:[, /]+([\\d.]+))?\\s*\\)$/.exec(value);
+                                if (!m) return null;
+                                if (m[4] !== undefined && Number(m[4]) < 0.999) return null;
+                                return [Number(m[1]),Number(m[2]),Number(m[3])];
+                            };
+                            const lum = rgb => {
+                                const c = rgb.map(x => x / 255).map(x =>
+                                    x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4));
+                                return c[0]*0.2126 + c[1]*0.7152 + c[2]*0.0722;
+                            };
+                            const ratio = (a,b) => (Math.max(lum(a),lum(b))+0.05) /
+                                                    (Math.min(lum(a),lum(b))+0.05);
+                            const visible = e => !!e.getClientRects().length
+                                && getComputedStyle(e).visibility !== 'hidden';
+                            let checked=0, skipped=0, poor=[];
+                            const nodes = [...document.querySelectorAll(
+                                'h1,h2,h3,h4,p,li,a,button,label,small,span')].slice(0,650);
+                            for (const el of nodes) {
+                                if (!visible(el) || !el.textContent?.trim()) continue;
+                                // Sample only text-owning elements, not wrapper blocks
+                                // that would repeat the same color measurements.
+                                if ([...el.children].some(ch => ch.textContent?.trim())) continue;
+                                const style = getComputedStyle(el), foreground=parse(style.color);
+                                if (!foreground) {skipped++;continue;}
+                                let bg=null, uncertain=false, current=el;
+                                while(current && current.nodeType===1) {
+                                    const st=getComputedStyle(current);
+                                    if(st.backgroundImage!=='none' || st.opacity!=='1') {
+                                        uncertain=true;break;
+                                    }
+                                    const candidate=parse(st.backgroundColor);
+                                    if(candidate) { bg=candidate;break; }
+                                    if(st.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
+                                       st.backgroundColor !== 'transparent') { uncertain=true;break; }
+                                    current=current.parentElement;
+                                }
+                                if (uncertain) {skipped++;continue;}
+                                if (!bg) bg=[255,255,255];
+                                const size=parseFloat(style.fontSize), weight=parseFloat(style.fontWeight)||400;
+                                const large=size >= 24 || (size>=18.66 && weight>=700);
+                                const required=large?3:4.5, value=ratio(foreground,bg);
+                                checked++;
+                                if (value+0.02<required && poor.length<8)
+                                    poor.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
+                                               ratio:Math.round(value*100)/100, required});
+                            }
+                            const root=getComputedStyle(document.documentElement);
+                            const body=getComputedStyle(document.body);
+                            const scrollBlocked=document.documentElement.scrollHeight>innerHeight+100 &&
+                                (root.overflowY==='hidden'||body.overflowY==='hidden');
+                            return {poor,checked,skipped,scrollBlocked};
+                        }""")
+                        if color_review["poor"]:
+                            issues.append(f"{name}: measurable WCAG AA text contrast failures: "
+                                          + json.dumps(color_review["poor"], ensure_ascii=False))
+                        if color_review["scrollBlocked"]:
+                            issues.append(f"{name}: native vertical scrolling blocked")
                         for key, message in (("overflow", "horizontal overflow"),
                                              ("tiny", "undersized controls"),
                                              ("brokenImages", "broken images"),

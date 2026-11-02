@@ -24,6 +24,15 @@ class GeneralLearningTests(unittest.TestCase):
         self.assertEqual(len(
             ledger["issues"]["no_decorative_numbering"]["project_slugs"]), 2)
 
+    def test_repeated_failure_is_sent_to_future_builder_without_false_fix(self):
+        ledger = {"schema_version": 1, "issues": {}, "user_rules": []}
+        record_qa_findings(ledger, "company-a", ["mobile overflow at 320px"])
+        record_qa_findings(ledger, "company-b", ["mobile overflow at 390px"])
+        instructions = global_instructions(ledger)
+        self.assertIn("RECURRING CROSS-PROJECT QA PROBLEM", instructions)
+        self.assertIn("responsive_performance", instructions)
+        self.assertIn("do not claim", instructions)
+
     def test_all_owner_feedback_is_recorded_but_not_fake_implemented(self):
         ledger = {"schema_version": 1, "issues": {}, "user_rules": []}
         rule = record_owner_feedback(

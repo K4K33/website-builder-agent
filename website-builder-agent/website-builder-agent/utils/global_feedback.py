@@ -107,18 +107,31 @@ def record_owner_feedback(
 
 
 def global_instructions(ledger: dict) -> str:
-    """Safety: active rules are concrete; unimplemented rules remain blockers."""
+    """Feed accepted lessons and recurring cross-company failures to Builder.
+
+    New unimplemented issues are presented as research/QA warnings, never as
+    if an automatic detector or the final repair already exists.
+    """
     entries = [r for r in ledger.get("user_rules", [])
                if r.get("scope") == "universal"]
-    if not entries:
-        return ""
-    return "\n".join(
+    lines = [
         "- GLOBAL QUALITY RULE: " + str(r.get("rule") or "")[:450]
         + (" [checked by: " + str(r.get("checker")) + "]"
            if r.get("status") == "active"
            else " [requires implementation and regression test; do not claim done]")
         for r in entries
-    )
+    ]
+    for category, issue in (ledger.get("issues") or {}).items():
+        if issue.get("status") != "universal_candidate":
+            continue
+        example = str((issue.get("examples") or [""])[0])[:180]
+        lines.append(
+            "- RECURRING CROSS-PROJECT QA PROBLEM: " + str(category)
+            + "; evidence: " + example
+            + ". Avoid repeating it. Classify, implement a real fix/test and "
+              "do not claim the general problem is already corrected."
+        )
+    return "\n".join(lines)
 
 
 def universal_rules_pending_implementation(ledger: dict) -> list[str]:

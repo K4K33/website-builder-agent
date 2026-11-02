@@ -1,6 +1,19 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
 
+## AUTOMATIC UNIVERSAL QA (2026-11-02)
+
+The 18 universal categories and exact pass/fail/pending matrix are
+documented in `docs/KAURIVO_AUTOMATIC_MASTER_QA_2026-11-02.md`.
+All three Builder entry points and the independent QA stage must use the
+same global checks; previous Kotifixi and three-sector feedback remains
+permanent. New owner-declared universal issues must be registered, and
+recurring findings from different clients must enter the common learning
+ledger automatically. No new general issue may be marked implemented
+without a real checker, regression test, and source-aware evidence. The
+single client's aesthetic preference must NOT be copied across brands.
+
+
 ## Footer sponsor / partner completeness — universal mandatory check
 - [ ] Inspect every original footer, small-print logo strip and partner page, including mobile variants; identify sponsor logos, partner logos, chains, certificates, memberships, original role, outgoing URL and original asset.
 - [ ] For each source logo, map to an approved current destination section in the new site; **no silent disappearance**. Prefer the original real logo with correct rights, alt text, legible size, mobile layout and accessible link.
