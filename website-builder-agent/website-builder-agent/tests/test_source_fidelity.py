@@ -2,7 +2,7 @@
 from __future__ import annotations
 import unittest
 from utils.content_parity import source_inventory_sha256
-from utils.source_fidelity import audit_source_fidelity, source_manifest
+from utils.source_fidelity import audit_source_fidelity, source_manifest, validate_source_plan
 
 def fixture():
     inventory={"pages":[
@@ -117,6 +117,37 @@ class SourceFidelityTests(unittest.TestCase):
         self.assertFalse(out["missing"])
         out=audit_source_fidelity(h+"changed",r)
         self.assertTrue(any("Exact source" in x for x in out["pending"]))
+
+    def test_source_plan_required_before_any_builder_spend(self):
+        research,html,_=fixture()
+        self.assertEqual(validate_source_plan(research,source_url="https://atelier.example.org/")["pages"],2)
+        research["source_content_map"]["pages"][1]["sections"]=[]
+        with self.assertRaisesRegex(RuntimeError,"unmapped source section"):
+            validate_source_plan(research,source_url="https://atelier.example.org/")
+
+    def test_large_original_site_cannot_shrink_to_tiny_brochure(self):
+        research,html,_=fixture()
+        research["source_inventory"]["pages"][1]["text"]="Full details about services and delivery. "*720
+        result=audit_source_fidelity(html,research,source_url="https://atelier.example.org/",
+                                     require_human_review=False)
+        self.assertTrue(any(item["kind"]=="suspicious_content_collapse" for item in result["missing"]),result)
+
+    def test_div_based_footer_text_partners_are_captured_and_required(self):
+        from utils.fetch import extract_text_and_meta
+        source='<html><body><main>Commercial services</main><div class="site-footer">' + (
+            '<a href="https://club.example.net/">Trade association</a>'
+            '<a href="https://club.example.net/"><img src="/badge.svg" alt="Association"></a>'
+        )+'</div></body></html>'
+        evidence=extract_text_and_meta(source,base_url="https://atelier.example.org/")
+        self.assertEqual(len(evidence["footer_assets"]),1)
+        self.assertTrue(any("club.example.net" in a["href"] for a in evidence["footer_links"]))
+        research,html,_=fixture()
+        research["source_inventory"]["pages"][0]["footer_links"]=[
+          {"href":"https://club.example.net/","text":"Trade association"}
+        ]
+        result=audit_source_fidelity(html,research,source_url="https://atelier.example.org/",
+                                     require_human_review=False)
+        self.assertTrue(any(x["kind"]=="missing_original_footer_link" for x in result["missing"]))
 
     def test_no_website_does_not_invent_partners(self):
         r={"research_mode":"verified_no_website"}
