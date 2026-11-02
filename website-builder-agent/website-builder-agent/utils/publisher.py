@@ -14,6 +14,7 @@ import hashlib
 from pathlib import Path
 
 import config
+from utils.site_integrity import site_sha256, site_files
 from utils.state import (
     get_company,
     upsert_company,
@@ -128,7 +129,17 @@ def publish_site(
         actual_sha = hashlib.sha256(source_file.read()).hexdigest()
     if actual_sha != qa["html_sha256"]:
         raise RuntimeError("HTML changed since QA; refuse to publish a stale approval.")
-
+    routes = build.get("page_paths") or []
+    bundle_files = []
+    if routes:
+        source_root = Path(source).resolve().parent
+        bundle_files = site_files(source_root,routes)
+        actual_site_digest = site_sha256(source_root,routes)
+        if (not qa.get("site_sha256") or qa["site_sha256"] != actual_site_digest
+                or approval.get("site_sha256") != actual_site_digest):
+            raise RuntimeError(
+                "Multi-page site content or image differs from exact QA-approved version."
+            )
     destination_dir = os.path.join(
         PUBLISH_DIR,
         slug,
@@ -144,10 +155,23 @@ def publish_site(
         exist_ok=True,
     )
 
-    shutil.copy2(
-        source,
-        destination,
-    )
+    if bundle_files:
+        # Do not publish only index.html: all approved routes and their media
+        # are part of this one exact approved snapshot. Existing stale
+        # generated routes must not remain publicly reachable after a rebuild.
+        dest_root = Path(destination_dir).resolve()
+        if dest_root.is_symlink() or dest_root.parent != Path(PUBLISH_DIR).resolve():
+            raise RuntimeError("Unsafe public demo destination.")
+        if dest_root.exists():
+            shutil.rmtree(dest_root)
+        dest_root.mkdir(parents=True,exist_ok=True)
+        for rel,origin in bundle_files:
+            target=dest_root/rel
+            target.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(origin,target)
+    else:
+        # Compatibility with previously approved old single-page builds.
+        shutil.copy2(source,destination)
 
     demo_url = (
         f"{GITHUB_PAGES_BASE}/demos/{slug}/"
