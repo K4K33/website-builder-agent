@@ -106,7 +106,7 @@ def _same_site_url(start: str, candidate: str) -> str:
             or resolved.password or not _safe_hostname(parsed_start.hostname)
             or _safe_hostname(resolved.hostname) != _safe_hostname(parsed_start.hostname)):
         return ""
-    path = resolved.path or "/"
+    path = (resolved.path or "/").rstrip("/") or "/"
     if path.casefold().endswith(SKIP_ENDINGS) or any(
             path.casefold().startswith(prefix) for prefix in SKIP_PATHS):
         return ""
@@ -198,7 +198,12 @@ def validate_inventory(company: dict, research: dict) -> dict:
     if not isinstance(inventory, dict) or not isinstance(inventory.get("pages"), list):
         raise RuntimeError("Source inventory missing: rerun multi-page Research before Builder.")
     pages = inventory["pages"]
-    if not pages or not all(isinstance(p, dict) and p.get("url") and p.get("text") for p in pages):
+    if not pages or not all(
+        isinstance(p, dict) and p.get("url")
+        and (p.get("text") or p.get("images")
+             or p.get("header_assets") or p.get("footer_assets"))
+        for p in pages
+    ):
         raise RuntimeError("Source inventory has no usable source-backed pages.")
     if inventory.get("priority_unvisited_urls"):
         raise RuntimeError(

@@ -97,6 +97,16 @@ class IndustryWorkflowTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     crawl_original_website(url, lambda _: {}, max_pages=1)
 
+    def test_image_only_original_page_is_valid_source_evidence(self):
+        inventory = {"source_inventory": {"pages": [
+            {"url": "https://gallery.example.org/", "text": "",
+             "images": [{"src": "/real-project.jpg", "alt": "Project"}],
+             "header_assets": [], "footer_assets": []}],
+            "failed_urls": [], "priority_unvisited_urls": []}}
+        result = validate_inventory(
+            {"url": "https://gallery.example.org/"}, inventory)
+        self.assertEqual(result["pages"], 1)
+
     def test_no_site_verified_profile_avoids_fake_old_website(self):
         company = {"name": "Test business"}
         research = {"research_mode": "verified_no_website",
