@@ -21,6 +21,14 @@ Applies to every customer, demo, template, agent-generated draft, QA iteration a
 - **Pricing:** show verified price information with date/source/qualification, direct link to the official current source; never promise an unverified total or tax benefit.
 - **Release:** maintain factual/rights/legal checks, real client-editing proof for CMS deliverables and owner approval separately from an AI quality score.
 
+## External video review received 2026-11-02 (V7 mobile capture; not V8 certification)
+
+The reviewed V7 design was estimated at about **8/10** by an external model based on a mobile recording; assessment was not a full direct site audit. Positive observations: service clarity, obvious contact action, functional and honest test form, real multi-page structure and subtler example-photo disclosures. Criticisms: forced hyphenation in large headings, too much italic serif, repetitive/impersonal copy, example images that imply an implausibly different service scale, and missing authentic proof.
+
+Universal actions: headline wrapping and typographic restraint, context-specific natural copy, industry-plausible image selection, no invented testimonials, and research-backed legal/financial claims. In particular, the video's **35%** home-service tax figure was superseded by a dated Finnish Tax Administration update effective for 2026–2027 (**40%** of eligible business work, subject to conditions). Neutral tax information does not establish that Kotifixi is eligible or registered; independently verify the seller before making a positive eligibility claim. Sources: https://www.vero.fi/tietoa-verohallinnosta/uutishuone/lehdist%C3%B6tiedotteet/2026/kotitalousvahennys-nousee-takautuvasti--nain-saat-korotetun-vahennyksen-kayttoosi/ and https://www.vero.fi/henkiloasiakkaat/vahennykset/kotitalousvahennys/kotitalousvahennyksen-maara .
+
+V8 already addressed the old contrast slogan and several repeated phrases. This follow-up must not invent reviews, publish without signoff, or treat CSS/tests as a real independent >=9.5 design review.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.
