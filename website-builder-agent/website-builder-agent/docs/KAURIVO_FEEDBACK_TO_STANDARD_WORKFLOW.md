@@ -89,6 +89,16 @@ User supplied a ~12.5-second iPhone screen recording of a **Claude Sonnet 5.5 Me
 
 **Gates:** release is still an internal review candidate; do not conflate passing tests with external independent >=9.5, an on-device mobile review or a customer-ready branded domain. Include direct link automatically after publishing.
 
+## 2026-11-02 — V13 review, independent Gemini and V14 header refinement
+
+Owner uploaded an 84.5-second desktop recording of the V13 site (1910×868) and a 17.3-second Gemini feedback recording (1484×878). Owner likes V13 but reports that the two top-right buttons do not fit the overall site styling. Full-width review shows a small neutral-outline "Soita 044 363 2429" button placed immediately beside a separate bright square blue "Kysy arviota" button. Although the layout gaps are better than V12, this pair still looks like unrelated UI pieces.
+
+**V14 change:** wrap the existing two real actions in a common `header-action-set` with subtle cool-grey-blue backing and unified border/radius/height, keep the call link visually secondary and the quote button as the single strong cobalt primary. Maintain separate tap targets and real destinations. At small screens keep one branded quote CTA plus visible hamburger while phone remains in menu and contact page. Respect the native scrolling and existing pointer-only 3D interactions. Add regression checks for five-page structure, link destinations and group styling.
+
+**Gemini observations and limits:** the third-party reviewer notes good minimal visual hierarchy, clear task/service navigation, transparent prices, straightforward contact details and honest tax information; it calls generic stock and openly labelled Kaurivo/test demos signs of a template. Those legal/truthful preview notices **must not** be removed from an unapproved demo. Use client-owned authorized photos, truthful service details and an actual approved production build rather than pretending stock is company work or inventing a founder story, photos, reviews or unrealistic time promises. It also suggested sales pitches, hypothetical price ranges, QR marketing and package offers; these are advisory and not adopted as actual Kaurivo terms or external client outreach instructions. This recording did not provide an authenticated V14 score, mobile audit or real trackpad performance measurements.
+
+**Universalization:** added actionable header consistency, responsive interaction checks, truthful demo vs production distinctions and evidence boundaries into global QA/design/builder systems. New versions must include preview URL automatically. Hold customer release pending branded domain, owner approval, independent quality proof and working CMS.
+
 ## QA note for this revision
 
 The V8 branch upgrades the existing V7 GitHub Pages preview, not the client production site. The earlier external **~8.5/10 iPhone-video review** does **not** transfer to this build. Until a real independent review with the required scope has evaluated the new commit, it remains **HOLD**. Static tests cannot certify a final 9.5.
