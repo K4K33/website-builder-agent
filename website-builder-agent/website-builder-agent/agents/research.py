@@ -874,7 +874,7 @@ tarkistetaan ennen maksullista Builder-ajoa.
 Lisää vastaukseen brand_preservation_plan, jossa on:
 logo_treatment, color_treatment, typography_treatment, photography_treatment
 (kukin vähintään 24 merkkiä), sekä source_urls (kaikki lähdesivut joilla
-havaittiin logo tai theme-color), original_logo_candidates (täsmälleen
+havaittiin logo, theme-color tai alkuperäinen yrityksen sisältökuva), original_logo_candidates (täsmälleen
 havaitut alkuperäiset logourlit) ja original_theme_colors (havaitut värit).
 Säilytä todellinen brändi, myös jos visuaalinen sommittelu muuttuu.
 Älä korvaa aitoja henkilökuvia geneerisillä AI/stock-kuvilla.
