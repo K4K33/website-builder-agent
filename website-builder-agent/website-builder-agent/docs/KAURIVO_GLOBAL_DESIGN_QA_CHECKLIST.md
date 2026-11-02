@@ -1,5 +1,23 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## Company-first brand and content preservation
+Before any redesign, keep the original company identity, source-page inventory,
+logo candidates, colors, real staff images, complete services, original prices
+and verified customer feedback. Never replace real company identity with
+generic stock art or initials. Where rights or visual equivalence are uncertain,
+leave customer release pending instead of inventing content.
+
+Every sourced testimonial must retain its real text and any actual displayed
+star score. A real 5-star review keeps five meaningful, accessible stars.
+A review without a verified score must not receive an invented star rating.
+
+The Builder requires an original-brand plan tied to actual source colors,
+logos, and URLs. Whole-site automated checks compare original reviews,
+rating evidence, explicit pricing table rows, and FAQ question labels.
+Exact-source checks supplement but do not replace human semantic review.
+
+
+
 ## Verbatim customer facts in prices, services, and products (2026-11-03)
 - [ ] Compare source and redesigned product/service tables row-by-row: full verified prices, units, size bands, weight limits, breed/product names, dates, eligibility and exceptions.
 - [ ] Creative shortening must not invent a different real-world category. The salon's published labradoodle mini/medium was incorrectly changed to lagotto mini / medium and caught in expert review; regression test now blocks recurrence in that demo.
