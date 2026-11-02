@@ -103,6 +103,10 @@ def main() -> int:
     parser.add_argument("--markdown", default="output/quality-diagnostics.md")
     args = parser.parse_args()
     os.chdir(ROOT)
+    # Executing from scripts/ otherwise drops the project root from sys.path.
+    # Match python -m unittest discover so EVERY original test can import utils/agents.
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), pattern="test_*.py",
                                                   top_level_dir=str(ROOT / "tests"))
     result = unittest.TextTestRunner(stream=sys.stdout, verbosity=2,
