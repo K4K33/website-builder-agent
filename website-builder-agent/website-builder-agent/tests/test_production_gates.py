@@ -43,6 +43,9 @@ def research_fixture(directory, industry):
         for i, name in enumerate(DIMENSIONS)
     ]
     return {
+        "research_mode": "verified_no_website",
+        "fact_sources": [{"url": "https://fixtures.example.org/offline-no-site",
+                          "text": "Synthetic offline test company; no real customer claimed."}],
         "company_facts": {"name": "Demo yritys", "industry": industry},
         "design_benchmark": refs, "design_decisions": decisions,
         "design_recommendations": {"motion_plan": {
@@ -58,7 +61,7 @@ def approved_review():
             "design_checks": [{"id": name, "passed": True, "evidence": "Visible main content"}
                               for name in DIMENSIONS],
             "visual_review": {
-                **{name: 90 for name in ("desktop", "tablet", "mobile", "small_mobile",
+                **{name: 97 for name in ("desktop", "tablet", "mobile", "small_mobile",
                                         "brand_specificity", "typography", "hierarchy",
                                         "art_direction", "imagery", "motion")},
                 "blockers": [], "improvements": []}}
@@ -83,7 +86,7 @@ class ProductionGates(unittest.TestCase):
 
     def create_build(self, industry="transport", slug="demo"):
         state.upsert_company(slug, {
-            "name": "Demo yritys", "url": "https://demo-example.fi", "status": "researched",
+            "name": "Demo yritys", "url": "", "status": "researched",
             "research": research_fixture(self.root, industry)
         })
         path = builder._write_html(slug, HTML)
@@ -190,12 +193,14 @@ class ProductionGates(unittest.TestCase):
             self.skipTest("Real Chromium integration runs on CI")
         for sector in ("transport", "restaurant", "home services"):
             with self.subTest(sector=sector):
-                self.create_build(industry=sector)
+                slug = "offline-" + sector.replace(" ", "-")
+                self.create_build(industry=sector, slug=slug)
                 args = SimpleNamespace(confirm_live_run=True, benchmark_mode=True, count=1,
                                        industry="ravintola", location="Tampere", max_revisions=0)
                 with patch.object(config, "model_for_stage", return_value="fixed/mock"), \
                      patch.dict(os.environ, {"OPENROUTER_API_KEY": "offline", "TAVILY_API_KEY": "offline"}), \
-                     patch.object(main.scout, "run_scout", return_value=[{"slug": "demo"}]), \
+                     patch.object(main.scout, "run_scout", return_value=[{"slug": slug}]),
+                     patch.object(main, "site_signal", return_value="has_website"), \
                      patch.object(main.research, "run_research"), \
                      patch.object(main.builder, "run_build"), \
                      patch.object(qa, "ask_claude_json", return_value=approved_review()), \
@@ -206,7 +211,7 @@ class ProductionGates(unittest.TestCase):
                     network_post.assert_not_called()
                     network_get.assert_not_called()
                     contact.assert_not_called()
-                company = state.get_company("demo")[1]
+                company = state.get_company(slug)[1]
                 self.assertEqual(company["status"], "qa_passed")
                 self.assertTrue(company["qa"]["overall_pass"])
                 self.assertFalse((company.get("approval") or {}).get("approved"))
