@@ -18,12 +18,14 @@ import os
 import re
 import hashlib
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 
 import config
 from bs4 import BeautifulSoup
 
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
+from utils.visual_media_gate import audit_visual_media
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
 from utils.global_feedback import (
@@ -579,16 +581,41 @@ def _automated_checks(html: str) -> dict:
         issues.append("Lomakkeen toimivaa taustapalvelua ei ole vahvistettu; käytä oikeaa yhteystietolinkkiä.")
     if soup.find(["iframe", "object", "embed"]):
         issues.append("Itsenäinen sivusto ei saa sisältää upotettua ulkoista sivua.")
+    # A generated page may use ONLY locally packaged client images
+    # under assets/. It cannot load scripts, styles or images from the web.
+    # File existence and MIME/signature are checked again by the central
+    # visual-media gate, which has access to the exact generated page path.
+    def permitted_asset(value):
+        parsed = urlsplit(value)
+        parts = parsed.path.split("/")
+        return (not parsed.scheme and not parsed.netloc and
+                parts[0] == "assets" and len(parts) > 1 and
+                all(part not in ("", ".", "..") for part in parts[1:]) and
+                not parsed.path.startswith("//"))
+
     for tag in soup.find_all(True):
         for attribute in ("src", "srcset", "poster"):
             value = str(tag.get(attribute, "")).strip()
-            if value and not value.startswith("data:"):
+            if not value or value.startswith("data:"):
+                continue
+            if attribute == "srcset":
+                entries = [part.strip().split()[0] for part in value.split(",") if part.strip()]
+                valid = tag.name in ("img", "source") and entries and all(
+                    permitted_asset(item) for item in entries
+                )
+            else:
+                valid = ((tag.name == "img" and attribute == "src")
+                         or (tag.name == "video" and attribute == "poster")) and permitted_asset(value)
+            if not valid:
                 issues.append("Sivu tarvitsee ulkoisen tai puuttuvan resurssin.")
     css = " ".join(style.get_text() for style in soup.find_all("style"))
     css += " " + " ".join(tag.get("style", "") for tag in soup.find_all(style=True))
     css_urls = re.findall(r"url\(\s*([^)]*)\)", css, re.I)
     if re.search(r"@import", css, re.I) or any(
-        not value.strip().strip("\"'").lower().startswith(("data:", "#")) for value in css_urls
+        not (
+            value.strip().strip("\"'").lower().startswith(("data:", "#"))
+            or permitted_asset(value.strip().strip("\"'"))
+        ) for value in css_urls
     ):
         issues.append("CSS sisältää ulkoisen tai puuttuvan resurssin.")
     id_list = [tag.get("id") for tag in soup.find_all(id=True)]
@@ -910,6 +937,28 @@ def review_passes(review, benchmark_urls=None, decisions=None):
     return True
 
 
+# Only the stricter score is eligible for the first owner preview.
+# The generic QA score and the independently verified agency-wide score are
+# separate stages; this code must not invent or self-assert external review.
+def owner_preview_visual_passes(review: dict, *, minimum: int | None = None) -> bool:
+    minimum = (config.QA_MIN_OWNER_PREVIEW_VISUAL_SCORE
+               if minimum is None else minimum)
+    if not review_passes(review):
+        return False
+    visual = review["visual_review"]
+    keys = (
+        "desktop", "tablet", "mobile", "small_mobile",
+        "brand_specificity", "typography", "hierarchy",
+        "art_direction", "imagery", "motion",
+    )
+    return all(
+        isinstance(visual.get(key), (int, float))
+        and not isinstance(visual.get(key), bool)
+        and minimum <= visual[key] <= 100
+        for key in keys
+    )
+
+
 def run_qa(slug_or_name: str) -> dict:
     slug, company = get_company(slug_or_name)
     if company is None:
@@ -930,6 +979,19 @@ def run_qa(slug_or_name: str) -> dict:
     ledger = load_ledger(ledger_file)
     pending_general_rules = universal_rules_pending_implementation(ledger)
     automated = _automated_checks(html)
+    # Fail objectively broken images and HOLD unverified external imagery
+    # before using a browser run or consuming any limited review credits.
+    # External checks must match the exact immutable HTML being reviewed.
+    media_evidence = research.get("public_media_verification") or {}
+    verified_images = (
+        set(media_evidence.get("verified_image_urls") or [])
+        if media_evidence.get("verified") is True
+        and media_evidence.get("html_sha256") == hashlib.sha256(html_bytes).hexdigest()
+        else set()
+    )
+    visual_media = audit_visual_media(
+        html, html_path=path, verified_public_images=verified_images
+    )
     # Never spend browser/AI review credits when guaranteed critical
     # source-backed fields are absent.
     parity_hard_missing = bool(parity["missing"] or any(
@@ -941,7 +1003,8 @@ def run_qa(slug_or_name: str) -> dict:
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
     benchmark_urls, decisions = [], []
-    if automated["automated_pass"] and not parity_hard_missing and universal["automated_pass"]:
+    if (automated["automated_pass"] and not parity_hard_missing
+            and universal["automated_pass"] and visual_media["owner_preview_ready"]):
         browser = inspect_site(path)
         if browser["pass"]:
             research = company.get("research") or {}
@@ -983,7 +1046,8 @@ def run_qa(slug_or_name: str) -> dict:
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
     result = {
-        "automated": automated, "browser": browser, "content_review": review,
+        "automated": automated, "visual_media": visual_media,
+        "browser": browser, "content_review": review,
         "content_parity": parity,
         "universal_quality": universal,
         "unimplemented_global_feedback": pending_general_rules,
@@ -991,13 +1055,17 @@ def run_qa(slug_or_name: str) -> dict:
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "overall_pass": (parity["pass"] and universal["automated_pass"]
                          and not pending_general_rules
-                         and automated["automated_pass"] and browser["pass"]
-                         and review_passes(review, benchmark_urls, decisions)),
+                         and automated["automated_pass"]
+                         and visual_media["owner_preview_ready"] and browser["pass"]
+                         and review_passes(review, benchmark_urls, decisions)
+                         and owner_preview_visual_passes(review)),
     }
     # Every future general failure is recorded without a new model request.
     # Repeating the same category across different clients makes it a
     # candidate for a universal regression check, not an invented fix.
     issues = (list(automated.get("automated_issues") or [])
+              + list(visual_media["blockers"])
+              + list(visual_media["needs_public_verification"])
               + [x["label"] for x in parity["missing"]]
               + [m for values in universal["blocking_problems"].values() for m in values]
               + list(browser.get("issues") or []))

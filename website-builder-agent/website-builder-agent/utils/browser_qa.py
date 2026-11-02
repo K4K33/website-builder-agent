@@ -26,6 +26,15 @@ def inspect_site(path):
                     try:
                         page.goto(source.as_uri(), wait_until="load", timeout=15000)
                         page.wait_for_timeout(150)
+                        # Make below-fold lazy images load before measuring or
+                        # screenshotting. External requests remain blocked in
+                        # offline mode; they must be packaged locally or be
+                        # separately proven by exact live-preview checks.
+                        page.evaluate("""async () => {
+                            const images = [...document.images];
+                            for (const image of images) image.loading = 'eager';
+                            await Promise.all(images.map(image => image.decode().catch(() => null)));
+                        }""")
                         findings = page.evaluate("""() => {
                             const visible = el => !!(el.getClientRects().length &&
                                 getComputedStyle(el).visibility !== 'hidden');
@@ -37,10 +46,29 @@ def inspect_site(path):
                                     return (el.matches('button,input,select') || el.getAttribute('role') === 'button') &&
                                         (r.width < 24 || r.height < 24);
                                 }).length,
-                                brokenImages: [...document.images].filter(el => !el.complete || !el.naturalWidth).length,
+                                brokenImages: [...document.images]
+                                    .filter(el => !el.complete || !el.naturalWidth)
+                                    .map(el => (el.currentSrc || el.src || '[missing src]').slice(0,180)).slice(0,8),
+                                lowResolutionLogos: [...document.querySelectorAll('header img')]
+                                    .filter(el => {
+                                        const parent = el.closest('[class*="logo"],[class*="brand"],[class*="identity"]');
+                                        return !!parent || /logo/i.test(el.alt || '');
+                                    })
+                                    .filter(el => el.naturalWidth > 0 && el.getBoundingClientRect().width >= 60 &&
+                                        el.naturalWidth < el.getBoundingClientRect().width * 1.5)
+                                    .map(el => ({
+                                        sourceWidth: el.naturalWidth,
+                                        displayedWidth: Math.round(el.getBoundingClientRect().width),
+                                        src: (el.currentSrc || el.src).slice(0,120)
+                                    })).slice(0,5),
                                 emptyMain: !document.querySelector('main')?.innerText.trim(),
                             };
                         }""")
+                        if findings["lowResolutionLogos"]:
+                            issues.append(
+                                f"{name}: pixelated primary brand logo (insufficient source pixels): "
+                                + json.dumps(findings["lowResolutionLogos"], ensure_ascii=False)
+                            )
                         # WCAG AA contrast on genuinely measurable solid backgrounds.
                         # Image/gradient/translucent layers are intentionally sent to
                         # visual review rather than given an invented CSS score.
@@ -108,7 +136,11 @@ def inspect_site(path):
                                              ("brokenImages", "broken images"),
                                              ("emptyMain", "empty main content")):
                             if findings[key]:
-                                issues.append(f"{name}: {message}")
+                                detail = (
+                                    ": " + json.dumps(findings[key], ensure_ascii=False)
+                                    if key == "brokenImages" else ""
+                                )
+                                issues.append(f"{name}: {message}{detail}")
                         # Exercise disclosure/menu controls without invoking external CTAs.
                         menus = page.locator('button[aria-expanded][aria-controls]')
                         for i in range(menus.count()):

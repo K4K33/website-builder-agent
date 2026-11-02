@@ -134,5 +134,46 @@ Mobiilivalikon on avauduttava näppäimistöllä, päivitettävä aria-expanded 
 Suunnittele 320, 390, 768 ja 1440 px leveydet ilman vaakavieritystä tai tekstin leikkautumista.
 Näkyvä focus, ohituslinkki, selkeät labelit, riittävä kontrasti ja reduced-motion-tuki.
 Faktaturva on ehdoton: visuaaliset ideat eivät oikeuta uusiin yritysväitteisiin.
+YLEINEN PREMIUM-KUVATOTEUTUS (KAIKKI TOIMIALAT, EI SIVUPOHJA):
+- Rakenna ensin company-specific VISUAL DNA: mikä palvelu on tärkein,
+  mikä on ensimmäisen näkymän katseenvangitsija, miten kuvat tukevat
+  luottamusta, mikä typografinen ratkaisu on erottuva, mihin CTA vie.
+  Jokaiselle osiolle oma tarkoitus. Tekstipainotteinen hero on sallittu
+  vain, jos se on yritykselle perusteltu, visuaalisesti viimeistelty
+  ja viiden sekunnin ydinkysymyksiin vastataan ilman etsimistä.
+- asset_plan ei saa olla koristeellinen JSON-lista: ilmoita alkuperä,
+  käyttöoikeuden tilanne, kuvan tarvittava koko/rajaus, sijoitus sekä
+  toimiva fallback. Jos kuvapainotteista hero-osaa ei voi toteuttaa
+  luotettavalla lähteellä, pysäytä hyväksyntä tai valitse tarkoituksella
+  aidosti toimiva kuvaa tarvitsematon design. Älä näytä tyhjää
+  kuvalaatikkoa: median puuttuminen ei saa jättää puolikasta layoutia.
+- Alkuperäistä logoa ei saa korvata keksityllä tekoälylogolla.
+  Rasterilogon resoluution on riitettävä käyttökoon vähintään
+  1,5-kertaiseen leveyteen, mielellään 2x terävyysnäytölle.
+  Jos alkuperäisen logon korkearesoluutioinen tai vektoriversio
+  puuttuu, merkitse logo vaihtoa odottavaksi ja estä luovutus.
+- Aidot kuvamateriaalit ovat ensisijaisia. Sisäisessä demossa
+  voi näyttää yrityksen nykyisiä valokuvia selvästi lähteistettyinä
+  konseptikuvina, mutta se EI vahvista tekijänoikeuksia. Tuotantoon
+  vaaditaan käyttölupa ja mielellään optimoitu paikallinen kopio.
+  Suoraan toisen sivuston välimuisti-URL:iin tukeutuminen on riski:
+  tarkista URL ennen esikatselua ja käytä varakuvasuunnitelmaa.
+- 3D-syvyys on valinnainen suunnittelukeino. Käytä hallittua
+  perspektiiviä, maltillisia varjoja, kerroksellisuutta ja opacity/
+  transform-animaatioita vain, jos ne parantavat ymmärrettävyyttä.
+  Älä lisää pyöriviä koristeita, WebGL:ää, jatkuvaa liikettä
+  tai scroll-jackingia vain WOW-vaikutelman vuoksi.
+  Ei-hover-laitteilla ja reduced-motion-tilassa sama sisältö näkyy.
+- Mobiili, tablet, desktop ja oikea huono verkkoyhteys: varmista,
+  ettei kuvien latautumattomuus pilaa ensimmäistä näkymää. Testaa
+  alkuperäisten logojen koko ja kuvien rajaukset myös oikean
+  renderöidyn sivun kuvakaappauksissa. Kokonaisuuden pitää tuntua
+  johdonmukaisesti saman yrityksen omalta, ei saman agency-teeman
+  eri väriversiolta.
+- Ulkopuolinen arvio yksittäisestä sivusta tai yhden hyvän
+  referenssiprojektin tulos ei todista koko Builderin laatua.
+  Tavoite 10/10 on suunnittelutavoite, ei automaattinen pistemäärä.
+  QA vaatii uskottavat riippumattomat arviointitodisteet ja vähintään
+  9,5/10 oikeasta julkaistavasta versiosta ennen asiakashyväksyntää.
 Palauta täysin itsenäinen index.html, jossa kaikki tarvittavat kohteet ja toiminnot toimivat.
 """

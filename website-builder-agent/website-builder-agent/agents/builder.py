@@ -16,6 +16,8 @@ from bs4 import BeautifulSoup
 
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
+from utils.visual_media_gate import audit_visual_media
+from utils.local_media_intake import stage_local_media
 from utils.content_parity import audit_content_parity
 from utils.universal_quality import audit_universal_standards
 from utils.global_feedback import (load_ledger, global_instructions,
@@ -952,6 +954,15 @@ def _write_html(slug: str, html: str) -> str:
                 "Sivun pitää olla täysin itsenäinen."
             )
 
+    # All locally referenced images must be real and packaged. This applies
+    # regardless of which build/revision/external generator produced the HTML.
+    media_preflight = audit_visual_media(cleaned, html_path=_output_path(slug))
+    if not media_preflight["static_pass"]:
+        raise RuntimeError(
+            "Local media integrity failure before HTML publication: "
+            + "; ".join(media_preflight["blockers"][:8])
+        )
+
     # Prevent copy-paste layouts before any new customer's HTML is saved.
     # No paid APIs and no external requests.
     assert_unique_against_output(cleaned, slug, config.OUTPUT_DIR)
@@ -1220,12 +1231,25 @@ def build_site(
         company_facts
     )
     brand_brief = client_design_brief(company)
+    media_manifest = stage_local_media(
+        company.get("media_intake"), intake_root=config.MEDIA_INTAKE_DIR,
+        output_dir=_output_dir(slug)
+    )
 
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
 
 ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
 {json.dumps(brand_brief, ensure_ascii=False)}
+
+KÄYTETTÄVISSÄ OLEVAT PAIKALLISET KUVAT JA LOGOT:
+{json.dumps(media_manifest, ensure_ascii=False)}
+Sallittuja ovat VAIN yllä luetellut, paketissa olevat assets/-polut.
+Ne ovat kuvia varsinaisessa sivustossa, eivät kilpailijoiden kuvia.
+Jos lista on tyhjä, ÄLÄ tee kuvan varaan rakennettua tyhjää heroa.
+Tee silloin harkittu typografinen ratkaisu ja pyydä kuvia ennen
+lopullista asiakasluovutusta. Älä väitä internal_demo_only-aineistoa
+tuotantoon hyväksytyksi.
 
 TOIMIALAN JA YRITYKSEN OMA SUUNNITTELUBRIEFI:
 {json.dumps(industry_brief, ensure_ascii=False)}
@@ -1350,9 +1374,13 @@ Yksi itsenäinen index.html.
 
 Ei:
 - Google Fonts -linkkiä
-- ulkoisia kuvia
+- ulkoisia kuvalinkkejä tai hotlinkkejä
 - ulkoisia JavaScript-kirjastoja
 - ulkoisia CSS-tiedostoja.
+
+Sallitut kuvat: VAIN yllä kuvamanifestissa luetellut paikalliset
+assets/-polut. Kuvia ei saa keksiä, piilottaa tai korvata tyhjillä
+laatikoilla. Muilla img-src -poluilla rakentaminen epäonnistuu.
 
 Kaikki CSS inline <style>-elementissä.
 
@@ -1545,10 +1573,20 @@ def revise_site(
     decisions = validate_design_plan(research, company.get("url", ""))
     reference_images, image_labels = reference_image_inputs(benchmark)
     brand_brief = client_design_brief(company)
+    media_manifest = stage_local_media(
+        company.get("media_intake"), intake_root=config.MEDIA_INTAKE_DIR,
+        output_dir=_output_dir(slug)
+    )
 
     user_prompt = f"""
 ASIAKKAAN BRÄNDI JA SISÄLLÖN SÄILYTTÄMINEN:
 {json.dumps(brand_brief, ensure_ascii=False)}
+
+AIEMMIN HYVÄKSYTYT PAIKALLISET KUVAT, JOITA EI SAA KADOTTAA:
+{json.dumps(media_manifest, ensure_ascii=False)}
+Käytä vain lueteltuja paikallisia assets/-tiedostoja; älä
+vaihda niitä etäkuviin. Säilytä olemassaoleva hyvä kuvasommittelu,
+ellei sitä korjata annetun palautteen perusteella.
 
 TOIMIALAN JA YRITYKSEN AIKAISEMMAT SISÄLTÖ- JA KUVATIEDOT:
 {json.dumps(industry_brief, ensure_ascii=False)}

@@ -3,3 +3,6 @@ __pycache__/
 .env
 .venv/
 output/
+
+# Client-supplied photos and logos must not be committed to the public repo.
+media_intake/
