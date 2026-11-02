@@ -92,7 +92,7 @@ def source_manifest(research: dict) -> dict:
                   "source_text_excerpt":str(p.get("text") or "")[:750],
                   "link_count":len(p.get("links") or []),
                   "asset_count":len(p.get("images") or []),
-                  "source_text_truncated":len(str(p.get("text") or ""))>=6400}
+                  "source_text_truncated":len(str(p.get("text") or ""))>=30000}
                  for p in pages],
         "assets":assets,
         "footer_links":footer_links,
