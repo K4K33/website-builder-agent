@@ -73,6 +73,16 @@ QA_MIN_VISUAL_SCORE = int(os.getenv("QA_MIN_VISUAL_SCORE", "85"))
 if not 0 <= QA_MIN_VISUAL_SCORE <= 100:
     raise ValueError("QA_MIN_VISUAL_SCORE pitää olla välillä 0–100")
 
+# A general model QA pass (legacy 85/100) is NOT a premium owner-preview
+# acceptance. The stricter 95/100 floor applies to EVERY visual dimension
+# before the Builder may mark a first client review ready. External independent
+# >=9.5/10 evidence and client permissions remain separate later gates.
+QA_MIN_OWNER_PREVIEW_VISUAL_SCORE = int(
+    os.getenv("QA_MIN_OWNER_PREVIEW_VISUAL_SCORE", "95")
+)
+if not 90 <= QA_MIN_OWNER_PREVIEW_VISUAL_SCORE <= 100:
+    raise ValueError("QA_MIN_OWNER_PREVIEW_VISUAL_SCORE must be 90..100")
+
 
 # ============================================================
 # Agentin asetukset
