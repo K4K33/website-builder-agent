@@ -176,6 +176,24 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V9 TARKENNETTU ULKOINEN PALAUTE KAIKILLE ASIAKKAILLE:
+- Arvioi suunnittelun, layoutin, saavutettavuuden, navigoinnin,
+  suorituskyvyn ja teknisen laadun objektiivisesti suhteessa tehtyyn työhön.
+  Asiakkaan toimittamatta jääneet omat valokuvat, yrityshistoria,
+  arvostelut ja tiimitiedot eivät oikeuta keksittyä sisältöä.
+- Suunnittele kuvapaikoille vakaat responsiiviset kuvasuhteet,
+  object-fit:cover, yhtenäiset kulmat ja järkevät kuvien rajaukset.
+- Älä näytä tyhjiä tiimi-, arvostelu- tai UKK-osioita:
+  vain varmennetulla ja luvallisella sisällöllä täytetyt osiot.
+- Pidä konseptidemo selvästi merkittynä; demo- ja testitekstit,
+  API-testiyhteydet ja metatiedot poistetaan hyväksytyssä
+  tuotantobuildissä kerralla. Pelkkä CSS-piilotus ei riitä.
+- Pienet kuvatekstit ja lomakeohjeet selkeästi luettaviksi,
+  yleisesti vähintään 14–15px, metadata ≥13px + hyvä kontrasti.
+- Vapaaehtoisia puhelin- tai paikkakuntakenttiä ei lisätä ilman
+  perusteltua käsittelytarkoitusta ja toimivaa tietosuojattua backendiä.
+- Tekoälyn antama hinta-arvio on vain idea, ei vahvistettu hinnasto.
+
 V9 YLEISET LAATUSÄÄNNÖT (uusi V8 desktop-palaute):
 - Taiton pitää tuntua harkitulta eikä isojen vaaleanharmaiden
   tekstipalkkien ketjulta. Erota hinnasto, huomautukset, lähteet ja
