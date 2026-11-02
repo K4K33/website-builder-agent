@@ -17,6 +17,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
+      - name: Fast syntax check before expensive browser setup
+        run: python -m compileall -q agents utils tests scripts main.py
       - run: python -m playwright install --with-deps chromium
       - name: Full suite with automatic root-cause report (must be zero failures)
         run: python scripts/quality_diagnostics.py --json output/quality-diagnostics.json --markdown output/quality-diagnostics.md
