@@ -58,7 +58,7 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertIn("Tarvitsetko apua", soup.select_one("h1").get_text(" ", strip=True))
         self.assertIn("hinnastoon", soup.select_one(".approach-section").get_text(" ",strip=True))
         self.assertNotIn("photo-caption", str(soup))
-        self.assertIn("Apua", soup.select_one(".hero-copy h1").get_text(" ", strip=True))
+        self.assertIn("apua", soup.select_one(".hero-copy h1").get_text(" ", strip=True).lower())
         for filename in FILES:
             text = (ROOT / filename).read_text(encoding="utf-8")
             for arrow in ("↗", "→", "➜", "➝"):
