@@ -131,6 +131,10 @@ class CreativeMultipageTests(unittest.TestCase):
              "prior_patterns_compared":["Previously built garage","Prior florist concept"],
              "unresolved":[]}}
         self.assertTrue(ai_style_review_passes(base))
+        self.assertTrue(ai_style_review_passes(base,available_patterns=[
+            {"site":"Previously built garage"},{"site":"Prior florist concept"}]))
+        self.assertFalse(ai_style_review_passes(base,available_patterns=[
+            {"site":"unrelated A"},{"site":"unrelated B"}]))
         base["ai_style_review"]["risk_score"]=4
         self.assertFalse(ai_style_review_passes(base))
         base["ai_style_review"]["risk_score"]=1
