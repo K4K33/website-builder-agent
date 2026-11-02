@@ -75,7 +75,13 @@ class UniversalStandardsTest(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         b = (root/"agents"/"builder.py").read_text("utf-8")
         q = (root/"agents"/"qa.py").read_text("utf-8")
-        self.assertEqual(b.count("_validate_all_universal_rules(cleaned, research, company)"), 3)
+        # Every Builder path now routes through ONE shared multi-page
+        # validation function instead of copying a separate checker.
+        pipeline = (root/"utils"/"site_build_pipeline.py").read_text("utf-8")
+        self.assertEqual(b.count("build_pages_from_response("), 3)
+        self.assertIn("audit_universal_standards(", pipeline)
+        self.assertIn("audit_source_fidelity(", pipeline)
+        self.assertIn("validate_locked_copy(", pipeline)
         self.assertIn("audit_universal_standards(", q)
         self.assertIn("record_qa_findings(ledger, slug", q)
 
