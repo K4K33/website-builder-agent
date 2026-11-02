@@ -2,6 +2,7 @@
 
 **Applies to ALL clients: new premium pitches, revisions, previews, developer handoffs and QA.**
 **Mandatory per-client checklist:** `docs/KAURIVO_GLOBAL_DESIGN_QA_CHECKLIST.md`.
+**Feedback-to-standards workflow:** `docs/KAURIVO_FEEDBACK_TO_STANDARD_WORKFLOW.md`.
 Every real preview must receive a recorded PASS / FIX / N/A review; no score alone establishes production readiness.
 Derived from the 2026-11-01 Kotifixi owner-feedback and observed iPhone screen recording.
 This is a written acceptance standard, not evidence that every current auto-generated
@@ -10,7 +11,7 @@ website already meets it.
 ## Universal text discipline and proven consistent 9.5 quality
 
 See `docs/KAURIVO_QUALITY_95_GATE.md`. Across the WHOLE site (not
-per page), use **at most one** obvious antithesis structure such as
+per page), aim for **zero**, with **at most one expressly justified** antithesis structure such as
 "Vähemmän X. Enemmän Y.", and omit it if not excellent.
 Do not chain slogans, symmetrical two-clause hero lines, repeated
 "yksi...monenlaisia..." phrasing or filler micro-labels. Prefer
