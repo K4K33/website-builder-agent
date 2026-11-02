@@ -1,5 +1,13 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-02 — Kotifixi desktop V8 review → V9 refinement
+
+User review: "ihan ok" visually, scrolling felt somewhat slow on trackpad, some pale text bars looked below premium, and raw.githack's warning page must never be presented to prospects. External Claude Sonnet 5.5 desktop video assessed approximately 8.5/10. Verified video contains the "One more step" raw.githack interstitial, real content, and overly crowded pricing sidebar. Sitewide changes: reduced paint-heavy filters/backdrop and scroll-listener overhead; removed offset hero decoration; separated source-link and tax info to distinct sections; clearer editorial hierarchy and readable copy. Add regression tests and sales-ready branded-domain gate. Maintain owner's preference of zero generic antithesis formulas and client-authentic content. Do not invent owner biography, ratings, photos or tax benefits.
+
+**Status:** candidate only. GitHub integration confirms files, not a real perceptual performance measurement. Reviewer saw prior version; actual latest-commit mobile+desktop independent rating ≥9.5 and three-project consistency are not proven. No client production launch or outreach. For full review, profile with real physical trackpad and complete first-load without interstitial.
+
+
+
 ## 2026-11-02 — Kotifixi V8: concrete copy, mobile disclosure, feedback as global QA rule
 
 **User instruction:** continue iterative development until quality is good and convert every piece of feedback into cross-project standards, without copying client-specific brands to other customers.
