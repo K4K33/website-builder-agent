@@ -915,7 +915,7 @@ def run_qa(slug_or_name: str) -> dict:
         html_bytes = file.read()
     html = html_bytes.decode("utf-8")
     research = company.get("research") or {}
-    parity = audit_content_parity(html, research)
+    parity = audit_content_parity(html, research, source_url=company.get("url", ""))
     automated = _automated_checks(html)
     # Never spend browser/AI review credits when guaranteed critical
     # source-backed fields are absent.

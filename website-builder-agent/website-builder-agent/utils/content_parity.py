@@ -104,7 +104,8 @@ def _explicit_review_approved(research: dict, pages: list[dict]) -> bool:
 
 
 def audit_content_parity(
-    html: str, research: dict, *, require_source_review: bool = True
+    html: str, research: dict, *, require_source_review: bool = True,
+    source_url: str = ""
 ) -> dict:
     """Check essential data and separately report source-coverage uncertainty.
 
@@ -151,6 +152,10 @@ def audit_content_parity(
     inventory = research.get("source_inventory") or {}
     pages = [p for p in inventory.get("pages", []) if isinstance(p, dict)]
     old_site = bool(pages)
+    if source_url and not old_site and research.get("research_mode") != "verified_no_website":
+        pending.append(
+            "Existing website has no researched source pages; cannot certify source parity."
+        )
     original_urls = {str(p.get("url") or "") for p in pages}
     for entry in research.get("content_requirements") or []:
         if not isinstance(entry, dict):

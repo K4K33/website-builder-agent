@@ -1372,7 +1372,8 @@ Palauta VAIN koko HTML.
         company_facts,
     )
 
-    parity = audit_content_parity(cleaned, research, require_source_review=False)
+    parity = audit_content_parity(cleaned, research, require_source_review=False,
+                                 source_url=company.get("url", ""))
     if parity["missing"] or parity["review_required"]:
         problems = ([x["label"] for x in parity["missing"]]
                     + parity["review_required"])
@@ -1622,7 +1623,21 @@ Palauta koko HTML.
         company_facts,
     )
 
-    parity = audit_content_parity(cleaned, research, require_source_review=False)
+    parity = audit_content_parity(
+        cleaned, research, require_source_review=False,
+        source_url=company.get("url", "")
+    )
+    if parity["missing"] or parity["review_required"]:
+        raise RuntimeError(
+            "Source facts lost in revision: "
+            + "; ".join(
+                [item["label"] for item in parity["missing"]]
+                + parity["review_required"]
+            )[:1600]
+        )
+
+    parity = audit_content_parity(cleaned, research, require_source_review=False,
+                                 source_url=company.get("url", ""))
     if parity["missing"] or parity["review_required"]:
         problems = ([x["label"] for x in parity["missing"]]
                     + parity["review_required"])
