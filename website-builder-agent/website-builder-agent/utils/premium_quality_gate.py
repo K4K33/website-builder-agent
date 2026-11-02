@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urljoin
 
 from bs4 import BeautifulSoup
 
@@ -233,3 +233,57 @@ def audit_primary_journeys(
     return {"pass": not issues, "issues": issues,
             "tasks_checked": len(tasks),
             "note": "Destinations exist in markup; external completion requires a real browser check."}
+
+
+def discover_source_journeys(research: dict) -> list[dict]:
+    """Find exact observed booking/contact links without inventing destinations.
+
+    Prioritize a real third-party booking page over generic old-site navigation;
+    only source-backed mailto/tel and external booking URLs are returned.
+    """
+    output, seen_categories = [], set()
+    source = (research.get("source_inventory") or {}).get("pages") or []
+    proposals = []
+    for page in source:
+        if not isinstance(page, dict) or not page.get("url"):
+            continue
+        original = str(page["url"])
+        host = (urlsplit(original).hostname or "").removeprefix("www.")
+        for link in page.get("links") or []:
+            if not isinstance(link, dict):
+                continue
+            label = str(link.get("text") or "").strip()
+            href = str(link.get("href") or "").strip()
+            if not href:
+                continue
+            absolute = urljoin(original, href)
+            parsed = urlsplit(absolute)
+            lower = (label + " " + href).casefold()
+            category = None
+            if (any(x in lower for x in ("ajanvaraus", "varaa aika", "booking", "book now"))
+                    and parsed.scheme == "https"
+                    and (parsed.hostname or "").removeprefix("www.") != host):
+                category = "booking"
+            elif parsed.scheme == "tel":
+                category = "phone"
+            elif parsed.scheme == "mailto":
+                category = "email"
+            if category:
+                proposals.append(({"booking": 0, "phone": 1, "email": 2}[category],
+                                  category, absolute, original, label))
+    facts = research.get("company_facts") or {}
+    if facts.get("contact_phone") and not any(item[1] == "phone" for item in proposals):
+        phone = "".join(ch for ch in str(facts["contact_phone"]) if ch.isdigit() or ch == "+")
+        if len(phone) >= 6:
+            proposals.append((1, "phone", "tel:" + phone, "verified company_facts", "Call"))
+    if facts.get("contact_email") and not any(item[1] == "email" for item in proposals):
+        proposals.append((2, "email", "mailto:" + str(facts["contact_email"]).strip(),
+                          "verified company_facts", "Email"))
+    for _, category, destination, source_url, label in sorted(proposals):
+        if category in seen_categories:
+            continue
+        seen_categories.add(category)
+        output.append({"label": label or category, "kind": category,
+                       "source_url": source_url, "source_route": "index.html",
+                       "destination": destination})
+    return output
