@@ -683,6 +683,14 @@ def cmd_pipeline(args):
     print("========================================")
 
     qa_result = qa.run_qa(selected_slug)
+    if getattr(args, "benchmark_mode", False):
+        from utils.blind_trials import record_first_pass_qa
+        first_pass = record_first_pass_qa(
+            Path(config.OUTPUT_DIR) / "_kaurivo_unseen_trials.json",
+            slug=selected_slug, qa_report=qa_result
+        )
+        print("[Blind benchmark] First-pass result recorded; independent 9.5 score NOT verified.")
+        print(json.dumps(first_pass,ensure_ascii=False))
     for attempt in range(args.max_revisions):
         if qa_result.get("overall_pass") is True:
             break

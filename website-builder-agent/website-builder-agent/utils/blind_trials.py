@@ -107,3 +107,53 @@ def first_pass_metrics(history: list[dict]) -> dict:
                      if evidenced else None,
         "note":"Historic hand-built demos are excluded; unverified quality is never counted as passed.",
     }
+
+def record_first_pass_qa(registry_path: str | Path, *, slug: str,
+                         qa_report: dict, build: dict | None = None) -> dict:
+    """Persist first-pass evidence without inventing independent 9.5 scores.
+
+    A follow-up build cannot rewrite the initial grade; only the first
+    QA result for a reserved trial counts. Evidence stays on the host
+    that owns the local ignored registry, not in the public repository.
+    """
+    path=Path(registry_path)
+    if not path.is_file():
+        raise RuntimeError("First-pass trial registry is missing.")
+    data=json.loads(path.read_text(encoding="utf-8"))
+    records=data.get("trials") or []
+    matches=[t for t in records if t.get("slug")==_normalize(slug)]
+    if len(matches)!=1 or matches[0].get("mode")!="first_pass_unseen":
+        raise RuntimeError("No unique recorded first-pass experiment for this company.")
+    trial=matches[0]
+    if trial.get("first_pass_recorded_at"):
+        raise RuntimeError("Cannot overwrite original first-pass evidence with a revised build.")
+    from hashlib import sha256
+    if not isinstance(qa_report,dict):
+        raise TypeError("QA evidence must be structured.")
+    evidence={
+        "technical_qa_pass":qa_report.get("overall_pass") is True,
+        "missing_original_content":len((qa_report.get("source_fidelity") or {}).get("missing") or []),
+        "missing_verified_facts":len((qa_report.get("content_parity") or {}).get("missing") or []),
+        "browser_issue_count":len((qa_report.get("browser") or {}).get("issues") or []),
+        "originality_warnings":len((qa_report.get("originality") or {}).get("warnings") or []),
+        "originality_blockers":len((qa_report.get("originality") or {}).get("blocking_problems") or []),
+        "source_page_count":(qa_report.get("source_fidelity") or {}).get("manifest",{}).get("source_page_count",0),
+        "generated_page_count":len(qa_report.get("site_pages") or []),
+        "ai_style_risk":(qa_report.get("content_review") or {}).get("ai_style_review",{}).get("risk_score"),
+        "internal_visual_review":(qa_report.get("content_review") or {}).get("visual_review") or {},
+        "independent_quality_score":None,
+        "independent_quality_evidence":"NOT VERIFIED",
+    }
+    trial.update({
+        "status":"first_pass_evaluated",
+        "first_pass_recorded_at":datetime.now(timezone.utc).isoformat(),
+        "first_pass_metrics":evidence,
+        "quality_evidence":"not_verified",
+        "first_pass_build_sha256":(build or {}).get("html_sha256") or qa_report.get("html_sha256") or "",
+    })
+    with NamedTemporaryFile(mode="w",encoding="utf-8",dir=path.parent,
+                             prefix=".trial-report-",delete=False) as handle:
+        json.dump(data,handle,ensure_ascii=False,indent=2)
+        temporary=handle.name
+    os.replace(temporary,path)
+    return evidence

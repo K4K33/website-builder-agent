@@ -70,9 +70,11 @@ class ClientOwnershipTests(unittest.TestCase):
         self.assertIn("Brändin säilyttäminen ei tarkoita vanhan sivun", builder.BUILD_SYSTEM_PROMPT)
         self.assertIn("SEN SIJAAN UUDISTA ISOSTI", builder.REVISE_SYSTEM_PROMPT)
         self.assertIn("client_design_brief(company)", __import__("inspect").getsource(builder.build_site))
-        self.assertIn("validate_locked_copy(cleaned, brand_brief)", __import__("inspect").getsource(builder.revise_site))
-        self.assertIn("validate_locked_copy(cleaned, client_design_brief(company))",
-                      __import__("inspect").getsource(builder.run_build_from_response))
+        from utils import site_build_pipeline
+        self.assertIn("build_pages_from_response(", __import__("inspect").getsource(builder.revise_site))
+        self.assertIn("build_pages_from_response(", __import__("inspect").getsource(builder.run_build_from_response))
+        self.assertIn("validate_locked_copy(combined,client_design_brief(company))",
+                      __import__("inspect").getsource(site_build_pipeline.build_pages_from_response))
 
     def test_locked_copy_excludes_script_and_style_faking(self):
         brief = {"locked_copy": ["Asiakkaan tärkeä lause"]}

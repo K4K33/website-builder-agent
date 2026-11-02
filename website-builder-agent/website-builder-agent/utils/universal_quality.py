@@ -51,6 +51,7 @@ def audit_universal_standards(
     *,
     company: dict | None = None,
     stage: str = "internal_demo",
+    rendered_pages: dict[str,str] | None = None,
 ) -> dict:
     """Separate deterministic failures from evidence still requiring review.
 
@@ -61,7 +62,14 @@ def audit_universal_standards(
         raise ValueError("Unknown review stage")
     research = research or {}
     company = company or {}
-    soup, main_text = _content(html)
+    pages = rendered_pages if isinstance(rendered_pages, dict) and rendered_pages else {"index.html": html}
+    # Run cross-site copy/brand audits on ALL routes, not just index.html.
+    texts = []
+    for page_html in pages.values():
+        _, content = _content(page_html)
+        texts.append(content)
+    main_text = " ".join(texts)
+    soup = BeautifulSoup("<html><body>" + "\n".join(pages.values()) + "</body></html>", "html.parser")
     lower = main_text.casefold()
     problems: dict[str, list[str]] = {}
     pending: dict[str, list[str]] = {}
@@ -72,7 +80,7 @@ def audit_universal_standards(
     def needs(key: str, reason: str) -> None:
         pending.setdefault(key, []).append(reason)
 
-    copy_result = lint_site_copy({"index.html": html})
+    copy_result = lint_site_copy(pages)
     for error in copy_result["issues"]:
         key = "no_decorative_numbering" if "decorative card numbering" in error else "natural_copy"
         fail(key, error)

@@ -11,6 +11,9 @@ import config
 from agents.qa import review_passes
 from utils.design_benchmark import validate_benchmark, validate_design_plan
 from utils.verified_profile import validate_verified_profile
+from utils.site_integrity import site_sha256
+from utils.creative_directions import validate_creative_directions
+from utils.site_architecture import validate_site_architecture
 
 REQUIRED_VIEWS = ("desktop", "tablet", "mobile", "small_mobile")
 
@@ -56,6 +59,22 @@ def inspect_candidate(slug: str, company: dict) -> dict:
         digest = sha256(target.read_bytes()).hexdigest()
     except (OSError, ValueError, TypeError) as exc:
         problems.append("Current HTML artifact missing or unsafe: " + str(exc))
+    if build.get("page_paths"):
+        try:
+            bundle_digest=site_sha256(expected.parent,build["page_paths"])
+            if (qa.get("site_sha256")!=bundle_digest
+                    or approval.get("site_sha256")!=bundle_digest):
+                problems.append("Multi-page QA/approval no longer matches all pages and assets.")
+        except (OSError,ValueError,RuntimeError) as exc:
+            problems.append("Multi-page site bundle integrity unavailable: "+str(exc))
+    try:
+        if research.get("creative_directions") or build.get("page_paths"):
+            validate_creative_directions(research)
+            validate_site_architecture(
+                research,no_site=research.get("research_mode")=="verified_no_website"
+            )
+    except (RuntimeError,ValueError,TypeError) as exc:
+        problems.append("Creative/site architecture evidence missing: "+str(exc))
     if not isinstance(version, int) or version < 1:
         problems.append("Build version must be a positive integer.")
     if (qa.get("overall_pass") is not True

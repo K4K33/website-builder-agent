@@ -254,7 +254,15 @@ class FreeEnrichmentTests(unittest.TestCase):
                 ("hero", "first_view"), ("services", "service_hierarchy"),
                 ("contact", "contact_path"), ("mobile", "mobile")])
         ]
+        from tests.test_creative_multipage_originality import creative
         brief = {
+            **creative(),
+            "site_architecture":{"pages":[{
+                "path":"index.html",
+                "purpose":"Present the verified lunch business services",
+                "user_task":"Find actual lunch and contact information",
+                "section_ids":["main"]
+            }]},
             "company_facts": {"name": "Hallucinated Oy", "industry": "consulting",
                               "services": ["Invented service"]},
             "reference_comparison": [{"url": u, "observations": ["Clear opening details"],
