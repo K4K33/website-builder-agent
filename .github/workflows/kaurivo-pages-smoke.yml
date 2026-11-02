@@ -82,3 +82,25 @@ jobs:
           done
           echo "Kotifixi V7 home, subpages, CSS and contact JS are live." >> "$GITHUB_STEP_SUMMARY"
 
+
+          # All current three-industry V4 owner previews: exact public URL + version marker + subpage.
+          for demo in te-service-v4 ravintola-rosanne-v4 rakennuspalvelu-rili-v4; do
+            case "${demo}" in
+              te-service-v4) marker='Autohuolto ja korjaukset Kirkkonummella.'; sub='huollot/' ;;
+              ravintola-rosanne-v4) marker='suunnitteludemon esimerkkisisältöä'; sub='juhlat/' ;;
+              rakennuspalvelu-rili-v4) marker='Rakennamme ja remontoimme Etelä-Savossa.'; sub='kohteet/' ;;
+            esac
+            url="https://k4k33.github.io/website-builder-agent/kaurivo/demos/${demo}/"
+            code=$(curl --max-time 15 -sSL -o /tmp/kaurivo-v4-live -w '%{http_code}' "${url}" || true)
+            if [[ "${code}" != "200" ]] || ! grep -Fq -- "${marker}" /tmp/kaurivo-v4-live; then
+              echo "::error::V4 preview missing or stale: ${url} (HTTP ${code})"
+              exit 1
+            fi
+            suburl="${url}${sub}"
+            code=$(curl --max-time 15 -sSL -o /tmp/kaurivo-v4-sub -w '%{http_code}' "${suburl}" || true)
+            if [[ "${code}" != "200" ]] || ! grep -Fq 'name="robots"' /tmp/kaurivo-v4-sub; then
+              echo "::error::V4 subpage missing: ${suburl} (HTTP ${code})"
+              exit 1
+            fi
+            echo "Verified V4 demo live: ${url} and ${suburl}" >> "$GITHUB_STEP_SUMMARY"
+          done
