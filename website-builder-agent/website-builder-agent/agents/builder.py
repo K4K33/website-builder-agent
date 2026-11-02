@@ -29,6 +29,21 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+KRIITTINEN YLEINEN DESIGN FAIL -PORTTI: KAIKKI ASIAKKAAT:
+- Kolmea erillistä yritystä ei saa tehdä identtisellä HTML/CSS-korttipohjalla,
+  vaikka väripaletti vaihdettaisiin. Suunnittele toimialalle uniikki IA,
+  layout, typografia, kuvasommitelma, sisältöjärjestys ja interaktiot.
+- EI koristeellisia 01/02/03 numeroita koskaan oletuksena palvelukorteissa.
+- SÄILYTÄ yrityksen alkuperäinen oikea logo ja brändivärit.
+- Teksti suoraan asiakkaalle; EI 'yrityksen sivuilla kerrotaan'.
+- Vanhan sisällön kaikki olennaiset tiedot ja kuvat inventoitava alisivuilta.
+- Rosanne-tyyppisen lounaslistan G/L/M merkinnät aina todennettava ja säilytettävä,
+  ei keksitä allergeeneja eikä näytetä mielivaltaista ma/ke/pe-nostoa.
+- Rakennusyrityksillä aidot projektigalleriat; ennen/jälkeen VAIN todellisista pareista.
+- WCAG AA tekstikontrasti on kovaportti. Mobiili+desktop, näppäimistö, CMS, linkit.
+- Kolme samaa DOM-rakennetta eri teemoilla = hylätty ja tehtävä uusiksi.
+Lue docs/KAURIVO_NO_TEMPLATES_BRAND_CONTENT_GUARD_2026-11-02.md.
+
 SÄILYTÄ KAIKKI ALKUPERÄISEN VERKKOSIVUSTON OLENNAISET TIEDOT:
 - Tee pakollinen sivukohtainen sisältöinventaario ENNEN uudistamista.
 - Vertaa alkuperäisen sivun palvelut, hinnat, yrityshistoria, FAQ,

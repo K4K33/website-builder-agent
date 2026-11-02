@@ -1,5 +1,9 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+
+## 2026-11-02 hard stop: three industry demo failure and new universal rule
+
+See `docs/KAURIVO_NO_TEMPLATES_BRAND_CONTENT_GUARD_2026-11-02.md`. HARD FAIL if decorative service numbering, wrong/replaced company logo or color identity, shared same grid recipe across unlike sectors, invented/partial menu, missing G/L/M labels, low-contrast text, invented before/after pairs, third-person "company website says" copy, or content missing from older pages. Research, unique visual direction, factual inventory and accessible browsing precede first owner-facing link. Scope: all companies.
 ## 2026-11-02 final visual pass before first-owner-preview
 
 - [ ] Preserve user-approved art direction; only change supported defects or specific requested final details. Stop gratuitous visual rewrites after acceptance.
