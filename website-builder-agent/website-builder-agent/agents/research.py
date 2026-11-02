@@ -28,6 +28,8 @@ from utils.design_benchmark import validate_benchmark, validate_design_plan, ref
 from utils.screenshot import capture_website
 from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
+from utils.creative_directions import validate_creative_directions
+from utils.site_architecture import validate_site_architecture
 
 import requests
 
@@ -226,6 +228,45 @@ Sääntöjä:
 - Jos yhteystieto puuttuu, jätä se tyhjäksi.
 """
 
+
+FINAL_RESEARCH_PROMPT += """
+
+PAKOLLINEN LUOVA VAIHE ENNEN KAUPALLISTA BUILD-API-KUTSUA:
+JSON:iin sisältyy ylimmän tason creative_directions: täsmälleen kolme
+todella erilaista yrityskohtaisen sivuston lähestymistapaa.
+Kussakin on NÄMÄ merkkijonokentät:
+id, concept, business_reason, source_anchor, first_view,
+information_architecture, navigation, image_strategy,
+typography, brand_continuity, non_goals, mobile_behavior.
+Vähintään kolme näistä neljästä muuttuu aidosti vaihtoehtojen välillä:
+first_view, information_architecture, navigation, image_strategy.
+Kolme värivariaatiota samasta hero/kortti/CTA-pohjasta EI kelpaa.
+Pidä oikea yritysidentiteetti jokaisessa vaihtoehdossa.
+
+Ylimmän tason creative_selection:
+{"selected_id":"täsmälleen yksi creative_directions id",
+ "business_reason":"perustele konkreettisesti miksi tämä on kahden muun
+parempi tämän yrityksen sisältöihin, yleisöön, brändiin ja tavoitteisiin",
+ "rejected_ids":["molemmat muut id:t"]}.
+Valinta ei ole riippumaton tarkastaja: myöhempi QA arvioi valinnan uudelleen.
+
+Ylimmän tason site_architecture:
+{"pages":[{"path":"index.html","purpose":"todellinen sivun tehtävä",
+ "user_task":"mitä oikea asiakas saavuttaa täällä",
+ "section_ids":["hero","palvelut","yhteys"]},
+ {"path":"palvelut/index.html","purpose":"...","user_task":"...",
+  "section_ids":["palvelut","hinnasto"]}]}
+Tee aitoja erillisiä HTML-sivuja, kun lähdesivuja on vähintään kolme TAI
+lähdetekstiä >=650 sanaa. Tällöin vähintään 2 eri sivua vaaditaan,
+käytännössä määrä määräytyy alkuperäisen sisältömäärän perusteella.
+source_content_mapin jokaisen lähde-URL:n ja jokaisen h2/h3-aiheen
+target pitää osoittaa site_architecturen oikean sivun ja osion polkuun,
+esim. palvelut/index.html#huolto. Myyntituotteiden oikea listaus,
+hinnasto ja muut ensisijaiset tehtävät eivät saa jäädä vanhan
+rikkinäisen verkkosivun linkiksi. Jos sisältö on laaja, käytä tarvittavaa
+määrää monisivuisia reittejä, kuitenkin enintään 14.
+HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
+"""
 
 FINAL_RESEARCH_PROMPT += DESIGN_CONTRACT.replace("Palauta täysin itsenäinen index.html, jossa kaikki tarvittavat kohteet ja toiminnot toimivat.", "Palauta edelleen vain yllä kuvatun skeeman JSON-designbrief.")
 
@@ -544,6 +585,8 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
         ],
     }
     validate_design_plan(research_data, "")
+    validate_creative_directions(research_data)
+    validate_site_architecture(research_data, no_site=True)
     updated = upsert_company(slug, {"research": research_data})
     set_status(slug, "researched")
     return updated
@@ -899,6 +942,8 @@ Tärkeää:
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
     validate_source_plan(research_data, source_url=url)
+    validate_creative_directions(research_data)
+    validate_site_architecture(research_data)
 
     updated_company = upsert_company(
         slug,
