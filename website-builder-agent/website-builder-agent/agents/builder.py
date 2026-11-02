@@ -176,6 +176,27 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V12 HEADER-SOMMITTELU JA TYPOGRAFIA KAIKILLE ASIAKKAILLE:
+- Logo, päävalikko ja oikeanpuoleiset yhteydenottotoiminnot ovat
+  kolme tasapainoista aluetta. Keskitetty valikko ei saa riippua
+  vasemman brändin tai oikean CTA-ryhmän fyysisestä leveydestä.
+  Kokeile CSS Gridin 1fr auto 1fr -rakennetta ja mittaa oikeasti
+  valikon keskipiste usealla desktop-leveydellä.
+- Yläpalkin tekstin pitää sopia brändin typografiseen järjestelmään:
+  selkeä n. 16–17px semi-bold sans ja hienovarainen valintaviiva
+  ovat usein parempia kuin liian raskas 18px bold.
+  Typografia ja oikea kielen rytmi ovat asiakaskohtaisesti arvioitavia.
+- CTA:t ovat yhtä korkeat, linjassa ja oikeassa reunassa
+  tasaisilla reunamarginaaleilla. Jos leveys ei riitä, siirrä
+  toissijainen puhelinnumero mobiilivalikkoon.
+- Älä väitä selaimen automaattisen Google Translate -palkin
+  olevan sivukoodin virhe, jos lang=fi ja UTF-8 ovat oikein.
+  Älä blokkaa selaimen käännöstoimintoa.
+- Ulkoisen mallin mielipide ei automaattisesti syrjäytä käyttäjän
+  aiempaa kirjattua otsikko-/tekstipäätöstä.
+- Testaa 1024, 1180, 1280 ja 1440 px sekä eri mobiilileveydet.
+  Pidä natiivi scroll ja kevyt 3D ilman jatkuvaa renderöintiä.
+
 V11 KAIKKIEN TULEVIEN ASIAKASSIVUJEN LAATU:
 - Selkeä sankariotsikko puhuu asiakkaan arjesta ja vahvistetuista
   palveluista. Älä kirjoita geneeristä yritysnimen toistavaa fraasia.
