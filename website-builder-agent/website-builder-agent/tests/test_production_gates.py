@@ -199,7 +199,7 @@ class ProductionGates(unittest.TestCase):
                                        industry="ravintola", location="Tampere", max_revisions=0)
                 with patch.object(config, "model_for_stage", return_value="fixed/mock"), \
                      patch.dict(os.environ, {"OPENROUTER_API_KEY": "offline", "TAVILY_API_KEY": "offline"}), \
-                     patch.object(main.scout, "run_scout", return_value=[{"slug": slug}]),
+                     patch.object(main.scout, "run_scout", return_value=[{"slug": slug}]), \
                      patch.object(main, "site_signal", return_value="has_website"), \
                      patch.object(main.research, "run_research"), \
                      patch.object(main.builder, "run_build"), \
