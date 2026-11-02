@@ -18,6 +18,17 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements.txt
       - run: python -m playwright install --with-deps chromium
-      - run: python -m unittest discover -s tests -v
+      - name: Full suite with automatic root-cause report (must be zero failures)
+        run: python scripts/quality_diagnostics.py --json output/quality-diagnostics.json --markdown output/quality-diagnostics.md
         env:
           REQUIRE_BROWSER_TESTS: '1'
+      - name: Keep evidence even if tests fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-diagnostics-${{ github.run_id }}
+          path: |
+            website-builder-agent/website-builder-agent/output/quality-diagnostics.json
+            website-builder-agent/website-builder-agent/output/quality-diagnostics.md
+          if-no-files-found: warn
+          retention-days: 30
