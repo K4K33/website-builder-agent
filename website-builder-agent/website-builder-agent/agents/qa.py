@@ -713,6 +713,37 @@ jotka kierrättävät käyttäjää ilman uutta tietoa.
 Älä väitä sivustonlaajuista tarkistusta tehdyksi, jos
 käytössä on vain yksittäisen sivun kuvakaappaus.
 
+YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
+- Yksi asiakasdemo ei riitä. Tavoitteena jokaisessa
+  asiakasprojektissa oikean ulkoisen riippumattoman AI:n
+  arvosana vähintään 9,5/10, myös vähintään kolmessa
+  erillisessä tuoreessa yritysprojektissa. ÄLÄ KEKSI
+  pisteitä tai väitä AI:n arvioineen työtä ilman näyttöä.
+  Mobiilin ja desktopin sekä alisivujen arvioinnit
+  tehdään aina ennen hyväksyntää.
+- VASTAKOHTAPARIEN (esim. "Vähemmän X, enemmän Y"
+  tai "Ei vain X vaan Y") EHDOTON MAKSIMI ON 1 KOKO
+  VERKKOSIVUSTOLLA, ei yksi per sivu. Jos pari kuulostaa
+  teennäiseltä, käytä 0. Toistuvat mainoslauseet ja
+  kahden iskulauseen rinnakkaisrytmi eivät korvaa
+  luonnollista suomen kieltä.
+- Älä toista samaa ideaa hero-osiossa, palvelukorteissa,
+  toisessa vaaleassa lohkossa ja lopun bannerissa.
+  Jokaisella osiolla täytyy olla oma oikea tehtävänsä.
+  Kirjoita suoraan asiakkaan todellisista palveluista
+  ja siitä miten asiakas saa yhteyden, älä
+  AI-motivaatiofraaseja.
+- Vahvistettujen yrityskuvien puuttuessa käytä
+  keskenään yhtenäisiä, luvallisia esimerkkikuvia.
+  Älä laita kuvan päälle isoa tummaa "Kuvituskuva"
+  tarraa. Kuvaluonteen kertoo pieni vieressä oleva
+  tekstiselite ja demon lähetysviesti.
+- Yksittäinen ulkoinen 8,5/10-arvio tai itse annettu
+  9,5/10-piste EI tarkoita läpäisyä. Etene
+  maksuttomien rakenteen ja selaimen testien kautta
+  ulkoiseen arvosteluun. Kirjaa palautteet ja
+  korjaa mahdolliset toistuvat ongelmat koko agenttiin.
+
 YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
 - Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat
   saatavilla, olennaisia ja käyttöoikeudeltaan ihmisen vahvistamia.
