@@ -30,6 +30,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from utils.source_identity import extract_source_identity, extract_price_faq_evidence
+from utils.source_content_blocks import extract_source_content_blocks
 
 
 HEADERS = {
@@ -1041,6 +1042,7 @@ def extract_text_and_meta(
     )
     source_identity = extract_source_identity(html, base_url)
     price_faq_evidence = extract_price_faq_evidence(html)
+    source_content_blocks = extract_source_content_blocks(html)
 
     # Many SME sites use footer-like <div> containers or ARIA landmarks,
     # not a semantic <footer>. Detect those before de-duplicating nested marks.
@@ -1224,6 +1226,7 @@ def extract_text_and_meta(
         "header_assets": header_assets,
         "source_identity": source_identity,
         "price_faq_evidence": price_faq_evidence,
+        "source_content_blocks": source_content_blocks,
         "footer_assets": footer_assets,
         "footer_links": footer_links,
         "image_count": len(

@@ -43,6 +43,26 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+NEXT-CLIENT PREMIUM FIRST-PASS CONTRACT:
+- First preserve the real company identity: sourced marks, recognisable colors,
+  people, approved real photos, original service structure, partners and tone.
+- Treat every observed source paragraph and substantive list item as a content
+  obligation. You may rewrite it naturally and reorganize pages, but cannot
+  silently discard meaning or switch product/price/eligibility categories.
+- Study all three truly distinct research creative directions and execute the
+  selected plan, never a recurring agency hero/card template. Ensure the
+  selected direction is visibly grounded in that company's authentic material.
+- Main booking / contact / purchase buttons must use the real source-backed
+  destination from primary_user_journeys; links that point to only a generic
+  service homepage cannot replace a verified exact booking URL.
+- Keep authentic customer quote + explicit rating together with accessible
+  meaningful stars. Do not fabricate star ratings or portraits.
+- Make every essential task obvious on mobile and desktop; no pointless
+  intermediate booking step, repeated decorative arrows, fabricated logos,
+  generic slogans or omitted high-value original details.
+- All generated sections and responsive compositions must be independently
+  inspected; the builder's own opinion does not constitute a 9.5 rating.
+
 KAIKILLE ASIAKKAILLE PAKOLLINEN BRÄNDI-, SISÄLTÖ- JA ARVOSTELUUSKOLLISUUS:
 - Vanhan sivuston todellinen logo, brändivärit, tunnistettava typografia
   ja asiakkaan oikea kuvallinen identiteetti on tunnistettava uudelta sivulta.

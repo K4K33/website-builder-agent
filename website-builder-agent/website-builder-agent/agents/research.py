@@ -29,6 +29,7 @@ from utils.screenshot import capture_website
 from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
+from utils.premium_quality_gate import discover_source_journeys
 from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
 
@@ -573,6 +574,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     ]
     research_data = {
         **brief,
+        "premium_protocol": "v2",  # Owner acceptance requires independent evidence.
         "company_facts": facts,  # The AI design response cannot change verified facts.
         "design_benchmark": benchmark,
         "fact_sources": verified["fact_sources"],
@@ -585,6 +587,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
             for item in references
         ],
     }
+    research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, "")
     validate_creative_directions(research_data)
     validate_site_architecture(research_data, no_site=True)
@@ -693,6 +696,7 @@ def run_research(
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
          "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
          "price_faq_evidence": p.get("price_faq_evidence") or {},
+         "source_block_samples": (p.get("source_content_blocks") or {}).get("blocks", [])[:12],
          "header_assets": p["header_assets"],
          "footer_assets": p["footer_assets"]}
         for p in source_inventory["pages"]
@@ -930,6 +934,7 @@ Tärkeää:
                  for record in reference_evidence]
     research_data = {
         **brief,
+        "premium_protocol": "v2",  # Owner acceptance requires independent evidence.
         "design_benchmark": benchmark,
         # The design pass must not rewrite or invent extracted company facts.
         "company_facts": company_facts,
@@ -953,6 +958,7 @@ Tärkeää:
         "reference_search_query": search_query,
     }
 
+    research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, url)
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.

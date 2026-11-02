@@ -1,5 +1,56 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## Premium 9.5/10 first-pass standard — 2026-11-03
+
+This is a source-first workflow for ALL future clients, not a patch to an old
+demo. Technical CI, genuine visual quality, source completeness and legitimate
+customer acceptance are different evidence gates.
+
+1. Crawl original homepage and important subpages; record and report unread
+   URLs, JS-loaded content and any 30k text / source-block caps. Keep sections,
+   original product and service categories, prices, caveats, owners, staff, logo,
+   colors, actual photos, affiliation marks, testimonials, exact rating stars,
+   booking and contact links, FAQs and substantial paragraphs.
+2. Produce the old-to-new matrix: for every source page and source heading
+   specify a real new destination; every nontrivial paragraph/list item is
+   retained verbatim or mapped to a source/build-specific human-approved rewrite.
+   Never certify paraphrase equivalence by a word-count or similarity heuristic.
+3. The Brand DNA brief identifies original visual assets, typography, colors,
+   actual photography and tone. Unlicensed photos require permission or a
+   legitimate owner-approved replacement, not an invented stock employee.
+4. Explore three genuinely different site architectures and justify the selected
+   original concept using sector benchmarks and first-party customer evidence.
+5. Use real quotes + their original explicit star counts only; never invent
+   social proof, five-star ratings or staff identities.
+6. Editorial proof: eliminate template slogans, repeated arrows, needless card
+   numbering, redundant filler, unexplained changes to original phrases and
+   content omissions. Preserve all verified accurate facts.
+7. Verify a complete primary visitor task inventory with the exact company
+   booking URL, phone, email, checkout or contact path; inspect actual keyboard,
+   small-mobile and desktop behavior, not just clickable-looking buttons.
+8. Run automated and actual browser checks; hold unknown contrast, media rights,
+   navigation, focus, real lead delivery and CMS access for human verification.
+9. Performance: measure lab results before launch; NEVER treat them as real-user
+   CWV field data. At adequate field sample size, independently verify p75
+   LCP <= 2500ms, INP <= 200ms and CLS <= 0.1 against that exact site build.
+10. For new premium owner approval, require the complete source/build-specific
+    human coverage review AND two independent, provenance-checked reviewers.
+    Both score EACH of ten dimensions >= 9.5/10, provide exact-build screenshots
+    at desktop, tablet, mobile and 320px, and inspect all pages. Averages cannot
+    mask weak dimensions. Reviewers must not be the builder, and ratings cannot
+    be fabricated by test fixtures or code.
+11. No-site companies still need verifiable factual source evidence and a
+    build-specific human factual review before acceptance.
+12. Any unresolved visual defect, missing factual source, or critical usability
+    bug blocks final acceptance even if the full Python/Playwright suite is green.
+    The client must be able to change real text/images/contact info using a
+    tested CMS account, with backups, rollback and a handover guide.
+
+**Release distinctions:** A fresh demo can exist with clearly pending visual,
+legal, rights, field-metric and human checks. This MUST NOT be described as a
+verified 9.5/10 client-ready site. New premium approvals are fail-closed.
+
+
 ## Company-first brand and content preservation
 Before any redesign, keep the original company identity, source-page inventory,
 logo candidates, colors, real staff images, complete services, original prices

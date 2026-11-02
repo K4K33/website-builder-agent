@@ -12,6 +12,10 @@ from bs4 import BeautifulSoup
 
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
+from utils.premium_quality_gate import (
+    source_coverage_matrix, verify_independent_premium_reviews,
+    verify_field_performance, audit_primary_journeys,
+)
 
 
 # Categories that apply across all sectors, not design layouts.
@@ -35,6 +39,11 @@ UNIVERSAL_STANDARDS = (
     ("editable_cms", "Customer edits real content with credentials and rollback", "release"),
     ("approved_domain_and_rights", "Branded HTTPS, rights, outreach legality and permission", "release"),
     ("verified_independent_review", "Independent exact-build multi-device quality review", "release"),
+    ("source_to_destination_matrix", "Each source page, section, price and review verified", "content"),
+    ("independent_premium_consensus", "Two independent exact-build reviewers, all dimensions >=9.5", "release"),
+    ("real_user_core_web_vitals", "Verified field p75 LCP, INP and CLS", "release"),
+    ("primary_user_journeys", "Every planned main booking, shopping and contact path works", "functional"),
+
 )
 
 
@@ -192,6 +201,56 @@ def audit_universal_standards(
         needs("contact_and_forms",
               "Real destination and error/success states have not been tested.")
 
+    # New proof-backed premium review matrix. Internal demo production is
+    # allowed with visibly pending subjective/live evidence, never certified.
+    coverage = source_coverage_matrix(rendered_pages if isinstance(rendered_pages, dict)
+                                     and rendered_pages else {"index.html": html}, research)
+    from utils.premium_quality_gate import site_digest
+    premium_build_hash = site_digest(rendered_pages if isinstance(rendered_pages, dict)
+                                     and rendered_pages else {"index.html": html})
+    if coverage["status"] == "no_original_site":
+        fact_review = research.get("no_site_fact_review") or {}
+        valid_no_site = (
+            bool(research.get("fact_sources"))
+            and fact_review.get("approved") is True
+            and fact_review.get("reviewer_kind") == "human"
+            and str(fact_review.get("reviewer") or "").strip()
+            and fact_review.get("build_sha256") == premium_build_hash
+        )
+        if not valid_no_site:
+            needs("source_to_destination_matrix",
+                  "No-site company: verified third-party factual inventory and "
+                  "exact-build human signoff still required.")
+    elif coverage["status"] != "verified":
+        needs("source_to_destination_matrix",
+              f"Original source/build coverage {coverage['status']}: "
+              f"{len(coverage['missing'])} missing, {len(coverage['pending'])} pending.")
+    independently_reviewed = verify_independent_premium_reviews(
+        research.get("premium_independent_reviews"),
+        rendered_pages if isinstance(rendered_pages, dict) and rendered_pages
+        else {"index.html": html}, research
+    )
+    if not independently_reviewed["pass"]:
+        needs("independent_premium_consensus",
+              "; ".join(independently_reviewed["issues"][:5]))
+    field_metrics = verify_field_performance(
+        research.get("field_performance_evidence"),
+        rendered_pages if isinstance(rendered_pages, dict) and rendered_pages
+        else {"index.html": html}
+    )
+    if not field_metrics["pass"]:
+        needs("real_user_core_web_vitals", "; ".join(field_metrics["issues"][:5]))
+    journeys = audit_primary_journeys(
+        rendered_pages if isinstance(rendered_pages, dict) and rendered_pages
+        else {"index.html": html}, research.get("primary_user_journeys")
+    )
+    if research.get("primary_user_journeys"):
+        for issue in journeys["issues"]:
+            fail("primary_user_journeys", issue)
+    else:
+        needs("primary_user_journeys",
+              "Company-specific booking/contact/purchase paths must be inventoried and tested.")
+
     if not (research.get("independent_visual_review") or {}).get("verified"):
         needs("verified_independent_review",
               "Independent score, exact-build desktop/mobile images and reviewer not verified.")
@@ -242,6 +301,12 @@ def audit_universal_standards(
         "stage": stage,
         "standards": grouped,
         "blocking_problems": problems,
+        "premium_evidence": {
+            "coverage": coverage,
+            "independent_review": independently_reviewed,
+            "field_performance": field_metrics,
+            "primary_user_journeys": journeys,
+        },
         "pending_evidence": pending,
         "note": (
             "Checked = no automatic defect found, NOT an independent quality certification. "
