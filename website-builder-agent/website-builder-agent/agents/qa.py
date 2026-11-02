@@ -52,6 +52,13 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+Source-fidelity numeric/category QA: verify that every price, weight band,
+species/breed, product name and service example used in the redesign matches
+an observed old-site category. 'lagotto mini/medium' is not equivalent to
+'labradoodle mini/medium'. Do not silently infer, rename or compress category
+examples when a new name could change customer choice. Explain omissions and
+hold the build until human-reviewed source-specific parity is proven.
+
 Tarkasta koko sivuston CTA-painikkeiden ja linkkien nuolten toistuminen.
 Koristeellinen ↗ tai → joka painikkeessa ja footer-linkissä on yleinen design-virhe.
 Arvioi lisäksi CSS:n ::after-nuolet ja SVG-koristeet; toiminnallinen suuntaohjain
