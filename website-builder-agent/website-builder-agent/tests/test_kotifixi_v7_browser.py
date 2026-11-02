@@ -35,7 +35,7 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                 except Exception as exc:
                     raise unittest.SkipTest("Chromium unavailable: " + str(exc)) from exc
                 try:
-                    for width in (320, 390, 768, 1024, 1180, 1280, 1440):
+                    for width in (320, 360, 390, 430, 768, 940, 960, 1024, 1180, 1280, 1440, 1920):
                         with self.subTest(width=width):
                             context = browser.new_context(
                                 viewport={"width": width, "height": 850},
@@ -71,7 +71,7 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                                               right:Math.round(e.getBoundingClientRect().right)})).slice(0,10)""")
                                             print("KOTIFIXI_V7_OVERFLOW", route, width, overflow, offenders, flush=True)
                                         self.assertLessEqual(overflow, 1)
-                                        if width <= 768:
+                                        if width <= 940:
                                             nav = page.locator("#mobile-menu")
                                             btn = page.locator("#menu-toggle")
                                             self.assertTrue(btn.is_visible())
@@ -83,17 +83,21 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                                         else:
                                             self.assertTrue(page.locator(".site-nav").is_visible())
                                         if width >= 1024:
-                                            # Three-column header: navigation centered independently
-                                            # of the logo width and the contact CTA width.
+                                            # Distributed-header V13: actual nav links
+                                            # should fill the formerly stranded dead gap.
                                             nav_box = page.locator(".site-header .site-nav").bounding_box()
                                             inner_box = page.locator(".site-header .header-inner").bounding_box()
                                             logo_box = page.locator(".site-header .brand").first.bounding_box()
                                             actions_box = page.locator(".site-header .header-right").bounding_box()
+                                            first_link = page.locator(".site-header .site-nav a").first.bounding_box()
+                                            last_link = page.locator(".site-header .site-nav a").last.bounding_box()
                                             self.assertIsNotNone(nav_box)
-                                            nav_middle = nav_box["x"] + nav_box["width"] / 2
-                                            inner_middle = inner_box["x"] + inner_box["width"] / 2
-                                            self.assertLess(abs(nav_middle - inner_middle), 3,
-                                                            (width, nav_middle, inner_middle))
+                                            left_gap = first_link["x"] - (logo_box["x"] + logo_box["width"])
+                                            right_gap = actions_box["x"] - (last_link["x"] + last_link["width"])
+                                            self.assertGreaterEqual(left_gap, 6)
+                                            self.assertGreaterEqual(right_gap, 6)
+                                            self.assertLessEqual(left_gap, 50, (width, "left gap", left_gap))
+                                            self.assertLessEqual(right_gap, 50, (width, "right gap", right_gap))
                                             self.assertLessEqual(
                                                 abs((actions_box["x"] + actions_box["width"])
                                                     - (inner_box["x"] + inner_box["width"])), 2
