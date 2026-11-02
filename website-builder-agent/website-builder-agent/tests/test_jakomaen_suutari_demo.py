@@ -36,7 +36,7 @@ class JakomaenFirstPassQA(unittest.TestCase):
             with self.subTest(route=route):
                 base = (ROOT / route).parent
                 for tag in soup.select("a[href],link[href],script[src]"):
-                    href = tag.get("href") or tag.get("src")
+                    href = (tag.get("href") if tag.has_attr("href") else tag.get("src")) or ""
                     parsed = urlsplit(href)
                     if parsed.scheme or href.startswith("#"):
                         continue
