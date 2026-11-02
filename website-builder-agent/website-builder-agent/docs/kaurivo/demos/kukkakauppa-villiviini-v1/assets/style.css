@@ -6,3 +6,7 @@
    extended outside the viewport, although ordinary DOM bounds were in range.
    Keep the motif inside its media container on touch screens. */
 @media(max-width:700px){.hero-right{overflow-x:clip}.hero-right:before{right:24px;transform:none;inset-block:32px 16px;width:calc(80% - 24px)}}
+
+/* Desktop decorative arch: keep rotated outline inside the viewport as well.
+   Pseudo-elements are not represented by ordinary DOM bounding-box checks. */
+@media(min-width:701px){.hero-right:before{right:21px;transform:rotate(2deg);width:calc(80% - 21px)}}
