@@ -26,6 +26,37 @@
   // Native wheel/touchpad/touch scrolling needs no scroll-position listener.
   document.querySelectorAll('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
 
+  // V11: lightweight pointer-only 3D tilt. No scroll/resize listener, no WebGL.
+  // Disabled on touch devices, reduced motion and non-hover environments.
+  const heroArt = document.querySelector('.hero-visual-3d');
+  if (heroArt && 'requestAnimationFrame' in window &&
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const frame = heroArt.querySelector('.hero-photo-frame');
+    if (frame) {
+      let queued = false;
+      let px = 0, py = 0;
+      heroArt.addEventListener('pointermove', e => {
+        px = e.clientX;
+        py = e.clientY;
+        if (queued) return;
+        queued = true;
+        window.requestAnimationFrame(() => {
+          queued = false;
+          const b = heroArt.getBoundingClientRect();
+          const x = Math.max(-1, Math.min(1, (px - b.left) / b.width * 2 - 1));
+          const y = Math.max(-1, Math.min(1, (py - b.top) / b.height * 2 - 1));
+          frame.style.setProperty('--hero-tilt-x', (-y * 2.5).toFixed(2) + 'deg');
+          frame.style.setProperty('--hero-tilt-y', (x * 3).toFixed(2) + 'deg');
+        });
+      }, { passive: true });
+      heroArt.addEventListener('pointerleave', () => {
+        frame.style.removeProperty('--hero-tilt-x');
+        frame.style.removeProperty('--hero-tilt-y');
+      });
+    }
+  }
+
   // Native scrolling remains entirely browser-owned. Reveal only sections
   // already outside the first viewport, with a one-shot IntersectionObserver.
   // If JS is disabled, unsupported or reduced motion is preferred, text
