@@ -159,8 +159,11 @@ def publish_site(
         # Do not publish only index.html: all approved routes and their media
         # are part of this one exact approved snapshot. Existing stale
         # generated routes must not remain publicly reachable after a rebuild.
-        dest_root = Path(destination_dir).resolve()
-        if dest_root.is_symlink() or dest_root.parent != Path(PUBLISH_DIR).resolve():
+        raw_destination = Path(destination_dir)
+        if raw_destination.is_symlink():
+            raise RuntimeError("Refuse to replace symlinked public demo directory.")
+        dest_root = raw_destination.resolve()
+        if dest_root.parent != Path(PUBLISH_DIR).resolve():
             raise RuntimeError("Unsafe public demo destination.")
         if dest_root.exists():
             shutil.rmtree(dest_root)
