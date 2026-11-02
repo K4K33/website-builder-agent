@@ -170,7 +170,7 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 .contact-note strong{color:#1f4260}
 .contact-note p{margin-top:6px}
 .contact-test{background:#f3f7fa;border:1px solid #e0e7ed;border-radius:7px;padding:clamp(23px,3vw,44px);min-width:0}
-.contact-test h2{font-size:clamp(31px,3.1vw,46px);margin:13px 0 15px;overflow-wrap:anywhere}
+.contact-test h2{font-size:clamp(31px,3.1vw,46px);margin:13px 0 15px;overflow-wrap:normal;hyphens:manual;word-break:normal;text-wrap:balance}
 .form-intro{color:#496477;font-size:14px;line-height:1.8}
 .contact-test form{margin-top:28px;display:flex;flex-direction:column;gap:17px}
 .contact-test form label:not(.consent-label){display:flex;flex-direction:column;gap:7px;color:#274862;font-size:13px;font-weight:750;min-width:0}
@@ -343,7 +343,7 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 @media(max-width:700px){.hero-visual{height:auto}.hero-photo-frame{height:clamp(285px,78vw,415px)}.approach-section{padding:58px 0 64px}}
 
 /* Keep long Finnish headings within 320px mobile layouts. */
-.page-intro h1,.about-text h1,.service-index h2,.section-heading h2,.approach-large h2{overflow-wrap:anywhere;hyphens:auto}
+.page-intro h1,.about-text h1,.service-index h2,.section-heading h2,.approach-large h2{overflow-wrap:normal;hyphens:manual;word-break:normal;text-wrap:balance}
 
 /* V8 mobile credibility: the preview disclaimer must NEVER disappear. */
 @media(max-width:700px){
