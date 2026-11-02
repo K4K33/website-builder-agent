@@ -26,6 +26,33 @@
   // Native wheel/touchpad/touch scrolling needs no scroll-position listener.
   document.querySelectorAll('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
 
+  // Native scrolling remains entirely browser-owned. Reveal only sections
+  // already outside the first viewport, with a one-shot IntersectionObserver.
+  // If JS is disabled, unsupported or reduced motion is preferred, text
+  // remains immediately visible.
+  if ('IntersectionObserver' in window &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const targets = document.querySelectorAll(
+      '.section-heading, .editorial-card, .approach-layout, .price-category, ' +
+      '.tax-info, .service-row, .about-content-grid, .contact-layout'
+    );
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px 20px 0px', threshold: 0.08 });
+    targets.forEach(el => {
+      // Never hide first-viewport or already-visible sections.
+      if (el.getBoundingClientRect().top > window.innerHeight + 20) {
+        el.classList.add('scroll-reveal');
+        observer.observe(el);
+      }
+    });
+  }
+
+
   // If an external example photo is unavailable, keep the editorial
   // layout and provide explicit text instead of showing a broken image.
   document.querySelectorAll('img').forEach(img => {
