@@ -693,6 +693,7 @@ def run_research(
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
          "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
          "price_faq_evidence": p.get("price_faq_evidence") or {},
+         "source_block_samples": (p.get("source_content_blocks") or {}).get("blocks", [])[:12],
          "header_assets": p["header_assets"],
          "footer_assets": p["footer_assets"]}
         for p in source_inventory["pages"]
