@@ -176,6 +176,23 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   ulkoiseen arvosteluun. Kirjaa palautteet ja
   korjaa mahdolliset toistuvat ongelmat koko agenttiin.
 
+V10 YLEISEN LAADUNTARKISTUKSEN UUSI PALAUTE:
+- Oikean ulkopuolisen ihmisen havainto navigoinnin luettavuudesta
+  on yhtä tärkeää kuin AI:n antama arvosana. Desktop-valikoissa
+  suositaan vähintään noin 15px selkeää tekstiä.
+- Puhelinnumero ja yhteydenottopainike liittyvät selkeästi
+  samaan yläpalkin toimintojen ryhmään.
+- Suomenkieliset tekstit kirjoitetaan aidosti luonteviksi.
+  Tarkista sijaintiin viittaavien fraasien toisto koko sivustolla.
+- Kohtuulliset scroll-reveal-efektit näyttävät sisällön yhdellä
+  kerralla, eivät ohjaa vieritystä; sisältö näkyy ilman JS:ää.
+  Kunnioita vähennettyä liikettä ja tee selkeät fokustilat.
+- Valokuvissa ei saa olla asiaankuulumattoman yrityksen näkyvää
+  brändiä; valitse sopiva luvallinen kuvitus.
+- Anna uuden version sisäinen tarkistettu esikatselulinkki
+  automaattisesti samassa vastauksessa, ei erillisestä pyynnöstä.
+  Asiakkaalle toimitettava linkki vaatii vahvistetun HTTPS-domainin.
+
 V9 TARKENNETTU ULKOINEN PALAUTE KAIKILLE ASIAKKAILLE:
 - Arvioi suunnittelun, layoutin, saavutettavuuden, navigoinnin,
   suorituskyvyn ja teknisen laadun objektiivisesti suhteessa tehtyyn työhön.
