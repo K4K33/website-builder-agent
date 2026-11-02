@@ -272,6 +272,8 @@ def inspect_client_delivery(company, *, today=None):
         ("backup_and_rollback_tested", "Backup and rollback have not been tested."),
         ("client_owns_editor_access", "Customer needs control of their own editing access."),
         ("owner_guide_delivered", "Client editing instructions have not been delivered."),
+        ("demo_content_removed_and_live_forms_verified",
+         "Production site still lacks verified removal of demo notices, test forms and preview-only integrations."),
         ("customer_acceptance", "Customer has not confirmed the handover."),
     ):
         if delivery.get(field) is not True:
