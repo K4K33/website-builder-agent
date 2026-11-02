@@ -71,3 +71,25 @@ todellinen CMS, yhteydenottojen toimitus ja itsenäinen
 Tämä prosessi ei saa kuluttaa rajallisia AI/API-krediittejä
 paikallisessa validoinnissa. Käytä fixture- ja mock-testejä,
 älä oikeiden yritysten API-hakuja testidatassa.
+
+## 2026-11-02 — Whole-agency automatic QA and general lessons
+
+The internal Builder's pre-save path now checks universal static requirements in
+addition to verified facts and HTML structure, across normal, external-agent
+and revision outputs. The QA report explicitly separates static defects from
+not-yet-reviewed original brand, footer partner logos, photos, source-content
+coverage, 3 same-industry benchmarks, full menu/dietary markings, real mobile/
+desktop contrast, keyboard, scroll, links, form delivery, CMS, permissions,
+domain and independent model review.
+
+A recurring QA failure is recorded automatically to
+`config.OUTPUT_DIR/_kaurivo_global_quality.json`. Two distinct company slugs
+mark a rule category as a shared problem candidate. User instructions declared
+universal are recorded with `utils.global_feedback.record_owner_feedback`.
+Unknown new standards are never falsely marked enforceable: only an implemented
+checker plus an actual regression test can become `active`; pending entries
+block final QA approval. This system does not autonomously write arbitrary new
+Python regression tests or resolve aesthetic judgments without reviewing them.
+
+No API credits are consumed for any deterministic checks. External independent
+visual review remains a separate existing model stage, never self-scored.

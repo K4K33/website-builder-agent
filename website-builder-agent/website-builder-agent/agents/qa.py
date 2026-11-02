@@ -25,6 +25,13 @@ from bs4 import BeautifulSoup
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
 from utils.kaurivo_site_quality_gate import lint_site_copy
+from utils.universal_quality import audit_universal_standards
+from utils.global_feedback import (
+    load_ledger, save_ledger, record_qa_findings,
+    universal_rules_pending_implementation,
+)
+from pathlib import Path
+
 from utils.quality import normalize_facts, canonical_url
 from utils.content_parity import audit_content_parity
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
@@ -916,6 +923,12 @@ def run_qa(slug_or_name: str) -> dict:
     html = html_bytes.decode("utf-8")
     research = company.get("research") or {}
     parity = audit_content_parity(html, research, source_url=company.get("url", ""))
+    universal = audit_universal_standards(
+        html, research, company=company, stage="internal_demo"
+    )
+    ledger_file = Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
+    ledger = load_ledger(ledger_file)
+    pending_general_rules = universal_rules_pending_implementation(ledger)
     automated = _automated_checks(html)
     # Never spend browser/AI review credits when guaranteed critical
     # source-backed fields are absent.
@@ -928,7 +941,7 @@ def run_qa(slug_or_name: str) -> dict:
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
     benchmark_urls, decisions = [], []
-    if automated["automated_pass"] and not parity_hard_missing:
+    if automated["automated_pass"] and not parity_hard_missing and universal["automated_pass"]:
         browser = inspect_site(path)
         if browser["pass"]:
             research = company.get("research") or {}
@@ -961,6 +974,8 @@ def run_qa(slug_or_name: str) -> dict:
                     ], ensure_ascii=False)
                     + "\nCONTENT PARITY EVIDENCE & OPEN REVIEW: \n"
                     + json.dumps(parity, ensure_ascii=False)
+                    + "\nALL-SITE QA STANDARD STATUS (unverified stays pending):\n"
+                    + json.dumps(universal, ensure_ascii=False)
                     + "\nPAGE CONTENT:\n" + _build_ai_snapshot(html),
                     max_tokens=5000, stage="qa",
                     image_paths=list(browser["screenshots"].values()) + benchmark_images,
@@ -970,9 +985,31 @@ def run_qa(slug_or_name: str) -> dict:
     result = {
         "automated": automated, "browser": browser, "content_review": review,
         "content_parity": parity,
+        "universal_quality": universal,
+        "unimplemented_global_feedback": pending_general_rules,
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
-        "overall_pass": parity["pass"] and automated["automated_pass"] and browser["pass"] and review_passes(review, benchmark_urls, decisions),
+        "overall_pass": (parity["pass"] and universal["automated_pass"]
+                         and not pending_general_rules
+                         and automated["automated_pass"] and browser["pass"]
+                         and review_passes(review, benchmark_urls, decisions)),
+    }
+    # Every future general failure is recorded without a new model request.
+    # Repeating the same category across different clients makes it a
+    # candidate for a universal regression check, not an invented fix.
+    issues = (list(automated.get("automated_issues") or [])
+              + [x["label"] for x in parity["missing"]]
+              + [m for values in universal["blocking_problems"].values() for m in values]
+              + list(browser.get("issues") or []))
+    record_qa_findings(ledger, slug, [str(x) for x in issues])
+    save_ledger(ledger_file, ledger)
+    result["global_learning"] = {
+        "candidate_categories": sorted(
+            key for key, entry in ledger["issues"].items()
+            if entry.get("status") == "universal_candidate"
+        ),
+        "new_rules_pending_checker": pending_general_rules,
+        "ledger_path": str(ledger_file),
     }
     upsert_company(slug, {"qa": result})
     set_status(slug, "qa_passed" if result["overall_pass"] else "built")

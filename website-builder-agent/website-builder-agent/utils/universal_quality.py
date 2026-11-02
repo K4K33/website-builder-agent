@@ -103,14 +103,14 @@ def audit_universal_standards(
         fail("source_coverage", "Company has a website but no multi-page research inventory.")
     if pages and (inventory.get("failed_urls") or inventory.get("priority_unvisited_urls")):
         fail("source_coverage", "Important original pages remain unresearched or failed.")
-    if pages and not research.get("content_inventory_review", {}).get("approved"):
+    if pages and not (research.get("content_inventory_review") or {}).get("approved"):
         needs("content_parity", "Human must verify complete old-to-new content inventory.")
     footer_media = [
         asset for page in pages if isinstance(page, dict)
         for asset in page.get("footer_assets") or []
         if isinstance(asset, dict) and asset.get("src")
     ]
-    if footer_media and not research.get("footer_affiliations_review", {}).get("approved"):
+    if footer_media and not (research.get("footer_affiliations_review") or {}).get("approved"):
         needs("sponsor_and_partner_marks",
               "Verify original footer logos, role, URL, ongoing relationship and reuse rights.")
     header_media = [
@@ -118,7 +118,7 @@ def audit_universal_standards(
         for asset in page.get("header_assets") or []
         if isinstance(asset, dict) and asset.get("src")
     ]
-    if header_media and not research.get("brand_approval", {}).get("approved"):
+    if header_media and not (research.get("brand_approval") or {}).get("approved"):
         needs("original_brand", "Verify actual client logo, brand fonts/colors and logo rights.")
     original_logo = str((research.get("brand_assets") or {}).get("approved_original_logo_url") or "")
     if original_logo:
@@ -133,27 +133,27 @@ def audit_universal_standards(
     industry = str((research.get("company_facts") or {}).get("industry") or "").casefold()
     if any(key in industry for key in ("ravintola", "restaurant", "lounas", "kahvila", "cafe")):
         if "lounas" in lower or "menu" in lower or "ruokalista" in lower:
-            if not research.get("menu_accuracy_review", {}).get("approved"):
+            if not (research.get("menu_accuracy_review") or {}).get("approved"):
                 needs("dietary_accuracy",
                       "Verify complete dated menu and original dietary/allergen markings with source.")
-    if soup.find("form") and not research.get("form_delivery_review", {}).get("verified"):
+    if soup.find("form") and not (research.get("form_delivery_review") or {}).get("verified"):
         needs("contact_and_forms",
               "Real destination and error/success states have not been tested.")
 
-    if not research.get("independent_visual_review", {}).get("verified"):
+    if not (research.get("independent_visual_review") or {}).get("verified"):
         needs("verified_independent_review",
               "Independent score, exact-build desktop/mobile images and reviewer not verified.")
-    if not research.get("browser_quality_review", {}).get("verified"):
+    if not (research.get("browser_quality_review") or {}).get("verified"):
         needs("contrast_and_accessibility",
               "Actual browser contrast, focus, keyboard and reduced-motion not verified.")
         needs("responsive_performance",
               "Actual phone/tablet/desktop overflow, load speed and scroll not verified.")
         needs("navigation_and_links",
               "Functional navigation and exact CTA links need browser checks.")
-    if not research.get("three_industry_benchmarks_review", {}).get("verified"):
+    if not (research.get("three_industry_benchmarks_review") or {}).get("verified"):
         needs("same_industry_inspiration",
               "Three sourced same-industry website benchmarks require verification.")
-    if not research.get("visual_originality_review", {}).get("verified"):
+    if not (research.get("visual_originality_review") or {}).get("verified"):
         needs("unique_art_direction",
               "Human side-by-side layout and brand review not verified.")
 
@@ -178,7 +178,7 @@ def audit_universal_standards(
     all_rules = {name: group for name, _, group in UNIVERSAL_STANDARDS}
     grouped = {
         key: {"group": group,
-              "status": "fail" if key in problems else "pending" if key in pending else "checked",
+              "status": "fail" if key in problems else "pending" if key in pending else "no_static_defect",
               "problems": problems.get(key, []),
               "pending": pending.get(key, [])}
         for key, group in all_rules.items()

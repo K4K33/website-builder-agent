@@ -17,6 +17,10 @@ from bs4 import BeautifulSoup
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
 from utils.content_parity import audit_content_parity
+from utils.universal_quality import audit_universal_standards
+from utils.global_feedback import (load_ledger, global_instructions,
+                                   universal_rules_pending_implementation)
+
 from utils.industry_workflow import create_industry_brief, validate_design_intent
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
@@ -1005,6 +1009,25 @@ def _safe_fact_summary(company_facts: dict) -> str:
     return repr(allowed)
 
 
+def _global_ledger_path() -> Path:
+    return Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
+
+
+def _global_build_instructions() -> str:
+    return global_instructions(load_ledger(_global_ledger_path()))
+
+
+def _validate_all_universal_rules(html: str, research: dict, company: dict) -> None:
+    """Zero-credit automated all-site preflight before persisting HTML."""
+    result = audit_universal_standards(
+        html, research, company=company, stage="internal_demo"
+    )
+    if result["blocking_problems"]:
+        errors = [f"{category}: {', '.join(messages)}"
+                  for category, messages in result["blocking_problems"].items()]
+        raise RuntimeError("Kaurivo universal QA failed: " + "; ".join(errors)[:1800])
+
+
 def _validate_generated_content(
     html: str,
     company_facts: dict,
@@ -1350,6 +1373,9 @@ Varmista:
 Palauta VAIN koko HTML.
 """
 
+    # Newly accepted cross-project rules are read fresh for every build.
+    user_prompt += "\n\nPYSYVÄT KAIKKIA ASIAKK AITA KOSKEVAT PALAUTESÄÄNNÖT:\n".replace("ASIAKK AITA", "ASIAKKAITA") + _global_build_instructions()
+
     print(
         "  [Builder] Generoidaan verkkosivua..."
     )
@@ -1381,6 +1407,7 @@ Palauta VAIN koko HTML.
             "Old-to-new content preservation failed before writing HTML: "
             + "; ".join(problems[:12])
         )
+    _validate_all_universal_rules(cleaned, research, company)
     validate_locked_copy(cleaned, brand_brief)
 
     _validate_plan_sections(cleaned, research, company.get("url", ""))
@@ -1463,6 +1490,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
         raise ValueError("External response producer must be identified.")
     cleaned = _clean_html(Path(response_path).read_text(encoding="utf-8"))
     _validate_generated_content(cleaned, facts)
+    _validate_all_universal_rules(cleaned, research, company)
     validate_locked_copy(cleaned, client_design_brief(company))
     _validate_plan_sections(cleaned, research, company.get("url", ""))
     path = _write_html(slug, cleaned)
@@ -1602,6 +1630,8 @@ Säilytä:
 Palauta koko HTML.
 """
 
+    user_prompt += "\n\nPYSYVÄT KAIKKIA ASIAKKAITA KOSKEVAT PALAUTESÄÄNNÖT:\n" + _global_build_instructions()
+
     print(
         "  [Builder] Muokataan verkkosivua..."
     )
@@ -1645,6 +1675,7 @@ Palauta koko HTML.
             "Old-to-new content preservation failed before writing HTML: "
             + "; ".join(problems[:12])
         )
+    _validate_all_universal_rules(cleaned, research, company)
     validate_locked_copy(cleaned, brand_brief)
 
     _validate_plan_sections(cleaned, research, company.get("url", ""))
