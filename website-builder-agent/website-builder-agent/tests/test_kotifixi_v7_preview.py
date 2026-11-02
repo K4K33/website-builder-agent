@@ -203,6 +203,21 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
             "Tarvitsetko apua kotitöissä tai pihatöissä?"
         )
 
+    def test_v13_distributed_header_does_not_revert_verified_copy(self):
+        css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        self.assertIn(
+            "grid-template-columns:max-content minmax(0,1fr) max-content", css
+        )
+        self.assertIn("justify-content:space-between", css)
+        self.assertIn("width:100%;", css)
+        home = BeautifulSoup((ROOT / "index.html").read_text(encoding="utf-8"),
+                             "html.parser")
+        self.assertEqual(home.select_one("h1").get_text(" ", strip=True),
+                         "Tarvitsetko apua kotitöissä tai pihatöissä?")
+        self.assertEqual(len(home.select(".site-nav a")), 5)
+        self.assertEqual(len(home.select(".phone-link")), 1)
+        self.assertEqual(len(home.select(".header-cta")), 1)
+
     def test_services_no_repeated_contact_ctas_per_card(self):
         soup = BeautifulSoup((ROOT / "palvelut/index.html").read_text(), "html.parser")
         self.assertEqual(len(soup.select(".service-row")), 3)
