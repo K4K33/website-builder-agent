@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install only free offline Python test dependencies
-        run: python -m pip install beautifulsoup4 requests
+        run: python -m pip install -r requirements.txt
       - name: Compile changed pipeline modules
         run: python -m py_compile agents/builder.py agents/research.py agents/qa.py utils/creative_directions.py utils/site_architecture.py utils/site_build_pipeline.py utils/visual_originality.py utils/universal_quality.py
       - name: Three distinct creative concepts, real site routes, anti-AI-review and blind company tests
