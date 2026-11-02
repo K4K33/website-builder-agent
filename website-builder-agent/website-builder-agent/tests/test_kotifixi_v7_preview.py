@@ -36,6 +36,16 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
                         target /= "index.html"
                     self.assertTrue(target.is_file(), (filename, href))
 
+    def test_mobile_preview_disclaimer_remains_visible(self):
+        stylesheet = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+        for filename in FILES:
+            page = (ROOT / filename).read_text(encoding="utf-8")
+            self.assertIn("Kaurivon suunnitteluesikatselu", page)
+            self.assertIn("Ei Kotifixin virallinen sivusto", page)
+        self.assertNotIn(".concept-strip>.container span:last-child{display:none}", stylesheet)
+        self.assertIn(".concept-strip>.container span:last-child{display:inline}", stylesheet)
+        self.assertIn("@media(max-width:360px)", stylesheet)
+
     def test_hero_conversion_restored_but_arrows_not_added(self):
         soup = BeautifulSoup((ROOT / "index.html").read_text(encoding="utf-8"), "html.parser")
         self.assertEqual(soup.select_one(".hero-copy .button-primary").get_text(strip=True), "Kysy arviota")
@@ -45,6 +55,8 @@ class KotifixiV7ReleaseTests(unittest.TestCase):
         self.assertEqual(len(soup.select(".intro-band")), 0)
         self.assertNotIn("Vähemmän tekemättömiä töitä", str(soup))
         self.assertNotIn("KOTIFIXIN IDEA", str(soup))
+        self.assertIn("Tarvitsetko apua", soup.select_one("h1").get_text(" ", strip=True))
+        self.assertIn("hinnastoon", soup.select_one(".approach-section").get_text(" ",strip=True))
         self.assertNotIn("photo-caption", str(soup))
         self.assertIn("Apua", soup.select_one(".hero-copy h1").get_text(" ", strip=True))
         for filename in FILES:
