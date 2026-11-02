@@ -65,6 +65,29 @@ For remotely hosted images, one of two paths is required:
   The offline browser still blocks remote network resources, so local media
   remains preferred for reliable visual screenshot QA.
 
+## New reusable local media intake (implemented)
+`utils/local_media_intake.py` packages **only explicitly supplied local
+client media** into the output site's `assets/` folder with content-hash
+filenames. It never hotlinks/downloads from a third party or consumes paid APIs.
+The default intake folder is `media_intake/` (overridable through
+`KAURIVO_MEDIA_INTAKE_DIR`). Each item in the company record's
+`media_intake` list must have:
+- `file`: relative path under the approved intake folder
+- `purpose`: brand logo / hero / service / gallery
+- `alt`: accessible picture description
+- `rights_status`: `client_approved`, `licensed`, or `internal_demo_only`
+- `source_note`: the actual permission/source evidence
+
+The generated Builder and reviser both receive the same packaged media
+manifest, so a newly acquired client image does not require changing Builder
+code. The HTML writer rejects broken local links, and QA checks header logo
+resolution and actual browser media loads. Demo-only images are marked as
+**not production licensed**.
+
+The 95/100 minimum for **each** generated visual-review dimension is an
+early internal owner-preview gate. External independent >=9.5/10 validation
+is separate and required for the agency-wide acceptance claim.
+
 ## Stage D — functional, content, and real multi-device QA
 - Check copy quality, exact links, authentic logo, full source content parity,
   no invented prices/reviews/food allergens and no formulaic AI slogans.
