@@ -442,3 +442,40 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
 @media(max-width:390px){
  .editorial-card-main .editorial-media,.editorial-media{height:auto;aspect-ratio:4/3}
 }
+
+
+/* V10 — legible desktop navigation, call action and purposeful motion.
+   These are reusable defaults for Kaurivo; no scroll hijacking. */
+.site-nav{gap:clamp(15px,1.6vw,24px)}
+.site-nav a{font-size:15px;line-height:1.3;font-weight:700;color:#233f56;letter-spacing:-.012em;padding-block:13px}
+.site-nav a:hover,.site-nav a:focus-visible{color:#175bb5}
+.header-inner{gap:clamp(18px,2.2vw,32px)}
+.header-right{gap:10px}
+.phone-link{display:inline-flex;align-items:center;gap:9px;color:#173a58;font-size:14px;line-height:1.25;font-weight:750;padding:11px 15px;border:1px solid #d4e0e9;border-radius:5px;white-space:nowrap;min-height:45px;transition:color .2s,border-color .2s,background .2s}
+.phone-link .phone-label{font-weight:800;color:#2169bf}
+.phone-link .phone-number{font-variant-numeric:tabular-nums}
+.phone-link:hover,.phone-link:focus-visible{color:#0f3b67;border-color:#a9c9e8;background:#f5f9ff;text-decoration:none}
+.header-cta{font-size:14px;padding:13px 17px;min-height:45px;display:inline-flex;align-items:center;justify-content:center}
+.site-nav a:focus-visible,.phone-link:focus-visible,.header-cta:focus-visible,.menu-toggle:focus-visible,.mobile-menu a:focus-visible{outline:3px solid #246cc3;outline-offset:3px;border-radius:3px}
+.menu-toggle:hover{background:#eff5fb;border-radius:5px}
+.mobile-menu a{font-size:16px;line-height:1.4}
+@media(max-width:1180px){
+ .phone-link{display:none}
+ .site-nav{gap:15px}
+ .site-nav a{font-size:15px}
+}
+@media(max-width:940px){
+ .site-nav{display:none}
+ .mobile-menu a{font-size:16px}
+}
+@media(max-width:390px){
+ .header-cta{font-size:12px}
+}
+/* Only below-the-fold elements are animated, when IntersectionObserver exists.
+   Reduced motion or missing JS never hides user content. */
+.scroll-reveal{opacity:0;transform:translate3d(0,13px,0);transition:transform .48s var(--ease),opacity .48s ease}
+.scroll-reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
+.editorial-card:focus-visible,.button:focus-visible,.underlined-link:focus-visible,.contact-option:focus-visible{outline:3px solid #246cc3;outline-offset:4px}
+@media(prefers-reduced-motion:reduce){
+ .scroll-reveal,.scroll-reveal.is-visible{opacity:1!important;transform:none!important;transition:none!important}
+}
