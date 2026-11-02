@@ -122,7 +122,8 @@ def stage_local_media(
                 "rights_status": rights,
                 "source_note": source_note,
                 "sha256": content_digest,
-                "production_rights_verified": rights in ("client_approved", "licensed"),
+                "production_rights_verified": False,  # Independent human release evidence is still required.
+                "requires_release_rights_review": True,
             },
         })
     # Validate all input before copying ANY file to avoid partial media builds.
