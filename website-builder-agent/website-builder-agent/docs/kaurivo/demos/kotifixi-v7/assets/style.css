@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 :root{--ink:#142d46;--navy:#0b2a47;--deep:#09243c;--blue:#2269cb;--blue-hover:#154d9c;--blue-light:#e8f1fb;--paper:#f8f8f5;--offwhite:#f2f5f6;--line:#d7e1e7;--muted:#52677b;--serif:Georgia,'Times New Roman',serif;--sans:'DM Sans',system-ui,-apple-system,sans-serif;--heading:'Manrope','DM Sans',system-ui,sans-serif;--container:1240px;--ease:cubic-bezier(.21,.7,.2,1)}
 *,*:before,*:after{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:110px}
+html{scroll-behavior:auto;scroll-padding-top:110px}
 body{margin:0;background:#fff;color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 button,input,textarea,select{font:inherit}
@@ -363,4 +363,56 @@ h1,h2,h3,p{margin:0}h1,h2,h3{font-family:var(--heading);line-height:1.12;letter-
  .header-inner{gap:5px}
  .concept-strip>.container{gap:3px 8px}
  .hero-copy h1{font-size:41px}
+}
+
+
+/* V9 — natural input scrolling and refined, low-paint art direction.
+   Keep browser-native wheel/trackpad/touch motion; remove expensive sticky blur,
+   universal image filters and scroll-triggered shadows. */
+.site-header{background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+.site-header.scrolled{box-shadow:none}
+.hero-copy,.hero-visual{animation:none}
+.hero-photo-frame img,.editorial-media img,.about-photo img{filter:none}
+.hero-photo-frame:after,.editorial-media:after,.about-photo:after{display:none}
+.hero-visual-edge{display:none}
+.hero-photo-frame{border-radius:10px;box-shadow:0 12px 36px rgba(20,46,70,.09)}
+.hero-section{background:#f6f8fa}
+.hero-copy h1 .serif{font-style:normal;font-family:var(--heading);font-weight:750;letter-spacing:-.056em}
+.hero-copy h1{max-width:690px;letter-spacing:-.052em}
+.section-heading h2 .serif{font-family:var(--heading);font-style:normal;font-weight:750;letter-spacing:inherit}
+.editorial-card{border:1px solid #e0e8ef;background:#fff}
+.editorial-card-main{background:#fff}
+.editorial-card-content p{color:#40586b;font-size:14px;line-height:1.65}
+.approach-section{background:#fff;border-top:1px solid #dce5ec;border-bottom:1px solid #dce5ec;padding:75px 0 82px}
+.approach-layout{grid-template-columns:1.03fr .97fr;align-items:center;gap:clamp(30px,6vw,100px)}
+.approach-large h2{font-size:clamp(35px,3.5vw,53px);text-wrap:balance}
+.approach-side{border-left:2px solid #c9dcf0;padding-left:32px}
+.service-outro{background:#fff;border-top:1px solid #dfe7ec;border-bottom:1px solid #dfe7ec}
+.pricing-notice{background:#fff;border-left:3px solid var(--blue);border-radius:0;padding:10px 0 11px 19px}
+.pricing-notice p{font-size:14px;color:#40576a}
+.pricing-aside{position:static;top:auto}
+.pricing-aside-inner{background:#fff;border:1px solid #dae5ed;border-top:3px solid var(--blue);border-radius:5px;padding:34px 29px;box-shadow:0 15px 34px rgba(18,54,83,.045)}
+.pricing-aside h2{font-size:clamp(26px,2.25vw,32px)}
+.pricing-aside .underlined-link{display:block;margin-top:28px;line-height:1.55}
+.tax-section{background:#f7f9fa;border-top:1px solid #e0e9ef;padding:70px 0 83px}
+.tax-info{display:grid;grid-template-columns:minmax(230px,.58fr) minmax(0,1fr);column-gap:clamp(38px,6vw,100px);row-gap:16px;align-items:start;max-width:1080px}
+.tax-info .eyebrow{grid-column:1/-1}
+.tax-info h2{font-size:clamp(32px,3.1vw,48px);letter-spacing:-.045em;line-height:1.15;max-width:370px}
+.tax-info p{color:#40586b;line-height:1.78;font-size:16px}
+.tax-info a{grid-column:2;justify-self:start;font-size:14px}
+.contact-test{background:#fff;border:1px solid #d9e4ec;box-shadow:0 14px 32px rgba(15,52,81,.035)}
+.contact-note{background:#f3f6f8;color:#3d5568}
+.footer-intro>span{color:#cfdfec}
+.footer-bottom{color:#c7dce9;font-size:12px}
+.footer-column a,.footer-column span{color:#e3edf4}
+@media(max-width:700px){
+ .approach-side{border-left:0;border-top:2px solid #c9dcf0;padding:24px 0 0;margin-top:30px}
+ .tax-section{padding:58px 0 65px}
+ .tax-info{display:block}
+ .tax-info h2{margin-top:12px}
+ .tax-info p{margin:20px 0}
+ .tax-info a{display:inline-block}
+}
+@media(hover:none){
+ .editorial-card:hover,.button:hover,.header-cta:hover{transform:none;box-shadow:none}
 }
