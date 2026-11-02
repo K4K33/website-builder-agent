@@ -29,6 +29,22 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+SÄILYTÄ KAIKKI ALKUPERÄISEN VERKKOSIVUSTON OLENNAISET TIEDOT:
+- Tee pakollinen sivukohtainen sisältöinventaario ENNEN uudistamista.
+- Vertaa alkuperäisen sivun palvelut, hinnat, yrityshistoria, FAQ,
+  ajankohtais- ja ruokalistat, yhteystiedot, aukioloajat,
+  varaus- ja lomakepolut, kuvat sekä toimintoja koskevat tiedot
+  uuden sivuston vastaaviin. Älä hukkaa sisältöä tavoitellessasi
+  siistimpää taittoa; sisältö saa vaihtaa sivua tai tiivistyä,
+  kun sama olennainen tieto säilyy.
+- Merkitse ristiriitaiset/vanhentuneet tiedot ja selvitä ne
+  mieluiten suoraan ensisijaisesta lähteestä. Älä kopioi
+  vanhaa veroprosenttia, muuttuvaa hinnastoa tai lomakevirhettä.
+- Dokumentoi tiedon lähdeosoite ja mitä ei vielä voitu varmistaa.
+- Tee laaduntarkistus vertaamalla vanhan ja uuden sivuston
+  sisältöä myös alisivuilta, ei vain etusivulta.
+- Katso docs/KAURIVO_CONTENT_PARITY_STANDARD_2026-11-02.md.
+
 VIIMEINEN VISUAALINEN LAATUVIIMEISTELY (KAIKKI ASIAKKAAT):
 - Kun asiakas hyväksyy ilmeen, älä aloita uutta konseptia.
   Tee vain rajatut viimeiset parannukset kuvaan, typografiaan,

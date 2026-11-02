@@ -12,6 +12,15 @@
 **Learning history:** `docs/KAURIVO_DESIGN_LEARNING_LOG.md`. New owner/external feedback must be recorded there with review scope and regression checks before altering the universal rules.
 **Mandatory feedback loop:** `docs/KAURIVO_FEEDBACK_TO_STANDARD_WORKFLOW.md`. Every new owner/customer/external comment is routed into the global QA system unless its application is legitimately client-specific (with the reason recorded).
 
+## Old → new content parity — hard blocker
+
+- [ ] Research every old page and its nested pages, services, prices, FAQ, business history, actual contact methods, operating area, opening hours, dynamic menus/announcements, real gallery and downloadable resources.
+- [ ] Create a cited old→new inventory. Content can be redesigned and shortened, but **all important current facts must remain accessible somewhere in the replacement**.
+- [ ] Verify changed legal/tax figures and other temporal facts independently. Keep missing/unverified fields as blockers or transparent notes, not invented copy.
+- [ ] Verify all source photo rights and consent before any customer-facing publication; internal sample imagery remains clearly labeled as such.
+- [ ] Test links, forms, responsive states, old-to-new redirects and client editing/CMS before production acceptance.
+- [ ] See `docs/KAURIVO_CONTENT_PARITY_STANDARD_2026-11-02.md`. A basic static demo is not by itself parity or CMS acceptance evidence.
+
 **Scope:** ALL clients, new builds, redesigns, demo revisions, private previews,
 full site deliveries. Not a special rule set for any single company.
 **Use:** Designer + agent + independent QA + human reviewer. Record each as
