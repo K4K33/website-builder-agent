@@ -71,6 +71,14 @@ class UniversalStandardsTest(unittest.TestCase):
         self.assertNotIn(".button.arrow::after", css)
         self.assertNotIn(".round-arrow", css)
 
+    def test_salon_pricing_preserves_exact_breed_name_from_source(self):
+        """The source says labradoodle mini/medium, not lagotto mini."""
+        demo = (Path(__file__).resolve().parents[1] / "docs" / "kaurivo" /
+                "demos" / "helsingin-koiratrimmaamo-v1" / "hinnasto" / "index.html")
+        html = demo.read_text(encoding="utf-8")
+        self.assertIn("labradoodle mini/medium", html)
+        self.assertNotIn("lagotto mini / medium", html)
+
     def test_approved_logo_missing_is_real_error(self):
         research = {"brand_assets": {"approved_original_logo_url": "/brand.svg"}}
         result = audit_universal_standards(self.html, research)
