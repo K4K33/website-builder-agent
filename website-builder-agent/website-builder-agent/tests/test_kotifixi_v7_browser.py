@@ -83,6 +83,40 @@ class KotifixiV7BrowserTests(unittest.TestCase):
                                         else:
                                             self.assertTrue(page.locator(".site-nav").is_visible())
                                         if width >= 1024:
+                                            # Three-column header: navigation centered independently
+                                            # of the logo width and the contact CTA width.
+                                            nav_box = page.locator(".site-header .site-nav").bounding_box()
+                                            inner_box = page.locator(".site-header .header-inner").bounding_box()
+                                            logo_box = page.locator(".site-header .brand").first.bounding_box()
+                                            actions_box = page.locator(".site-header .header-right").bounding_box()
+                                            self.assertIsNotNone(nav_box)
+                                            nav_middle = nav_box["x"] + nav_box["width"] / 2
+                                            inner_middle = inner_box["x"] + inner_box["width"] / 2
+                                            self.assertLess(abs(nav_middle - inner_middle), 3,
+                                                            (width, nav_middle, inner_middle))
+                                            self.assertLessEqual(
+                                                abs((actions_box["x"] + actions_box["width"])
+                                                    - (inner_box["x"] + inner_box["width"])), 2
+                                            )
+                                            self.assertLessEqual(
+                                                logo_box["x"] + logo_box["width"],
+                                                nav_box["x"] - 3
+                                            )
+                                            self.assertLessEqual(
+                                                nav_box["x"] + nav_box["width"],
+                                                actions_box["x"] - 3
+                                            )
+                                            nav_type = page.locator(".site-nav a").first.evaluate(
+                                                """(el) => ({
+                                                  fontSize: parseFloat(getComputedStyle(el).fontSize),
+                                                  fontWeight: getComputedStyle(el).fontWeight,
+                                                  family: getComputedStyle(el).fontFamily
+                                                })"""
+                                            )
+                                            self.assertEqual(nav_type["fontWeight"], "600")
+                                            self.assertIn("DM Sans", nav_type["family"])
+                                            self.assertGreaterEqual(nav_type["fontSize"],
+                                                                    17 if width >= 1280 else 16)
                                             font_px = page.locator(".site-nav a").first.evaluate(
                                                 "(el) => parseFloat(getComputedStyle(el).fontSize)"
                                             )
