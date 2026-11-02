@@ -54,6 +54,70 @@ def research_fixture(directory, industry):
     }
 
 
+def complete_rebuild_research():
+    """Real strict preflight inputs for the external-rebuild approval test.
+
+    This uses a synthetic company; never represents a real customer or
+    replaces the production creativity/architecture/source validators.
+    """
+    variants = [
+        ("editorial", "Large typography before service summary",
+         "One coherent company story and task-based service information",
+         "Top links directly to the most useful service sections",
+         "Purposeful text-led composition without decorative images"),
+        ("service", "Quick visual service index before business background",
+         "Services arranged by visitor need and requested work type",
+         "Task-oriented navigation into named service sections",
+         "Functional service illustrations where verified media exists"),
+        ("contact", "Compact contact column before supporting overview",
+         "Contact and directions precede the more detailed company story",
+         "Contact-first navigation with persistent accessible links",
+         "Focused source-backed photography placed after essential details"),
+    ]
+    directions = [{
+        "id": key,
+        "concept": key + " distinct synthetic business design concept",
+        "business_reason": "The customer must easily find the true business information and contact path.",
+        "source_anchor": "The offline test company has only a research fixture, no real business site.",
+        "first_view": first,
+        "information_architecture": layout,
+        "navigation": navigation,
+        "image_strategy": images,
+        "typography": "High contrast readable display and supporting body typography",
+        "brand_continuity": "Only the documented synthetic company identity appears",
+        "non_goals": "No invented reviews, achievements, sponsors or customer images",
+        "mobile_behavior": "Stacked content and accessible touch targets at small widths",
+    } for key, first, layout, navigation, images in variants]
+    return {
+        "creative_directions": directions,
+        "creative_selection": {
+            "selected_id": "editorial", "rejected_ids": ["service", "contact"],
+            "business_reason": "A short offline research fixture is most usable as clear editorial information, whereas dense directory and contact-rail layouts add unnecessary complexity.",
+        },
+        "site_architecture": {"pages": [{
+            "path": "index.html",
+            "purpose": "Show the synthetic service and tested brand identity",
+            "user_task": "Read the test company details and navigate to the main page",
+            "section_ids": ["main"],
+        }]},
+        "design_recommendations": {
+            "visual_concept": "A type-led editorial layout for a short business fixture",
+            "typography_scale": "Readable section headings and explicit body text sizing",
+            "spacing_and_layout": "Wide whitespace and single task-focused main column",
+            "mobile_plan": "Natural mobile flow without horizontal overflow or overlays",
+            "section_plan": [
+                {"id": "main", "purpose": "Present known synthetic business information",
+                 "layout": "Readable main content and clear navigation targets"},
+                {"id": "footer", "purpose": "Make supporting information identifiable",
+                 "layout": "A separate compact footer below the visitor's main task"},
+            ],
+            "motion_plan": {"purpose": "Clarity", "implementation": "Static deliberately",
+                            "reduced_motion": "All elements remain visible",
+                            "verification": "Inspect mobile and desktop"},
+        },
+    }
+
+
 def approved_review():
     return {"content_ok": True, "issues": [],
             "reference_comparison": {"reviewed_urls": URLS, "company_specific": True,
@@ -175,6 +239,10 @@ class ProductionGates(unittest.TestCase):
     def test_external_rebuild_revokes_approval(self):
         self.create_build()
         self.qa_and_approve()
+        # The *new* external build must pass all real source/design preflights.
+        # The earlier approved fixture deliberately did not claim a creative review.
+        current = state.get_company("demo")[1]["research"]
+        state.upsert_company("demo", {"research": {**current, **complete_rebuild_research()}})
         response = self.root / "response.html"
         response.write_text(HTML)
         builder.run_build_from_response("demo", str(response), "offline fixture")
