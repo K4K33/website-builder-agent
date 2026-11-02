@@ -18,6 +18,7 @@ import os
 import re
 import hashlib
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 
 import config
 from bs4 import BeautifulSoup
@@ -580,16 +581,41 @@ def _automated_checks(html: str) -> dict:
         issues.append("Lomakkeen toimivaa taustapalvelua ei ole vahvistettu; käytä oikeaa yhteystietolinkkiä.")
     if soup.find(["iframe", "object", "embed"]):
         issues.append("Itsenäinen sivusto ei saa sisältää upotettua ulkoista sivua.")
+    # A generated page may use ONLY locally packaged client images
+    # under assets/. It cannot load scripts, styles or images from the web.
+    # File existence and MIME/signature are checked again by the central
+    # visual-media gate, which has access to the exact generated page path.
+    def permitted_asset(value):
+        parsed = urlsplit(value)
+        parts = parsed.path.split("/")
+        return (not parsed.scheme and not parsed.netloc and
+                parts[0] == "assets" and len(parts) > 1 and
+                all(part not in ("", ".", "..") for part in parts[1:]) and
+                not parsed.path.startswith("//"))
+
     for tag in soup.find_all(True):
         for attribute in ("src", "srcset", "poster"):
             value = str(tag.get(attribute, "")).strip()
-            if value and not value.startswith("data:"):
+            if not value or value.startswith("data:"):
+                continue
+            if attribute == "srcset":
+                entries = [part.strip().split()[0] for part in value.split(",") if part.strip()]
+                valid = tag.name in ("img", "source") and entries and all(
+                    permitted_asset(item) for item in entries
+                )
+            else:
+                valid = ((tag.name == "img" and attribute == "src")
+                         or (tag.name == "video" and attribute == "poster")) and permitted_asset(value)
+            if not valid:
                 issues.append("Sivu tarvitsee ulkoisen tai puuttuvan resurssin.")
     css = " ".join(style.get_text() for style in soup.find_all("style"))
     css += " " + " ".join(tag.get("style", "") for tag in soup.find_all(style=True))
     css_urls = re.findall(r"url\(\s*([^)]*)\)", css, re.I)
     if re.search(r"@import", css, re.I) or any(
-        not value.strip().strip("\"'").lower().startswith(("data:", "#")) for value in css_urls
+        not (
+            value.strip().strip("\"'").lower().startswith(("data:", "#"))
+            or permitted_asset(value.strip().strip("\"'"))
+        ) for value in css_urls
     ):
         issues.append("CSS sisältää ulkoisen tai puuttuvan resurssin.")
     id_list = [tag.get("id") for tag in soup.find_all(id=True)]
