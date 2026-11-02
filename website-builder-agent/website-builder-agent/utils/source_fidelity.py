@@ -55,6 +55,7 @@ def source_manifest(research: dict) -> dict:
     inventory = research.get("source_inventory") or {}
     pages = [p for p in inventory.get("pages") or [] if isinstance(p, dict) and p.get("url")]
     assets, known = [], set()
+    footer_links, known_links = [], set()
     for page in pages:
         for placement, key in (("brand", "header_assets"), ("affiliation", "footer_assets")):
             for a in page.get(key) or []:
@@ -71,6 +72,19 @@ def source_manifest(research: dict) -> dict:
                         "role":"unverified" if placement=="affiliation" else "brand_candidate",
                         "source_url":page["url"],
                     })
+        # Preserve external text/link affiliations and social links as well
+        # as graphic marks; old brands can be text-only links.
+        for link in page.get("footer_links") or []:
+            if not isinstance(link,dict) or not link.get("href"):
+                continue
+            href=_url(link["href"],page["url"])
+            host=urlsplit(page["url"]).hostname or ""
+            if (not href or href.split("/",1)[0]==host.lower().removeprefix("www.")
+                or href in known_links):
+                continue
+            known_links.add(href)
+            footer_links.append({"href":href,"text":str(link.get("text") or "")[:150],
+                                 "source_url":page["url"],"role":"unverified"})
     return {
         "source_sha256": source_inventory_sha256(inventory),
         "pages":[{"source_url":p["url"],"title":str(p.get("title") or "")[:180],
@@ -81,6 +95,7 @@ def source_manifest(research: dict) -> dict:
                   "source_text_truncated":len(str(p.get("text") or ""))>=6400}
                  for p in pages],
         "assets":assets,
+        "footer_links":footer_links,
         "source_page_count":len(pages),
         "note":"Source-grounded coverage checklist; not proof of equivalence, rights or visual quality.",
     }
@@ -303,6 +318,31 @@ def audit_source_fidelity(
             )
             if not reviewed:
                 pending.append("Affiliation role and logo reproduction permission need confirmation: "+src)
+
+    rendered_href_urls={
+        _url(a.get("href") or "")
+        for soup in soup_pages.values()
+        for a in soup.find_all("a",href=True)
+    }
+    for link in manifest["footer_links"]:
+        checked+=1
+        href=link["href"]
+        if href in rendered_href_urls:
+            continue
+        excepted=any(
+            isinstance(row,dict)
+            and row.get("kind")=="footer_link"
+            and _url(row.get("original_href") or "")==href
+            and row.get("source_sha256")==source_sha
+            and row.get("reviewer_kind")=="client"
+            and str(row.get("reason") or "").strip()
+            and str(row.get("reviewer") or "").strip()
+            for row in research.get("approved_asset_removals") or []
+        )
+        if not excepted:
+            missing.append({"kind":"missing_original_footer_link",
+                            "source":link["source_url"],"href":href,
+                            "issue":"Original linked partner/social mark must remain or have owner-approved removal"})
 
     original_host=urlsplit(source_url or original_pages[0]["source_url"]).hostname or ""
     original_host=original_host.lower().removeprefix("www.")
