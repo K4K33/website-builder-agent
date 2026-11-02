@@ -1,0 +1,123 @@
+name: Kaurivo three new demo preview QA
+
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/visan-pyorahuolto-v1/**"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/kukkakauppa-villiviini-v1/**"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/verhoomo-kudelma-v1/**"
+      - "website-builder-agent/website-builder-agent/tests/test_kaurivo_three_new_demos_20261102.py"
+      - ".github/workflows/kaurivo-new-demo-preview-qa.yml"
+  workflow_run:
+    workflows: ["Deploy static content to Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-qa:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install zero-API static test dependency
+        run: python -m pip install beautifulsoup4
+      - name: Cross-industry page navigation, business fact and UX regression
+        run: python -m unittest tests.test_kaurivo_three_new_demos_20261102 -v
+
+  live-qa:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install browser
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Check real GitHub Pages routes and photo visibility at 320/390/1440
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+
+          base='https://k4k33.github.io/website-builder-agent/kaurivo/demos/'
+          sites={
+            'visan-pyorahuolto-v1': ('palvelut/','yhteys/'),
+            'kukkakauppa-villiviini-v1': ('tilaustyot/','yhteys/'),
+            'verhoomo-kudelma-v1': ('verhoilu/','yhteys/'),
+          }
+          out=Path('kaurivo-demo-qa')
+          out.mkdir(exist_ok=True)
+          results=[]
+          with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True)
+            try:
+              for slug,subpages in sites.items():
+                for route in ('', *subpages):
+                  url=base+slug+'/'+route
+                  for width,height in ((320,720),(390,844),(1440,900)):
+                    ctx=browser.new_context(viewport={'width':width,'height':height},reduced_motion='reduce')
+                    page=ctx.new_page()
+                    errors=[]
+                    page.on('pageerror',lambda exc:errors.append(str(exc)))
+                    response=page.goto(url,wait_until='domcontentloaded',timeout=25000)
+                    page.wait_for_timeout(2000 if not route else 650)
+                    data=page.evaluate("""() => {
+                      const images=[...document.querySelectorAll('main img')];
+                      return {
+                        horizontalOverflow: document.documentElement.scrollWidth>innerWidth+2,
+                        mainH1: document.querySelectorAll('main h1').length,
+                        brokenImages: images.filter(i=>!i.complete||!i.naturalWidth)
+                          .map(i=>(i.currentSrc||i.src||'').slice(0,190)),
+                        visibleImages: images.filter(i=>i.complete&&i.naturalWidth>0).length,
+                        navigationVisible: !!document.querySelector('nav'),
+                        sourceNotice: document.body.innerText.includes('KAURIVON ITSENÄINEN'),
+                        hasCss: getComputedStyle(document.body).fontFamily.toLowerCase().includes('arial'),
+                      };
+                    }""")
+                    if response is None or response.status!=200:
+                      raise AssertionError(f'HTTP failure {response.status if response else None}: {url}')
+                    if data['horizontalOverflow'] or data['mainH1']!=1 or errors:
+                      raise AssertionError(f'Layout or script failure: {slug} {route} {width} {data} {errors}')
+                    if not data['sourceNotice'] or not data['hasCss']:
+                      raise AssertionError(f'Brand disclosure/style missing: {slug} {route}')
+                    if not route and data['brokenImages']:
+                      raise AssertionError(f'Homepage images broken: {slug}, {width}px: {data["brokenImages"]}')
+                    if width==320:
+                      toggle=page.locator('[data-nav-toggle]')
+                      toggle.click()
+                      if toggle.get_attribute('aria-expanded')!='true':
+                        raise AssertionError(f'Mobile menu broken: {url}')
+                      page.keyboard.press('Escape')
+                      if toggle.get_attribute('aria-expanded')!='false':
+                        raise AssertionError(f'Mobile menu Escape broken: {url}')
+                    if route=='' and width in (390,1440):
+                      page.screenshot(path=str(out/(slug+'-'+str(width)+'.png')),full_page=True,animations='disabled')
+                    results.append({'site':slug,'route':route,'width':width,'status':response.status,'images':data['visibleImages']})
+                    print('PASS '+json.dumps(results[-1],ensure_ascii=False),flush=True)
+                    ctx.close()
+            finally:
+              browser.close()
+          (out/'results.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: three-new-industry-preview-screenshots
+          path: kaurivo-demo-qa/
+          if-no-files-found: ignore
