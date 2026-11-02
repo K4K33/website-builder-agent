@@ -190,6 +190,44 @@ class PremiumGateTests(unittest.TestCase):
         ]
         self.assertEqual(discover_source_journeys(self.research), [])
 
+    def test_new_premium_client_cannot_bypass_two_reviewers_at_approval(self):
+        import hashlib
+        from unittest.mock import patch
+        from agents.qa import approve_company
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "index.html"
+            path.write_text(self.html["index.html"], encoding="utf-8")
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            company = {
+                "status": "qa_passed",
+                "research": {"premium_protocol": "v2",
+                             "research_mode": "verified_no_website",
+                             "fact_sources": [{"url": "https://registry.example.org/firm"}]},
+                "build": {"version": 1, "output_path": str(path)},
+                "qa": {"overall_pass": True, "build_version": 1,
+                       "html_sha256": digest},
+            }
+            with patch("agents.qa.get_company", return_value=("test", company)):
+                with self.assertRaisesRegex(RuntimeError, "factual profile"):
+                    approve_company("test")
+                company["research"]["no_site_fact_review"] = {
+                    "approved": True, "reviewer_kind": "human",
+                    "build_sha256": site_digest(self.html),
+                }
+                with self.assertRaisesRegex(RuntimeError, "two-reviewer"):
+                    approve_company("test")
+
+    def test_verified_content_matrix_does_not_approve_stale_html(self):
+        self.research["content_inventory_review"] = {
+            "approved": True, "reviewer_kind": "human", "reviewer": "Reviewer",
+            "checked_at": "2026-11-03",
+            "snapshot_sha256": source_inventory_sha256(self.research["source_inventory"]),
+            "build_sha256": site_digest(self.html), "source_urls": [ROOT_URL],
+        }
+        changed = {"index.html": self.html["index.html"].replace("workshop", "office")}
+        self.assertNotEqual(source_coverage_matrix(changed, self.research)["status"],
+                            "verified")
+
     def test_verified_no_website_still_needs_external_factual_review(self):
         coverage = source_coverage_matrix(self.html, {"research_mode": "verified_no_website"})
         self.assertEqual(coverage["status"], "no_original_site")
