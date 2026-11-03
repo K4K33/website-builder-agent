@@ -103,7 +103,24 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
         if url in logo_candidates or any(p["src"] == url for p in content_photos):
             continue
         alt = " ".join(str(img.get("alt") or "").split())[:200]
-        content_photos.append({"src": url[:500], "alt": alt})
+        # Record high-confidence photo roles from actual surrounding markup.
+        # A team-page URL alone is NOT proof a photo depicts an employee.
+        ancestry = " ".join(
+            " ".join(node.get("class") or []) + " " + str(node.get("id") or "")
+            for node in [img, *list(img.parents)[:5]]
+            if getattr(node, "attrs", None) is not None
+        )
+        marker = ancestry + " " + alt
+        if re.search(r"(?:staff|team[-_ ]?member|employee|henkil[oö]st[oö]|"
+                     r"ty[oö]ntekij[aä]|tekij[aä]|kasvokuva|portrait|"
+                     r"henkil[oö]kuva|profile[-_ ]?photo)", marker, re.I):
+            role = "staff_portrait"
+        elif re.search(r"(?:galler|gallery|portfolio|referens|work[-_ ]?gallery|"
+                       r"ty[oö]n[aä]yte|kuvagalleria|carousel)", marker, re.I):
+            role = "gallery_photo"
+        else:
+            role = "unclassified"
+        content_photos.append({"src": url[:500], "alt": alt, "role": role})
 
     candidates = soup.select(REVIEW_SELECTOR)
     # Some themes render individual testimonials as blockquotes without classes.
