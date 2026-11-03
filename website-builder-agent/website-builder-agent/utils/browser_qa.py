@@ -120,7 +120,7 @@ def inspect_site(path):
                             const hero=h1?.closest('section,article') || main;
                             const mediaAfter=media.filter(el=>el.getBoundingClientRect().top>=viewport.h);
                             const bgHero=[hero,...hero.querySelectorAll('*')].slice(0,60)
-                              .some(el=>getComputedStyle(el).backgroundImage!=='none');
+                              .some(el=>getComputedStyle(el).backgroundImage.includes('url('));
                             return {
                                 measured:true,viewportWidth:viewport.w,viewportHeight:viewport.h,
                                 visibleMainMedia:above.length,allMainMedia:media.length,
@@ -138,15 +138,15 @@ def inspect_site(path):
                                 and first_fold.get("allMainMedia", 0) > 0
                                 and first_fold.get("visibleMainMedia", 0) == 0
                                 and first_fold.get("mainMediaBelowFold", 0) > 0
-                                and not first_fold.get("heroHasCssBackground")):
+                                ):
                             visual_review_flags.append({
                                 "viewport": name,
                                 "kind": "first_view_business_media_below_fold",
                                 "observation": first_fold,
-                                "note": "Business media begins below first phone viewport. "
-                                        "Check whether this sector should show authentic "
-                                        "product/work photography immediately; do not "
-                                        "automatically reject text-first businesses.",
+                                "note": "Business img/video elements begin below the first phone viewport. "
+                                        "Review genuine product/work visibility; a CSS image "
+                                        "or gradient alone cannot prove source photo priority. "
+                                        "Do not automatically reject text-first businesses.",
                             })
                         if findings.get("columnImbalance"):
                             visual_review_flags.extend([
