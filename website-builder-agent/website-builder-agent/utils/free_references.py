@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import json
+import ipaddress
 from pathlib import Path
 import re
 from urllib.parse import urlsplit
@@ -72,8 +73,14 @@ def _candidates(records: list, *, target_url: str = "", limit: int = 30) -> list
         host = (urlsplit(url).hostname or "").casefold()
         if not host or host in hosts or not url.startswith(("http://", "https://")):
             continue
-        if host in {"localhost", "127.0.0.1"} or host.endswith(".local"):
+        if (host in {"localhost", "localhost.localdomain"}
+                or host.endswith((".local", ".internal", ".localhost"))):
             continue
+        try:
+            if not ipaddress.ip_address(host).is_global:
+                continue
+        except ValueError:
+            pass
         hosts.add(host)
         chosen.append({
             "url": url,
