@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 
 _CAROUSEL = re.compile(r"(?:swiper|slick|owl-carousel|splide|flickity|glide|carousel|slider|slideshow)", re.I)
 _MOTION_LIB = re.compile(r"(?:gsap|scrolltrigger|lottie|anime\.js|framer-motion|motion\.one)", re.I)
-_3D = re.compile(r"(?:preserve-3d|perspective\s*:|rotate[XY3d]\s*\(|translate3d\s*\(|matrix3d\s*\()", re.I)
+_3D = re.compile(r"(?:preserve-3d|perspective\s*:|rotate(?:X|Y|3d)\s*\(|translate3d\s*\(|matrix3d\s*\()", re.I)
 _CSS_BG = re.compile(r"background(?:-image)?\s*:[^;{}]*url\(\s*['\"]?([^)'\" ]+)", re.I)
 _VIDEO_IFRAME = re.compile(r"(?:youtube\.com/embed|youtube-nocookie\.com/embed|player\.vimeo\.com/video|wistia|video\.)", re.I)
 
@@ -53,10 +53,8 @@ def extract_source_experience(html: str, source_url: str = "") -> dict:
         [style.get_text(" ", strip=True) for style in soup.find_all("style")]
         + [str(node.get("style")) for node in soup.find_all(style=True)]
     )
-    scripts = "\n".join(
-        [script.get_text(" ", strip=True) for script in soup.find_all("script")]
-        + [str(script.get("src") or "") for script in soup.select("script[src]")]
-    )
+    scripts = "\n".join(script.get_text(" ", strip=True)
+                        for script in soup.find_all("script"))
     backgrounds = list(dict.fromkeys(
         urljoin(source_url, match) if source_url else match
         for match in _CSS_BG.findall(styles)
@@ -123,7 +121,8 @@ def source_experience_brief(research: dict) -> dict:
         "3d_present": any(p.get("observed_3d") for p in observed),
         "animation_present": any(p.get("observed_css_or_js_animation") for p in observed),
         "texture_background_present": any(p.get("observed_textured_backgrounds") for p in observed),
-        "photo_rich": sum(int(p.get("observed_photo_assets") or 0) for p in observed) >= 3,
+        "photo_rich": len({url for p in observed for url in
+                           (p.get("observed_photo_urls") or [])}) >= 3,
         "external_assets_need_browser_review": any(p.get("browser_inspection_required") for p in observed),
         "creative_policy": (
             "Preserve or improve meaningful original interactions, movement, "
@@ -139,6 +138,8 @@ def source_experience_brief(research: dict) -> dict:
 
 def audit_source_experience_parity(rendered_pages: dict[str, str], research: dict) -> dict:
     """Detect obvious source-to-demo experiential downgrades without AI credits."""
+    if research.get("research_mode") == "verified_no_website":
+        return {"blocking": [], "pending": [], "brief": {"status": "no_original_site"}}
     brief = source_experience_brief(research)
     if brief["status"] == "unverified":
         return {"blocking": [], "pending": [
