@@ -103,6 +103,34 @@ class FreeReferencesTests(unittest.TestCase):
         self.assertEqual(normalize_industry("kukkakaupan kukkakauppa"),
                          "kukkakauppa")
 
+    def test_rare_industry_uses_prior_verified_company_references(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            results = discover_free_references(
+                "mattokutomo", cache_path=Path(tmp)/"r.json",
+                historic_lookup=lambda category: [
+                    {"url": f"https://rug{i}.example.org/",
+                     "title": f"Real handloom operator {i}"}
+                    for i in range(4)],
+                fetch_osm=Mock(side_effect=AssertionError("No OSM tag mapping")),
+            )
+            self.assertEqual(len(results), 4)
+
+    def test_public_osm_candidates_never_include_private_addresses(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            unsafe = [
+                {"website": "http://127.0.0.5/private"},
+                {"website": "http://10.0.0.4/"},
+                {"website": "http://192.168.1.1/"},
+                {"website": "http://169.254.169.254/latest/"},
+            ]
+            results = discover_free_references(
+                "kukkakauppa", cache_path=Path(tmp)/"r.json",
+                historic_lookup=lambda category: [],
+                fetch_osm=lambda *args: unsafe + SITES,
+            )
+            self.assertEqual(len(results), 4)
+            self.assertTrue(all("example.org" in x["url"] for x in results))
+
     def test_real_source_text_cache_refreshes_after_one_week(self):
         with tempfile.TemporaryDirectory() as tmp:
             fn = Mock(return_value={"success": True, "visible_text": "Observed real product",
