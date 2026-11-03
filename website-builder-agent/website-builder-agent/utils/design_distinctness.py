@@ -63,7 +63,7 @@ def repeated_company_copy(first: str, second: str) -> dict:
             value = " ".join(node.get_text(" ", strip=True).casefold().split())
             value = value.strip(".!? ")
             words = value.split()
-            if node.name == "p" and len(value) >= 90 and len(words) >= 12:
+            if node.name == "p" and len(value) >= 90 and len(words) >= 10:
                 paragraphs.add(value)
             elif node.name in ("h1", "h2", "h3") and len(value) >= 32 and len(words) >= 5:
                 headings.add(value)
