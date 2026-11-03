@@ -56,13 +56,17 @@ ole vaatimuksia. Muutokset ovat työkulun valmistelua. Ne eivät
 tarkoita, että ChatGPT jo lähettäisi taustalla automaattisesti uusia
 liidilistoja; jatkuva ilmoitus vaatii erikseen asetetun ajastuksen.
 
-## V8: maksuton paikallinen tuotantotila on oletus
+## V9: maksuton tuotantotila hyödyntää aidot ilmaiskiintiöt
 
-**Uusi oletus:** `AI_BACKEND=ollama` ja `FREE_ONLY=1`. OpenRouter ja
-Tavily eivät kuulu maksuttoman tuotantotilan työnkulkuun. Pilvipalvelujen
-mahdollinen käyttö vaatii nimenomaiset erilliset asetukset
-`AI_BACKEND=openrouter` ja `FREE_ONLY=0` sekä olemassaolevan
-`--confirm-paid-apis` / `--confirm-live-run` -luvan.
+**Oletus:** `AI_BACKEND=ollama` ja `FREE_ONLY=1`. V9 sallii tässä
+maksuttomassa tilassa **OpenRouterin nollahintaiset `:free`-mallit**
+(tarkalla mallivalinnalla; Research voi käyttää `openrouter/free`-reititintä)
+sekä **Tavily Researcher -tilin vahvistetut maksuttomat hakukrediitit**.
+Maksulliset malliversiot ja vahvistamattomien Tavily-tilien pyynnöt
+estetään. Maksulliseen käyttöön ei koskaan siirrytä automaattisesti.
+
+Katso täydelliset käyttörajat, turvaehdot, tilivahvistus ja hybridi-
+esimerkki: `docs/KAURIVO_V9_VERIFIED_FREE_TIERS.md`.
 
 **Käyttökustannus:** ei maksullisia tekoäly-/hakupalvelukutsuja, mutta
 laitteisto, sähkö, internet ja mahdolliset hosting-palvelut eivät ole
@@ -87,8 +91,11 @@ että tietty paikallinen malli kykenee vaadittuun premium-tason koodaukseen ja
 kuvien analysointiin. Paikallisen palvelun häiriö **ei** siirrä kutsua pilveen.
 Lisätiedot: https://docs.ollama.com/api .
 
-Uudet Research-vaiheen saman toimialan **todelliset yritysreferenssit** haetaan
-maksuttomassa tilassa OpenStreetMap/Overpass-tiedoista. Referenssit vaativat
+Uudet Research-vaiheen saman toimialan **todelliset yritysreferenssit**
+haetaan ensin maksuttomasta OpenStreetMap/Overpass-lähteestä sekä jo
+todennetuista välimuisteista. Jos toimialan todellisia ehdokkaita on liian
+vähän, vahvistetun Tavily Researcher -tilin jäljellä olevia ilmaiskrediittejä
+voidaan käyttää hallitusti. Referenssit vaativat
 edelleen alkuperäissivuston sisällön tarkistuksen, vertailukuvakaappaukset ja
 vähintään kolme lähteisiin sidottua saman toimialan yritystä. Julkisen OSM-
 palvelun käytölle voi olla rajoituksia, virheitä ja verkkokuormitusta.
@@ -109,8 +116,11 @@ python main.py free-batch --allow-public-lookups --limit 20
 python main.py free-batch --allow-public-lookups --retry-failed
 ```
 
-Tämä käyttää paikallisia malleja Researchiin, Builderiin, visuaaliseen
-QA:han ja enintään kahteen saman yrityksen havaintopohjaiseen
+Tämä käyttää paikallisia malleja tai täsmällisesti valittuja
+maksuttomia OpenRouter-malleja Researchiin, Builderiin ja visuaaliseen
+QA:han. Paikallinen malli jää käyttöön maksuttoman pilvikiintiön
+täyttyessä, jos se on asennettu. Agentti tekee enintään kaksi
+saman yrityksen havaintopohjaista
 korjauskierrokseen (vaihdettavissa `--max-revisions 0..3`).
 Yksittäiset ongelmat pysäytetään ilman, että loppujonon työ katoaa.
 Jokainen tulos kirjataan `output/_kaurivo_free_batch.json`-tiedostoon.
@@ -119,8 +129,10 @@ Käytettävissä on myös täysin ilman tekoälyä tehtävä kuvavertailu
 
 **Yöllinen Kaurivo-adminin PRH-haku:** ajastettu kansallinen PRH ZIP -ajo
 käy edelleen läpi korkeintaan 9 000 ehdokasta paikallisesti ja muodostaa
-50 yrityksen shortlistin. Maksulliset Tavily-lisähaut on estetty myös
-tästä ajastuksesta. Tämä EI automaattisesti todista puuttuvaa yrityksen
+50 yrityksen shortlistin. Vahvistetun maksuttoman Tavily-tilin
+enintään 12 lisähakua per ajo voidaan nyt tehdä vain turvallisen
+palvelinpuoleisen 750 krediitin kuukausivarauksen kautta.
+Vahvistuksen puuttuessa hakuja ei tehdä. Tämä EI automaattisesti todista puuttuvaa yrityksen
 verkkosivua eikä säilytä aiempia maksullisella haulla saatuja 12
 verkkosivuehdotusta: ilman luotettavaa ilmaista näyttöä verkkosivun
 tilanne jää tarkistettavaksi. Yritysten määrää ei hiljaisesti pienennetä
