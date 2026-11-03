@@ -103,6 +103,21 @@ Palauta VAIN validi JSON:
 
 
 FINAL_RESEARCH_PROMPT = """
+V5 BRAND EXPERIENCE BEFORE DESIGN:
+Include the source's FULL wordmark appearance (type and emblem together),
+primary/secondary palette RELATIONSHIPS, source hero photo subject,
+actual tone of the owner's own words and the business's distinct
+emotional services as internal design evidence. Preserve visual softness
+or strength rather than merely reusing one approximate accent color.
+Compare the exact first screen of the original and redesign at 320/390px.
+For picture-led retail and craft, the genuine product should feature near
+the start; an enormous text-only banner may be a wrong-sector design.
+Do not use source-hosted image URLs as copyright permission.
+Describe which existing brand choices need owner approval before changing.
+Avoid generic slogans, obligatory full-width strips and an agency
+house style replacing the source identity. Document:
+docs/KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md.
+
 TOIMIALAN TUNNISTETTAVUUDEN ENNAKKOTARKISTUS KAIKILLE YRITYKSILLE:
 - Suunnittele kuin tämän yrityksen oma palvelu-, myynti- tai asiantuntijasivu,
   älä Kaurivon toistuva elegantti esite tai instituution verkkosivu.
