@@ -8,9 +8,10 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-from utils.universal_quality import audit_universal_standards
-
 ROOT=Path(__file__).resolve().parents[1]
+# Executed as python scripts/..., so explicitly make the project package root importable.
+sys.path.insert(0, str(ROOT))
+from utils.universal_quality import audit_universal_standards
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
 
