@@ -38,6 +38,7 @@ def derive_brand_site_blueprint(research: dict) -> dict:
     brand_colors: dict[str, list[str]] = defaultdict(list)
     authentic_logo = {}
     authentic_favicon = {}
+    source_wordmarks = {}
     photos = {}
     for page in snapshots:
         url = str(page.get("url") or "")
@@ -50,6 +51,9 @@ def derive_brand_site_blueprint(research: dict) -> dict:
         for logo in identity.get("original_logo_candidates") or []:
             if isinstance(logo, str) and logo:
                 authentic_logo.setdefault(logo, []).append(url)
+        for wordmark in identity.get("original_header_wordmark_candidates") or []:
+            if isinstance(wordmark, str) and wordmark.strip():
+                source_wordmarks.setdefault(wordmark, []).append(url)
         for favicon in identity.get("original_favicon_candidates") or []:
             if isinstance(favicon, str) and favicon:
                 authentic_favicon.setdefault(favicon, []).append(url)
@@ -99,6 +103,10 @@ def derive_brand_site_blueprint(research: dict) -> dict:
                 {"url": url, "source_urls": list(dict.fromkeys(origins))}
                 for url, origins in sorted(authentic_logo.items())
             ],
+            "original_header_wordmark_candidates": [
+                {"text": sample, "source_urls": list(dict.fromkeys(urls))}
+                for sample, urls in sorted(source_wordmarks.items())
+            ],
             "original_favicon_candidates": [
                 {"url": url, "source_urls": list(dict.fromkeys(origins))}
                 for url, origins in sorted(authentic_favicon.items())
@@ -110,6 +118,12 @@ def derive_brand_site_blueprint(research: dict) -> dict:
             "typography_direction": _one(rec.get("typography_scale")),
             "spacing_and_layout": _one(rec.get("spacing_and_layout")),
             "mobile_plan": _one(rec.get("mobile_plan")),
+            "compare_original_full_wordmark_not_just_logo": True,
+            "source_vs_redesign_mobile_320_390_review_required": bool(snapshots),
+            "first_screen_source_photo_references": [
+                {"url": url, "source_urls": list(dict.fromkeys(origins))}
+                for url, origins in list(photos.items())[:5]
+            ],
             "color_use_requires_source_or_approved_plan": True,
             "original_identity_comes_first": True,
             "never_auto_generate_client_logo": True,
