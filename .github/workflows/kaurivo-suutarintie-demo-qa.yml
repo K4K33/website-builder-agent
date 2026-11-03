@@ -92,6 +92,13 @@ jobs:
                         raise AssertionError(f'Lost site CSS/contact: {route} {width}: {data}')
                       if not route and (not data['logo'] or not data['hero'] or not data['aboveFoldPhoto']):
                         raise AssertionError(f'Original photos and identity missing from first view: {width}: {data}')
+                      # Capture the natural, not keyboard-focused, visual state.
+                      # Menu interactions are tested AFTER the screenshot to
+                      # avoid injecting an accessibility focus ring into previews.
+                      if not route or width==390:
+                        name=route.rstrip('/').replace('/','-') or 'home'
+                        page.screenshot(path=str(output/f'{name}-{width}.png'),
+                                        full_page=True,animations="disabled")
                       if width==390:
                         button=page.locator('[data-menu-button]')
                         button.click()
@@ -100,10 +107,6 @@ jobs:
                         page.keyboard.press('Escape')
                         if button.get_attribute('aria-expanded')!='false':
                           raise AssertionError('Mobile menu Escape does not close: '+route)
-                      if not route or width==390:
-                        name=route.rstrip('/').replace('/','-') or 'home'
-                        page.screenshot(path=str(output/f'{name}-{width}.png'),
-                                        full_page=True,animations="disabled")
                       results.append({'route':route,'width':width,'status':'pass',
                                       'original_logo_loaded':bool(data['logo'])})
                       print('PASS '+json.dumps(results[-1]),flush=True)
