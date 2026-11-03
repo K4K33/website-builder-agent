@@ -53,7 +53,10 @@ def _require_paid_consent(args):
     # External search APIs (if any) remain independently quota-limited.
     # FREE_ONLY can use only zero-cost provider endpoints, explicitly
     # checked again at each outbound API call, so no paid consent is needed.
-    if config.free_only() or config.ai_backend() == "ollama":
+    if config.free_only():
+        return
+    if all(config.backend_for_stage(stage) == "ollama"
+           for stage in ("scout", "research", "builder", "qa", "outreach")):
         return
     if not getattr(args, "confirm_paid_apis", False):
         raise RuntimeError(
