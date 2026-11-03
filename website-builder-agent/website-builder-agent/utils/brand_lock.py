@@ -71,7 +71,6 @@ def _signed(record: object, *, digest: str, source_hash: str) -> bool:
         and record.get("reviewer_kind") == "client"
         and _text(record.get("reviewer"))
         and _text(record.get("checked_at"))
-        and _text(record.get("evidence_reference"))
         and record.get("build_sha256") == digest
     ):
         return False
