@@ -22,7 +22,7 @@ from utils.premium_quality_gate import site_digest
 
 BRAND_HINT = re.compile(
     r"(?:^|[\s\-_])(?:brand|logo|wordmark|lettermark|monogram|emblem|"
-    r"identity|site-mark|site-logo|tunnus|liikemerkki|merkki)(?:$|[\s\-_])",
+    r"identity|site-mark|site-logo|seal|stamp|tunnus|liikemerkki|merkki)(?:$|[\s\-_])",
     re.I,
 )
 # SVGs used for navigation (menu/search/close) are not business logos.
@@ -110,6 +110,7 @@ def _mark_elements(header) -> list[tuple[object, str]]:
             " ".join(node.get("class") or []), _text(node.get("id")),
             _text(node.get("role")), _text(node.get("aria-label")),
             _text(node.get("alt")), _text(node.get("title")),
+            _text(node.get("src")),
         ])
         parent = node.parent
         if parent and parent is not header:
@@ -131,6 +132,62 @@ def _mark_elements(header) -> list[tuple[object, str]]:
     return found
 
 
+AFFILIATION_HINT = re.compile(
+    r"(?:partner|sponsor|affiliat|association|certificate|certification|"
+    r"kumppan|yhteistyo|sertifika|asiakaslogo|client-logo)",
+    re.I,
+)
+
+
+def _affiliation_mark_candidates(soup) -> list[tuple[object, str]]:
+    """Inspect clearly labelled sponsor/partner regions, not arbitrary icons."""
+    found = []
+    for node in soup.find_all(["img", "svg"]):
+        ancestor_markers = []
+        for ancestor in [node, *list(node.parents)[:4]]:
+            if getattr(ancestor, "attrs", None) is None:
+                continue
+            ancestor_markers.extend(
+                [" ".join(ancestor.get("class") or []), _text(ancestor.get("id"))]
+            )
+        markers = " ".join(ancestor_markers)
+        if not AFFILIATION_HINT.search(markers):
+            continue
+        # A decorative image next to a partner section isn't a partner logo.
+        # Explicit partner-mark slots are inspected; unmarked widgets require
+        # separate human/source review, never a false automatic pass.
+        identity_marker = " ".join([
+            _text(node.get("alt")), _text(node.get("aria-label")),
+            _text(node.get("src")), _text(node.get("id")),
+            " ".join(node.get("class") or []),
+        ])
+        if BRAND_HINT.search(identity_marker) or AFFILIATION_HINT.search(identity_marker):
+            found.append((node, markers[:120]))
+    return found
+
+
+def _permitted_affiliations(research: dict, *, digest: str,
+                            source_hash: str) -> set[str]:
+    approval = research.get("additional_affiliations_approval")
+    if not _signed(approval, digest=digest, source_hash=source_hash):
+        return set()
+    allowed = set()
+    for item in research.get("verified_additional_affiliations") or []:
+        if not isinstance(item, dict):
+            continue
+        if not (
+            item.get("rights_verified") is True
+            and item.get("active_verified") is True
+            and _text(item.get("relationship_role"))
+            and _text(item.get("source_url")).startswith("https://")
+        ):
+            continue
+        url = _text(item.get("logo_src"))
+        if url:
+            allowed.add(url)
+    return allowed
+
+
 def audit_brand_lock(rendered_pages: dict[str, str],
                      research: dict | None = None) -> dict:
     """Detect invented brand marks, silent logo swaps and favicon mismatch.
@@ -145,6 +202,17 @@ def audit_brand_lock(rendered_pages: dict[str, str],
     digest = site_digest(rendered_pages)
     brand_assets = research.get("brand_assets") or {}
     approved_primary = _text(brand_assets.get("approved_original_logo_url"))
+    source_affiliations: set[str] = set()
+    for source_page in (research.get("source_inventory") or {}).get("pages") or []:
+        if not isinstance(source_page, dict):
+            continue
+        for asset in source_page.get("footer_assets") or []:
+            if isinstance(asset, dict) and _text(asset.get("src")):
+                source_affiliations.add(urljoin(_text(source_page.get("url")),
+                                                 _text(asset["src"])))
+    permitted_affiliations = source_affiliations | _permitted_affiliations(
+        research, digest=digest, source_hash=source_hash
+    )
     approved_favicon = _text(brand_assets.get("approved_favicon_url"))
     allowed_new = _signed(research.get("approved_new_brand_mark"),
                           digest=digest, source_hash=source_hash)
@@ -197,6 +265,23 @@ def audit_brand_lock(rendered_pages: dict[str, str],
                 "category": "source_logo_rights_review", "route": route,
                 "issue": "Source asset identity found; lawful logo use and client signoff still require verification.",
             })
+        # Do not introduce invented sponsor, association or certification
+        # emblems, even when the builder preserves all original footer logos.
+        # A new partner mark requires current-source/build client proof.
+        for node, marker in _affiliation_mark_candidates(soup):
+            src = _text(node.get("src")) if node.name == "img" else ""
+            if src in permitted_affiliations:
+                continue
+            if node.name == "img" and src in allowed:
+                # The company wordmark can legitimately appear in a footer.
+                continue
+            blocked.append({
+                "category": "unsourced_affiliation_mark",
+                "route": route,
+                "src": src[:200], "marker": marker,
+                "issue": "Partner/sponsor/certification mark lacks an observed source or exact-build client approval.",
+            })
+
         icon_links = soup.select(
             'link[rel~="icon"],link[rel~="apple-touch-icon"],'
             'link[rel~="shortcut"][rel~="icon"]'
