@@ -156,7 +156,7 @@ def audit_trust_claims(rendered_pages: dict[str, str], research: dict | None = N
         # Restrict checks to explicit aggregate components to prevent
         # confusing decorative stars, product symbols, and icons for ratings.
         for node in soup.select(AGGREGATE_SELECTOR):
-            if node.find_parent(AGGREGATE_SELECTOR):
+            if node.find_parent(REVIEW_SELECTOR) or node.find_parent(AGGREGATE_SELECTOR):
                 continue
             claim = " ".join(node.get_text(" ", strip=True).split())
             if not claim and node.get("aria-label"):
