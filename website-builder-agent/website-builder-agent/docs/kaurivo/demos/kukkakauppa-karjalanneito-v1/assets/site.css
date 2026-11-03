@@ -69,7 +69,7 @@ img{display:block;max-width:100%}
 .service-list{margin-top:58px;border-top:1px solid #dfccd0}
 .service-row{border-bottom:1px solid #dfccd0;display:grid;grid-template-columns:75px 1fr 1.1fr 120px;align-items:center;gap:20px;min-height:118px;transition:background .2s,padding .2s}
 .service-row:hover{background:#fff0f1;padding-inline:16px}
-.service-row .num{font-size:12px;font-weight:800;color:#b65d72}
+.service-row .service-thumb{width:58px;height:58px;object-fit:cover;border-radius:50%}
 .service-row h3{font-size:clamp(22px,3vw,39px);letter-spacing:-.045em;font-weight:900;margin:0}
 .service-row p{font-size:14px;line-height:1.65;color:#66595d;margin:0;max-width:410px}
 .service-row a{justify-self:end;font-size:13px;font-weight:800;text-decoration:underline;text-underline-offset:5px;white-space:nowrap}
@@ -188,7 +188,7 @@ img{display:block;max-width:100%}
  .section-head p{margin-top:22px}
  .services,.gallery-teaser{padding:75px 0 80px}
  .service-row{grid-template-columns:35px 1fr;gap:7px 20px;padding:21px 0;min-height:0}
- .service-row .num{grid-row:span 3;align-self:start;padding-top:8px}
+ .service-row .service-thumb{grid-row:span 3;align-self:start;margin-top:6px}
  .service-row p{max-width:580px}
  .service-row a{justify-self:start}
  .work-feature{grid-template-columns:1fr}
