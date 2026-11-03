@@ -1,14 +1,18 @@
-"""Exact-build hash of every route and packaged image.
+"""Exact-build hash of every route and packaged image, style and script.
 
 An index.html digest alone cannot protect a multi-page site against
-post-QA edits to service/product pages or changes to images.
+post-QA edits to pages, work photography, typography, CSS or JS interactions.
+Only assets inside the generated site bundle are content-addressed here;
+remote CDN assets still require separate source/rights and visual review.
 """
 from __future__ import annotations
 from hashlib import sha256
 from pathlib import Path
 from utils.site_architecture import route_path
 
-ALLOWED_ASSET_EXTENSIONS={".png",".jpg",".jpeg",".gif",".svg",".avif",".webp"}
+ALLOWED_ASSET_EXTENSIONS={".png",".jpg",".jpeg",".gif",".svg",".avif",".webp",
+                          ".ico",".css",".js",".mjs",".json",".webmanifest",
+                          ".woff",".woff2"}
 
 def site_files(root: str | Path, page_paths: list[str]) -> list[tuple[str,Path]]:
     base=Path(root).resolve()
