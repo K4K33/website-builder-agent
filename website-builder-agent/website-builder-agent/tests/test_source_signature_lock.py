@@ -105,6 +105,28 @@ class SourceSignatureLockTests(unittest.TestCase):
         self.assertIn("staff_portrait_lost",kinds(result))
         self.assertEqual(sum(x["kind"]=="staff_portrait_lost" for x in result["blocking"]),2)
 
+    def test_staff_photo_cannot_be_hidden_on_unrelated_product_page(self):
+        p=pages()
+        p["team/index.html"]=page("<h2>Our team</h2><p>Alex and Mira</p>")
+        p["gallery/index.html"]=p["gallery/index.html"].replace(
+            "</main>",'<img src="https://atelier.example/media/alex.jpg">'
+                      '<img src="https://atelier.example/media/mira.jpg"></main>')
+        report=audit_source_signature_lock(p,original())
+        self.assertIn("staff_portrait_disconnected_from_team",kinds(report))
+
+    def test_unlabelled_people_photos_on_real_team_page_require_visual_continuity(self):
+        research=original()
+        team=research["source_inventory"]["pages"][1]
+        team["text"]="Henkilöstö ja yrittäjät esittäytyvät tässä."
+        team["source_identity"]["original_content_photos"]=[
+            {"src":"https://atelier.example/media/alex.jpg","role":"unclassified"},
+            {"src":"https://atelier.example/media/mira.jpg","role":"unclassified"}
+        ]
+        p=pages()
+        p["team/index.html"]=page("<article><h2>Our people</h2>Alex and Mira</article>")
+        report=audit_source_signature_lock(p,research)
+        self.assertIn("team_page_all_real_photos_lost",kinds(report))
+
     def test_sparse_gallery_and_old_site_link_cannot_pass(self):
         p=pages()
         p["gallery/index.html"]=page(
