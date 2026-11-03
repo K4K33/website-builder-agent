@@ -8,6 +8,7 @@ from playwright.sync_api import sync_playwright
 def inspect_site(path):
     source = Path(path).resolve()
     issues, screenshots, visual_review_flags = [], {}, []
+    first_fold_observations = {}
     viewports = (("desktop", 1440, 900), ("tablet", 768, 1024),
                  ("mobile", 390, 844), ("small_mobile", 320, 740))
     try:
@@ -94,6 +95,59 @@ def inspect_site(path):
                                 emptyMain: !document.querySelector('main')?.innerText.trim(),
                             };
                         }""")
+                        # A visible source product in the first phone screen
+                        # is a design observation, never a universal mandate.
+                        # Text-first service sites, CSS hero backgrounds and
+                        # intentional editorial layouts need human judgement.
+                        first_fold = page.evaluate("""() => {
+                            const main=document.querySelector('main');
+                            if (!main) return {measured:false,reason:'No main landmark'};
+                            const viewport={w:innerWidth,h:innerHeight};
+                            const rect=main.getBoundingClientRect();
+                            const candidates=[...main.querySelectorAll('img,picture,video')];
+                            const media=candidates.filter(el=>{
+                                const r=el.getBoundingClientRect(),s=getComputedStyle(el);
+                                return r.width>0 && r.height>0 && s.visibility!=='hidden'
+                                    && s.display!=='none';
+                            });
+                            const intersects=el=>{
+                                const r=el.getBoundingClientRect();
+                                return Math.max(0,Math.min(r.right,viewport.w)-Math.max(0,r.left))
+                                  *Math.max(0,Math.min(r.bottom,viewport.h)-Math.max(0,r.top));
+                            };
+                            const above=media.filter(el=>intersects(el)>250);
+                            const h1=main.querySelector('h1');
+                            const hero=h1?.closest('section,article') || main;
+                            const mediaAfter=media.filter(el=>el.getBoundingClientRect().top>=viewport.h);
+                            const bgHero=[hero,...hero.querySelectorAll('*')].slice(0,60)
+                              .some(el=>getComputedStyle(el).backgroundImage!=='none');
+                            return {
+                                measured:true,viewportWidth:viewport.w,viewportHeight:viewport.h,
+                                visibleMainMedia:above.length,allMainMedia:media.length,
+                                mainMediaBelowFold:mediaAfter.length,
+                                firstFoldVisibleMediaArea:Math.round(above.reduce(
+                                  (s,el)=>s+intersects(el),0)),
+                                hasMainHeading:!!h1,
+                                titleBottom:h1?Math.round(h1.getBoundingClientRect().bottom):null,
+                                headerHeight:Math.round(Math.max(0,rect.top)),
+                                heroHasCssBackground:!!bgHero,
+                            };
+                        }""")
+                        first_fold_observations[name] = first_fold
+                        if (width <= 390 and first_fold.get("measured")
+                                and first_fold.get("allMainMedia", 0) > 0
+                                and first_fold.get("visibleMainMedia", 0) == 0
+                                and first_fold.get("mainMediaBelowFold", 0) > 0
+                                and not first_fold.get("heroHasCssBackground")):
+                            visual_review_flags.append({
+                                "viewport": name,
+                                "kind": "first_view_business_media_below_fold",
+                                "observation": first_fold,
+                                "note": "Business media begins below first phone viewport. "
+                                        "Check whether this sector should show authentic "
+                                        "product/work photography immediately; do not "
+                                        "automatically reject text-first businesses.",
+                            })
                         if findings.get("columnImbalance"):
                             visual_review_flags.extend([
                                 {"viewport": name, **candidate}
@@ -241,4 +295,5 @@ def inspect_site(path):
     return {"pass": not issues and len(screenshots) == len(viewports),
             "issues": issues, "screenshots": screenshots,
             "visual_review_flags": visual_review_flags,
+            "first_fold_observations": first_fold_observations,
             "note": "Whitespace/layout flags need independently reviewed full-page screenshots."}
