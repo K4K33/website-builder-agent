@@ -14,6 +14,7 @@ from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
 from utils.content_parity import source_inventory_sha256
+from utils.source_experience import source_experience_brief
 
 
 def _one(value: object, maxlen: int = 480) -> str:
@@ -85,6 +86,7 @@ def derive_brand_site_blueprint(research: dict) -> dict:
     return {
         "protocol": "company_source_to_sitemap_wireframe_brand_style_2026-11",
         "source_sha256": source_sha,
+        "source_experience_plan": source_experience_brief(research),
         "company_name": _one((research.get("company_facts") or {}).get("name")),
         "sitemap_and_wireframes": architecture,
         "selected_direction": {

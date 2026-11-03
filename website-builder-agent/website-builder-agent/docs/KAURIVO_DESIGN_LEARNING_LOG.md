@@ -1,5 +1,11 @@
 # Kaurivo — continuous customer and independent review learning log
 
+## 2026-11-03 — Munkkiniemen Suutari / Roots LTD: rejected source-experience regression
+
+Owner's 141-second side-by-side recording shows an original with ROOTS LTD brand identity, genuine workshop and product photography, rich video, image galleries and tactile backgrounds. The separately generated concept has an invented M brand mark, generic SVG shoe, repetitive numerals, arrows and big flat cards; major genuine media and meaningful visual depth are lost. It must not be called a premium-ready redesign, regardless of the six-page build and green earlier tests.
+
+Systemic causes: HTML content/source checks did not give original effects, video, gallery and background richness a binding art-direction role; direct docs demos could bypass universal gate. The new cross-industry baseline records original source experience, requires comparable meaningful richness, restrains effects when source is static, catches bypassed manual previews and keeps real rights clearance and actual browser perception mandatory. No copying source photos/video/logo without permission.
+
 ## 2026-11-02 — Kotifixi V15 approved as design baseline by owner
 
 Owner says "tämä on jo hyvä mielestäni" and supplied a ~31.4-second desktop walkthrough of V15 across the home page, service list, pricing, process page and contact/test form. Treat this as **owner design approval**, not customer approval, measured independent >=9.5, validated live form delivery, or a mobile audit. No V16 purely to chase AI scores. Keep V15 unchanged and available as the reference for the agency's first cross-industry quality-consistency tests.
