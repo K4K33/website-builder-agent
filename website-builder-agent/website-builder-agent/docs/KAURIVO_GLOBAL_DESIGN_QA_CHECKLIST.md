@@ -1,5 +1,31 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## V5: original brand character, first phone viewport and true customer voice
+
+See `docs/KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md`.
+
+- [ ] The ORIGINAL full wordmark lockup, letterforms and proportions survive;
+  retaining a tiny source emblem with a newly invented bold wordmark is NOT
+  automatically brand faithful.
+- [ ] Compare source vs redesigned palette hierarchy and emotional softness;
+  one similar hue alone does not authorise a dark redesign of a light brand.
+- [ ] In image-led businesses, verify actual business imagery is sufficiently
+  prominent during the first 320/390px viewport, not hidden after a long
+  generic headline and action buttons.
+- [ ] Each hero headline, main section and customer claim is specific to
+  this business and has a source-/customer-task-based rationale. Eliminate
+  tautological filler such as 'Karhulassa, oikeista kukista'.
+- [ ] Compare against two unrelated previous Kaurivo sites for repeated
+  dark hero, broad colored band, service strip, mosaic, CTA and typography
+  recipes; keep meaningful useful galleries/tables intact.
+- [ ] Distinguish sensitive service journeys (e.g. funeral vs wedding)
+  with restrained copy and specific contact paths; no invented product,
+  stock, delivery conditions, price or image caption.
+- [ ] External images/logos remain rights pending until real permission
+  is confirmed. A public noindex demo is still publicly accessible.
+- [ ] Human screenshot review, owner signoff and independent feedback are
+  required before claiming verified 9.5/10 or brand preservation.
+
 ## V4: yrityksen ja toimialan tunnistettavuus ilman logoa
 
 Ohjeet: `docs/KAURIVO_SECTOR_IDENTITY_V4_2026-11-03.md`.
