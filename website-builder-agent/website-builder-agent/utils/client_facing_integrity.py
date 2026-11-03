@@ -32,8 +32,8 @@ RESEARCH_NARRATION = (
     ),
     re.compile(
         r"\b(?:tiedot|hinnat|hinnastot|kuvat|lainaukset|palvelut)\s+"
-        r"(?:on|ovat)\s+(?:siirretty|poimittu|kerätty|kopioitu|otettu)\s+"
-        r"(?:alkuperäis(?:eltä|estä)|yrityksen)\b", re.I
+        r"(?:on|ovat)\s+(?:siirretty|poimittu|kerätty|kopioitu|otettu|tuotu)\s+"
+        r"(?:alkuperäis(?:eltä|estä|iltä)|yrityksen)\b", re.I
     ),
     re.compile(
         r"\b(?:\d+|yksi|kaksi|kolme|neljä|viisi|kuusi|seitsemän|kahdeksan|yhdeksän|kymmenen)\s+"
