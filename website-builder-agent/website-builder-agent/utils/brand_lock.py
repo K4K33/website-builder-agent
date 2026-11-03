@@ -233,6 +233,10 @@ def audit_brand_lock(rendered_pages: dict[str, str],
                 if src in allowed:
                     approved_found = True
                     continue
+                if src in permitted_affiliations:
+                    # A genuine event sponsor may also appear in a header.
+                    # It must not impersonate the company's primary logo.
+                    continue
                 if allowed_new:
                     continue
                 blocked.append({
