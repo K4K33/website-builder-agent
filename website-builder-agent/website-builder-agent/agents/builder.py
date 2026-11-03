@@ -31,6 +31,7 @@ from utils.global_feedback import (load_ledger, global_instructions,
 from utils.industry_workflow import create_industry_brief, validate_design_intent
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
+from utils.brand_design_blueprint import derive_brand_site_blueprint
 import json
 
 from utils.claude_client import ask_claude
@@ -1311,6 +1312,7 @@ def build_site(
     # All old pages and observed sections must have a plan BEFORE paid Build.
     validate_source_plan(research, source_url=company.get("url", ""))
     creative = validate_creative_directions(research)
+    brand_blueprint = derive_brand_site_blueprint(research)
     architecture = validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
@@ -1350,6 +1352,15 @@ def build_site(
 
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+RELUMEN, WEBFLOW'N JA WIXIN KALTAISEN JÄSENNETYN SUUNNITTELUN INSPIROIMA
+YRITYSKOHTAINEN SIVUKARTTA → OSIOIDEN WIREFRAME → YHTEINEN BRÄNDITYYLIOHJE:
+{json.dumps(brand_blueprint, ensure_ascii=False)}
+Tämä suunnittelupaketti sisältää vain lähteissä havaitun yritysidentiteetin.
+Älä keksi puuttuvia brändivärejä tai logoa. Toteuta valittu rakenne kaikille
+sivuille yhtenäisellä hallittavalla tyylijärjestelmällä, mutta vältä
+valmista geneeristä toimialapohjaa. Pidä sisäinen tutkimusmetatieto erossa
+asiakkaille näkyvistä teksteistä. Kysymykset oikeuksista ja tiedoista sisäiseen QA:han.
 
 ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
 {json.dumps(brand_brief, ensure_ascii=False)}
@@ -1617,6 +1628,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     if not producer.strip():
         raise ValueError("External response producer must be identified.")
     validate_creative_directions(research)
+    derive_brand_site_blueprint(research)  # Same preflight for external-agent imports.
     validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
@@ -1695,6 +1707,10 @@ def revise_site(
     )
 
     user_prompt = f"""
+JO SOVITTU YRITYSKOHTAINEN SIVUKARTTA, WIREFRAME JA BRÄNDITYYLIOHJE
+(käytä yhtenäisesti kaikilla alasivuilla; älä keksi uutta brändiä):
+{json.dumps(brand_blueprint, ensure_ascii=False)}
+
 ASIAKKAAN BRÄNDI JA SISÄLLÖN SÄILYTTÄMINEN:
 {json.dumps(brand_brief, ensure_ascii=False)}
 
