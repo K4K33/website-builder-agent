@@ -32,6 +32,40 @@ class CompleteSiteIntegrityTests(unittest.TestCase):
             (root/"assets"/"photo.png").write_bytes(b"tampered")
             self.assertNotEqual(site_sha256(root,paths),digest)
 
+    def test_full_bundle_hash_changes_when_css_or_js_or_font_changes(self):
+        with TemporaryDirectory() as temp:
+            root = self.make_site(temp)
+            routes = ["index.html", "palvelut/index.html"]
+            (root / "assets" / "site.css").write_text(
+                ":root{--brand-primary:#efdae2}body{font:16px Arial}",
+                encoding="utf-8"
+            )
+            (root / "assets" / "site.js").write_text(
+                "document.documentElement.dataset.ready='yes'", encoding="utf-8"
+            )
+            (root / "assets" / "identity.woff2").write_bytes(b"test font")
+            baseline = site_sha256(root, routes)
+            self.assertEqual(len(site_files(root, routes)), 6)
+            (root / "assets" / "site.css").write_text(
+                ":root{--brand-primary:#25121f}body{font:16px Arial}",
+                encoding="utf-8"
+            )
+            self.assertNotEqual(site_sha256(root, routes), baseline)
+            (root / "assets" / "site.css").write_text(
+                ":root{--brand-primary:#efdae2}body{font:16px Arial}",
+                encoding="utf-8"
+            )
+            self.assertEqual(site_sha256(root, routes), baseline)
+            (root / "assets" / "site.js").write_text(
+                "document.documentElement.dataset.ready='no'", encoding="utf-8"
+            )
+            self.assertNotEqual(site_sha256(root, routes), baseline)
+            (root / "assets" / "site.js").write_text(
+                "document.documentElement.dataset.ready='yes'", encoding="utf-8"
+            )
+            (root / "assets" / "identity.woff2").write_bytes(b"different font")
+            self.assertNotEqual(site_sha256(root, routes), baseline)
+
     def test_publisher_copies_all_pages_and_refuses_stale_snapshot(self):
         with TemporaryDirectory() as temp:
             root=self.make_site(temp)
