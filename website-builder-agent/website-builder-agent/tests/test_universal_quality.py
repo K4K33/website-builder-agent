@@ -132,5 +132,69 @@ class UniversalStandardsTest(unittest.TestCase):
         self.assertIn("audit_universal_standards(", q)
         self.assertIn("record_qa_findings(ledger, slug", q)
 
+
+    def test_release_approval_is_stale_after_even_one_html_change(self):
+        """Passing tick-box flags cannot stand in for fresh client approval."""
+        from utils.premium_quality_gate import site_digest
+        flags = {
+            "cms_edit_verified": True,
+            "real_lead_delivery_verified": True,
+            "branded_https_verified": True,
+            "media_rights_verified": True,
+            "legal_and_outreach_reviewed": True,
+            "client_approved": True,
+            "approved": True,
+            "reviewer_kind": "client",
+            "reviewer": "Synthetic owner",
+            "approved_at": "2026-11-03T09:00:00Z",
+            "client_approval_reference": "fixture-only:approval-record",
+        }
+        company = {"release_evidence": flags}
+        before = audit_universal_standards(self.html, company=company,
+                                           stage="client_release")
+        messages = before["pending_evidence"]["approved_domain_and_rights"]
+        self.assertTrue(any("exact site build" in msg for msg in messages), messages)
+        flags["build_sha256"] = site_digest({"index.html": self.html})
+        signed = audit_universal_standards(self.html, company=company,
+                                           stage="client_release")
+        self.assertFalse(any("Final client signoff" in msg for msg in
+                             signed["pending_evidence"].get("approved_domain_and_rights", [])))
+        changed = self.html.replace("Help at home", "Repair in your neighbourhood")
+        stale = audit_universal_standards(changed, company=company,
+                                          stage="client_release")
+        self.assertTrue(any("Final client signoff" in msg for msg in
+                            stale["pending_evidence"]["approved_domain_and_rights"]))
+        self.assertFalse(stale["client_release_ready"])
+
+    def test_release_approval_cannot_reuse_an_old_source_snapshot(self):
+        from utils.premium_quality_gate import site_digest
+        from utils.content_parity import source_inventory_sha256
+        inventory = {"pages": [{
+            "url": "https://synthetic-business.example/",
+            "text": "A documented synthetic workshop and service."
+        }]}
+        release = {
+            "approved": True,
+            "reviewer_kind": "client",
+            "reviewer": "Synthetic owner",
+            "approved_at": "2026-11-03T09:00:00Z",
+            "client_approval_reference": "fixture-only:approval-record",
+            "build_sha256": site_digest({"index.html": self.html}),
+            "source_sha256": "stale-source",
+        }
+        research = {"source_inventory": inventory}
+        report = audit_universal_standards(self.html, research, company={
+            "release_evidence": release
+        })
+        self.assertTrue(any("original source snapshot" in msg for msg in
+                            report["pending_evidence"]["approved_domain_and_rights"]))
+        release["source_sha256"] = source_inventory_sha256(inventory)
+        report = audit_universal_standards(self.html, research, company={
+            "release_evidence": release
+        })
+        self.assertFalse(any("Final client signoff" in msg for msg in
+                             report["pending_evidence"].get("approved_domain_and_rights", [])))
+
+
 if __name__ == "__main__":
     unittest.main()

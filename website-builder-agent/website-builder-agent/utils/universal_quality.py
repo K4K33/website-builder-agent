@@ -298,7 +298,31 @@ def audit_universal_standards(
               "Human side-by-side layout and brand review not verified.")
 
     # Release evidence always remains visible even for internal demos.
+    # A checked box from last week's version cannot certify today's HTML:
+    # bind the client's final signoff to BOTH exact build and source snapshot.
     release_manifest = company.get("release_evidence") or {}
+    source_snapshot = (research.get("source_inventory") or {})
+    from utils.content_parity import source_inventory_sha256
+    expected_source_hash = (
+        source_inventory_sha256(source_snapshot) if source_snapshot.get("pages") else ""
+    )
+    release_signature_valid = (
+        isinstance(release_manifest, dict)
+        and release_manifest.get("approved") is True
+        and release_manifest.get("reviewer_kind") == "client"
+        and str(release_manifest.get("reviewer") or "").strip()
+        and str(release_manifest.get("approved_at") or "").strip()
+        and str(release_manifest.get("client_approval_reference") or "").strip()
+        and release_manifest.get("build_sha256") == premium_build_hash
+        and (not expected_source_hash
+             or release_manifest.get("source_sha256") == expected_source_hash)
+    )
+    if not release_signature_valid:
+        needs(
+            "approved_domain_and_rights",
+            "Final client signoff lacks an approval reference or is not bound "
+            "to this exact site build and original source snapshot."
+        )
     release = {
         "editable_cms": ("cms_edit_verified", "Client login, save, publish and restore"),
         "contact_and_forms": ("real_lead_delivery_verified", "End-to-end lead delivery"),

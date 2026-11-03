@@ -284,3 +284,32 @@ text, images, prices, reviews and contacts via a tested CMS workflow.
 
 **The goal is approaching 10/10 on real diverse client work—not manufacturing
 a 10/10 claim from code, green tests, or an unverified AI rating.**
+
+
+## 2026-11-03 continuation: brand token and approval-staleness regression
+
+**Cross-page identity check:** A copied stylesheet or generated subpage can
+accidentally introduce another client's brand color and typography. The
+shared static QA now compares explicitly declared global `:root` tokens
+(`--brand-*`, `--identity-*`, heading/body font and brand color tokens)
+across routes and blocks contradictory values. It deliberately does not
+force every section to have the same palette, does not parse external CSS,
+and never claims to judge design taste. Full-page rendered comparison
+remains mandatory.
+
+**Customer signoff must apply to the current deliverable:** Flags such as
+`client_approved: true` are insufficient. The final release manifest must
+have a real client reviewer, a traceable approval reference, date,
+`build_sha256` matching the complete current HTML route set and
+`source_sha256` matching the current crawled inventory (when available).
+Any subsequent build change or refreshed source research voids that
+approval evidence until a new signoff. This supplements, rather than
+replaces, proof of permitted media, verified contacts, CMS handover,
+accessibility, performance and independent review.
+
+**Prevent recurrence in CI:** The creative multi-page GitHub Actions suite
+must trigger on brand blueprint, client-facing integrity, premium quality
+and their regression tests, in addition to general build changes.
+It runs targeted static tests on each affected PR; the separate complete
+quality workflow remains the source of truth for the full browser suite.
+A green static build is still not evidence of an independently proven 9.5/10.

@@ -13,6 +13,12 @@ on:
       - "website-builder-agent/website-builder-agent/tests/test_site_bundle_integrity.py"
       - "website-builder-agent/website-builder-agent/utils/visual_originality.py"
       - "website-builder-agent/website-builder-agent/utils/universal_quality.py"
+      - "website-builder-agent/website-builder-agent/tests/test_client_facing_integrity.py"
+      - "website-builder-agent/website-builder-agent/tests/test_universal_quality.py"
+      - "website-builder-agent/website-builder-agent/tests/test_brand_design_blueprint.py"
+      - "website-builder-agent/website-builder-agent/utils/premium_quality_gate.py"
+      - "website-builder-agent/website-builder-agent/utils/client_facing_integrity.py"
+      - "website-builder-agent/website-builder-agent/utils/brand_design_blueprint.py"
       - "website-builder-agent/website-builder-agent/tests/test_creative_multipage_originality.py"
       - ".github/workflows/kaurivo-creative-multipage-qa.yml"
   push:
@@ -26,6 +32,12 @@ on:
       - "website-builder-agent/website-builder-agent/utils/production_readiness.py"
       - "website-builder-agent/website-builder-agent/tests/test_site_bundle_integrity.py"
       - "website-builder-agent/website-builder-agent/utils/visual_originality.py"
+      - "website-builder-agent/website-builder-agent/utils/brand_design_blueprint.py"
+      - "website-builder-agent/website-builder-agent/utils/client_facing_integrity.py"
+      - "website-builder-agent/website-builder-agent/utils/premium_quality_gate.py"
+      - "website-builder-agent/website-builder-agent/tests/test_brand_design_blueprint.py"
+      - "website-builder-agent/website-builder-agent/tests/test_universal_quality.py"
+      - "website-builder-agent/website-builder-agent/tests/test_client_facing_integrity.py"
       - ".github/workflows/kaurivo-creative-multipage-qa.yml"
 
 permissions:
@@ -46,8 +58,8 @@ jobs:
       - name: Install only free offline Python test dependencies
         run: python -m pip install -r requirements.txt
       - name: Compile changed pipeline modules
-        run: python -m py_compile agents/builder.py agents/research.py agents/qa.py utils/creative_directions.py utils/site_architecture.py utils/site_build_pipeline.py utils/site_integrity.py utils/publisher.py utils/production_readiness.py utils/visual_originality.py utils/universal_quality.py
+        run: python -m py_compile agents/builder.py agents/research.py agents/qa.py utils/creative_directions.py utils/site_architecture.py utils/site_build_pipeline.py utils/site_integrity.py utils/publisher.py utils/production_readiness.py utils/visual_originality.py utils/universal_quality.py utils/brand_design_blueprint.py utils/client_facing_integrity.py utils/premium_quality_gate.py
       - name: Three distinct creative concepts, real site routes, anti-AI-review and blind company tests
-        run: python -m unittest tests.test_creative_multipage_originality tests.test_site_bundle_integrity tests.test_blind_trials -v
+        run: python -m unittest tests.test_creative_multipage_originality tests.test_site_bundle_integrity tests.test_blind_trials tests.test_brand_design_blueprint tests.test_universal_quality -v
       - name: Existing content parity, source migration and visual media gates
         run: python -m unittest tests.test_source_fidelity tests.test_content_parity tests.test_visual_media_gate -v
