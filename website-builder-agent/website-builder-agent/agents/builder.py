@@ -44,6 +44,18 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+SOURCE-EXPERIENCE CONTINUITY (EVERY REDESIGN):
+The source_experience_plan must be supplemented by actual browser-observed
+original_experience_profile, not only static source HTML and screenshots with
+animations disabled. Preserve the visual role of real work photos, video,
+authentic galleries, meaningful 3-D/scroll effects and distinctive material
+backgrounds when observed. Do not flatten a richer current site into generic
+serif headlines, decorative letter watermarks, numbered cards or arrow CTAs.
+A largely static source does NOT need gratuitous 3-D or animation.
+If the original browser profile is incomplete, flag manual source observation.
+No generated illustration or unlicensed stock footage may masquerade as
+the company's original real media. Test responsive motion and reduced-motion.
+
 PERMANENT COMPANY-FIRST EDITORIAL AND VISUAL RULE (ALL BUSINESSES):
 Source text, URLs, prices, dates, research notes and photo origin are EVIDENCE,
 not text to publish as a research report. Compose the visitor-facing page as the
@@ -1540,6 +1552,9 @@ TOIMIALAN JA YRITYKSEN OMA SUUNNITTELUBRIEFI:
 
 KAIKKIEN ALKUPERÄISTEN SIVUJEN JA OSA-ALUEIDEN SÄILYTYSVAATIMUKSET:
 {json.dumps(source_manifest(research), ensure_ascii=False)}
+ALKUPERÄISEN SIVUN TODELLISET SELAIMELLA TARKASTETUT SIGNAALIT:
+{json.dumps(research.get("original_experience_profile") or {"status": "UNVERIFIED — inspect source before premium approval"}, ensure_ascii=False)}
+
 HYVÄKSYTTY TOTEUTUSSUUNNITELMA (älä korvaa oikeita sisältöjä vain linkillä vanhalle sivulle):
 {json.dumps(research.get("source_content_map") or {}, ensure_ascii=False)}
 Näytä oikeat asiakkaan tuotteet, hinnat ja palvelut uudella sivulla.
@@ -1887,6 +1902,9 @@ TOIMIALAN JA YRITYKSEN AIKAISEMMAT SISÄLTÖ- JA KUVATIEDOT:
 
 KAIKKIEN ALKUPERÄISTEN SIVUJEN JA OSA-ALUEIDEN SÄILYTYSVAATIMUKSET:
 {json.dumps(source_manifest(research), ensure_ascii=False)}
+ALKUPERÄISEN SIVUN TODELLISET SELAIMELLA TARKASTETUT SIGNAALIT:
+{json.dumps(research.get("original_experience_profile") or {"status": "UNVERIFIED — inspect source before premium approval"}, ensure_ascii=False)}
+
 HYVÄKSYTTY SÄILYTYSSUUNNITELMA:
 {json.dumps(research.get("source_content_map") or {}, ensure_ascii=False)}
 Kaikki alkuperäiset keskeiset tehtävät toteutetaan uudessa ympäristössä;
