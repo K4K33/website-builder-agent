@@ -138,18 +138,18 @@ img{display:block;max-width:100%}
 .lightbox__prev{left:24px}
 .lightbox__next{right:24px}
 .lightbox__caption{position:absolute;bottom:20px;left:30px;right:30px;text-align:center;font-size:13px;color:#f7d5dd}
-.contact-hero{display:grid;grid-template-columns:1.1fr .9fr;background:var(--petal);min-height:530px}
+.contact-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);background:var(--petal);min-height:530px}
 .contact-hero__copy{padding:100px 7vw 100px max(44px,calc((100vw - var(--max))/2 + 44px));display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
 .contact-hero h1{margin-bottom:23px}
 .contact-hero p{font-size:17px;line-height:1.7;max-width:450px;color:#615057}
-.contact-hero>img{width:100%;height:100%;object-fit:cover}
-.contact-info{display:grid;grid-template-columns:1.15fr 1fr;gap:110px;padding:95px 0 125px}
+.contact-hero>img{display:block;width:100%;max-width:100%;min-width:0;height:100%;object-fit:cover}
+.contact-info{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:110px;padding:95px 0 125px}
 .contact-info h2{font-size:clamp(36px,4.5vw,61px);line-height:1.08;letter-spacing:-.068em;margin:0 0 25px}
 .contact-info p{font-size:15px;line-height:1.8;color:#6f6065}
 .big-contact{display:block;font-size:clamp(24px,3vw,44px);font-weight:900;letter-spacing:-.045em;margin:22px 0;overflow-wrap:anywhere}
 .big-contact:hover{color:#ad4771}
 .address{font-size:20px;font-weight:800;line-height:1.65}
-.hours{width:100%;border-collapse:collapse;margin:28px 0 20px}
+.hours{width:100%;table-layout:fixed;border-collapse:collapse;margin:28px 0 20px}
 .hours th,.hours td{text-align:left;padding:18px 0;border-bottom:1px solid #e2cdd3;font-size:15px}
 .hours th{font-weight:700}
 .hours td{text-align:right;font-weight:800}
@@ -203,10 +203,10 @@ img{display:block;max-width:100%}
  .gallery-intro{padding:78px 0 55px}
  .gallery-intro__inner{grid-template-columns:1fr;gap:25px}
  .masonry{columns:3}
- .contact-hero{grid-template-columns:1fr}
+ .contact-hero{grid-template-columns:minmax(0,1fr)}
  .contact-hero__copy{padding:80px 28px}
  .contact-hero>img{height:350px}
- .contact-info{grid-template-columns:1fr;gap:55px;padding:70px 0 95px}
+ .contact-info{grid-template-columns:minmax(0,1fr);gap:55px;padding:70px 0 95px}
 }
 @media(max-width:540px){
  .hero h1{font-size:clamp(60px,15vw,84px)}
@@ -242,3 +242,7 @@ img{display:block;max-width:100%}
  html{scroll-behavior:auto}
  *,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
+
+/* Intrinsic media and long address/email text may not force narrow mobile grid tracks. */
+.contact-hero__copy,.contact-info>*{min-width:0}
+.hours th,.hours td{overflow-wrap:anywhere}
