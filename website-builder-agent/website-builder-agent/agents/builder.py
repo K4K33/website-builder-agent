@@ -1691,6 +1691,7 @@ def revise_site(
     validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
     creative = validate_creative_directions(research)
+    brand_blueprint = derive_brand_site_blueprint(research)
 
     company_facts = research.get(
         "company_facts",
