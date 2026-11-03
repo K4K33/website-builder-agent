@@ -1,5 +1,24 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## V3: source-bound trust claims and non-compensatory quality gate
+
+The current universal acceptance contract is
+**docs/KAURIVO_UNIVERSAL_QUALITY_CONTRACT_V3_2026-11-03.md**.
+It applies to **every industry and every route**, including future first-pass demos.
+A high overall score never compensates for fake ratings, missing original
+information, an invented logo, unlawful imagery, broken contact/booking flow,
+an unverified sponsor, bad readability or absent client approval.
+
+- [ ] Every original testimonial that is reused retains the actual **associated** source stars (including an unrated original remaining unrated).
+- [ ] Every **new** testimonial has a real evidence URL, reuse rights and current source/build-bound client approval; no synthetic customer quotes.
+- [ ] Every numerical Google-like/aggregate rating badge has verified source evidence and an approval for the exact current build.
+- [ ] Empty or JS-only review widgets are browser/human **REVIEW REQUIRED**, never automatically certified.
+- [ ] Source, rights, interaction and accessibility blockers are resolved before any customer-ready claim; do not use a 9.5/10 average to hide them.
+- [ ] All old-to-new source content, affiliates and logos are audited on subpages as seriously as on the homepage.
+- [ ] 320/390/768/1440 screenshots cover every route; two independent reviewer reports are tied to the exact build if claiming >=9.5 in each of ten dimensions.
+- [ ] All QA regressions apply across companies, with source-linked positive, negative and false-positive controls.
+
+
 ## Permanent cross-industry lessons from critical 2026-11-03 review
 See **docs/KAURIVO_GENUINE_10_10_WEBSITE_METHOD_2026-11-03.md** for complete
 operational stages, evidence boundaries, examples and acceptance matrix.
