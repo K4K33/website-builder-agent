@@ -12,7 +12,7 @@ class BrandExperienceV5PolicyTests(unittest.TestCase):
         self.assertEqual(prompt.count("V5: ALKUPERÄISEN BRÄNDIN TUNTU"), 2)
         self.assertIn("ALKUPERÄINEN KOKO SANATUNNUS", prompt)
         self.assertIn("320/390 px", prompt)
-        self.assertIn("kiv", (ROOT / "docs" / "KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md").read_text("utf-8"))
+        self.assertIn("full wordmark", (ROOT / "docs" / "KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md").read_text("utf-8"))
 
     def test_research_and_qa_compare_emotional_brand_not_merely_logo_file(self):
         research = (ROOT / "agents" / "research.py").read_text("utf-8")
