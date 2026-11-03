@@ -51,6 +51,13 @@ RESEARCH_NARRATION = (
         r"(?:taken|copied|transferred) from (?:the|their) original website|"
         r"\d+ (?:services|price rows) from (?:the|their) original website)\b", re.I
     ),
+    # On the company's OWN site, agent prose like 'according to the article
+    # published by the company' leaks the research process to customers.
+    # Legitimate third-party editorial references are not the target here.
+    re.compile(
+        r"\b[\wÅÄÖåäö-]+n\s+(?:julkaistun|julkaiseman)\s+"
+        r"(?:artikkelin|blogitekstin|kirjoituksen)\s+mukaan\b", re.I
+    ),
 )
 
 INTERNAL_ROLE = re.compile(

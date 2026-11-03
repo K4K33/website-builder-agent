@@ -1,3 +1,39 @@
+
+## 2026-11-04 — Etikki: first-pass technical pass but visual source regression
+
+Viewed the user-supplied 126-second desktop comparison of the original and
+new independent Etikki concept (not a rebrand approval). Source: branded
+yellow saw-like original icon and white wordmark, warm wood/grain surfaces,
+red calls to action, real workshop video, wood and upholstery photography,
+four authentic staff photos and named individual contacts. Proposed site:
+plain typography-only logo, beige/black and black/white palette, no original
+work video, no staff portraits, sparse text-heavy service landing page and
+plain uniform price lines. Some genuine product shots and the eleven original
+partner marks were retained, but content/visual parity is incomplete.
+Specific customer-facing leakage: 'Etikin julkaistun artikkelin mukaan...'.
+The demo's 28/28 Chromium browser run is accurate for its limited
+responsive/navigation checks, but it never established independent 9.5/10
+brand or aesthetic quality. A 5.8/10 qualitative estimate was given as
+a subjective critique, not a measured metric.
+
+Generalized failure classes and preventive rule:
+1. Brand/asset preservation must cover original visual LOGO, not merely name.
+2. Source video, staff portraits, textures and personality are first-class
+   content assets; removing them needs signed owner approval or explicit
+   source-bound replacement planning.
+3. Rich source service pages must not become enormous empty editorial
+   text blocks; show authentic work where it supports visitor tasks.
+4. Source research narration in client copy is a hard copy-QA failure.
+5. A meaningful old-to-new reviewer matrix must be required before reporting
+   a concept as close to 10/10. Existing internal test success is not design proof.
+6. Future concepts must not repeat another company's beige/black editorial
+   aesthetic absent source-grounded rationale.
+
+The accompanying audit code gains a narrow cross-company guard for
+'company's published article says...' provenance wording. The actual
+Etikki demo has not been revised by this learning-log change, and
+client permission to use original assets has not been obtained.
+
 # Kaurivo — continuous customer and independent review learning log
 
 ## 2026-11-03 — Munkkiniemen Suutari / Roots LTD: rejected source-experience regression

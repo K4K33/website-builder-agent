@@ -34,6 +34,7 @@ class ClientFacingIntegrityTests(unittest.TestCase):
             "Sivulla on päiväämätön lomailmoitus.",
             "Prices taken from the original website.",
             "As described in our source inventory.",
+            "Verstaan julkaistun artikkelin mukaan käytämme mittakuvia.",
         ]
         for sentence in sentences:
             with self.subTest(sentence=sentence):

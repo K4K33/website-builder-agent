@@ -569,3 +569,43 @@ just the Kaurivo brand site. It comes from direct visual feedback on V1/V2/V3.
   that no layout overflow means the user will like the art direction.
 - Motion-heavy visuals are a craft demonstration, not an excuse to
   compromise readability, conversion flows, accessibility or performance.
+
+
+## 2026-11-04 — Mandatory dual-source visual continuity after Etikki recording
+A 126-second source/new recording independently reviewed after a 28/28 browser PASS
+revealed a major false positive: the new site was responsive, but the original
+saw/woodcraft Etikki mark, warm timber background treatments, prominent red CTA,
+workshop video, four real team portraits and some original gallery depth were
+missing. The replacement looked like a generic monochrome editorial furniture
+template. The text 'Etikin julkaistun artikkelin mukaan' also leaked research
+provenance into customer-facing service copy. An absence of horizontal overflow
+and a matching wordmark string are NOT evidence of identity or content fidelity.
+
+**Before building, inventory the original's visual signatures with actual
+screenshot/video evidence:** original combined mark (icon AND wordmark),
+dominant image/video, color and material character, original CTA style,
+face/employee photography, source gallery depth, branded texture, motion,
+trust signals and customer voice. Preserve effective source features or
+obtain an explicit source- and exact-build-bound owner-approved replacement.
+Do not automatically force grayscale, modern beige, editorial typography,
+static image replacement for a real workshop video, or text-only 'team' cards.
+If media rights are unknown, visually plan for the original assets and mark
+the preview REVIEW REQUIRED; do not pass it as finished or silently delete them.
+
+**Cross-route acceptance (ALL industries):** compare old/new at 320, 390, 768,
+1440 px and inspect the actual first screen, not only valid CSS; on each route
+require an original-to-new media/component checklist covering graphics, video,
+textures, employee portraits, partner marks and complete galleries. A missing
+source-signature asset fails brand/content review regardless of excellent
+navigation responsiveness or a high internal design impression. A video may
+move to a relevant project page, but cannot vanish without an evidenced plan.
+Check that photography remains sensibly placed and original partner marks
+aren't reduced into illegible tiles. Copy must be customer-oriented: phrases
+like 'company's published article says...' or 'image from the old site' are
+internal research notes, never client marketing copy.
+
+**Do not equate CI success with an aesthetic rating.** CI checks technical
+contract only. Premium-release approval still requires an independently
+recorded source/new visual review and customer-cleared brand/media rights.
+A first-pass concept that looks like another unrelated Kaurivo client has
+not met the brand-individuality requirement.
