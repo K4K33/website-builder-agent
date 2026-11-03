@@ -17,6 +17,7 @@ from utils.brand_lock import audit_brand_lock
 from utils.brand_experience import audit_brand_experience
 from utils.source_experience import audit_source_experience_parity
 from utils.source_experience_gate import audit_experience_continuity
+from utils.source_signature_lock import audit_source_signature_lock
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -173,6 +174,15 @@ def audit_universal_standards(
               "Compare the actual original/new 320px and 390px first screens; "
               "confirm industry-relevant photos appear at the right time. "
               "Some sectors legitimately need a text-first layout.")
+
+    # A source photograph is not interchangeable with a generic image count.
+    # Enforce original logo artwork, staff portraits, full work galleries and
+    # videos BEFORE considering the site technically accepted.
+    signature = audit_source_signature_lock(pages, research)
+    for item in signature["blocking"]:
+        fail("original_visual_assets", str(item))
+    for item in signature["pending"]:
+        needs("original_visual_assets", str(item))
 
     source_experience = audit_source_experience_parity(pages, research)
     for issue in source_experience["blocking"]:
