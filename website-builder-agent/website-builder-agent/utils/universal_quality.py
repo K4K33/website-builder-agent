@@ -16,6 +16,7 @@ from utils.brand_design_blueprint import audit_sitewide_brand_consistency
 from utils.brand_lock import audit_brand_lock
 from utils.brand_experience import audit_brand_experience
 from utils.source_experience import audit_source_experience_parity
+from utils.source_experience_gate import audit_experience_continuity
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -32,6 +33,7 @@ UNIVERSAL_STANDARDS = (
     ("unique_art_direction", "Distinctive brand-specific visual composition", "visual"),
     ("original_brand", "Original client logo and approved brand preserved", "brand"),
     ("source_experience_parity", "Original video, galleries, texture, motion and media depth", "visual"),
+    ("source_browser_experience_continuity", "Live browser inventory of original video, 3-D, animation, photography and texture", "visual"),
     ("sponsor_and_partner_marks", "Original relevant footer partner marks and links", "brand"),
     ("content_parity", "Current services, pricing, FAQ, contacts, hours and dynamic content", "content"),
     ("natural_copy", "Natural and non-repetitive language without source narration", "content"),
@@ -177,6 +179,17 @@ def audit_universal_standards(
         fail("source_experience_parity", issue)
     for issue in source_experience["pending"]:
         needs("source_experience_parity", issue)
+
+    # Complement source-HTML parity with actual original browser observations.
+    # Inconclusive captures remain pending, never treated as no motion.
+    browser_experience = audit_experience_continuity(
+        rendered_pages if isinstance(rendered_pages, dict) and rendered_pages
+        else {"index.html": html}, research,
+    )
+    for issue in browser_experience["blocking"]:
+        fail("source_browser_experience_continuity", issue)
+    for issue in browser_experience["pending"]:
+        needs("source_browser_experience_continuity", issue)
 
     sector_presence = audit_sector_presence(pages, research)
     for item in sector_presence['blocking']:
@@ -424,6 +437,7 @@ def audit_universal_standards(
         "brand_identity_lock": identity_lock,
         "brand_experience": brand_experience,
         "sector_presence": sector_presence,
+        "source_browser_experience": browser_experience,
         "premium_evidence": {
             "coverage": coverage,
             "independent_review": independently_reviewed,
