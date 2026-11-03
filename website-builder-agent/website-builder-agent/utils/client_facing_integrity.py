@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
+import hashlib
+import json
 
 from bs4 import BeautifulSoup
 
@@ -220,3 +222,34 @@ def audit_client_facing_integrity(
         "pages_checked": inspected, "generic_headings": generic,
         "note": "Static precision checks plus explicit human review; no invented visual score.",
     }
+
+
+def audit_layout_review_flags(
+    flags: list[dict], rendered_pages: dict[str, str], research: dict
+) -> dict:
+    """A layout warning is provisional until another person reviews the screenshot.
+
+    A partial signoff, absent image, stale build or AI self-approval fails.
+    The review does NOT pretend the pixel imbalance is automatically ugly.
+    """
+    flags = [dict(flag) for flag in (flags or []) if isinstance(flag, dict)]
+    if not flags:
+        return {"pass": True, "issues": [], "flags": []}
+    review = research.get("layout_composition_review") or {}
+    normalized_flags = json.dumps(flags, ensure_ascii=False, sort_keys=True)
+    flags_hash = hashlib.sha256(normalized_flags.encode("utf-8")).hexdigest()
+    issues = []
+    if review.get("reviewer_kind") not in ("human", "independent_human"):
+        issues.append("A real independent visual reviewer must inspect large asymmetric columns.")
+    if review.get("reviewer_id") in ("builder", "generator", None, ""):
+        issues.append("Missing distinct visual reviewer identity.")
+    if review.get("approved") is not True or not review.get("checked_at"):
+        issues.append("Whitespace/composition findings have not been approved.")
+    if review.get("build_sha256") != site_digest(rendered_pages):
+        issues.append("Composition review applies to a different build.")
+    if review.get("flags_sha256") != flags_hash:
+        issues.append("Composition review does not cover all measured gaps.")
+    if not review.get("screenshot_evidence"):
+        issues.append("Full-page screenshot evidence missing.")
+    return {"pass": not issues, "issues": issues,
+            "flags": flags, "flags_sha256": flags_hash}
