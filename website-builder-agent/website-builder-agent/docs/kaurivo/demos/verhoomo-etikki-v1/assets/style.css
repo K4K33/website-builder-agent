@@ -45,3 +45,6 @@ img{display:block;max-width:100%}a{color:inherit}button,input{font:inherit}a:foc
 .real-gallery{margin-bottom:68px}.craft-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:13px}.craft-grid figure{margin:0;position:relative;min-width:0;background:#e3dfd6;overflow:hidden}.craft-grid img{width:100%;height:290px;object-fit:cover;image-rendering:auto;transition:transform .5s}.craft-grid figure:hover img{transform:scale(1.04)}.craft-grid figcaption{font-size:12px;padding:12px 11px 14px;background:#f4f0e9;line-height:1.35}.real-gallery .section-head p{max-width:360px}
 @media(max-width:740px){.craft-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.craft-grid img{height:185px}.craft-grid figcaption{min-height:54px;font-size:11px}.real-gallery{margin-bottom:50px}}
 @media(max-width:350px){.craft-grid img{height:155px}}
+
+/* Protect Finnish compound words and price-table labels at 320px. */
+.page-head h1,.page-head .lead,.price-row h2,.price-row p{overflow-wrap:anywhere}
