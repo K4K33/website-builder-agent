@@ -1,0 +1,64 @@
+name: Kotifixi V17 editable owner-test live smoke
+on:
+  workflow_run:
+    workflows: ["Deploy static content to Pages"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: kotifixi-v17-live-smoke
+  cancel-in-progress: true
+jobs:
+  live-check:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify real owner-editable V17 preview and deny unauthorized writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v17/"
+          for item in \
+            '|data-edit-field="hero_heading"' \
+            'palvelut/|Kotifixin palvelut' \
+            'hinnasto/|data-edit-field="lawn_price"' \
+            'meista/|Fixin tapa toimia' \
+            'yhteys/|id="contact-form"' \
+            'assets/cms-live.js|kaurivo-kotifixi-v17-edit-pilot' \
+            'assets/v16.css|.campaign-feature' \
+            'muokkaa/|id="edit-form"' \
+            'muokkaa/editor.js|version_conflict' \
+            'muokkaa/editor.css|.layout'; do
+            IFS='|' read -r suffix marker <<< "$item"
+            okay="false"
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl -sSL --max-time 14 -o /tmp/kotifixi-v17-check -w '%{http_code}' "$base$suffix" || true)
+              if [[ "$code" = "200" ]] && grep -Fq -- "$marker" /tmp/kotifixi-v17-check; then
+                okay="true"; break
+              fi
+              sleep 7
+            done
+            if [[ "$okay" != "true" ]]; then
+              echo "::error::Missing V17 published file or stale content: $base$suffix"
+              exit 1
+            fi
+            echo "OK: $suffix"
+          done
+          endpoint="https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-kotifixi-v17-edit-pilot"
+          code=$(curl -sSL --max-time 20 -o /tmp/kotifixi-v17-api -w '%{http_code}' "$endpoint?action=public")
+          if [[ "$code" != "200" ]] || ! grep -Fq '"ok":true' /tmp/kotifixi-v17-api \
+            || ! grep -Fq '"hero_heading"' /tmp/kotifixi-v17-api; then
+            echo "::error::Edge content endpoint failed public read (HTTP $code)"
+            exit 1
+          fi
+          code=$(curl -sSL --max-time 20 -o /tmp/kotifixi-v17-deny -w '%{http_code}' \
+            -X POST "$endpoint" -H "Origin: https://k4k33.github.io" \
+            -H "Content-Type: application/json" \
+            --data '{"action":"save","token":"bad","expected_version":1,"content":{}}')
+          if [[ "$code" != "403" ]] || ! grep -Fq 'invalid_or_expired_test_link' /tmp/kotifixi-v17-deny; then
+            echo "::error::Unauthorized editing was not correctly denied (HTTP $code)"
+            exit 1
+          fi
+          echo "V17 pages, editor, public content and denied writes verified." >> "$GITHUB_STEP_SUMMARY"
