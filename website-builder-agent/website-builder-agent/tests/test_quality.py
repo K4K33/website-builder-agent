@@ -194,6 +194,7 @@ class QualityTests(unittest.TestCase):
         item['design_checks'].pop()
         self.assertFalse(qa.review_passes(item, decisions=fixture['design_decisions']))
 
+    @patch.dict(os.environ, {"AI_BACKEND": "openrouter", "FREE_ONLY": "0"})
     def test_reference_selection_rejects_gallery_and_fabricated_evidence(self):
         candidates = [{'url':'https://reference-'+x+'.fi'} for x in 'abcd']
         selected = [{'url':item['url'],'same_industry':True,'reason':'operator','evidence_quote':'Bus services'} for item in candidates]
@@ -319,6 +320,7 @@ class QualityTests(unittest.TestCase):
             item = review(); item['visual_review']['mobile'] = value
             self.assertFalse(qa.review_passes(item))
 
+    @patch.dict(os.environ, {"AI_BACKEND": "openrouter", "FREE_ONLY": "0"})
     def test_model_requires_explicit_quality_selection(self):
         with patch.dict(os.environ, {'BUILDER_MODEL':'','QA_MODEL':''}), patch.object(config,'OPENROUTER_MODEL','openrouter/free'):
             with self.assertRaises(RuntimeError): config.model_for_stage('builder')
@@ -326,6 +328,7 @@ class QualityTests(unittest.TestCase):
         with patch.dict(os.environ, {'BUILDER_MODEL':'provider/test-model'}):
             self.assertEqual(config.model_for_stage('builder'), 'provider/test-model')
 
+    @patch.dict(os.environ, {"AI_BACKEND": "openrouter", "FREE_ONLY": "0"})
     def test_truncated_nonempty_response_not_accepted(self):
         response = Mock(status_code=200)
         response.json.return_value = {'choices':[{'message':{'content':'<html>partial'},'finish_reason':'length'}]}
@@ -374,6 +377,7 @@ class QualityTests(unittest.TestCase):
                                     'qa':{'overall_pass':True,'build_version':1}})
         with self.assertRaises(RuntimeError): qa.approve_company('testi')
 
+    @patch.dict(os.environ, {"AI_BACKEND": "openrouter", "FREE_ONLY": "0"})
     def test_design_pass_cannot_modify_company_facts(self):
         state.upsert_company('testi', {'name':'Testi','url':'https://testi.fi'})
         extracted = {'company_facts':{'name':'Testi','industry':'transport','services':['Oikea palvelu']}}
