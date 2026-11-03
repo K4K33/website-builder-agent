@@ -191,7 +191,10 @@ def _openrouter_safe_limit() -> int:
 
 def config_free_openrouter() -> bool:
     import config
-    return config.free_only()
+    return config.free_only() and any(
+        config.backend_for_stage(stage) == "openrouter"
+        for stage in (None, "research", "builder", "qa")
+    )
 
 
 def _tavily_safe_limit() -> int:
