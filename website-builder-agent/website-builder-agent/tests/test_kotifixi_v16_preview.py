@@ -66,7 +66,7 @@ class VersionedPreviewTests(unittest.TestCase):
         self.assertTrue(about.select_one(".about-photo img").get("srcset"))
         self.assertTrue(about.select_one(".about-photo img").get("sizes"))
         css = (SITE / "assets/style.css").read_text(encoding="utf-8")
-        self.assertIn("/* V16 final editorial finish", css)
+        self.assertIn("/* KOTIFIXI V16", css)
         self.assertIn("scale(1.025)", css)
         self.assertIn(".editorial-card-content p{", css)
         self.assertIn("font-size:15px;line-height:1.67", css)
