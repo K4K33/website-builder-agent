@@ -12,6 +12,7 @@ ROOT=Path(__file__).resolve().parents[1]
 # Executed as python scripts/..., so explicitly make the project package root importable.
 sys.path.insert(0, str(ROOT))
 from utils.universal_quality import audit_universal_standards
+from utils.visual_originality import audit_design_originality
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
 
@@ -123,6 +124,12 @@ def main():
             print("BLOCK",slug,"source_evidence",str(exc))
             failed=True
             continue
+        originality=audit_design_originality(
+            pages["index.html"], site_slug=slug, reference_demos=DEMOS)
+        if originality["blocking_problems"]:
+            failed=True
+            for issue in originality["blocking_problems"]:
+                print("BLOCK",slug,"reused_template_or_copy",issue[:550])
         problems=result.get("blocking_problems") or {}
         if problems:
             failed=True
