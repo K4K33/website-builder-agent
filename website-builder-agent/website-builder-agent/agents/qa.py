@@ -25,6 +25,7 @@ from bs4 import BeautifulSoup
 
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
+from utils.visual_comparison import build_visual_comparison
 from utils.visual_media_gate import audit_visual_media
 from utils.site_architecture import (
     validate_site_architecture, validate_site_navigation, pages_for_validation
@@ -1240,6 +1241,8 @@ def run_qa(slug_or_name: str) -> dict:
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
     benchmark_urls, decisions = [], []
+    visual_comparison = {"status": "not_run", "pairs": {}, "repair_hints": [],
+                         "missing": [], "render_errors": []}
     if (automated["automated_pass"] and not parity_hard_missing
             and universal["automated_pass"] and visual_media["owner_preview_ready"]
             and originality["pass"]):
@@ -1258,7 +1261,14 @@ def run_qa(slug_or_name: str) -> dict:
             for route, result in page_browsers.items()
             for finding in result.get("visual_review_flags") or []
         ]
-        if browser["pass"]:
+        # Generate paired source-versus-redesign evidence before any paid AI
+        # review. Original screenshot failures cannot certify brand fidelity.
+        visual_comparison = build_visual_comparison(
+            research.get("original_screenshots"), page_browsers["index.html"],
+            rendered_pages, research, report_dir=site_root/"qa"/"visual",
+        )
+        browser["visual_comparison"] = visual_comparison
+        if browser["pass"] and visual_comparison["status"] != "review_required":
             research = company.get("research") or {}
             try:
                 benchmark = validate_benchmark(research, company.get("url", ""))
@@ -1268,11 +1278,11 @@ def run_qa(slug_or_name: str) -> dict:
                 _validate_plan_sections(html, research, company.get("url", ""),
                                         rendered_pages=rendered_pages)
                 benchmark_images, image_labels = reference_image_inputs(benchmark)
-                original_images = [
-                    research.get("original_screenshots", {}).get(view)
-                    for view in ("desktop", "mobile")
-                    if isinstance(research.get("original_screenshots", {}).get(view), str)
-                    and os.path.isfile(research["original_screenshots"][view])
+                paired_images = [
+                    visual_comparison["pairs"][key]["comparison_image"]
+                    for key in ("small_mobile", "mobile", "desktop")
+                    if key in visual_comparison["pairs"]
+                    and visual_comparison["pairs"][key].get("comparison_image")
                 ]
                 other_page_shots=[
                     p for route,report in page_browsers.items()
@@ -1288,9 +1298,19 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(research.get("design_recommendations", {}), ensure_ascii=False)
                     + "\nINDUSTRY REFERENCES (not company facts; their images follow generated views):\n"
                     + json.dumps(benchmark, ensure_ascii=False)
-                    + "\nIMAGE ORDER: first four new-page screenshots; then ORIGINAL company-site "
-                    "desktop/mobile (when available); THEN sector benchmarks. Compare real client "
-                    "brand colors, identity, photo usage and text readability.\n"
+                    + "\nIMAGE ORDER: FIRST real source (LEFT) vs generated (RIGHT) "
+                    "first-fold screenshot pairs for 320px, 390px, 1440px; THEN "
+                    "new-page full screenshots, subpages and benchmarks. Compare "
+                    "literal typography, brand mood and original business photos. "
+                    "A matching icon filename is NOT complete brand fidelity.\n"
+                    + "\nSIDE-BY-SIDE BROWSER EVIDENCE / REPAIR CANDIDATES:\n"
+                    + json.dumps({
+                        "status": visual_comparison["status"],
+                        "missing": visual_comparison["missing"],
+                        "repair_hints": visual_comparison["repair_hints"],
+                        "source_sha256": visual_comparison.get("source_sha256"),
+                        "build_sha256": visual_comparison.get("build_sha256"),
+                    }, ensure_ascii=False) + "\n"
                     + "\nREFERENCE IMAGE ORDER (after the original site):\n"
                     + json.dumps(image_labels, ensure_ascii=False)
                     + "\nREQUIRED DESIGN DECISIONS (check each with visible evidence):\n"
@@ -1318,8 +1338,8 @@ def run_qa(slug_or_name: str) -> dict:
                     + "\n".join(route+": "+_build_ai_snapshot(body)
                                 for route,body in rendered_pages.items()),
                     max_tokens=5000, stage="qa",
-                    image_paths=list(browser["screenshots"].values()) + other_page_shots
-                                + original_images + benchmark_images,
+                    image_paths=paired_images + list(browser["screenshots"].values()) + other_page_shots
+                                + benchmark_images,
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
@@ -1331,7 +1351,8 @@ def run_qa(slug_or_name: str) -> dict:
         "automated": automated, "visual_media": visual_media,
         "originality": originality, "site_navigation": nav,
         "site_pages":list(rendered_pages),
-        "browser": browser, "content_review": review,
+        "browser": browser, "visual_comparison": visual_comparison,
+        "content_review": review,
         "content_parity": parity,
         "source_fidelity": source_fidelity,
         "universal_quality": universal,
@@ -1345,6 +1366,8 @@ def run_qa(slug_or_name: str) -> dict:
                          and not pending_general_rules
                          and automated["automated_pass"]
                          and visual_media["owner_preview_ready"] and browser["pass"]
+                         and visual_comparison["status"] not in
+                             ("review_required", "repair_suggested", "not_run")
                          and layout_review["pass"]
                          and review_passes(review, benchmark_urls, decisions)
                          and owner_preview_visual_passes(review)
@@ -1366,6 +1389,10 @@ def run_qa(slug_or_name: str) -> dict:
               + list(source_fidelity["pending"])
               + [m for values in universal["blocking_problems"].values() for m in values]
               + list(browser.get("issues") or [])
+              + list(visual_comparison.get("missing") or [])
+              + list(visual_comparison.get("render_errors") or [])
+              + [str(x.get("kind"))+": "+str(x.get("suggestion"))
+                 for x in visual_comparison.get("repair_hints") or []]
               + list(layout_review.get("issues") or []))
     record_qa_findings(ledger, slug, [str(x) for x in issues])
     save_ledger(ledger_file, ledger)
