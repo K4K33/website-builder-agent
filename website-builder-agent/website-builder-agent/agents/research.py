@@ -349,8 +349,11 @@ def _search_tavily(
     max_results: int = 5,
 ) -> list[dict]:
 
-    if config.free_only():
-        raise RuntimeError("FREE_ONLY blocks Tavily; use cached public OSM operator sources.")
+    if config.free_only() and not config.tavily_free_plan_confirmed():
+        raise RuntimeError(
+            "FREE_ONLY permits Tavily basic search only after "
+            "TAVILY_FREE_PLAN_CONFIRMED=1 for a verified no-billing free account."
+        )
     api_key = _get_tavily_key()
 
     print(
@@ -465,11 +468,40 @@ def _search_tavily(
 
 
 def _search_industry_references(industry: str, target_url: str, search_query: str) -> list[dict]:
-    """Use only free public OSM candidates when FREE_ONLY=1."""
+    """Use no-cost public OSM first; confirmed basic Tavily free tier for gaps.
+
+    Never silently upgrade advanced searches or buy additional credits.
+    A Tavily/API outage or exhausted free budget retains prior real sources.
+    """
     if config.free_only():
-        return discover_free_references(
-            industry, target_url=target_url, max_results=20,
-        )
+        references = []
+        try:
+            references = discover_free_references(
+                industry, target_url=target_url, max_results=20,
+            )
+        except RuntimeError as error:
+            print("[Research] Free OSM/verified sector pool insufficient: " + str(error)[:160])
+        # The free-tier allowance is valuable for unusual sectors and
+        # inaccessible/uncertain operator listings, rather than paying to
+        # rediscover already validated industry sources.
+        if (len(references) < 8 and config.tavily_free_plan_confirmed()
+                and os.getenv("TAVILY_API_KEY")):
+            try:
+                additional = _search_tavily(search_query, max_results=8)
+                seen = {canonical_url(item.get("url")) for item in references}
+                for item in additional:
+                    canonical = canonical_url(item.get("url"))
+                    if canonical and canonical not in seen:
+                        seen.add(canonical)
+                        references.append(item)
+            except RuntimeError as error:
+                print("[Research] Free Tavily allowance unavailable: " + str(error)[:160])
+        if len(references) < 3:
+            raise RuntimeError(
+                "Not enough real operator candidates from free sources. "
+                "No paid search fallback or fabricated competitor sites."
+            )
+        return references
     references = _search_tavily(search_query, max_results=5)
     references += _search_tavily(
         f"{industry} yritys palvelut yhteystiedot", max_results=5,
