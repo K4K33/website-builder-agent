@@ -85,6 +85,32 @@ def _candidates(records: list, *, target_url: str = "", limit: int = 30) -> list
     return chosen
 
 
+def historical_verified_references(category: str) -> list[dict]:
+    """Reuse actual source-verified benchmark operators for rare industries."""
+    from utils.state import load_companies
+    pool = []
+    for company in (load_companies() or {}).values():
+        if not isinstance(company, dict):
+            continue
+        research = company.get("research") or {}
+        facts = research.get("company_facts") or {}
+        raw = " ".join(str(facts.get("industry") or "").casefold().split())
+        current_category = normalize_industry(raw) or raw
+        if current_category != category:
+            continue
+        for row in research.get("design_benchmark") or []:
+            if not isinstance(row, dict):
+                continue
+            match = row.get("industry_match") or {}
+            quote, text = str(match.get("evidence_quote") or ""), str(row.get("site_text") or "")
+            if match.get("same_industry") is True and quote.strip() and quote in text and row.get("url"):
+                pool.append({
+                    "url": row["url"], "title": row.get("title") or "",
+                    "content": text[:1500],
+                })
+    return pool
+
+
 def discover_free_references(
     industry: str, *,
     target_url: str = "",
@@ -92,6 +118,7 @@ def discover_free_references(
     regions: tuple[str, ...] = DEFAULT_REGIONS,
     max_results: int = 10,
     fetch_osm=None,
+    historic_lookup=None,
     now: datetime | None = None,
 ) -> list[dict]:
     """Reuse an existing industry pool before a couple of fair-use OSM lookups.
@@ -100,11 +127,11 @@ def discover_free_references(
     source quote and business category before selecting its three references.
     """
     category = normalize_industry(industry)
+    mapped_to_osm = bool(category)
+    category = category or " ".join(str(industry or "").casefold().split())
     if not category:
-        raise RuntimeError(
-            "No trustworthy free OSM mapping for this industry: " + str(industry)
-            + ". Provide verified same-sector reference URLs or add a supported tag mapping."
-        )
+        raise RuntimeError("Industry required for free reference research.")
+    historic_lookup = historic_lookup or historical_verified_references
     if not 3 <= max_results <= 50:
         raise ValueError("max_results must be 3..50")
     now = now or datetime.now(timezone.utc)
@@ -120,6 +147,8 @@ def discover_free_references(
     current = stored.get(category) or {}
     observed_at = _timestamp(current.get("updated_at") or "") if isinstance(current, dict) else None
     saved = (current.get("results") or []) if isinstance(current, dict) else []
+    saved = _candidates(list(saved) + list(historic_lookup(category) or []),
+                        target_url=target_url, limit=50)
     if observed_at and timedelta(0) <= now - observed_at <= timedelta(days=CACHE_DAYS):
         results = _candidates(saved, target_url=target_url, limit=max_results)
         # A validated pool of 3+ possible operator URLs can be reused across
@@ -134,14 +163,19 @@ def discover_free_references(
                 "public OSM search; no repeated immediate requests."
             )
 
-    if fetch_osm is None:
-        # Local import to avoid circular references and extra dependencies.
+    if not mapped_to_osm and len(saved) < 3:
+        raise RuntimeError(
+            "No trustworthy free OSM mapping or three prior source-verified "
+            "references for industry: " + str(industry)
+        )
+    if fetch_osm is None and mapped_to_osm:
         from agents.scout import _fetch_osm_companies
         fetch_osm = _fetch_osm_companies
 
-    gathered = list(saved) if observed_at and now - observed_at <= timedelta(days=CACHE_DAYS) else []
-    # At most two public region lookups per cache refresh. No unlimited loop.
-    for region in regions[:MAX_PUBLIC_REGIONS_PER_LOOKUP]:
+    gathered = list(saved)
+    # At most two public region lookups, none for sectors satisfied by
+    # previously verified operators. Do not flood public Overpass instances.
+    for region in (regions[:MAX_PUBLIC_REGIONS_PER_LOOKUP] if mapped_to_osm else ()):
         if len(_candidates(gathered, target_url=target_url, limit=50)) >= max_results:
             break
         try:
@@ -159,7 +193,7 @@ def discover_free_references(
     saved_current = dict(stored)
     saved_current[category] = {
         "updated_at": now.isoformat(),
-        "source": "openstreetmap_overpass_public",
+        "source": "openstreetmap_overpass_and_prior_verified_benchmarks",
         "results": results,
     }
     path.write_text(json.dumps(saved_current, ensure_ascii=False, indent=2),
