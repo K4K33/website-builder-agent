@@ -74,6 +74,8 @@ def _empty_state() -> dict:
         "providers": {
             "openrouter": {
                 "used_today": 0,
+                "minute_key": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M"),
+                "used_this_minute": 0,
             },
             "tavily": {
                 "used_this_month": 0,
@@ -134,6 +136,14 @@ def _load_state() -> dict:
             "used_this_month"
         ] = 0
 
+    # Public free-model API: up to 20 requests/minute; reserve at most 18.
+    # Fail closed to local model instead of burning failed 429 requests.
+    current_minute = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")
+    if state["providers"]["openrouter"].get("minute_key") != current_minute:
+        state["providers"]["openrouter"]["minute_key"] = current_minute
+        state["providers"]["openrouter"]["used_this_minute"] = 0
+    state["providers"]["openrouter"].setdefault("used_this_minute", 0)
+
     state["providers"]["openrouter"].setdefault(
         "used_today",
         0,
@@ -179,12 +189,22 @@ def _openrouter_safe_limit() -> int:
     )
 
 
-def _tavily_safe_limit() -> int:
-    return max(
-        0,
-        TAVILY_MONTHLY_LIMIT
-        - TAVILY_SAFETY_MARGIN,
+def config_free_openrouter() -> bool:
+    import config
+    return config.free_only() and any(
+        config.backend_for_stage(stage) == "openrouter"
+        for stage in (None, "research", "builder", "qa")
     )
+
+
+def _tavily_safe_limit() -> int:
+    import config
+    ordinary_limit = max(0, TAVILY_MONTHLY_LIMIT - TAVILY_SAFETY_MARGIN)
+    # One user can use the same Tavily account elsewhere. Leave a hard
+    # 250-credit reserve below the advertised free 1,000-credit allowance.
+    # Local counters are not shared across machines: for full no-charge
+    # assurance use an account WITHOUT pay-as-you-go or a card.
+    return min(ordinary_limit, 750) if config.free_only() else ordinary_limit
 
 
 def _days_in_month() -> int:
@@ -374,6 +394,14 @@ def reserve(provider: str) -> bool:
             )
 
             return False
+
+        if config_free_openrouter():
+            minute_used = int(state["providers"]["openrouter"].get(
+                "used_this_minute", 0))
+            if minute_used >= 18:
+                print("[RESOURCE] OpenRouter free minute cap (18/20) -> local fallback.")
+                return False
+            state["providers"]["openrouter"]["used_this_minute"] = minute_used + 1
 
         state["providers"]["openrouter"][
             "used_today"

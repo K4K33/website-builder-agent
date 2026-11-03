@@ -140,6 +140,35 @@ def _extract_content(data: dict) -> str:
     return ""
 
 
+def _local_free_quota_fallback(
+    system: str, user_prompt: str, *, stage: str | None,
+    max_tokens: int, image_paths: list[str] | None,
+    json_mode: bool,
+) -> str:
+    """Use installed local model when OpenRouter's free allowance ends.
+
+    No cloud paid escalation or unlimited retries. Missing local inference
+    fails closed rather than pretending visual QA was independently checked.
+    """
+    if not config.free_only() or os.getenv("FREE_CLOUD_LOCAL_FALLBACK", "1") != "1":
+        raise RuntimeError("Free OpenRouter allowance exhausted; no paid fallback.")
+    name = (os.getenv(f"OLLAMA_{stage.upper()}_MODEL", "").strip()
+            if stage else "")
+    name = name or os.getenv("OLLAMA_MODEL", "").strip()
+    if not name or name.lower().endswith(":cloud"):
+        raise RuntimeError(
+            "Free OpenRouter allowance exhausted and no installed local "
+            "fallback model configured; no paid fallback."
+        )
+    from utils.local_ai import chat_local
+    return chat_local(
+        system, user_prompt, model=name,
+        max_tokens=min(max_tokens, config.AI_MAX_OUTPUT_TOKENS),
+        image_paths=image_paths, json_mode=json_mode,
+        timeout=int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "600")),
+    )
+
+
 def ask_claude(
     system: str,
     user_prompt: str,
@@ -155,7 +184,7 @@ def ask_claude(
     if max_retries < 1 or max_tokens < 1:
         raise ValueError("max_retries and max_tokens must be positive")
 
-    if config.ai_backend() == "ollama":
+    if config.backend_for_stage(stage) == "ollama":
         from utils.local_ai import chat_local
         # No OpenRouter headers, credits, reservations, or cloud fallback.
         return chat_local(
@@ -164,6 +193,10 @@ def ask_claude(
             timeout=int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "600")),
         )
 
+    # Validate again at the final paid-provider boundary. An unrelated
+    # funded API key must never make a non-free model billable in FREE_ONLY.
+    if config.free_only() and not config.is_zero_cost_openrouter_model(model):
+        raise RuntimeError("FREE_ONLY blocks paid model before any OpenRouter API request.")
     headers = _get_headers()
     user_content = _build_user_content(
         user_prompt,
@@ -208,11 +241,12 @@ def ask_claude(
         payload["max_tokens"] = current_max_tokens
 
         if not resource_manager.reserve("openrouter"):
-            raise RuntimeError(
-                "OpenRouter-kutsu estettiin Resource "
-                "Managerin toimesta. Kuukausiresurssia "
-                "ei ole turvallisesti käytettävissä."
-            )
+            if config.free_only():
+                return _local_free_quota_fallback(
+                    system, user_prompt, stage=stage, max_tokens=max_tokens,
+                    image_paths=image_paths, json_mode=json_mode,
+                )
+            raise RuntimeError("OpenRouter request blocked by daily resource limit.")
 
         try:
             response = requests.post(
@@ -223,6 +257,11 @@ def ask_claude(
             )
 
             if response.status_code == 429:
+                if config.free_only():
+                    return _local_free_quota_fallback(
+                        system, user_prompt, stage=stage, max_tokens=max_tokens,
+                        image_paths=image_paths, json_mode=json_mode,
+                    )
                 last_error = response.text
 
                 wait = (

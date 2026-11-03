@@ -24,9 +24,11 @@ class FreePipelineTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             self.assertTrue(config.free_only())
             self.assertEqual(config.ai_backend(), "ollama")
-        with patch.dict(os.environ, {"AI_BACKEND": "openrouter"}, clear=True):
+        with patch.dict(os.environ, {"AI_BACKEND": "openrouter",
+                                     "RESEARCH_MODEL": "provider/paid"}, clear=True):
+            self.assertEqual(config.ai_backend(), "openrouter")
             with self.assertRaisesRegex(RuntimeError, "FREE_ONLY"):
-                config.ai_backend()
+                config.model_for_stage("research")
         with patch.dict(os.environ, {"AI_BACKEND": "openrouter", "FREE_ONLY": "0"},
                         clear=True):
             self.assertEqual(config.ai_backend(), "openrouter")
@@ -35,7 +37,7 @@ class FreePipelineTests(unittest.TestCase):
         with patch.dict(os.environ, {"FREE_ONLY": "1", "AI_BACKEND": "ollama"}), \
              patch.object(research, "_get_tavily_key") as key, \
              patch.object(research.resource_manager, "reserve") as reserve:
-            with self.assertRaisesRegex(RuntimeError, "FREE_ONLY blocks Tavily"):
+            with self.assertRaisesRegex(RuntimeError, "TAVILY_FREE_PLAN_CONFIRMED"):
                 research._search_tavily("flowers")
             key.assert_not_called()
             reserve.assert_not_called()

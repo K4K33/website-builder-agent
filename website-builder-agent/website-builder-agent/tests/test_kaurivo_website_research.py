@@ -28,6 +28,27 @@ class FakeResponse:
     def json(self):return {"results":self.results}
 
 class WebsiteResearchTests(unittest.TestCase):
+    def test_verified_free_plan_uses_atomic_server_budget_before_search(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/"packet.json"
+            path.write_text(json.dumps({
+                "schema":"kaurivo_prh_shortlist_v1", "mode":"pilot-live",
+                "candidates":[candidate()]}), encoding="utf-8")
+            from unittest.mock import patch
+            import os
+            with patch.dict(os.environ, {
+                    "FREE_ONLY":"1", "KAURIVO_TAVILY_FREE_PLAN_CONFIRMED":"1"}), \
+                 patch("utils.kaurivo_website_research.search_once",
+                       return_value=({"url":"https://espoonlukkohuolto.fi/"}, False)) as called:
+                result=enrich(path,key="free-account-fixture",
+                              claim=lambda: False)
+                self.assertEqual(result["searched"],0)
+                called.assert_not_called()
+                result=enrich(path,key="free-account-fixture",
+                              claim=lambda: True)
+                self.assertEqual(result["searched"],1)
+                called.assert_called_once()
+
     def test_free_only_blocks_even_a_configured_paid_search_key(self):
         with tempfile.TemporaryDirectory() as temp:
             path=Path(temp)/"packet.json"
@@ -147,7 +168,8 @@ class WebsiteResearchTests(unittest.TestCase):
         workflow=(ROOT.parents[1]/".github/workflows/kaurivo-national-prh.yml").read_text()
         ingest=(ROOT/"docs/kaurivo/backend/prh_ingest_edge.ts").read_text()
         admin=(ROOT/"docs/kaurivo/assets/crm.js").read_text()
-        self.assertNotIn("secrets.KAURIVO_TAVILY_API_KEY",workflow)
+        self.assertIn("secrets.KAURIVO_TAVILY_API_KEY", workflow)
+        self.assertIn("vars.KAURIVO_TAVILY_FREE_PLAN_CONFIRMED", workflow)
         self.assertIn("FREE_ONLY: \"1\"", workflow)
         self.assertIn("--max-queries 12",workflow)
         self.assertIn("website_candidate_url:candidate",ingest)

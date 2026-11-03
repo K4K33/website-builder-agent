@@ -135,8 +135,11 @@ def rank_search_candidate(company, results):
     return {"url":candidates[0][1],"source":"tavily_search","confidence":candidates[0][0]}
 
 def search_once(company,*,key,post=requests.post):
-    if config.free_only():
-        raise RuntimeError("FREE_ONLY forbids paid Tavily API calls.")
+    if config.free_only() and not config.tavily_free_plan_confirmed(scheduled=True):
+        raise RuntimeError(
+            "FREE_ONLY permits scheduled Tavily only with verified free plan and "
+            "atomic server-side free-credit reservation."
+        )
     q=(str(company.get("name",""))[:100]+" "+str(company.get("city_hint",""))[:40]+
        " virallinen kotisivu yritys Finland").strip()
     response=post(API,json={
@@ -163,9 +166,9 @@ def enrich(packet_path,*,key="",max_queries=MAX_QUERIES_PER_RUN,post=requests.po
     leads=packet.get("candidates")
     if not isinstance(leads,list) or len(leads)>50:
         raise RuntimeError("Invalid source shortlist")
-    if config.free_only():
+    if config.free_only() and not config.tavily_free_plan_confirmed(scheduled=True):
         return {"enabled":False,"searched":0,"suggested":0,"credits_budgeted":0,
-                "reason":"FREE_ONLY blocks external paid website search"}
+                "reason":"Verified no-billing Tavily free plan not configured"}
     if not key or claim is None:
         return {"enabled":False,"searched":0,"suggested":0,"credits_budgeted":0,
                 "reason":"search_key_or_secure_quota_unavailable"}
@@ -207,7 +210,11 @@ def main(argv=None):
     parser.add_argument("--packet",required=True)
     parser.add_argument("--max-queries",type=int,default=MAX_QUERIES_PER_RUN)
     args=parser.parse_args(argv)
-    key="" if config.free_only() else os.environ.get("KAURIVO_TAVILY_API_KEY","")
+    enabled = (not config.free_only()
+               or config.tavily_free_plan_confirmed(scheduled=True))
+    key=os.environ.get("KAURIVO_TAVILY_API_KEY","") if enabled else ""
+    # This already uses the trusted remote Supabase atomic 750-credit budget.
+    # If a reservation fails, no provider request is sent.
     reserve=make_credit_reservation() if key else None
     result=enrich(args.packet,key=key,max_queries=args.max_queries,claim=reserve)
     print(json.dumps(result,ensure_ascii=False))
