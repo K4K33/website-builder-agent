@@ -174,6 +174,52 @@ class BrandLockTests(unittest.TestCase):
         research["source_inventory"]["pages"][0]["url"] = "https://changed.example.org/"
         self.assertTrue(audit_brand_lock(pages, research)["blocking"])
 
+    def test_new_sponsor_logo_cannot_be_fabricated_by_agent(self):
+        html = page('<strong>Example Workshop</strong>')
+        html = html.replace('</main>',
+                            '<section class="partners"><img class="partner-logo" '
+                            'src="/images/invented-sponsor.svg" alt="Sponsor logo">'
+                            '</section></main>')
+        result = audit_brand_lock({"index.html": html})
+        self.assertIn("unsourced_affiliation_mark",
+                      [x["category"] for x in result["blocking"]])
+
+    def test_original_affiliation_logo_and_source_identity_are_preserved(self):
+        research = evidence()
+        research["source_inventory"]["pages"][0]["footer_assets"] = [{
+            "src": "/images/real-partner.svg", "href": "https://partner.example.org/"
+        }]
+        html = page('<strong>Example Workshop</strong>').replace(
+            '</main>',
+            '<section class="partners"><img class="partner-logo" '
+            'src="https://synthetic.example.org/images/real-partner.svg" '
+            'alt="Partner logo"></section></main>'
+        )
+        result = audit_brand_lock({"index.html": html}, research)
+        self.assertNotIn("unsourced_affiliation_mark",
+                         [x["category"] for x in result["blocking"]])
+
+    def test_new_partner_logo_needs_active_rights_and_exact_client_signoff(self):
+        pages = {"index.html": page('<strong>Example Workshop</strong>').replace(
+            '</main>', '<section class="partners"><img class="partner-logo" '
+            'src="/images/new-partner.svg" alt="Partner logo"></section></main>'
+        )}
+        research = evidence()
+        research["verified_additional_affiliations"] = [{
+            "logo_src": "/images/new-partner.svg",
+            "source_url": "https://partner.example.org/verification",
+            "relationship_role": "partner",
+            "rights_verified": True,
+            "active_verified": True,
+        }]
+        research["additional_affiliations_approval"] = client_record(pages, research)
+        self.assertFalse(audit_brand_lock(pages, research)["blocking"])
+        changed = {"index.html": pages["index.html"] + " "}
+        self.assertTrue(audit_brand_lock(changed, research)["blocking"])
+        research["verified_additional_affiliations"][0]["active_verified"] = False
+        self.assertTrue(audit_brand_lock(pages, research)["blocking"])
+
+
 
 if __name__ == "__main__":
     unittest.main()
