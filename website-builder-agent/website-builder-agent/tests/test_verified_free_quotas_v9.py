@@ -155,6 +155,26 @@ class FreeQuotaTests(TestCase):
                 self.assertEqual(allowed["searched"], 1)
                 provider.assert_called_once()
 
+    def test_tavily_basic_free_search_results_reused_across_companies(self):
+        from utils.free_tavily_cache import cached_free_search
+        from datetime import datetime, timedelta, timezone
+        from pathlib import Path
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            called = Mock(return_value=[{
+                "url": "https://actual-operator.example.org/",
+                "title": "Real operator", "content": "Observed link"}])
+            t = datetime(2026, 11, 3, tzinfo=timezone.utc)
+            first = cached_free_search("real florists in Finland", called,
+                                       cache_root=Path(tmp), now=t)
+            second = cached_free_search("real florists in Finland", called,
+                                        cache_root=Path(tmp), now=t+timedelta(days=1))
+            self.assertEqual(first, second)
+            called.assert_called_once()
+            cached_free_search("real florists in Finland", called,
+                               cache_root=Path(tmp), now=t+timedelta(days=15))
+            self.assertEqual(called.call_count, 2)
+
     def test_no_implicit_tavily_spend_when_osm_pool_ample(self):
         with patch.dict(os.environ, {
                 "FREE_ONLY": "1", "TAVILY_API_KEY": "fixture",
