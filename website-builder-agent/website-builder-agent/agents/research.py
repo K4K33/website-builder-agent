@@ -30,6 +30,7 @@ from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
 from utils.free_references import discover_free_references
+from utils.reference_screenshot_cache import capture_cached
 from utils.premium_quality_gate import discover_source_journeys
 from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
@@ -571,7 +572,11 @@ def _collect_reference_evidence(references, target_url):
             continue
         domains.add(domain)
         try:
-            shots = capture_website(url, "reference-" + domain + "-" + uuid4().hex[:12])
+            shots = (capture_cached(
+                url, capture_website,
+                cache_root=os.path.join(config.OUTPUT_DIR, "_reference_screenshot_cache"),
+            ) if config.free_only()
+                     else capture_website(url, "reference-" + domain + "-" + uuid4().hex[:12]))
             if not isinstance(shots, dict) or not all(
                     isinstance(shots.get(view), str) and os.path.isfile(shots[view])
                     for view in ("desktop", "mobile")):
