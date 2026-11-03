@@ -246,3 +246,8 @@ img{display:block;max-width:100%}
 /* Intrinsic media and long address/email text may not force narrow mobile grid tracks. */
 .contact-hero__copy,.contact-info>*{min-width:0}
 .hours th,.hours td{overflow-wrap:anywhere}
+
+@media(max-width:360px){
+  /* The real contact title contains a long Finnish compound word. */
+  .contact-hero h1{font-size:37px;letter-spacing:-.075em;line-height:1.06;max-width:100%;overflow-wrap:anywhere}
+}
