@@ -149,7 +149,7 @@ class ClientFacingIntegrityTests(unittest.TestCase):
         result = self.audit(pages)
         self.assertTrue(result["pass"])
         self.assertIn("template_headlines", [i["category"] for i in result["pending"]])
-        self.assertIn("editorial_visual_balance",
+        self.assertIn("independent_premium_consensus",
                       audit_universal_standards(pages["index.html"],
                                                 rendered_pages=pages)["pending_evidence"])
 
