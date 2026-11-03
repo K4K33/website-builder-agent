@@ -30,6 +30,7 @@ from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
 from utils.free_references import discover_free_references
+from utils.free_tavily_cache import cached_free_search
 from utils.reference_screenshot_cache import capture_cached
 from utils.reference_site_cache import cached_analyze
 from utils.premium_quality_gate import discover_source_journeys
@@ -487,7 +488,10 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
         if (len(references) < 8 and config.tavily_free_plan_confirmed()
                 and os.getenv("TAVILY_API_KEY")):
             try:
-                additional = _search_tavily(search_query, max_results=8)
+                additional = cached_free_search(
+                    search_query, _search_tavily,
+                    cache_root=os.path.join(config.OUTPUT_DIR, "_tavily_free_cache"),
+                )
                 seen = {canonical_url(item.get("url")) for item in references}
                 for item in additional:
                     canonical = canonical_url(item.get("url"))
