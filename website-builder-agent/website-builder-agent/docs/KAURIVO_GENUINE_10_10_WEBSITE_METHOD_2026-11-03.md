@@ -18,6 +18,36 @@ A quality system must **prevent the class of error** rather than hard-code
 special cases for the last client. Each customer gets a new independently
 researched design, while the same adversarial QA applies across sectors.
 
+## Documented industry methods worth adapting (not copying)
+
+Reviewed official product documentation on 2026-11-03. These companies
+demonstrate structured AI website generation, but **their marketing claims do
+not prove every customer site is 10/10**. Their templates, source code,
+protected content and imagery must never be imported without permission.
+
+| Company / primary documentation | Verified public workflow | Kaurivo adaptation | Important difference |
+|---|---|---|---|
+| [Relume Site Builder](https://www.relume.ai/resources/faqs/how-does-relume-s-ai-website-builder-work) and [sitemap docs](https://resources-relume-io.relume.work/resources/docs/building-a-sitemap-with-ai) | Brief → sitemap → per-section wireframes → style guide; designers may compare alternate sitemaps and edit | Derive a source-bound **sitemap + section plan + selected direction** BEFORE generation | Kaurivo must retain actual original business facts and source-to-new content trace, not assume generated wireframe text is factual |
+| [Webflow AI builder](https://help.webflow.com/hc/en-us/articles/38840145286035-Build-a-site-with-Webflow-s-AI-site-builder) | Review/reorder per-page section plan and generate common global style guide; typography, spacing, color, effects and buttons can be edited across routes | Derive a common **original brand kit** for all planned pages, audit contradictory browser theme metadata, keep final customer editing accessible | Webflow itself warns that editing the original AI structure via regeneration overwrites previous edits; Kaurivo must preserve locked client details |
+| [Wix Harmony Brand](https://support.wix.com/en/article/wix-harmony-editor-setting-up-your-brand) | Site-wide brand colors, text styles and controls defined once and propagated across pages | Use source-linked original identity as the authority rather than randomly selected theme colors; constrain site-wide consistency | Sourced brand colors and client permission beat generated aesthetic guesses |
+| [10Web Redesign Agent](https://10web.io/product-release/redesign-agent/) | Existing website URL → redesign attempt that retains the page's content/structure and changes the visual language | Prioritize provenance-rich page/content parity while redesigning independently | 10Web documentation explicitly describes its current workflow as **page-level**, not a verified complete multi-page content audit |
+| [10Web terms](https://10web.io/legal/terms-of-service/) | Recreating third-party websites has important ownership and permission requirements | Block publication of unlicensed client photos/logos/copy and require rights review | A public URL is NOT a licence to clone an owner's materials |
+| [Squarespace Blueprint AI](https://www.squarespace.com/websites/ai-website-builder) | Company description informs a cohesive personalized design direction | Use company-specific business details to choose the art direction; assess subpage cohesion | Treat all claims of high quality as promotional, not independent proof |
+
+**Implementation:** `utils/brand_design_blueprint.py` now derives a deterministic
+company-specific plan from the existing verified Research fields. No paid API
+credits, no templates from competitors, no fabricated original brand colors.
+`agents/builder.py` injects this plan for fresh generation and revisions,
+and applies the same preflight to external-agent imports. A cross-route
+theme-color consistency check supplements human screenshot review. Current
+scope is a *structured planning contract*, not a real drag-and-drop
+wireframe UI, CMS licence, or automated visual art director.
+
+**Evidence hierarchy:** real original assets → actual source fact inventory →
+source-bound style guide and page outline → chosen creative concept →
+generated pages → static/dynamic QA → independently reviewed screenshots →
+customer-approved production delivery. Each stage is distinguishable.
+
 ## 1. Separate four data layers *before any copy is rendered*
 
 | Layer | Examples | May be shown on client website? |
