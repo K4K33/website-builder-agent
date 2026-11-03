@@ -4,9 +4,11 @@ No source copying, real company identifiers, API usage or fake aesthetic scores.
 """
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
-from utils.client_facing_integrity import audit_client_facing_integrity
+from utils.client_facing_integrity import audit_client_facing_integrity, audit_layout_review_flags
 from utils.content_parity import source_inventory_sha256
 from utils.premium_quality_gate import site_digest
 from utils.universal_quality import audit_universal_standards
@@ -123,6 +125,49 @@ class ClientFacingIntegrityTests(unittest.TestCase):
         self.assertIn("editorial_visual_balance",
                       audit_universal_standards(pages["index.html"],
                                                 rendered_pages=pages)["pending_evidence"])
+
+    def test_independent_layout_flags_are_build_bound_and_cannot_be_self_approved(self):
+        pages = {"index.html": site("<p>Legible and genuine copy.</p>")}
+        flags = [{"route": "index.html", "viewport": "desktop",
+                  "columnBlankPixels": [550, 45]}]
+        result = audit_layout_review_flags(flags, pages, {})
+        self.assertFalse(result["pass"])
+        review = {
+            "approved": True, "reviewer_kind": "human",
+            "reviewer_id": "independent-design-reviewer",
+            "checked_at": "2026-11-03",
+            "screenshot_evidence": "reviewed exact current screenshot",
+            "flags_sha256": result["flags_sha256"],
+            "build_sha256": site_digest(pages),
+        }
+        self.assertTrue(audit_layout_review_flags(
+            flags, pages, {"layout_composition_review": review})["pass"])
+        self.assertFalse(audit_layout_review_flags(
+            flags, {"index.html": pages["index.html"] + " "},
+            {"layout_composition_review": review})["pass"])
+        review["reviewer_id"] = "builder"
+        self.assertFalse(audit_layout_review_flags(
+            flags, pages, {"layout_composition_review": review})["pass"])
+
+    def test_browser_emits_whitespace_candidates_without_fake_numeric_design_score(self):
+        from utils.browser_qa import inspect_site
+        html = """<!doctype html><html><head><meta charset="utf-8">
+        <style>body{margin:0;font:16px Arial}main{padding:8px}
+        .columns{display:grid;grid-template-columns:1fr 1fr;min-height:890px}
+        .columns>div{height:870px;box-sizing:border-box}
+        .bottom{margin-top:725px}</style></head><body>
+        <main><h1>Original service company</h1>
+        <section class="columns"><div><p>Opening details.</p></div>
+        <div><p class="bottom">Important verified opening details below.</p></div>
+        </section></main></body></html>"""
+        with tempfile.TemporaryDirectory() as directory:
+            file = Path(directory) / "index.html"
+            file.write_text(html, encoding="utf-8")
+            report = inspect_site(file)
+            self.assertTrue(report["pass"], report["issues"])
+            self.assertTrue(report["visual_review_flags"], report)
+            self.assertIn("desktop",
+                          {flag["viewport"] for flag in report["visual_review_flags"]})
 
     def test_real_source_note_is_not_whitelisted_in_body_by_demo_status(self):
         pages = {"index.html": site('<p>Yrityksen omilta verkkosivuilta.</p>')}
