@@ -8,6 +8,7 @@ It makes all planned pages and style decisions visible before a Build credit.
 from __future__ import annotations
 
 from collections import defaultdict
+import re
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
@@ -122,13 +123,41 @@ def derive_brand_site_blueprint(research: dict) -> dict:
     }
 
 
-def audit_sitewide_brand_consistency(rendered_pages: dict[str, str]) -> dict:
-    """Check objectively inconsistent page theme colors, no aesthetic guessing.
+def _declared_identity_tokens(html: str) -> dict[str, str]:
+    """Read explicit global CSS brand tokens, not contextual section styling.
 
-    We do not mandate that every subpage uses identical layouts or a fixed
-    color: just avoid silently diverging the browser-level brand theme.
+    This intentionally ignores external stylesheets and dynamic CSS. Only
+    contradictory values found in comparable inline :root declarations are
+    definitive static failures; missing values remain outside this check.
     """
-    themes = {}
+    soup = BeautifulSoup(html, "html.parser")
+    declared: dict[str, set[str]] = defaultdict(set)
+    for tag in soup.find_all("style"):
+        css = re.sub(r"/\\*.*?\\*/", "", tag.get_text(" ", strip=False), flags=re.S)
+        for block in re.findall(r"(?<![\\w-]):root\\s*\\{([^{}]*)\\}", css, flags=re.I | re.S):
+            for match in re.finditer(r"(--[a-z][\\w-]*)\\s*:\\s*([^;{}]+)", block, flags=re.I):
+                key, value = match.group(1).lower(), " ".join(match.group(2).split()).lower()
+                # These deliberately name the site-wide identity. Do not
+                # compare generic section/seasonal/background utility colors.
+                if key.startswith(("--brand-", "--identity-")) or key in {
+                    "--color-primary", "--color-accent", "--font-brand",
+                    "--font-heading", "--font-body",
+                }:
+                    declared[key].add(value.removesuffix("!important").strip())
+    # If a token has several values on one page (e.g. an adaptive override),
+    # the static test cannot confidently select the effective value.
+    return {key: next(iter(values)) for key, values in declared.items() if len(values) == 1}
+
+
+def audit_sitewide_brand_consistency(rendered_pages: dict[str, str]) -> dict:
+    """Fail on contradictory global identity tokens across the site's pages.
+
+    An individual subpage may use a distinct composition, hero color or
+    background. An explicitly declared global --brand-primary or heading font
+    must not silently switch to a different business identity by route.
+    """
+    themes: dict[str, str] = {}
+    tokens_by_page: dict[str, dict[str, str]] = {}
     for route, html in rendered_pages.items():
         soup = BeautifulSoup(html, "html.parser")
         tag = soup.find("meta", attrs={"name": "theme-color"})
@@ -136,11 +165,28 @@ def audit_sitewide_brand_consistency(rendered_pages: dict[str, str]) -> dict:
             theme = str(tag.get("content") or "").strip().lower()
             if theme:
                 themes[route] = theme
-    mismatch = len(set(themes.values())) > 1
+        tokens_by_page[route] = _declared_identity_tokens(html)
+
+    issues = []
+    if len(set(themes.values())) > 1:
+        issues.append("Inconsistent theme-color across new business site routes.")
+    comparable_tokens = sorted({key for tokens in tokens_by_page.values() for key in tokens})
+    for key in comparable_tokens:
+        found = {route: values[key] for route, values in tokens_by_page.items()
+                 if key in values}
+        if len(found) > 1 and len(set(found.values())) > 1:
+            issues.append(
+                f"Conflicting global identity token {key} across routes: "
+                + ", ".join(f"{route}={value}" for route, value in sorted(found.items()))
+            )
     return {
-        "pass": not mismatch,
-        "issues": (["Inconsistent theme-color across new business site routes."]
-                   if mismatch else []),
+        "pass": not issues,
+        "issues": issues,
         "theme_colors_by_page": themes,
-        "note": "Only browser theme metadata checked; typography and composition need screenshot review.",
+        "identity_tokens_by_page": tokens_by_page,
+        "note": (
+            "Checked browser theme and comparable inline :root brand tokens only. "
+            "External stylesheets, permitted page-specific compositions, "
+            "typography and aesthetics still require screenshot review."
+        ),
     }
