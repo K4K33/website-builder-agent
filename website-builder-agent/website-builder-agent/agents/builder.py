@@ -1512,6 +1512,17 @@ sivuille yhtenäisellä hallittavalla tyylijärjestelmällä, mutta vältä
 valmista geneeristä toimialapohjaa. Pidä sisäinen tutkimusmetatieto erossa
 asiakkaille näkyvistä teksteistä. Kysymykset oikeuksista ja tiedoista sisäiseen QA:han.
 
+ALKUPERÄISEN SIVUN KOKEMUKSELLISUUS ON PAKOLLINEN LÄHTÖTASO:
+Tarkista yllä oleva source_experience_plan. Säilytä videon, galleriat,
+oikeat työ- ja tuotekuvat, materiaalitaustat ja merkitykselliset liikkeet,
+jos ne ovat olemassa lähteessä. Älä korvaa niitä koristeellisilla numeroilla,
+toistuvilla nuolilla, piirroksilla tai tyhjillä korttipinnoilla.
+Jos alkuperäisen sivun liike on hillittyä, ÄLÄ lisää 3D:tä tai raskaita
+animaatioita automaattisesti. Jos alkuperäinen on näyttävä, älä alenna
+kokemusta staattiseksi geneeriseksi pohjaksi. Todelliset käyttöoikeudet,
+pitkäkestoinen suorituskyky, saavutettavuus ja reduced-motion ovat pakollisia.
+Puuttuva kuvien/videoiden käyttöoikeus on QA-este, ei lupa heikentää sivua.
+
 ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
 {json.dumps(brand_brief, ensure_ascii=False)}
 
