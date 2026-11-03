@@ -16,6 +16,11 @@ Standard: `docs/KAURIVO_BRAND_EXPERIENCE_V6_2026-11-03.md`.
 - [ ] Real Chromium first-fold evidence shows image visibility and the original
   work photo's relative priority. Below-fold company imagery triggers human
   examination, never a blanket failure for legitimate text-first services.
+- [ ] When local CSS, scripts or fonts influence brand appearance, their
+  **byte-level hashes** must be bound to the exact visual/client approval.
+  A post-approval CSS-only change invalidates it even if HTML is unchanged.
+- [ ] Internal CSS/JS outside the approved packaged assets directory or on
+  external/CDN hosts needs separate integrity and actual-render review.
 - [ ] Reviewer evidence metadata is not independent human confirmation or a
   legal media licence. Validate file authenticity, reviewer independence,
   customer approval and visual quality through separate actual checks.
