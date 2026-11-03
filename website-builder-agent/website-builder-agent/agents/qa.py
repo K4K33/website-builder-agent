@@ -34,6 +34,7 @@ from utils.visual_originality import audit_design_originality
 from utils.site_integrity import site_sha256
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
+from utils.client_facing_integrity import audit_layout_review_flags
 from utils.premium_quality_gate import (
     source_coverage_matrix, verify_independent_premium_reviews,
     audit_primary_journeys, site_digest,
@@ -1179,6 +1180,11 @@ def run_qa(slug_or_name: str) -> dict:
         browser["issues"]=[route+": "+item
                             for route,result in page_browsers.items()
                             for item in result.get("issues") or []]
+        browser["visual_review_flags"]=[
+            {"route": route, **finding}
+            for route, result in page_browsers.items()
+            for finding in result.get("visual_review_flags") or []
+        ]
         if browser["pass"]:
             research = company.get("research") or {}
             try:
@@ -1244,7 +1250,11 @@ def run_qa(slug_or_name: str) -> dict:
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
+    layout_review = audit_layout_review_flags(
+        browser.get("visual_review_flags") or [], rendered_pages, research
+    )
     result = {
+        "layout_composition_review": layout_review,
         "automated": automated, "visual_media": visual_media,
         "originality": originality, "site_navigation": nav,
         "site_pages":list(rendered_pages),
@@ -1262,6 +1272,7 @@ def run_qa(slug_or_name: str) -> dict:
                          and not pending_general_rules
                          and automated["automated_pass"]
                          and visual_media["owner_preview_ready"] and browser["pass"]
+                         and layout_review["pass"]
                          and review_passes(review, benchmark_urls, decisions)
                          and owner_preview_visual_passes(review)
                          and ai_style_review_passes(
@@ -1281,7 +1292,8 @@ def run_qa(slug_or_name: str) -> dict:
               + [str(x.get("kind","unknown"))+": "+str(x.get("source","")) for x in source_fidelity["missing"]]
               + list(source_fidelity["pending"])
               + [m for values in universal["blocking_problems"].values() for m in values]
-              + list(browser.get("issues") or []))
+              + list(browser.get("issues") or [])
+              + list(layout_review.get("issues") or []))
     record_qa_findings(ledger, slug, [str(x) for x in issues])
     save_ledger(ledger_file, ledger)
     result["global_learning"] = {
