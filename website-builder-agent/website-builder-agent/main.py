@@ -245,7 +245,7 @@ def cmd_visual_evidence(args):
     new_browser = inspect_site(root / "index.html")
     report = build_visual_comparison(
         research_data.get("original_screenshots"), new_browser, pages,
-        research_data, report_dir=root/"qa"/"visual",
+        research_data, report_dir=Path(config.OUTPUT_DIR)/"_visual_reports"/slug,
     )
     print(json.dumps({
         "status": report["status"],
