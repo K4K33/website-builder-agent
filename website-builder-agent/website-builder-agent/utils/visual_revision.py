@@ -38,7 +38,12 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
         if isinstance(item, dict) else str(item)
         for item in (qa.get("source_fidelity") or {}).get("missing") or []
     ]
-    creative = list((qa.get("content_review") or {}).get("issues") or [])
+    ai_review = qa.get("content_review") or {}
+    creative = list(ai_review.get("issues") or [])
+    # The actual multimodal reviewer can detect wordmark/palette or generic
+    # style regressions even when no static first-fold heuristic is triggered.
+    visual_blockers = list((ai_review.get("visual_review") or {}).get("blockers") or [])
+    benchmark_gaps = list((ai_review.get("reference_comparison") or {}).get("remaining_gaps") or [])
     layout = list((qa.get("layout_composition_review") or {}).get("issues") or [])
     # Avoid treating missing assets/licences as generic fixable page layout.
     browser_fixable = [
@@ -56,6 +61,8 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
         *browser_fixable,
         *content_missing,
         *source_missing,
+        *[str(x) for x in visual_blockers],
+        *[str(x) for x in benchmark_gaps],
         *[str(x) for x in creative],
         *[str(x) for x in layout],
     ]
@@ -89,6 +96,8 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
             "browser": browser_fixable[:10],
             "source_content_missing": source_missing[:10],
             "research_content_missing": content_missing[:10],
+            "qa_visual_blockers": [str(x) for x in visual_blockers[:10]],
+            "benchmark_remaining_gaps": [str(x) for x in benchmark_gaps[:10]],
             "qa_review_issues": [str(x) for x in creative[:10]],
             "layout_review": [str(x) for x in layout[:10]],
         },
