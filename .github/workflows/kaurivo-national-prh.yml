@@ -93,12 +93,17 @@ jobs:
             --output-dir output/nightly-prh \
             --seen-path data/prh_seen_ids.json
 
-      - name: Enforce zero paid website-search calls in the scheduled PRH batch
+      - name: Use zero-billing Tavily free allowance only with verified account and atomic ledger
         if: ${{ success() && github.event_name == 'schedule' && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        env:
+          # This repository variable must explicitly be set to "1" by the owner
+          # after verifying a card-free, no-pay-as-you-go Tavily account.
+          # The existing Supabase quota claim must approve each of 12 requests.
+          KAURIVO_TAVILY_FREE_PLAN_CONFIRMED: ${{ vars.KAURIVO_TAVILY_FREE_PLAN_CONFIRMED }}
+          KAURIVO_TAVILY_API_KEY: ${{ secrets.KAURIVO_TAVILY_API_KEY }}
         run: |
-          # Intentionally DO NOT expose Tavily secrets in the scheduled job.
-          # PRH still checks the full source registry and keeps its 50-lead
-          # shortlist; missing websites remain unverified, never invented.
+          # 0 external calls unless BOTH account assurance and the atomic
+          # remote 750-credit ledger are available. On failure, no paid retry.
           python -m utils.kaurivo_website_research \
             --packet output/nightly-prh/crm-shortlist.json \
             --max-queries 12
