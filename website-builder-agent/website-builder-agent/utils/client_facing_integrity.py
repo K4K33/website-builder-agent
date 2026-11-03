@@ -21,8 +21,8 @@ from utils.premium_quality_gate import site_digest
 # are in a CUSTOMER'S own main content: they narrate evidence collection.
 RESEARCH_NARRATION = (
     re.compile(
-        r"\balkuperäis(?:en|ellä|eltä|elle|et|iä)\s+"
-        r"(?:verkkosivuston|verkkosivun|sivuston|sivun|sivuilta|hinnaston|hinnastosivun)"
+        r"\balkuperäis(?:en|ellä|eltä|iltä|illa|illä|ista|istä|ille|et|iä)\s+"
+        r"(?:verkkosivuston|verkkosivun|verkkosivuilta|sivuston|sivustolta|sivun|sivuilta|hinnaston|hinnastosivun|hinnastosivulta)"
         r"\b", re.I
     ),
     re.compile(
@@ -31,7 +31,7 @@ RESEARCH_NARRATION = (
         re.I
     ),
     re.compile(
-        r"\b(?:tiedot|hinnat|kuvat|lainaukset|palvelut)\s+"
+        r"\b(?:tiedot|hinnat|hinnastot|kuvat|lainaukset|palvelut)\s+"
         r"(?:on|ovat)\s+(?:siirretty|poimittu|kerätty|kopioitu|otettu)\s+"
         r"(?:alkuperäis(?:eltä|estä)|yrityksen)\b", re.I
     ),
@@ -130,6 +130,22 @@ def audit_client_facing_integrity(
                     "route": route,
                     "excerpt": text[max(0, match.start()-45):match.end()+80],
                 })
+        # Header/footer belong to the customer's website too. Only an
+        # explicitly separate preview disclosure can hold demo provenance.
+        for furniture in soup.select("header,footer"):
+            clean = BeautifulSoup(str(furniture), "html.parser")
+            for excluded in clean.select('[data-demo-disclosure="true"]'):
+                excluded.decompose()
+            furniture_text = " ".join(clean.get_text(" ", strip=True).split())
+            for pattern in RESEARCH_NARRATION:
+                match = pattern.search(furniture_text)
+                if match:
+                    blocked.append({
+                        "category": "research_leak", "route": route,
+                        "location": furniture.name,
+                        "excerpt": furniture_text[max(0, match.start()-30):match.end()+75],
+                    })
+                    break
         for node in main.select("*"):
             classes = " ".join(node.get("class") or [])
             marker = " ".join((classes, str(node.get("data-role") or "")))
