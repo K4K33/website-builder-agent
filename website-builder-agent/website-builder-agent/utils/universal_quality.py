@@ -361,7 +361,14 @@ def audit_universal_standards(
               "pending": pending.get(key, [])}
         for key, group in all_rules.items()
     }
+    # Report one usable cross-project decision rather than exposing a
+    # misleading 'green' automation flag when human/source proof is still open.
+    decision = ("blocked" if problems else
+                "review_required" if pending else "client_ready")
     return {
+        "quality_decision": decision,
+        "blocking_categories": sorted(problems),
+        "pending_categories": sorted(pending),
         "automated_pass": not problems,
         "internal_review_ready": not problems,
         "client_release_ready": not problems and not pending,
