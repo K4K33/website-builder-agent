@@ -43,6 +43,27 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+PERMANENT COMPANY-FIRST EDITORIAL AND VISUAL RULE (ALL BUSINESSES):
+Source text, URLs, prices, dates, research notes and photo origin are EVIDENCE,
+not text to publish as a research report. Compose the visitor-facing page as the
+business itself: "Suutarin hinnasto" rather than "63 rows copied from original";
+"Huokotie 1" rather than "address observed on their contact page".
+Never print "original website said", extraction counts, audit/crawl notes,
+expired source alerts, test summaries, SEO research, placeholders or credits
+in the client's real page content. Keep uncertainties in INTERNAL QA metadata.
+A minimal standalone preview-only disclosure may sit OUTSIDE the main business
+content and must be removed before production; do not impersonate approval.
+Do not invent a brand monogram, circle letter seal, identity SVG, employee,
+visual star rating or decorative fake map. Keep verified original identity;
+if the logo has no licence use the exact business name in normal typography.
+For a location use a verified real map or a precise clickable address/directions
+card, never stylized imaginary streets pretending to be a real map.
+Subpage composition matters as much as the hero. Visually inspect every
+section and route including optical column balance, sparse empty blocks,
+small-mobile, long prices, contact and footer. Repetitive generic headline
+phrases must be rewritten to refer concretely to the business.
+See docs/KAURIVO_GENUINE_10_10_WEBSITE_METHOD_2026-11-03.md.
+
 NEXT-CLIENT PREMIUM FIRST-PASS CONTRACT:
 - First preserve the real company identity: sourced marks, recognisable colors,
   people, approved real photos, original service structure, partners and tone.
