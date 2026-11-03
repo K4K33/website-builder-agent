@@ -133,9 +133,9 @@ def _declared_identity_tokens(html: str) -> dict[str, str]:
     soup = BeautifulSoup(html, "html.parser")
     declared: dict[str, set[str]] = defaultdict(set)
     for tag in soup.find_all("style"):
-        css = re.sub(r"/\\*.*?\\*/", "", tag.get_text(" ", strip=False), flags=re.S)
-        for block in re.findall(r"(?<![\\w-]):root\\s*\\{([^{}]*)\\}", css, flags=re.I | re.S):
-            for match in re.finditer(r"(--[a-z][\\w-]*)\\s*:\\s*([^;{}]+)", block, flags=re.I):
+        css = re.sub(r"/\*.*?\*/", "", tag.get_text(" ", strip=False), flags=re.S)
+        for block in re.findall(r"(?<![\w-]):root\s*\{([^{}]*)\}", css, flags=re.I | re.S):
+            for match in re.finditer(r"(--[a-z][\w-]*)\s*:\s*([^;{}]+)", block, flags=re.I):
                 key, value = match.group(1).lower(), " ".join(match.group(2).split()).lower()
                 # These deliberately name the site-wide identity. Do not
                 # compare generic section/seasonal/background utility colors.
