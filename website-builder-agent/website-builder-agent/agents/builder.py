@@ -684,6 +684,13 @@ Palauta VAIN koko HTML-tiedosto.
 
 
 REVISE_SYSTEM_PROMPT = """
+FOR ALL CLIENT REVISIONS: preserve original verified business identity,
+source details and exact price/service labels. Rewrite customer-facing text
+to remove any notes about research, original websites, extract counts, QA,
+prompt status or demo evaluation. Do not fabricate lettermarks or faux maps.
+Audit every affected subpage, mobile viewport and the true CTA destination.
+Read docs/KAURIVO_GENUINE_10_10_WEBSITE_METHOD_2026-11-03.md.
+
 Olet kokenut frontend-kehittäjä.
 
 Saat nykyisen HTML-sivun, tutkimusdatan ja muutospyynnön.
