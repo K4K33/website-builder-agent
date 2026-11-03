@@ -187,7 +187,7 @@ class VersionedPreviewTests(unittest.TestCase):
         self.assertIn("Autonpesu", prices)
         self.assertIn("Joulukuusen poishaku", prices)
         self.assertIn("Kalusteiden kunnostus", prices)
-        self.assertIn("Ei vähennyskelpoinen", prices)
+        self.assertIn("Ei kotitalousvähennystä", prices)
         self.assertIn("40 %", prices)
         self.assertIn("20 €", prices)
         self.assertIn("MobilePay", about)
