@@ -91,7 +91,7 @@ def model_for_stage(stage=None):
             raise RuntimeError("Ollama cloud models are disabled; local-only inference required.")
         return model
     model = os.getenv(f"{stage.upper()}_MODEL", "").strip() if stage else ""
-    model = model or OPENROUTER_MODEL
+    model = model or os.getenv("OPENROUTER_MODEL", OPENROUTER_MODEL).strip()
     if free_only() and not is_zero_cost_openrouter_model(model):
         raise RuntimeError(
             "FREE_ONLY forbids paid OpenRouter models. Select an exact ':free' "
