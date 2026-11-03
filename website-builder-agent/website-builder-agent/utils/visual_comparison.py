@@ -14,6 +14,7 @@ from pathlib import Path
 
 from utils.content_parity import source_inventory_sha256
 from utils.premium_quality_gate import site_digest
+from utils.screenshot import OUTPUT_DIR as SOURCE_SCREENSHOT_ROOT
 
 
 VIEWPORTS = (
@@ -31,12 +32,13 @@ IMAGE_LED_SECTORS = (
 )
 
 
-def _existing_image(value: object) -> Path | None:
+def _existing_image(value: object, allowed_root: Path | None = None) -> Path | None:
     if not isinstance(value, str) or not value.strip():
         return None
     try:
         item = Path(value).expanduser().resolve()
-        if item.is_file() and item.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
+        if (item.is_file() and item.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+                and (allowed_root is None or item.is_relative_to(allowed_root.resolve()))):
             return item
     except (OSError, ValueError):
         return None
@@ -152,6 +154,7 @@ def build_visual_comparison(
     *,
     report_dir: str | Path,
     render_panels: bool = True,
+    source_capture_root: str | Path | None = None,
 ) -> dict:
     """Emit original/new paired evidence; never substitute source screenshots.
 
@@ -168,10 +171,11 @@ def build_visual_comparison(
     digest = site_digest(rendered_pages)
     old_shots = source.get("screenshots") if isinstance(source.get("screenshots"), dict) else source
     new_shots = current.get("screenshots") or {}
+    source_root = Path(source_capture_root or SOURCE_SCREENSHOT_ROOT).resolve()
     pairs = {}
     evidence_missing = []
     for name, width, height in VIEWPORTS:
-        old = _existing_image(old_shots.get(name))
+        old = _existing_image(old_shots.get(name), allowed_root=source_root)
         new = _existing_image(new_shots.get(name))
         if has_original_site and not old:
             evidence_missing.append("Original " + name + " screenshot missing.")
@@ -233,6 +237,8 @@ def build_visual_comparison(
         "render_errors": panel_errors,
         "repair_hints": hints,
         "human_comparison_required": has_original_site,
+        "original_capture_url": source.get("capture_url"),
+        "original_captured_at": source.get("captured_at"),
         "note": (
             "These are source and generated screenshots at matching widths, "
             "not an independent visual score or verified licence. "
