@@ -13,6 +13,15 @@ import re
 
 
 CATEGORIES = {
+    "sector_recognition": (
+        "sector_recognition", "missing_bicycle_first_view",
+        "wrong_industry_impression", "looks like a university",
+        "yliopiston sivu", "toimialan tunnistettavuus",
+    ),
+    "company_voice_and_rhythm": (
+        "company_voice_and_rhythm", "text strips", "repeated marketing copy",
+        "sisältöpalkki", "samanlaista tekstiä", "institutional brochure",
+    ),
     "source_bound_social_proof": (
         "source_bound_social_proof", "unsourced_customer_review",
         "changed_source_review_rating", "unverified_aggregate_rating",
