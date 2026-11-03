@@ -1,5 +1,25 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## V4: yrityksen ja toimialan tunnistettavuus ilman logoa
+
+Ohjeet: `docs/KAURIVO_SECTOR_IDENTITY_V4_2026-11-03.md`.
+
+- [ ] Tämän yrityksen oma todellinen brändi, arkinen ammattisanasto ja
+  kuvallinen ympäristö näkyvät, eikä Kaurivon vakio-esteettinen tyyli peitä niitä.
+- [ ] Viiden sekunnin logo piilossa -testi: vähintään kaksi riippumatonta
+  arvioijaa tunnistaa oikean alan, asiakkaan ydintehtävän ja alkuperäiset
+  brändivihjeet. Väärä yliopisto-/konsultti-/toimistomielikuva estää hyväksynnän.
+- [ ] Kahden arvioijan havaintojen lähteet, reitit, neljä näyttökokoa,
+  lähdesivuhajautus ja täsmällisen lopullisen version hajautus tarkistetaan.
+- [ ] Rakenteiden ja otsikoiden ei tule kiertää samoina monen yrityksen välillä.
+  Tavalliset navigaatiotekstit ja aidot tuotekatalogit ovat sallittuja.
+- [ ] Identtiset täysleveät tekstipalkit toistuvasti ovat visuaalinen
+  varoitus, ellei jokaiselle löydy perusteltua yrityskohtaisen sisällön
+  ja käyttötarkoituksen syytä.
+- [ ] Pyörähuollolla on oikea huoltopolku, pyörämyyjällä vain todistetut
+  myyntipalvelut; usean toimialan yrityksessä kaikki todelliset palvelut säilyvät.
+
+
 ## Brand Lock: original logo and image identity across all routes
 
 **Source-first requirement:** see

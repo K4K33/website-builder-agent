@@ -46,6 +46,35 @@ def compare_site_designs(first: str, second: str) -> dict[str, object]:
             "layout_similarity": round(ratio, 3),
             "same_core_stylesheet": same_sheet}
 
+def repeated_company_copy(first: str, second: str) -> dict:
+    """Flag exact substantial marketing copy shared by unrelated businesses.
+
+    Do not flag common functional headings (Contact, Services, Pricing), single
+    generic words or legal/privacy page text. This is a narrow deterministic
+    anti-template check, not an AI authorship detector.
+    """
+    def units(html: str) -> dict:
+        soup = BeautifulSoup(html, "html.parser")
+        main = soup.find("main")
+        if main is None:
+            return {"headings": set(), "paragraphs": set()}
+        headings, paragraphs = set(), set()
+        for node in main.select("h1,h2,h3,p"):
+            value = " ".join(node.get_text(" ", strip=True).casefold().split())
+            value = value.strip(".!? ")
+            words = value.split()
+            if node.name == "p" and len(value) >= 90 and len(words) >= 10:
+                paragraphs.add(value)
+            elif node.name in ("h1", "h2", "h3") and len(value) >= 32 and len(words) >= 5:
+                headings.add(value)
+        return {"headings": headings, "paragraphs": paragraphs}
+    a, b = units(first), units(second)
+    matches = sorted((a["headings"] & b["headings"]) |
+                     (a["paragraphs"] & b["paragraphs"]))
+    return {"too_similar": bool(matches),
+            "copied_marketing_text": [part[:175] for part in matches[:5]]}
+
+
 def assert_unique_against_output(html: str, slug: str,
                                  output_dir: str | Path) -> None:
     """Raise before saving another company's repeated layout."""
@@ -62,4 +91,11 @@ def assert_unique_against_output(html: str, slug: str,
                 f"layout similarity {result['layout_similarity']}. "
                 "Create an original information architecture, composition "
                 "and visual hierarchy; changing only colors is not enough."
+            )
+        voice = repeated_company_copy(html, other.read_text(encoding="utf-8"))
+        if voice["too_similar"]:
+            raise RuntimeError(
+                f"Repeated marketing copy from unrelated customer {other.parent.name}: "
+                + " | ".join(voice["copied_marketing_text"])
+                + ". Rebuild with the real company's own services and language."
             )

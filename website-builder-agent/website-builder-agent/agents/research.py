@@ -103,6 +103,28 @@ Palauta VAIN validi JSON:
 
 
 FINAL_RESEARCH_PROMPT = """
+TOIMIALAN TUNNISTETTAVUUDEN ENNAKKOTARKISTUS KAIKILLE YRITYKSILLE:
+- Suunnittele kuin tämän yrityksen oma palvelu-, myynti- tai asiantuntijasivu,
+  älä Kaurivon toistuva elegantti esite tai instituution verkkosivu.
+- Arvioi ilman logoa: tunnistaako ensisilmäyksellä yrityksen todellisen
+  toimialan ja ensisijaisen asiakastehtävän? Pyörähuollon pitää tuntua
+  pyörähuollolta, ravintolan ravintolalta ja suutarin suutarin liikkeeltä.
+- Erota aidot markkinan/asiakkaan bränditunnusmerkit geneerisistä
+  visuaalisista trendeistä (serif-otsikot, isot pehmeät palkit, peruskortit,
+  museomainen taitto, huomiokorosteiden toistuva rytmitys).
+- Mieti miten sivu voisi näyttää epähuomiossa yliopiston, toimiston,
+  arkkitehdin tai konsulttiyrityksen sivulta. Korjaa alan tunnistettavuus
+  oikealla yrityksen tuotanto-/palvelusisällöllä, kuvilla ja hierarkialla.
+- Rakenteellisesti aidosti erilaiset kolme luovaa ideaa, ei kolme väriversiota
+  samoista täysleveistä sisältöpalkkeista.
+- Älä keksi pyörämyyntiä pyörähuollolle, varauksia ilman ajanvarausta,
+  henkilökuntaa, projektikuvia tai tuotteita joita lähteessä ei ole.
+- Kirjaa design_recommendations-kenttään sector_signature: faktapohjainen
+  toimialan tunnistus, kaksi erottavaa toimialavihjettä, oikeat asiakastehtävät,
+  kolme vältettävää väärän toimialan mielikuvaa ja yrityksen oikeaa omaa kieltä.
+- Käytä lähdekohtaisia havaintoja ja kolme saman toimialan referenssisivustoa,
+  mutta älä koskaan kopioi niiden tai toisten asiakkaidemme tekstejä.
+
 MAKE TWO STRICTLY SEPARATED OUTPUT CATEGORIES FOR THE NEXT CLIENT:
 (1) Source-backed business facts, exact brand/identity, original services,
 pricing, customer reviews/rating evidence, real imagery, geospatial facts and

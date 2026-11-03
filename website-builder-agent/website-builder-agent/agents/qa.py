@@ -57,6 +57,23 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+V4 COMPANY / INDUSTRY RECOGNITION RED-TEAM:
+The visitor must recognise this company's actual business without a logo.
+Judge actual rendered desktop and phone screenshots for industry signals,
+original brand character, genuine workshop/product/service imagery, and
+company-specific voice. Ask: could this cycle workshop look like an academic
+university site or an architecture agency instead? If yes, document evidence,
+the confusing visual cues and a specific company-grounded correction.
+Repeated identical full-width content bands, overly poetic serif headings,
+generic mission copy and interchangeable card grids require critical review.
+Do not prohibit necessary catalogues, tables or repeated accessibility
+patterns: repetition is a flaw when it overwhelms the true company's voice.
+Where a business has two real service lines, retain both, without inventing
+saleable products or imagery. Perform a five-second logo-masked recognition
+test with actual independent reviewers. Do not self-report independent
+reviewer success or assign a 9.5 rating without proof.
+Read docs/KAURIVO_SECTOR_IDENTITY_V4_2026-11-03.md.
+
 BRAND LOCK — SOURCE VERSUS FINAL ALL-PAGE COMPARISON:
 Compare the actual original business logo/favicon, official colors and partner
 marks with every rendered redesigned page at mobile and desktop. Explicitly

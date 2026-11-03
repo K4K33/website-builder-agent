@@ -594,6 +594,28 @@ BRAND LOCK — EI UUSIA YRITYSTUNNUKSIA ILMAN TODELLISTA HYVÄKSYNTÄÄ:
   voimassa olevan suhteen ja julkaisuoikeuden. Älä keksi niitä lainkaan.
 - Tarkistus: utils/brand_lock.py + docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md.
 
+YLEINEN V4-TOIMIALAILME JA BRÄNDIN TUNNISTETTAVUUS:
+- Sivuston täytyy tuntua tämän OIKEAN yrityksen toimialalta myös ilman
+  logoa: oikeat tuotteet, työtilat, palvelut, valokuvat ja asiointitapa.
+- Ei ole riittävää, että teknisesti laadukas pyörähuolto näyttää
+  yliopistolta, luksuskonsultilta tai museolta. Tunnista väärä
+  toimialamielikuva ja muuta visuaalista konseptia lähdeaineiston mukaan.
+- Älä kierrätä muilta asiakkailta isoja serif-otsikoita, tasaleveitä
+  sisältöpalkkeja, samoja 3 kortin ruudukoita, samankaltaisia heroja,
+  sloganirakenteita tai pitkiä geneerisiä arvopuheita automaattisesti.
+- Yrityksen oma kuva- ja kielimaailma määrittää rytmin. Esimerkiksi aidon
+  huoltotyön jälki, tuotteet ja hyödylliset hinnastot saavat olla keskiössä.
+  Jos yrityksellä on sekä suutari- että pyöräpalvelu, kumpikaan ei katoa.
+- Oikeat samaa toimialaa edustavat benchmarkit ovat apuna, mutta niiden
+  brändiä tai tekstiä ei kopioida.
+- Jokaiseen pääotsikkoon ja näkyvään sisältöpalkkiin kuuluu konkreettinen
+  yrityskohtainen syy. Jos osio voisi tulla muuttumatta yliopistolle,
+  toimistolle ja pyörähuollolle, kirjoita tai sommittele se uudelleen.
+- Tuota myös itsearvioitava ensimmäisen näkymän liiketoiminnallinen
+  perustelu, mutta älä väitä sitä riippumattomaksi visuaalitestiksi.
+- Toimialan tunnistus ja usean yrityksen teksti-/rakennevertailu ovat
+  pakollista QA:ta. docs/KAURIVO_SECTOR_IDENTITY_V4_2026-11-03.md.
+
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
   vahvistettu palvelu, kenelle se on ja miten asiakas jatkaa. Pelkkä
@@ -926,6 +948,28 @@ BRAND LOCK — EI UUSIA YRITYSTUNNUKSIA ILMAN TODELLISTA HYVÄKSYNTÄÄ:
 - Kumppanilogot, sertifikaatit ja jäsenyystunnukset vaativat aidon lähteen,
   voimassa olevan suhteen ja julkaisuoikeuden. Älä keksi niitä lainkaan.
 - Tarkistus: utils/brand_lock.py + docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md.
+
+YLEINEN V4-TOIMIALAILME JA BRÄNDIN TUNNISTETTAVUUS:
+- Sivuston täytyy tuntua tämän OIKEAN yrityksen toimialalta myös ilman
+  logoa: oikeat tuotteet, työtilat, palvelut, valokuvat ja asiointitapa.
+- Ei ole riittävää, että teknisesti laadukas pyörähuolto näyttää
+  yliopistolta, luksuskonsultilta tai museolta. Tunnista väärä
+  toimialamielikuva ja muuta visuaalista konseptia lähdeaineiston mukaan.
+- Älä kierrätä muilta asiakkailta isoja serif-otsikoita, tasaleveitä
+  sisältöpalkkeja, samoja 3 kortin ruudukoita, samankaltaisia heroja,
+  sloganirakenteita tai pitkiä geneerisiä arvopuheita automaattisesti.
+- Yrityksen oma kuva- ja kielimaailma määrittää rytmin. Esimerkiksi aidon
+  huoltotyön jälki, tuotteet ja hyödylliset hinnastot saavat olla keskiössä.
+  Jos yrityksellä on sekä suutari- että pyöräpalvelu, kumpikaan ei katoa.
+- Oikeat samaa toimialaa edustavat benchmarkit ovat apuna, mutta niiden
+  brändiä tai tekstiä ei kopioida.
+- Jokaiseen pääotsikkoon ja näkyvään sisältöpalkkiin kuuluu konkreettinen
+  yrityskohtainen syy. Jos osio voisi tulla muuttumatta yliopistolle,
+  toimistolle ja pyörähuollolle, kirjoita tai sommittele se uudelleen.
+- Tuota myös itsearvioitava ensimmäisen näkymän liiketoiminnallinen
+  perustelu, mutta älä väitä sitä riippumattomaksi visuaalitestiksi.
+- Toimialan tunnistus ja usean yrityksen teksti-/rakennevertailu ovat
+  pakollista QA:ta. docs/KAURIVO_SECTOR_IDENTITY_V4_2026-11-03.md.
 
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
