@@ -161,6 +161,45 @@ class SourceSignatureLockTests(unittest.TestCase):
             '<img src="https://atelier.example/p0.jpg">')},research)
         self.assertIn("original_photographic_depth_lost",kinds(report))
 
+    def test_universal_gate_blocks_missing_source_portraits(self):
+        from utils.universal_quality import audit_universal_standards
+        p=pages()
+        p["team/index.html"]=page("<h2>Our team</h2><p>Alex and Mira</p>")
+        review=audit_universal_standards(
+            p["index.html"], research=original(), rendered_pages=p,
+            stage="internal_demo")
+        self.assertIn("original_visual_assets",review["blocking_problems"])
+
+    def test_demo_preview_ci_does_not_accept_missing_source_manifest(self):
+        from scripts import audit_changed_demo_previews
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+        with TemporaryDirectory() as temp:
+            with patch.object(audit_changed_demo_previews,"ROOT",Path(temp)):
+                with self.assertRaisesRegex(ValueError,"Missing source-bound"):
+                    audit_changed_demo_previews.verified_source_evidence("new-company")
+
+    def test_demo_preview_ci_rejects_legacy_logo_only_manifest(self):
+        import json
+        from scripts import audit_changed_demo_previews
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+        with TemporaryDirectory() as temp:
+            folder=Path(temp)/"data"/"demo_provenance"
+            folder.mkdir(parents=True)
+            (folder/"old-company.json").write_text(json.dumps({
+                "schema_version":1,"stage":"internal_demo",
+                "source_url":"https://atelier.example/",
+                "footer_assets":[{"name":"Partner",
+                                  "src":"https://atelier.example/partner.png",
+                                  "source_url":"https://atelier.example/"}]
+            }),encoding="utf-8")
+            with patch.object(audit_changed_demo_previews,"ROOT",Path(temp)):
+                with self.assertRaisesRegex(ValueError,"Legacy partial"):
+                    audit_changed_demo_previews.verified_source_evidence("old-company")
+
     def test_browser_observed_video_counts_if_html_source_misses_it(self):
         research=original()
         research["source_inventory"]["pages"][0]["source_identity"]["source_experience"]["observed_videos"]=0
