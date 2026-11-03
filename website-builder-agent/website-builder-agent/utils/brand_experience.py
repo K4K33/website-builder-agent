@@ -8,7 +8,7 @@ required rather than incorrectly certified.
 """
 from __future__ import annotations
 
-from posixpath import dirname, normpath
+from posixpath import dirname, join, normpath
 from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
@@ -68,7 +68,7 @@ def _linked_local_presentation_assets(pages: dict[str, str]) -> dict:
             if parsed.scheme or parsed.netloc:
                 continue
             relative = (parsed.path.lstrip("/") if parsed.path.startswith("/") else
-                        normpath(dirname(route) + "/" + parsed.path))
+                        normpath(join(dirname(route), parsed.path)))
             if relative.startswith("assets/") and ".." not in relative.split("/"):
                 bundled.add(relative)
             else:
