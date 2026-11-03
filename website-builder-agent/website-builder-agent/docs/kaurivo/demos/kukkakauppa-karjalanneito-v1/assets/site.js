@@ -8,6 +8,7 @@
     toggle.setAttribute("aria-expanded", String(open));
     mobile.setAttribute("data-open", String(open));
     mobile.setAttribute("aria-hidden", String(!open));
+    mobile.inert = !open;
     toggle.setAttribute("aria-label", open ? "Sulje valikko" : "Avaa valikko");
   }
   if (toggle && mobile) {
