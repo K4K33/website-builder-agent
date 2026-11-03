@@ -27,14 +27,19 @@ class OllamaBackendTests(unittest.TestCase):
         values.update(updates)
         return patch.dict(os.environ, values)
 
-    def test_free_only_blocks_openrouter_even_if_key_exists(self):
-        with self.env(AI_BACKEND="openrouter"):
-            with self.assertRaisesRegex(RuntimeError, "FREE_ONLY"):
-                config.ai_backend()
+    def test_free_only_blocks_paid_openrouter_models_but_allows_free_variants(self):
+        with self.env(AI_BACKEND="openrouter", OPENROUTER_MODEL="provider/paid"):
+            self.assertEqual(config.ai_backend(), "openrouter")
             with patch.object(claude_client, "_get_headers") as credentials:
                 with self.assertRaisesRegex(RuntimeError, "FREE_ONLY"):
                     claude_client.ask_claude("system", "prompt")
                 credentials.assert_not_called()
+        with self.env(AI_BACKEND="openrouter", OPENROUTER_MODEL="provider/quality:free",
+                      RESEARCH_MODEL="provider/quality:free"):
+            self.assertEqual(config.model_for_stage("research"), "provider/quality:free")
+            self.assertTrue(config.is_zero_cost_openrouter_model("provider/quality:free"))
+            self.assertFalse(config.is_zero_cost_openrouter_model("provider/quality"))
+            self.assertFalse(config.is_zero_cost_openrouter_model("provider/quality:extended"))
 
     def test_unknown_backend_rejected_and_cloud_model_disabled(self):
         with self.env(AI_BACKEND="remote"):
