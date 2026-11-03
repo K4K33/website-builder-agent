@@ -48,8 +48,11 @@ def process_free_batch(queue: dict, process, *, status_path: str | Path,
             report["skipped"].append({"slug": slug, "reason": "already_approved"})
             continue
         existing = state["jobs"].get(slug) or {}
-        if existing.get("status") in ("completed", "blocked") and not retry_failed:
-            report["skipped"].append({"slug": slug, "reason": "already_attempted"})
+        if existing.get("status") == "completed":
+            report["skipped"].append({"slug": slug, "reason": "previously_completed"})
+            continue
+        if existing.get("status") == "blocked" and not retry_failed:
+            report["skipped"].append({"slug": slug, "reason": "blocked_until_explicit_retry"})
             continue
         items.append(slug)
     report["eligible"] = len(items)
