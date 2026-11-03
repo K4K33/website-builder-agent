@@ -20,6 +20,9 @@ class UniversalStandardsTest(unittest.TestCase):
         self.assertTrue(required.issubset({x[0] for x in UNIVERSAL_STANDARDS}))
         result = audit_universal_standards(self.html)
         self.assertTrue(result["automated_pass"])
+        self.assertEqual(result["quality_decision"], "review_required")
+        self.assertFalse(result["blocking_categories"])
+        self.assertIn("editable_cms", result["pending_categories"])
         self.assertFalse(result["client_release_ready"])
         self.assertIn("editable_cms", result["pending_evidence"])
         self.assertIn("verified_independent_review", result["pending_evidence"])
@@ -31,6 +34,8 @@ class UniversalStandardsTest(unittest.TestCase):
         result = audit_universal_standards(page)
         self.assertIn("no_decorative_numbering", result["blocking_problems"])
         self.assertIn("natural_copy", result["blocking_problems"])
+        self.assertEqual(result["quality_decision"], "blocked")
+        self.assertIn("natural_copy", result["blocking_categories"])
 
     def test_repeated_decorative_cta_arrows_are_blocked_across_pages(self):
         repeated = {

@@ -24,6 +24,22 @@ class GeneralLearningTests(unittest.TestCase):
         self.assertEqual(len(
             ledger["issues"]["no_decorative_numbering"]["project_slugs"]), 2)
 
+    def test_fake_review_rating_failures_remain_a_distinct_global_category(self):
+        from utils.global_feedback import classify_issue
+        for message in (
+            "unsourced_customer_review: invented quote",
+            "changed_source_review_rating: original 4 stars shown as 5",
+            "unverified_aggregate_rating: Google 4.9 / 5",
+        ):
+            self.assertEqual(classify_issue(message), "source_bound_social_proof")
+        ledger = load_ledger("/no/such/kaurivo-ledger")
+        record_qa_findings(ledger, "synthetic-a", ["unverified_aggregate_rating"])
+        record_qa_findings(ledger, "synthetic-b", ["changed_source_review_rating"])
+        self.assertEqual(
+            ledger["issues"]["source_bound_social_proof"]["status"],
+            "universal_candidate"
+        )
+
     def test_repeated_failure_is_sent_to_future_builder_without_false_fix(self):
         ledger = {"schema_version": 1, "issues": {}, "user_rules": []}
         record_qa_findings(ledger, "company-a", ["mobile overflow at 320px"])

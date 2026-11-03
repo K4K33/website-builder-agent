@@ -14,6 +14,7 @@ from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.client_facing_integrity import audit_client_facing_integrity
 from utils.brand_design_blueprint import audit_sitewide_brand_consistency
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
+from utils.trust_claims import audit_trust_claims
 from utils.premium_quality_gate import (
     source_coverage_matrix, verify_independent_premium_reviews,
     verify_field_performance, audit_primary_journeys,
@@ -32,6 +33,7 @@ UNIVERSAL_STANDARDS = (
     ("no_decorative_numbering", "No gratuitous 01/02/03 cards", "content"),
     ("non_repetitive_cta_icons", "No repeated decorative arrows on links and calls to action", "visual"),
     ("real_testimonials", "No invented customer reviews, results or staff", "trust"),
+    ("source_bound_social_proof", "New testimonial and rating claims require exact-build proof", "trust"),
     ("accurate_media", "Licensed, true company photos and paired before/after evidence", "media"),
     ("dietary_accuracy", "Full sourced menu and verified G/L/M or allergen details", "safety"),
     ("navigation_and_links", "Working navigation, real link destinations and no fake CTAs", "functional"),
@@ -149,6 +151,18 @@ def audit_universal_standards(
         fail("real_testimonials", str(item))
     for item in source_review_fidelity["pending"]:
         needs("real_testimonials", item)
+
+    # Preservation alone is insufficient: a generated site can retain every
+    # genuine quote AND append fabricated five-star endorsements.
+    # Fail closed for clearly recognizable review cards and aggregate badges.
+    social_proof = audit_trust_claims(
+        rendered_pages if isinstance(rendered_pages, dict) and rendered_pages
+        else {"index.html": html}, research
+    )
+    for item in social_proof["blocking"]:
+        fail("source_bound_social_proof", str(item))
+    for item in social_proof["pending"]:
+        needs("source_bound_social_proof", str(item))
 
     copy_result = lint_site_copy(pages)
     for error in copy_result["issues"]:
@@ -347,7 +361,14 @@ def audit_universal_standards(
               "pending": pending.get(key, [])}
         for key, group in all_rules.items()
     }
+    # Report one usable cross-project decision rather than exposing a
+    # misleading 'green' automation flag when human/source proof is still open.
+    decision = ("blocked" if problems else
+                "review_required" if pending else "client_ready")
     return {
+        "quality_decision": decision,
+        "blocking_categories": sorted(problems),
+        "pending_categories": sorted(pending),
         "automated_pass": not problems,
         "internal_review_ready": not problems,
         "client_release_ready": not problems and not pending,
@@ -360,6 +381,7 @@ def audit_universal_standards(
             "independent_review": independently_reviewed,
             "field_performance": field_metrics,
             "primary_user_journeys": journeys,
+            "social_proof": social_proof,
         },
         "pending_evidence": pending,
         "note": (
