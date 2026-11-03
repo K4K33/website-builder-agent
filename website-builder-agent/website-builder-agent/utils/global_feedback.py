@@ -13,6 +13,11 @@ import re
 
 
 CATEGORIES = {
+    "source_bound_social_proof": (
+        "source_bound_social_proof", "unsourced_customer_review",
+        "changed_source_review_rating", "unverified_aggregate_rating",
+        "arvostelun tähdet", "keksitty asiakaspalaute", "fake review rating",
+    ),
     "no_decorative_numbering": ("numerointi", "decorative card numbering", "card-number"),
     "natural_copy": ("natural_copy", "source narration", "repeated paragraph",
                      "placeholder", "ai-roska", "contrast-pair"),
