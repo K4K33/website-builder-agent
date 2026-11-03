@@ -12,6 +12,25 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 
 # Content requirements, never fixed "hero / four cards / CTA" designs.
 SECTORS = {
+    "bicycle": {
+        "terms": (
+            "pyöräliik", "pyörähuol", "polkupyör", "pyöräkaup",
+            "fillari", "bicycle", "bike shop", "bike repair", "cycling",
+            "cycle shop", "cycle repair",
+        ),
+        "visitor_tasks": (
+            "identify actual bicycle services or verified bikes offered for sale",
+            "see exact repair/pricing or real product and availability information",
+            "find workshop visit details, opening hours and direct contact",
+        ),
+        "source_focus": (
+            "real bicycle repairs and tools, not an academic or agency brochure",
+            "verified workshop imagery and existing brand voice",
+            "whether bicycles are actually sold, versus only maintained",
+            "specific bike categories, price rows, workshop hours and location",
+            "true service mix if the business also repairs shoes or other items",
+        ),
+    },
     "automotive": {
         "terms": ("autokorja", "autohuol", "vehicle repair", "car repair", "garage"),
         "visitor_tasks": ("identify relevant repair or service", "find reliable contact/booking path",
@@ -249,6 +268,22 @@ def create_industry_brief(company: dict, research: dict) -> dict:
         **guidance,
         "inventory_status": status,
         "source_pages": source_pages,
+        "sector_identity_expectation": (
+            "At five seconds with the logo hidden the actual customer task, "
+            "business category and working environment should be recognisable. "
+            "A verified bike repair shop must not look like a university; "
+            "a shoe-and-bike business must preserve BOTH service lines. "
+            "Avoid repeating Kaurivo's generic editorial bars, oversized "
+            "institutional heading treatments and generic section stacks. "
+            "Use evidence-backed sector photography and specific services; "
+            "never invent stock, workshop assets or staff."
+        ),
+        "voice_and_layout_expectation": (
+            "Use actual client phrasing and source-observed offer, not reusable "
+            "marketing slogans. Compose the layout around the client's source "
+            "content density, photos and customer actions; do not clone a "
+            "full-width strip + text/photo split + uniform service card sequence."
+        ),
         "must_preserve": [
             "real company logo and approved brand; no invented textual replacement",
             "observed source theme colors and approved photographic identity",
