@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 def inspect_site(path):
     source = Path(path).resolve()
-    issues, screenshots = [], {}
+    issues, screenshots, visual_review_flags = [], {}, []
     viewports = (("desktop", 1440, 900), ("tablet", 768, 1024),
                  ("mobile", 390, 844), ("small_mobile", 320, 740))
     try:
@@ -61,9 +61,44 @@ def inspect_site(path):
                                         displayedWidth: Math.round(el.getBoundingClientRect().width),
                                         src: (el.currentSrc || el.src).slice(0,120)
                                     })).slice(0,5),
+                                // A tall almost-empty column next to substantial
+                                // content is a human layout-review candidate,
+                                // NOT a numeric automatic design verdict.
+                                columnImbalance: innerWidth < 768 ? [] :
+                                  [...document.querySelectorAll('main section,main [class*="grid"],main [class*="split"],main [class*="columns"]')]
+                                    .slice(0,100).filter(el => {
+                                        const display=getComputedStyle(el).display;
+                                        return display==='grid'||display==='flex';
+                                    }).map(el => {
+                                        const children=[...el.children].filter(ch => visible(ch)
+                                            && ch.getBoundingClientRect().width >= 180);
+                                        if(children.length!==2) return null;
+                                        const rects=children.map(ch=>ch.getBoundingClientRect());
+                                        const maxH=Math.max(...rects.map(r=>r.height));
+                                        if(maxH<500 || Math.min(...rects.map(r=>r.width))<180) return null;
+                                        const textEnds=children.map((ch,i) => {
+                                            const candidates=[...ch.querySelectorAll('h1,h2,h3,p,li,a,button,table')];
+                                            const ends=candidates.filter(visible)
+                                                .map(n=>n.getBoundingClientRect().bottom);
+                                            return ends.length?Math.max(...ends):rects[i].top;
+                                        });
+                                        const blanks=rects.map((r,i)=>r.bottom-textEnds[i]);
+                                        if(Math.max(...blanks)<360 || Math.abs(blanks[0]-blanks[1])<300) return null;
+                                        return {
+                                            element: el.tagName.toLowerCase(),
+                                            className: String(el.className||'').slice(0,90),
+                                            columnBlankPixels: blanks.map(x=>Math.round(x)),
+                                            note:'Editorial whitespace imbalance requires screenshot inspection'
+                                        };
+                                    }).filter(Boolean).slice(0,6),
                                 emptyMain: !document.querySelector('main')?.innerText.trim(),
                             };
                         }""")
+                        if findings.get("columnImbalance"):
+                            visual_review_flags.extend([
+                                {"viewport": name, **candidate}
+                                for candidate in findings["columnImbalance"]
+                            ])
                         if findings["lowResolutionLogos"]:
                             issues.append(
                                 f"{name}: pixelated primary brand logo (insufficient source pixels): "
@@ -204,4 +239,6 @@ def inspect_site(path):
     except Exception as error:
         issues.append(f"Browser QA unavailable or failed: {type(error).__name__}: {str(error)[:200]}")
     return {"pass": not issues and len(screenshots) == len(viewports),
-            "issues": issues, "screenshots": screenshots}
+            "issues": issues, "screenshots": screenshots,
+            "visual_review_flags": visual_review_flags,
+            "note": "Whitespace/layout flags need independently reviewed full-page screenshots."}
