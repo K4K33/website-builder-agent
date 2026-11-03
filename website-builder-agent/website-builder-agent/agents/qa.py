@@ -805,6 +805,16 @@ HTML END:
 
 
 VISUAL_REVIEW_PROMPT = """
+CRITICALLY ASSESS EACH PAGE/VIEWPORT NOT JUST THE HOMEPAGE:
+Compare source brand, original photos and service personality; verify that
+the client would recognize their own business. Look for fictional symbols,
+artificial maps, leaked agent notes, generic headline systems, unbalanced
+column whitespace, awkward empty bottom areas, repetitive cards and
+decorative arrows/numbering. Assess actual 1440px, 768px, 390px and 320px
+screenshots when present, and flag missing screenshots rather than scoring
+them as seen. A green automated suite does not prove beautiful design.
+Document source-specific discrepancies. Provide no invented independent score.
+
 Lisäksi arvioi mukana olevat aidot renderöidyt desktop-, tablet- ja mobiilikuvat.
 HTML:n sisältötarkistus yksin ei riitä hyväksyntään.
 Kun alkuperäisen yrityssivuston desktop/mobiilikuvat ovat mukana, vertaa
