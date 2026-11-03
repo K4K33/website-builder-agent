@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ipaddress
 from pathlib import Path
+from datetime import datetime, timezone
 from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
@@ -124,4 +125,6 @@ def capture_website(url: str, company_name: str) -> dict | None:
     if not results:
         return None
     results["first_fold_observations"] = metrics
+    results["captured_at"] = datetime.now(timezone.utc).isoformat()
+    results["capture_url"] = str(url)
     return results
