@@ -1,10 +1,11 @@
-name: Kaurivo Karjalanneito new-company preview QA
+name: Kaurivo Karjalanneito source and live browser QA
 
 on:
   pull_request:
     paths:
       - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/kukkakauppa-karjalanneito-v1/**"
       - "website-builder-agent/website-builder-agent/tests/test_karjalanneito_demo.py"
+      - "website-builder-agent/website-builder-agent/tests/browser_karjalanneito_preview.py"
       - ".github/workflows/kaurivo-karjalanneito-demo-qa.yml"
   workflow_run:
     workflows: ["Deploy static content to Pages"]
@@ -16,7 +17,7 @@ permissions:
 
 jobs:
   original-content-and-functional-contract:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
@@ -29,116 +30,56 @@ jobs:
           python-version: "3.11"
       - name: Install free parser
         run: python -m pip install beautifulsoup4
-      - name: Three pages, complete source gallery and real business details
+      - name: Three routes, source photo parity, dimensions and facts
         run: python -m unittest tests.test_karjalanneito_demo -v
 
-  published-photo-and-browser-review:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+  local-browser:
+    if: github.event_name == 'pull_request'
+    needs: original-content-and-functional-contract
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install headless browser
+      - name: Install Playwright Chromium
         run: |
           python -m pip install playwright
           python -m playwright install --with-deps chromium
-      - name: Inspect live links, imagery, interactive gallery and viewport
-        run: |
-          python - <<'PY'
-          from playwright.sync_api import sync_playwright
-          from pathlib import Path
-          import json
-          import time
-
-          base = "https://k4k33.github.io/website-builder-agent/kaurivo/demos/kukkakauppa-karjalanneito-v1/"
-          routes = ("", "galleria/", "yhteystiedot/")
-          output = Path("karjalanneito-browser-qa")
-          output.mkdir(exist_ok=True)
-          records = []
-          with sync_playwright() as pw:
-              browser = pw.chromium.launch(headless=True)
-              try:
-                  for route in routes:
-                      for width in (320,390,768,1440):
-                          context = browser.new_context(
-                              viewport={"width": width, "height": 850},
-                              reduced_motion="reduce"
-                          )
-                          page = context.new_page()
-                          errors = []
-                          page.on("pageerror", lambda error: errors.append(str(error)))
-                          response = page.goto(base + route, wait_until="domcontentloaded", timeout=30000)
-                          if response is None or response.status != 200:
-                              raise AssertionError("Bad URL: " + base + route)
-                          page.wait_for_timeout(650)
-                          state = page.evaluate("""() => ({
-                              overflow: document.documentElement.scrollWidth > innerWidth + 2,
-                              h1: document.querySelectorAll('main h1').length,
-                              disclosure: document.body.innerText.includes('KAURIVON ITSENÄINEN KONSEPTIDEMO'),
-                              sourceLogo: [...document.querySelectorAll('.brand__icon img')]
-                                .some(el => el.src.includes('cropped-logo_final_KN')),
-                              images: document.querySelectorAll('main img').length
-                          })""")
-                          if state["overflow"] or state["h1"] != 1 or not state["disclosure"] or not state["sourceLogo"] or errors:
-                              raise AssertionError("Layout/identity/browser error: " + str((route,width,state,errors)))
-                          if route == "":
-                              if state["images"] < 8:
-                                  raise AssertionError("Source flower imagery unexpectedly absent")
-                              page.wait_for_function("""() => {
-                                  const img = document.querySelector('.hero__main');
-                                  return img && img.complete && img.naturalWidth > 0;
-                              }""", timeout=22000)
-                          elif route == "galleria/":
-                              if page.locator("[data-gallery-item]").count() != 45:
-                                  raise AssertionError("Original 45-gallery source parity lost")
-                              page.locator('[data-gallery-filter="haakimput"]').click()
-                              if page.locator("[data-gallery-item]:visible").count() != 4:
-                                  raise AssertionError("Wedding filter failed")
-                              if "4 kuvaa" not in page.locator("[data-gallery-count]").inner_text():
-                                  raise AssertionError("Gallery photo counter failed")
-                              page.locator("[data-gallery-item]:visible").first.locator("button").click()
-                              if page.locator("[data-lightbox]").get_attribute("aria-hidden") != "false":
-                                  raise AssertionError("Lightbox failed")
-                              page.keyboard.press("Escape")
-                              if page.locator("[data-lightbox]").get_attribute("aria-hidden") != "true":
-                                  raise AssertionError("Lightbox Escape failed")
-                              page.locator('[data-gallery-filter="kaikki"]').click()
-                              first_image = page.locator("[data-gallery-item] img").first
-                              first_image.scroll_into_view_if_needed()
-                              page.wait_for_function("""() => {
-                                  const img = document.querySelector('[data-gallery-item] img');
-                                  return img && img.complete && img.naturalWidth > 0;
-                              }""", timeout=22000)
-                          else:
-                              page.wait_for_function("""() => {
-                                  const img = document.querySelector('.contact-hero > img');
-                                  return img && img.complete && img.naturalWidth > 0;
-                              }""", timeout=22000)
-                          if width == 320:
-                              toggle = page.locator("[data-nav-toggle]")
-                              toggle.click()
-                              if toggle.get_attribute("aria-expanded") != "true":
-                                  raise AssertionError("Mobile nav open failed")
-                              page.keyboard.press("Escape")
-                              if toggle.get_attribute("aria-expanded") != "false":
-                                  raise AssertionError("Mobile nav close failed")
-                          if width in (390,1440):
-                              file = output / ((route.replace("/", "-") or "home") + str(width) + ".png")
-                              page.screenshot(path=str(file), full_page=route != "galleria/", animations="disabled")
-                          data = {"route":route,"width":width,"ok":True,"images":state["images"]}
-                          records.append(data)
-                          print("PASS " + json.dumps(data), flush=True)
-                          context.close()
-              finally:
-                  browser.close()
-          (output / "result.json").write_text(json.dumps(records,ensure_ascii=False,indent=2))
-          PY
+      - name: Verify local PR build, image loading, gallery filters and 12 viewports
+        run: python -m tests.browser_karjalanneito_preview --local
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: karjalanneito-source-photo-browser-screenshots
-          path: karjalanneito-browser-qa/
+          name: karjalanneito-pr-local-screenshots
+          path: website-builder-agent/website-builder-agent/qa-evidence/karjalanneito-local/
+          if-no-files-found: ignore
+
+  live-browser:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Playwright Chromium
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Verify public published image loading, gallery and 12 viewports
+        run: python -m tests.browser_karjalanneito_preview --live
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: karjalanneito-live-screenshots
+          path: website-builder-agent/website-builder-agent/qa-evidence/karjalanneito-live/
           if-no-files-found: ignore
