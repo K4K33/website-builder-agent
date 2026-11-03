@@ -120,10 +120,19 @@ def discover_free_references(
     current = stored.get(category) or {}
     observed_at = _timestamp(current.get("updated_at") or "") if isinstance(current, dict) else None
     saved = (current.get("results") or []) if isinstance(current, dict) else []
-    if observed_at and now - observed_at <= timedelta(days=CACHE_DAYS):
+    if observed_at and timedelta(0) <= now - observed_at <= timedelta(days=CACHE_DAYS):
         results = _candidates(saved, target_url=target_url, limit=max_results)
-        if len(results) >= 5:
+        # A validated pool of 3+ possible operator URLs can be reused across
+        # clients, without re-querying public OSM for every business.
+        if len(results) >= 3:
             return results
+        # Negative cache: a 24-hour cool-down protects free public infrastructure
+        # if this location/category has too few listed company sites.
+        if now - observed_at < timedelta(hours=24):
+            raise RuntimeError(
+                "Insufficient source-backed operator URLs in recent cached "
+                "public OSM search; no repeated immediate requests."
+            )
 
     if fetch_osm is None:
         # Local import to avoid circular references and extra dependencies.
@@ -144,16 +153,17 @@ def discover_free_references(
             if isinstance(row, dict) and row.get("website"):
                 gathered.append(row)
     results = _candidates(gathered, target_url=target_url, limit=50)
-    if results:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        saved_current = dict(stored)
-        saved_current[category] = {
-            "updated_at": now.isoformat(),
-            "source": "openstreetmap_overpass_public",
-            "results": results,
-        }
-        path.write_text(json.dumps(saved_current, ensure_ascii=False, indent=2),
-                        encoding="utf-8")
+    # Save both successful and unsuccessful lookups. A missing operator is
+    # never treated as valid, but it prevents hammering free OSM public servers.
+    path.parent.mkdir(parents=True, exist_ok=True)
+    saved_current = dict(stored)
+    saved_current[category] = {
+        "updated_at": now.isoformat(),
+        "source": "openstreetmap_overpass_public",
+        "results": results,
+    }
+    path.write_text(json.dumps(saved_current, ensure_ascii=False, indent=2),
+                    encoding="utf-8")
     selected = _candidates(results, target_url=target_url, limit=max_results)
     if len(selected) < 3:
         raise RuntimeError(
