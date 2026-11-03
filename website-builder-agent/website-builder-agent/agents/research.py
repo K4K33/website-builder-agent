@@ -31,6 +31,7 @@ from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
 from utils.free_references import discover_free_references
 from utils.reference_screenshot_cache import capture_cached
+from utils.reference_site_cache import cached_analyze
 from utils.premium_quality_gate import discover_source_journeys
 from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
@@ -519,7 +520,8 @@ def _select_reference_candidates(references, facts, target_url):
             continue
         domains.add(domain)
         try:
-            site = analyze_url(url)
+            site = (cached_analyze(url, analyze_url)
+                    if config.free_only() else analyze_url(url))
             if not isinstance(site, dict) or site.get("success") is not True:
                 continue
             text = site.get("visible_text", "")[:6000]
