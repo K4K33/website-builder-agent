@@ -1,5 +1,26 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## Brand Lock: original logo and image identity across all routes
+
+**Source-first requirement:** see
+`docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md`.
+The Brand Lock gate detects fabricated logo images and SVG emblems in
+brand slots, wrong header marks, missing explicitly approved original
+logos on subpages and unverified favicons. It does not fabricate assets
+or treat a source URL as a licence.
+
+- [ ] Record the actual original company logo(s), favicon, colors, fonts,
+  photographs and partner logos with source URL and owner-confirmed rights.
+- [ ] Any logo replacement is supported by source/build-bound client
+  signoff, reuse rights and independently checked visual equivalence.
+- [ ] Unknown logo -> plain correct company name for an internal demo,
+  with original identity and rights marked REVIEW REQUIRED, not a fake seal.
+- [ ] Inspect header/footer/phone navigation and favicons on *every* route;
+  compare actual image pixels/SVGs with source, not just filenames.
+- [ ] The company must not be silently rebranded. Real brand-refresh
+  decisions require explicit owner approval and separate versioning.
+
+
 ## V3: source-bound trust claims and non-compensatory quality gate
 
 The current universal acceptance contract is

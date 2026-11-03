@@ -57,6 +57,18 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+BRAND LOCK — SOURCE VERSUS FINAL ALL-PAGE COMPARISON:
+Compare the actual original business logo/favicon, official colors and partner
+marks with every rendered redesigned page at mobile and desktop. Explicitly
+flag made-up SVG emblems, generated one-letter logos, swapped identity marks,
+invented sponsorship/certification badges and different logos across subpages.
+Do not treat a matching file name as proof of identical artwork. Verify the
+source-to-optimized image lineage, brand usage rights and exact-build owner
+approval. A text-only true company name is a provisional safe demo fallback
+when the source logo cannot be licensed or verified; it is not proof of final
+brand fidelity. Never approve 9.5/10 while these proofs are outstanding.
+Review docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md.
+
 COMPANY-FIRST RED TEAM (ALL ROUTES):
 Flag any researcher / agent meta-narration exposed to real visitors:
 original-site source counts, notes about where we copied data from, alleged

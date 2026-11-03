@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.client_facing_integrity import audit_client_facing_integrity
 from utils.brand_design_blueprint import audit_sitewide_brand_consistency
+from utils.brand_lock import audit_brand_lock
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
 from utils.premium_quality_gate import (
@@ -49,6 +50,7 @@ UNIVERSAL_STANDARDS = (
     ("primary_user_journeys", "Every planned main booking, shopping and contact path works", "functional"),
     ("customer_facing_copy", "Published copy contains no research notes or source narration", "content"),
     ("verified_brand_marks", "No invented logo monograms without client-linked proof", "brand"),
+    ("brand_identity_lock", "Source-verified header marks and unchanged approved favicons on every route", "brand"),
     ("real_location_aids", "No decorative street maps masquerading as navigation aids", "functional"),
     ("editorial_visual_balance", "Human comparison of typography, whitespace and composition", "visual"),
     ("coherent_sitewide_brand_kit", "Consistent website-level brand tokens and theme across all routes", "brand"),
@@ -138,6 +140,12 @@ def audit_universal_standards(
         # Visual/editorial proof is checked independently below by the
         # exact-build two-reviewer consensus. Never create a permanently
         # unresolvable pending flag once real evidence has passed.
+
+    identity_lock = audit_brand_lock(pages, research)
+    for issue in identity_lock["blocking"]:
+        fail("brand_identity_lock", str(issue))
+    for issue in identity_lock["pending"]:
+        needs("brand_identity_lock", str(issue))
 
     brand_consistency = audit_sitewide_brand_consistency(pages)
     for reason in brand_consistency["issues"]:
@@ -376,6 +384,7 @@ def audit_universal_standards(
         "standards": grouped,
         "blocking_problems": problems,
         "brand_consistency": brand_consistency,
+        "brand_identity_lock": identity_lock,
         "premium_evidence": {
             "coverage": coverage,
             "independent_review": independently_reviewed,

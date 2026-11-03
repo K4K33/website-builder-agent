@@ -579,6 +579,21 @@ YLEINEN V3-LUOTTAMUSSIGNAALIEN JA ENSIVERSIOLAADUN SÄÄNTÖ:
 - Tämä perustuu kaikille yrityksille yhteiseen V3-laatusopimukseen:
   docs/KAURIVO_UNIVERSAL_QUALITY_CONTRACT_V3_2026-11-03.md.
 
+BRAND LOCK — EI UUSIA YRITYSTUNNUKSIA ILMAN TODELLISTA HYVÄKSYNTÄÄ:
+- Käytä vain tutkimuksessa tunnistettua yrityksen omaa logoa tai sen erikseen
+  hyväksyttyä täsmällistä kopiota. ÄLÄ piirrä uutta brändilogoa, SVG-merkkiä,
+  kirjaimista tehtyä sinettiä, uutta faviconia, sponsori- tai sertifikaattilogoa.
+- Uusi logo ei muutu aidoksi vaihtamalla tiedostonimeksi original-logo.svg.
+  Jokainen muokattu logotiedosto tarvitsee jäljitettävän alkuperäisen kuvan,
+  omistajan hyväksynnän ja nimenomaan nykyiseen sivuversioon sidotun todistuksen.
+- Alkuperäinen hyväksytty logo on säilytettävä etusivun ja kaikkien alisivujen
+  otsakkeessa. Varmista myös mobiilinavigaation, footerin ja faviconin identiteetti.
+- Jos logoa ei voi käyttää luvallisesti, näytä yrityksen tarkka nimi tavallisena
+  tekstinä sisäisessä demossa ja merkitse todellinen brändi odottamaan tarkistusta.
+- Kumppanilogot, sertifikaatit ja jäsenyystunnukset vaativat aidon lähteen,
+  voimassa olevan suhteen ja julkaisuoikeuden. Älä keksi niitä lainkaan.
+- Tarkistus: utils/brand_lock.py + docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md.
+
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
   vahvistettu palvelu, kenelle se on ja miten asiakas jatkaa. Pelkkä
@@ -896,6 +911,21 @@ YLEINEN V3-LUOTTAMUSSIGNAALIEN JA ENSIVERSIOLAADUN SÄÄNTÖ:
   luettavuus, mobiili, toimivat linkit ja asiakkaan tunnistama brändi.
 - Tämä perustuu kaikille yrityksille yhteiseen V3-laatusopimukseen:
   docs/KAURIVO_UNIVERSAL_QUALITY_CONTRACT_V3_2026-11-03.md.
+
+BRAND LOCK — EI UUSIA YRITYSTUNNUKSIA ILMAN TODELLISTA HYVÄKSYNTÄÄ:
+- Käytä vain tutkimuksessa tunnistettua yrityksen omaa logoa tai sen erikseen
+  hyväksyttyä täsmällistä kopiota. ÄLÄ piirrä uutta brändilogoa, SVG-merkkiä,
+  kirjaimista tehtyä sinettiä, uutta faviconia, sponsori- tai sertifikaattilogoa.
+- Uusi logo ei muutu aidoksi vaihtamalla tiedostonimeksi original-logo.svg.
+  Jokainen muokattu logotiedosto tarvitsee jäljitettävän alkuperäisen kuvan,
+  omistajan hyväksynnän ja nimenomaan nykyiseen sivuversioon sidotun todistuksen.
+- Alkuperäinen hyväksytty logo on säilytettävä etusivun ja kaikkien alisivujen
+  otsakkeessa. Varmista myös mobiilinavigaation, footerin ja faviconin identiteetti.
+- Jos logoa ei voi käyttää luvallisesti, näytä yrityksen tarkka nimi tavallisena
+  tekstinä sisäisessä demossa ja merkitse todellinen brändi odottamaan tarkistusta.
+- Kumppanilogot, sertifikaatit ja jäsenyystunnukset vaativat aidon lähteen,
+  voimassa olevan suhteen ja julkaisuoikeuden. Älä keksi niitä lainkaan.
+- Tarkistus: utils/brand_lock.py + docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md.
 
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea

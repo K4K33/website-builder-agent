@@ -37,6 +37,7 @@ def derive_brand_site_blueprint(research: dict) -> dict:
                  if isinstance(page, dict)]
     brand_colors: dict[str, list[str]] = defaultdict(list)
     authentic_logo = {}
+    authentic_favicon = {}
     photos = {}
     for page in snapshots:
         url = str(page.get("url") or "")
@@ -49,6 +50,9 @@ def derive_brand_site_blueprint(research: dict) -> dict:
         for logo in identity.get("original_logo_candidates") or []:
             if isinstance(logo, str) and logo:
                 authentic_logo.setdefault(logo, []).append(url)
+        for favicon in identity.get("original_favicon_candidates") or []:
+            if isinstance(favicon, str) and favicon:
+                authentic_favicon.setdefault(favicon, []).append(url)
         for photo in identity.get("original_content_photos") or []:
             if isinstance(photo, dict) and photo.get("src"):
                 photos.setdefault(photo["src"], []).append(url)
@@ -94,6 +98,10 @@ def derive_brand_site_blueprint(research: dict) -> dict:
             "original_logo_candidates": [
                 {"url": url, "source_urls": list(dict.fromkeys(origins))}
                 for url, origins in sorted(authentic_logo.items())
+            ],
+            "original_favicon_candidates": [
+                {"url": url, "source_urls": list(dict.fromkeys(origins))}
+                for url, origins in sorted(authentic_favicon.items())
             ],
             "original_photo_candidates": [
                 {"url": url, "source_urls": list(dict.fromkeys(origins))}
