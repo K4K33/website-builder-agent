@@ -56,6 +56,19 @@ class RealFirstFoldBrowserTests(unittest.TestCase):
         # are intentionally text-first and still have excellent design.
         self.assertTrue(result["pass"], result["issues"])
 
+    def test_decorative_gradient_cannot_hide_below_fold_photo_flag(self):
+        result = self.run_page(
+            '<section class="intro" style="min-height:1050px;'
+            'background:linear-gradient(145deg,#eee,#fff)">'
+            '<p>Gradient is not a photo of company work.</p></section>'
+            '<section>' + PHOTO + '</section>'
+        )
+        observed = result["first_fold_observations"]["small_mobile"]
+        self.assertFalse(observed["heroHasCssBackground"])
+        self.assertTrue(any(flag.get("kind") == "first_view_business_media_below_fold"
+                            for flag in result["visual_review_flags"]),
+                        result["visual_review_flags"])
+
     def test_authentic_photo_visible_above_fold_has_observed_media(self):
         result = self.run_page('<section class="intro">' + PHOTO + '</section>')
         first = result["first_fold_observations"]["small_mobile"]
