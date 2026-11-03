@@ -82,6 +82,39 @@ jobs:
           done
           echo "Kotifixi V7 home, subpages, CSS and contact JS are live." >> "$GITHUB_STEP_SUMMARY"
 
+          # Kotifixi V16 owner preview: verify the current version and every route, never
+          # mistake a green repository commit for a successfully published website.
+          current_demo="https://k4k33.github.io/website-builder-agent/kaurivo/demos/kotifixi-v16/"
+          for entry in \
+            "|Helpompi arki alkaa meistä!" \
+            "palvelut/|Lumenkolaus ja kuusen poishaku" \
+            "hinnasto/|Kalusteiden kunnostus ja pienet korjaustyöt" \
+            "meista/|Fixin tapa toimia" \
+            "yhteys/|ei lähde yrittäjälle" \
+            "assets/style.css|--container:1240px" \
+            "assets/v16.css|.campaign-feature" \
+            "assets/app.js|kaurivo-kotifixi-demo-contact"; do
+            suffix="${entry%%|*}"
+            expected="${entry#*|}"
+            url="${current_demo}${suffix}"
+            ok="false"
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl --max-time 15 -sSL -o /tmp/kotifixi-v16-live -w '%{http_code}' "${url}" || true)
+              echo "Kotifixi V16 ${suffix:-home}: HTTP ${code}, attempt ${attempt}"
+              if [[ "${code}" == "200" ]] && grep -Fq -- "${expected}" /tmp/kotifixi-v16-live; then
+                ok="true"
+                break
+              fi
+              sleep 6
+            done
+            if [[ "${ok}" != "true" ]]; then
+              echo "::error::Kotifixi V16 current owner preview missing or stale: ${url}"
+              exit 1
+            fi
+          done
+          echo "Kotifixi V16 current owner preview and all subpages/assets verified live." >> "$GITHUB_STEP_SUMMARY"
+
+
 
           # All current three-industry V4 owner previews: exact public URL + version marker + subpage.
           for demo in te-service-v4 ravintola-rosanne-v4 rakennuspalvelu-rili-v4; do
