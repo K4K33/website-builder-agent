@@ -75,7 +75,20 @@ def inspect(base: str, mode: str):
                         css: getComputedStyle(document.body).fontFamily.includes('Arial'),
                         images: document.querySelectorAll('main img').length
                     })""")
-                    assert not state["overflow"], ("HORIZONTAL_OVERFLOW", route, width, state)
+                    if state["overflow"]:
+                        offenders = page.evaluate("""() => [...document.querySelectorAll('body *')]
+                          .filter(el => {
+                              const r=el.getBoundingClientRect();
+                              return r.width > 0 && (r.right > innerWidth+2 || r.left < -2) &&
+                                getComputedStyle(el).position !== 'absolute';
+                          }).slice(0,12).map(el => ({
+                              tag:el.tagName, cls:String(el.className||'').slice(0,80),
+                              right:Math.round(el.getBoundingClientRect().right),
+                              left:Math.round(el.getBoundingClientRect().left),
+                              width:Math.round(el.getBoundingClientRect().width)
+                          }))""")
+                        raise AssertionError(("HORIZONTAL_OVERFLOW", route, width,
+                                              state, offenders))
                     assert state["h1"] == 1, ("MAIN_H1", route, width, state)
                     assert state["disclosure"] and state["sourceLogo"] and state["css"], (
                         "BRAND_OR_CSS", route, width, state
