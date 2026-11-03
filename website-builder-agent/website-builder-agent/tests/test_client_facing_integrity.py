@@ -196,6 +196,25 @@ class ClientFacingIntegrityTests(unittest.TestCase):
             self.assertIn("desktop",
                           {flag["viewport"] for flag in report["visual_review_flags"]})
 
+    def test_identified_independent_editor_can_approve_generic_headlines_on_exact_build(self):
+        pages = {"index.html": site("<h2>Laadukasta palvelua</h2>"),
+                 "service.html": site("<h2>Tule käymään</h2>")}
+        first = self.audit(pages)
+        self.assertIn("template_headlines",
+                      [item["category"] for item in first["pending"]])
+        review = {"approved": True, "reviewer_kind": "human",
+                  "reviewer": "Outside editor", "checked_at": "2026-11-03",
+                  "build_sha256": site_digest(pages),
+                  "reviewed_headlines": first["generic_headings"]}
+        approved = self.audit(pages, {"editorial_language_review": review})
+        self.assertNotIn("template_headlines",
+                         [item["category"] for item in approved["pending"]])
+        self.assertIn("natural_copy", audit_universal_standards(
+            pages["index.html"], rendered_pages=pages)["pending_evidence"])
+        self.assertNotIn("natural_copy", audit_universal_standards(
+            pages["index.html"], research={"editorial_language_review": review},
+            rendered_pages=pages)["pending_evidence"])
+
     def test_real_source_note_is_not_whitelisted_in_body_by_demo_status(self):
         pages = {"index.html": site('<p>Yrityksen omilta verkkosivuilta.</p>')}
         self.assertFalse(self.audit(pages, stage="internal_demo")["pass"])
