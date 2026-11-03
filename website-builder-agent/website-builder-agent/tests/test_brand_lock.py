@@ -205,6 +205,20 @@ class BrandLockTests(unittest.TestCase):
         self.assertNotIn("unsourced_affiliation_mark",
                          [x["category"] for x in result["blocking"]])
 
+    def test_genuine_source_sponsor_in_header_is_not_falsely_a_brand_invention(self):
+        research = evidence()
+        research["source_inventory"]["pages"][0]["footer_assets"] = [{
+            "src": "/partners/documented-sponsor.svg",
+            "href": "https://partner.example.org/"
+        }]
+        page_html = page(
+            '<img class="sponsor-logo" alt="Sponsor logo" '
+            'src="https://synthetic.example.org/partners/documented-sponsor.svg">'
+        )
+        result = audit_brand_lock({"index.html": page_html}, research)
+        self.assertFalse(result["blocking"], result)
+        self.assertTrue(result["pending"])
+
     def test_new_partner_logo_needs_active_rights_and_exact_client_signoff(self):
         pages = {"index.html": page('<strong>Example Workshop</strong>').replace(
             '</main>', '<section class="partners"><img class="partner-logo" '
