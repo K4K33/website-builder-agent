@@ -191,9 +191,19 @@ def audit_client_facing_integrity(
             actual_image = bool(panel.select("img[src]"))
             if has_pin and not real_embed and not actual_image and panel not in map_art:
                 map_art.append(panel)
-        if map_art and not _record_valid(
-            research.get("verified_geospatial_illustration"),
-            rendered_pages, research
+        map_approval = research.get("verified_geospatial_illustration") or {}
+        coordinates = map_approval.get("coordinates") if isinstance(map_approval, dict) else None
+        ground_truth = bool(
+            isinstance(coordinates, dict)
+            and all(isinstance(coordinates.get(k), (int, float))
+                    and not isinstance(coordinates.get(k), bool) for k in ("lat", "lon"))
+            and -90 <= coordinates["lat"] <= 90
+            and -180 <= coordinates["lon"] <= 180
+            and str(map_approval.get("coordinate_source_url") or "").startswith("https://")
+        )
+        if map_art and not (
+            _record_valid(map_approval, rendered_pages, research)
+            and ground_truth
         ):
             blocked.append({
                 "category": "misleading_map", "route": route,
