@@ -14,6 +14,7 @@ import re
 import unicodedata
 from urllib.parse import urlsplit, urlencode
 import requests
+import config
 
 API = "https://api.tavily.com/search"
 MAX_QUERIES_PER_RUN = 12
@@ -134,6 +135,8 @@ def rank_search_candidate(company, results):
     return {"url":candidates[0][1],"source":"tavily_search","confidence":candidates[0][0]}
 
 def search_once(company,*,key,post=requests.post):
+    if config.free_only():
+        raise RuntimeError("FREE_ONLY forbids paid Tavily API calls.")
     q=(str(company.get("name",""))[:100]+" "+str(company.get("city_hint",""))[:40]+
        " virallinen kotisivu yritys Finland").strip()
     response=post(API,json={
@@ -160,6 +163,9 @@ def enrich(packet_path,*,key="",max_queries=MAX_QUERIES_PER_RUN,post=requests.po
     leads=packet.get("candidates")
     if not isinstance(leads,list) or len(leads)>50:
         raise RuntimeError("Invalid source shortlist")
+    if config.free_only():
+        return {"enabled":False,"searched":0,"suggested":0,"credits_budgeted":0,
+                "reason":"FREE_ONLY blocks external paid website search"}
     if not key or claim is None:
         return {"enabled":False,"searched":0,"suggested":0,"credits_budgeted":0,
                 "reason":"search_key_or_secure_quota_unavailable"}
@@ -201,7 +207,7 @@ def main(argv=None):
     parser.add_argument("--packet",required=True)
     parser.add_argument("--max-queries",type=int,default=MAX_QUERIES_PER_RUN)
     args=parser.parse_args(argv)
-    key=os.environ.get("KAURIVO_TAVILY_API_KEY","")
+    key="" if config.free_only() else os.environ.get("KAURIVO_TAVILY_API_KEY","")
     reserve=make_credit_reservation() if key else None
     result=enrich(args.packet,key=key,max_queries=args.max_queries,claim=reserve)
     print(json.dumps(result,ensure_ascii=False))
