@@ -588,17 +588,33 @@ def cmd_free_readiness(args):
         server["available"] = True
     except (requests.RequestException, ValueError, TypeError) as error:
         server["error"] = type(error).__name__ + ": local Ollama not available"
+    stage_backends = {
+        stage: config.backend_for_stage(stage) for stage in ("research", "builder", "qa")
+    }
+    local_required = any(mode == "ollama" for mode in stage_backends.values())
+    free_remote_required = any(mode == "openrouter" for mode in stage_backends.values())
+    from utils import resource_manager
     print(json.dumps({
         "free_only": config.free_only(),
         "backend": config.ai_backend(),
+        "stage_backends": stage_backends,
         "models_requested": settings,
         "ollama_local": server,
-        "ready_to_try": server["available"]
-            and all(isinstance(value, str) for value in settings.values()),
+        "openrouter_free_key_configured": bool(os.getenv("OPENROUTER_API_KEY")
+                                                or config.OPENROUTER_API_KEY),
+        "openrouter_free_local_budget": resource_manager.status_openrouter(),
+        "tavily_free_account_confirmed": config.tavily_free_plan_confirmed(),
+        "tavily_free_key_configured": bool(os.getenv("TAVILY_API_KEY")),
+        "tavily_free_local_budget": resource_manager.status_tavily(),
+        "ready_to_try": (config.free_only()
+            and all(isinstance(value, str) for value in settings.values())
+            and (not local_required or server["available"])
+            and (not free_remote_required or bool(os.getenv("OPENROUTER_API_KEY")
+                                                  or config.OPENROUTER_API_KEY))),
         "quality_verified": False,
-        "note": "A local model must be installed by its owner. A responsive API "
-                "does not prove vision support, 9.5 quality or processing speed. "
-                "No paid endpoints, mail or remote model download was used.",
+        "note": "Checks configuration only, not provider remaining account quota, "
+                "model multimodal ability, independent 9.5 quality or billing guarantees. "
+                "No paid endpoint, email or model download used.",
     }, ensure_ascii=False, indent=2))
 
 
