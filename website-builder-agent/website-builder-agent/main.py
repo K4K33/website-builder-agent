@@ -51,7 +51,9 @@ from utils.state import (
 def _require_paid_consent(args):
     # A loopback-only local model needs no paid-model authorization.
     # External search APIs (if any) remain independently quota-limited.
-    if config.ai_backend() == "ollama":
+    # FREE_ONLY can use only zero-cost provider endpoints, explicitly
+    # checked again at each outbound API call, so no paid consent is needed.
+    if config.free_only() or config.ai_backend() == "ollama":
         return
     if not getattr(args, "confirm_paid_apis", False):
         raise RuntimeError(
@@ -602,8 +604,8 @@ def cmd_free_readiness(args):
 
 def cmd_free_batch(args):
     """Process all existing saved leads with strictly local inference."""
-    if not config.free_only() or config.ai_backend() != "ollama":
-        raise RuntimeError("free-batch forbids paid/cloud providers: set FREE_ONLY=1, AI_BACKEND=ollama.")
+    if not config.free_only():
+        raise RuntimeError("free-batch forbids paid/cloud providers: set FREE_ONLY=1.")
     if not args.allow_public_lookups:
         raise RuntimeError("Permit reading actual public company and OSM sources with --allow-public-lookups.")
     for stage in ("research", "builder", "qa"):
@@ -633,7 +635,8 @@ def cmd_pipeline(args):
     # Local/free processing must not require Tavily or a paid search key.
     # Paid search is an EXPLICIT alternate mode, never an automatic fallback.
     keys = [] if config.free_only() else ["TAVILY_API_KEY"]
-    if config.ai_backend() == "openrouter":
+    if any(config.backend_for_stage(stage) == "openrouter"
+           for stage in ("research", "builder", "qa")):
         keys.append("OPENROUTER_API_KEY")
     for key in keys:
         if not os.getenv(key) and not getattr(config, key, ""):
@@ -814,7 +817,7 @@ def cmd_pipeline(args):
             print("[Pipeline] No further revision attempts: " + plan["reason"])
             break
         seen_issue_signatures.add(plan["signature"])
-        print(f"[Pipeline] Evidence-backed {'local' if config.free_only() else 'paid'} revision {attempt + 1}/{args.max_revisions}")
+        print(f"[Pipeline] Evidence-backed {'zero-paid-fee' if config.free_only() else 'paid'} revision {attempt + 1}/{args.max_revisions}")
         builder.run_revise(
             selected_slug, json.dumps(plan["feedback"], ensure_ascii=False)
         )
@@ -1313,7 +1316,7 @@ def build_parser():
 
     parser_pipeline.add_argument(
         "--confirm-live-run", action="store_true",
-        help="Explicitly authorize the paid external Scout/Research/Build/QA run.",
+        help="Authorize live public-company lookups and optional free-quota AI; paid providers still require separate FREE_ONLY=0.",
     )
     parser_pipeline.add_argument(
         "--max-revisions", type=int, choices=range(0, 4), default=0,
@@ -1329,7 +1332,7 @@ def build_parser():
 
     free_batch = subparsers.add_parser(
         "free-batch",
-        help="Process saved company queue through free local-only research/build/QA; no per-site fees.",
+        help="Process saved company queue with local and verified free-quota AI, no paid per-site fees.",
     )
     free_batch.add_argument("--limit", type=int, default=0,
         help="Number of queued companies to process; 0 = ALL eligible, no artificial cap.")
