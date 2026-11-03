@@ -56,43 +56,73 @@ ole vaatimuksia. Muutokset ovat työkulun valmistelua. Ne eivät
 tarkoita, että ChatGPT jo lähettäisi taustalla automaattisesti uusia
 liidilistoja; jatkuva ilmoitus vaatii erikseen asetetun ajastuksen.
 
-## Paikallinen maksuton AI (Ollama, opt-in)
+## V8: maksuton paikallinen tuotantotila on oletus
 
-Kaurivo voidaan asettaa käyttämään **omaan koneeseen asennettuja** paikallisia
-Ollama-malleja. Se ei tällöin käytä OAVIRin OpenRouter-kiintiöitä tai
-API-avaimia. Tämä ominaisuus on valinnainen, ja aiempi OpenRouter-toiminta
-säilyy oletuksena. **Mitään ei asenneta automaattisesti.**
+**Uusi oletus:** `AI_BACKEND=ollama` ja `FREE_ONLY=1`. OpenRouter ja
+Tavily eivät kuulu maksuttoman tuotantotilan työnkulkuun. Pilvipalvelujen
+mahdollinen käyttö vaatii nimenomaiset erilliset asetukset
+`AI_BACKEND=openrouter` ja `FREE_ONLY=0` sekä olemassaolevan
+`--confirm-paid-apis` / `--confirm-live-run` -luvan.
+
+**Käyttökustannus:** ei maksullisia tekoäly-/hakupalvelukutsuja, mutta
+laitteisto, sähkö, internet ja mahdolliset hosting-palvelut eivät ole
+kirjaimellisesti ilmaisia. Paikallista mallia EI asenneta automaattisesti,
+eikä GitHubin pilviajokone voi ajaa käyttäjän koneen Ollamaa.
+
+Aseta omalla Windows-koneella PowerShellissä ensin paikallisesti asennetut
+mallit (vaatii riittävän suuren, kuvien ymmärtämistä tukevan QA-mallin):
 
 ```powershell
 $env:AI_BACKEND = "ollama"
 $env:FREE_ONLY = "1"
-$env:OLLAMA_MODEL = "PAIKALLINEN_TEKSTIMALLI"
-$env:OLLAMA_BUILDER_MODEL = "PAIKALLINEN_KOODIMALLI"
-$env:OLLAMA_QA_MODEL = "PAIKALLINEN_KUVIA_TUKEVA_MALLI"
+$env:OLLAMA_MODEL = "OMA_PAIKALLINEN_TEKSTIMALLI"
+$env:OLLAMA_BUILDER_MODEL = "OMA_PAIKALLINEN_KOODIMALLI"
+$env:OLLAMA_QA_MODEL = "OMA_PAIKALLINEN_KUVAMALLI"
+python main.py free-readiness
 ```
 
-Korvaa esimerkkimallien nimet *todella asennettujen paikallisten mallien*
-nimillä. QA:n mallin on pystyttävä lukemaan kuvakaappauksia; Builderin
-mallin on pystyttävä tuottamaan riittävän laadukasta koodia ja JSONia.
-Näitä laatuominaisuuksia **ei ole vielä vahvistettu todellisella paikallisella
-malliajolla**. Ollaman API on paikallisesti
-`http://127.0.0.1:11434`, ei pilvessä. Pilvitunniste `:cloud` estetään.
-Paikallisen palvelun puuttuessa järjestelmä pysähtyy: se ei lähetä
-samoja syötteitä automaattisesti OpenRouteriin.
+Korvaa nimet **todella asennetuilla** paikallisilla malleilla. En ole
+varmistanut tässä projektissa, että käyttäjän laitteessa on edes Ollama tai
+että tietty paikallinen malli kykenee vaadittuun premium-tason koodaukseen ja
+kuvien analysointiin. Paikallisen palvelun häiriö **ei** siirrä kutsua pilveen.
+Lisätiedot: https://docs.ollama.com/api .
 
-Ohje: https://docs.ollama.com/api . Ennen asentamista tarkista koneen RAM,
-näytönohjain, levytila ja asennuskäytännöt. Erityisesti koulun hallinnoimalle
-koneelle ei pidä asentaa ohjelmia ilman lupaa. Älä lataa mallia pelkkää
-kokeilua varten, jos koneen kapasiteetti ei riitä.
+Uudet Research-vaiheen saman toimialan **todelliset yritysreferenssit** haetaan
+maksuttomassa tilassa OpenStreetMap/Overpass-tiedoista. Referenssit vaativat
+edelleen alkuperäissivuston sisällön tarkistuksen, vertailukuvakaappaukset ja
+vähintään kolme lähteisiin sidottua saman toimialan yritystä. Julkisen OSM-
+palvelun käytölle voi olla rajoituksia, virheitä ja verkkokuormitusta.
+Hakua rajoitetaan kohtuullisiin aluekyselyihin, tulokset talletetaan
+toimialakohtaiseen välimuistiin, sivustotekstit ja todelliset
+referenssikuvakaappaukset uudelleenkäytetään aikarajallisesti. Puuttuvia
+referenssejä ei keksitä eikä korvata maksullisella haulla.
 
-`FREE_ONLY` estää pilvessä tapahtuvan AI-ajon, mutta **ei tarkoita**
-rajatonta maksutonta ulkoista hakua. Tavily-tutkimus käyttää edelleen
-erillistä palvelua ja kiintiötä. Ollaman käyttöä ei voi tehdä GitHubin
-pilviajokoneelta suoraan käyttäjän koulukoneen `localhost`-osoitteeseen.
-Koko putken paikalliseen ajoon tarvitaan oma hallittu kone, mahdolliset
-Tavily-krediitit ja muut erikseen vahvistetut lähteet. Paikalliset
-ilmaismallit eivät automaattisesti täytä premium-laatuvaatimustamme.
+Maksuton vapaa jono käsittelee kaikki aiemmin löydetyt ja tallennetut
+kelvolliset yritykset ilman **ohjelmiston keinotekoista kappalemäärärajaa**:
 
+```powershell
+# Yritystietojen julkiset verkkopyynnöt on erikseen sallittava.
+python main.py free-batch --allow-public-lookups --limit 0
+# Voit myös jakaa työn eriin. Seuraavalla ajolla jatketaan jonosta.
+python main.py free-batch --allow-public-lookups --limit 20
+# Jos esteenä ollut tieto korjattiin:
+python main.py free-batch --allow-public-lookups --retry-failed
+```
+
+Tämä käyttää paikallisia malleja Researchiin, Builderiin, visuaaliseen
+QA:han ja enintään kahteen saman yrityksen havaintopohjaiseen
+korjauskierrokseen (vaihdettavissa `--max-revisions 0..3`).
+Yksittäiset ongelmat pysäytetään ilman, että loppujonon työ katoaa.
+Jokainen tulos kirjataan `output/_kaurivo_free_batch.json`-tiedostoon.
+Käytettävissä on myös täysin ilman tekoälyä tehtävä kuvavertailu
+`python main.py visual-evidence SLUG --refresh-original`.
+
+**Määrä ja laatu:** numeroa sivustoa/päivä ei voi luvata ennen paikallisen
+koneen nopeuden, mallien laadun ja todellisen jonon mittaamista.
+`free-batch` raportoi onnistuneiden ajokertojen toteutuneet kestot ja
+niistä laskennallisen 8 tunnin kapasiteetin. Raportin `completed` tarkoittaa
+vain, että prosessi valmistui; se ei ole 9,5/10-hyväksyntä. Laadun pitää
+säilyä kaikissa projekteissa, eikä asiakasviestejä lähetetä automaattisesti.
 
 ## Maksuton asiakashaku ja turvallinen pilotointi (2026-10-29)
 
