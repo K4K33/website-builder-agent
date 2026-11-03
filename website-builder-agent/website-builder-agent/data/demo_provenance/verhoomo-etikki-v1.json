@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "client": "Verhoomo Etikki Oy",
+  "source_url": "https://etikki.fi/",
+  "observed_at": "2026-11-04",
+  "stage": "internal_demo",
+  "original_partner_section": "https://etikki.fi/",
+  "footer_assets": [
+    {
+      "name": "Jyrsijä",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Jyrsija-logo-uusi.jpg",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Annala",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Annala_logo_cmyk-1-003-e1674985538289.jpg",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Nevotex",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/nevotex_musta_logo.png",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Interventus",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Interventus_logo_rgb-e1674985560344.jpg",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Recticel",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Recticel-logo-uusi.jpg",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Stentrade",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Stentrad-logo-uusi.png",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Resta Lattiat",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Resta-lattiat-logo.png",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Vallila Interior",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Vallila-logo-uusi.png",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Marronwood",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Marronwood-logo.jpg",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "Lauritzon's",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/Lauritzons.jpg",
+      "source_url": "https://etikki.fi/"
+    },
+    {
+      "name": "O&O",
+      "src": "https://etikki.fi/wp-content/uploads/2021/05/O-O-logo-uusi.png",
+      "source_url": "https://etikki.fi/"
+    }
+  ],
+  "rights_verified": false,
+  "relationships_currently_verified": false,
+  "notes": "All 11 source URLs were opened and visually inspected against the source site's explicit Yhteistyökumppanimme section. Do not treat this manifest as rights or relationship approval; client approval remains required."
+}

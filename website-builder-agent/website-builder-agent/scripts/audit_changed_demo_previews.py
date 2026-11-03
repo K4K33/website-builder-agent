@@ -21,6 +21,46 @@ def changed_slugs(base,head):
                    if p.startswith(PREFIX) and "/" in p[len(PREFIX):]
                    and not p[len(PREFIX):].startswith("_shared/")})
 
+def verified_source_evidence(slug):
+    """Accept only explicit source-grounded affiliation inventories.
+
+    This is observed-source evidence for internal demos, NEVER licence or client
+    approval. The independent screenshots and rights gates remain pending.
+    """
+    import json
+    from urllib.parse import urlsplit
+    safe = slug.replace("-", "").replace("_", "")
+    if not safe.isalnum():
+        raise ValueError("Invalid demo slug")
+    manifest = ROOT / "data" / "demo_provenance" / (slug + ".json")
+    if not manifest.is_file():
+        return {}
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    if data.get("schema_version") != 1 or data.get("stage") != "internal_demo":
+        raise ValueError("Unexpected source evidence format/stage")
+    source = data.get("source_url", "")
+    host = urlsplit(source).hostname
+    if not host or not source.startswith("https://"):
+        raise ValueError("Source must be a verified HTTPS domain")
+    entries = data.get("footer_assets") or []
+    if not entries or len(entries) > 100:
+        raise ValueError("Missing or unreasonably large partner inventory")
+    found = set()
+    for item in entries:
+        url = item.get("src", "")
+        page = item.get("source_url", "")
+        if (not item.get("name") or not url.startswith("https://")
+            or urlsplit(url).hostname != host
+            or urlsplit(page).hostname != host
+            or not page.startswith("https://")
+            or url in found):
+            raise ValueError("Source assets must be unique and first-party")
+        found.add(url)
+    return {"source_inventory":{"pages":[{
+        "url":source,
+        "footer_assets":[{"src":x["src"],"name":x["name"]} for x in entries]
+    }]}}
+
 def main():
     base,head=os.environ.get("BASE_SHA",""),os.environ.get("HEAD_SHA","")
     if not base or not head:
@@ -37,7 +77,7 @@ def main():
             print("BLOCK",slug,"missing index.html")
             failed=True
             continue
-        result=audit_universal_standards(pages["index.html"],rendered_pages=pages,stage="internal_demo")
+        result=audit_universal_standards(pages["index.html"],research=verified_source_evidence(slug),rendered_pages=pages,stage="internal_demo")
         problems=result.get("blocking_problems") or {}
         if problems:
             failed=True
