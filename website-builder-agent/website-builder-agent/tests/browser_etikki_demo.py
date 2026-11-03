@@ -50,7 +50,7 @@ def scan(base: str):
                         h1Text:h1?.innerText, header:!!header,
                         css:getComputedStyle(document.body).backgroundColor,
                         title:document.title,
-                        preview:document.body.innerText.includes('ITSENÄINEN VERKKOSIVUKONSEPTI'),
+                        preview:document.body.innerText.includes('KONSEPTIDEMO'),
                         topImgs:topImgs.length,
                         totalImgs:document.querySelectorAll('main img').length,
                         localLinks:localLinks.length,
@@ -79,8 +79,20 @@ def scan(base: str):
                         img.scroll_into_view_if_needed()
                         page.wait_for_function("() => {let i=document.querySelector('.craft-grid img');return i&&i.complete&&i.naturalWidth>0}",timeout=15000)
                         assert page.locator('.craft-grid img').count()>=8,("GALLERY_TOO_SMALL",width)
-                    if route=="" and width==1440:
-                        assert page.locator('.partner-logo img').count()==11,("MISSING_PARTNERS",width)
+                    if not route and width in (390,1440):
+                        logos=page.locator('.partner-logo img')
+                        assert logos.count()==11,("MISSING_SOURCE_PARTNERS",width)
+                        page.locator('.partner-zone').scroll_into_view_if_needed()
+                        page.wait_for_timeout(1800)
+                        status=logos.evaluate_all("(imgs) => imgs.map(i => ({alt:i.alt,ok:i.complete&&i.naturalWidth>0,url:i.currentSrc||i.src}))")
+                        failed=[item for item in status if not item["ok"]]
+                        assert not failed,("UNLOADED_SOURCE_LOGOS",width,failed)
+                    if route=="tyot/" and width in (390,1440):
+                        imgs=page.locator('.craft-grid img')
+                        imgs.evaluate_all("(items) => items.forEach(img => img.loading='eager')")
+                        page.wait_for_timeout(1600)
+                        state=imgs.evaluate_all("(items) => items.map(i=>({alt:i.alt,ok:i.complete&&i.naturalWidth>0}))")
+                        assert all(i["ok"] for i in state),("MISSING_AUTHENTIC_GALLERY_IMAGES",width,state)
                     if (route in ("", "tyot/", "palvelut/", "hinnasto/", "meista/", "yhteys/")) and width in (390,1440):
                         page.screenshot(path=str(target/((route.strip('/') or 'etusivu')+'-'+str(width)+'.png')),
                             full_page=True, animations="disabled",timeout=35000)
@@ -94,6 +106,27 @@ def scan(base: str):
             browser.close()
     (target/"results.json").write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding="utf-8")
     print(f"ETIKKI_BROWSER_PASS {len(rows)}/28 across 7 routes x 4 viewports",flush=True)
+    # Evidence for a human side-by-side identity review, not an automated score.
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True)
+            try:
+                for width,height in ((390,844),(1440,900)):
+                    page=browser.new_page(viewport={"width":width,"height":height},reduced_motion="reduce")
+                    try:
+                        response=page.goto("https://etikki.fi/",wait_until="domcontentloaded",timeout=35000)
+                        page.wait_for_timeout(1900)
+                        page.screenshot(path=str(target/f"original-etikki-{width}-fold.png"),
+                                        full_page=False,animations="disabled",timeout=30000)
+                        print("SOURCE_FOLD_CAPTURED",width,response.status if response else None,flush=True)
+                    except Exception as error:
+                        print("SOURCE_FOLD_REVIEW_REQUIRED",width,str(error)[:260],flush=True)
+                    finally:
+                        page.close()
+            finally:
+                browser.close()
+    except Exception as error:
+        print("SOURCE_SCREENSHOT_REVIEW_REQUIRED",str(error)[:260],flush=True)
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
