@@ -48,7 +48,17 @@ and consistent site tokens did not imply original brand personality.
    Metadata validation is NOT verification that screenshot files are
    genuine, the reviewer is independent, the rights are cleared, or
    the design deserves a score. Those remain real human/client checks.
-5. **Regressions** — tests with fictional company facts demonstrate that
+5. **Whole-site visual approval integrity** — production QA now computes one
+   complete-site SHA-256 covering all rendered pages and packaged original
+   photos, CSS, JavaScript and local font files under assets/. An explicit
+   rebranding approval and before/after visual review that depend on
+   linked local styles/scripts must cite this exact bundle digest as well
+   as HTML/source hashes. Changing only a CSS color or font after review
+   invalidates approval even if HTML is byte-for-byte unchanged.
+   Local style/script references outside assets/ remain REVIEW REQUIRED.
+   Externally served fonts, image hosts and CDN scripts are not covered
+   by local hashing and need separate provenance, rendering and rights checks.
+6. **Regressions** — tests with fictional company facts demonstrate that
    an unchanged logo does not silently approve a new identity, stale
    builds/source invalidate comparisons, unauthorised declared rebrands
    block, an image-less first phone fold is flagged without penalizing

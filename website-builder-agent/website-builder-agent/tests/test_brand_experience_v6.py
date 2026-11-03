@@ -139,6 +139,62 @@ class BrandExperienceV6Tests(unittest.TestCase):
         self.assertFalse(audit_brand_experience(rendered, data)["pass"])
         self.assertTrue(audit_brand_experience(rendered, data)["blocking"])
 
+    def test_local_css_and_script_changes_invalidate_brand_approval(self):
+        data, rendered = research(), pages()
+        rendered["index.html"] = rendered["index.html"].replace(
+            "<main>", '<link rel="stylesheet" href="assets/site.css">'
+            '<script src="assets/site.js" defer></script><main>'
+        )
+        record = review(data, rendered)
+        record["site_bundle_sha256"] = "bundle-before-stylesheet-change"
+        data["brand_experience_review"] = record
+        first = audit_brand_experience(
+            rendered, data, site_bundle_sha256="bundle-before-stylesheet-change"
+        )
+        self.assertTrue(first["pass"], first)
+        self.assertEqual(first["local_presentation_assets"]["bundled"],
+                         ["assets/site.css", "assets/site.js"])
+        missing_digest = audit_brand_experience(rendered, data)
+        self.assertFalse(missing_digest["pass"])
+        self.assertTrue(any("bundle hash" in issue for issue in missing_digest["pending"]))
+        stale = audit_brand_experience(
+            rendered, data, site_bundle_sha256="bundle-after-stylesheet-change"
+        )
+        self.assertFalse(stale["pass"])
+        self.assertTrue(any("stale" in issue for issue in stale["pending"]))
+
+        # Explicit client permission for a visual rebrand must also be
+        # invalidated when its CSS bundle changes without HTML edits.
+        data["brand_character_plan"] = {"replace_brand_character": True}
+        data["brand_character_change_approval"] = {
+            "approved": True, "reviewer_kind": "client",
+            "reviewer": "Fictional owner", "approval_reference": "signed-example",
+            "build_sha256": site_digest(rendered),
+            "source_sha256": source_inventory_sha256(data["source_inventory"]),
+            "site_bundle_sha256": "bundle-before-stylesheet-change",
+        }
+        self.assertFalse(audit_brand_experience(
+            rendered, data, site_bundle_sha256="bundle-before-stylesheet-change"
+        )["blocking"])
+        self.assertTrue(audit_brand_experience(
+            rendered, data, site_bundle_sha256="bundle-after-stylesheet-change"
+        )["blocking"])
+
+    def test_unbundled_local_presentation_asset_requires_manual_review(self):
+        data, rendered = research(), pages()
+        rendered["index.html"] = rendered["index.html"].replace(
+            "<main>", '<link rel="stylesheet" href="site.css"><main>'
+        )
+        record = review(data, rendered)
+        record["site_bundle_sha256"] = "local-digest"
+        data["brand_experience_review"] = record
+        report = audit_brand_experience(
+            rendered, data, site_bundle_sha256="local-digest"
+        )
+        self.assertFalse(report["pass"])
+        self.assertEqual(report["local_presentation_assets"]["unsigned"],
+                         ["site.css"])
+
     def test_no_site_research_never_invents_a_brand_comparison(self):
         data = {"research_mode": "verified_no_website",
                 "source_inventory": {"pages": []}}

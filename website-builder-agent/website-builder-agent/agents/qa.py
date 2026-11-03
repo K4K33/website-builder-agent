@@ -1182,9 +1182,10 @@ def run_qa(slug_or_name: str) -> dict:
         html, research, source_url=company.get("url", ""),
         rendered_pages=rendered_pages
     )
+    bundle_digest = site_sha256(site_root, list(rendered_pages))
     universal = audit_universal_standards(
         html, research, company=company, stage="internal_demo",
-        rendered_pages=rendered_pages
+        rendered_pages=rendered_pages, site_bundle_sha256=bundle_digest
     )
     ledger_file = Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
     ledger = load_ledger(ledger_file)
@@ -1337,7 +1338,7 @@ def run_qa(slug_or_name: str) -> dict:
         "unimplemented_global_feedback": pending_general_rules,
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
-        "site_sha256": site_sha256(site_root,list(rendered_pages)),
+        "site_sha256": bundle_digest,
         "overall_pass": (parity["pass"] and source_fidelity["pass"]
                          and nav["pass"] and originality["pass"]
                          and universal["automated_pass"]

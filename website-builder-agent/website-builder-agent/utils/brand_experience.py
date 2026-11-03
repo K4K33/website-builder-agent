@@ -8,6 +8,7 @@ required rather than incorrectly certified.
 """
 from __future__ import annotations
 
+from posixpath import dirname, join, normpath
 from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
@@ -49,8 +50,36 @@ def _observations(research: dict) -> dict:
     }
 
 
+def _linked_local_presentation_assets(pages: dict[str, str]) -> dict:
+    """Identify local styles/scripts whose bytes must be in the site bundle.
+
+    Relative references outside assets/ remain unsigned and require review.
+    """
+    bundled, unsigned = set(), set()
+    for route, html in pages.items():
+        soup = BeautifulSoup(html, "html.parser")
+        links = list(soup.select('link[rel~="stylesheet"][href]'))
+        links += list(soup.select('script[src]'))
+        for node in links:
+            uri = str(node.get("href") or node.get("src") or "").strip()
+            if not uri or uri.startswith(("//", "data:", "#")):
+                continue
+            parsed = urlsplit(uri)
+            if parsed.scheme or parsed.netloc:
+                continue
+            relative = (parsed.path.lstrip("/") if parsed.path.startswith("/") else
+                        normpath(join(dirname(route), parsed.path)))
+            if relative.startswith("assets/") and ".." not in relative.split("/"):
+                bundled.add(relative)
+            else:
+                unsigned.add(relative)
+    return {"bundled": sorted(bundled), "unsigned": sorted(unsigned)}
+
+
 def _valid_human_comparison(record: object, *, digest: str,
-                            source_hash: str, routes: list[str]) -> list[str]:
+                            source_hash: str, routes: list[str],
+                            site_bundle_sha256: str | None,
+                            needs_site_bundle: bool) -> list[str]:
     """Validate recorded evidence, not certify human independence or image pixels."""
     issues = []
     if not isinstance(record, dict):
@@ -65,6 +94,11 @@ def _valid_human_comparison(record: object, *, digest: str,
         issues.append("Comparison is not bound to this exact site build.")
     if source_hash and record.get("source_sha256") != source_hash:
         issues.append("Comparison is not bound to the original source snapshot.")
+    if needs_site_bundle:
+        if not site_bundle_sha256:
+            issues.append("No full site bundle hash (including CSS and JS) supplied.")
+        elif record.get("site_bundle_sha256") != site_bundle_sha256:
+            issues.append("Visual comparison uses stale or unverified CSS/JS asset bundle.")
     screenshots = record.get("screenshots") or {}
     for width in REVIEW_WIDTHS:
         for side in ("original", "redesign"):
@@ -90,7 +124,9 @@ def _valid_human_comparison(record: object, *, digest: str,
     return issues
 
 
-def _approved_change(research: dict, pages: dict[str, str], source_hash: str) -> bool:
+def _approved_change(research: dict, pages: dict[str, str], source_hash: str,
+                     *, site_bundle_sha256: str | None,
+                     needs_site_bundle: bool) -> bool:
     approval = research.get("brand_character_change_approval") or {}
     return bool(
         isinstance(approval, dict)
@@ -99,12 +135,16 @@ def _approved_change(research: dict, pages: dict[str, str], source_hash: str) ->
         and str(approval.get("reviewer") or "").strip()
         and str(approval.get("approval_reference") or "").strip()
         and approval.get("build_sha256") == site_digest(pages)
+        and (not needs_site_bundle or (
+            bool(site_bundle_sha256)
+            and approval.get("site_bundle_sha256") == site_bundle_sha256))
         and (not source_hash or approval.get("source_sha256") == source_hash)
     )
 
 
 def audit_brand_experience(rendered_pages: dict[str, str],
-                           research: dict | None = None) -> dict:
+                           research: dict | None = None,
+                           *, site_bundle_sha256: str | None = None) -> dict:
     research = research or {}
     pages = rendered_pages or {}
     inventory = research.get("source_inventory") or {}
@@ -112,6 +152,8 @@ def audit_brand_experience(rendered_pages: dict[str, str],
     source_hash = source_inventory_sha256(inventory) if source_pages else ""
     digest = site_digest(pages)
     signals = _observations(research)
+    dependencies = _linked_local_presentation_assets(pages)
+    needs_bundle = bool(dependencies["bundled"] or dependencies["unsigned"])
     blocked, pending = [], []
     changed = research.get("brand_character_plan") or {}
     if not isinstance(changed, dict):
@@ -125,7 +167,9 @@ def audit_brand_experience(rendered_pages: dict[str, str],
             ("replace_source_photography", "source photographic signature"),
         ) if changed.get(key) is True
     ]
-    approved = _approved_change(research, pages, source_hash)
+    approved = _approved_change(research, pages, source_hash,
+                                site_bundle_sha256=site_bundle_sha256,
+                                needs_site_bundle=needs_bundle)
     if source_pages and requested and not approved:
         blocked.append({
             "category": "unapproved_visual_rebrand",
@@ -133,6 +177,9 @@ def audit_brand_experience(rendered_pages: dict[str, str],
             "issue": "Explicit change to original brand identity requires exact-build "
                      "and source-bound client permission.",
         })
+    if source_pages and dependencies["unsigned"]:
+        pending.append("Local CSS/JS references outside signed assets/ bundle: "
+                       + ", ".join(dependencies["unsigned"][:5]))
     # An approved logo file alone never closes this new visual test.
     if source_pages and (signals["observed_logos"]
                          or signals["observed_wordmarks"]
@@ -140,6 +187,8 @@ def audit_brand_experience(rendered_pages: dict[str, str],
         review_issues = _valid_human_comparison(
             research.get("brand_experience_review"),
             digest=digest, source_hash=source_hash, routes=list(pages),
+            site_bundle_sha256=site_bundle_sha256,
+            needs_site_bundle=needs_bundle,
         )
         if review_issues:
             pending.extend(review_issues)
@@ -156,6 +205,8 @@ def audit_brand_experience(rendered_pages: dict[str, str],
         "approved_identity_change": approved,
         "source_sha256": source_hash,
         "build_sha256": digest,
+        "site_bundle_sha256": site_bundle_sha256,
+        "local_presentation_assets": dependencies,
         "note": (
             "Automated checks validate evidence fields, not screenshots or "
             "subjective brand faithfulness. Reviewer independence, client "
