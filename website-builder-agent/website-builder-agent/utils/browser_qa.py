@@ -17,6 +17,9 @@ def inspect_site(path):
             try:
                 for name, width, height in viewports:
                     context = browser.new_context(viewport={"width": width, "height": height},
+                                                  is_mobile=width <= 390,
+                                                  has_touch=width <= 390,
+                                                  device_scale_factor=1,
                                                   reduced_motion="reduce", service_workers="block")
                     # Generated code is untrusted: block all network access.
                     context.route("**/*", lambda route: route.continue_()
