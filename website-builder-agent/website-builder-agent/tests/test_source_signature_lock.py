@@ -91,7 +91,7 @@ class SourceSignatureLockTests(unittest.TestCase):
     def test_plain_text_brand_is_not_original_logo(self):
         p=pages()
         p["index.html"]=p["index.html"].replace(
-            '<img src="https://atelier.example/media/official-logo.png" alt="official logo">',
+            "<img src='https://atelier.example/media/official-logo.png' alt='official logo'>",
             '<strong>Atelier</strong>')
         result=audit_source_signature_lock(p,original())
         self.assertIn("source_logo_lost",kinds(result))
