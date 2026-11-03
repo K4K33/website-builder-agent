@@ -1,0 +1,163 @@
+name: Kaurivo Suutarin Tie V1 original-brand and responsive QA
+
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/suutarin-tie-v1/**"
+      - "website-builder-agent/website-builder-agent/tests/test_suutarin_tie_demo_v1.py"
+      - ".github/workflows/kaurivo-suutarintie-demo-qa.yml"
+  workflow_run:
+    workflows: ["Deploy static content to Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-source-and-browser:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install offline test helpers and Chromium
+        run: |
+          python -m pip install beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
+      - name: Check all company facts, brand identity, source prices and internal links
+        run: python -m unittest tests.test_suutarin_tie_demo_v1 -v
+      - name: Render actual first fold at 320 390 768 1440 and test working navigation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from functools import partial
+          from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+          from threading import Thread
+          from tempfile import TemporaryDirectory
+          from playwright.sync_api import sync_playwright
+          import json
+
+          docs=Path("docs").resolve()
+          output=Path("output/suutarin-tie-v1-visual")
+          output.mkdir(parents=True,exist_ok=True)
+          with TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/"website-builder-agent").symlink_to(docs,target_is_directory=True)
+            class Quiet(SimpleHTTPRequestHandler):
+              def log_message(self,*args): pass
+            server=ThreadingHTTPServer(("127.0.0.1",0),partial(Quiet,directory=str(root)))
+            Thread(target=server.serve_forever,daemon=True).start()
+            base=f"http://127.0.0.1:{server.server_address[1]}/website-builder-agent/kaurivo/demos/suutarin-tie-v1/"
+            results=[]
+            try:
+              with sync_playwright() as pw:
+                browser=pw.chromium.launch(headless=True)
+                try:
+                  for route in ("","palvelut/","hinnasto/","nahkatyot/","yhteystiedot/"):
+                    sizes=((320,740),(390,844),(768,1024),(1440,900)) if not route else ((390,844),(1440,900))
+                    for width,height in sizes:
+                      ctx=browser.new_context(viewport={"width":width,"height":height},
+                                              device_scale_factor=1,reduced_motion="reduce")
+                      page=ctx.new_page()
+                      errors=[]
+                      page.on("pageerror",lambda exc: errors.append(str(exc)))
+                      response=page.goto(base+route,wait_until="domcontentloaded",timeout=30000)
+                      page.wait_for_timeout(1350)
+                      data=page.evaluate("""() => ({
+                        overflow:document.documentElement.scrollWidth>innerWidth+2,
+                        width:innerWidth,
+                        h1:document.querySelectorAll('main h1').length,
+                        bg:getComputedStyle(document.body).backgroundColor,
+                        logo:document.querySelector('.brand__seal img')?.naturalWidth || 0,
+                        hero:document.querySelector('.hero__main-img')?.naturalWidth || 0,
+                        aboveFoldPhoto:[...document.querySelectorAll('main img')].some(img=>{
+                          const r=img.getBoundingClientRect();
+                          return img.naturalWidth>0 && r.top<innerHeight && r.bottom>0 &&
+                                 r.width>60 && r.height>90;
+                        }),
+                        contactActions:document.querySelectorAll('a[href^="tel:"],a[href^="mailto:"]').length
+                      })""")
+                      if not response or response.status!=200:
+                        raise AssertionError(f'Route unavailable: {route} HTTP {response.status if response else None}')
+                      if data['overflow'] or data['h1']!=1 or errors:
+                        raise AssertionError(f'Layout/JS error: {route} {width}: {data}, {errors}')
+                      if data['contactActions']<2 or data['bg']=='rgba(0, 0, 0, 0)':
+                        raise AssertionError(f'Lost site CSS/contact: {route} {width}: {data}')
+                      if not route and (not data['logo'] or not data['hero'] or not data['aboveFoldPhoto']):
+                        raise AssertionError(f'Original photos and identity missing from first view: {width}: {data}')
+                      # Capture the natural, not keyboard-focused, visual state.
+                      # Menu interactions are tested AFTER the screenshot to
+                      # avoid injecting an accessibility focus ring into previews.
+                      if not route or width==390:
+                        name=route.rstrip('/').replace('/','-') or 'home'
+                        page.screenshot(path=str(output/f'{name}-{width}.png'),
+                                        full_page=True,animations="disabled")
+                      if width==390:
+                        button=page.locator('[data-menu-button]')
+                        button.click()
+                        if button.get_attribute('aria-expanded')!='true':
+                          raise AssertionError('Mobile menu does not open: '+route)
+                        page.keyboard.press('Escape')
+                        if button.get_attribute('aria-expanded')!='false':
+                          raise AssertionError('Mobile menu Escape does not close: '+route)
+                      results.append({'route':route,'width':width,'status':'pass',
+                                      'original_logo_loaded':bool(data['logo'])})
+                      print('PASS '+json.dumps(results[-1]),flush=True)
+                      ctx.close()
+                finally:
+                  browser.close()
+            finally:
+              server.shutdown()
+            (output/"evidence.json").write_text(json.dumps(results,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: suutarintie-v1-real-viewport-screenshots
+          path: website-builder-agent/website-builder-agent/output/suutarin-tie-v1-visual/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  live-after-pages:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Confirm live public preview and all pages
+        run: |
+          python - <<'PY'
+          import time
+          from urllib.request import urlopen
+          root="https://k4k33.github.io/website-builder-agent/kaurivo/demos/suutarin-tie-v1/"
+          checks={
+            "":"Kengät kuntoon",
+            "palvelut/":"Korjaus alkaa",
+            "hinnasto/":"Classic, yli 2 kpl",
+            "nahkatyot/":"Oman",
+            "yhteystiedot/":"Insinöörinkatu 27",
+            "assets/site.css":"--pine:#103b2e",
+            "assets/site.js":"data-menu-button",
+          }
+          for route,marker in checks.items():
+            url=root+route
+            success=False
+            for attempt in range(7):
+              try:
+                with urlopen(url,timeout=15) as response:
+                  page=response.read().decode("utf-8")
+                  success=(response.status==200 and marker in page)
+                  if success: break
+              except Exception as err:
+                print(type(err).__name__,str(err)[:200])
+              time.sleep(7)
+            if not success:
+              raise AssertionError("Public preview not updated: "+url)
+            print("LIVE PASS "+url,flush=True)
+          PY
