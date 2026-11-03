@@ -26,6 +26,7 @@ from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.screenshot import capture_website
+from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
@@ -800,6 +801,10 @@ def run_research(
     original_screenshots = capture_website(
         normalize_url(url), "original-client-" + slug
     ) or {}
+    # Zero-paid-credit browser probe of every inventoried source route.
+    # Failure is explicitly incomplete, never interpreted as an absence of
+    # original video, animation, galleries or background character.
+    original_experience_profile = probe_original_site_experience(source_inventory)
     source_excerpts = [
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
          "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
@@ -961,6 +966,14 @@ URL:
 
 {extracted.get("current_site_weaknesses", [])}
 
+--- ALKUPERÄISEN SIVUSTON SELAIMELLA HAVAITUT KUVA-, VIDEO-,
+3D-, ANIMAATIO- JA TAUSTASIGNAALIT ---
+{json.dumps(original_experience_profile, ensure_ascii=False)}
+Havainnot ovat heuristiikkaa, eivät tekijänoikeuslupia.
+Älä poista havaittuja laadukkaita elementtejä ilman korvaavaa
+asiakkaan brändiin sopivaa ratkaisua. Jos havainto on puutteellinen,
+merkitse epävarmuus. Älä lisää turhia 3D-efektejä staattiselle sivulle.
+
 --- NYKYISEN KOKO SIVUSTON INVENTAARIO ---
 
 {json.dumps(source_excerpts, ensure_ascii=False)}
@@ -1043,6 +1056,7 @@ Tärkeää:
         "company_facts": company_facts,
         "source_inventory": source_inventory,
         "original_screenshots": original_screenshots,
+        "original_experience_profile": original_experience_profile,
         "fact_sources": [{"url": url, "title": site_data.get("title", ""),
                           "text": site_data.get("visible_text", "")[:12000]}],
         "reference_sources": [

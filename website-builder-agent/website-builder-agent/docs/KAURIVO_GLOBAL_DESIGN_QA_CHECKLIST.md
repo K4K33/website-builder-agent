@@ -1,5 +1,27 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## V8: retain original motion, media and distinctive background character
+
+Operational instructions: docs/KAURIVO_SOURCE_EXPERIENCE_CONTINUITY_2026-11-03.md.
+
+- [ ] Free Playwright source-experience probe visited **all** original source
+  routes and captured hash-bound video, motion, gallery, 3-D and background
+  signals; incomplete pages/animations remain REVIEW REQUIRED.
+- [ ] Compare source versus new **moving** browser evidence, not just static
+  screenshots. Preserve the visual role of valuable original effects and real
+  work/product photos; a much simpler replacement is not automatically better.
+- [ ] A largely static original site receives effects only with a specific
+  company-based rationale; a genuinely animated one must not be silently
+  flattened into generic cards, letters and repeated arrows.
+- [ ] Do not imply missing original media rights were solved by a synthetic
+  shoe/photo/logo. Any lawful replacement or omitted feature needs an actual
+  client decision tied to the exact source and build digests.
+- [ ] Check real playback, reduced motion, mobile smoothness, background
+  contrast, text legibility and first-viewport company recognition.
+- [ ] AMK-inspired IA, audience, visual hierarchy and usability checks apply
+  generally; school synopsis/report requirements do not appear on client sites.
+
+
 ## V7: actual original-versus-new screenshot evidence and bounded repair
 
 See `docs/KAURIVO_V7_VISUAL_ITERATION_QA.md`.
