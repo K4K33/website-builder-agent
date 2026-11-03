@@ -25,7 +25,7 @@ RESEARCH_NARRATION = (
     ),
     re.compile(
         r"\b(?:yrityksen|asiakkaan)\s+(?:omalla|omilla|omilta|alkuperäisellä|alkuperäisiltä)"
-        r"\s+(?:verkkosivustolla|verkkosivuilla|sivulla|sivuilta|yhteystietosivuilta)\b",
+        r"\s+(?:verkkosivustolla|verkkosivuilta|verkkosivuilla|sivulla|sivuilta|yhteystietosivuilta)\b",
         re.I
     ),
     re.compile(
@@ -34,7 +34,8 @@ RESEARCH_NARRATION = (
         r"(?:alkuperäis(?:eltä|estä)|yrityksen)\b", re.I
     ),
     re.compile(
-        r"\b\d+\s+(?:työtä|hintariviä|palvelua|arvostelua|kuvaa)\s+"
+        r"\b(?:\d+|yksi|kaksi|kolme|neljä|viisi|kuusi|seitsemän|kahdeksan|yhdeksän|kymmenen)\s+"
+        r"(?:työtä|hintariviä|palvelua|arvostelua|kuvaa)\s+"
         r"(?:alkuperäis(?:eltä|estä)|lähdesivulta|lähdesivustolta)\b", re.I
     ),
     re.compile(r"\b(?:päiväämätön|vanhentunut)\s+.{0,65}"
@@ -177,6 +178,17 @@ def audit_client_facing_integrity(
                 and node.name == "svg"
             )
         ]
+        # CSS-only faux location panels need the same review as drawn SVGs.
+        for panel in main.find_all(class_=re.compile(
+            r"(?:^|[-_ ])(?:map-panel|map-illustration|map-placeholder)"
+            r"(?:$|[-_ ])", re.I
+        )):
+            has_pin = bool(panel.select(".map-pin,.map-drawing,.location-label"))
+            real_embed = bool(panel.select('iframe[src*="google.com/maps/"],'
+                                          'iframe[src*="openstreetmap.org/"]'))
+            actual_image = bool(panel.select("img[src]"))
+            if has_pin and not real_embed and not actual_image and panel not in map_art:
+                map_art.append(panel)
         if map_art and not _record_valid(
             research.get("verified_geospatial_illustration"),
             rendered_pages, research
