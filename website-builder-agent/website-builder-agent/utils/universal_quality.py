@@ -14,6 +14,7 @@ from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.client_facing_integrity import audit_client_facing_integrity
 from utils.brand_design_blueprint import audit_sitewide_brand_consistency
 from utils.brand_lock import audit_brand_lock
+from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
 from utils.premium_quality_gate import (
@@ -54,6 +55,8 @@ UNIVERSAL_STANDARDS = (
     ("real_location_aids", "No decorative street maps masquerading as navigation aids", "functional"),
     ("editorial_visual_balance", "Human comparison of typography, whitespace and composition", "visual"),
     ("coherent_sitewide_brand_kit", "Consistent website-level brand tokens and theme across all routes", "brand"),
+    ("sector_recognition", "First-view company industry recognisability", "visual"),
+    ("company_voice_and_rhythm", "Company-specific voice and page layout", "visual"),
 
 
 )
@@ -146,6 +149,12 @@ def audit_universal_standards(
         fail("brand_identity_lock", str(issue))
     for issue in identity_lock["pending"]:
         needs("brand_identity_lock", str(issue))
+
+    sector_presence = audit_sector_presence(pages, research)
+    for item in sector_presence['blocking']:
+        fail('sector_recognition', str(item))
+    for message in sector_presence['pending']:
+        needs('company_voice_and_rhythm' if 'strips' in message else 'sector_recognition', message)
 
     brand_consistency = audit_sitewide_brand_consistency(pages)
     for reason in brand_consistency["issues"]:
@@ -385,6 +394,7 @@ def audit_universal_standards(
         "blocking_problems": problems,
         "brand_consistency": brand_consistency,
         "brand_identity_lock": identity_lock,
+        "sector_presence": sector_presence,
         "premium_evidence": {
             "coverage": coverage,
             "independent_review": independently_reviewed,
