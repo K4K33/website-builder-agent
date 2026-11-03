@@ -210,6 +210,56 @@ def cmd_qa(args):
     qa.run_qa(args.company)
 
 
+
+def cmd_visual_evidence(args):
+    """No paid AI: original/new browser screenshot pairs and repair report."""
+    from utils.screenshot import capture_website
+    from utils.browser_qa import inspect_site
+    from utils.visual_comparison import build_visual_comparison
+
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Company not found: " + str(args.company))
+    research_data = dict(company.get("research") or {})
+    build = company.get("build") or {}
+    output_path = build.get("output_path")
+    if not output_path or not Path(output_path).is_file():
+        raise RuntimeError("Build this site before requesting visual evidence.")
+    root = Path(output_path).resolve().parent
+    routes = build.get("page_paths") or ["index.html"]
+    pages = {}
+    for route in routes:
+        file = (root / route).resolve()
+        if not file.is_relative_to(root) or not file.is_file():
+            raise RuntimeError("Missing or unsafe site route: " + str(route))
+        pages[route] = file.read_text(encoding="utf-8")
+    if args.refresh_original:
+        source_url = company.get("url") or ""
+        if not (research_data.get("source_inventory") or {}).get("pages"):
+            raise RuntimeError("This company has no researched original website.")
+        captured = capture_website(source_url, "original-client-" + slug)
+        if not captured:
+            raise RuntimeError("Original site could not be captured; no fake comparison generated.")
+        research_data["original_screenshots"] = captured
+        upsert_company(slug, {"research": research_data})
+    new_browser = inspect_site(root / "index.html")
+    report = build_visual_comparison(
+        research_data.get("original_screenshots"), new_browser, pages,
+        research_data, report_dir=Path(config.OUTPUT_DIR)/"_visual_reports"/slug,
+    )
+    print(json.dumps({
+        "status": report["status"],
+        "comparison_html": report["comparison_html"],
+        "manifest": report["report_path"],
+        "pairs": list(report["pairs"]),
+        "repair_hints": report["repair_hints"],
+        "missing": report["missing"],
+        "render_errors": report["render_errors"],
+        "browser_issues": new_browser.get("issues") or [],
+        "note": "Offline evidence, NOT client approval or an independent 9.5 score.",
+    }, ensure_ascii=False, indent=2))
+
+
 # =========================================================
 # PREVIEW
 # =========================================================
@@ -691,31 +741,20 @@ def cmd_pipeline(args):
         )
         print("[Blind benchmark] First-pass result recorded; independent 9.5 score NOT verified.")
         print(json.dumps(first_pass,ensure_ascii=False))
+    # All model retries are opt-in and capped by --max-revisions. A missing
+    # original screenshot, owner approval or media licence is NOT a rewrite task.
+    from utils.visual_revision import decide_revision
+    seen_issue_signatures = set()
     for attempt in range(args.max_revisions):
-        if qa_result.get("overall_pass") is True:
+        plan = decide_revision(qa_result, seen_issue_signatures)
+        if not plan["revise"]:
+            print("[Pipeline] No further paid revisions: " + plan["reason"])
             break
-        if qa_result.get("content_review", {}).get("notes") == "AI review failed":
-            break
-        if any("Browser QA unavailable" in issue for issue in qa_result.get("browser", {}).get("issues", [])):
-            break
-        # A human/content rights signoff cannot be fixed by asking the model
-        # to regenerate HTML: stop instead of burning capped AI credits.
-        if qa_result.get("content_parity", {}).get("review_required"):
-            print("[Pipeline] Source-content verification is pending; stop paid retries.")
-            break
-        if qa_result.get("unimplemented_global_feedback"):
-            print("[Pipeline] A new agency-wide rule needs a real checker/test.")
-            break
-        feedback = {
-            "static": qa_result.get("automated", {}).get("automated_issues", []),
-            "browser": qa_result.get("browser", {}).get("issues", []),
-            "review": qa_result.get("content_review", {}),
-            "source_content": qa_result.get("content_parity", {}),
-            "universal": qa_result.get("universal_quality", {}),
-            "general_lessons": qa_result.get("global_learning", {}),
-        }
-        print(f"[Pipeline] Korjauskierros {attempt + 1}/{args.max_revisions}")
-        builder.run_revise(selected_slug, json.dumps(feedback, ensure_ascii=False))
+        seen_issue_signatures.add(plan["signature"])
+        print(f"[Pipeline] Evidence-backed revision {attempt + 1}/{args.max_revisions}")
+        builder.run_revise(
+            selected_slug, json.dumps(plan["feedback"], ensure_ascii=False)
+        )
         qa_result = qa.run_qa(selected_slug)
 
     # -----------------------------------------------------
@@ -986,6 +1025,17 @@ def build_parser():
     parser_qa.add_argument("--confirm-paid-apis", action="store_true",
         help="Explicitly authorize paid AI/search provider calls.")
     parser_qa.set_defaults(func=cmd_qa)
+
+    visual_evidence = subparsers.add_parser(
+        "visual-evidence",
+        help="FREE local original/new paired screenshots and repair candidates; no AI calls.",
+    )
+    visual_evidence.add_argument("company")
+    visual_evidence.add_argument(
+        "--refresh-original", action="store_true",
+        help="Capture a fresh original-company website at 320,390,768,1440 (browser only).",
+    )
+    visual_evidence.set_defaults(func=cmd_visual_evidence)
 
     # -----------------------------------------------------
     # PREVIEW

@@ -1,5 +1,18 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## V7: actual original-versus-new screenshot evidence and bounded repair
+
+See `docs/KAURIVO_V7_VISUAL_ITERATION_QA.md`.
+
+- [ ] Capture the source company's ACTUAL first screen at **320, 390, 768 and 1440px**; do not substitute competitor sites or invented art. Save source capture provenance.
+- [ ] Capture matching generated-site first screens with the same viewport and mobile-emulation settings. Include every built page in full browser QA.
+- [ ] Produce source-left/new-right PNGs, local contact sheet and source/build/screenshot hashes outside the publishable site directory.
+- [ ] An unavailable or mismatched source screenshot must be marked **review required**; never award a brand fidelity pass from a logo-file match alone.
+- [ ] For visually demonstrative businesses, original photo above the fold vs none in the redesign is an actionable screenshot review-and-repair candidate, not a blanket rule for text-led businesses.
+- [ ] Route concrete screenshot-supported and browser-supported issues to a strictly capped revision loop only when paid retries have been explicitly authorized; stop on identical repeated issues.
+- [ ] Do not use a Builder rewrite to manufacture screenshot evidence, owner signoff, rights licences, independent reviewer identities or an imaginary 9.5/10 score.
+
+
 ## V6: actual source-bound brand and mobile evidence (new gate)
 
 Standard: `docs/KAURIVO_BRAND_EXPERIENCE_V6_2026-11-03.md`.
