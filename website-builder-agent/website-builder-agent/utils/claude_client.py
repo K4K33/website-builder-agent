@@ -155,7 +155,7 @@ def ask_claude(
     if max_retries < 1 or max_tokens < 1:
         raise ValueError("max_retries and max_tokens must be positive")
 
-    if config.ai_backend() == "ollama":
+    if config.backend_for_stage(stage) == "ollama":
         from utils.local_ai import chat_local
         # No OpenRouter headers, credits, reservations, or cloud fallback.
         return chat_local(
@@ -164,6 +164,10 @@ def ask_claude(
             timeout=int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "600")),
         )
 
+    # Validate again at the final paid-provider boundary. An unrelated
+    # funded API key must never make a non-free model billable in FREE_ONLY.
+    if config.free_only() and not config.is_zero_cost_openrouter_model(model):
+        raise RuntimeError("FREE_ONLY blocks paid model before any OpenRouter API request.")
     headers = _get_headers()
     user_content = _build_user_content(
         user_prompt,
