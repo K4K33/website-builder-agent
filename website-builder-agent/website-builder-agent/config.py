@@ -28,31 +28,61 @@ OPENROUTER_MODEL = os.getenv(
     "openrouter/free",
 )
 
-# Kaurivo is LOCAL/FREE by default. Paid providers need two explicit
-# opt-ins: AI_BACKEND=openrouter AND FREE_ONLY=0, plus normal CLI consent.
-# No implicit cloud fallback, no hidden paid API use.
+# No-billing default. A free cloud provider is allowed only when the
+# exact stage model is a documented $0 OpenRouter free variant, or Tavily is
+# explicitly verified as a non-billing account with a hard free-plan stop.
+# A free model may be weaker than the required premium owner-preview quality.
 def free_only():
     return os.getenv("FREE_ONLY", "1").strip().lower() not in {"0", "false", "no"}
+
 
 def ai_backend():
     mode = os.getenv("AI_BACKEND", "ollama").strip().lower()
     if mode not in {"openrouter", "ollama"}:
         raise RuntimeError("AI_BACKEND must be 'openrouter' or 'ollama'.")
-    if free_only() and mode != "ollama":
-        raise RuntimeError("FREE_ONLY requires AI_BACKEND=ollama; no cloud AI requests permitted.")
     return mode
 
 
-# Each stage has an explicit model; Builder and visual QA cannot silently use
-# a random free router. Set exact provider model IDs after choosing the model.
+def backend_for_stage(stage=None):
+    """Optional free-tier hybrid: local Builder/QA plus free OpenRouter Research."""
+    default = ai_backend()
+    key = f"{stage.upper()}_AI_BACKEND" if stage else ""
+    mode = os.getenv(key, default).strip().lower() if key else default
+    if mode not in {"openrouter", "ollama"}:
+        raise RuntimeError("Stage AI backend must be 'openrouter' or 'ollama'.")
+    return mode
+
+
+def is_zero_cost_openrouter_model(model: str) -> bool:
+    """Never trust a bare $0 price claim or a paid model with a similar name."""
+    value = str(model or "").strip().lower()
+    return bool(value == "openrouter/free" or
+                (value.endswith(":free") and "/" in value and
+                 " " not in value and not value.startswith("/")))
+
+
+def tavily_free_plan_confirmed(*, scheduled: bool = False) -> bool:
+    """Operators must confirm the *account* cannot spill into paid credits.
+
+    A local usage counter alone is not a billing guarantee if the account has
+    a card or pay-as-you-go. For scheduled jobs use the separate server-side
+    atomic free-credit reservation ledger.
+    """
+    flag = ("KAURIVO_TAVILY_FREE_PLAN_CONFIRMED" if scheduled
+            else "TAVILY_FREE_PLAN_CONFIRMED")
+    return free_only() and os.getenv(flag, "").strip() == "1"
+
+
+# All paid OpenRouter models are forbidden in FREE_ONLY, including when a
+# funded key is already present. Builder and visual QA still require exact
+# model IDs so an unpredictable free router cannot silently weaken quality.
 def model_for_stage(stage=None):
-    if ai_backend() == "ollama":
-        # Keep local and cloud model configurations distinct: never interpret an
-        # OpenRouter model ID as a local model name.
+    if backend_for_stage(stage) == "ollama":
         stage_key = f"OLLAMA_{stage.upper()}_MODEL" if stage else ""
         model = (os.getenv(stage_key, "").strip() if stage_key else "")
         model = model or os.getenv("OLLAMA_MODEL", "").strip()
-        if not model or (stage in {"builder", "qa"} and not os.getenv(stage_key, "").strip()):
+        if not model or (stage in {"builder", "qa"}
+                         and not os.getenv(stage_key, "").strip()):
             raise RuntimeError(
                 f"Configure a locally installed Ollama model for stage {stage or 'default'}; "
                 "Builder and visual QA need explicit OLLAMA_BUILDER_MODEL / OLLAMA_QA_MODEL."
@@ -62,10 +92,19 @@ def model_for_stage(stage=None):
         return model
     model = os.getenv(f"{stage.upper()}_MODEL", "").strip() if stage else ""
     model = model or OPENROUTER_MODEL
-    if stage in {"builder", "qa"} and (model == "openrouter/free" or model.endswith(":free")):
+    if free_only() and not is_zero_cost_openrouter_model(model):
         raise RuntimeError(
-            f"Aseta {stage.upper()}_MODEL laadukkaaksi, täsmälliseksi malliksi. "
-            "Rakentaja ja visuaalinen QA eivät käytä vaihtuvaa ilmaismallia."
+            "FREE_ONLY forbids paid OpenRouter models. Select an exact ':free' "
+            "model ID or 'openrouter/free' for non-critical research."
+        )
+    if stage in {"builder", "qa"} and model == "openrouter/free":
+        raise RuntimeError(
+            f"Set an exact model for {stage}: a changing free router cannot "
+            "be trusted for deterministic Builder and visual QA."
+        )
+    if stage in {"builder", "qa"} and not os.getenv(f"{stage.upper()}_MODEL", "").strip():
+        raise RuntimeError(
+            f"Set {stage.upper()}_MODEL explicitly to a vision/code-capable model."
         )
     return model
 
@@ -135,7 +174,8 @@ STATUS_FLOW = [
 # Käynnistyksen tarkistus
 # ============================================================
 
-if not OPENROUTER_API_KEY and ai_backend() == "openrouter":
+if not OPENROUTER_API_KEY and any(backend_for_stage(stage) == "openrouter"
+                                  for stage in ("research", "builder", "qa")):
     print(
         "[VAROITUS] OPENROUTER_API_KEY puuttuu. "
         "Lisää se GitHub Secretiksi nimellä OPENROUTER_API_KEY "
