@@ -180,11 +180,13 @@ def _openrouter_safe_limit() -> int:
 
 
 def _tavily_safe_limit() -> int:
-    return max(
-        0,
-        TAVILY_MONTHLY_LIMIT
-        - TAVILY_SAFETY_MARGIN,
-    )
+    import config
+    ordinary_limit = max(0, TAVILY_MONTHLY_LIMIT - TAVILY_SAFETY_MARGIN)
+    # One user can use the same Tavily account elsewhere. Leave a hard
+    # 250-credit reserve below the advertised free 1,000-credit allowance.
+    # Local counters are not shared across machines: for full no-charge
+    # assurance use an account WITHOUT pay-as-you-go or a card.
+    return min(ordinary_limit, 750) if config.free_only() else ordinary_limit
 
 
 def _days_in_month() -> int:
