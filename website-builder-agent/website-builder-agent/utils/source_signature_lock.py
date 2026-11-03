@@ -60,6 +60,16 @@ def signature_from_source(research: dict) -> dict:
             source_media = identity.get("source_experience") or {}
             if isinstance(source_media, dict) and int(source_media.get("observed_videos") or 0) > 0:
                 videos.add(url)
+        # An unlabelled portrait from a people-focused About/Team page
+        # must not be silently dropped simply because Wordpress omitted alt.
+        team_copy = (str(p.get("title") or "") + " " + str(p.get("text") or ""))[:6000]
+        if TEAM_PATH.search(urlsplit(url).path) and re.search(
+            r"tiimi|henkil[oö]st[oö]|ty[oö]ntekij|tekij[aä]|yritt[aä]j|"
+            r"our team|meet the team|our staff|employees", team_copy, re.I
+        ):
+            about.update(_url(item.get("src"), url)
+                         for item in identity.get("original_content_photos") or []
+                         if isinstance(item, dict) and _url(item.get("src"), url))
         known.append(url)
     profile = research.get("original_experience_profile") or {}
     inventory = research.get("source_inventory") or {}
@@ -75,7 +85,7 @@ def signature_from_source(research: dict) -> dict:
         "identity_pages": observed_identity,
         "logos": sorted(logos),
         "staff_portraits": sorted(team),
-        "about_portraits": sorted(about),
+        "about_page_people_photos": sorted(about),
         "gallery_photos": sorted(gallery),
         "all_content_photos": sorted(photos),
         "video_pages": sorted(videos),
@@ -121,16 +131,18 @@ def _signed_replacements(research: dict, source_hash: str,
 
 
 def _rendered(pages: dict[str, str]) -> dict:
-    images, header_images = set(), {}
+    images, header_images, images_by_route = set(), {}, {}
     videos = 0
     for route, html in pages.items():
         soup = BeautifulSoup(html, "html.parser")
         header = soup.find("header")
         header_images[route] = set()
+        images_by_route[route] = set()
         for img in soup.find_all("img"):
             for value in [img.get("src"), img.get("data-src")]:
                 if value:
                     images.add(str(value).strip())
+                    images_by_route[route].add(str(value).strip())
                     if header is not None and img in header.descendants:
                         header_images[route].add(str(value).strip())
             # srcset is responsive source evidence, not a substitute for
@@ -140,12 +152,14 @@ def _rendered(pages: dict[str, str]) -> dict:
                     candidate = part.strip().split(" ", 1)[0]
                     if candidate:
                         images.add(candidate)
+                        images_by_route[route].add(candidate)
                         if header is not None and img in header.descendants:
                             header_images[route].add(candidate)
         videos += len(soup.select("video,source[type^='video/']"))
         videos += sum(bool(VIDEO_SRC.search(str(i.get("src") or "")))
                       for i in soup.select("iframe[src]"))
-    return {"images": images, "header_images": header_images, "video": videos}
+    return {"images": images, "header_images": header_images,
+            "images_by_route": images_by_route, "video": videos}
 
 
 def audit_source_signature_lock(pages: dict[str, str], research: dict) -> dict:
@@ -199,6 +213,37 @@ def audit_source_signature_lock(pages: dict[str, str], research: dict) -> dict:
                 "kind": "staff_portrait_lost", "original": asset,
                 "reason": "A source-observed team portrait was removed; preserve or obtain a specific customer decision.",
             })
+
+    team_routes = [route for route in pages if TEAM_PATH.search(route)]
+    # The portraits should appear in the company/team area, not merely be
+    # hidden inside a product gallery on an unrelated subpage.
+    if team_routes:
+        for asset in source["staff_portraits"]:
+            if (present(asset)
+                and not any(asset in rendered["images_by_route"][route]
+                            or replacement.get(asset, "") in rendered["images_by_route"][route]
+                            for route in team_routes)
+                and not excepted("staff_portrait_placement", asset)):
+                blocking.append({
+                    "kind": "staff_portrait_disconnected_from_team",
+                    "original": asset,
+                    "reason": "Staff photo exists only outside the company's team/about pages.",
+                })
+        if source["about_page_people_photos"]:
+            preserved = [
+                asset for asset in source["about_page_people_photos"]
+                if any(asset in rendered["images_by_route"][route]
+                       or replacement.get(asset, "") in rendered["images_by_route"][route]
+                       for route in team_routes)
+                or excepted("about_page_photo", asset)
+            ]
+            if not preserved:
+                blocking.append({
+                    "kind": "team_page_all_real_photos_lost",
+                    "originals": source["about_page_people_photos"][:8],
+                    "reason": "Original team/about page included people-related photographs "
+                              "but the redesigned team area has none of the originals.",
+                })
 
     # Preserve each photo in a true gallery instead of pointing customers
     # back to the old site. Reorganization between routes is allowed.
