@@ -63,6 +63,13 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
     color = soup.find("meta", attrs={"name": re.compile("^theme-color$", re.I)})
     theme_color = str(color.get("content") or "").strip()[:40] if color else ""
     logo_candidates = []
+    original_favicons = []
+    for link in soup.select('link[rel~="icon"],link[rel~="apple-touch-icon"]'):
+        href = str(link.get("href") or "").strip()
+        if href:
+            absolute = urljoin(source_url, href) if source_url else href
+            if absolute not in original_favicons:
+                original_favicons.append(absolute[:500])
     for img in soup.select('header img,[role="banner"] img,[class*="site-header"] img'):
         raw = str(img.get("src") or img.get("data-src") or "").strip()
         if raw:
@@ -120,6 +127,7 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
     return {
         "theme_color": theme_color,
         "original_logo_candidates": logo_candidates[:12],
+        "original_favicon_candidates": original_favicons[:12],
         "original_content_photos": content_photos[:70],
         "reviews": reviews,
         "dynamic_review_widget": dynamic_review_widget,
