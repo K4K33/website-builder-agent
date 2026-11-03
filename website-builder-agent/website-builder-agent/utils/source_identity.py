@@ -10,6 +10,7 @@ import re
 import unicodedata
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
+from utils.source_experience import extract_source_experience
 
 
 REVIEW_SELECTOR = (
@@ -139,6 +140,7 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
     ))
     return {
         "theme_color": theme_color,
+        "source_experience": extract_source_experience(html, source_url),
         "original_logo_candidates": logo_candidates[:12],
         "original_header_wordmark_candidates": original_wordmark_text[:12],
         "original_favicon_candidates": original_favicons[:12],
