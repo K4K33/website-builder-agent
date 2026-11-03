@@ -234,11 +234,22 @@ def audit_client_facing_integrity(
         inspected.append(route)
 
     if len(generic) >= 2:
-        pending.append({
-            "category": "template_headlines",
-            "issue": "Several generic headings require editorial comparison with company voice.",
-            "examples": generic[:8],
-        })
+        editorial = research.get("editorial_language_review") or {}
+        approved = (
+            isinstance(editorial, dict)
+            and editorial.get("approved") is True
+            and editorial.get("reviewer_kind") in ("human", "independent_human")
+            and str(editorial.get("reviewer") or "").strip()
+            and str(editorial.get("checked_at") or "").strip()
+            and editorial.get("build_sha256") == site_digest(rendered_pages)
+            and editorial.get("reviewed_headlines") == generic
+        )
+        if not approved:
+            pending.append({
+                "category": "template_headlines",
+                "issue": "Several generic headings require editorial comparison with company voice.",
+                "examples": generic[:8],
+            })
     pending.append({
         "category": "visual_editorial_proof",
         "issue": "A human independent reviewer must inspect actual screenshots, source brand continuity, authentic maps and compositional balance.",
