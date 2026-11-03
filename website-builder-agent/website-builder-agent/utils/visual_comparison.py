@@ -82,7 +82,8 @@ def _first_fold_repair_hints(source: dict, redesigned: dict, research: dict) -> 
                         / max(1, width * height))
         after_ratio = (float(after.get("firstFoldVisibleMediaArea") or 0)
                        / max(1, width * height))
-        if before_ratio >= 0.09 and after_ratio < 0.02:
+        if (before_ratio >= 0.09 and after_ratio < 0.02
+                and not after.get("heroHasCssBackground")):
             evidence.append({
                 "kind": "image_led_mobile_first_fold_regression",
                 "severity": "review_and_repair",
