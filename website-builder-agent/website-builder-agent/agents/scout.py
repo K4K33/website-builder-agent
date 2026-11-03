@@ -61,6 +61,11 @@ def _build_overpass_query(
         "hotelli": [("tourism", "hotel")],
         "sähköasentaja": [("craft", "electrician")],
         "putkimies": [("craft", "plumber")],
+        "kukkakauppa": [("shop", "florist")],
+        "pyöräliike": [("shop", "bicycle")],
+        "suutari": [("craft", "shoemaker")],
+        "leipomo": [("shop", "bakery")],
+
     }
     tags = categories.get(industry.strip().casefold())
     if not tags:
