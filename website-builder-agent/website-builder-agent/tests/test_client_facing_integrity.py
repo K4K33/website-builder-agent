@@ -41,6 +41,33 @@ class ClientFacingIntegrityTests(unittest.TestCase):
                 self.assertFalse(report["pass"], report)
                 self.assertIn("research_leak", [i["category"] for i in report["blocking"]])
 
+    def test_footer_source_narration_is_not_exempt_client_copy(self):
+        footer = "<footer>Hinnastot on tuotu alkuperäisiltä sivuilta.</footer>"
+        result = self.audit({"index.html": site("<p>Real service.</p>", footer=footer)})
+        self.assertFalse(result["pass"], result)
+        self.assertIn("research_leak", [i["category"] for i in result["blocking"]])
+
+    def test_a_signed_fake_map_without_coordinate_evidence_still_fails(self):
+        pages = {"index.html": site(
+            '<div class="map-panel"><svg class="map-drawing">'
+            '<path d="M1 2L3 4"/></svg><div class="map-pin">X</div></div>'
+        )}
+        research = {"source_inventory": {"pages": [{
+            "url": "https://company.example/", "text": "Found public address"
+        }]}}
+        research["verified_geospatial_illustration"] = {
+            "approved": True, "reviewer_kind": "client", "reviewer": "Owner",
+            "checked_at": "2026-11-03",
+            "source_sha256": source_inventory_sha256(research["source_inventory"]),
+            "build_sha256": site_digest(pages),
+        }
+        self.assertFalse(self.audit(pages, research)["pass"])
+        research["verified_geospatial_illustration"].update({
+            "coordinates": {"lat": 60.1, "lon": 24.9},
+            "coordinate_source_url": "https://company.example/contact",
+        })
+        self.assertTrue(self.audit(pages, research)["pass"])
+
     def test_hidden_research_script_is_not_customer_copy(self):
         html = site('<p>Voit huollattaa pyörän ja jalkineet täällä.</p>'
                     '<script>const info = "6 työtä alkuperäiseltä hinnastosivulta";</script>')
