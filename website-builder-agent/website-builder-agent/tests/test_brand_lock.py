@@ -56,6 +56,12 @@ class BrandLockTests(unittest.TestCase):
         universal = audit_universal_standards(pages["index.html"])
         self.assertIn("brand_identity_lock", universal["blocking_problems"])
 
+    def test_logo_filename_without_alt_or_css_class_is_still_checked(self):
+        pages = {"index.html": page('<img src="/assets/logo.svg">')}
+        report = audit_brand_lock(pages)
+        self.assertIn("unsourced_header_logo",
+                      [item["category"] for item in report["blocking"]])
+
     def test_fabricated_logo_named_final_or_original_is_still_blocked(self):
         pages = {"index.html": page('<img class="logo" '
                                     'src="/assets/official-original-logo-final.svg">')}
