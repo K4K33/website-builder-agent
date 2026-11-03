@@ -50,7 +50,7 @@ class MunkkiniemenDemoSourceGate(unittest.TestCase):
             self.assertIn('tel:+3589487286', html)
             self.assertIn('mailto:pietusuutari@gmail.com', html)
             for target in ROUTES:
-                href = ("../" if route else "./") + (target + "/" if target else "")
+                href = ("../" if route else "") + (target + "/" if target else ("./" if not route else ""))
                 self.assertIn('href="' + href + '"', html,
                               f"Missing {target} in {route} navigation")
             for match in re.finditer(r'href="([^"]+)"', html):
