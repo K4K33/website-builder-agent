@@ -14,6 +14,7 @@ import config
 import os
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 from agents import scout
 from agents import research
@@ -563,13 +564,75 @@ def cmd_attach_profile(args):
 # PIPELINE
 # =========================================================
 
+def cmd_free_readiness(args):
+    """Check zero-credit local configuration, not an actual quality score."""
+    import requests
+    settings = {}
+    for stage in ("research", "builder", "qa"):
+        try:
+            settings[stage] = config.model_for_stage(stage)
+        except RuntimeError as error:
+            settings[stage] = {"error": str(error)}
+    server = {"available": False, "installed": [], "error": ""}
+    try:
+        response = requests.get("http://127.0.0.1:11434/api/tags",
+                                timeout=3, allow_redirects=False)
+        response.raise_for_status()
+        info = response.json()
+        server["installed"] = sorted(
+            str(item.get("name")) for item in info.get("models") or []
+            if isinstance(item, dict) and isinstance(item.get("name"), str)
+        )
+        server["available"] = True
+    except (requests.RequestException, ValueError, TypeError) as error:
+        server["error"] = type(error).__name__ + ": local Ollama not available"
+    print(json.dumps({
+        "free_only": config.free_only(),
+        "backend": config.ai_backend(),
+        "models_requested": settings,
+        "ollama_local": server,
+        "ready_to_try": server["available"]
+            and all(isinstance(value, str) for value in settings.values()),
+        "quality_verified": False,
+        "note": "A local model must be installed by its owner. A responsive API "
+                "does not prove vision support, 9.5 quality or processing speed. "
+                "No paid endpoints, mail or remote model download was used.",
+    }, ensure_ascii=False, indent=2))
+
+
+def cmd_free_batch(args):
+    """Process all existing saved leads with strictly local inference."""
+    if not config.free_only() or config.ai_backend() != "ollama":
+        raise RuntimeError("free-batch forbids paid/cloud providers: set FREE_ONLY=1, AI_BACKEND=ollama.")
+    if not args.allow_public_lookups:
+        raise RuntimeError("Permit reading actual public company and OSM sources with --allow-public-lookups.")
+    for stage in ("research", "builder", "qa"):
+        config.model_for_stage(stage)
+    from utils.free_batch import process_free_batch
+    def run_one(slug):
+        cmd_pipeline(SimpleNamespace(
+            confirm_live_run=True, company=slug, count=1,
+            industry="", location="", benchmark_mode=False,
+            max_revisions=args.max_revisions,
+        ))
+    report = process_free_batch(
+        load_companies(), run_one,
+        status_path=Path(config.OUTPUT_DIR) / "_kaurivo_free_batch.json",
+        limit=args.limit, retry_failed=args.retry_failed,
+    )
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+
+
 def cmd_pipeline(args):
     if not getattr(args, "confirm_live_run", False):
         raise RuntimeError("Live pipeline requires --confirm-live-run to authorize external API calls.")
     # Resolve all required models before discovery can spend API requests.
     config.model_for_stage("builder")
     config.model_for_stage("qa")
-    keys = ["TAVILY_API_KEY"]
+    config.model_for_stage("research")
+    # Local/free processing must not require Tavily or a paid search key.
+    # Paid search is an EXPLICIT alternate mode, never an automatic fallback.
+    keys = [] if config.free_only() else ["TAVILY_API_KEY"]
     if config.ai_backend() == "openrouter":
         keys.append("OPENROUTER_API_KEY")
     for key in keys:
@@ -748,10 +811,10 @@ def cmd_pipeline(args):
     for attempt in range(args.max_revisions):
         plan = decide_revision(qa_result, seen_issue_signatures)
         if not plan["revise"]:
-            print("[Pipeline] No further paid revisions: " + plan["reason"])
+            print("[Pipeline] No further revision attempts: " + plan["reason"])
             break
         seen_issue_signatures.add(plan["signature"])
-        print(f"[Pipeline] Evidence-backed revision {attempt + 1}/{args.max_revisions}")
+        print(f"[Pipeline] Evidence-backed {'local' if config.free_only() else 'paid'} revision {attempt + 1}/{args.max_revisions}")
         builder.run_revise(
             selected_slug, json.dumps(plan["feedback"], ensure_ascii=False)
         )
@@ -1257,6 +1320,26 @@ def build_parser():
         help="Rajattu QA-korjauskierrosten määrä (0–3). Oletus 0 pitää API-kulut ennallaan.",
     )
     parser_pipeline.set_defaults(func=cmd_pipeline)
+
+    free_ready = subparsers.add_parser(
+        "free-readiness",
+        help="Check local Ollama models and zero-fee provider configuration; no cloud calls.",
+    )
+    free_ready.set_defaults(func=cmd_free_readiness)
+
+    free_batch = subparsers.add_parser(
+        "free-batch",
+        help="Process saved company queue through free local-only research/build/QA; no per-site fees.",
+    )
+    free_batch.add_argument("--limit", type=int, default=0,
+        help="Number of queued companies to process; 0 = ALL eligible, no artificial cap.")
+    free_batch.add_argument("--max-revisions", type=int, choices=range(0, 4), default=2,
+        help="Up to 3 local-only evidence-backed repair rounds; 2 default.")
+    free_batch.add_argument("--allow-public-lookups", action="store_true",
+        help="Allow actual public website and OSM research (not paid providers).")
+    free_batch.add_argument("--retry-failed", action="store_true",
+        help="Explicitly retry previous blocked queue items after fixing their cause.")
+    free_batch.set_defaults(func=cmd_free_batch)
 
     return parser
 
