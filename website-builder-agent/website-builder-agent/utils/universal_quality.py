@@ -15,6 +15,7 @@ from utils.client_facing_integrity import audit_client_facing_integrity
 from utils.brand_design_blueprint import audit_sitewide_brand_consistency
 from utils.brand_lock import audit_brand_lock
 from utils.brand_experience import audit_brand_experience
+from utils.source_experience import audit_source_experience_parity
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -30,6 +31,7 @@ UNIVERSAL_STANDARDS = (
     ("same_industry_inspiration", "Three sourced leading sector sites; original adaptation", "research"),
     ("unique_art_direction", "Distinctive brand-specific visual composition", "visual"),
     ("original_brand", "Original client logo and approved brand preserved", "brand"),
+    ("source_experience_parity", "Original video, galleries, texture, motion and media depth", "visual"),
     ("sponsor_and_partner_marks", "Original relevant footer partner marks and links", "brand"),
     ("content_parity", "Current services, pricing, FAQ, contacts, hours and dynamic content", "content"),
     ("natural_copy", "Natural and non-repetitive language without source narration", "content"),
@@ -169,6 +171,12 @@ def audit_universal_standards(
               "Compare the actual original/new 320px and 390px first screens; "
               "confirm industry-relevant photos appear at the right time. "
               "Some sectors legitimately need a text-first layout.")
+
+    source_experience = audit_source_experience_parity(pages, research)
+    for issue in source_experience["blocking"]:
+        fail("source_experience_parity", issue)
+    for issue in source_experience["pending"]:
+        needs("source_experience_parity", issue)
 
     sector_presence = audit_sector_presence(pages, research)
     for item in sector_presence['blocking']:
