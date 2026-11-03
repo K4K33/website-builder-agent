@@ -101,6 +101,21 @@ class FreeQuotaTests(TestCase):
                 claude_client.ask_claude("sys", "prompt", stage="research")
             provider.assert_not_called()
 
+    def test_paid_stage_override_cannot_bypass_explicit_paid_consent(self):
+        import main
+        from types import SimpleNamespace
+        env = {"FREE_ONLY": "0", "AI_BACKEND": "ollama",
+               "RESEARCH_AI_BACKEND": "openrouter",
+               "RESEARCH_MODEL": "provider/paid"}
+        with patch.dict(os.environ, env):
+            with self.assertRaisesRegex(RuntimeError, "confirm-paid-apis"):
+                main._require_paid_consent(
+                    SimpleNamespace(confirm_paid_apis=False)
+                )
+            main._require_paid_consent(
+                SimpleNamespace(confirm_paid_apis=True)
+            )
+
     def test_tavily_basic_free_search_requires_account_confirmation(self):
         env = {"FREE_ONLY": "1", "TAVILY_API_KEY": "free-plan-fixture"}
         response = Mock(status_code=200)
