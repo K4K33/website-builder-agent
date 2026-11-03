@@ -65,10 +65,11 @@ class FreeReferencesTests(unittest.TestCase):
             fetch = Mock(return_value=SITES)
             cache = Path(tmp) / "cache.json"
             first = discover_free_references(
-                "kukkakauppa", cache_path=cache, now=NOW, fetch_osm=fetch)
+                "kukkakauppa", cache_path=cache, now=NOW, fetch_osm=fetch,
+                historic_lookup=lambda category: [])
             second = discover_free_references(
                 "florist", cache_path=cache, now=NOW + timedelta(hours=2),
-                fetch_osm=fetch)
+                fetch_osm=fetch, historic_lookup=lambda category: [])
             self.assertEqual(first, second)
             self.assertEqual(len(first), 4)
             fetch.assert_called_once()
@@ -78,7 +79,8 @@ class FreeReferencesTests(unittest.TestCase):
             result = discover_free_references(
                 "kampaamo", target_url="https://shop0.example.org/",
                 cache_path=Path(tmp)/"r.json", now=NOW,
-                fetch_osm=lambda *args: SITES)
+                fetch_osm=lambda *args: SITES,
+                historic_lookup=lambda category: [])
             self.assertEqual(len(result), 3)
             self.assertTrue(all("shop0." not in row["url"] for row in result))
 
@@ -88,14 +90,16 @@ class FreeReferencesTests(unittest.TestCase):
             path = Path(tmp)/"r.json"
             with self.assertRaisesRegex(RuntimeError, "Fewer than three"):
                 discover_free_references("kukkakauppa", cache_path=path,
-                                         now=NOW, fetch_osm=fetch)
+                                         now=NOW, fetch_osm=fetch,
+                historic_lookup=lambda category: [])
             self.assertEqual(fetch.call_count, 2)
             with self.assertRaisesRegex(RuntimeError, "cached"):
                 discover_free_references("kukkakauppa", cache_path=path,
-                                         now=NOW+timedelta(hours=1), fetch_osm=fetch)
+                                         now=NOW+timedelta(hours=1), fetch_osm=fetch, historic_lookup=lambda category: [])
             self.assertEqual(fetch.call_count, 2)
             with self.assertRaisesRegex(RuntimeError, "No trustworthy free"):
-                discover_free_references("unmapped-sector", cache_path=path)
+                discover_free_references("unmapped-sector", cache_path=path,
+                                         historic_lookup=lambda category: [])
         self.assertEqual(normalize_industry("kukkakaupan kukkakauppa"),
                          "kukkakauppa")
 
