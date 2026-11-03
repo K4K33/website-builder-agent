@@ -1265,7 +1265,8 @@ def run_qa(slug_or_name: str) -> dict:
         # review. Original screenshot failures cannot certify brand fidelity.
         visual_comparison = build_visual_comparison(
             research.get("original_screenshots"), page_browsers["index.html"],
-            rendered_pages, research, report_dir=site_root/"qa"/"visual",
+            rendered_pages, research,
+            report_dir=Path(config.OUTPUT_DIR)/"_visual_reports"/slug,
         )
         browser["visual_comparison"] = visual_comparison
         if browser["pass"] and visual_comparison["status"] != "review_required":
