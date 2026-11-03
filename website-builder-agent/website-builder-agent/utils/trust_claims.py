@@ -123,9 +123,12 @@ def audit_trust_claims(rendered_pages: dict[str, str], research: dict | None = N
     checked_reviews, checked_aggregates = 0, 0
     for route, html in rendered_pages.items():
         soup = BeautifulSoup(html, "html.parser")
-        for node in soup.select(REVIEW_SELECTOR):
-            # Avoid counting a nested review element twice.
-            if node.find_parent(REVIEW_SELECTOR):
+        review_nodes = soup.select(REVIEW_SELECTOR)
+        review_node_ids = {id(node) for node in review_nodes}
+        for node in review_nodes:
+            # BeautifulSoup.find_parent() accepts tag names, NOT CSS selectors;
+            # compare ancestor identities to avoid double counting nested cards.
+            if any(id(parent) in review_node_ids for parent in node.parents):
                 continue
             quote = _quote_in_card(node)
             if not quote:
@@ -155,8 +158,11 @@ def audit_trust_claims(rendered_pages: dict[str, str], research: dict | None = N
         # Sitewide aggregate badges are different from the per-quote stars.
         # Restrict checks to explicit aggregate components to prevent
         # confusing decorative stars, product symbols, and icons for ratings.
-        for node in soup.select(AGGREGATE_SELECTOR):
-            if node.find_parent(REVIEW_SELECTOR) or node.find_parent(AGGREGATE_SELECTOR):
+        aggregate_nodes = soup.select(AGGREGATE_SELECTOR)
+        aggregate_ids = {id(node) for node in aggregate_nodes}
+        for node in aggregate_nodes:
+            if any(id(parent) in review_node_ids or id(parent) in aggregate_ids
+                   for parent in node.parents):
                 continue
             claim = " ".join(node.get_text(" ", strip=True).split())
             if not claim and node.get("aria-label"):
