@@ -81,6 +81,7 @@ def audit_universal_standards(
     company: dict | None = None,
     stage: str = "internal_demo",
     rendered_pages: dict[str,str] | None = None,
+    site_bundle_sha256: str | None = None,
 ) -> dict:
     """Separate deterministic failures from evidence still requiring review.
 
@@ -155,7 +156,9 @@ def audit_universal_standards(
 
     # An image logo matching the source is not proof that the surrounding
     # typography, visual softness, first fold and brand story survived.
-    brand_experience = audit_brand_experience(pages, research)
+    brand_experience = audit_brand_experience(
+        pages, research, site_bundle_sha256=site_bundle_sha256
+    )
     for item in brand_experience["blocking"]:
         fail("original_brand_experience", str(item))
     for item in brand_experience["pending"]:
