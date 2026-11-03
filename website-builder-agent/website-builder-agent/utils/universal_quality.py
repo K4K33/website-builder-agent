@@ -14,6 +14,7 @@ from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.client_facing_integrity import audit_client_facing_integrity
 from utils.brand_design_blueprint import audit_sitewide_brand_consistency
 from utils.brand_lock import audit_brand_lock
+from utils.brand_experience import audit_brand_experience
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -57,6 +58,8 @@ UNIVERSAL_STANDARDS = (
     ("coherent_sitewide_brand_kit", "Consistent website-level brand tokens and theme across all routes", "brand"),
     ("sector_recognition", "First-view company industry recognisability", "visual"),
     ("company_voice_and_rhythm", "Company-specific voice and page layout", "visual"),
+    ("original_brand_experience", "Full original wordmark, palette mood and voice are source-verified", "brand"),
+    ("first_view_visual_priority", "Evidence-based first mobile viewport shows actual client work where appropriate", "visual"),
 
 
 )
@@ -149,6 +152,20 @@ def audit_universal_standards(
         fail("brand_identity_lock", str(issue))
     for issue in identity_lock["pending"]:
         needs("brand_identity_lock", str(issue))
+
+    # An image logo matching the source is not proof that the surrounding
+    # typography, visual softness, first fold and brand story survived.
+    brand_experience = audit_brand_experience(pages, research)
+    for item in brand_experience["blocking"]:
+        fail("original_brand_experience", str(item))
+    for item in brand_experience["pending"]:
+        needs("original_brand_experience", str(item))
+    if (brand_experience["source_signals"]["observed_source_photos"]
+            and brand_experience["pending"]):
+        needs("first_view_visual_priority",
+              "Compare the actual original/new 320px and 390px first screens; "
+              "confirm industry-relevant photos appear at the right time. "
+              "Some sectors legitimately need a text-first layout.")
 
     sector_presence = audit_sector_presence(pages, research)
     for item in sector_presence['blocking']:
@@ -394,6 +411,7 @@ def audit_universal_standards(
         "blocking_problems": problems,
         "brand_consistency": brand_consistency,
         "brand_identity_lock": identity_lock,
+        "brand_experience": brand_experience,
         "sector_presence": sector_presence,
         "premium_evidence": {
             "coverage": coverage,

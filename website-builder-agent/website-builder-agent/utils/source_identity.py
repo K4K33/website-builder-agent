@@ -77,6 +77,19 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
             if url not in logo_candidates:
                 logo_candidates.append(url[:500])
 
+    # Collect only explicit site-title / wordmark DOM cues. This is a source
+    # text sample, NOT evidence of the original font (often in external CSS).
+    original_wordmark_text = []
+    for element in soup.select(
+        'header [class*="site-title"],header [class*="site-name"],'
+        'header [class*="brand-name"],header [class*="wordmark"],'
+        '[role="banner"] [class*="site-title"],'
+        'header h1,[role="banner"] h1'
+    )[:24]:
+        text = " ".join(element.get_text(" ", strip=True).split())[:120]
+        if 3 <= len(text) <= 90 and text not in original_wordmark_text:
+            original_wordmark_text.append(text)
+
     # Preserve real original work/staff photography as source candidates.
     # Their presence does not imply the agency has permission to republish.
     content_photos = []
@@ -127,6 +140,7 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
     return {
         "theme_color": theme_color,
         "original_logo_candidates": logo_candidates[:12],
+        "original_header_wordmark_candidates": original_wordmark_text[:12],
         "original_favicon_candidates": original_favicons[:12],
         "original_content_photos": content_photos[:70],
         "reviews": reviews,

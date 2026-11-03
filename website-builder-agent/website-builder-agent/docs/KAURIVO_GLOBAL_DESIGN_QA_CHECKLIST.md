@@ -1,5 +1,26 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## V6: actual source-bound brand and mobile evidence (new gate)
+
+Standard: `docs/KAURIVO_BRAND_EXPERIENCE_V6_2026-11-03.md`.
+
+- [ ] Record the original header's complete text wordmark where observable;
+  never hallucinate a typeface from visible text alone.
+- [ ] Check original/new source-bound screenshots at 320, 390 and 1440px,
+  with both full wordmark and color character considered (not just a logo URL).
+- [ ] Explicit original-brand replacement without exact-build and original-
+  source-bound client consent is **BLOCKED**, including changed logo lettering,
+  palette character or photographic identity.
+- [ ] If an original site exists but visual comparison is missing, mark
+  **REVIEW REQUIRED**; a passing DOM/image test does not mean on-brand.
+- [ ] Real Chromium first-fold evidence shows image visibility and the original
+  work photo's relative priority. Below-fold company imagery triggers human
+  examination, never a blanket failure for legitimate text-first services.
+- [ ] Reviewer evidence metadata is not independent human confirmation or a
+  legal media licence. Validate file authenticity, reviewer independence,
+  customer approval and visual quality through separate actual checks.
+
+
 ## V5: original brand character, first phone viewport and true customer voice
 
 See `docs/KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md`.
