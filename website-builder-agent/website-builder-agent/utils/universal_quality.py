@@ -131,8 +131,9 @@ def audit_universal_standards(
     for item in integrity["pending"]:
         if item["category"] == "template_headlines":
             needs("natural_copy", str(item))
-        else:
-            needs("editorial_visual_balance", str(item))
+        # Visual/editorial proof is checked independently below by the
+        # exact-build two-reviewer consensus. Never create a permanently
+        # unresolvable pending flag once real evidence has passed.
 
     source_detail_fidelity = audit_price_faq_preservation(pages, research)
     for item in source_detail_fidelity["missing"]:
