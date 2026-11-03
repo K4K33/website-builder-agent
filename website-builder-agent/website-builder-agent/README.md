@@ -117,6 +117,15 @@ Jokainen tulos kirjataan `output/_kaurivo_free_batch.json`-tiedostoon.
 Käytettävissä on myös täysin ilman tekoälyä tehtävä kuvavertailu
 `python main.py visual-evidence SLUG --refresh-original`.
 
+**Yöllinen Kaurivo-adminin PRH-haku:** ajastettu kansallinen PRH ZIP -ajo
+käy edelleen läpi korkeintaan 9 000 ehdokasta paikallisesti ja muodostaa
+50 yrityksen shortlistin. Maksulliset Tavily-lisähaut on estetty myös
+tästä ajastuksesta. Tämä EI automaattisesti todista puuttuvaa yrityksen
+verkkosivua eikä säilytä aiempia maksullisella haulla saatuja 12
+verkkosivuehdotusta: ilman luotettavaa ilmaista näyttöä verkkosivun
+tilanne jää tarkistettavaksi. Yritysten määrää ei hiljaisesti pienennetä
+sen takia. OSM:n julkista reilun käytön rajaa ei kierretä.
+
 **Määrä ja laatu:** numeroa sivustoa/päivä ei voi luvata ennen paikallisen
 koneen nopeuden, mallien laadun ja todellisen jonon mittaamista.
 `free-batch` raportoi onnistuneiden ajokertojen toteutuneet kestot ja
