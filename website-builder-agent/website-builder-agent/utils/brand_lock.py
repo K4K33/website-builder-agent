@@ -21,8 +21,8 @@ from utils.premium_quality_gate import site_digest
 
 
 BRAND_HINT = re.compile(
-    r"(?:^|[\s\-_])(?:brand|logo|wordmark|lettermark|monogram|emblem|"
-    r"identity|site-mark|site-logo|seal|stamp|tunnus|liikemerkki|merkki)(?:$|[\s\-_])",
+    r"(?:^|[\s/._-])(?:brand|logo|wordmark|lettermark|monogram|emblem|"
+    r"identity|site-mark|site-logo|seal|stamp|tunnus|liikemerkki|merkki)(?:$|[\s/._-])",
     re.I,
 )
 # SVGs used for navigation (menu/search/close) are not business logos.
