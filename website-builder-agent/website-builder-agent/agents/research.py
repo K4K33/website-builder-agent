@@ -29,11 +29,15 @@ from utils.screenshot import capture_website
 from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
+from utils.free_references import discover_free_references
+from utils.reference_screenshot_cache import capture_cached
+from utils.reference_site_cache import cached_analyze
 from utils.premium_quality_gate import discover_source_journeys
 from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
 
 import requests
+import config
 
 from utils import resource_manager
 from utils.claude_client import ask_claude_json
@@ -345,6 +349,8 @@ def _search_tavily(
     max_results: int = 5,
 ) -> list[dict]:
 
+    if config.free_only():
+        raise RuntimeError("FREE_ONLY blocks Tavily; use cached public OSM operator sources.")
     api_key = _get_tavily_key()
 
     print(
@@ -458,6 +464,19 @@ def _search_tavily(
     ]
 
 
+def _search_industry_references(industry: str, target_url: str, search_query: str) -> list[dict]:
+    """Use only free public OSM candidates when FREE_ONLY=1."""
+    if config.free_only():
+        return discover_free_references(
+            industry, target_url=target_url, max_results=20,
+        )
+    references = _search_tavily(search_query, max_results=5)
+    references += _search_tavily(
+        f"{industry} yritys palvelut yhteystiedot", max_results=5,
+    )
+    return references
+
+
 def _format_search_results(
     results: list[dict],
 ) -> str:
@@ -495,14 +514,15 @@ def _select_reference_candidates(references, facts, target_url):
     if not industry:
         raise RuntimeError("Identify the target industry before reference discovery.")
     candidates, domains = [], {urlsplit(canonical_url(target_url)).hostname}
-    for reference in references[:8]:
+    for reference in references[:24]:
         url = canonical_url(reference.get("url"))
         domain = urlsplit(url).hostname
         if not domain or domain in domains:
             continue
         domains.add(domain)
         try:
-            site = analyze_url(url)
+            site = (cached_analyze(url, analyze_url)
+                    if config.free_only() else analyze_url(url))
             if not isinstance(site, dict) or site.get("success") is not True:
                 continue
             text = site.get("visible_text", "")[:6000]
@@ -555,7 +575,11 @@ def _collect_reference_evidence(references, target_url):
             continue
         domains.add(domain)
         try:
-            shots = capture_website(url, "reference-" + domain + "-" + uuid4().hex[:12])
+            shots = (capture_cached(
+                url, capture_website,
+                cache_root=os.path.join(config.OUTPUT_DIR, "_reference_screenshot_cache"),
+            ) if config.free_only()
+                     else capture_website(url, "reference-" + domain + "-" + uuid4().hex[:12]))
             if not isinstance(shots, dict) or not all(
                     isinstance(shots.get(view), str) and os.path.isfile(shots[view])
                     for view in ("desktop", "mobile")):
@@ -583,10 +607,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     name = facts["name"]
     search_query = f"{industry} {str(facts['services'][0])[:80]} yritys palvelut verkkosivut"
     print("[Research] No verified company website: using reviewed factual profile.")
-    references = _search_tavily(search_query, max_results=5)
-    references += _search_tavily(
-        f"{industry} yritys palvelut yhteystiedot", max_results=5
-    )
+    references = _search_industry_references(industry, "", search_query)
     selected = _select_reference_candidates(references, facts, "")
     evidence = _collect_reference_evidence(selected, "")
     images, labels = reference_image_inputs(evidence)
@@ -867,12 +888,7 @@ Raaka HTML:
         "design-referenssejä..."
     )
 
-    references = _search_tavily(search_query, max_results=5)
-    # A bounded second query prioritises real operators over design galleries.
-    references += _search_tavily(
-        f"{industry} {str(company_facts.get('services', [''])[0:1])} yritys palvelut verkkosivut",
-        max_results=5,
-    )
+    references = _search_industry_references(industry, url, search_query)
 
     # ---------------------------------------------------------
     # FINAL DESIGN BRIEF
@@ -921,7 +937,7 @@ Laadi source_content_map jokaiselle lähdesivulle ja h2/h3-otsikolle,
 älä poista osioita pelkän visualisoinnin vuoksi. Tämä suunnitelma
 tarkistetaan ennen maksullista Builder-ajoa.
 
---- TAVILYN REFERENSSIT ---
+--- TODELLISET TOIMIALAREFERENSSIT ---
 
 {_format_search_results(references)}
 

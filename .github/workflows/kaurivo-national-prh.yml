@@ -93,13 +93,12 @@ jobs:
             --output-dir output/nightly-prh \
             --seen-path data/prh_seen_ids.json
 
-      - name: Find candidate websites through an optional bounded official search API
+      - name: Enforce zero paid website-search calls in the scheduled PRH batch
         if: ${{ success() && github.event_name == 'schedule' && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
-        env:
-          KAURIVO_TAVILY_API_KEY: ${{ secrets.KAURIVO_TAVILY_API_KEY }}
         run: |
-          # If no free-tier key is configured, this is a zero-request no-op.
-          # Maximum 12 basic searches per run; results are unverified suggestions.
+          # Intentionally DO NOT expose Tavily secrets in the scheduled job.
+          # PRH still checks the full source registry and keeps its 50-lead
+          # shortlist; missing websites remain unverified, never invented.
           python -m utils.kaurivo_website_research \
             --packet output/nightly-prh/crm-shortlist.json \
             --max-queries 12

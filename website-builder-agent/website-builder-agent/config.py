@@ -28,14 +28,17 @@ OPENROUTER_MODEL = os.getenv(
     "openrouter/free",
 )
 
-# Default remains the existing cloud client to avoid breaking older projects.
-# Kaurivo can opt into local inference WITHOUT touching OAVIR's OpenRouter credits.
-# FREE_ONLY forbids OpenRouter calls, including accidentally selected paid models.
+# Kaurivo is LOCAL/FREE by default. Paid providers need two explicit
+# opt-ins: AI_BACKEND=openrouter AND FREE_ONLY=0, plus normal CLI consent.
+# No implicit cloud fallback, no hidden paid API use.
+def free_only():
+    return os.getenv("FREE_ONLY", "1").strip().lower() not in {"0", "false", "no"}
+
 def ai_backend():
-    mode = os.getenv("AI_BACKEND", "openrouter").strip().lower()
+    mode = os.getenv("AI_BACKEND", "ollama").strip().lower()
     if mode not in {"openrouter", "ollama"}:
         raise RuntimeError("AI_BACKEND must be 'openrouter' or 'ollama'.")
-    if os.getenv("FREE_ONLY", "").strip().lower() in {"1", "true", "yes"} and mode != "ollama":
+    if free_only() and mode != "ollama":
         raise RuntimeError("FREE_ONLY requires AI_BACKEND=ollama; no cloud AI requests permitted.")
     return mode
 

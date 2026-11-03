@@ -189,6 +189,7 @@ class FreeEnrichmentTests(unittest.TestCase):
             researched.assert_called_once_with("demo")
             built.assert_called_once_with("demo")
 
+    @patch.dict(os.environ, {"AI_BACKEND": "openrouter", "FREE_ONLY": "0"})
     def test_direct_paid_cli_commands_require_explicit_consent(self):
         with patch.object(main.scout, "run_scout") as paid_scout:
             args = SimpleNamespace(dry_run=False, discovery_only=False, count=1,
@@ -232,6 +233,7 @@ class FreeEnrichmentTests(unittest.TestCase):
         self.assertTrue(saved["company_profile"]["verified_by_human"])
         self.assertNotIn("research", saved)
 
+    @patch.dict(os.environ, {"AI_BACKEND": "openrouter", "FREE_ONLY": "0"})
     def test_research_no_site_uses_profile_and_three_references_without_fake_target_site(self):
         saved = company() | {"company_profile": profile()}
         state.upsert_company("demo", saved)

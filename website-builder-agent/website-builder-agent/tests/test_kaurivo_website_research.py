@@ -1,5 +1,7 @@
 """Kaurivo optional website intelligence: zero-external-call regression tests."""
 from datetime import date
+import os
+from unittest.mock import patch
 import json
 from pathlib import Path
 import tempfile
@@ -26,6 +28,25 @@ class FakeResponse:
     def json(self):return {"results":self.results}
 
 class WebsiteResearchTests(unittest.TestCase):
+    def test_free_only_blocks_even_a_configured_paid_search_key(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/"packet.json"
+            path.write_text(json.dumps({
+                "schema":"kaurivo_prh_shortlist_v1","mode":"pilot-live",
+                "candidates":[candidate()]}),encoding="utf-8")
+            before=path.read_bytes()
+            with patch.dict(os.environ, {"FREE_ONLY": "1", "AI_BACKEND": "ollama"}):
+                result=enrich(path,key="a-real-key-would-go-here",
+                              post=lambda *args,**kwargs: self.fail("No paid search"),
+                              claim=lambda: self.fail("No credit reservation"))
+                self.assertEqual(result["credits_budgeted"],0)
+                self.assertEqual(result["searched"],0)
+                self.assertFalse(result["enabled"])
+                with self.assertRaisesRegex(RuntimeError,"FREE_ONLY"):
+                    search_once(candidate(),key="mock",
+                                post=lambda *args,**kwargs: self.fail("No paid search"))
+            self.assertEqual(path.read_bytes(),before)
+
     def test_provider_is_off_without_key_and_spends_nothing(self):
         with tempfile.TemporaryDirectory() as temp:
             path=Path(temp)/"packet.json"
@@ -66,6 +87,7 @@ class WebsiteResearchTests(unittest.TestCase):
             self.assertFalse(plausible_url(url),url)
         self.assertEqual(plausible_url("https://hyvayritys.fi/#home"),"https://hyvayritys.fi/")
 
+    @patch.dict(os.environ, {"FREE_ONLY": "0", "AI_BACKEND": "openrouter"})
     def test_provider_call_is_one_basic_api_request(self):
         called=[]
         def post(url,**kwargs):
@@ -80,6 +102,7 @@ class WebsiteResearchTests(unittest.TestCase):
         self.assertEqual(called[0][1]["json"]["include_images"],False)
         self.assertEqual(called[0][1]["headers"]["Authorization"],"Bearer fake-token")
 
+    @patch.dict(os.environ, {"FREE_ONLY": "0", "AI_BACKEND": "openrouter"})
     def test_quota_cap_and_stop_on_429(self):
         with tempfile.TemporaryDirectory() as temp:
             path=Path(temp)/"packet.json"
@@ -104,6 +127,7 @@ class WebsiteResearchTests(unittest.TestCase):
             self.assertEqual(len(calls),1)
 
 
+    @patch.dict(os.environ, {"FREE_ONLY": "0", "AI_BACKEND": "openrouter"})
     def test_optional_search_requires_real_server_quota_reservation(self):
         with tempfile.TemporaryDirectory() as temp:
             path=Path(temp)/"packet.json"
@@ -123,7 +147,8 @@ class WebsiteResearchTests(unittest.TestCase):
         workflow=(ROOT.parents[1]/".github/workflows/kaurivo-national-prh.yml").read_text()
         ingest=(ROOT/"docs/kaurivo/backend/prh_ingest_edge.ts").read_text()
         admin=(ROOT/"docs/kaurivo/assets/crm.js").read_text()
-        self.assertIn("KAURIVO_TAVILY_API_KEY",workflow)
+        self.assertNotIn("secrets.KAURIVO_TAVILY_API_KEY",workflow)
+        self.assertIn("FREE_ONLY: \"1\"", workflow)
         self.assertIn("--max-queries 12",workflow)
         self.assertIn("website_candidate_url:candidate",ingest)
         self.assertIn("website_verified:false",ingest)
