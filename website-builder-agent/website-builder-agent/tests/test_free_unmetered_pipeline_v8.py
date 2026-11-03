@@ -72,7 +72,9 @@ class FreeReferencesTests(unittest.TestCase):
                 fetch_osm=fetch, historic_lookup=lambda category: [])
             self.assertEqual(first, second)
             self.assertEqual(len(first), 4)
-            fetch.assert_called_once()
+            # A first empty cache may use up to two separate public regions;
+            # the next company reuses the resulting industry cache.
+            self.assertEqual(fetch.call_count, 2)
 
     def test_target_domain_excluded(self):
         with tempfile.TemporaryDirectory() as tmp:
