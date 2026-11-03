@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#e9f2fc"><title>Kotifixi | Muokkaa testisivua</title>
+<link rel="stylesheet" href="./editor.css"></head>
+<body>
+<header class="top"><div class="top-inner"><div class="brand">Kotifixi <span>Muokkauskoe</span></div><a href="../" rel="noopener" target="_blank">Avaa testisivusto</a></div></header>
+<main>
+<div class="intro"><div class="eyebrow">KAURIVO / TESTILUOVUTUS</div><h1>Nyt voit kokeilla sivujesi muokkaamista.</h1><p>Muuta esimerkiksi etusivun tekstiä, palvelun hintaa tai kuvaa. Tallenna ja tarkista oikea muutos viereisestä esikatselusta. Voit myös palauttaa aiemman version.</p></div>
+<div class="notice"><strong>Tämä on vain kokeilu.</strong> Muutokset näkyvät julkisessa testi-esikatselussa, eivät kotifixi.comissa. Älä lisää asiakastietoja tai kuvia, joihin ei ole julkaisulupaa. Muokkauslinkki toimii määräajan.</div>
+<section id="missing" class="missing" hidden><h2>Tarvitset henkilökohtaisen testilinkin</h2><p>Avaa tämä sivu Kaurivon lähettämästä sähköpostista. Pelkkä yleinen muokkausosoite ei anna muokkausoikeutta.</p><a href="../">Voit silti katsoa verkkosivut.</a></section>
+<section class="layout" id="editor" hidden>
+<div class="panel">
+<div class="panel-head"><h2>Muokattavat tiedot</h2><small id="current-version">Ladataan</small></div>
+<form id="edit-form">
+<fieldset><legend>Etusivu</legend>
+<label>Pääotsikko<input data-field="hero_heading" required maxlength="140"></label>
+<label>Esittelyteksti<textarea data-field="hero_intro" required maxlength="600"></textarea></label>
+<label>Palveluosion otsikko<input data-field="services_heading" required maxlength="140"></label>
+<label>Lopun otsikko<input data-field="closing_heading" required maxlength="140"></label>
+<label>Etusivun kuva (HTTPS-linkki)<input data-field="hero_image" type="url" required maxlength="1600"></label>
+<label>Valitse oma kuva<input type="file" id="photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"></label>
+<p class="helper">Kuva enintään 1,5 Mt, JPG/PNG/WebP. Vain sellaisia kuvia, joiden julkaisun hyväksyt.</p>
+<button class="secondary" id="upload" type="button">Lisää valittu kuva</button>
+</fieldset>
+<fieldset><legend>Palvelut</legend>
+<label>Ensimmäisen palvelun nimi<input data-field="service1_title" required maxlength="140"></label>
+<label>Kuvaus<textarea data-field="service1_description" required maxlength="500"></textarea></label>
+<label>Toisen palvelun nimi<input data-field="service2_title" required maxlength="140"></label>
+<label>Kuvaus<textarea data-field="service2_description" required maxlength="500"></textarea></label>
+<label>Kolmannen palvelun nimi<input data-field="service3_title" required maxlength="140"></label>
+<label>Kuvaus<textarea data-field="service3_description" required maxlength="500"></textarea></label>
+</fieldset>
+<fieldset><legend>Hinnat ja yhteystiedot</legend>
+<label>Nurmikonleikkuu<input data-field="lawn_price" required maxlength="60"></label>
+<label>Siivouspalvelu<input data-field="cleaning_price" required maxlength="60"></label>
+<label>Puhelin<input data-field="phone_display" required maxlength="32"></label>
+<label>Sähköposti<input data-field="email" type="email" required maxlength="254"></label>
+<label>Tavoitettavuus<input data-field="hours" required maxlength="130"></label>
+</fieldset>
+<div class="actions"><button id="save" type="submit">Tallenna testisivulle</button><button id="reload" class="secondary" type="button">Lataa viimeisin</button></div>
+<div id="status" role="status" aria-live="polite">Ladataan muokattavaa sisältöä…</div>
+</form>
+<div class="history"><h2>Palauta aiempi versio</h2><p class="helper">Jokainen tallennus jää versionhistoriaan, joten voit perua kokeilumuutokset.</p>
+<select id="history" aria-label="Valitse palautettava versio"></select>
+<button id="restore" class="secondary" type="button">Palauta valittu versio</button></div>
+</div>
+<div class="panel right"><div class="panel-head"><h2>Esikatselu</h2><a href="../" rel="noopener" target="_blank">Avaa isona</a></div>
+<iframe id="preview" src="../" title="Kotifixin testi-esikatselu"></iframe>
+<p class="helper">Muutokset päivittyvät tallennuksen jälkeen. Hintoja voit tarkastella myös <a href="../hinnasto/" target="_blank" rel="noopener">hinnastosivulla</a>.</p></div>
+</section>
+</main><script src="./editor.js" defer></script></body></html>
