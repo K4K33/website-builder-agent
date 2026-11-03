@@ -37,6 +37,7 @@ from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
 
 import requests
+import config
 
 from utils import resource_manager
 from utils.claude_client import ask_claude_json
