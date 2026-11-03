@@ -197,6 +197,24 @@ class BoundedRevisionTests(unittest.TestCase):
         self.assertFalse(pending["revise"])
         self.assertEqual(pending["reason"], "only_unverified_human_or_client_evidence")
 
+    def test_multimodal_brand_and_layout_blockers_are_actual_repair_inputs(self):
+        result = decide_revision({
+            "overall_pass": False,
+            "visual_comparison": {"status": "paired_for_human_review"},
+            "content_review": {
+                "issues": [],
+                "visual_review": {"blockers": [
+                    "The source's handwritten wordmark became a bold black slogan."
+                ]},
+                "reference_comparison": {"remaining_gaps": [
+                    "Original shop photographs are hidden behind two text sections."
+                ]},
+            },
+        })
+        self.assertTrue(result["revise"])
+        self.assertEqual(len(result["feedback"]["qa_visual_blockers"]), 1)
+        self.assertEqual(len(result["feedback"]["benchmark_remaining_gaps"]), 1)
+
     def test_specific_browser_failure_can_trigger_repair_without_visual_issue(self):
         result = decide_revision({
             "overall_pass": False,
