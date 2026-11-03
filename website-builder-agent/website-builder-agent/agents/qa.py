@@ -57,6 +57,23 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+COMPANY-FIRST RED TEAM (ALL ROUTES):
+Flag any researcher / agent meta-narration exposed to real visitors:
+original-site source counts, notes about where we copied data from, alleged
+expired notices, QA/testing notes, "not approved" commentary inside business
+sections, and generic slogans that do not describe a verified service.
+Check that no new circular initial-logo, employee, star score, fictional
+location/map image or sponsor relation is represented as original brand.
+Maps must have real geospatial grounding or the page should show a truthful
+address and real directions link. Do not confuse an adjacent Google Maps link
+with proof that a decorative streets illustration is a map.
+Assess every page including last sections, footer and contact page for severe
+blank column areas, unpleasant optical weight, broken alignment, font scale,
+responsive text and visual repetition. A browser layout flag is a *candidate*,
+not a numeric rating; require independent exact-build screenshot review to
+resolve it. Compare the real original source and benchmark designs, do not
+self-rate 9.5. Read the global quality method.
+
 INDEPENDENT PREMIUM REVIEW PROTOCOL:
 Evaluate this exact build and all pages at desktop/tablet/mobile/320px,
 against the original company's source brand and all available screenshots.
