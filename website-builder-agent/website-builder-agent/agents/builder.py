@@ -594,6 +594,29 @@ BRAND LOCK — EI UUSIA YRITYSTUNNUKSIA ILMAN TODELLISTA HYVÄKSYNTÄÄ:
   voimassa olevan suhteen ja julkaisuoikeuden. Älä keksi niitä lainkaan.
 - Tarkistus: utils/brand_lock.py + docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md.
 
+V5: ALKUPERÄISEN BRÄNDIN TUNTU JA ENSIMMÄINEN MOBIILIRUUTU:
+- Aito logo-kuvatiedosto ei yksin tarkoita brändiuskollisuutta. Tutki
+  ALKUPERÄINEN KOKO SANATUNNUS, kirjainmuodot, asettelu, pehmeä/voimakas
+  värisuhde, kuvatyyli ja yrityksen oma teksti. Älä korvaa herkkää
+  käsinkirjoitettua nimeä uudella paksulla suuraakkoslogolla omin luvin.
+- Jos alkuperäinen ilme on vaalea, pehmeä ja herkkä, uusi tumma korostettu
+  identiteetti on REBRANDING ja tarvitsee todellisen asiakkaan luvan.
+- Valokuvalliseen toimialaan kuuluvalla yrityksellä (kukat, ruoka, hiukset,
+  käsityö) pitää nähdä aidot työnäytteet riittävän aikaisin ensimmäisessä
+  320/390 px näkymässä. Jos yläosa on vain suurta tekstiä, väripalkkia ja
+  nappeja, arvioi uudelleen kuvan näkyvyys. Älä kuitenkaan pakota
+  kuvapohjaa joka toimialalle.
+- Älä kirjoita sisällöttömiä iskukulauseita (esim. 'oikeista kukista').
+  Käytä yrityksen omia tarkistettuja sanoja ja asiakkaan oikeita tehtäviä.
+- Sommittelun ei pidä automaattisesti kiertää Kaurivon vakiojärjestystä:
+  tumma hero / suuri CTA / tietopalkki / tasaiset palvelurivit /
+  toinen väripalkki / kuvakollaasi / tumma lopetus.
+- Herkät palvelut, esim. surusidonta, tarvitsevat oman arvokkaan
+  palvelupolun ja asiallisen tekstin; älä keksi hintoja tai toimituslupauksia.
+- Ulkopuolisten kuvien ja yritystunnuksen oikeudet ovat tarkistettavia;
+  lähdeviite tai noindex ei anna käyttöoikeutta.
+- Laatumääritys: docs/KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md.
+
 YLEINEN V4-TOIMIALAILME JA BRÄNDIN TUNNISTETTAVUUS:
 - Sivuston täytyy tuntua tämän OIKEAN yrityksen toimialalta myös ilman
   logoa: oikeat tuotteet, työtilat, palvelut, valokuvat ja asiointitapa.
@@ -948,6 +971,29 @@ BRAND LOCK — EI UUSIA YRITYSTUNNUKSIA ILMAN TODELLISTA HYVÄKSYNTÄÄ:
 - Kumppanilogot, sertifikaatit ja jäsenyystunnukset vaativat aidon lähteen,
   voimassa olevan suhteen ja julkaisuoikeuden. Älä keksi niitä lainkaan.
 - Tarkistus: utils/brand_lock.py + docs/KAURIVO_BRAND_LOCK_STANDARD_2026-11-03.md.
+
+V5: ALKUPERÄISEN BRÄNDIN TUNTU JA ENSIMMÄINEN MOBIILIRUUTU:
+- Aito logo-kuvatiedosto ei yksin tarkoita brändiuskollisuutta. Tutki
+  ALKUPERÄINEN KOKO SANATUNNUS, kirjainmuodot, asettelu, pehmeä/voimakas
+  värisuhde, kuvatyyli ja yrityksen oma teksti. Älä korvaa herkkää
+  käsinkirjoitettua nimeä uudella paksulla suuraakkoslogolla omin luvin.
+- Jos alkuperäinen ilme on vaalea, pehmeä ja herkkä, uusi tumma korostettu
+  identiteetti on REBRANDING ja tarvitsee todellisen asiakkaan luvan.
+- Valokuvalliseen toimialaan kuuluvalla yrityksellä (kukat, ruoka, hiukset,
+  käsityö) pitää nähdä aidot työnäytteet riittävän aikaisin ensimmäisessä
+  320/390 px näkymässä. Jos yläosa on vain suurta tekstiä, väripalkkia ja
+  nappeja, arvioi uudelleen kuvan näkyvyys. Älä kuitenkaan pakota
+  kuvapohjaa joka toimialalle.
+- Älä kirjoita sisällöttömiä iskukulauseita (esim. 'oikeista kukista').
+  Käytä yrityksen omia tarkistettuja sanoja ja asiakkaan oikeita tehtäviä.
+- Sommittelun ei pidä automaattisesti kiertää Kaurivon vakiojärjestystä:
+  tumma hero / suuri CTA / tietopalkki / tasaiset palvelurivit /
+  toinen väripalkki / kuvakollaasi / tumma lopetus.
+- Herkät palvelut, esim. surusidonta, tarvitsevat oman arvokkaan
+  palvelupolun ja asiallisen tekstin; älä keksi hintoja tai toimituslupauksia.
+- Ulkopuolisten kuvien ja yritystunnuksen oikeudet ovat tarkistettavia;
+  lähdeviite tai noindex ei anna käyttöoikeutta.
+- Laatumääritys: docs/KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md.
 
 YLEINEN V4-TOIMIALAILME JA BRÄNDIN TUNNISTETTAVUUS:
 - Sivuston täytyy tuntua tämän OIKEAN yrityksen toimialalta myös ilman
