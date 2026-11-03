@@ -115,13 +115,27 @@ class SuutarinTieDemoTests(unittest.TestCase):
                 src = soup.select_one(".brand__seal img")["src"]
                 self.assertIn("suutarintie-logo-greenleather.png", src)
                 self.assertIn("images.squarespace-cdn.com", src)
-                self.assertIn("Suurtarin Tie", "Suurtarin Tie")  # guard basic encoding
+                wordmark = soup.select_one("img.footer__wordmark")
+                self.assertIsNotNone(wordmark)
+                self.assertIn("xSUUTARINTIEx.png", wordmark["src"])
+                self.assertIn("alkuperäinen", wordmark["alt"])
         home = self.soup("index.html")
         photos = [image["src"] for image in home.select("main img")]
         self.assertGreaterEqual(len(set(photos)), 4)
         self.assertTrue(all("images.squarespace-cdn.com" in url for url in photos))
         self.assertIn("Kuvat ja alkuperäinen tunnus linkitetty", self.html("index.html"))
         self.assertNotIn('class="testimonial"', self.html("index.html"))
+
+    def test_original_news_and_work_photographs_are_preserved(self):
+        leather = self.soup("nahkatyot/index.html")
+        text = leather.get_text(" ", strip=True)
+        self.assertIn("Verstaan töitä", text)
+        self.assertIn("Katso yrityksen uusimmat julkaisut", text)
+        self.assertGreaterEqual(len({
+            img["src"] for img in leather.select("main img")
+            if "squarespace-cdn.com" in img.get("src", "")
+        }), 5)
+        self.assertNotIn("30.10. SULJETTU", text)
 
     def test_review_stars_are_dated_provider_evidence_not_fabricated_quotes(self):
         source = self.html("index.html")
