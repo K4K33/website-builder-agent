@@ -564,6 +564,21 @@ YLEINEN KUVA- JA SIIRTYMÄLAADUN TARKISTUS:
   toisia sivuja eikä ulkopuolista sisällönhallintaa.
   Monisivuisen toteutuksen laatutarkistus on erillinen.
 
+YLEINEN V3-LUOTTAMUSSIGNAALIEN JA ENSIVERSIOLAADUN SÄÄNTÖ:
+- Kaikki näkyvät asiakasarvostelut, lainaukset ja tähtiarvosanat sidotaan
+  TODELLISEEN lähteeseen ja juuri siihen palautteeseen. Älä lisää 5/5-arvosanaa
+  arvostelulle, jonka alkuperäinen arvosana puuttuu tai on 4/5.
+- Älä keksi Google-/Trustpilot-keskiarvoja, asiakasmääriä, sertifikaatteja,
+  saavutuksia, henkilöstöä, projekteja, ennen/jälkeen-kuvia tai luottamusmerkkejä.
+- Uudet asiakkaalta saadut suosittelut ja pistekeskiarvot vaativat todennettavan
+  alkuperän, käyttöluvan sekä tämän sivuversion asiakashyväksynnän.
+- Jos vahvistettua luottamussignaalia ei ole, älä lisää tyhjää arvosteluosiota.
+  Anna yrityksen oikean työn, palvelusisällön ja toimintapolun vakuuttaa.
+- Sivuston kaikilla alisivuilla on yhtä korkea laatuvaatimus: teksti, sponsorit,
+  luettavuus, mobiili, toimivat linkit ja asiakkaan tunnistama brändi.
+- Tämä perustuu kaikille yrityksille yhteiseen V3-laatusopimukseen:
+  docs/KAURIVO_UNIVERSAL_QUALITY_CONTRACT_V3_2026-11-03.md.
+
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
   vahvistettu palvelu, kenelle se on ja miten asiakas jatkaa. Pelkkä
@@ -866,6 +881,21 @@ YLEINEN KUVA- JA SIIRTYMÄLAADUN TARKISTUS:
 - Jos rakennetaan vain yksi HTML-sivu, älä keksi
   toisia sivuja eikä ulkopuolista sisällönhallintaa.
   Monisivuisen toteutuksen laatutarkistus on erillinen.
+
+YLEINEN V3-LUOTTAMUSSIGNAALIEN JA ENSIVERSIOLAADUN SÄÄNTÖ:
+- Kaikki näkyvät asiakasarvostelut, lainaukset ja tähtiarvosanat sidotaan
+  TODELLISEEN lähteeseen ja juuri siihen palautteeseen. Älä lisää 5/5-arvosanaa
+  arvostelulle, jonka alkuperäinen arvosana puuttuu tai on 4/5.
+- Älä keksi Google-/Trustpilot-keskiarvoja, asiakasmääriä, sertifikaatteja,
+  saavutuksia, henkilöstöä, projekteja, ennen/jälkeen-kuvia tai luottamusmerkkejä.
+- Uudet asiakkaalta saadut suosittelut ja pistekeskiarvot vaativat todennettavan
+  alkuperän, käyttöluvan sekä tämän sivuversion asiakashyväksynnän.
+- Jos vahvistettua luottamussignaalia ei ole, älä lisää tyhjää arvosteluosiota.
+  Anna yrityksen oikean työn, palvelusisällön ja toimintapolun vakuuttaa.
+- Sivuston kaikilla alisivuilla on yhtä korkea laatuvaatimus: teksti, sponsorit,
+  luettavuus, mobiili, toimivat linkit ja asiakkaan tunnistama brändi.
+- Tämä perustuu kaikille yrityksille yhteiseen V3-laatusopimukseen:
+  docs/KAURIVO_UNIVERSAL_QUALITY_CONTRACT_V3_2026-11-03.md.
 
 KAIKKIEN ASIAKKAIDEN YLEIN PREMIUM-LAATUPORTTI (EI YRITYSKOHTAINEN):
 - Viiden sekunnin mobiilitesti: ensisilmäyksellä pitää ymmärtää oikea
