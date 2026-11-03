@@ -70,6 +70,8 @@ class KarjalanneitoFirstPassTests(unittest.TestCase):
             self.assertIsNotNone(image)
             self.assertTrue(image["src"].startswith(PHOTO), image["src"])
             self.assertTrue(image.get("alt", "").strip())
+            self.assertGreater(int(image.get("width") or 0), 0, "Lazy gallery images need intrinsic width")
+            self.assertGreater(int(image.get("height") or 0), 0, "Lazy gallery images need intrinsic height")
             self.assertTrue(figure.find("button")["aria-label"])
             source_paths.append(image["src"])
         self.assertEqual(len(set(source_paths)), 45)
