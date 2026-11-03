@@ -57,6 +57,22 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+V5 SOURCE-TO-NEW BRAND EXPERIENCE RED-TEAM:
+On REAL 320/390px screenshots, compare original and new first viewport.
+Does the original customer wordmark / script style survive as a full lockup,
+not merely a small icon asset next to an invented bold brand name?
+Compare palette ENERGY, not only color family; pale soft rose is different
+from a dark high-contrast burgundy scheme. Inspect hero photo prominence:
+a visually-led retailer must not defer all actual products until the
+user has scrolled through a large generic landing-page text wall.
+Identify filler marketing slogans, generic headings, transplanted agency
+section sequences, and genuine/sensitive customer paths (e.g. sympathy
+flowers versus wedding flowers). Avoid invented claims, image captions,
+inventory or prices. Explicitly separate screenshot evidence, opinion,
+unverified asset rights and human owner approval. A source URL/noindex
+does not grant a media licence. No self-certified 9.5 quality.
+Read docs/KAURIVO_BRAND_EXPERIENCE_V5_2026-11-03.md.
+
 V4 COMPANY / INDUSTRY RECOGNITION RED-TEAM:
 The visitor must recognise this company's actual business without a logo.
 Judge actual rendered desktop and phone screenshots for industry signals,
