@@ -31,6 +31,7 @@ from utils.global_feedback import (load_ledger, global_instructions,
 from utils.industry_workflow import create_industry_brief, validate_design_intent
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
+from utils.brand_design_blueprint import derive_brand_site_blueprint
 import json
 
 from utils.claude_client import ask_claude
@@ -43,6 +44,27 @@ import config
 
 
 BUILD_SYSTEM_PROMPT = """
+PERMANENT COMPANY-FIRST EDITORIAL AND VISUAL RULE (ALL BUSINESSES):
+Source text, URLs, prices, dates, research notes and photo origin are EVIDENCE,
+not text to publish as a research report. Compose the visitor-facing page as the
+business itself: "Suutarin hinnasto" rather than "63 rows copied from original";
+"Huokotie 1" rather than "address observed on their contact page".
+Never print "original website said", extraction counts, audit/crawl notes,
+expired source alerts, test summaries, SEO research, placeholders or credits
+in the client's real page content. Keep uncertainties in INTERNAL QA metadata.
+A minimal standalone preview-only disclosure may sit OUTSIDE the main business
+content and must be removed before production; do not impersonate approval.
+Do not invent a brand monogram, circle letter seal, identity SVG, employee,
+visual star rating or decorative fake map. Keep verified original identity;
+if the logo has no licence use the exact business name in normal typography.
+For a location use a verified real map or a precise clickable address/directions
+card, never stylized imaginary streets pretending to be a real map.
+Subpage composition matters as much as the hero. Visually inspect every
+section and route including optical column balance, sparse empty blocks,
+small-mobile, long prices, contact and footer. Repetitive generic headline
+phrases must be rewritten to refer concretely to the business.
+See docs/KAURIVO_GENUINE_10_10_WEBSITE_METHOD_2026-11-03.md.
+
 NEXT-CLIENT PREMIUM FIRST-PASS CONTRACT:
 - First preserve the real company identity: sourced marks, recognisable colors,
   people, approved real photos, original service structure, partners and tone.
@@ -663,6 +685,13 @@ Palauta VAIN koko HTML-tiedosto.
 
 
 REVISE_SYSTEM_PROMPT = """
+FOR ALL CLIENT REVISIONS: preserve original verified business identity,
+source details and exact price/service labels. Rewrite customer-facing text
+to remove any notes about research, original websites, extract counts, QA,
+prompt status or demo evaluation. Do not fabricate lettermarks or faux maps.
+Audit every affected subpage, mobile viewport and the true CTA destination.
+Read docs/KAURIVO_GENUINE_10_10_WEBSITE_METHOD_2026-11-03.md.
+
 Olet kokenut frontend-kehittäjä.
 
 Saat nykyisen HTML-sivun, tutkimusdatan ja muutospyynnön.
@@ -1283,6 +1312,7 @@ def build_site(
     # All old pages and observed sections must have a plan BEFORE paid Build.
     validate_source_plan(research, source_url=company.get("url", ""))
     creative = validate_creative_directions(research)
+    brand_blueprint = derive_brand_site_blueprint(research)
     architecture = validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
@@ -1322,6 +1352,15 @@ def build_site(
 
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+RELUMEN, WEBFLOW'N JA WIXIN KALTAISEN JÄSENNETYN SUUNNITTELUN INSPIROIMA
+YRITYSKOHTAINEN SIVUKARTTA → OSIOIDEN WIREFRAME → YHTEINEN BRÄNDITYYLIOHJE:
+{json.dumps(brand_blueprint, ensure_ascii=False)}
+Tämä suunnittelupaketti sisältää vain lähteissä havaitun yritysidentiteetin.
+Älä keksi puuttuvia brändivärejä tai logoa. Toteuta valittu rakenne kaikille
+sivuille yhtenäisellä hallittavalla tyylijärjestelmällä, mutta vältä
+valmista geneeristä toimialapohjaa. Pidä sisäinen tutkimusmetatieto erossa
+asiakkaille näkyvistä teksteistä. Kysymykset oikeuksista ja tiedoista sisäiseen QA:han.
 
 ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
 {json.dumps(brand_brief, ensure_ascii=False)}
@@ -1589,6 +1628,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     if not producer.strip():
         raise ValueError("External response producer must be identified.")
     validate_creative_directions(research)
+    derive_brand_site_blueprint(research)  # Same preflight for external-agent imports.
     validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
@@ -1651,6 +1691,7 @@ def revise_site(
     validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
     creative = validate_creative_directions(research)
+    brand_blueprint = derive_brand_site_blueprint(research)
 
     company_facts = research.get(
         "company_facts",
@@ -1667,6 +1708,10 @@ def revise_site(
     )
 
     user_prompt = f"""
+JO SOVITTU YRITYSKOHTAINEN SIVUKARTTA, WIREFRAME JA BRÄNDITYYLIOHJE
+(käytä yhtenäisesti kaikilla alasivuilla; älä keksi uutta brändiä):
+{json.dumps(brand_blueprint, ensure_ascii=False)}
+
 ASIAKKAAN BRÄNDI JA SISÄLLÖN SÄILYTTÄMINEN:
 {json.dumps(brand_brief, ensure_ascii=False)}
 

@@ -103,6 +103,20 @@ Palauta VAIN validi JSON:
 
 
 FINAL_RESEARCH_PROMPT = """
+MAKE TWO STRICTLY SEPARATED OUTPUT CATEGORIES FOR THE NEXT CLIENT:
+(1) Source-backed business facts, exact brand/identity, original services,
+pricing, customer reviews/rating evidence, real imagery, geospatial facts and
+visitor tasks; these may inform customer-facing copy after factual validation.
+(2) Source URLs, original-page attribution, observations, old-site warnings,
+content counts, uncertainty, rights and QA gaps; these are INTERNAL EVIDENCE.
+Never advise printing research metadata or extraction commentary on the
+customer's site. Preserve all genuine source facts and meaning; leave unresolved
+stale opening times/prices pending verification, not as a public research note.
+Original company logo/color/person photography always outranks generic premium
+visual trends. Three truly distinct visual concepts with specific source anchors
+are required before selecting. No invented letter logo or decorative fake map.
+See docs/KAURIVO_GENUINE_10_10_WEBSITE_METHOD_2026-11-03.md.
+
 Olet Research-agentti verkkosivujen uudistusprojektissa.
 
 Sinulle annetaan:

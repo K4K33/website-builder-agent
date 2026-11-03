@@ -34,6 +34,7 @@ from utils.visual_originality import audit_design_originality
 from utils.site_integrity import site_sha256
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
+from utils.client_facing_integrity import audit_layout_review_flags
 from utils.premium_quality_gate import (
     source_coverage_matrix, verify_independent_premium_reviews,
     audit_primary_journeys, site_digest,
@@ -56,6 +57,23 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+COMPANY-FIRST RED TEAM (ALL ROUTES):
+Flag any researcher / agent meta-narration exposed to real visitors:
+original-site source counts, notes about where we copied data from, alleged
+expired notices, QA/testing notes, "not approved" commentary inside business
+sections, and generic slogans that do not describe a verified service.
+Check that no new circular initial-logo, employee, star score, fictional
+location/map image or sponsor relation is represented as original brand.
+Maps must have real geospatial grounding or the page should show a truthful
+address and real directions link. Do not confuse an adjacent Google Maps link
+with proof that a decorative streets illustration is a map.
+Assess every page including last sections, footer and contact page for severe
+blank column areas, unpleasant optical weight, broken alignment, font scale,
+responsive text and visual repetition. A browser layout flag is a *candidate*,
+not a numeric rating; require independent exact-build screenshot review to
+resolve it. Compare the real original source and benchmark designs, do not
+self-rate 9.5. Read the global quality method.
+
 INDEPENDENT PREMIUM REVIEW PROTOCOL:
 Evaluate this exact build and all pages at desktop/tablet/mobile/320px,
 against the original company's source brand and all available screenshots.
@@ -787,6 +805,16 @@ HTML END:
 
 
 VISUAL_REVIEW_PROMPT = """
+CRITICALLY ASSESS EACH PAGE/VIEWPORT NOT JUST THE HOMEPAGE:
+Compare source brand, original photos and service personality; verify that
+the client would recognize their own business. Look for fictional symbols,
+artificial maps, leaked agent notes, generic headline systems, unbalanced
+column whitespace, awkward empty bottom areas, repetitive cards and
+decorative arrows/numbering. Assess actual 1440px, 768px, 390px and 320px
+screenshots when present, and flag missing screenshots rather than scoring
+them as seen. A green automated suite does not prove beautiful design.
+Document source-specific discrepancies. Provide no invented independent score.
+
 Lisäksi arvioi mukana olevat aidot renderöidyt desktop-, tablet- ja mobiilikuvat.
 HTML:n sisältötarkistus yksin ei riitä hyväksyntään.
 Kun alkuperäisen yrityssivuston desktop/mobiilikuvat ovat mukana, vertaa
@@ -1179,6 +1207,11 @@ def run_qa(slug_or_name: str) -> dict:
         browser["issues"]=[route+": "+item
                             for route,result in page_browsers.items()
                             for item in result.get("issues") or []]
+        browser["visual_review_flags"]=[
+            {"route": route, **finding}
+            for route, result in page_browsers.items()
+            for finding in result.get("visual_review_flags") or []
+        ]
         if browser["pass"]:
             research = company.get("research") or {}
             try:
@@ -1244,7 +1277,11 @@ def run_qa(slug_or_name: str) -> dict:
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
+    layout_review = audit_layout_review_flags(
+        browser.get("visual_review_flags") or [], rendered_pages, research
+    )
     result = {
+        "layout_composition_review": layout_review,
         "automated": automated, "visual_media": visual_media,
         "originality": originality, "site_navigation": nav,
         "site_pages":list(rendered_pages),
@@ -1262,6 +1299,7 @@ def run_qa(slug_or_name: str) -> dict:
                          and not pending_general_rules
                          and automated["automated_pass"]
                          and visual_media["owner_preview_ready"] and browser["pass"]
+                         and layout_review["pass"]
                          and review_passes(review, benchmark_urls, decisions)
                          and owner_preview_visual_passes(review)
                          and ai_style_review_passes(
@@ -1281,7 +1319,8 @@ def run_qa(slug_or_name: str) -> dict:
               + [str(x.get("kind","unknown"))+": "+str(x.get("source","")) for x in source_fidelity["missing"]]
               + list(source_fidelity["pending"])
               + [m for values in universal["blocking_problems"].values() for m in values]
-              + list(browser.get("issues") or []))
+              + list(browser.get("issues") or [])
+              + list(layout_review.get("issues") or []))
     record_qa_findings(ledger, slug, [str(x) for x in issues])
     save_ledger(ledger_file, ledger)
     result["global_learning"] = {

@@ -11,6 +11,8 @@ from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
 from utils.kaurivo_site_quality_gate import lint_site_copy
+from utils.client_facing_integrity import audit_client_facing_integrity
+from utils.brand_design_blueprint import audit_sitewide_brand_consistency
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.premium_quality_gate import (
     source_coverage_matrix, verify_independent_premium_reviews,
@@ -43,6 +45,12 @@ UNIVERSAL_STANDARDS = (
     ("independent_premium_consensus", "Two independent exact-build reviewers, all dimensions >=9.5", "release"),
     ("real_user_core_web_vitals", "Verified field p75 LCP, INP and CLS", "release"),
     ("primary_user_journeys", "Every planned main booking, shopping and contact path works", "functional"),
+    ("customer_facing_copy", "Published copy contains no research notes or source narration", "content"),
+    ("verified_brand_marks", "No invented logo monograms without client-linked proof", "brand"),
+    ("real_location_aids", "No decorative street maps masquerading as navigation aids", "functional"),
+    ("editorial_visual_balance", "Human comparison of typography, whitespace and composition", "visual"),
+    ("coherent_sitewide_brand_kit", "Consistent website-level brand tokens and theme across all routes", "brand"),
+
 
 )
 
@@ -111,6 +119,27 @@ def audit_universal_standards(
         fail("non_repetitive_cta_icons",
              f"Repeated decorative CTA arrows across site ({len(arrow_links)} links): {examples}. "
              "Use readable links and distinct button hierarchy without generic arrow suffixes.")
+
+    integrity = audit_client_facing_integrity(pages, research, stage=stage)
+    integrity_keys = {
+        "research_leak": "customer_facing_copy",
+        "visible_internal_note": "customer_facing_copy",
+        "demo_note_in_release": "customer_facing_copy",
+        "unsourced_brand_mark": "verified_brand_marks",
+        "misleading_map": "real_location_aids",
+    }
+    for item in integrity["blocking"]:
+        fail(integrity_keys.get(item["category"], "customer_facing_copy"), str(item))
+    for item in integrity["pending"]:
+        if item["category"] == "template_headlines":
+            needs("natural_copy", str(item))
+        # Visual/editorial proof is checked independently below by the
+        # exact-build two-reviewer consensus. Never create a permanently
+        # unresolvable pending flag once real evidence has passed.
+
+    brand_consistency = audit_sitewide_brand_consistency(pages)
+    for reason in brand_consistency["issues"]:
+        fail("coherent_sitewide_brand_kit", reason)
 
     source_detail_fidelity = audit_price_faq_preservation(pages, research)
     for item in source_detail_fidelity["missing"]:
@@ -301,6 +330,7 @@ def audit_universal_standards(
         "stage": stage,
         "standards": grouped,
         "blocking_problems": problems,
+        "brand_consistency": brand_consistency,
         "premium_evidence": {
             "coverage": coverage,
             "independent_review": independently_reviewed,

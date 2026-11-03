@@ -1,5 +1,30 @@
 # KAURIVO — EVERY CLIENT PROJECT: UNIVERSAL PREMIUM DESIGN & DELIVERY CHECKLIST
 
+## Permanent cross-industry lessons from critical 2026-11-03 review
+See **docs/KAURIVO_GENUINE_10_10_WEBSITE_METHOD_2026-11-03.md** for complete
+operational stages, evidence boundaries, examples and acceptance matrix.
+
+- [ ] PUBLIC COPY NEVER CONTAINS RESEARCH NOTES: no source attribution,
+  extraction counts, outdated source notices, or QA/debug explanation in
+  customer sections. Internal evidence must stay in QA/provenance records.
+- [ ] Do not invent circular initials, monograms, emblems or a new client's logo.
+  Existing true brand identity is default; new identity needs client approval.
+- [ ] A faux street map is not an address feature. Use a real georeferenced map
+  or simple correct address with verified directions and, optionally, approved
+  storefront photo.
+- [ ] Company-specific editorial review rejects generic slogans, repeated
+  decorative arrows, 01/02/03 gimmicks, repeated subpage motifs and fake stars.
+- [ ] Each page and viewport must receive visual comparison, especially lower
+  contact-page columns, long price tables, hero cropping, empty whitespace and
+  full footer. Whitespace flags trigger independent screenshot review; a
+  pixel heuristic does not judge aesthetics by itself.
+- [ ] Original source content, reviews and stars, exact business location,
+  every important old detail and useful primary paths must survive, with
+  client-approved exceptions and rights.
+- [ ] Never declare 9.5/10 on basis of 100% passing technical tests alone.
+
+
+
 ## Premium 9.5/10 first-pass standard — 2026-11-03
 
 This is a source-first workflow for ALL future clients, not a patch to an old
