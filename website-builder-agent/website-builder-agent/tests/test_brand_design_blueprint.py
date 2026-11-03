@@ -111,5 +111,40 @@ class BrandBlueprintTests(unittest.TestCase):
             "index.html": first, "other.html": "<main>Other</main>"})["pass"])
 
 
+    def test_global_brand_tokens_must_agree_across_pages(self):
+        """A copied unrelated client's CSS kit cannot slip into a subpage."""
+        pages = {
+            "index.html": ('<html><head><style>:root{--brand-primary:#153f32;'
+                           '--font-heading:Georgia}</style></head><main>Home</main></html>'),
+            "palvelut/index.html": ('<html><head><style>:root{--brand-primary:#a71c20;'
+                                    '--font-heading:Arial}</style></head><main>Services</main></html>'),
+        }
+        report = audit_sitewide_brand_consistency(pages)
+        self.assertFalse(report["pass"], report)
+        self.assertEqual(len(report["issues"]), 2)
+        universal = audit_universal_standards(pages["index.html"], rendered_pages=pages)
+        self.assertIn("coherent_sitewide_brand_kit", universal["blocking_problems"])
+
+    def test_shared_brand_tokens_allow_distinct_section_colors_and_layouts(self):
+        pages = {
+            "index.html": ('<style>:root{--brand-primary: #153f32;'
+                           '--font-heading: Georgia;} .hero{background:#fff}</style>'),
+            "palvelut/index.html": ('<style>:root{--brand-primary:#153F32;'
+                                    '--font-heading:Georgia} .hero{background:#eee}</style>'),
+        }
+        self.assertTrue(audit_sitewide_brand_consistency(pages)["pass"])
+
+    def test_missing_inline_brand_token_is_not_fabricated_as_comparison(self):
+        pages = {
+            "index.html": '<style>:root{--brand-primary:#153f32}</style>',
+            "hinnasto/index.html": '<link rel="stylesheet" href="/style.css">',
+        }
+        report = audit_sitewide_brand_consistency(pages)
+        self.assertTrue(report["pass"])
+        self.assertNotIn("hinnasto/index.html",
+                         {route for route, data in report["identity_tokens_by_page"].items()
+                          if data})
+
+
 if __name__ == "__main__":
     unittest.main()
