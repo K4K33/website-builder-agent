@@ -43,3 +43,10 @@
   .gallery-lead-photo img{height:270px}
   .main-nav a{font-size:17px}
 }
+
+.contact-map iframe[hidden]{display:none}
+.map-poster{min-height:290px;background:linear-gradient(135deg,#f6daee 0%,#eed2e8 100%);border:1px solid #d1b9ce;padding:clamp(25px,4vw,58px);display:flex;align-items:center;justify-content:space-between;gap:25px}
+.map-poster>div{display:flex;flex-direction:column;gap:10px}
+.map-poster strong{font-family:var(--serif);font-size:clamp(27px,3vw,42px);font-weight:400;line-height:1.15}
+.map-poster>div>span:last-child{font-size:14px;color:#705769}
+@media(max-width:760px){.map-poster{min-height:260px;align-items:start;flex-direction:column;justify-content:center}}
