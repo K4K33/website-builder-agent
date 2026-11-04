@@ -66,7 +66,15 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
         routes.append(route)
         images = main.find_all("img")
         for img in images:
-            value = str(img.get("src") or img.get("data-src") or "").strip()
+            # Lazy-load placeholders often occupy src while the actual
+            # original photo is data-src/data-lazy-src. Count the REAL
+            # asset, not a transparent tracking or placeholder data URI.
+            value = ""
+            for attr in ("data-src", "data-lazy-src", "data-original", "src"):
+                candidate = str(img.get(attr) or "").strip()
+                if candidate and not candidate.startswith(("data:", "blob:", "javascript:")):
+                    value = candidate
+                    break
             key = _media_key(value, route)
             if key:
                 image_routes[key].add(route)
