@@ -1,0 +1,31 @@
+name: Kaurivo Penny Lane source visual probe
+on:
+  push:
+    branches: ["feat/pennylane-vintage-20261104"]
+    paths:
+      - "website-builder-agent/website-builder-agent/scripts/probe_pennylane_original.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          python -m pip install playwright beautifulsoup4
+          python -m playwright install --with-deps chromium
+      - run: python scripts/probe_pennylane_original.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pennylane-original-visual-evidence
+          path: website-builder-agent/website-builder-agent/qa-evidence/pennylane/source/
+          if-no-files-found: warn
+          retention-days: 30
