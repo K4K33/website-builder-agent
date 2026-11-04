@@ -124,15 +124,34 @@ jobs:
               rakennuspalvelu-rili-v4) marker='Rakennamme ja remontoimme Etelä-Savossa.'; sub='kohteet/' ;;
             esac
             url="https://k4k33.github.io/website-builder-agent/kaurivo/demos/${demo}/"
-            code=$(curl --max-time 15 -sSL -o /tmp/kaurivo-v4-live -w '%{http_code}' "${url}" || true)
-            if [[ "${code}" != "200" ]] || ! grep -Fq -- "${marker}" /tmp/kaurivo-v4-live; then
-              echo "::error::V4 preview missing or stale: ${url} (HTTP ${code})"
+            # GitHub Pages briefly serves 503 while deploying an otherwise
+            # present page. Keep EXACT marker assertions, but retry transient
+            # errors so one propagation race cannot mark the release broken.
+            ok="false"
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl --max-time 15 -sSL -o /tmp/kaurivo-v4-live -w '%{http_code}' "${url}" || true)
+              echo "V4 ${demo} home attempt ${attempt}: HTTP ${code}"
+              if [[ "${code}" == "200" ]] && grep -Fq -- "${marker}" /tmp/kaurivo-v4-live; then
+                ok="true"; break
+              fi
+              sleep 7
+            done
+            if [[ "${ok}" != "true" ]]; then
+              echo "::error::V4 preview missing or stale after retries: ${url} (HTTP ${code})"
               exit 1
             fi
             suburl="${url}${sub}"
-            code=$(curl --max-time 15 -sSL -o /tmp/kaurivo-v4-sub -w '%{http_code}' "${suburl}" || true)
-            if [[ "${code}" != "200" ]] || ! grep -Fq 'name="robots"' /tmp/kaurivo-v4-sub; then
-              echo "::error::V4 subpage missing: ${suburl} (HTTP ${code})"
+            ok="false"
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl --max-time 15 -sSL -o /tmp/kaurivo-v4-sub -w '%{http_code}' "${suburl}" || true)
+              echo "V4 ${demo} subpage attempt ${attempt}: HTTP ${code}"
+              if [[ "${code}" == "200" ]] && grep -Fq 'name="robots"' /tmp/kaurivo-v4-sub; then
+                ok="true"; break
+              fi
+              sleep 7
+            done
+            if [[ "${ok}" != "true" ]]; then
+              echo "::error::V4 subpage missing or stale after retries: ${suburl} (HTTP ${code})"
               exit 1
             fi
             echo "Verified V4 demo live: ${url} and ${suburl}" >> "$GITHUB_STEP_SUMMARY"
