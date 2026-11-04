@@ -1,0 +1,81 @@
+name: Kaurivo Castanum original-browser capture (no paid APIs)
+on:
+  push:
+    branches: [feat/castanum-botanical-demo-20261104]
+    paths:
+      - ".github/workflows/kaurivo-castanum-source-capture.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Browser source observation, actual image sizes, screenshots
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from playwright.sync_api import sync_playwright
+          out=pathlib.Path("source-evidence/castanum");out.mkdir(parents=True,exist_ok=True)
+          paths=["/","/inspiroidu","/kimput","/surukukat","/haakimput","/toimitus","/yhteystiedot"]
+          result=[]
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              for suffix in paths:
+                  entry={"url":"https://www.castanum.fi"+suffix,"screenshots":[]}
+                  for width,height in [(390,844),(1440,900)]:
+                      page=browser.new_page(viewport={"width":width,"height":height}, device_scale_factor=1)
+                      try:
+                          response=page.goto(entry["url"],wait_until="domcontentloaded",timeout=28000)
+                          page.wait_for_timeout(3000)
+                          page.evaluate("document.querySelectorAll('img').forEach(i=>{i.loading='eager'})")
+                          imgs=page.evaluate("""() => Array.from(document.images).map(i=>({
+                            src:i.currentSrc||i.src,alt:i.alt, width:i.naturalWidth,height:i.naturalHeight,
+                            shownW:Math.round(i.getBoundingClientRect().width),
+                            shownH:Math.round(i.getBoundingClientRect().height),
+                            top:Math.round(i.getBoundingClientRect().top)
+                          })).filter(x=>x.src).slice(0,65)""")
+                          summary=page.evaluate("""() => {
+                            let b=document.body, h=document.querySelector('header')||b;
+                            const s=getComputedStyle(b), h1=document.querySelector('h1');
+                            return {title:document.title,text:(b.innerText||'').slice(0,4500),
+                              bgcolor:s.backgroundColor,font:s.fontFamily,color:s.color,
+                              headerBg:getComputedStyle(h).backgroundColor,
+                              h1Font:h1?getComputedStyle(h1).fontFamily:'',
+                              anchors:[...document.querySelectorAll('a[href]')].map(a=>({text:(a.innerText||'').trim().slice(0,50),href:a.href})).filter(x=>x.text).slice(0,75),
+                              videos:document.querySelectorAll('video').length,
+                              galleries:document.querySelectorAll('[data-hook*="gallery"], [role="listbox"]').length,
+                              animations:document.getAnimations().length}}
+                          """)
+                          filename=(suffix.strip('/').replace('/','-') or "home")+f"-{width}.png"
+                          page.screenshot(path=str(out/filename),full_page=True,animations="disabled",timeout=20000)
+                          entry[str(width)]={"status":response.status if response else None,**summary,"images":imgs}
+                          entry["screenshots"].append(filename)
+                      except Exception as exc:
+                          entry[str(width)]={"error":str(exc)[:400]}
+                      finally:
+                          page.close()
+                  result.append(entry)
+              browser.close()
+          (out/"observation.json").write_text(json.dumps(result,ensure_ascii=False,indent=2))
+          for entry in result:
+              one=entry.get('1440',{})
+              print('SOURCE',entry['url'],'status',one.get('status'),'title',one.get('title'), 'error',one.get('error'))
+              print('STYLE',one.get('bgcolor'),one.get('font'),one.get('color'),'MOTION',one.get('animations'))
+              for img in one.get('images',[])[:17]:
+                  print('IMG',json.dumps(img,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: castanum-original-browser-evidence
+          path: source-evidence/castanum/
+          retention-days: 30
+          if-no-files-found: error
