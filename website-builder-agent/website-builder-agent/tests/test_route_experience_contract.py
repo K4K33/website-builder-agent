@@ -164,6 +164,16 @@ class PurposeFirstRouteTests(TestCase):
         self.assertIn("contact_page_hides_verified_visit_details",
                       {x["kind"] for x in blocked})
 
+    def test_verified_phone_formatting_is_not_a_false_failure(self):
+        data=research()
+        data["company_facts"]={"name":"Example Workshop",
+                               "phone":"+358 40 000 123"}
+        pages=good_pages()
+        pages["contact/index.html"]=page("Call our showroom",
+            body='<a href="tel:+35840000123">+358 40 000 123</a>')
+        blocked=audit_route_experience(pages,data)["blocking"]
+        self.assertFalse(blocked,blocked)
+
     def test_missing_main_element_cannot_bypass_task_specific_contact_guard(self):
         pages=good_pages()
         pages["contact/index.html"]=(
