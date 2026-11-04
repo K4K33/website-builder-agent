@@ -1,0 +1,66 @@
+name: Castanum live shop catalog evidence capture
+on:
+  push:
+    branches: [fix/commerce-parity-castanum-20261104]
+    paths:
+      - ".github/workflows/castanum-shop-source-capture.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          target="https://castanum.ekukka.fi/"
+          out=Path("castanum-ecommerce-source");out.mkdir(exist_ok=True)
+          with sync_playwright() as p:
+            browser=p.chromium.launch()
+            page=browser.new_page(viewport={"width":1440,"height":900})
+            page.goto(target,wait_until="domcontentloaded",timeout=40000)
+            page.wait_for_timeout(4500)
+            for label in ["Hyväksy kaikki evästeet","Hyväksy kaikki","Hyväksy"]:
+              try:
+                button=page.get_by_role("button",name=label,exact=True)
+                if button.count() and button.first.is_visible():
+                  button.first.click(timeout=1500)
+                  page.wait_for_timeout(800)
+                  break
+              except Exception: pass
+            page.screenshot(path=str(out/"shop-home.png"),full_page=True,timeout=25000)
+            print("SHOP",page.title(),page.url)
+            print("BODY",page.locator("body").inner_text()[:4700].replace("\n"," | "))
+            print("PRODUCT_LINKS_START")
+            links=page.evaluate("""() => [...document.querySelectorAll('a[href]')].map(a=>({
+              text:(a.innerText||a.getAttribute('aria-label')||'').trim().replace(/\\s+/g,' ').slice(0,130),
+              href:a.href,img:a.querySelector('img')?.currentSrc||''
+            })).filter(a=>a.href.includes('/tuotteet/')||a.href.includes('category.php')).slice(0,120)""")
+            for link in links:print("PRODUCT",json.dumps(link,ensure_ascii=False))
+            print("PRODUCT_LINKS_END")
+            listing="https://castanum.ekukka.fi/category.php?aihe=kaikki&kategoria=Kaikki+Tuotteet"
+            page.goto(listing,wait_until="domcontentloaded",timeout=40000)
+            page.wait_for_timeout(2500)
+            page.screenshot(path=str(out/"shop-all.png"),full_page=True,timeout=25000)
+            print("CATALOG_TEXT",page.locator("body").inner_text()[:3800].replace("\n"," | "))
+            links=page.evaluate("""() => [...document.querySelectorAll('a[href]')].map(a=>({
+              text:(a.innerText||a.getAttribute('aria-label')||'').trim().replace(/\\s+/g,' ').slice(0,100),
+              href:a.href,img:a.querySelector('img')?.currentSrc||''
+            })).filter(a=>a.href.includes('/tuotteet/')).slice(0,120)""")
+            for link in links:print("CATPRODUCT",json.dumps(link,ensure_ascii=False))
+            (out/"catalog-links.json").write_text(json.dumps(links,ensure_ascii=False,indent=2))
+            browser.close()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: castanum-shop-source-evidence, path: "castanum-ecommerce-source/", retention-days: 14}
