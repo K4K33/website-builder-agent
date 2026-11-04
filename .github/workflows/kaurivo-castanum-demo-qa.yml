@@ -1,7 +1,7 @@
 name: Kaurivo Castanum source & responsive browser verification
 on:
   push:
-    branches: [feat/castanum-botanical-demo-20261104]
+    branches: [feat/castanum-commerce-continuity-20261104]
     paths:
       - ".github/workflows/kaurivo-castanum-demo-qa.yml"
       - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1/**"
@@ -44,7 +44,7 @@ jobs:
           import json
           root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
           out=Path("qa-evidence/castanum/new");out.mkdir(parents=True,exist_ok=True)
-          routes=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot"]
+          routes=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot","verkkokauppa"]
           results=[]; blockers=[]
           with sync_playwright() as p:
             browser=p.chromium.launch(headless=True)
@@ -141,14 +141,34 @@ jobs:
                   button.click()
                   mobile.keyboard.press("Escape")
                   assert button.get_attribute("aria-expanded")=="false"
-                  expected=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot"]
+                  expected=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot","verkkokauppa"]
                   desktop=browser.new_page(viewport={"width":1440,"height":900})
                   for route in expected:
                       desktop.goto(origin+"/"+route+"/",wait_until="domcontentloaded")
                       assert desktop.locator("main h1").count()==1,(route,"missing h1")
                       assert desktop.locator(".main-nav a").count()==7,(route,"missing nav")
                       assert desktop.locator('.brand[href]').count()==1,(route,"missing return home")
-                      assert desktop.locator('a[href^="https://castanum.ekukka.fi/"]').count()>0,(route,"original shop lost")
+                      assert desktop.locator('a[data-shop-entry]').count()>0,(route,"original shop lost")
+                  for width in (320,390,768,1440):
+                      shop=browser.new_page(viewport={"width":width,"height":900})
+                      shop.goto(origin+"/verkkokauppa/",wait_until="domcontentloaded")
+                      assert shop.locator('[data-product-source]').count()==87
+                      assert shop.evaluate("document.documentElement.scrollWidth<=innerWidth+1")
+                      shop.locator('#product-search').fill('Castanum')
+                      assert shop.locator('[data-product-source]:visible').count()==1
+                      shop.locator('#product-search').fill('zzzz-no-match')
+                      assert shop.locator('#shop-empty').is_visible()
+                      shop.locator('#shop-clear').click()
+                      assert shop.locator('[data-product-source]:visible').count()==87
+                      shop.locator('#product-category').select_option('Surukukat')
+                      assert shop.locator('[data-product-source]:visible').count()==30
+                      shop.locator('.shop-reset').click()
+                      shop.locator('#product-budget').fill('25')
+                      assert shop.locator('[data-product-source]:visible').count()>0
+                      assert shop.locator('[data-product-source]:visible').evaluate_all("els=>els.every(e=>Number(e.dataset.price)<=25)")
+                      shop.locator('#product-sort').select_option('price-asc')
+                      assert shop.locator('[data-product-source]:visible').evaluate_all("els=>els.every((e,i)=>i===0||Number(els[i-1].dataset.price)<=Number(e.dataset.price))")
+                      shop.close()
                   desktop.goto(origin+"/yhteystiedot/",wait_until="domcontentloaded")
                   assert desktop.locator("main address").count()==1
                   assert desktop.locator('.contact-map iframe[title]').count()==1

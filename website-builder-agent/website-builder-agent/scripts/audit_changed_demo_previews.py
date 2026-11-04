@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from utils.universal_quality import audit_universal_standards
 from utils.visual_originality import audit_design_originality
 from utils.route_experience_contract import audit_route_experience
+from utils.commerce_parity import commerce_problems
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
 
@@ -98,6 +99,8 @@ def verified_source_evidence(slug):
         "source_inventory": inventory,
         "original_experience_profile": profile,
         "source_comparison_evidence": paired,
+        "commerce_inventory": data.get("commerce_inventory", []),
+        "company_facts": data.get("company_facts", {}),
     }
 
 def main():
@@ -118,6 +121,9 @@ def main():
             continue
         try:
             evidence=verified_source_evidence(slug)
+            for issue in commerce_problems(evidence, pages):
+                print("BLOCK", slug, issue["kind"], issue["source"])
+                failed=True
             # Hand-coded / external-agent demos used to bypass the entire
             # research-to-route Builder plan. Derive the visitor job from real
             # page paths, then enforce the SAME pre-write composition policy.
