@@ -87,7 +87,7 @@ h1,h2,h3,p{overflow-wrap:break-word}
 .sell-inner h2 em{color:var(--rose)}
 .sell-inner p{font-size:15px;line-height:1.75;max-width:460px;color:#5a4752}
 .sell-steps{border-top:1px solid var(--line)}
-.sell-step{padding:22px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:48px 1fr;gap:15px}
+.sell-step{padding:24px 0;border-bottom:1px solid var(--line);display:block}
 .sell-step .step-number{font:italic 30px "Cormorant Garamond",Georgia,serif;color:var(--rose)}
 .sell-step h3{font-size:14px;margin:0 0 7px;font-weight:700}
 .sell-step p{font-size:13px;margin:0;color:#604d59;line-height:1.7}
