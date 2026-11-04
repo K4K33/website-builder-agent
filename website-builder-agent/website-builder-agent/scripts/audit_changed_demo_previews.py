@@ -13,6 +13,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from utils.universal_quality import audit_universal_standards
 from utils.visual_originality import audit_design_originality
+from utils.route_experience_contract import audit_route_experience
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
 
@@ -117,6 +118,19 @@ def main():
             continue
         try:
             evidence=verified_source_evidence(slug)
+            # Hand-coded / external-agent demos used to bypass the entire
+            # research-to-route Builder plan. Derive the visitor job from real
+            # page paths, then enforce the SAME pre-write composition policy.
+            evidence["site_architecture"]={"pages":[
+                {"path":route,"purpose":"","user_task":""}
+                for route in pages
+            ]}
+            composition=audit_route_experience(pages,evidence)
+            if composition["blocking"]:
+                failed=True
+                for item in composition["blocking"][:12]:
+                    print("BLOCK",slug,"route_composition",
+                          str(item.get("kind")),"@",str(item.get("route") or item.get("issue")))
             result=audit_universal_standards(
                 pages["index.html"], research=evidence,
                 rendered_pages=pages, stage="internal_demo")
