@@ -84,6 +84,7 @@ jobs:
                   });
                   return {h1:document.querySelectorAll('main h1').length,
                     viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+                    overflowNodes:[...document.querySelectorAll("main *")].filter(e=>e.getBoundingClientRect().right>innerWidth+3).slice(0,5).map(e=>e.className),
                     allImages:images.length,loaded:images.filter(i=>i.naturalWidth>0).length,
                     visibleMainPhotos:first.length,broken:images.filter(i=>i.complete&&i.naturalWidth===0).map(i=>i.currentSrc).slice(0,6),
                     linkCount:document.querySelectorAll('.main-nav a').length,
@@ -94,7 +95,7 @@ jobs:
                 page.screenshot(path=str(out/f"{filelabel}-{width}.png"),full_page=True,animations="disabled",timeout=25000)
                 results.append({"page":filelabel,"width":width,**observed,"page_errors":errors})
                 if observed["h1"]!=1:blockers.append(f"{filelabel} {width}: not exactly one h1")
-                if observed["scrollWidth"]>width+3:blockers.append(f"{filelabel} {width}: horizontal overflow "+str(observed["scrollWidth"]))
+                if observed["scrollWidth"]>width+3:blockers.append(f"{filelabel} {width}: horizontal overflow "+str(observed["scrollWidth"])+" "+str(observed["overflowNodes"]))
                 if observed["linkCount"]!=7:blockers.append(f"{filelabel} {width}: missing navigation")
                 if observed["broken"]:blockers.append(f"{filelabel} {width}: broken images "+str(observed["broken"]))
                 if errors:blockers.append(f"{filelabel} {width}: JavaScript "+str(errors))
