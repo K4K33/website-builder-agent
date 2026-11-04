@@ -229,3 +229,16 @@ class ServiceIntegrationTests(unittest.TestCase):
         r = {'source_inventory': {'pages': [{'url': 'https://cabin.example/', 'forms': [
             {'action': '/book', 'method': 'post', 'fields': [{'type': 'email'}, {'type': 'date'}]}]}]}}
         self.assertEqual(source_tasks(r)[0]['kind'], 'booking_form')
+
+    def test_malformed_model_voice_and_review_fields_fail_closed(self):
+        for value in ('approved', ['approved'], True):
+            r, p = fixture(); r['company_voice_brief'] = value
+            self.assertFalse(audit_service_quality(p, r)['client_ready'])
+            r, p = fixture(); r['service_quality_reviews'] = {'visual': value}
+            self.assertFalse(audit_service_quality(p, r, artifact_digest='a'*64)['client_ready'])
+        r, p = fixture(); r['company_voice_brief']['source_excerpts'] = ['fake']
+        self.assertTrue(audit_service_quality(p, r)['blocking'])
+
+    def test_malformed_task_plan_is_rejected_before_spending(self):
+        r, p = fixture(); r['business_task_plan'] = {'task_id': 'bad'}
+        with self.assertRaisesRegex(RuntimeError, 'must be a list'): validate_service_plan(r)

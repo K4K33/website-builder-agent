@@ -119,7 +119,9 @@ def validate_service_plan(research):
     plans = research.get('business_task_plan')
     if plans is None and research.get('service_quality_protocol') != 'v1':
         return
-    if not isinstance(plans, list):
+    if plans is not None and not isinstance(plans, list):
+        raise RuntimeError('Service business task plan must be a list')
+    if plans is None:
         plans = []
     task_ids = {t['id'] for t in tasks}
     ids = [p.get('task_id') for p in plans if isinstance(p, dict)]
@@ -156,6 +158,7 @@ def audit_service_quality(pages, research, *, artifact_digest=None):
     soups = {route: BeautifulSoup(raw, 'html.parser') for route, raw in pages.items()}
     task_ids = {t['id'] for t in brief['tasks']}
     plans = research.get('business_task_plan') or []
+    plans = plans if isinstance(plans, list) else []
     mapped = {p.get('task_id'): p for p in plans if isinstance(p, dict)}
     for task in brief['tasks']:
         record = mapped.get(task['id'])
@@ -222,15 +225,25 @@ def audit_service_quality(pages, research, *, artifact_digest=None):
                                 'visitor_task': assignment.get('visitor_task')})
 
     voice = research.get('company_voice_brief') or {}
+    if not isinstance(voice, dict):
+        blocking.append({'kind': 'invalid_voice_brief'})
+        voice = {}
     sources = {p.get('url'): str(p.get('text') or '')
                for p in (research.get('source_inventory') or {}).get('pages', [])}
     sources.update({p.get('url'): str(p.get('text') or '') for p in research.get('fact_sources') or []})
     excerpts = voice.get('source_excerpts') or []
+    if not isinstance(excerpts, list) or any(not isinstance(e, dict) for e in excerpts):
+        blocking.append({'kind': 'invalid_voice_excerpts'})
+        excerpts = []
     fact_corpus = _normal(' '.join(sources.values()) + ' ' + json.dumps(research.get('company_facts') or {}, ensure_ascii=False)).casefold()
-    for fact in voice.get('company_specific_facts') or []:
+    voice_facts = voice.get('company_specific_facts') or []
+    if not isinstance(voice_facts, list) or any(not isinstance(f, str) for f in voice_facts):
+        blocking.append({'kind': 'invalid_voice_facts'})
+        voice_facts = []
+    for fact in voice_facts:
         if not _normal(fact) or _normal(fact).casefold() not in fact_corpus:
             blocking.append({'kind': 'invented_voice_fact'})
-    valid_voice = bool(excerpts and voice.get('company_specific_facts') and voice.get('tone'))
+    valid_voice = bool(excerpts and voice_facts and isinstance(voice.get('tone'), str) and _normal(voice.get('tone')))
     for excerpt in excerpts:
         quote = _normal(excerpt.get('text'))
         if not quote or quote not in _normal(sources.get(excerpt.get('source_url'), '')):
@@ -241,9 +254,11 @@ def audit_service_quality(pages, research, *, artifact_digest=None):
 
     # Evidence must inspect the complete bundle, not just unchanged HTML.
     evidence = research.get('service_quality_reviews') or {}
+    evidence = evidence if isinstance(evidence, dict) else {}
     reviews = {}
     for domain in DOMAINS:
         record = evidence.get(domain) or {}
+        record = record if isinstance(record, dict) else {}
         ok = bool(isinstance(artifact_digest, str) and re.fullmatch('[a-f0-9]{64}', artifact_digest)
                   and record.get('approved') is True
                   and record.get('artifact_sha256') == artifact_digest
@@ -251,11 +266,16 @@ def audit_service_quality(pages, research, *, artifact_digest=None):
                   and record.get('independent_of_builder') is True
                   and record.get('reviewer_id') and record.get('evidence_reference')
                   and record.get('checked_at') and record.get('open_issues') == []
-                  and set(record.get('routes_reviewed') or []) == set(pages))
+                  and isinstance(record.get('routes_reviewed'), list)
+                  and all(isinstance(x, str) for x in record['routes_reviewed'])
+                  and set(record['routes_reviewed']) == set(pages))
         if domain in ('commercial', 'technical'):
-            ok = ok and set(record.get('task_ids_tested') or []) == task_ids
+            ok = ok and isinstance(record.get('task_ids_tested'), list)
+            ok = ok and all(isinstance(x, str) for x in record['task_ids_tested'])
+            ok = ok and set(record['task_ids_tested']) == task_ids
         if domain == 'commercial':
             results = record.get('journey_results') or []
+            results = results if isinstance(results, list) else []
             checked = {r.get('task_id') for r in results if isinstance(r, dict)
                        and r.get('result') == 'pass' and r.get('completion_evidence')
                        and r.get('completion_mode') == mapped.get(r.get('task_id'), {}).get('completion_mode')}
