@@ -7,6 +7,7 @@ are never told to invent media. This is not a numeric aesthetic grade.
 """
 from __future__ import annotations
 import re
+from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 from utils.content_parity import source_inventory_sha256
 from utils.cross_route_editorial_risks import audit_cross_route_editorial_risks
@@ -30,13 +31,28 @@ EXPECTATIONS = {
     "general": "Explain this route's visitor task, without a reused agency hero.",
 }
 
+def _is_actual_source_photo(candidate: dict) -> bool:
+    """Keep sponsor marks and SVG icons out of the PHOTO-RICH threshold."""
+    if candidate.get("role") in ("gallery_photo", "staff_portrait"):
+        return True
+    src=str(candidate.get("src") or "")
+    marker=(str(candidate.get("alt") or "")+" "+
+            src.rsplit("/",1)[-1]).casefold()
+    if re.search(r"(?:logo|sponsor|partner|yhteisty[oö]|kumppani|"
+                 r"icon|ikoni|favicon|badge|merkki)",marker):
+        return False
+    if urlsplit(src).path.casefold().endswith(".svg"):
+        return False
+    return True
+
 def source_photo_count(research: dict) -> int:
     seen = set()
     for page in (research.get("source_inventory") or {}).get("pages") or []:
         if isinstance(page, dict):
             ident = page.get("source_identity") or {}
             for p in ident.get("original_content_photos") or []:
-                if isinstance(p, dict) and p.get("src"):
+                if (isinstance(p, dict) and p.get("src")
+                    and _is_actual_source_photo(p)):
                     seen.add(str(p["src"]).strip())
     return len(seen)
 
@@ -65,7 +81,9 @@ def _observed_photo_candidates(research: dict) -> list[dict]:
         url=str(page.get("url") or "")
         identity=page.get("source_identity") or {}
         for photo in identity.get("original_content_photos") or []:
-            if not isinstance(photo,dict) or not photo.get("src"): continue
+            if (not isinstance(photo,dict) or not photo.get("src")
+                or not _is_actual_source_photo(photo)):
+                continue
             src=str(photo["src"]).strip()
             if src in seen: continue
             seen.add(src)
