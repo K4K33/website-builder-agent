@@ -98,6 +98,11 @@ def verified_source_evidence(slug):
         "source_inventory": inventory,
         "original_experience_profile": profile,
         "source_comparison_evidence": paired,
+        # Preserve researched transaction evidence in the universal quality audit.
+        "company_facts": data.get("company_facts") or {},
+        "commerce_inventory": data.get("commerce_inventory") or {},
+        "commerce_release_verification": data.get("commerce_release_verification") or {},
+        "source_url": data.get("source_url") or "",
     }
 
 def main():
