@@ -40,7 +40,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          from playwright.sync_api import sync_playwright
+          from playwright.sync_api import sync_playwright, expect
           import json
           root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
           out=Path("qa-evidence/castanum/new");out.mkdir(parents=True,exist_ok=True)
@@ -118,7 +118,7 @@ jobs:
           from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
           from functools import partial
           from threading import Thread
-          from playwright.sync_api import sync_playwright
+          from playwright.sync_api import sync_playwright, expect
           root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
           Handler=partial(SimpleHTTPRequestHandler,directory=str(root))
           server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
@@ -156,14 +156,15 @@ jobs:
                       assert shop.locator('[data-product-source]').count()==87
                       assert shop.evaluate("document.documentElement.scrollWidth<=innerWidth+1")
                       shop.locator('#product-search').fill('Castanum')
-                      assert shop.locator('[data-product-source]:visible').count()==1
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(1)
                       shop.locator('#product-search').fill('zzzz-no-match')
                       assert shop.locator('#shop-empty').is_visible()
                       shop.locator('#shop-clear').click()
-                      assert shop.locator('[data-product-source]:visible').count()==87
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(87)
                       shop.locator('#product-category').select_option('Surukukat')
-                      assert shop.locator('[data-product-source]:visible').count()==30
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(30)
                       shop.locator('.shop-reset').click()
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(87)
                       shop.locator('#product-budget').fill('25')
                       assert shop.locator('[data-product-source]:visible').count()>0
                       assert shop.locator('[data-product-source]:visible').evaluate_all("els=>els.every(e=>Number(e.dataset.price)<=25)")
