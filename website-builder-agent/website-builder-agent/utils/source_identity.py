@@ -59,6 +59,24 @@ def _stars(node) -> int | None:
     return None
 
 
+
+def _effective_image_source(node) -> str:
+    """Prefer the REAL image over transparent/lazy SVG placeholder data.
+    
+    A WordPress gallery often stores the real photograph in data-src and
+    exposes only a tiny transparent placeholder in src.
+    """
+    for key in ("data-src", "data-lazy-src", "data-original",
+                "data-image", "src", "data-srcset", "srcset"):
+        raw = str(node.get(key) or "").strip()
+        if key.endswith("srcset") and raw:
+            raw = raw.split(",", 1)[0].strip().split(" ", 1)[0]
+        if raw and not raw.lower().startswith(("data:", "blob:", "javascript:", "#")):
+            return raw
+    return ""
+
+
+
 def extract_source_identity(html: str, source_url: str = "") -> dict:
     soup = BeautifulSoup(html, "html.parser")
     color = soup.find("meta", attrs={"name": re.compile("^theme-color$", re.I)})
@@ -72,7 +90,7 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
             if absolute not in original_favicons:
                 original_favicons.append(absolute[:500])
     for img in soup.select('header img,[role="banner"] img,[class*="site-header"] img'):
-        raw = str(img.get("src") or img.get("data-src") or "").strip()
+        raw = _effective_image_source(img)
         if raw:
             url = urljoin(source_url, raw) if source_url else raw
             if url not in logo_candidates:
@@ -96,7 +114,7 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
     content_photos = []
     main = soup.find("main") or soup
     for img in main.find_all("img"):
-        raw = str(img.get("src") or img.get("data-src") or "").strip()
+        raw = _effective_image_source(img)
         if not raw:
             continue
         url = urljoin(source_url, raw) if source_url else raw
