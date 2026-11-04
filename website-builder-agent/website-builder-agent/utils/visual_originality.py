@@ -79,15 +79,44 @@ def _client_key(name: str) -> str:
     # One sample from each client, not Kotifixi v1..v15 inflation.
     return re.sub(r"-v\d+$","",name.casefold())
 
+def _presentation_formula(html: str, css: str = "") -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    heading = soup.select_one("main h1")
+    styles = " ".join(x.get_text() for x in soup.find_all("style")) + " " + css
+    # A style hint requires actual CSS; serif-looking filenames are not proof.
+    families = sorted(set(re.findall(r"font-family\s*:\s*([^;}]+)", styles, re.I)))
+    return {"hero": _hero_type(html),
+            "italic_heading": bool(heading and heading.find(["em", "i"])),
+            "font_families": families[:12]}
+
+
+def _linked_styles(html: str, folder: Path) -> str:
+    pieces = []
+    for link in BeautifulSoup(html, "html.parser").select('link[rel="stylesheet"][href]'):
+        raw = str(link.get("href") or "")
+        if raw.startswith(("/", "http:", "https:", "//")):
+            continue
+        file = (folder / raw.split("?", 1)[0]).resolve()
+        if file.is_relative_to(folder.resolve()) and file.is_file() and file.stat().st_size < 500000:
+            pieces.append(file.read_text(encoding="utf-8"))
+    return "\n".join(pieces)
+
+
 def audit_design_originality(
     html: str, *, site_slug: str,
     reference_demos: str | Path | None = None,
     additional_sites: dict[str,str] | None = None,
+    stylesheet_text: str = "",
+    additional_styles: dict[str,str] | None = None,
 ) -> dict:
     references=dict(additional_sites or {})
+    styles=dict(additional_styles or {})
     if reference_demos:
         root=Path(reference_demos)
         if root.exists():
+            current = root / site_slug / "index.html"
+            if not stylesheet_text and current.is_file():
+                stylesheet_text = _linked_styles(html, current.parent)
             grouped={}
             for p in sorted(root.glob("*/index.html")):
                 group=_client_key(p.parent.name)
@@ -96,7 +125,9 @@ def audit_design_originality(
                 grouped[group]=p
             for group,p in list(grouped.items())[:60]:
                 try:
-                    references.setdefault(group,p.read_text(encoding="utf-8"))
+                    other_html = p.read_text(encoding="utf-8")
+                    references.setdefault(group, other_html)
+                    styles.setdefault(group, _linked_styles(other_html, p.parent))
                 except OSError:
                     pass
     reference_signatures=[]
@@ -106,9 +137,24 @@ def audit_design_originality(
             reference_signatures.append({
                 "site":name,"first_view_structure":_hero_type(other),
                 "section_count":len(signature),
+                "presentation_formula":_presentation_formula(other, styles.get(name, "")),
                 "section_rhythm":[str(item[:4]) for item in signature[:6]],
                 "formulaic_copy_examples":_cliche_evidence(other)[:2],
             })
+    own_formula = _presentation_formula(html, stylesheet_text)
+    formula_flags = []
+    for name, other in references.items():
+        if _client_key(name) == _client_key(site_slug):
+            continue
+        formula = _presentation_formula(other, styles.get(name, ""))
+        if (own_formula["hero"] in ("TM", "MT")
+            and own_formula["hero"] == formula["hero"]
+            and own_formula["italic_heading"] and formula["italic_heading"]
+            and own_formula["font_families"]
+            and own_formula["font_families"] == formula["font_families"]):
+            formula_flags.append({"kind":"repeated_presentation_formula", "other_site":name,
+                                  "evidence":own_formula,
+                                  "status":"requires_visual_comparison"})
     matches=[]
     for name,other in references.items():
         if name==site_slug: continue
@@ -133,7 +179,10 @@ def audit_design_originality(
         warnings.append("Common text-left/media-right hero; justify this choice with business and content evidence.")
     if generic_copy:
         warnings.append("Review formulaic sales copy: "+"; ".join(generic_copy))
-    return {"pass":not problems,"blocking_problems":problems,
+    if formula_flags:
+        warnings.append("Repeated split hero, italic headline and CSS type choices across unrelated clients; inspect visual evidence.")
+    return {"review_flags":formula_flags, "presentation_formula":own_formula,
+            "pass":not problems,"blocking_problems":problems,
             "warnings":warnings,"similar_sites":matches[:8],
             "reference_signatures":reference_signatures[:16],
             "hero_composition":_hero_type(html),

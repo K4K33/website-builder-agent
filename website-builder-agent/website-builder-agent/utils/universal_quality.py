@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
+from utils.service_quality import audit_service_quality
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.client_facing_integrity import audit_client_facing_integrity
 from utils.brand_design_blueprint import audit_sitewide_brand_consistency
@@ -31,6 +32,8 @@ from utils.premium_quality_gate import (
 
 # Categories that apply across all sectors, not design layouts.
 UNIVERSAL_STANDARDS = (
+    ("business_task_continuity", "Every source business action survives; a link is not completion evidence", "functional"),
+    ("service_quality_acceptance", "Separate exact-bundle technical, content, visual and commercial decisions", "release"),
     ("source_coverage", "All important old pages and facts have source evidence", "research"),
     ("same_industry_inspiration", "Three sourced leading sector sites; original adaptation", "research"),
     ("unique_art_direction", "Distinctive brand-specific visual composition", "visual"),
@@ -117,6 +120,13 @@ def audit_universal_standards(
 
     def needs(key: str, reason: str) -> None:
         pending.setdefault(key, []).append(reason)
+
+    service_quality = audit_service_quality(pages, research, artifact_digest=site_bundle_sha256)
+    for issue in service_quality["blocking"]:
+        fail("business_task_continuity" if "task" in issue["kind"] or "form" in issue["kind"]
+             else "service_quality_acceptance", str(issue))
+    for issue in service_quality["pending"]:
+        needs("service_quality_acceptance", str(issue))
 
     # User-validated cross-company rule: decorative ↗/→ in every CTA is
     # template-like visual noise. Count across ALL rendered pages, including
@@ -448,6 +458,7 @@ def audit_universal_standards(
     decision = ("blocked" if problems else
                 "review_required" if pending else "client_ready")
     return {
+        "service_quality": service_quality,
         "quality_decision": decision,
         "blocking_categories": sorted(problems),
         "pending_categories": sorted(pending),

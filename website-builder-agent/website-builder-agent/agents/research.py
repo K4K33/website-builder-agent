@@ -22,6 +22,7 @@ from urllib.parse import urlsplit
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
@@ -325,6 +326,21 @@ hinnasto ja muut ensisijaiset tehtävät eivät saa jäädä vanhan
 rikkinäisen verkkosivun linkiksi. Jos sisältö on laaja, käytä tarvittavaa
 määrää monisivuisia reittejä, kuitenkin enintään 14.
 HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
+"""
+
+FINAL_RESEARCH_PROMPT += SERVICE_QUALITY_POLICY + """
+Return these structured planning fields as part of the brief:
+- business_task_plan: one record per observed source task, with task_id (from the
+  supplied deterministic manifest when available), source_route, destination,
+  completion_mode (existing_platform, local_flow or form_submission), and the
+  browser test needed to verify completion. Do not invent task ids or services.
+- media_purpose_plan: route, src (rendered image), source_src (observed original),
+  observed_subject, visitor_task, rationale. If you have not visually inspected
+  the subject, leave it unknown. Original ownership or alt text is not proof.
+- company_voice_brief: tone, company_specific_facts, source_excerpts (exact text
+  and source_url). Unknown voice remains pending; use plain verified facts.
+These are plans, never independent approvals. Keep all planning metadata out
+of customer-facing HTML. Do not declare any reviewer or test already passed.
 """
 
 FINAL_RESEARCH_PROMPT += DESIGN_CONTRACT.replace("Palauta täysin itsenäinen index.html, jossa kaikki tarvittavat kohteet ja toiminnot toimivat.", "Palauta edelleen vain yllä kuvatun skeeman JSON-designbrief.")
@@ -683,6 +699,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     ]
     research_data = {
         **brief,
+        "service_quality_protocol": "v1",
         "premium_protocol": "v2",  # Owner acceptance requires independent evidence.
         "company_facts": facts,  # The AI design response cannot change verified facts.
         "design_benchmark": benchmark,
@@ -696,6 +713,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
             for item in references
         ],
     }
+    reset_generated_review_claims(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, "")
     validate_creative_directions(research_data)
@@ -1019,6 +1037,9 @@ Tärkeää:
         "design brief..."
     )
 
+    final_prompt += "\nDETERMINISTIC SOURCE TASK MANIFEST (copy task ids exactly):\n" + json.dumps(
+        service_brief({"source_inventory": source_inventory, "company_facts": company_facts}),
+        ensure_ascii=False)
     brief = ask_claude_json(
         FINAL_RESEARCH_PROMPT,
         final_prompt,
@@ -1050,6 +1071,7 @@ Tärkeää:
                  for record in reference_evidence]
     research_data = {
         **brief,
+        "service_quality_protocol": "v1",
         "premium_protocol": "v2",  # Owner acceptance requires independent evidence.
         "design_benchmark": benchmark,
         # The design pass must not rewrite or invent extracted company facts.
@@ -1075,6 +1097,7 @@ Tärkeää:
         "reference_search_query": search_query,
     }
 
+    reset_generated_review_claims(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, url)
     # Do not spend a Builder request on a redesign that never planned to

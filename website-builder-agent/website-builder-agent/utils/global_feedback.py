@@ -13,6 +13,9 @@ import re
 
 
 CATEGORIES = {
+    "business_task_continuity": ("lost_business_task", "broken_business_task", "business_task", "form_replaced_with_weaker_action"),
+    "media_task_relevance": ("lead_image_task_relevance", "media_subject_not_observed", "media purpose", "kuvan käyttötarkoitus"),
+    "separate_quality_decisions": ("domain_review_pending", "service_quality_acceptance", "technical tests are not visual approval"),
     "sector_recognition": (
         "sector_recognition", "missing_bicycle_first_view",
         "wrong_industry_impression", "looks like a university",
@@ -99,7 +102,7 @@ def record_qa_findings(
 
 def record_owner_feedback(
     ledger: dict, *,
-    text: str, company_slug: str = "", applies_to_all: bool,
+    text: str, company_slug: str = "", applies_to_all: bool = True,
     regression_test: str = "", checker: str = "",
 ) -> dict:
     """Capture owner rule, but never claim unknown ideas already enforceable."""
@@ -119,7 +122,9 @@ def record_owner_feedback(
     has_test = safe_path and (Path(__file__).resolve().parents[1] / relative).is_file()
     status = "active" if known_checker and has_test else "needs_implementation"
     rule = {"scope": "universal", "category": category, "rule": text.strip(),
-            "status": status, "checker": checker, "regression_test": regression_test}
+            "status": status, "checker": checker, "regression_test": regression_test,
+            "origin_company_slug": company_slug,
+            "validation_status": "implemented_not_field_validated" if status == "active" else "not_implemented"}
     if rule not in ledger.setdefault("user_rules", []):
         ledger["user_rules"].append(rule)
     return rule
