@@ -50,6 +50,72 @@ def _route_role(page: dict) -> str:
                 return role
     return "general"
 
+PHOTO_ROLE_HINTS = {
+    "rental": re.compile(r"mekko|puku|dress|gown|suit|juhla|vuokra|rental|formal",re.I),
+    "collection": re.compile(r"tuote|product|work|ty[oö]|referens|galler|portfolio|shoes|keng|vintage|dress|mekko",re.I),
+    "contact": re.compile(r"myym[aä]l[aä]|liiketila|julkisiv|storefront|interior|shop|store|building|sis[aä]til|toimipiste",re.I),
+    "people": re.compile(r"henkil[oö]|yritt[aä]j|team|person|portrait|staff|employee|founder|tekij[aä]",re.I),
+    "service": re.compile(r"huolto|process|service|workshop|ty[oö]tila|korja|installation|valmist",re.I),
+}
+
+def _observed_photo_candidates(research: dict) -> list[dict]:
+    images, seen = [], set()
+    for page in (research.get("source_inventory") or {}).get("pages") or []:
+        if not isinstance(page,dict): continue
+        url=str(page.get("url") or "")
+        identity=page.get("source_identity") or {}
+        for photo in identity.get("original_content_photos") or []:
+            if not isinstance(photo,dict) or not photo.get("src"): continue
+            src=str(photo["src"]).strip()
+            if src in seen: continue
+            seen.add(src)
+            images.append({"src":src, "alt":str(photo.get("alt") or "")[:130],
+                           "role":str(photo.get("role") or ""),
+                           "observed_on":url})
+    return images
+
+def _candidate_score(role: str, candidate: dict) -> int:
+    if role=="general": return 0
+    alt=str(candidate["alt"])+" "+str(candidate["src"]).split("/")[-1]
+    score=0
+    if role=="people" and candidate["role"]=="staff_portrait": score+=10
+    if role=="collection" and candidate["role"]=="gallery_photo": score+=6
+    if role=="contact" and candidate["role"] in ("shop_interior","exterior"): score+=8
+    hint=PHOTO_ROLE_HINTS.get(role)
+    if hint and hint.search(alt): score+=5
+    return score
+
+def _allocate_distinct_source_photo_hints(rows: list[dict],
+                                          research: dict) -> None:
+    """Provide each task a distinct, source-OBSERVED candidate where possible.
+
+    Alt/file-name matching is a weak inventory hint, NOT proof of the subject,
+    permission to use original media, or a mandatory exact filename.
+    Unknown/unlabelled images remain available for human assignment.
+    """
+    candidates=_observed_photo_candidates(research)
+    used=set()
+    priority={"rental":0,"contact":1,"people":2,"collection":3,
+              "service":4,"booking":5,"general":6}
+    for row in sorted(rows,key=lambda row:(priority.get(row["role"],9),row["route"])):
+        role=row["role"]
+        ranked=sorted((( _candidate_score(role,p),p) for p in candidates
+                       if p["src"] not in used),
+                      key=lambda x:(-x[0],x[1]["src"]))
+        if not ranked or ranked[0][0] <= 0:
+            row["source_photo_hint"] = None
+            continue
+        score,photo=ranked[0]
+        used.add(photo["src"])
+        row["source_photo_hint"]={
+            "src":photo["src"],"alt":photo["alt"],
+            "observed_on":photo["observed_on"],
+            "verified_visual_subject":False,
+            "licensed_for_public_use":False,
+            "note":"Source observed reference; verify subject and rights before use."
+        }
+
+
 def derive_route_experience_contract(research: dict) -> dict:
     """Deterministic pre-build contract tied to actual planned visitor jobs."""
     count = source_photo_count(research)
@@ -68,6 +134,7 @@ def derive_route_experience_contract(research: dict) -> dict:
             "product_media_required": count >= 3 and role in ("collection", "rental"),
             "contact_details_required": role == "contact",
         })
+    _allocate_distinct_source_photo_hints(routes, research)
     return {
         "protocol": "purpose-first-route-v1",
         "source_sha256": source_inventory_sha256(inv) if inv.get("pages") else "",
