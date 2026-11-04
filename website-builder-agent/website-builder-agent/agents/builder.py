@@ -14,6 +14,7 @@ import webbrowser
 from pathlib import Path
 from bs4 import BeautifulSoup
 
+from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, validate_service_plan
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
 from utils.visual_media_gate import audit_visual_media
@@ -43,7 +44,7 @@ from utils.state import (
 import config
 
 
-BUILD_SYSTEM_PROMPT = """
+BUILD_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + """
 SOURCE-EXPERIENCE CONTINUITY (EVERY REDESIGN):
 The source_experience_plan must be supplemented by actual browser-observed
 original_experience_profile, not only static source HTML and screenshots with
@@ -771,7 +772,7 @@ Palauta VAIN koko HTML-tiedosto.
 """
 
 
-REVISE_SYSTEM_PROMPT = """
+REVISE_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + """
 FOR ALL CLIENT REVISIONS: preserve original verified business identity,
 source details and exact price/service labels. Rewrite customer-facing text
 to remove any notes about research, original websites, extract counts, QA,
@@ -1473,6 +1474,7 @@ def build_site(
     validate_brand_preservation_plan(research)
     # All old pages and observed sections must have a plan BEFORE paid Build.
     validate_source_plan(research, source_url=company.get("url", ""))
+    validate_service_plan(research)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
     architecture = validate_site_architecture(
@@ -1518,6 +1520,8 @@ Rakenna verkkosivu tämän research-datan perusteella.
 RELUMEN, WEBFLOW'N JA WIXIN KALTAISEN JÄSENNETYN SUUNNITTELUN INSPIROIMA
 YRITYSKOHTAINEN SIVUKARTTA → OSIOIDEN WIREFRAME → YHTEINEN BRÄNDITYYLIOHJE:
 {json.dumps(brand_blueprint, ensure_ascii=False)}
+SERVICE-WIDE BUSINESS, MEDIA AND VOICE CONTRACT:
+{json.dumps(service_brief(research), ensure_ascii=False)}
 Tämä suunnittelupaketti sisältää vain lähteissä havaitun yritysidentiteetin.
 Älä keksi puuttuvia brändivärejä tai logoa. Toteuta valittu rakenne kaikille
 sivuille yhtenäisellä hallittavalla tyylijärjestelmällä, mutta vältä
@@ -1831,6 +1835,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     validate_design_intent(research)
     validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
+    validate_service_plan(research)
     validate_design_plan(research, company.get("url", ""))
     facts = research.get("company_facts")
     if not isinstance(facts, dict) or not facts:
@@ -1900,6 +1905,7 @@ def revise_site(
     validate_design_intent(research)
     validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
+    validate_service_plan(research)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
 
@@ -1921,6 +1927,8 @@ def revise_site(
 JO SOVITTU YRITYSKOHTAINEN SIVUKARTTA, WIREFRAME JA BRÄNDITYYLIOHJE
 (käytä yhtenäisesti kaikilla alasivuilla; älä keksi uutta brändiä):
 {json.dumps(brand_blueprint, ensure_ascii=False)}
+SERVICE-WIDE BUSINESS, MEDIA AND VOICE CONTRACT:
+{json.dumps(service_brief(research), ensure_ascii=False)}
 
 ASIAKKAAN BRÄNDI JA SISÄLLÖN SÄILYTTÄMINEN:
 {json.dumps(brand_brief, ensure_ascii=False)}

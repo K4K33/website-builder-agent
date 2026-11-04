@@ -25,6 +25,7 @@ from bs4 import BeautifulSoup
 
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
+from utils.service_quality import audit_service_quality, POLICY as SERVICE_QUALITY_POLICY
 from utils.route_experience_contract import derive_route_experience_contract
 from utils.visual_comparison import build_visual_comparison
 from utils.visual_media_gate import audit_visual_media
@@ -1302,7 +1303,7 @@ def run_qa(slug_or_name: str) -> dict:
                     if key in ("desktop","mobile") and p and os.path.isfile(p)
                 ][:12]
                 review = ask_claude_json(
-                    QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT,
+                    QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT + SERVICE_QUALITY_POLICY,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
                     + json.dumps(normalize_facts(research.get("company_facts")), ensure_ascii=False)
                     + "\nDESIGN BRIEF (not company facts):\n"
@@ -1338,6 +1339,8 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(parity, ensure_ascii=False)
                     + "\nORIGINAL SOURCE FIDELITY (all pages, sections, brand/partner logos, old-site task handoffs): \n"
                     + json.dumps(source_fidelity, ensure_ascii=False)
+                    + "\nSERVICE QUALITY DECISIONS (separate technical/content/visual/commercial; inspect media subject and task completion):\n"
+                    + json.dumps(universal.get("service_quality", {}), ensure_ascii=False)
                     + "\nALL-SITE QA STANDARD STATUS (unverified stays pending):\n"
                     + json.dumps(universal, ensure_ascii=False)
                     + "\nALL NEW ROUTES, SOURCE MIGRATION AND NAVIGATION:\n"
@@ -1473,6 +1476,21 @@ def approve_company(slug_or_name):
         journeys = audit_primary_journeys(rendered, tasks)
         if not tasks or not journeys["pass"]:
             raise RuntimeError("Premium acceptance: primary visitor actions are not independently mapped.")
+    if research.get("service_quality_protocol") == "v1" and research.get("premium_protocol") != "v2":
+        site_root = Path(path).resolve().parent
+        rendered = {}
+        for route in routes or ["index.html"]:
+            file = (site_root / route).resolve()
+            if not file.is_relative_to(site_root) or not file.is_file():
+                raise RuntimeError("Service acceptance: unsafe or missing page")
+            rendered[route] = file.read_text(encoding="utf-8")
+    if research.get("service_quality_protocol") == "v1" or research.get("premium_protocol") == "v2":
+        service = audit_service_quality(rendered, research,
+                                        artifact_digest=full_digest or qa.get("site_sha256"))
+        if not service["client_ready"]:
+            raise RuntimeError("Service quality acceptance: technical, content, visual and commercial "
+                               "reviews remain separate and must all be complete: "
+                               + str((service["blocking"] + service["pending"])[:5]))
     upsert_company(slug, {"approval": {
         "approved": True,
         "build_version": qa["build_version"],

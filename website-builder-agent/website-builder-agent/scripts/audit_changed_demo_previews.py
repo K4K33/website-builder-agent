@@ -101,6 +101,9 @@ def verified_source_evidence(slug):
         "source_comparison_evidence": paired,
         "commerce_inventory": data.get("commerce_inventory", []),
         "company_facts": data.get("company_facts", {}),
+        **{key: data.get(key) for key in ("business_task_plan", "media_purpose_plan",
+                                         "company_voice_brief", "service_quality_reviews",
+                                         "fact_sources", "service_quality_protocol")},
     }
 
 def main():
