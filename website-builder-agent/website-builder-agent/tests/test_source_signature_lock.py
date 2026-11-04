@@ -178,6 +178,49 @@ class SourceSignatureLockTests(unittest.TestCase):
         p["team/index.html"]+=" "
         self.assertIn("staff_portrait_lost",kinds(audit_source_signature_lock(p,research)))
 
+    def test_wix_resized_genuine_photo_keeps_exact_original_gallery_asset(self):
+        from utils.source_signature_lock import _wix_asset_identity
+        same="0c902c_0274c1041f974bcfbc23b1c6e1f10aac.jpg"
+        base="https://static.wixstatic.com/media/"+same
+        resized=(base+"/v1/fill/w_980,h_1100,al_c,q_85,enc_avif,quality_auto/"+same)
+        research={"source_inventory":{"pages":[{
+            "url":"https://florist.example/gallery",
+            "source_identity":{"original_logo_candidates":[],
+                               "original_content_photos":[{"src":base,"role":"gallery_photo"}]}
+        }]}}
+        page_html={"index.html":page('<img src="'+resized+'" alt="Original flowers">')}
+        self.assertEqual(_wix_asset_identity(resized),base)
+        report=audit_source_signature_lock(page_html,research)
+        self.assertNotIn("original_gallery_photo_lost",kinds(report))
+
+    def test_wix_different_image_id_is_not_allowed_to_pass_source_parity(self):
+        from utils.source_signature_lock import _wix_asset_identity
+        original="https://static.wixstatic.com/media/company_real_arrangement.jpg"
+        different=("https://static.wixstatic.com/media/company_other_arrangement.jpg"
+                   "/v1/fill/w_980,h_1100,al_c,q_85/other.jpg")
+        research={"source_inventory":{"pages":[{
+            "url":"https://florist.example/gallery",
+            "source_identity":{"original_logo_candidates":[],
+                               "original_content_photos":[{"src":original,"role":"gallery_photo"}]}
+        }]}}
+        result=audit_source_signature_lock({"index.html":page(
+            '<img src="'+different+'">')},research)
+        self.assertIn("original_gallery_photo_lost",kinds(result))
+        self.assertEqual(_wix_asset_identity("https://untrusted.example/media/company_real_arrangement.jpg"),"")
+
+    def test_wix_logo_same_asset_different_resolution_preserves_brand(self):
+        logo="https://static.wixstatic.com/media/genuine_original_logo.png"
+        changed=(logo+"/v1/fill/w_180,h_180,al_c,q_85/genuine_original_logo.png")
+        research={"source_inventory":{"pages":[{
+            "url":"https://florist.example/",
+            "source_identity":{"original_logo_candidates":[logo],
+                               "original_content_photos":[]}
+        }]}}
+        p={"index.html":(
+            '<!doctype html><html><body><header><img alt="Logo" src="'+changed+
+            '"></header><main><h1>Flowers</h1></main></body></html>')}
+        self.assertNotIn("source_logo_lost",kinds(audit_source_signature_lock(p,research)))
+
     def test_no_website_cannot_invent_identity(self):
         report=audit_source_signature_lock({"index.html":page("Hello")},
                                            {"research_mode":"verified_no_website"})

@@ -1,0 +1,183 @@
+name: Kaurivo Castanum source & responsive browser verification
+on:
+  push:
+    branches: [feat/castanum-botanical-demo-20261104]
+    paths:
+      - ".github/workflows/kaurivo-castanum-demo-qa.yml"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1/**"
+      - "website-builder-agent/website-builder-agent/data/demo_provenance/castanum-toolon-kukkakauppa-v1.json"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  castanum-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          pip install beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
+      - name: Verify original-source digest matches exact inventory
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from utils.content_parity import source_inventory_sha256
+          p=Path("data/demo_provenance/castanum-toolon-kukkakauppa-v1.json")
+          d=json.loads(p.read_text())
+          actual=source_inventory_sha256(d["source_inventory"])
+          expected=d["original_experience_profile"]["source_sha256"]
+          print("CASTANUM_SOURCE_SHA256",actual,"expected",expected)
+          assert actual==expected,"Source observation hash differs from proven source inventory"
+          PY
+      - name: Inspect 7 real HTML routes at 4 viewport widths
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import json
+          root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
+          out=Path("qa-evidence/castanum/new");out.mkdir(parents=True,exist_ok=True)
+          routes=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot"]
+          results=[]; blockers=[]
+          with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            for route in routes:
+              file=root/route/"index.html" if route else root/"index.html"
+              for width,height in ((320,740),(390,844),(768,1024),(1440,900)):
+                context=browser.new_context(viewport={"width":width,"height":height},device_scale_factor=1,reduced_motion="reduce")
+                page=context.new_page()
+                errors=[]
+                page.on("pageerror",lambda e:errors.append(str(e)))
+                page.goto(file.as_uri(),wait_until="domcontentloaded",timeout=23000)
+                page.wait_for_timeout(850)
+                # Do not confuse a slow authentic Wix image with a missing one:
+                # explicitly await decoding of first-screen media for up to 6s.
+                # A real failed request still leaves naturalWidth=0 and FAILS.
+                page.evaluate("""async () => {
+                  const relevant=[...document.images].filter(img=>img.getBoundingClientRect().top<innerHeight+240);
+                  await Promise.race([
+                    Promise.all(relevant.map(img=>img.decode().catch(()=>null))),
+                    new Promise(resolve=>setTimeout(resolve,6000))
+                  ]);
+                }""")
+                # Full-page screenshots must show below-fold photos, not
+                # empty blocks from untriggered browser lazy-loading.
+                page.evaluate("""async () => {
+                  const all=[...document.images];
+                  all.forEach(img => { img.loading='eager'; });
+                  await Promise.race([
+                    Promise.all(all.map(img=>img.decode().catch(()=>null))),
+                    new Promise(resolve=>setTimeout(resolve,6500))
+                  ]);
+                }""")
+                observed=page.evaluate("""() => {
+                  const images=[...document.images];
+                  const first=[...document.querySelectorAll('main img')].filter(i=>{
+                    const r=i.getBoundingClientRect();return i.naturalWidth>0&&r.width>=45&&r.top<innerHeight&&r.bottom>0;
+                  });
+                  return {h1:document.querySelectorAll('main h1').length,
+                    viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+                    allImages:images.length,loaded:images.filter(i=>i.naturalWidth>0).length,
+                    visibleMainPhotos:first.length,broken:images.filter(i=>i.complete&&i.naturalWidth===0).map(i=>i.currentSrc).slice(0,6),
+                    linkCount:document.querySelectorAll('.main-nav a').length,
+                    contactText:(document.querySelector('main')?.innerText||'').includes('Eteläinen Hesperiankatu 6')
+                  };
+                }""")
+                filelabel=route or "home"
+                page.screenshot(path=str(out/f"{filelabel}-{width}.png"),full_page=True,animations="disabled",timeout=25000)
+                results.append({"page":filelabel,"width":width,**observed,"page_errors":errors})
+                if observed["h1"]!=1:blockers.append(f"{filelabel} {width}: not exactly one h1")
+                if observed["scrollWidth"]>width+3:blockers.append(f"{filelabel} {width}: horizontal overflow "+str(observed["scrollWidth"]))
+                if observed["linkCount"]!=7:blockers.append(f"{filelabel} {width}: missing navigation")
+                if observed["broken"]:blockers.append(f"{filelabel} {width}: broken images "+str(observed["broken"]))
+                if errors:blockers.append(f"{filelabel} {width}: JavaScript "+str(errors))
+                if route in ("kimput","haakimput","surukukat","galleria") and observed["visibleMainPhotos"]==0:
+                  blockers.append(f"{filelabel} {width}: original products absent from first viewport")
+                if route=="yhteystiedot" and not observed["contactText"]:
+                  blockers.append(f"{filelabel} {width}: wrong address")
+                context.close()
+            browser.close()
+          (out/"report.json").write_text(json.dumps(results,ensure_ascii=False,indent=2))
+          print("BROWSER ROUTES",len(results),"BLOCKS",len(blockers))
+          for row in results:print("PAGE",row["page"],row["width"],"photos",row["visibleMainPhotos"],"loaded",row["loaded"],"/",row["allImages"])
+          for item in blockers:print("BLOCK",item)
+          if blockers:raise SystemExit(1)
+          PY
+      - name: Functional mobile menu, cross-page navigation and contact composition
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+          from functools import partial
+          from threading import Thread
+          from playwright.sync_api import sync_playwright
+          root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
+          Handler=partial(SimpleHTTPRequestHandler,directory=str(root))
+          server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+          thread=Thread(target=server.serve_forever,daemon=True)
+          thread.start()
+          origin=f"http://127.0.0.1:{server.server_port}"
+          try:
+              with sync_playwright() as p:
+                  browser=p.chromium.launch(headless=True)
+                  mobile=browser.new_page(viewport={"width":390,"height":844})
+                  mobile.goto(origin+"/",wait_until="domcontentloaded")
+                  button=mobile.locator(".menu-toggle")
+                  assert button.get_attribute("aria-expanded")=="false"
+                  button.click()
+                  assert button.get_attribute("aria-expanded")=="true"
+                  assert mobile.locator(".main-nav").evaluate("(n) => getComputedStyle(n).display")!="none"
+                  mobile.locator('.main-nav a[href="haakimput/"]').click()
+                  assert mobile.url.rstrip("/").endswith("/haakimput")
+                  assert "Morsiuskimppu" in mobile.locator("h1").inner_text()
+                  button=mobile.locator(".menu-toggle")
+                  button.click()
+                  mobile.keyboard.press("Escape")
+                  assert button.get_attribute("aria-expanded")=="false"
+                  expected=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot"]
+                  desktop=browser.new_page(viewport={"width":1440,"height":900})
+                  for route in expected:
+                      desktop.goto(origin+"/"+route+"/",wait_until="domcontentloaded")
+                      assert desktop.locator("main h1").count()==1,(route,"missing h1")
+                      assert desktop.locator(".main-nav a").count()==7,(route,"missing nav")
+                      assert desktop.locator('.brand[href]').count()==1,(route,"missing return home")
+                      assert desktop.locator('a[href^="https://castanum.ekukka.fi/"]').count()>0,(route,"original shop lost")
+                  desktop.goto(origin+"/yhteystiedot/",wait_until="domcontentloaded")
+                  assert desktop.locator("main address").count()==1
+                  assert desktop.locator('.contact-map iframe[title]').count()==1
+                  assert desktop.locator("#contact-map-frame").is_hidden()
+                  assert desktop.locator("#map-poster").is_visible()
+                  desktop.locator("[data-load-map]").click()
+                  assert desktop.locator("#contact-map-frame").is_visible()
+                  assert desktop.locator("#map-poster").is_hidden()
+                  assert "maps.google.com" in (desktop.locator("#contact-map-frame").get_attribute("src") or "")
+                  desktop.locator('[name="name"]').fill("Testi henkilö")
+                  desktop.locator('[name="email"]').fill("testi@example.com")
+                  desktop.locator('[name="message"]').fill("Kysyisin kukista")
+                  desktop.locator("#message-form button").click()
+                  assert "Sähköpostiohjelma avataan" in desktop.locator(".form-note").inner_text()
+                  print("FUNCTIONAL PASS: mobile menu, Escape, genuine shop, seven routes, map and draft-only contact")
+                  browser.close()
+          finally:
+              server.shutdown()
+              server.server_close()
+          PY
+      - name: Apply universal brand/route/preview audit to this exact demo
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: python scripts/audit_changed_demo_previews.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: castanum-seven-page-browser-evidence
+          path: website-builder-agent/website-builder-agent/qa-evidence/castanum/new/
+          retention-days: 30
+          if-no-files-found: warn
