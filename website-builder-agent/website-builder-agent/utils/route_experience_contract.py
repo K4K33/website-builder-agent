@@ -255,7 +255,15 @@ def audit_route_experience(pages: dict[str, str], research: dict) -> dict:
     for risk in editorial["pending"]:
         kind = str(risk.get("category") or "")
         issue = "cross_route:" + kind
-        if (kind in hard and contract["photo_rich_source"] and len(pages)>=3
+        # Identical conversion banners across unrelated pages are agency
+        # template repetition even for a business with NO original images.
+        # Product-photo and text-only penalties remain conditional on real
+        # source photography so that no-site leads needn't fabricate images.
+        should_block = (
+            kind=="repeated_full_width_call_to_action_copy" and len(pages)>=3
+            or kind in hard and contract["photo_rich_source"] and len(pages)>=3
+        )
+        if (should_block
             and not _signed_exception(research,pages,contract["source_sha256"],issue)):
             blocking.append({"kind":kind, "issue":issue,
                              "detail":risk.get("issue"),
