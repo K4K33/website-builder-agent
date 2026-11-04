@@ -40,7 +40,13 @@ assistant's subjective review, NOT an independent audited numerical score.
    distinct real companies resemble one portfolio. A source-matched palette
    and real logo don't automatically preserve the source site's layered,
    eclectic boutique environment.
-4. **Content architecture is too thin.** Five routes look like a long
+4. **The demo still hotlinks photos from the company's OLD WordPress host.**
+   Reusing genuine source photos within a labelled internal concept is
+   traceable, but a real commercial replacement cannot assume old-site
+   hosting remains available. If the original domain/assets are later
+   switched off, the new site loses its pictures. Secure rights and store
+   licensed originals in owner-controlled hosting before handover.
+5. **Content architecture is too thin.** Five routes look like a long
    editorial landing page chopped into five short pages, not five
    task-focused destinations. A product gallery with only three sample
    photographs and vague product headings is not sufficient to show a
@@ -49,13 +55,13 @@ assistant's subjective review, NOT an independent audited numerical score.
    'Uutuuksia liikkeessämme' content area with the new static gallery and
    social link; verify whether the source widget is dynamic before claiming
    feature parity.
-5. **Conversion paths are weak.** A visitor contemplating consignment needs
+6. **Conversion paths are weak.** A visitor contemplating consignment needs
    exact steps, time window, contact and any verified terms where those
    terms were published. A rental visitor needs the clothes visible,
    inquiry details and truthful sizing/availability policy. A customer
    looking for the physical shop should see opening hours/directions
    promptly. Decorative headings should not postpone the primary task.
-6. **Some phrasing is template-like.** 'Valikoima elää', 'Jokaiselle
+7. **Some phrasing is template-like.** 'Valikoima elää', 'Jokaiselle
    vuosikymmenelle on oma hetkensä', and repeated formulaic vintage mottos
    may be elegant individually but become filler alongside repeated
    visual templates. Copy must sound like the original store and explain
@@ -73,7 +79,8 @@ assistant's subjective review, NOT an independent audited numerical score.
   or when there are >=3 text-only short-heading intros despite a photo-rich
   original, or when the same lengthy CTA heading repeats on >=3 routes.
   Those are **editorial review flags** rather than universal aesthetic bans.
-- Use actual Chromium naturalWidth/Height versus display geometry to flag
+- Detect photo hotlinks to the old website. They are fragile under a real
+  site migration, and reuse still requires rights clearance.\n- Use actual Chromium naturalWidth/Height versus display geometry to flag
   low-resolution enlarged content photos. 'All images loaded' is not a
   substitute for image quality inspection.
 - Verify source dynamic feed, galleries, booking widgets, current offers
