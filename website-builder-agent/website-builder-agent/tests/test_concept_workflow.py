@@ -10,6 +10,31 @@ from utils.concept_workflow import generate_concepts, choose_concept
 
 
 class ConceptWorkflowTests(unittest.TestCase):
+    def test_model_workflow_uses_json_generation_and_all_twelve_real_images(self):
+        research, data = fixture()
+        company = {'research':research}
+        with TemporaryDirectory() as folder:
+            def save(slug, changes):company.update(changes);return company
+            def respond(system, user, **kwargs):
+                if kwargs['stage'] == 'builder':
+                    return data
+                self.assertEqual(len(kwargs['image_paths']),12)
+                self.assertTrue(all(Path(p).is_file() for p in kwargs['image_paths']))
+                self.assertNotIn('creative_selection',user)
+                _,manifest=load_verified_set(company['concept_previews'],company['research'],
+                                              allowed_root=Path(folder)/'studio')
+                return selection_report(manifest)
+            with patch('utils.concept_workflow.get_company',side_effect=lambda name:('studio',company)), \
+                 patch('utils.concept_workflow.upsert_company',side_effect=save), \
+                 patch('utils.concept_workflow.config.OUTPUT_DIR',folder), \
+                 patch('utils.concept_workflow.config.model_for_stage',return_value='fixture-model'), \
+                 patch('utils.browser_qa.inspect_site',side_effect=fake_renderer), \
+                 patch('agents.builder._validate_generated_content'), \
+                 patch('utils.claude_client.ask_claude_json',side_effect=respond) as model:
+                generate_concepts('studio')
+                choose_concept('studio')
+                self.assertEqual(model.call_count,2)
+
     def test_external_authoring_and_selection_work_without_model_calls(self):
         research, data=fixture()
         with TemporaryDirectory() as folder:

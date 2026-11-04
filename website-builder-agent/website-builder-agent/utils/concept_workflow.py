@@ -33,7 +33,7 @@ def _company(name):
 def generate_concepts(name, *, response_path=None, producer=''):
     from agents.builder import _validate_generated_content
     from utils.browser_qa import inspect_site
-    from utils.claude_client import ask_claude
+    from utils.claude_client import ask_claude_json
     from utils.creative_directions import validate_creative_directions
     slug, company = _company(name)
     research = company['research']; validate_creative_directions(research)
@@ -45,12 +45,13 @@ def generate_concepts(name, *, response_path=None, producer=''):
         if not producer.strip(): raise RuntimeError('External concept producer must be explicit')
         raw = Path(response_path).read_text(encoding='utf-8')
     else:
-        raw = ask_claude(CONCEPT_PROMPT, json.dumps({
+        authored = ask_claude_json(CONCEPT_PROMPT, json.dumps({
             'facts': research.get('company_facts'), 'directions': research['creative_directions'],
             'required_routes': preview_routes(research), 'media': media,
             'brand_plan': research.get('brand_preservation_plan'),
             'site_architecture': research.get('site_architecture')}, ensure_ascii=False),
             max_tokens=config.BUILDER_MAX_TOKENS, stage='builder')
+        raw = json.dumps(authored, ensure_ascii=False)
         producer = config.backend_for_stage('builder') + ':' + config.model_for_stage('builder')
     result = write_concepts(raw, research, output_parent=root / '_concept_previews',
         producer=producer, renderer=inspect_site, media_items=company.get('media_intake'),
