@@ -90,6 +90,17 @@ jobs:
                     hrefs=[all_source.nth(i).get_attribute("href") for i in range(30)]
                     assert len(set(hrefs))==30
                     assert all(h.startswith("https://castanum.ekukka.fi/tuotteet/") for h in hrefs)
+                    # Real product links must open the authentic provider
+                    # product detail, not a fake local cart or homepage redirect.
+                    if width==1440:
+                      with page.expect_popup() as popup:
+                        all_source.first.click()
+                      dest=popup.value
+                      dest.wait_for_load_state("domcontentloaded",timeout=25000)
+                      assert dest.url.startswith("https://castanum.ekukka.fi/tuotteet/")
+                      assert "Floristin suosikki" in dest.locator("body").inner_text(timeout=15000)
+                      dest.close()
+
                     page.get_by_role("button",name="Surukukat",exact=True).click()
                     assert page.locator(".store-product-card:visible").count()>=6
                     assert page.locator(".store-product-card:visible[data-category='Surukukat']").count()==page.locator(".store-product-card:visible").count()
@@ -114,6 +125,8 @@ jobs:
                     page.evaluate("document.querySelectorAll('img').forEach(i=>i.loading='eager')")
                     page.wait_for_timeout(1200)
                   if width in (390,1440) and route in ("","verkkokauppa"):
+                    page.evaluate("window.scrollTo(0,0)")
+                    page.wait_for_timeout(250)
                     page.screenshot(path=str(out/f"{route or 'home'}-{width}.png"),full_page=True,animations="disabled",timeout=25000)
                   errors.extend(f"{route or 'home'}@{width} JS {e}" for e in failures)
                   page.close()
