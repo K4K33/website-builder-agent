@@ -1,0 +1,59 @@
+name: Castanum public seven-page demo availability and content smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1/**"
+      - ".github/workflows/kaurivo-castanum-public-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  castanum-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Verify published HTML pages and real assets, with Pages propagation tolerance
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://k4k33.github.io/website-builder-agent/kaurivo/demos/castanum-toolon-kukkakauppa-v1/"
+          entries=(
+            "|Kukkia Töölöstä"
+            "kimput/|Kimppu, joka tuntuu"
+            "haakimput/|Morsiuskimppu saa olla"
+            "surukukat/|Kukat muistamiseen."
+            "galleria/|Galleria</h1>"
+            "toimitus/|Helsinkiin, Espooseen ja Vantaalle."
+            "yhteystiedot/|Eteläinen Hesperiankatu 6"
+            "assets/style.css|--paper:#ffebff"
+            "assets/app.js|data-load-map"
+          )
+          for entry in "${entries[@]}"; do
+            path="${entry%%|*}"
+            marker="${entry#*|}"
+            found="false"
+            for attempt in {1..10}; do
+              code=$(curl -L -sS --max-time 22 -o /tmp/castanum-page -w '%{http_code}' "${base}${path}" || true)
+              echo "Castanum ${path:-index} attempt ${attempt}: ${code}"
+              if [[ "${code}" == "200" ]] && grep -Fq -- "${marker}" /tmp/castanum-page; then
+                found="true"
+                break
+              fi
+              sleep 6
+            done
+            if [[ "${found}" != "true" ]]; then
+              echo "::error::Published Castanum route inaccessible or stale: ${base}${path}"
+              exit 1
+            fi
+            echo "Verified: ${base}${path}" >> "$GITHUB_STEP_SUMMARY"
+          done
+          photo="https://static.wixstatic.com/media/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg/v1/fill/w_980,h_1100,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg"
+          code=$(curl -L -sS --max-time 30 -o /tmp/castanum-original-photo -w '%{http_code}' "$photo" || true)
+          bytes=$(wc -c < /tmp/castanum-original-photo || echo 0)
+          echo "Original flower image: HTTP ${code}, bytes ${bytes}"
+          if [[ "$code" != "200" || "${bytes}" -lt 5000 ]]; then
+            echo "::error::Original flower photo dependency unavailable on live Wix media host"
+            exit 1
+          fi
+          echo "Public Castanum demo and representative original flower media are reachable." >> "$GITHUB_STEP_SUMMARY"
