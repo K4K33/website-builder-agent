@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from utils.content_parity import source_inventory_sha256
 from utils.source_experience import source_experience_brief
 from utils.source_signature_lock import signature_from_source
+from utils.route_experience_contract import derive_route_experience_contract
 
 
 def _one(value: object, maxlen: int = 480) -> str:
@@ -104,6 +105,7 @@ def derive_brand_site_blueprint(research: dict) -> dict:
         "protocol": "company_source_to_sitemap_wireframe_brand_style_2026-11",
         "source_sha256": source_sha,
         "source_experience_plan": source_experience_brief(research),
+        "route_specific_first_view_contract": derive_route_experience_contract(research),
         "source_visual_signature_lock": visual_contract,
         "source_visual_signature_policy": (
             "The actual original logo, sourced staff photographs and each "
