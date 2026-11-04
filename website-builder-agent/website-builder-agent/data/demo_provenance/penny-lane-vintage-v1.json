@@ -174,8 +174,19 @@
   "source_comparison_evidence": {
     "source_desktop": "GitHub Actions 41744887529: source-1440.png",
     "source_mobile": "GitHub Actions 41744887529: source-390.png",
-    "redesign_desktop": "GitHub Actions 41746012806: etusivu-1440.png",
-    "redesign_mobile": "GitHub Actions 41746012806: etusivu-390.png"
+    "redesign_desktop": "GitHub Actions 41746350197: etusivu-1440.png (final design)",
+    "redesign_mobile": "GitHub Actions 41746350197: etusivu-390.png (final design)",
+    "internal_visual_observation": {
+      "reviewer_kind": "builder_self_review",
+      "status": "REVIEW_REQUIRED",
+      "source_vs_new": "Original real shop has its own Victorian-script Penny Lane logo, warm cream/cocoa sections, satin fashion hero image, three item gallery images and small actual shop photograph. Redesign retains every source identity mark and five photos, changes navigation to five practical pages, retains cream/cocoa and draws burgundy only from the source logo dress. Not an independent approval.",
+      "remaining": [
+        "Actual customer permission to reuse site images and logo",
+        "Review original-vs-new at every route by a separate human",
+        "Low-resolution original product photos could benefit from owner-supplied higher resolution versions",
+        "CMS/editor and production hosting must be completed before sale"
+      ]
+    }
   },
   "rights_verified": false,
   "customer_approval_verified": false,
