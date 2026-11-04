@@ -54,7 +54,7 @@ def validate_site_architecture(research: dict, *, no_site: bool = False) -> dict
     # but only checked that some non-empty prose existed. A generator could
     # duplicate the exact same task and hero across five pages. Reject it
     # before spending the Builder's paid generation credits.
-    tasks = [re.sub(r"\\s+", " ", str(page.get("user_task") or "").strip()).casefold()
+    tasks = [re.sub(r"\s+", " ", str(page.get("user_task") or "").strip()).casefold()
              for page in pages]
     if len(tasks) != len(set(tasks)):
         raise RuntimeError("Different pages repeat the same visitor task. "
