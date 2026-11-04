@@ -7,12 +7,14 @@ on:
       - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1/**"
       - "website-builder-agent/website-builder-agent/data/demo_provenance/castanum-toolon-kukkakauppa-v1.json"
       - "website-builder-agent/website-builder-agent/utils/commerce_parity.py"
+      - "website-builder-agent/website-builder-agent/scripts/audit_changed_demo_previews.py"
+      - "website-builder-agent/website-builder-agent/tests/test_commerce_parity.py"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
   source-store-and-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 14
+    timeout-minutes: 22
     defaults:
       run:
         working-directory: website-builder-agent/website-builder-agent
@@ -142,6 +144,13 @@ jobs:
           BASE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
         run: python scripts/audit_changed_demo_previews.py
+      - name: All project tests, including browser and diagnostics
+        env:
+          REQUIRE_BROWSER_TESTS: '1'
+        run: |
+          pip install -r requirements.txt
+          python -m compileall -q agents utils tests scripts main.py
+          python scripts/quality_diagnostics.py --json output/quality-diagnostics.json --markdown output/quality-diagnostics.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
