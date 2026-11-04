@@ -72,6 +72,24 @@ class PurposeFirstRouteTests(TestCase):
         self.assertTrue(contract["photo_rich_source"])
         self.assertEqual(len(set(roles.values())),5)
 
+    def test_real_source_photo_hints_are_distinct_and_role_based(self):
+        data=research()
+        photos=data["source_inventory"]["pages"][0]["source_identity"]["original_content_photos"]
+        labels=("Vintage juhlamekko","Myymälän sisätilat","Työnäyte tuotteesta",
+                "Henkilökuva","Korjaus työpajalla")
+        for item,label in zip(photos,labels):
+            item["alt"]=label
+        contract=derive_route_experience_contract(data)
+        hints={item["route"]:item["source_photo_hint"]
+               for item in contract["routes"]}
+        self.assertIn("juhlamekko",hints["rental/index.html"]["alt"])
+        self.assertIn("sisätilat",hints["contact/index.html"]["alt"])
+        self.assertIn("Työnäyte",hints["catalog/index.html"]["alt"])
+        selected=[hint["src"] for hint in hints.values() if hint]
+        self.assertEqual(len(selected),len(set(selected)))
+        self.assertTrue(all(hint["licensed_for_public_use"] is False
+                            for hint in hints.values() if hint))
+
     def test_repeated_identical_visitor_tasks_are_stopped_before_generation(self):
         from utils.site_architecture import validate_site_architecture
         data=research()
