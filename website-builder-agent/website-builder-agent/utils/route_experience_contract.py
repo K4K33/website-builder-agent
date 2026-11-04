@@ -224,10 +224,10 @@ def _known_contact_markers(research: dict) -> list[str]:
             continue
         text = str(page.get("text") or "")
         markers.extend(m.casefold() for m in re.findall(
-            r"\\b[\\wåäöÅÄÖ-]*(?:katu|tie|kuja|polku|vägen|gatan)\\s+\\d+[a-z]?\\b",
+            r"\b[\wåäöÅÄÖ-]*(?:katu|tie|kuja|polku|vägen|gatan)\s+\d+[a-z]?\b",
             text, flags=re.I))
         markers.extend(m.casefold() for m in re.findall(
-            r"[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}", text, flags=re.I))
+            r"[\w.+-]+@[\w.-]+\.[a-z]{2,}", text, flags=re.I))
         for field in ("links", "footer_links"):
             for link in page.get(field) or []:
                 if not isinstance(link, dict):
@@ -248,7 +248,7 @@ def _source_has_contact_facts(research: dict) -> bool:
     source_text = " ".join(str(page.get("text") or "")
                            for page in (research.get("source_inventory") or {}).get("pages") or []
                            if isinstance(page, dict))
-    return bool(re.search(r"\\b(?:aukioloaj\\w*|avoinna|opening hours|opening times)\\b",
+    return bool(re.search(r"\b(?:aukioloaj\w*|avoinna|opening hours|opening times)\b",
                           source_text, flags=re.I))
 
 
