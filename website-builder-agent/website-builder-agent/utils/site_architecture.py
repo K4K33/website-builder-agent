@@ -50,6 +50,15 @@ def validate_site_architecture(research: dict, *, no_site: bool = False) -> dict
             not re.fullmatch(r"[a-z][a-z0-9_-]*", str(a or "")) for a in sections
         ):
             raise RuntimeError("Every planned route needs valid section ids.")
+    # The earlier validator claimed every route has a DISTINCT visitor task,
+    # but only checked that some non-empty prose existed. A generator could
+    # duplicate the exact same task and hero across five pages. Reject it
+    # before spending the Builder's paid generation credits.
+    tasks = [re.sub(r"\\s+", " ", str(page.get("user_task") or "").strip()).casefold()
+             for page in pages]
+    if len(tasks) != len(set(tasks)):
+        raise RuntimeError("Different pages repeat the same visitor task. "
+                           "Design a real task and first-screen purpose per route.")
     if "index.html" not in routes:
         raise RuntimeError("Site plan must contain index.html.")
     inventory = research.get("source_inventory") or {}
