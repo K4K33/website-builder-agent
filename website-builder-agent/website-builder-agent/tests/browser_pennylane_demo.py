@@ -43,7 +43,12 @@ def main():
                         url=f"http://127.0.0.1:{PORT}/{SLUG}/{route}"
                         response=page.goto(url,wait_until="domcontentloaded",timeout=30000)
                         assert response and response.status==200,(route,width,response.status if response else None)
-                        page.wait_for_timeout(400)
+                        # An externally hosted original image can load after
+                        # DOMContentLoaded; wait for real pixels, not 400ms.
+                        page.wait_for_function(
+                            "() => {const i=document.querySelector('header img');"
+                            " return i && i.complete && i.naturalWidth>0}",
+                            timeout=20000)
                         data=page.evaluate("""() => ({
                           h1:[...document.querySelectorAll('main h1')].map(x=>x.innerText),
                           logo:[...document.querySelectorAll('header img')].map(x=>({src:x.src,ok:x.complete&&x.naturalWidth>0})),
@@ -74,7 +79,9 @@ def main():
                             # Scroll to all original photos and await their actual loads.
                             page.locator("main img").evaluate_all("(imgs)=>imgs.forEach(i=>{i.loading='eager';i.decoding='sync'})")
                             page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                            page.wait_for_timeout(2100)
+                            page.wait_for_function(
+                                "() => [...document.querySelectorAll('main img')].every("
+                                "i=>i.complete&&i.naturalWidth>0)",timeout=30000)
                             state=page.locator("main img").evaluate_all(
                                 "(imgs)=>imgs.map(i=>({src:i.currentSrc||i.src,ok:i.complete&&i.naturalWidth>0,width:i.naturalWidth}))")
                             assert all(i["ok"] for i in state),("BROKEN_SOURCE_PHOTOS",route,width,state)
