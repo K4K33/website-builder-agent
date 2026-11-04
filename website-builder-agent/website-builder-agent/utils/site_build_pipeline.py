@@ -18,6 +18,7 @@ from utils.visual_media_gate import audit_visual_media
 from utils.design_distinctness import assert_unique_against_output
 from utils.content_parity import audit_content_parity
 from utils.universal_quality import audit_universal_standards
+from utils.route_experience_contract import audit_route_experience
 from utils.source_fidelity import audit_source_fidelity
 from utils.client_handover import client_design_brief, validate_locked_copy
 
@@ -72,6 +73,13 @@ def build_pages_from_response(raw: str, *, slug: str,
     if not universal["automated_pass"]:
         raise RuntimeError("Universal business content/brand failure: "+
                            "; ".join(x for arr in universal["blocking_problems"].values() for x in arr)[:1500])
+    # Hard failure BEFORE writing: a source-rich shop cannot pass by moving
+    # products beneath a giant title or recycling the same image/CTA everywhere.
+    route_experience=audit_route_experience(pages,research)
+    if route_experience["blocking"]:
+        raise RuntimeError("Route-specific composition rejected: " + "; ".join(
+            str(x.get("kind")) + " @ " + str(x.get("route") or x.get("issue"))
+            for x in route_experience["blocking"][:10]))
     uniqueness=audit_design_originality(
         pages["index.html"],site_slug=slug,
         reference_demos=Path(__file__).resolve().parents[1]/"docs"/"kaurivo"/"demos",
@@ -99,4 +107,5 @@ def build_pages_from_response(raw: str, *, slug: str,
         for temporary,_ in staging:
             temporary.unlink(missing_ok=True)
     return {"output_path":str(root/"index.html"),"page_paths":sorted(pages),
-            "visual_originality":uniqueness,"navigation":navigation}
+            "visual_originality":uniqueness,"navigation":navigation,
+            "route_experience":route_experience}
