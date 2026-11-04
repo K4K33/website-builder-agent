@@ -139,6 +139,22 @@ class PurposeFirstRouteTests(TestCase):
         self.assertIn("repeated_full_width_call_to_action_copy",
                       {x["kind"] for x in result["blocking"]})
 
+    def test_sponsor_logos_and_icons_do_not_trigger_photo_rich_retail_rules(self):
+        from utils.route_experience_contract import source_photo_count
+        data=research(photo_count=0)
+        data["source_inventory"]["pages"][0]["source_identity"]["original_content_photos"]=[
+            {"src":"https://work.example/partner-logo.png",
+             "alt":"Yhteistyökumppanin logo","role":"unclassified"},
+            {"src":"https://work.example/brand-icon.svg",
+             "alt":"Sivuston icon","role":"unclassified"},
+            {"src":"https://work.example/logo2.jpg",
+             "alt":"Sponsor logo","role":"unclassified"},
+            {"src":"https://work.example/staff.jpg",
+             "alt":"Real staff group photograph","role":"unclassified"},
+        ]
+        self.assertEqual(source_photo_count(data),1)
+        self.assertFalse(derive_route_experience_contract(data)["photo_rich_source"])
+
     def test_image_poor_source_not_forced_to_invent_brand_photos(self):
         pages={p:page(p) for p in ("index.html","catalog/index.html",
                                    "rental/index.html","services/index.html")}
