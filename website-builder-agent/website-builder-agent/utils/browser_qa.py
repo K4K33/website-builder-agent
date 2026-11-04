@@ -5,7 +5,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 
-def inspect_site(path):
+def inspect_site(path, *, first_view_requirement: dict | None = None):
     source = Path(path).resolve()
     issues, screenshots, visual_review_flags = [], {}, []
     first_fold_observations = {}
@@ -157,6 +157,22 @@ def inspect_site(path):
                             };
                         }""")
                         first_fold_observations[name] = first_fold
+                        # Pure HTML may contain a product image after 900px of
+                        # oversized headings. Check REAL pixels at each width,
+                        # not just whether an <img> exists somewhere in hero.
+                        requirement = first_view_requirement or {}
+                        if requirement.get("product_media_required") is True:
+                            real_area = int(first_fold.get("firstFoldVisibleMediaArea") or 0)
+                            threshold = int(width * height * 0.035)
+                            if real_area < threshold:
+                                issues.append(
+                                    f"{name}: source-rich {requirement.get('role', 'product')} "
+                                    "route lacks meaningful merchandise/work imagery "
+                                    f"in the first viewport ({real_area}px² visible, "
+                                    f"at least {threshold}px² required). "
+                                    "Reduce oversized headings/empty hero and move "
+                                    "real products into the actual initial screen."
+                                )
                         if (width <= 390 and first_fold.get("measured")
                                 and first_fold.get("allMainMedia", 0) > 0
                                 and first_fold.get("visibleMainMedia", 0) == 0
