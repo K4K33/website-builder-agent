@@ -162,7 +162,8 @@ def audit_service_quality(pages, research, *, artifact_digest=None):
     mapped = {p.get('task_id'): p for p in plans if isinstance(p, dict)}
     for task in brief['tasks']:
         record = mapped.get(task['id'])
-        external = urlsplit(task['destination']).netloc != urlsplit(task['source_url']).netloc
+        external = ((urlsplit(task['destination']).hostname or '').lower().removeprefix('www.')
+                    != (urlsplit(task['source_url']).hostname or '').lower().removeprefix('www.'))
         if not record:
             if not task['kind'].endswith('_form') and external and task['kind'] != 'shopping':
                 if not any(a.get('href') == task['destination']

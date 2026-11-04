@@ -261,3 +261,13 @@ class ServiceIntegrationTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'complete bundle changed'):
                     approve_company('new-workshop')
                 save.assert_not_called()
+
+    def test_www_alias_is_not_mistaken_for_an_external_booking_platform(self):
+        r, p = fixture()
+        r['source_inventory']['pages'][0]['url'] = 'https://www.repair.example/'
+        r['company_voice_brief']['source_excerpts'][0]['source_url'] = 'https://www.repair.example/'
+        r['source_inventory']['pages'][0]['links'][0]['href'] = 'https://repair.example/booking'
+        task = source_tasks(r)[0]
+        r['business_task_plan'][0].update(task_id=task['id'], destination='#booking', completion_mode='local_flow')
+        p['index.html'] = '<main><a href="#booking">Book</a><section id="booking">Choose a time</section></main>'
+        self.assertFalse(audit_service_quality(p, r)['blocking'])
