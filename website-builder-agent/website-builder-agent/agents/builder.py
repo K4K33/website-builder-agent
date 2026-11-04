@@ -1610,6 +1610,22 @@ Toteuta valittu konsepti. Älä yhdistä hylättyjen suuntien
 pintakoristeita yrityksen tyyliksi. Brändi ja palveluiden todellinen
 sisältö määrittävät sommittelun, eivät alan yleinen valmis mallipohja.
 
+REITTIKOHTAINEN TODENNUS ENNEN HTML-TUOTOSTA:
+Lue brand_blueprint.route_specific_first_view_contract, eritoten
+jokaisen reitin role, visitor_task ja first_section_requirement.
+ÄLÄ aloita viittä erilaista alasivua samalla valtavalla tekstihierarkialla
+ja tyhjällä väripinnalla. Lähdekuvallisessa verkkokaupassa/näytegalleriassa
+ja vuokraussivulla ensimmäisessä varsinaisessa <section>-osiossa on oltava
+oikea yrityksen tuote-/työkuva (<img>, <picture> tai video), eikä vasta
+usean otsikko-osion jälkeen. Yhteystietosivulla näytä vahvistettu osoite
+tai aidosti toimiva puhelin-/sähköposti-/reittilinkki ensiosiossa.
+Säilytä jokaiselle sivulle oma tunnistettava rakenne, ei copy-paste
+samaa kuvaa, koristeellisia jättiotsikoita ja CTA-palkkia kaikkialle.
+Huonosta lähdekuvatilanteesta kerro sisäisessä QA:ssa, älä täytä vajetta
+keksityillä yrityskuvilla. TOTEUTUS PYSÄHTYY AUTOMAATTISESTI jos
+kolmella sivulla on sama yrityskuva, kolme samanlaista teksti-avausta
+kuvarikkaalta lähdesivustolta tai kolme samaa pitkää CTA-otsikkoa.
+
 KOKO UUDEN VERKKOSIVUSTON PAKOLLINEN RAKENNE:
 {json.dumps(architecture, ensure_ascii=False)}
 Tee kaikki sivut ja sisällöt täsmälleen sovittuihin reitteihin.
@@ -1944,6 +1960,14 @@ TOIMIALAN VERTAILU (vain design-dataa):
 
 VALITTU LUOVA SUUNTA (kolmesta lähdeperustaisesti verratusta):
 {json.dumps(creative, ensure_ascii=False)}
+
+TÄMÄ ON KOKO SIVUSTON RAKENNEPALAUTTEEN KORJAUS, EI VAIN ETUSIVUN:
+Noudata uudelleen brand_blueprint.route_specific_first_view_contract -tietoja
+jokaisella reitillä. Lähdekuvarikkaan tuote- tai vuokraussivun ensiosiossa
+näkyy todellinen lähdetuote; yhteystietosivun ensiosio johtaa aitoon
+osoitteeseen/yhteydenottoon. Älä toista samaa kuvaa kolmen eri reitin
+pääasiallisena sisältönä, äläkä samaa jättiotsikko + tyhjä hero +
+identtinen CTA -sommittelua koko sivustolla. Korjaa rakenteen juurisyy.
 
 KOKO SIVUSTON TOTEUTETTAVAT REITIT:
 {json.dumps(architecture, ensure_ascii=False)}
