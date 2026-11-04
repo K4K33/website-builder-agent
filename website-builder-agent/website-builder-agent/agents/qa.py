@@ -1485,8 +1485,10 @@ def approve_company(slug_or_name):
                 raise RuntimeError("Service acceptance: unsafe or missing page")
             rendered[route] = file.read_text(encoding="utf-8")
     if research.get("service_quality_protocol") == "v1" or research.get("premium_protocol") == "v2":
-        service = audit_service_quality(rendered, research,
-                                        artifact_digest=full_digest or qa.get("site_sha256"))
+        service_digest = full_digest or site_sha256(Path(path).resolve().parent, list(rendered))
+        if qa.get("site_sha256") != service_digest:
+            raise RuntimeError("Service quality acceptance: complete bundle changed after QA")
+        service = audit_service_quality(rendered, research, artifact_digest=service_digest)
         if not service["client_ready"]:
             raise RuntimeError("Service quality acceptance: technical, content, visual and commercial "
                                "reviews remain separate and must all be complete: "

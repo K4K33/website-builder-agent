@@ -242,3 +242,22 @@ class ServiceIntegrationTests(unittest.TestCase):
     def test_malformed_task_plan_is_rejected_before_spending(self):
         r, p = fixture(); r['business_task_plan'] = {'task_id': 'bad'}
         with self.assertRaisesRegex(RuntimeError, 'must be a list'): validate_service_plan(r)
+
+    def test_legacy_missing_route_list_does_not_bypass_full_bundle_check(self):
+        import hashlib
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+        from agents.qa import approve_company
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / 'index.html'; path.write_text('<main><h1>Workshop</h1></main>')
+            company = {'status': 'qa_passed', 'research': {'service_quality_protocol': 'v1'},
+                       'build': {'version': 1, 'output_path': str(path)},
+                       'qa': {'overall_pass': True, 'build_version': 1,
+                              'html_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                              'site_sha256': 'a'*64}}
+            with patch('agents.qa.get_company', return_value=('new-workshop', company)), \
+                 patch('agents.qa.upsert_company') as save:
+                with self.assertRaisesRegex(RuntimeError, 'complete bundle changed'):
+                    approve_company('new-workshop')
+                save.assert_not_called()
