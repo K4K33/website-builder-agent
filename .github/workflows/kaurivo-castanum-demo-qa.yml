@@ -100,6 +100,59 @@ jobs:
           for item in blockers:print("BLOCK",item)
           if blockers:raise SystemExit(1)
           PY
+      - name: Functional mobile menu, cross-page navigation and contact composition
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+          from functools import partial
+          from threading import Thread
+          from playwright.sync_api import sync_playwright
+          root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
+          Handler=partial(SimpleHTTPRequestHandler,directory=str(root))
+          server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+          thread=Thread(target=server.serve_forever,daemon=True)
+          thread.start()
+          origin=f"http://127.0.0.1:{server.server_port}"
+          try:
+              with sync_playwright() as p:
+                  browser=p.chromium.launch(headless=True)
+                  mobile=browser.new_page(viewport={"width":390,"height":844})
+                  mobile.goto(origin+"/",wait_until="domcontentloaded")
+                  button=mobile.locator(".menu-toggle")
+                  assert button.get_attribute("aria-expanded")=="false"
+                  button.click()
+                  assert button.get_attribute("aria-expanded")=="true"
+                  assert mobile.locator(".main-nav").evaluate("(n) => getComputedStyle(n).display")!="none"
+                  mobile.locator('.main-nav a[href="haakimput/"]').click()
+                  assert mobile.url.rstrip("/").endswith("/haakimput")
+                  assert "Morsiuskimppu" in mobile.locator("h1").inner_text()
+                  button=mobile.locator(".menu-toggle")
+                  button.click()
+                  mobile.keyboard.press("Escape")
+                  assert button.get_attribute("aria-expanded")=="false"
+                  expected=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot"]
+                  desktop=browser.new_page(viewport={"width":1440,"height":900})
+                  for route in expected:
+                      desktop.goto(origin+"/"+route+"/",wait_until="domcontentloaded")
+                      assert desktop.locator("main h1").count()==1,(route,"missing h1")
+                      assert desktop.locator(".main-nav a").count()==7,(route,"missing nav")
+                      assert desktop.locator('.brand[href]').count()==1,(route,"missing return home")
+                      assert desktop.locator('a[href^="https://castanum.ekukka.fi/"]').count()>0,(route,"original shop lost")
+                  desktop.goto(origin+"/yhteystiedot/",wait_until="domcontentloaded")
+                  assert desktop.locator("main address").count()==1
+                  assert desktop.locator('.contact-map iframe[title]').count()==1
+                  desktop.locator('[name="name"]').fill("Testi henkilö")
+                  desktop.locator('[name="email"]').fill("testi@example.com")
+                  desktop.locator('[name="message"]').fill("Kysyisin kukista")
+                  desktop.locator("#message-form button").click()
+                  assert "Sähköpostiohjelma avataan" in desktop.locator(".form-note").inner_text()
+                  print("FUNCTIONAL PASS: mobile menu, Escape, genuine shop, seven routes, map and draft-only contact")
+                  browser.close()
+          finally:
+              server.shutdown()
+              server.server_close()
+          PY
       - name: Apply universal brand/route/preview audit to this exact demo
         env:
           BASE_SHA: ${{ github.event.before }}
