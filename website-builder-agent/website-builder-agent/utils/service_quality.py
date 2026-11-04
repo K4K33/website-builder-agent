@@ -98,6 +98,8 @@ def service_brief(research):
                'task_plan': research.get('business_task_plan') or [],
                'media_plan': research.get('media_purpose_plan') or [],
                'voice': research.get('company_voice_brief') or {},
+               'creative_selection': research.get('creative_selection'),
+               'review_evidence_protocol': research.get('review_evidence_protocol'),
                'company_facts': research.get('company_facts') or {}}
     return {**payload, 'contract_sha256': _hash(payload), 'policy': POLICY}
 
@@ -148,7 +150,7 @@ def _target(pages, source_route, href):
     return soup.find(id=parsed.fragment) if parsed.fragment else soup.find('main') or soup
 
 
-def audit_service_quality(pages, research, *, artifact_digest=None):
+def audit_service_quality(pages, research, *, artifact_digest=None, review_bundle=None):
     brief = service_brief(research)
     blocking, pending = [], []
     try:
@@ -286,6 +288,10 @@ def audit_service_quality(pages, research, *, artifact_digest=None):
             ok = ok and bool(record.get('source_new_comparison') and record.get('prior_client_comparison'))
         if domain == 'content':
             ok = ok and valid_voice and record.get('voice_excerpts_reviewed') == excerpts
+        if research.get('review_evidence_protocol') == 'v1':
+            from utils.review_bundle import domain_evidence_complete
+            ok = ok and domain_evidence_complete(review_bundle, record, domain, routes=pages,
+                tasks=task_ids, source_exists=bool((research.get('source_inventory') or {}).get('pages')))
         reviews[domain] = 'reviewed' if ok else 'pending'
         if not ok:
             pending.append({'kind': 'domain_review_pending', 'domain': domain})

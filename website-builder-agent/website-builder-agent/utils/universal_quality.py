@@ -121,7 +121,15 @@ def audit_universal_standards(
     def needs(key: str, reason: str) -> None:
         pending.setdefault(key, []).append(reason)
 
-    service_quality = audit_service_quality(pages, research, artifact_digest=site_bundle_sha256)
+    review_bundle = None
+    if company.get("review_bundle"):
+        from utils.review_bundle import current_review_bundle
+        try:
+            review_bundle = current_review_bundle(company, pages, artifact_digest=site_bundle_sha256)
+        except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
+            needs("service_quality_acceptance", "Collect fresh review material: " + str(error))
+    service_quality = audit_service_quality(pages, research, artifact_digest=site_bundle_sha256,
+                                            review_bundle=review_bundle)
     for issue in service_quality["blocking"]:
         fail("business_task_continuity" if "task" in issue["kind"] or "form" in issue["kind"]
              else "service_quality_acceptance", str(issue))

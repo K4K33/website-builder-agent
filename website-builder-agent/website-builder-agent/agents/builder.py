@@ -14,6 +14,7 @@ import webbrowser
 from pathlib import Path
 from bs4 import BeautifulSoup
 
+from utils.concept_previews import validate_selected_concept
 from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, validate_service_plan
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
@@ -1475,6 +1476,7 @@ def build_site(
     # All old pages and observed sections must have a plan BEFORE paid Build.
     validate_source_plan(research, source_url=company.get("url", ""))
     validate_service_plan(research)
+    validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
     architecture = validate_site_architecture(
@@ -1514,8 +1516,20 @@ def build_site(
         output_dir=_output_dir(slug)
     )
 
+    concept_choice = validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
+    selected_preview = ""
+    if concept_choice:
+        from utils.concept_previews import load_verified_set
+        concept_path, concepts = load_verified_set(company['concept_previews'], research,
+                                                   allowed_root=Path(config.OUTPUT_DIR) / slug)
+        selected_entry = next(e for e in concepts['entries'] if e['id'] == concept_choice['choice']['selected_id'])
+        selected_preview = "\n".join((concept_path.parent / selected_entry['folder'] / route).read_text(encoding='utf-8')
+                                      for route in selected_entry['routes'])
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+VALITTU SELAIMESSA VERRATTU TODELLINEN PROTOTYYPPI (rakenna sama valittu ilme koko sivustolle):
+{selected_preview}
 
 RELUMEN, WEBFLOW'N JA WIXIN KALTAISEN JÄSENNETYN SUUNNITTELUN INSPIROIMA
 YRITYSKOHTAINEN SIVUKARTTA → OSIOIDEN WIREFRAME → YHTEINEN BRÄNDITYYLIOHJE:
@@ -1815,6 +1829,14 @@ def run_build(
     slug, company = _resolve_company(
         slug_or_name
     )
+    if (company.get("research") or {}).get("visual_concepts_protocol") == "v1":
+        from utils.concept_workflow import generate_concepts, choose_concept
+        if not company.get("concept_previews"):
+            generate_concepts(slug)
+            _, company = _resolve_company(slug)
+        if not (company.get("concept_previews") or {}).get("selection_sha256"):
+            choose_concept(slug)
+            _, company = _resolve_company(slug)
 
     return build_site(
         slug,
@@ -1836,6 +1858,7 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
     validate_service_plan(research)
+    validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     validate_design_plan(research, company.get("url", ""))
     facts = research.get("company_facts")
     if not isinstance(facts, dict) or not facts:
@@ -1906,6 +1929,7 @@ def revise_site(
     validate_brand_preservation_plan(research)
     validate_source_plan(research, source_url=company.get("url", ""))
     validate_service_plan(research)
+    validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
 

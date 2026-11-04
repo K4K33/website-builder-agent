@@ -103,7 +103,9 @@ def verified_source_evidence(slug):
         "company_facts": data.get("company_facts", {}),
         **{key: data.get(key) for key in ("business_task_plan", "media_purpose_plan",
                                          "company_voice_brief", "service_quality_reviews",
-                                         "fact_sources", "service_quality_protocol")},
+                                         "fact_sources", "service_quality_protocol",
+                                         "review_evidence_protocol", "visual_concepts_protocol",
+                                         "creative_selection")},
     }
 
 def main():

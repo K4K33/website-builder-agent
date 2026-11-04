@@ -1252,15 +1252,16 @@ def run_qa(slug_or_name: str) -> dict:
             item["route"]: item
             for item in derive_route_experience_contract(research)["routes"]
         }
-        page_browsers={
-            route:inspect_site(
+        from utils.review_bundle import preserve_route_captures
+        page_browsers={}
+        for route in rendered_pages:
+            report = inspect_site(
                 site_root/route,
                 **({"first_view_requirement":role_requirements[route]}
                    if role_requirements.get(route,{}).get("product_media_required")
                    else {})
             )
-            for route in rendered_pages
-        }
+            page_browsers[route] = preserve_route_captures(report, site_root=site_root, route=route)
         browser=dict(page_browsers["index.html"])
         browser["pages"]=page_browsers
         browser["pass"]=all(item.get("pass") for item in page_browsers.values())
@@ -1418,6 +1419,14 @@ def run_qa(slug_or_name: str) -> dict:
         "new_rules_pending_checker": pending_general_rules,
         "ledger_path": str(ledger_file),
     }
+    if research.get("review_evidence_protocol") == "v1":
+        from utils.review_bundle import collect_review_bundle
+        from utils.screenshot import OUTPUT_DIR as source_capture_root
+        bundle = collect_review_bundle(company, rendered_pages, result, site_root=site_root,
+            output_parent=site_root / "_review_material", allowed_capture_roots=[
+                Path(config.OUTPUT_DIR), Path(source_capture_root)])
+        result["review_bundle"] = bundle
+        upsert_company(slug, {"review_bundle": bundle})
     upsert_company(slug, {"qa": result})
     set_status(slug, "qa_passed" if result["overall_pass"] else "built")
     print("QA: " + ("PASS" if result["overall_pass"] else "FAIL"))
@@ -1488,7 +1497,12 @@ def approve_company(slug_or_name):
         service_digest = full_digest or site_sha256(Path(path).resolve().parent, list(rendered))
         if qa.get("site_sha256") != service_digest:
             raise RuntimeError("Service quality acceptance: complete bundle changed after QA")
-        service = audit_service_quality(rendered, research, artifact_digest=service_digest)
+        from utils.concept_previews import validate_selected_concept
+        from utils.review_bundle import current_review_bundle
+        validate_selected_concept(company, allowed_root=Path(path).resolve().parent)
+        evidence_bundle = current_review_bundle(company, rendered, artifact_digest=service_digest)
+        service = audit_service_quality(rendered, research, artifact_digest=service_digest,
+                                        review_bundle=evidence_bundle)
         if not service["client_ready"]:
             raise RuntimeError("Service quality acceptance: technical, content, visual and commercial "
                                "reviews remain separate and must all be complete: "

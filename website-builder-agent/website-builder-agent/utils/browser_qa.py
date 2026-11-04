@@ -5,7 +5,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 
-def inspect_site(path, *, first_view_requirement: dict | None = None):
+def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_file_root=None):
     source = Path(path).resolve()
     issues, screenshots, visual_review_flags = [], {}, []
     first_fold_observations = {}
@@ -22,8 +22,21 @@ def inspect_site(path, *, first_view_requirement: dict | None = None):
                                                   device_scale_factor=1,
                                                   reduced_motion="reduce", service_workers="block")
                     # Generated code is untrusted: block all network access.
-                    context.route("**/*", lambda route: route.continue_()
-                                  if route.request.url.startswith(("file:", "data:")) else route.abort())
+                    def allowed_request(route):
+                        url = route.request.url
+                        allowed = url.startswith("data:")
+                        if url.startswith("file:"):
+                            if allowed_file_root is None:
+                                allowed = True
+                            else:
+                                from urllib.parse import urlsplit, unquote
+                                parsed = urlsplit(url)
+                                file = Path(unquote(parsed.path)).resolve()
+                                allowed = (parsed.netloc in ("", "localhost")
+                                           and file.is_relative_to(Path(allowed_file_root).resolve())
+                                           and file.is_file())
+                        return route.continue_() if allowed else route.abort()
+                    context.route("**/*", allowed_request)
                     page = context.new_page()
                     errors = []
                     page.on("pageerror", lambda error: errors.append(str(error)))
