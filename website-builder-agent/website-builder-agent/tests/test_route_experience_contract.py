@@ -111,6 +111,14 @@ class PurposeFirstRouteTests(TestCase):
                       {x["kind"] for x in problems})
         self.assertTrue(any(x.get("route")=="catalog/index.html" for x in problems))
 
+    def test_large_logo_or_svg_icon_does_not_count_as_catalogue_product(self):
+        pages=good_pages()
+        pages["catalog/index.html"]=page(
+            "Nice logo",image="https://work.example/brand-logo.svg")
+        issues=audit_route_experience(pages,research())["blocking"]
+        self.assertIn("task_first_view_has_no_product_evidence",
+                      {x["kind"] for x in issues})
+
     def test_rental_page_requires_real_product_in_opening(self):
         pages=good_pages()
         pages["rental/index.html"]=page("Rent beautiful things",
