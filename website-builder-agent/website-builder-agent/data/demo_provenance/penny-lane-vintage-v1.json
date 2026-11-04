@@ -1,0 +1,183 @@
+{
+  "schema_version": 2,
+  "stage": "internal_demo",
+  "source_url": "https://pennylane.fi/",
+  "source_inventory": {
+    "pages": [
+      {
+        "url": "https://pennylane.fi/",
+        "title": "Secondhand Boutique",
+        "text": "Siirry sisältöön Secondhand Boutique Facebook Instagram Penny Lane on myyntitiliperiaatteella toimiva vintage- ja secondhandliike Helsingin Töölössä. Avoinna Arkisin 12 – 17 Lauantaisin 12 – 15 Valikoimastamme löytyy niin menneiden vuosikymmenten kappaleita vintagen perituntijalle, kuin ajattomia vaatekappaleita tyyliin kuin tyyliin; keräilijän helmiä, klassisia designvaatteita, kelloja, hohtoa juhliin, kenkiä ja laukkuja – kaikki asiantuntemuksella valittuja. Penny Lanessa menneen maailman trendit – kuolemattomat vintagen eri tyylit nitoutuvat yhteen. Tätä on ollut Penny Lane, jo vuodesta 1993. Liikehuoneistomme on nähtävyys jo sinänsä. Alakertaa hallitsee 100 vuotta vanhat flyygeli ja gramofoni sulassa sovussa nostalgisten vintage kenkien, laukkujen ja muiden asusteiden kanssa. Natisevat portaat johtavat yläkertaan, jossa menneisyys kohtaa nykypäivän. Siellä on useita rekkejä täynnä upeita iltapukuja ja wanhojentanssipukuja eri aikakausilta sekä frakkeja, smokkeja ja pukuja. Näitä Penny Lane myös vuokraa. Uutuuksia liikkeessämme Penny Lane toimii myyntitiliperiaatteella: Voit tuoda hyväkuntoisia käytettyjä tai käyttämättömiä vaatteita, asusteita, kenkiä ja laukkuja myytäväksi. Kun jättämäsi artikkeli on myyty, saat itsellesi sovitun osan. Pidämme tavarat myynnissä kahden kuukauden ajan. Myymättömät artikkelit palautamme tai toimitamme ne halutessasi vaatekeräykseen. Penny Lane Instagramissa Follow on Instagram Penny Lane Secondhand Boutique Runeberginkatu 37 00100 Helsinki Aukioloajat Arkisin 12 – 17 Lauantaisin 12 – 15 [wpgmza id=\"1\"]",
+        "headings": {
+          "h1": [
+            "Penny Lane on myyntitiliperiaatteella toimiva vintage- ja secondhandliike Helsingin Töölössä."
+          ],
+          "h2": [
+            "Penny Lane Secondhand Boutique"
+          ],
+          "h3": [
+            "Uutuuksia liikkeessämme"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://pennylane.fi/wp-content/uploads/2016/08/cropped-penny-lane-logo-with-shadow.png",
+            "alt": "Penny Lane original logo"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [
+          {
+            "href": "https://www.facebook.com/PennyLaneSecondhand/",
+            "text": "Facebook"
+          },
+          {
+            "href": "http://instagram.com/pennylanesecondhand",
+            "text": "Instagram"
+          }
+        ],
+        "images": [
+          {
+            "src": "https://pennylane.fi/wp-content/uploads/2016/08/cropped-penny-lane-logo-with-shadow.png"
+          },
+          {
+            "src": "https://pennylane.fi/wp-content/uploads/2022/02/MG_9307-927x1024.jpg"
+          },
+          {
+            "src": "https://pennylane.fi/wp-content/uploads/2016/06/pennylane1.jpg"
+          },
+          {
+            "src": "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0775-225x300.jpg"
+          },
+          {
+            "src": "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0788-225x300.jpg"
+          },
+          {
+            "src": "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0779-225x300.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://www.facebook.com/PennyLaneSecondhand/",
+            "text": "Facebook"
+          },
+          {
+            "href": "http://instagram.com/pennylanesecondhand",
+            "text": "Instagram"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://pennylane.fi/wp-content/uploads/2016/08/cropped-penny-lane-logo-with-shadow.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://pennylane.fi/wp-content/uploads/2022/02/MG_9307-927x1024.jpg",
+              "alt": "Vintageasu, helmet ja korkokengät",
+              "role": "unclassified"
+            },
+            {
+              "src": "https://pennylane.fi/wp-content/uploads/2016/06/pennylane1.jpg",
+              "alt": "Penny Lanen myymälän sisätilat",
+              "role": "unclassified"
+            },
+            {
+              "src": "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0775-225x300.jpg",
+              "alt": "Violetti vintage-mekko",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0788-225x300.jpg",
+              "alt": "Mustavalkoinen juhlamekko",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0779-225x300.jpg",
+              "alt": "Vintage-saappaat",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "restrained",
+            "observed_videos": 0,
+            "observed_photo_assets": 5,
+            "observed_carousel_nodes": 0,
+            "observed_textured_backgrounds": [],
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_photo_urls": [
+              "https://pennylane.fi/wp-content/uploads/2022/02/MG_9307-927x1024.jpg",
+              "https://pennylane.fi/wp-content/uploads/2016/06/pennylane1.jpg",
+              "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0775-225x300.jpg",
+              "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0788-225x300.jpg",
+              "https://pennylane.fi/wp-content/uploads/2022/02/IMG_0779-225x300.jpg"
+            ],
+            "evidence_scope": "original_browser_and_html"
+          },
+          "source_url": "https://pennylane.fi/",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      }
+    ]
+  },
+  "original_experience_profile": {
+    "source_sha256": "1a2ecd85ff6dadca94f3ef99237aa2d6fd64d5db23ecfa86017646cf724ccf55",
+    "capture_method": "browser",
+    "complete": true,
+    "checked_at": "2026-11-04T00:12:19.448119+00:00",
+    "inspected_urls": [
+      "https://pennylane.fi/"
+    ],
+    "failed_urls": [],
+    "features": {
+      "video": {
+        "present": false
+      },
+      "three_d": {
+        "present": false
+      },
+      "motion": {
+        "present": false
+      },
+      "textured_background": {
+        "present": false
+      },
+      "gallery": {
+        "present": true,
+        "source_url": "https://pennylane.fi/",
+        "observation": "5 real photo assets including source product gallery"
+      },
+      "photography": {
+        "present": true,
+        "source_url": "https://pennylane.fi/",
+        "observation": "5 original photographs visually loaded, 390 and 1440px"
+      }
+    },
+    "raw_observations": {
+      "source_homepage_390": {
+        "images": 6,
+        "videos": 0
+      },
+      "source_homepage_1440": {
+        "images": 6,
+        "videos": 0
+      }
+    },
+    "note": "Original site actually browser-captured at both 390 and 1440; only one original HTML route. Source photographs and logo observed in screenshots."
+  },
+  "source_comparison_evidence": {
+    "source_desktop": "GitHub Actions 41744887529: source-1440.png",
+    "source_mobile": "GitHub Actions 41744887529: source-390.png",
+    "redesign_desktop": "GitHub Actions 41746012806: etusivu-1440.png",
+    "redesign_mobile": "GitHub Actions 41746012806: etusivu-390.png"
+  },
+  "rights_verified": false,
+  "customer_approval_verified": false,
+  "notes": "Internal independent noindex demo only. Original photo and logo reuse rights not confirmed. The static site is not yet a customer-editable CMS. Contact telephone and email cross-checked against Helsinki City public business listing."
+}
