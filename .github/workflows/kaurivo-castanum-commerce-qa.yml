@@ -1,0 +1,138 @@
+name: Kaurivo commerce continuity real-browser QA
+on:
+  push:
+    branches: [fix/commerce-parity-castanum-20261104]
+    paths:
+      - ".github/workflows/kaurivo-castanum-commerce-qa.yml"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1/**"
+      - "website-builder-agent/website-builder-agent/data/demo_provenance/castanum-toolon-kukkakauppa-v1.json"
+      - "website-builder-agent/website-builder-agent/utils/commerce_parity.py"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  source-store-and-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          pip install beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
+      - name: Assert exact-source commerce prices and product purchase paths
+        run: |
+          python -m unittest tests.test_commerce_parity -v
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from utils.commerce_parity import audit_commerce_parity
+          d=json.loads(Path("data/demo_provenance/castanum-toolon-kukkakauppa-v1.json").read_text())
+          pages={str(p.relative_to(Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1"))):p.read_text()
+                 for p in Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").rglob("index.html")}
+          report=audit_commerce_parity(pages,d)
+          print("COMMERCE SOURCE",d["commerce_inventory"]["shop_url"])
+          print("SOURCE PRODUCTS",d["commerce_inventory"]["observed_total_products"])
+          print("DEMO PRODUCTS",len(d["commerce_inventory"]["products"]))
+          print("BLOCKERS",report["blocking"])
+          print("PENDING",report["pending"])
+          assert not report["blocking"],report
+          assert report["required"]
+          PY
+      - name: Inspect 8 real pages and functional shop at 4 viewport widths
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
+          from functools import partial
+          from threading import Thread
+          import json
+          from playwright.sync_api import sync_playwright
+          root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
+          out=Path("qa-evidence/castanum/store");out.mkdir(parents=True,exist_ok=True)
+          s=ThreadingHTTPServer(("127.0.0.1",0),partial(SimpleHTTPRequestHandler,directory=str(root)))
+          Thread(target=s.serve_forever,daemon=True).start()
+          base=f"http://127.0.0.1:{s.server_port}/"
+          routes=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot","verkkokauppa"]
+          errors=[]
+          try:
+            with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              for width,height in [(320,730),(390,844),(768,1024),(1440,900)]:
+                context=browser.new_context(viewport={"width":width,"height":height},reduced_motion="reduce")
+                for route in routes:
+                  page=context.new_page()
+                  failures=[]
+                  page.on("pageerror",lambda e:failures.append(str(e)))
+                  page.goto(base+route+"/",wait_until="domcontentloaded",timeout=20000)
+                  page.wait_for_timeout(450)
+                  measurements=page.evaluate("""() => ({
+                    sw:document.documentElement.scrollWidth,vw:innerWidth,
+                    h1:document.querySelectorAll('main h1').length,
+                    nav:document.querySelectorAll('.main-nav a').length,
+                    storeLink:!!document.querySelector('a[href$="verkkokauppa/"]'),
+                    firstPhoto:[...document.querySelectorAll('main img')].some(i=>i.getBoundingClientRect().top<innerHeight)
+                  })""")
+                  if measurements["sw"]>width+3:errors.append(f"{route or 'home'}@{width} overflow {measurements}")
+                  if measurements["h1"]!=1:errors.append(f"{route or 'home'}@{width} heading")
+                  if measurements["nav"]!=8:errors.append(f"{route or 'home'}@{width} nav count")
+                  if not measurements["storeLink"]:errors.append(f"{route or 'home'}@{width} no local shop")
+                  if route=="verkkokauppa":
+                    assert measurements["firstPhoto"]
+                    assert page.locator(".store-product-card").count()==30
+                    assert page.locator(".store-product-card:visible").count()==12
+                    all_source=page.locator(".store-product-card a.store-item-cta")
+                    assert all_source.count()==30
+                    hrefs=[all_source.nth(i).get_attribute("href") for i in range(30)]
+                    assert len(set(hrefs))==30
+                    assert all(h.startswith("https://castanum.ekukka.fi/tuotteet/") for h in hrefs)
+                    page.get_by_role("button",name="Surukukat",exact=True).click()
+                    assert page.locator(".store-product-card:visible").count()>=6
+                    assert page.locator(".store-product-card:visible[data-category='Surukukat']").count()==page.locator(".store-product-card:visible").count()
+                    page.get_by_role("button",name="Kaikki",exact=True).click()
+                    page.locator("[data-shop-search]").fill("floristin")
+                    assert page.locator(".store-product-card:visible").count()==1
+                    page.locator("[data-shop-search]").fill("")
+                    page.get_by_role("button",name="Näytä lisää tuotteita").click()
+                    assert page.locator(".store-product-card:visible").count()==24
+                    page.locator("[data-shop-sort]").select_option("price-asc")
+                    prices=page.locator(".store-product-card:visible").evaluate_all(
+                      "(cards) => cards.map(c=>Number(c.dataset.price))")
+                    assert prices==sorted(prices)
+                    page.locator("[data-shop-sort]").select_option("price-desc")
+                    prices=page.locator(".store-product-card:visible").evaluate_all(
+                      "(cards) => cards.map(c=>Number(c.dataset.price))")
+                    assert prices==sorted(prices,reverse=True)
+                    assert not page.locator("main button").get_by_text("Lisää ostoskoriin").count()
+                    page.locator("[data-shop-sort]").select_option("default")
+                    page.locator("[data-shop-search]").fill("")
+                    page.evaluate("document.querySelectorAll('.store-product-card').forEach(i=>i.hidden=false)")
+                    page.evaluate("document.querySelectorAll('img').forEach(i=>i.loading='eager')")
+                    page.wait_for_timeout(1200)
+                  if width in (390,1440) and route in ("","verkkokauppa"):
+                    page.screenshot(path=str(out/f"{route or 'home'}-{width}.png"),full_page=True,animations="disabled",timeout=25000)
+                  errors.extend(f"{route or 'home'}@{width} JS {e}" for e in failures)
+                  page.close()
+                context.close()
+              browser.close()
+          finally:
+            s.shutdown();s.server_close()
+          print("BROWSER",len(routes)*4,"checks, failures",errors)
+          if errors:raise SystemExit(1)
+          PY
+      - name: Apply universal objective demo gate
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: python scripts/audit_changed_demo_previews.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: castanum-new-shop-qa-screenshots
+          path: website-builder-agent/website-builder-agent/qa-evidence/castanum/store
+          retention-days: 14
+          if-no-files-found: warn
