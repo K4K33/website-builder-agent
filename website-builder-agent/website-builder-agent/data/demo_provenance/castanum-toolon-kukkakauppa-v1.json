@@ -1,0 +1,768 @@
+{
+  "schema_version": 2,
+  "stage": "internal_demo",
+  "source_url": "https://www.castanum.fi/",
+  "company": "Castanum",
+  "research_mode": "existing_website",
+  "observed_at": "2026-11-04T09:40:37Z",
+  "company_facts": {
+    "name": "Castanum",
+    "address": "Eteläinen Hesperiankatu 6, 00100 Helsinki",
+    "phone": "041 319 2410",
+    "email": "kukat@castanum.fi",
+    "opening_hours": "Ma–pe 9–17; la 10–14; su suljettu",
+    "delivery_areas": [
+      "Helsinki",
+      "Espoo",
+      "Vantaa"
+    ],
+    "external_shop_url": "https://castanum.ekukka.fi/"
+  },
+  "source_inventory": {
+    "pages": [
+      {
+        "url": "https://www.castanum.fi/",
+        "text": "CASTANUM Kukkakauppa. Palvelemme ma-pe 9-17, la 10-14, sunnuntai suljettu. Uusi puhelinnumero 041 319 2410. kukat@castanum.fi. Eteläinen Hesperiankatu 6, 00100 Helsinki.",
+        "headings": {
+          "h1": [],
+          "h2": [
+            "Kukkakauppa",
+            "CASTANUM"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png",
+            "alt": "Castanum original brand mark"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_50d6bb434c9e4f5eaa6e9ae1593323cb.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/e626957c055448ea37f2bea071868220.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_b8363924923c4ae688d02536acb661cd.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_742b3f6495234d01826bfb02c7b53b1a.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/24bba47f40f8473a534ae0301bf748c9.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://castanum.ekukka.fi/",
+            "text": "Verkkokauppa"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_50d6bb434c9e4f5eaa6e9ae1593323cb.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 0",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/e626957c055448ea37f2bea071868220.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 1",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_b8363924923c4ae688d02536acb661cd.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 2",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_742b3f6495234d01826bfb02c7b53b1a.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 3",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 4",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/24bba47f40f8473a534ae0301bf748c9.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 5",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "source-photography-and-simple-web-navigation",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/0c902c_50d6bb434c9e4f5eaa6e9ae1593323cb.jpg",
+              "https://static.wixstatic.com/media/e626957c055448ea37f2bea071868220.jpg",
+              "https://static.wixstatic.com/media/0c902c_b8363924923c4ae688d02536acb661cd.jpg",
+              "https://static.wixstatic.com/media/0c902c_742b3f6495234d01826bfb02c7b53b1a.jpg",
+              "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg",
+              "https://static.wixstatic.com/media/24bba47f40f8473a534ae0301bf748c9.jpg"
+            ],
+            "evidence_scope": "browser original 390px and 1440px"
+          },
+          "source_url": "https://www.castanum.fi/",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      },
+      {
+        "url": "https://www.castanum.fi/inspiroidu",
+        "text": "Kukkakauppa CASTANUM. Galleria. Neilikkapallo orkideoilla. kukat@castanum.fi. 0413192410. Eteläinen Hesperiankatu 6, 00100 Helsinki.",
+        "headings": {
+          "h1": [],
+          "h2": [
+            "Galleria",
+            "CASTANUM"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png",
+            "alt": "Castanum original brand mark"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_bca951719f164f1e921360e1cfdf69e9.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_0274c1041f974bcfbc23b1c6e1f10aac.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_bf04ae39fd02464eadb343b399d2bd2f.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_9d0b1e9681084098a2854c4c7b94f8a6.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_742b3f6495234d01826bfb02c7b53b1a.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_4f14e15646a747f28ce7ecfa82b6afd2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_82271eeaf3324b73b8ffba9df4dd2063.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_4b83af6d07f544419ae8aae9995a7b45.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_5be9971e45524eeea7d501782f7caf11.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://castanum.ekukka.fi/",
+            "text": "Verkkokauppa"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 0",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_bca951719f164f1e921360e1cfdf69e9.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 1",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_0274c1041f974bcfbc23b1c6e1f10aac.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 2",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_bf04ae39fd02464eadb343b399d2bd2f.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 3",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_9d0b1e9681084098a2854c4c7b94f8a6.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 4",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_742b3f6495234d01826bfb02c7b53b1a.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 5",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_4f14e15646a747f28ce7ecfa82b6afd2.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 6",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_82271eeaf3324b73b8ffba9df4dd2063.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 7",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_4b83af6d07f544419ae8aae9995a7b45.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 8",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_5be9971e45524eeea7d501782f7caf11.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 9",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "source-photography-and-simple-web-navigation",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg",
+              "https://static.wixstatic.com/media/0c902c_bca951719f164f1e921360e1cfdf69e9.jpg",
+              "https://static.wixstatic.com/media/0c902c_0274c1041f974bcfbc23b1c6e1f10aac.jpg",
+              "https://static.wixstatic.com/media/0c902c_bf04ae39fd02464eadb343b399d2bd2f.jpg",
+              "https://static.wixstatic.com/media/0c902c_9d0b1e9681084098a2854c4c7b94f8a6.jpg",
+              "https://static.wixstatic.com/media/0c902c_742b3f6495234d01826bfb02c7b53b1a.jpg",
+              "https://static.wixstatic.com/media/0c902c_4f14e15646a747f28ce7ecfa82b6afd2.jpg",
+              "https://static.wixstatic.com/media/0c902c_82271eeaf3324b73b8ffba9df4dd2063.jpg",
+              "https://static.wixstatic.com/media/0c902c_4b83af6d07f544419ae8aae9995a7b45.jpg",
+              "https://static.wixstatic.com/media/0c902c_5be9971e45524eeea7d501782f7caf11.jpg"
+            ],
+            "evidence_scope": "browser original 390px and 1440px"
+          },
+          "source_url": "https://www.castanum.fi/inspiroidu",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      },
+      {
+        "url": "https://www.castanum.fi/kimput",
+        "text": "Sidomme kauniit ja ikimuistoiset kimput toiveittenne mukaan. kukat@castanum.fi. 0413192410. Eteläinen Hesperiankatu 6, 00100 Helsinki.",
+        "headings": {
+          "h1": [],
+          "h2": [
+            "Kimput",
+            "CASTANUM"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png",
+            "alt": "Castanum original brand mark"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://castanum.ekukka.fi/",
+            "text": "Verkkokauppa"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 0",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "source-photography-and-simple-web-navigation",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/0c902c_3b311367023f4150ae2d26ea97805f0a~mv2.jpg"
+            ],
+            "evidence_scope": "browser original 390px and 1440px"
+          },
+          "source_url": "https://www.castanum.fi/kimput",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      },
+      {
+        "url": "https://www.castanum.fi/surukukat",
+        "text": "Surusidonta on ainutkertainen ja tärkeimpiä sidontoja, johon panostamme pieteetillä. Saatte kauttamme surulaitteet, seppeleet ja kukat muistotilaisuuteen. kukat@castanum.fi 0413192410 Eteläinen Hesperiankatu 6 00100 Helsinki.",
+        "headings": {
+          "h1": [],
+          "h2": [
+            "Surukukat",
+            "CASTANUM"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png",
+            "alt": "Castanum original brand mark"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_0d3d2dbdd4dd417b8c12396d449df123.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_1a40093a50504e5da25c80ee8f1658c8.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_2b6f738a23c04a18b52d0c12899708b7.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_32e0e35c43ad43c48311072fe3c92f19.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_14177075ebcb465693dd25eda1a65998.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_845d0c47e06640ad92523254523c997e.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_67eeda12c7c54c6babdd1e6c195bf3d8.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_09b940b59d0f4667ac16d61785a8dc62.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_ad4f93087cbb47ee8f035a505a8891c2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_e5d798ac746442ea8b4c678d49d718f2.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://castanum.ekukka.fi/",
+            "text": "Verkkokauppa"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg",
+              "alt": "surulaite 0 0",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_0d3d2dbdd4dd417b8c12396d449df123.jpg",
+              "alt": "surulaite 1 1",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_1a40093a50504e5da25c80ee8f1658c8.jpg",
+              "alt": "surulaite 2 2",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_2b6f738a23c04a18b52d0c12899708b7.jpg",
+              "alt": "surulaite 3 3",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_32e0e35c43ad43c48311072fe3c92f19.jpg",
+              "alt": "surulaite 4 4",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_14177075ebcb465693dd25eda1a65998.jpg",
+              "alt": "surulaite 5 5",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_845d0c47e06640ad92523254523c997e.jpg",
+              "alt": "surulaite 6 6",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_67eeda12c7c54c6babdd1e6c195bf3d8.jpg",
+              "alt": "surulaite 7 7",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_09b940b59d0f4667ac16d61785a8dc62.jpg",
+              "alt": "surulaite 8 8",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_ad4f93087cbb47ee8f035a505a8891c2.jpg",
+              "alt": "surulaite 9 9",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_e5d798ac746442ea8b4c678d49d718f2.jpg",
+              "alt": "surulaite 10 10",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "source-photography-and-simple-web-navigation",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg",
+              "https://static.wixstatic.com/media/0c902c_0d3d2dbdd4dd417b8c12396d449df123.jpg",
+              "https://static.wixstatic.com/media/0c902c_1a40093a50504e5da25c80ee8f1658c8.jpg",
+              "https://static.wixstatic.com/media/0c902c_2b6f738a23c04a18b52d0c12899708b7.jpg",
+              "https://static.wixstatic.com/media/0c902c_32e0e35c43ad43c48311072fe3c92f19.jpg",
+              "https://static.wixstatic.com/media/0c902c_14177075ebcb465693dd25eda1a65998.jpg",
+              "https://static.wixstatic.com/media/0c902c_845d0c47e06640ad92523254523c997e.jpg",
+              "https://static.wixstatic.com/media/0c902c_67eeda12c7c54c6babdd1e6c195bf3d8.jpg",
+              "https://static.wixstatic.com/media/0c902c_09b940b59d0f4667ac16d61785a8dc62.jpg",
+              "https://static.wixstatic.com/media/0c902c_ad4f93087cbb47ee8f035a505a8891c2.jpg",
+              "https://static.wixstatic.com/media/0c902c_e5d798ac746442ea8b4c678d49d718f2.jpg"
+            ],
+            "evidence_scope": "browser original 390px and 1440px"
+          },
+          "source_url": "https://www.castanum.fi/surukukat",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      },
+      {
+        "url": "https://www.castanum.fi/haakimput",
+        "text": "Viehättävintä on morsiussidonta. Kahdenkymmenen vuoden kokemuksella ja hyvällä maulla toteutamme kauniit morsiuskimput ja upeat koristeet kirkkoon ja juhlapaikalle. kukat@castanum.fi 0413192410 Eteläinen Hesperiankatu 6 00100 Helsinki.",
+        "headings": {
+          "h1": [],
+          "h2": [
+            "Hääkimput",
+            "CASTANUM"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png",
+            "alt": "Castanum original brand mark"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_da932db240614acda308874129c6ad3f.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_e07b6ba04b6b4237a68d082b40a99542.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_bca951719f164f1e921360e1cfdf69e9.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_030a9ce22a474dc48f30776729b19581.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/0c902c_71ff8081a44f42e4a0ebd4b4a5e79ab7.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/24bba47f40f8473a534ae0301bf748c9.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://castanum.ekukka.fi/",
+            "text": "Verkkokauppa"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_da932db240614acda308874129c6ad3f.jpg",
+              "alt": "morsiussidonta 0",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_e07b6ba04b6b4237a68d082b40a99542.jpg",
+              "alt": "morsiussidonta 1",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_bca951719f164f1e921360e1cfdf69e9.jpg",
+              "alt": "morsiussidonta 2",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_030a9ce22a474dc48f30776729b19581.jpg",
+              "alt": "morsiussidonta 3",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/0c902c_71ff8081a44f42e4a0ebd4b4a5e79ab7.jpg",
+              "alt": "morsiussidonta 4",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/24bba47f40f8473a534ae0301bf748c9.jpg",
+              "alt": "morsiussidonta 5",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "source-photography-and-simple-web-navigation",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/0c902c_da932db240614acda308874129c6ad3f.jpg",
+              "https://static.wixstatic.com/media/0c902c_e07b6ba04b6b4237a68d082b40a99542.jpg",
+              "https://static.wixstatic.com/media/0c902c_bca951719f164f1e921360e1cfdf69e9.jpg",
+              "https://static.wixstatic.com/media/0c902c_030a9ce22a474dc48f30776729b19581.jpg",
+              "https://static.wixstatic.com/media/0c902c_71ff8081a44f42e4a0ebd4b4a5e79ab7.jpg",
+              "https://static.wixstatic.com/media/24bba47f40f8473a534ae0301bf748c9.jpg"
+            ],
+            "evidence_scope": "browser original 390px and 1440px"
+          },
+          "source_url": "https://www.castanum.fi/haakimput",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      },
+      {
+        "url": "https://www.castanum.fi/toimitus",
+        "text": "Toimitamme kukkia Helsinkiin,Espooseen ja Vantaalle. kukat@castanum.fi 0413192410 Eteläinen Hesperiankatu 6 00100 Helsinki.",
+        "headings": {
+          "h1": [],
+          "h2": [
+            "Toimitus",
+            "CASTANUM"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png",
+            "alt": "Castanum original brand mark"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://castanum.ekukka.fi/",
+            "text": "Verkkokauppa"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 0",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "source-photography-and-simple-web-navigation",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/8bee7cd5049a4893952d4416f8e9601f.jpg"
+            ],
+            "evidence_scope": "browser original 390px and 1440px"
+          },
+          "source_url": "https://www.castanum.fi/toimitus",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      },
+      {
+        "url": "https://www.castanum.fi/yhteystiedot",
+        "text": "Suora yhteydenotto: kukat@castanum.fi, 041319 2410, Eteläinen Hesperiankatu 6, 00100 Helsinki. Arkisin 9-17, lauantai 10-14, sunnuntai suljettu.",
+        "headings": {
+          "h1": [],
+          "h2": [
+            "Yhteystiedot",
+            "CASTANUM"
+          ]
+        },
+        "header_assets": [
+          {
+            "src": "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png",
+            "alt": "Castanum original brand mark"
+          }
+        ],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/11062b_7fb923cf2d6748e195e980d74c4059f2f000.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://castanum.ekukka.fi/",
+            "text": "Verkkokauppa"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://static.wixstatic.com/media/84770f_b1cd12d1108449a68e8036d250cb5f03.png"
+          ],
+          "original_header_wordmark_candidates": [],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/11062b_7fb923cf2d6748e195e980d74c4059f2f000.jpg",
+              "alt": "Castanumin alkuperäinen kukkakuva 0",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "source-photography-and-simple-web-navigation",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/11062b_7fb923cf2d6748e195e980d74c4059f2f000.jpg"
+            ],
+            "evidence_scope": "browser original 390px and 1440px"
+          },
+          "source_url": "https://www.castanum.fi/yhteystiedot",
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {}
+      }
+    ]
+  },
+  "original_experience_profile": {
+    "source_sha256": "3a5dfec88111e1222cc6561c727fa9fd70ee4c77cd5b6cd1df2e5bec30d9ba85",
+    "capture_method": "browser",
+    "complete": true,
+    "checked_at": "2026-11-04T09:40:37Z",
+    "inspected_urls": [
+      "https://www.castanum.fi/",
+      "https://www.castanum.fi/inspiroidu",
+      "https://www.castanum.fi/kimput",
+      "https://www.castanum.fi/surukukat",
+      "https://www.castanum.fi/haakimput",
+      "https://www.castanum.fi/toimitus",
+      "https://www.castanum.fi/yhteystiedot"
+    ],
+    "failed_urls": [],
+    "features": {
+      "video": {
+        "present": false
+      },
+      "three_d": {
+        "present": false
+      },
+      "motion": {
+        "present": false
+      },
+      "textured_background": {
+        "present": false
+      },
+      "gallery": {
+        "present": true,
+        "source_url": "https://www.castanum.fi/inspiroidu",
+        "observation": "Gallery and original suru/wedding examples captured"
+      },
+      "photography": {
+        "present": true,
+        "source_url": "https://www.castanum.fi/",
+        "observation": "Seven source pages rendered in Chromium at 390px and 1440px; Wix images captured"
+      }
+    },
+    "raw_observations": {
+      "source_capture_run": "https://github.com/K4K33/website-builder-agent/actions/runs/41809123425",
+      "source_artifact_id": 13311895382
+    },
+    "note": "Seven real original page screenshots, 2 viewport widths, images and media sizes in captured workflow artifact."
+  },
+  "source_comparison_evidence": {
+    "source_desktop": "Artifact 13311895382: home-1440.png",
+    "source_mobile": "Artifact 13311895382: home-390.png",
+    "redesign_desktop": "Exact new browser screenshot must be verified in Castanum QA run (index-1440.png)",
+    "redesign_mobile": "Exact new browser screenshot must be verified in Castanum QA run (index-390.png)"
+  },
+  "rights_verified": false,
+  "customer_approval_verified": false,
+  "editorial_review_status": "REVIEW_REQUIRED",
+  "notes": "Internal preview only, noindex. Original Wix photographs hotlinked, client media usage permission and CMS ownership not yet confirmed. Existing ekukka webshop opens on its original domain. No invented availability, prices, product stock or reviews."
+}
