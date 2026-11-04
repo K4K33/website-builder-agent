@@ -192,6 +192,22 @@ def inspect_site(path, *, first_view_requirement: dict | None = None):
                                 {"viewport": name, **candidate}
                                 for candidate in findings["columnImbalance"]
                             ])
+                        if ((first_view_requirement or {}).get("product_media_required")
+                                and findings.get("lowResolutionContentPhotos")):
+                            # A 225px thumbnail blown up to 500px is not an
+                            # acceptable premium merchandise photo. Flag only
+                            # GROSS upscaling, not subtle 1x-vs-retina issues.
+                            severe = [
+                                item for item in findings["lowResolutionContentPhotos"]
+                                if (item["sourceSize"][0] < item["displayedSize"][0] * .50
+                                    or item["sourceSize"][1] < item["displayedSize"][1] * .50)
+                            ]
+                            if severe:
+                                issues.append(
+                                    f"{name}: low-resolution original product photography "
+                                    "severely enlarged in public-facing product view: "
+                                    + json.dumps(severe[:4],ensure_ascii=False)
+                                )
                         if findings.get("lowResolutionContentPhotos"):
                             visual_review_flags.append({
                                 "viewport": name,
