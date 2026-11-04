@@ -75,7 +75,8 @@ class ConceptPreviewTests(unittest.TestCase):
 
     def test_scripts_forms_redirects_and_inline_handlers_are_blocked(self):
         for bad in ('<script>alert(1)</script>', '<form></form>', '<iframe src="file:///private"></iframe>',
-                    '<meta http-equiv="refresh" content="0;url=file:///private">', '<p onclick="alert(1)">Bad</p>'):
+                    '<meta http-equiv="refresh" content="0;url=file:///private">', '<p onclick="alert(1)">Bad</p>',
+                    '<a href="javascript:index.html">Bad</a>', '<a href="//other.invalid/index.html">Bad</a>'):
             r, value = fixture()
             value['concepts']['concept_1']['pages']['index.html'] += bad
             with self.assertRaises(RuntimeError): parse_concepts(json.dumps(value), r)

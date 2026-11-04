@@ -113,6 +113,9 @@ def parse_concepts(raw, research):
                 if href.startswith(('#', 'https://', 'mailto:', 'tel:')):
                     continue
                 from urllib.parse import urljoin, urlsplit
+                parsed = urlsplit(href)
+                if parsed.scheme or parsed.netloc:
+                    raise RuntimeError('Concept navigation cannot execute code or use an unapproved external scheme')
                 dest = urlsplit(urljoin('https://preview.invalid/' + route, href)).path.lstrip('/')
                 if dest not in required_routes:
                     raise RuntimeError('Concept navigation leaves its two actual prototype pages')
