@@ -56,7 +56,17 @@ jobs:
                 errors=[]
                 page.on("pageerror",lambda e:errors.append(str(e)))
                 page.goto(file.as_uri(),wait_until="domcontentloaded",timeout=23000)
-                page.wait_for_timeout(1100)
+                page.wait_for_timeout(850)
+                # Do not confuse a slow authentic Wix image with a missing one:
+                # explicitly await decoding of first-screen media for up to 6s.
+                # A real failed request still leaves naturalWidth=0 and FAILS.
+                page.evaluate("""async () => {
+                  const relevant=[...document.images].filter(img=>img.getBoundingClientRect().top<innerHeight+240);
+                  await Promise.race([
+                    Promise.all(relevant.map(img=>img.decode().catch(()=>null))),
+                    new Promise(resolve=>setTimeout(resolve,6000))
+                  ]);
+                }""")
                 observed=page.evaluate("""() => {
                   const images=[...document.images];
                   const first=[...document.querySelectorAll('main img')].filter(i=>{
