@@ -990,7 +990,14 @@
         "category": "Onnittelukukat"
       }
     ],
-    "note": "30 real source product options retained as static internal-demo samples. Prices and availability may change; actual live purchasing/payment remains at Castanum eKukka. No client access or provider integration approval."
+    "note": "30 real source product options retained as static internal-demo samples. Prices and availability may change; actual live purchasing/payment remains at Castanum eKukka. No client access or provider integration approval.",
+    "review_snapshot": {
+      "rating": 5,
+      "review_count": 50,
+      "observed_at": "2026-11-04T10:52:41Z",
+      "source_url": "https://castanum.ekukka.fi/",
+      "evidence": "Live Chromium eKukka home showing 5.0 Arvostelut (50), screenshot artifact 13315007036."
+    }
   },
   "commerce_release_verification": {
     "owner_approved": false,
