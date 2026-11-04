@@ -31,7 +31,18 @@ def extract_source_experience(html: str, source_url: str = "") -> dict:
     for img in main.find_all("img"):
         if img.find_parent(("header", "footer", "nav")):
             continue
-        src = str(img.get("src") or img.get("data-src") or "").strip()
+        # Lazy-loaded source sites may put a data-URI placeholder in src;
+        # the photographed work is held in data-src or data-srcset.
+        src = ""
+        for key in ("data-src", "data-lazy-src", "data-original",
+                    "src", "data-srcset", "srcset"):
+            candidate = str(img.get(key) or "").strip()
+            if key.endswith("srcset") and candidate:
+                candidate = candidate.split(",", 1)[0].strip().split(" ", 1)[0]
+            if candidate and not candidate.lower().startswith(
+                    ("data:", "blob:", "javascript:", "#")):
+                src = candidate
+                break
         if src and not src.startswith("data:image/svg"):
             url = urljoin(source_url, src) if source_url else src
             if url not in photo_srcs:
