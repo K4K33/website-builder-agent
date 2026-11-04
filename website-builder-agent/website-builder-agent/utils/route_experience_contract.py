@@ -260,7 +260,17 @@ def _contact_evidence(first, research: dict) -> bool:
     if known:
         # Source-grounded identity matters: any arbitrary phone/address can
         # be present in the markup but still belong to the wrong business.
-        return any(marker in observed for marker in known)
+        # Permit ordinary phone formatting differences in tel: links.
+        observed_digits = re.sub(r"[^0-9]", "", observed)
+        for marker in known:
+            if marker in observed:
+                return True
+            digits = re.sub(r"[^0-9]", "", marker)
+            if (len(digits) >= 7 and
+                    re.fullmatch(r"[+0-9() .-]+", marker) and
+                    digits in observed_digits):
+                return True
+        return False
     if first.select_one('address,a[href^="tel:"],a[href^="mailto:"]'):
         return True
     directions = first.select_one('a[href*="google.com/maps"],'
