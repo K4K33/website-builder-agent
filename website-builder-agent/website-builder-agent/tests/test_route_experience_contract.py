@@ -72,6 +72,15 @@ class PurposeFirstRouteTests(TestCase):
         self.assertTrue(contract["photo_rich_source"])
         self.assertEqual(len(set(roles.values())),5)
 
+    def test_repeated_identical_visitor_tasks_are_stopped_before_generation(self):
+        from utils.site_architecture import validate_site_architecture
+        data=research()
+        data["site_architecture"]["pages"][2]["user_task"]=(
+            data["site_architecture"]["pages"][1]["user_task"])
+        with self.assertRaisesRegex(RuntimeError,
+                                    "repeat the same visitor task"):
+            validate_site_architecture(data)
+
     def test_legitimate_varied_route_first_sections_pass(self):
         r=audit_route_experience(good_pages(),research())
         self.assertEqual(r["blocking"],[],r)
