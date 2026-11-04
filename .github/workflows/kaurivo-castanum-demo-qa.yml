@@ -36,7 +36,7 @@ jobs:
           print("CASTANUM_SOURCE_SHA256",actual,"expected",expected)
           assert actual==expected,"Source observation hash differs from proven source inventory"
           PY
-      - name: Inspect 7 real HTML routes at 4 viewport widths
+      - name: Inspect 8 real HTML routes at 4 viewport widths
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -98,7 +98,7 @@ jobs:
                 if observed["linkCount"]!=7:blockers.append(f"{filelabel} {width}: missing navigation")
                 if observed["broken"]:blockers.append(f"{filelabel} {width}: broken images "+str(observed["broken"]))
                 if errors:blockers.append(f"{filelabel} {width}: JavaScript "+str(errors))
-                if route in ("kimput","haakimput","surukukat","galleria") and observed["visibleMainPhotos"]==0:
+                if route in ("kimput","haakimput","surukukat","galleria","verkkokauppa") and observed["visibleMainPhotos"]==0:
                   blockers.append(f"{filelabel} {width}: original products absent from first viewport")
                 if route=="yhteystiedot" and not observed["contactText"]:
                   blockers.append(f"{filelabel} {width}: wrong address")
