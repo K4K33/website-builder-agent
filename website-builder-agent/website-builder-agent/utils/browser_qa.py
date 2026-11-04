@@ -65,6 +65,26 @@ def inspect_site(path):
                                         displayedWidth: Math.round(el.getBoundingClientRect().width),
                                         src: (el.currentSrc || el.src).slice(0,120)
                                     })).slice(0,5),
+                                // Passing image-loaded checks does NOT prove the
+                                // photo has enough native pixels at display size.
+                                // Only report materially enlarged source images;
+                                // intentional pixel-art/product crops need a human.
+                                lowResolutionContentPhotos: [...document.querySelectorAll('main img')]
+                                    .filter(el => {
+                                        const rect = el.getBoundingClientRect();
+                                        return rect.width >= 240 && rect.height >= 180
+                                          && el.naturalWidth > 0 && el.naturalHeight > 0
+                                          && (el.naturalWidth < rect.width * .92
+                                           || el.naturalHeight < rect.height * .92);
+                                    })
+                                    .map(el => ({
+                                        sourceSize: [el.naturalWidth, el.naturalHeight],
+                                        displayedSize: [
+                                            Math.round(el.getBoundingClientRect().width),
+                                            Math.round(el.getBoundingClientRect().height)
+                                        ],
+                                        src: (el.currentSrc || el.src).slice(0,140),
+                                    })).slice(0,8),
                                 // A tall almost-empty column next to substantial
                                 // content is a human layout-review candidate,
                                 // NOT a numeric automatic design verdict.
@@ -156,6 +176,17 @@ def inspect_site(path):
                                 {"viewport": name, **candidate}
                                 for candidate in findings["columnImbalance"]
                             ])
+                        if findings.get("lowResolutionContentPhotos"):
+                            visual_review_flags.append({
+                                "viewport": name,
+                                "kind": "upscaled_original_content_photography",
+                                "evidence": findings["lowResolutionContentPhotos"],
+                                "note": "Actual image native dimensions are smaller than "
+                                        "the rendered dimensions. Check product/staff photo "
+                                        "sharpness in real screenshots and seek licensed "
+                                        "higher-resolution originals. This is an aesthetic "
+                                        "review flag, not an automatic resolution claim.",
+                            })
                         if findings["lowResolutionLogos"]:
                             issues.append(
                                 f"{name}: pixelated primary brand logo (insufficient source pixels): "
