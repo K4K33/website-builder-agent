@@ -5,6 +5,9 @@ on:
     paths:
       - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/**"
       - "website-builder-agent/website-builder-agent/utils/source_experience.py"
+      - "website-builder-agent/website-builder-agent/utils/source_signature_lock.py"
+      - "website-builder-agent/website-builder-agent/data/demo_provenance/**"
+      - "website-builder-agent/website-builder-agent/tests/test_source_signature_lock.py"
       - "website-builder-agent/website-builder-agent/utils/universal_quality.py"
       - "website-builder-agent/website-builder-agent/utils/source_identity.py"
       - "website-builder-agent/website-builder-agent/utils/brand_design_blueprint.py"
@@ -16,6 +19,8 @@ on:
     paths:
       - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/**"
       - "website-builder-agent/website-builder-agent/utils/source_experience.py"
+      - "website-builder-agent/website-builder-agent/utils/source_signature_lock.py"
+      - "website-builder-agent/website-builder-agent/data/demo_provenance/**"
       - ".github/workflows/kaurivo-all-new-demos-universal-qa.yml"
   workflow_dispatch:
 
@@ -39,9 +44,9 @@ jobs:
       - name: Install free offline parser
         run: python -m pip install beautifulsoup4
       - name: Compile sources
-        run: python -m py_compile utils/source_experience.py utils/source_identity.py utils/brand_design_blueprint.py utils/universal_quality.py scripts/audit_changed_demo_previews.py
+        run: python -m py_compile utils/source_experience.py utils/source_identity.py utils/source_signature_lock.py utils/brand_design_blueprint.py utils/universal_quality.py scripts/audit_changed_demo_previews.py
       - name: Test source-based motion/media fidelity
-        run: python -m unittest tests.test_source_experience tests.test_brand_lock -v
+        run: python -m unittest tests.test_source_experience tests.test_source_signature_lock tests.test_brand_lock -v
       - name: Block changed hand-authored demos that bypass universal QA
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}

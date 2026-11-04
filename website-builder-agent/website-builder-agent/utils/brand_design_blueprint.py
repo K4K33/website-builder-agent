@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 
 from utils.content_parity import source_inventory_sha256
 from utils.source_experience import source_experience_brief
+from utils.source_signature_lock import signature_from_source
 
 
 def _one(value: object, maxlen: int = 480) -> str:
@@ -83,10 +84,36 @@ def derive_brand_site_blueprint(research: dict) -> dict:
             "relevant_source_urls": list(dict.fromkeys(origin)),
         })
     source_sha = source_inventory_sha256(inventory) if snapshots else ""
+    # The full original media list is stored in source_inventory and checked
+    # offline on every route. Do not duplicate hundreds of image URLs into
+    # each paid Builder prompt; send actionable source-bound anchors + counts.
+    full_signature = signature_from_source(research)
+    visual_contract = {
+        "source_sha256": full_signature["source_sha256"],
+        "original_logo_urls": full_signature["logos"][:12],
+        "original_staff_portrait_urls": full_signature["staff_portraits"][:24],
+        "original_team_page_photo_count": len(full_signature["about_page_people_photos"]),
+        "source_gallery_photo_count": len(full_signature["gallery_photos"]),
+        "source_gallery_photo_samples": full_signature["gallery_photos"][:14],
+        "source_all_content_photo_count": len(full_signature["all_content_photos"]),
+        "source_video_pages": full_signature["video_pages"][:15],
+        "full_source_inventory_required_in_qa": True,
+        "note": "The short samples are NOT a waiver: ALL source assets are checked offline.",
+    }
     return {
         "protocol": "company_source_to_sitemap_wireframe_brand_style_2026-11",
         "source_sha256": source_sha,
         "source_experience_plan": source_experience_brief(research),
+        "source_visual_signature_lock": visual_contract,
+        "source_visual_signature_policy": (
+            "The actual original logo, sourced staff photographs and each "
+            "gallery image are required assets, not optional moodboard references. "
+            "Do not silently replace with text, AI artwork or stock images; "
+            "uncleared licensing means internal REVIEW REQUIRED and a customer "
+            "asset decision, not permission to publish substitutes. Source-observed "
+            "video must remain playable. CSS textures, palette character, real "
+            "first-fold and media rights require paired source/new human review."
+        ),
         "company_name": _one((research.get("company_facts") or {}).get("name")),
         "sitemap_and_wireframes": architecture,
         "selected_direction": {

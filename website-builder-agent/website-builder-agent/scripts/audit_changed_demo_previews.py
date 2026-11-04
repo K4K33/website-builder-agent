@@ -12,6 +12,7 @@ ROOT=Path(__file__).resolve().parents[1]
 # Executed as python scripts/..., so explicitly make the project package root importable.
 sys.path.insert(0, str(ROOT))
 from utils.universal_quality import audit_universal_standards
+from utils.visual_originality import audit_design_originality
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
 
@@ -22,44 +23,81 @@ def changed_slugs(base,head):
                    and not p[len(PREFIX):].startswith("_shared/")})
 
 def verified_source_evidence(slug):
-    """Accept only explicit source-grounded affiliation inventories.
+    """A static demo may not pass without ORIGINAL researched source evidence.
 
-    This is observed-source evidence for internal demos, NEVER licence or client
-    approval. The independent screenshots and rights gates remain pending.
+    This applies to every newly changed demo, including hand-coded/Codex
+    output. A few unverified footer logos are not a source inventory.
     """
     import json
     from urllib.parse import urlsplit
+    from utils.content_parity import source_inventory_sha256
+
     safe = slug.replace("-", "").replace("_", "")
-    if not safe.isalnum():
+    if not safe.isalnum() or not slug:
         raise ValueError("Invalid demo slug")
     manifest = ROOT / "data" / "demo_provenance" / (slug + ".json")
     if not manifest.is_file():
-        return {}
+        raise ValueError(
+            "Missing source-bound demo provenance. Run Research and commit a "
+            "schema_version=2 original media/identity inventory before adding a demo.")
     data = json.loads(manifest.read_text(encoding="utf-8"))
-    if data.get("schema_version") != 1 or data.get("stage") != "internal_demo":
-        raise ValueError("Unexpected source evidence format/stage")
-    source = data.get("source_url", "")
-    host = urlsplit(source).hostname
-    if not host or not source.startswith("https://"):
-        raise ValueError("Source must be a verified HTTPS domain")
-    entries = data.get("footer_assets") or []
-    if not entries or len(entries) > 100:
-        raise ValueError("Missing or unreasonably large partner inventory")
-    found = set()
-    for item in entries:
-        url = item.get("src", "")
-        page = item.get("source_url", "")
-        if (not item.get("name") or not url.startswith("https://")
-            or urlsplit(url).hostname != host
-            or urlsplit(page).hostname != host
-            or not page.startswith("https://")
-            or url in found):
-            raise ValueError("Source assets must be unique and first-party")
-        found.add(url)
-    return {"source_inventory":{"pages":[{
-        "url":source,
-        "footer_assets":[{"src":x["src"],"name":x["name"]} for x in entries]
-    }]}}
+    if data.get("schema_version") != 2 or data.get("stage") != "internal_demo":
+        raise ValueError(
+            "Legacy partial provenance is not acceptable for changed demos. "
+            "A source-origin and browser media inventory are mandatory.")
+
+    if data.get("research_mode") == "verified_no_website":
+        independent = data.get("verified_no_website_company") or {}
+        if (not str(independent.get("source_url") or "").startswith("https://")
+            or not str(independent.get("checked_at") or "").strip()
+            or not str(independent.get("business_name") or "").strip()):
+            raise ValueError("No-website prospect must have verified real-business evidence.")
+        return {"research_mode":"verified_no_website",
+                "company_facts":{"name":independent["business_name"]}}
+
+    inventory = data.get("source_inventory") or {}
+    pages = inventory.get("pages") or []
+    source_url = str(data.get("source_url") or "")
+    source_host = (urlsplit(source_url).hostname or "").removeprefix("www.")
+    if not source_url.startswith("https://") or not source_host or not pages:
+        raise ValueError("Complete HTTPS original-site inventory required.")
+    if len(pages) > 80:
+        raise ValueError("Unbounded manifest exceeds source capture limit.")
+    for page in pages:
+        if not isinstance(page, dict):
+            raise ValueError("Each original route requires a source observation.")
+        observed_url = str(page.get("url") or "")
+        host = (urlsplit(observed_url).hostname or "").removeprefix("www.")
+        ident = page.get("source_identity")
+        if (host != source_host or not observed_url.startswith("https://")
+            or not isinstance(ident, dict)
+            or "original_logo_candidates" not in ident
+            or "original_content_photos" not in ident
+            or not isinstance(ident.get("source_experience"), dict)):
+            raise ValueError(
+                "Original page is missing captured logo, photo-role or media signals: "
+                + observed_url[:120])
+    profile = data.get("original_experience_profile") or {}
+    if (profile.get("source_sha256") != source_inventory_sha256(inventory)
+        or profile.get("capture_method") not in ("browser", "human_browser_review")
+        or profile.get("complete") is not True
+        or not str(profile.get("checked_at") or "").strip()):
+        raise ValueError("Source browser profile missing/incomplete/stale; cannot treat "
+                         "unobserved original video, colors or textures as absent.")
+
+    paired = data.get("source_comparison_evidence") or {}
+    if (not str(paired.get("source_desktop") or "").strip()
+        or not str(paired.get("source_mobile") or "").strip()
+        or not str(paired.get("redesign_desktop") or "").strip()
+        or not str(paired.get("redesign_mobile") or "").strip()):
+        raise ValueError("Missing paired original/new desktop/mobile screenshot references. "
+                         "These are only references; independent visual signoff remains pending.")
+
+    return {
+        "source_inventory": inventory,
+        "original_experience_profile": profile,
+        "source_comparison_evidence": paired,
+    }
 
 def main():
     base,head=os.environ.get("BASE_SHA",""),os.environ.get("HEAD_SHA","")
@@ -77,7 +115,21 @@ def main():
             print("BLOCK",slug,"missing index.html")
             failed=True
             continue
-        result=audit_universal_standards(pages["index.html"],research=verified_source_evidence(slug),rendered_pages=pages,stage="internal_demo")
+        try:
+            evidence=verified_source_evidence(slug)
+            result=audit_universal_standards(
+                pages["index.html"], research=evidence,
+                rendered_pages=pages, stage="internal_demo")
+        except (ValueError, KeyError, TypeError) as exc:
+            print("BLOCK",slug,"source_evidence",str(exc))
+            failed=True
+            continue
+        originality=audit_design_originality(
+            pages["index.html"], site_slug=slug, reference_demos=DEMOS)
+        if originality["blocking_problems"]:
+            failed=True
+            for issue in originality["blocking_problems"]:
+                print("BLOCK",slug,"reused_template_or_copy",issue[:550])
         problems=result.get("blocking_problems") or {}
         if problems:
             failed=True
