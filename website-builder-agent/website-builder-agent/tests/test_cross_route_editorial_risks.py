@@ -48,10 +48,22 @@ class CrossRouteEditorialRisksTests(unittest.TestCase):
             ("Real shop","store"),("Care","care"),("Sale","sale"),("Our people","team")
         ]):
             name=f"{location}/index.html"
-            image=f"https://shop.example/unique-{idx}.jpg"
+            image=f"/assets/unique-{idx}.jpg"
             routes[name]=page(title,image,f"{title} appointment",hero_photo=True)
         result=audit_cross_route_editorial_risks(routes,research())
         self.assertFalse(result["pending"],result)
+
+    def test_original_source_hotlinked_images_are_pending_not_accepted_as_self_hosted(self):
+        routes={
+            f"route{i}/index.html":page(
+                f"Service {i}","https://shop.example/original-hero.jpg",
+                f"Learn about service {i}")
+            for i in range(3)
+        }
+        result=audit_cross_route_editorial_risks(routes,research())
+        self.assertIn("original_hosted_media_dependency",
+                      {item["category"] for item in result["pending"]})
+        self.assertEqual(result["observations"]["old_site_hotlinked_photo_assets"],1)
 
     def test_no_source_photography_does_not_force_image_hero(self):
         no_source={"source_inventory":{"pages":[{
