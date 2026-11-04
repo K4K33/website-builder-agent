@@ -20,6 +20,7 @@ from utils.source_experience_gate import audit_experience_continuity
 from utils.source_signature_lock import audit_source_signature_lock
 from utils.cross_route_editorial_risks import audit_cross_route_editorial_risks
 from utils.route_experience_contract import audit_route_experience
+from utils.commerce_parity import audit_commerce_parity
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -39,6 +40,7 @@ UNIVERSAL_STANDARDS = (
     ("source_browser_experience_continuity", "Live browser inventory of original video, 3-D, animation, photography and texture", "visual"),
     ("sponsor_and_partner_marks", "Original relevant footer partner marks and links", "brand"),
     ("content_parity", "Current services, pricing, FAQ, contacts, hours and dynamic content", "content"),
+    ("commerce_parity", "Retain source shop categories, real product prices, actual product purchase paths and proven checkout", "functional"),
     ("natural_copy", "Natural and non-repetitive language without source narration", "content"),
     ("no_decorative_numbering", "No gratuitous 01/02/03 cards", "content"),
     ("non_repetitive_cta_icons", "No repeated decorative arrows on links and calls to action", "visual"),
@@ -197,6 +199,16 @@ def audit_universal_standards(
     editorial_risks = audit_cross_route_editorial_risks(pages, research)
     for risk in editorial_risks["pending"]:
         needs("cross_route_visual_rhythm", str(risk))
+
+    # Hard transactional fidelity: a live source webshop cannot be replaced
+    # with a redirect-only button and declared feature-complete. For demos
+    # exact source product links and real catalog cards are mandatory; a
+    # customer release also needs owner-approved end-to-end checkout proof.
+    commerce = audit_commerce_parity(pages, research, stage=stage)
+    for issue in commerce["blocking"]:
+        fail("commerce_parity", issue)
+    for issue in commerce["pending"]:
+        needs("commerce_parity", issue)
 
     source_experience = audit_source_experience_parity(pages, research)
     for issue in source_experience["blocking"]:
