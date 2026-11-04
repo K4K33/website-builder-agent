@@ -25,6 +25,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install free source QA dependencies
+        run: python -m pip install beautifulsoup4
+
+      - name: Block unsourced or off-brand changed demos before public deployment
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
+            BASE_SHA="$(git rev-parse HEAD^ 2>/dev/null || true)"
+          fi
+          if [[ -z "$BASE_SHA" || -z "$HEAD_SHA" ]]; then
+            echo 'Missing source-compare commit range; refuse public demo deployment'
+            exit 1
+          fi
+          export BASE_SHA HEAD_SHA
+          cd website-builder-agent/website-builder-agent
+          python scripts/audit_changed_demo_previews.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
