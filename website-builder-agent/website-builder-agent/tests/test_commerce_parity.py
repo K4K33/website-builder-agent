@@ -80,6 +80,18 @@ class CommerceParityTests(TestCase):
                                      research(),stage="client_release")
         self.assertTrue(any("release missing" in err for err in report["blocking"]))
 
+    def test_hand_coded_demo_source_audit_keeps_commerce_snapshot(self):
+        # Regression for losing research.commerce_inventory in the CI adapter.
+        from scripts.audit_changed_demo_previews import verified_source_evidence
+        evidence=verified_source_evidence("castanum-toolon-kukkakauppa-v1")
+        self.assertEqual(
+            evidence["commerce_inventory"]["observed_total_products"], 87
+        )
+        self.assertGreaterEqual(len(evidence["commerce_inventory"]["products"]), 6)
+        self.assertEqual(
+            evidence["company_facts"]["external_shop_url"], STORE
+        )
+
     def test_universal_audit_cannot_greenlight_shopless_castanum(self):
         page='<!doctype html><html lang="fi"><head><title>Castanum</title></head>' + (
             '<body><header><a href="'+STORE+'">Verkkokauppa</a></header>'
