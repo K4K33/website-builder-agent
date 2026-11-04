@@ -1,0 +1,148 @@
+"""Detect cross-route editorial repetition invisible to responsive and brand-mark QA.
+
+This module deliberately returns REVIEW FLAGS, not subjective design scores
+or automatic failures: a reused hero photo or shared CTA can be valid, but
+multiple repeats on a short brand-rich site require source/new screenshot
+inspection. No network, API credits, media licensing or inferred aesthetics.
+"""
+from __future__ import annotations
+
+from collections import defaultdict
+import re
+from urllib.parse import urljoin, urlsplit
+
+from bs4 import BeautifulSoup
+
+
+def _normalize(value: object) -> str:
+    return " ".join(str(value or "").casefold().split())
+
+
+def _media_key(src: str, route: str) -> str:
+    """Keep real asset identity; relative paths are resolved against route."""
+    value = str(src or "").strip()
+    if not value or value.startswith(("data:", "blob:", "javascript:")):
+        return ""
+    if value.startswith(("http://", "https://", "//")):
+        return value.split("#", 1)[0]
+    return urljoin("https://local.example/" + str(route).lstrip("/"), value).split("#", 1)[0]
+
+
+def _photo_rich_original(research: dict) -> bool:
+    photos = set()
+    for page in (research.get("source_inventory") or {}).get("pages") or []:
+        if not isinstance(page, dict):
+            continue
+        ident = page.get("source_identity") or {}
+        for row in ident.get("original_content_photos") or []:
+            if isinstance(row, dict) and row.get("src"):
+                photos.add(row["src"])
+    return len(photos) >= 3
+
+
+def audit_cross_route_editorial_risks(pages: dict[str, str],
+                                     research: dict | None = None) -> dict:
+    """Flags structural monotony and repeated visual assets across all routes.
+
+    Individual legitimate brand choices are never prohibited. Only flag a
+    meaningful repeated combination, and require visual proof before premium
+    approval. Do not claim to measure natural image size or human aesthetics.
+    """
+    research = research or {}
+    if not isinstance(pages, dict) or len(pages) < 3:
+        return {"pending": [], "observations": {"routes": len(pages or {})}}
+    image_routes: dict[str, set[str]] = defaultdict(set)
+    image_mentions = 0
+    repeated_heading_routes: dict[str, set[str]] = defaultdict(set)
+    text_hero_routes = []
+    routes = []
+    for route, raw in pages.items():
+        if not isinstance(raw, str):
+            continue
+        soup = BeautifulSoup(raw, "html.parser")
+        main = soup.find("main")
+        if main is None:
+            continue
+        routes.append(route)
+        images = main.find_all("img")
+        for img in images:
+            value = str(img.get("src") or img.get("data-src") or "").strip()
+            key = _media_key(value, route)
+            if key:
+                image_routes[key].add(route)
+                image_mentions += 1
+        first = main.find("section")
+        if first is not None:
+            h1 = first.find("h1")
+            if (h1 and not first.find(["img", "video", "picture"])
+                    and len(h1.get_text(" ", strip=True).split()) <= 9):
+                text_hero_routes.append(route)
+        unique_headings = set()
+        for header in main.select("h2,h3"):
+            heading = _normalize(header.get_text(" ", strip=True))
+            if len(heading) >= 24:
+                unique_headings.add(heading)
+        for heading in unique_headings:
+            repeated_heading_routes[heading].add(route)
+
+    pending = []
+    if len(routes) < 3:
+        return {"pending": [], "observations": {"routes": len(routes)}}
+    repetitions = sorted(((img, sorted(where)) for img, where in image_routes.items()
+                          if len(where) >= 3),
+                         key=lambda row: (-len(row[1]), row[0]))
+    if repetitions:
+        pending.append({
+            "category": "recycled_business_photography",
+            "issue": "The same real product/work photo appears across three or more "
+                     "distinct pages. Review whether each route has enough "
+                     "purpose-specific visual evidence rather than repeatedly "
+                     "using one attractive source picture.",
+            "examples": [{"asset": img, "routes": where} for img, where in repetitions[:6]],
+        })
+    unique_count = len(image_routes)
+    if len(routes) >= 4 and image_mentions >= 10 and unique_count > 0 and image_mentions >= 2.6 * unique_count:
+        pending.append({
+            "category": "low_media_variety",
+            "issue": "The redesign repeatedly stretches a small source photo set "
+                     "over multiple pages. Check source full gallery depth, real "
+                     "new photography availability and photo resolution before release.",
+            "unique_photos": unique_count,
+            "total_image_placements": image_mentions,
+        })
+    if _photo_rich_original(research) and len(text_hero_routes) >= 3:
+        pending.append({
+            "category": "repeated_text_only_subpage_openings",
+            "issue": "Photo-rich original business has three or more new routes "
+                     "opening with short, text-only headline sections. Check "
+                     "whether every page repeats the same oversized editorial "
+                     "intro instead of showing relevant merchandise, staff, "
+                     "services or booking information promptly.",
+            "routes": sorted(text_hero_routes),
+        })
+    heading_repeats = sorted(((heading, sorted(where))
+                              for heading, where in repeated_heading_routes.items()
+                              if len(where) >= 3),
+                             key=lambda row: (-len(row[1]), row[0]))
+    if heading_repeats:
+        pending.append({
+            "category": "repeated_full_width_call_to_action_copy",
+            "issue": "The same substantial section heading appears on three "
+                     "or more routes. Verify that repeated CTA strips do not "
+                     "make unrelated pages feel like one copied template.",
+            "examples": [
+                {"text": heading[:140], "routes": where}
+                for heading, where in heading_repeats[:5]
+            ],
+        })
+    return {
+        "pending": pending,
+        "observations": {
+            "routes": len(routes),
+            "distinct_main_image_assets": unique_count,
+            "image_placements": image_mentions,
+            "same_photo_on_3plus_routes": len(repetitions),
+            "text_only_first_sections": sorted(text_hero_routes),
+        },
+        "note": "Editorial review candidates, NOT pixel-level proof, copyright clearance or a numerical design score.",
+    }
