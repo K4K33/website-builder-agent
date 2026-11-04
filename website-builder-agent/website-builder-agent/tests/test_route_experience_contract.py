@@ -169,6 +169,17 @@ class PurposeFirstRouteTests(TestCase):
         result=audit_route_experience(pages,research(photo_count=0))
         self.assertFalse(result["blocking"],result)
 
+    def test_no_website_business_still_cannot_copy_same_cta_everywhere(self):
+        pages={
+            name:page(f"Different page {i}",cta="Contact our amazing design company")
+            for i,name in enumerate((
+                "index.html","catalog/index.html","rental/index.html",
+                "contact/index.html"))
+        }
+        result=audit_route_experience(pages,research(photo_count=0))
+        self.assertIn("repeated_full_width_call_to_action_copy",
+                      {x["kind"] for x in result["blocking"]})
+
     def test_exception_needs_genuine_exact_build_independent_evidence(self):
         pages=good_pages()
         pages["rental/index.html"]=page("No photo for this outfit")
