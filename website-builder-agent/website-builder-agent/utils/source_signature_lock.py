@@ -20,6 +20,30 @@ TEAM_PATH = re.compile(r"(?:meista|meistä|about|team|staff|henkil[oö]st|tekij[
 VIDEO_SRC = re.compile(r"(youtube(?:-nocookie)?\.com/embed|player\.vimeo\.com/video|wistia|\.mp4(?:\?|$)|\.webm(?:\?|$))", re.I)
 EXCLUDED_IMAGE = re.compile(r"^(?:data:|blob:|javascript:)", re.I)
 
+def _wix_asset_identity(value: str) -> str:
+    """Compare *identical* media IDs across genuine Wix CDN size variants.
+
+    static.wixstatic.com/media/<asset> and that exact asset's
+    /v1/fill/... resize URL are the SAME owner-uploaded image; string equality
+    previously declared every genuine resized gallery photo 'lost'.
+    Do NOT accept lookalikes, different Wix IDs, or other hosts.
+    Licensing, quality and resolution still have separate hard checks.
+    """
+    parsed = urlsplit(str(value or ""))
+    if parsed.scheme != "https" or parsed.hostname != "static.wixstatic.com":
+        return ""
+    match = re.fullmatch(
+        r"/media/([A-Za-z0-9_~.%-]+)(?:/v1/(?:fill|fit|crop)/[^?#]+)?",
+        parsed.path,
+    )
+    if not match:
+        return ""
+    return "https://static.wixstatic.com/media/" + match.group(1)
+
+def _has_matching_media(asset: str, observed: set[str]) -> bool:
+    identity = _wix_asset_identity(asset)
+    return asset in observed or bool(identity and identity in observed)
+
 
 def _url(src: object, source: str = "") -> str:
     value = str(src or "").strip()
@@ -141,20 +165,32 @@ def _rendered(pages: dict[str, str]) -> dict:
         for img in soup.find_all("img"):
             for value in [img.get("src"), img.get("data-src")]:
                 if value:
-                    images.add(str(value).strip())
-                    images_by_route[route].add(str(value).strip())
+                    raw = str(value).strip()
+                    # Preserve the concrete URL alongside its verified
+                    # image-content ID so distinct Wix resize widths don't
+                    # masquerade as missing gallery photos.
+                    variants = {raw}
+                    wix_id = _wix_asset_identity(raw)
+                    if wix_id:
+                        variants.add(wix_id)
+                    images.update(variants)
+                    images_by_route[route].update(variants)
                     if header is not None and img in header.descendants:
-                        header_images[route].add(str(value).strip())
+                        header_images[route].update(variants)
             # srcset is responsive source evidence, not a substitute for
             # visual pixel comparison / rights clearance.
             for key in ("srcset", "data-srcset"):
                 for part in str(img.get(key) or "").split(","):
                     candidate = part.strip().split(" ", 1)[0]
                     if candidate:
-                        images.add(candidate)
-                        images_by_route[route].add(candidate)
+                        variants = {candidate}
+                        wix_id = _wix_asset_identity(candidate)
+                        if wix_id:
+                            variants.add(wix_id)
+                        images.update(variants)
+                        images_by_route[route].update(variants)
                         if header is not None and img in header.descendants:
-                            header_images[route].add(candidate)
+                            header_images[route].update(variants)
         videos += len(soup.select("video,source[type^='video/']"))
         videos += sum(bool(VIDEO_SRC.search(str(i.get("src") or "")))
                       for i in soup.select("iframe[src]"))
@@ -183,7 +219,8 @@ def audit_source_signature_lock(pages: dict[str, str], research: dict) -> dict:
     replacement = _signed_replacements(research, source["source_sha256"], build_hash)
 
     def present(asset: str) -> bool:
-        return asset in rendered["images"] or replacement.get(asset, "") in rendered["images"]
+        return (_has_matching_media(asset, rendered["images"]) or
+                _has_matching_media(replacement.get(asset, ""), rendered["images"]))
 
     def excepted(kind: str, asset: str) -> bool:
         return _signed_exception(research, kind, asset,
@@ -194,7 +231,8 @@ def audit_source_signature_lock(pages: dict[str, str], research: dict) -> dict:
     # every page, unless an exact-build customer approves that route's change.
     if source["logos"]:
         for route, header_assets in rendered["header_images"].items():
-            if not any(asset in header_assets or replacement.get(asset, "") in header_assets
+            if not any(_has_matching_media(asset, header_assets) or
+                       _has_matching_media(replacement.get(asset, ""), header_assets)
                        for asset in source["logos"]):
                 if not excepted("logo", route):
                     blocking.append({
@@ -220,8 +258,8 @@ def audit_source_signature_lock(pages: dict[str, str], research: dict) -> dict:
     if team_routes:
         for asset in source["staff_portraits"]:
             if (present(asset)
-                and not any(asset in rendered["images_by_route"][route]
-                            or replacement.get(asset, "") in rendered["images_by_route"][route]
+                and not any(_has_matching_media(asset, rendered["images_by_route"][route])
+                            or _has_matching_media(replacement.get(asset, ""), rendered["images_by_route"][route])
                             for route in team_routes)
                 and not excepted("staff_portrait_placement", asset)):
                 blocking.append({
@@ -232,8 +270,8 @@ def audit_source_signature_lock(pages: dict[str, str], research: dict) -> dict:
         if source["about_page_people_photos"]:
             preserved = [
                 asset for asset in source["about_page_people_photos"]
-                if any(asset in rendered["images_by_route"][route]
-                       or replacement.get(asset, "") in rendered["images_by_route"][route]
+                if any(_has_matching_media(asset, rendered["images_by_route"][route])
+                       or _has_matching_media(replacement.get(asset, ""), rendered["images_by_route"][route])
                        for route in team_routes)
                 or excepted("about_page_photo", asset)
             ]
