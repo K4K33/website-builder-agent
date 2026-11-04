@@ -94,7 +94,7 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
         unique_headings = set()
         for header in main.select("h2,h3"):
             heading = _normalize(header.get_text(" ", strip=True))
-            if len(heading) >= 24:
+            if len(heading) >= 20:
                 unique_headings.add(heading)
         for heading in unique_headings:
             repeated_heading_routes[heading].add(route)
