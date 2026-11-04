@@ -1,4 +1,5 @@
 import contextlib
+import base64
 import io
 import json
 import os
@@ -355,7 +356,13 @@ class QualityTests(unittest.TestCase):
     def test_visual_qa_receives_all_rendered_views(self):
         path = builder._write_html('testi', HTML)
         state.upsert_company('testi', {'build': {'output_path':path,'version':1},'research':self.research_fixture()})
-        shots = {k:k+'.png' for k in ('desktop','tablet','mobile','small_mobile')}
+        # QA now freezes actual per-route bytes; nonexistent path strings are
+        # intentionally not accepted as rendered review material.
+        shots = {}
+        for viewport in ('desktop','tablet','mobile','small_mobile'):
+            image = Path(path).parent / (viewport+'.png')
+            image.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII='))
+            shots[viewport] = str(image)
         premium = review()
         for dimension in ('desktop','tablet','mobile','small_mobile','brand_specificity',
                           'typography','hierarchy','art_direction','imagery','motion'):
@@ -370,6 +377,7 @@ class QualityTests(unittest.TestCase):
                 )
             })
             self.assertEqual(len(ask.call_args.kwargs['image_paths']), 10)
+            self.assertTrue(all(Path(p).is_file() for p in ask.call_args.kwargs['image_paths']))
             self.assertEqual(ask.call_args.kwargs['stage'], 'qa')
 
     def test_stale_qa_cannot_be_approved(self):

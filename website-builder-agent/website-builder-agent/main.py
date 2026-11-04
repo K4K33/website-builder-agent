@@ -163,6 +163,41 @@ def cmd_build(args):
     builder.run_build(args.company)
 
 
+def cmd_concept_previews(args):
+    if not args.response: _require_paid_consent(args)
+    from utils.concept_workflow import generate_concepts
+    print(json.dumps(generate_concepts(args.company, response_path=args.response,
+                                      producer=args.producer), ensure_ascii=False, indent=2))
+
+
+def cmd_choose_concept(args):
+    if not args.review: _require_paid_consent(args)
+    from utils.concept_workflow import choose_concept
+    print(json.dumps(choose_concept(args.company, review_path=args.review,
+                                   reviewer=args.reviewer), ensure_ascii=False, indent=2))
+
+
+def cmd_review_material(args):
+    from utils.review_bundle import collect_review_bundle
+    from utils.screenshot import OUTPUT_DIR as source_capture_root
+    slug, company = get_company(args.company)
+    if not company or not company.get('build'):
+        raise RuntimeError('A real built website is required before collecting review material')
+    root = Path(company['build']['output_path']).resolve().parent
+    routes = company['build'].get('page_paths') or ['index.html']
+    from utils.site_architecture import route_path
+    pages = {}
+    for route in routes:
+        file = (root / route_path(route)).resolve()
+        if not file.is_relative_to(root): raise RuntimeError('Unsafe reviewed page')
+        pages[route] = file.read_text(encoding='utf-8')
+    bundle = collect_review_bundle(company, pages, company.get('qa') or {}, site_root=root,
+        output_parent=root / '_review_material',
+        allowed_capture_roots=[Path(config.OUTPUT_DIR), Path(source_capture_root)])
+    upsert_company(slug, {'review_bundle': bundle})
+    print(json.dumps(bundle, ensure_ascii=False, indent=2))
+
+
 def cmd_complete_build(args):
     print(builder.run_build_from_response(args.company, args.response, args.producer))
 
@@ -795,7 +830,13 @@ def cmd_pipeline(args):
     print(" VAIHE 2/4 — RESEARCH")
     print("========================================")
 
-    research.run_research(selected_slug)
+    researched_company = research.run_research(selected_slug)
+    if (isinstance(researched_company, dict)
+        and (researched_company.get("research") or {}).get("visual_concepts_protocol") == "v1"):
+        from utils.concept_workflow import generate_concepts, choose_concept
+        print("[Concepts] Render three actual responsive prototypes before full Build")
+        generate_concepts(selected_slug)
+        choose_concept(selected_slug)
 
     # -----------------------------------------------------
     # BUILD
@@ -1049,6 +1090,20 @@ def build_parser():
     parser_build.add_argument("--confirm-paid-apis", action="store_true",
         help="Explicitly authorize paid AI/search provider calls.")
     parser_build.set_defaults(func=cmd_build)
+
+    concepts = subparsers.add_parser("concept-previews", help="Render three real private concept bundles before full Build.")
+    concepts.add_argument("company")
+    concepts.add_argument("--response", default=None, help="Import an externally authored concepts JSON without a model call.")
+    concepts.add_argument("--producer", default="", help="Required for an external response.")
+    concepts.set_defaults(func=cmd_concept_previews)
+    concept_choice = subparsers.add_parser("choose-concept", help="Compare twelve real views in a fresh context; never client approval.")
+    concept_choice.add_argument("company")
+    concept_choice.add_argument("--review", default=None, help="Import an actual external comparison JSON without a model call.")
+    concept_choice.add_argument("--reviewer", default="", help="Required for an imported comparison.")
+    concept_choice.set_defaults(func=cmd_choose_concept)
+    material = subparsers.add_parser("review-material", help="Collect existing screenshot/report bytes into a private review bundle; no API calls.")
+    material.add_argument("company")
+    material.set_defaults(func=cmd_review_material)
 
     parser_complete = subparsers.add_parser(
         "complete-build", help="Validate and import an external coding agent response without API calls."
