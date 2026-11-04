@@ -764,5 +764,893 @@
   "rights_verified": false,
   "customer_approval_verified": false,
   "editorial_review_status": "REVIEW_REQUIRED",
-  "notes": "Internal preview only, noindex. Original Wix photographs hotlinked, client media usage permission and CMS ownership not yet confirmed. Existing ekukka webshop opens on its original domain. No invented availability, prices, product stock or reviews."
+  "notes": "Internal catalogue preview using 87 real source products. Snapshot prices, no invented stock, checkout remains on original eKukka product pages. Not a full checkout integration or approved client delivery.",
+  "commerce_inventory": [
+    {
+      "shop_url": "https://castanum.ekukka.fi/",
+      "captured_at": "2026-11-04T21:23:14.549472+00:00",
+      "complete": true,
+      "observed_product_count": 87,
+      "target": "verkkokauppa/index.html",
+      "products": [
+        {
+          "id": "211",
+          "name": "Amarylliskimppu  jouluisin somistein",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/211/%20amarylliskimppu%20%20jouluisin%20somistein",
+          "image": "https://castanum.ekukka.fi/pictures/1245_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "212",
+          "name": "Amarylliskimppu  jouluisin somistein",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/212/amarylliskimppu%20%20jouluisin%20somistein",
+          "image": "https://castanum.ekukka.fi/pictures/1246_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "210",
+          "name": "Amarylliskimppu  jouluisin somistein",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/210/amarylliskimppu%20%20jouluisin%20somistein",
+          "image": "https://castanum.ekukka.fi/pictures/1244_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "214",
+          "name": "Joulukori amaryllis",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/214/joulukori%20amaryllis",
+          "image": "https://castanum.ekukka.fi/pictures/1248_large.jpg",
+          "price": 60,
+          "price_text": "alk. 60,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "218",
+          "name": "Joulukori hyasintti",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/218/joulukori%20hyasintti",
+          "image": "https://castanum.ekukka.fi/pictures/1251_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "213",
+          "name": "Joulukori valkoinen",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/213/joulukori%20valkoinen",
+          "image": "https://castanum.ekukka.fi/pictures/1247_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "219",
+          "name": "Matala pyöreä  punainen joulukimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/219/matala%20py%C3%B6re%C3%A4%20%20punainen%20joulukimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1252_large.jpg",
+          "price": 70,
+          "price_text": "70,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "209",
+          "name": "Matala pyöreä  valkoinen joulukimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/209/matala%20py%C3%B6re%C3%A4%20%20valkoinen%20joulukimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1243_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "207",
+          "name": "Matala pyöreä joulukimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/207/matala%20py%C3%B6re%C3%A4%20joulukimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1242_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "215",
+          "name": "Tulppaanit punaiset",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/215/tulppaanit%20punaiset",
+          "image": "https://castanum.ekukka.fi/pictures/1249_large.jpg",
+          "price": 20,
+          "price_text": "alk. 20,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "217",
+          "name": "Tulppaanit valkoiset",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/217/tulppaanit%20valkoiset",
+          "image": "https://castanum.ekukka.fi/pictures/1250_large.jpg",
+          "price": 20,
+          "price_text": "alk. 20,00 €",
+          "category": "Sesonki",
+          "subcategory": "Kausituotteet"
+        },
+        {
+          "id": "121",
+          "name": "Äidille ruusuja",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/121/%C3%A4idille%20ruusuja",
+          "image": "https://castanum.ekukka.fi/pictures/1154_large.jpg",
+          "price": 60,
+          "price_text": "60,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "112",
+          "name": "Avoin tuote / puhelintuote",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/112/avoin%20tuote%20%20puhelintuote",
+          "image": "https://castanum.ekukka.fi/pictures/1145_large.jpg",
+          "price": null,
+          "price_text": "Hinta sovitaan liikkeen kanssa",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "201",
+          "name": "Castanum kimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/201/castanum%20kimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1240_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "113",
+          "name": "Floristin suosikki",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/113/floristin%20suosikki",
+          "image": "https://castanum.ekukka.fi/pictures/1146_large.jpg",
+          "price": 40,
+          "price_text": "alk. 40,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "184",
+          "name": "Ilahdutus -kimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/184/ilahdutus%20kimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1215_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "92",
+          "name": "KIMPPU HALAUS",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/92/kimppu%20halaus",
+          "image": "https://castanum.ekukka.fi/pictures/1121_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "94",
+          "name": "KIMPPU LUMOUS",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/94/kimppu%20lumous",
+          "image": "https://castanum.ekukka.fi/pictures/1124_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "93",
+          "name": "KIMPPU ONNI",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/93/kimppu%20onni",
+          "image": "https://castanum.ekukka.fi/pictures/1120_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "90",
+          "name": "KIMPPU RAUHA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/90/kimppu%20rauha",
+          "image": "https://castanum.ekukka.fi/pictures/1123_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "175",
+          "name": "Kimppu Sini",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/175/kimppu%20sini",
+          "image": "https://castanum.ekukka.fi/pictures/1206_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "174",
+          "name": "Kimppu sinivihreä",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/174/kimppu%20sinivihre%C3%A4",
+          "image": "https://castanum.ekukka.fi/pictures/1205_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "172",
+          "name": "Kimppu Unelma",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/172/kimppu%20unelma",
+          "image": "https://castanum.ekukka.fi/pictures/1203_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "95",
+          "name": "KIMPPU UNELMA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/95/kimppu%20unelma",
+          "image": "https://castanum.ekukka.fi/pictures/1125_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "171",
+          "name": "Kimppu Vaalea",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/171/kimppu%20vaalea",
+          "image": "https://castanum.ekukka.fi/pictures/1202_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "91",
+          "name": "KIMPPU VOIMAKAS",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/91/kimppu%20voimakas",
+          "image": "https://castanum.ekukka.fi/pictures/1122_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "99",
+          "name": "KORKEA KIMPPU, KELTASÄVY",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/99/korkea%20kimppu%20keltas%C3%A4vy",
+          "image": "https://castanum.ekukka.fi/pictures/1132_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "100",
+          "name": "KORKEA KIMPPU, PUNASÄVY",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/100/korkea%20kimppu%20punas%C3%A4vy",
+          "image": "https://castanum.ekukka.fi/pictures/1133_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "98",
+          "name": "KORKEA KIMPPU, VÄRIKÄS",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/98/korkea%20kimppu%20v%C3%A4rik%C3%A4s",
+          "image": "https://castanum.ekukka.fi/pictures/1131_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "114",
+          "name": "Kukkalahja lähimmäiselle",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/114/kukkalahja%20l%C3%A4himm%C3%A4iselle",
+          "image": "https://castanum.ekukka.fi/pictures/1147_large.jpg",
+          "price": 40,
+          "price_text": "alk. 40,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "115",
+          "name": "Kukkalahja rakkaalle",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/115/kukkalahja%20rakkaalle",
+          "image": "https://castanum.ekukka.fi/pictures/1148_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "116",
+          "name": "Kukkalahja seniorille",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/116/kukkalahja%20seniorille",
+          "image": "https://castanum.ekukka.fi/pictures/1149_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "119",
+          "name": "Kukkalahja ystävälle",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/119/kukkalahja%20yst%C3%A4v%C3%A4lle",
+          "image": "https://castanum.ekukka.fi/pictures/1152_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "120",
+          "name": "Lahjakortti",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/120/lahjakortti",
+          "image": "https://castanum.ekukka.fi/pictures/1153_large.jpg",
+          "price": 25,
+          "price_text": "alk. 25,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "163",
+          "name": "Parane pian!",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/163/parane%20pian",
+          "image": "https://castanum.ekukka.fi/pictures/1194_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "73",
+          "name": "PIKKUKIMPPU HEMPEÄ",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/73/pikkukimppu%20hempe%C3%A4",
+          "image": "https://castanum.ekukka.fi/pictures/1071_large.jpg",
+          "price": 25,
+          "price_text": "alk. 25,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "72",
+          "name": "PIKKUKIMPPU PUNA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/72/pikkukimppu%20puna",
+          "image": "https://castanum.ekukka.fi/pictures/1069_large.jpg",
+          "price": 25,
+          "price_text": "alk. 25,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "74",
+          "name": "PIKKUKIMPPU VAALEA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/74/pikkukimppu%20vaalea",
+          "image": "https://castanum.ekukka.fi/pictures/1073_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "162",
+          "name": "Piristä ystävää",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/162/pirist%C3%A4%20yst%C3%A4v%C3%A4%C3%A4",
+          "image": "https://castanum.ekukka.fi/pictures/1193_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "161",
+          "name": "Ruusuja rakkaalle",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/161/ruusuja%20rakkaalle",
+          "image": "https://castanum.ekukka.fi/pictures/1192_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "148",
+          "name": "Viikkokimppu Ilo",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/148/viikkokimppu%20ilo",
+          "image": "https://castanum.ekukka.fi/pictures/1180_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "157",
+          "name": "Viikkokimppu Luonto",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/157/viikkokimppu%20luonto",
+          "image": "https://castanum.ekukka.fi/pictures/1188_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "151",
+          "name": "Viikkokimppu Piristys",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/151/viikkokimppu%20piristys",
+          "image": "https://castanum.ekukka.fi/pictures/1183_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "149",
+          "name": "Viikkokimppu Rakkaus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/149/viikkokimppu%20rakkaus",
+          "image": "https://castanum.ekukka.fi/pictures/1181_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "158",
+          "name": "Viikkokimppu Rauha",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/158/viikkokimppu%20rauha",
+          "image": "https://castanum.ekukka.fi/pictures/1189_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukkakimput"
+        },
+        {
+          "id": "66",
+          "name": "PÖYTÄASETELMA PUN.",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/66/p%C3%B6yt%C3%A4asetelma%20pun",
+          "image": "https://castanum.ekukka.fi/pictures/1047_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukka-asetelmat"
+        },
+        {
+          "id": "67",
+          "name": "PÖYTÄASETELMA VALK.",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/67/p%C3%B6yt%C3%A4asetelma%20valk",
+          "image": "https://castanum.ekukka.fi/pictures/1052_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukka-asetelmat"
+        },
+        {
+          "id": "68",
+          "name": "PÖYTÄASETELMA VPUN.",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/68/p%C3%B6yt%C3%A4asetelma%20vpun",
+          "image": "https://castanum.ekukka.fi/pictures/1048_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Kukka-asetelmat"
+        },
+        {
+          "id": "79",
+          "name": "RUUSUT ( PUN ) OMA VALINTA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/79/ruusut%20%20pun%20%20oma%20valinta",
+          "image": "https://castanum.ekukka.fi/pictures/1127_large.jpg",
+          "price": 7,
+          "price_text": "7,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Ruusut"
+        },
+        {
+          "id": "80",
+          "name": "RUUSUT ( VALK ) OMA VALINTA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/80/ruusut%20%20valk%20%20oma%20valinta",
+          "image": "https://castanum.ekukka.fi/pictures/1126_large.jpg",
+          "price": 6,
+          "price_text": "6,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Ruusut"
+        },
+        {
+          "id": "78",
+          "name": "RUUSUT ( VPUN ) OMA VALINTA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/78/ruusut%20%20vpun%20%20oma%20valinta",
+          "image": "https://castanum.ekukka.fi/pictures/1128_large.jpg",
+          "price": 6,
+          "price_text": "6,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Ruusut"
+        },
+        {
+          "id": "126",
+          "name": "Äiti - lapsi kimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/126/%C3%A4iti%20%20lapsi%20kimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1158_large.jpg",
+          "price": 60,
+          "price_text": "60,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Vauvaonnittelut"
+        },
+        {
+          "id": "88",
+          "name": "NAPANUORAKIMPPU PIENOKAINEN",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/88/napanuorakimppu%20pienokainen",
+          "image": "https://castanum.ekukka.fi/pictures/1108_large.jpg",
+          "price": 40,
+          "price_text": "alk. 40,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Vauvaonnittelut"
+        },
+        {
+          "id": "87",
+          "name": "NAPANUORAKIMPPU PRINSESSA",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/87/napanuorakimppu%20prinsessa",
+          "image": "https://castanum.ekukka.fi/pictures/1111_large.jpg",
+          "price": 40,
+          "price_text": "alk. 40,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Vauvaonnittelut"
+        },
+        {
+          "id": "89",
+          "name": "NAPANUORAKIMPPU PRINSSI",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/89/napanuorakimppu%20prinssi",
+          "image": "https://castanum.ekukka.fi/pictures/1109_large.jpg",
+          "price": 40,
+          "price_text": "alk. 40,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Vauvaonnittelut"
+        },
+        {
+          "id": "128",
+          "name": "Ristiäis / nimiäis -kimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/128/risti%C3%A4is%20%20nimi%C3%A4is%20kimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1160_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Vauvaonnittelut"
+        },
+        {
+          "id": "127",
+          "name": "Ristiäis / nimiäis -kimppu",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/127/risti%C3%A4is%20%20nimi%C3%A4is%20kimppu",
+          "image": "https://castanum.ekukka.fi/pictures/1159_large.jpg",
+          "price": 45,
+          "price_text": "45,00 €",
+          "category": "Onnittelukukat",
+          "subcategory": "Vauvaonnittelut"
+        },
+        {
+          "id": "129",
+          "name": "Hautakimppu Aamurusko",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/129/hautakimppu%20aamurusko",
+          "image": "https://castanum.ekukka.fi/pictures/1161_large.jpg",
+          "price": 50,
+          "price_text": "alk. 50,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "65",
+          "name": "Hautakimppu Kauniit muistot",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/65/hautakimppu%20kauniit%20muistot",
+          "image": "https://castanum.ekukka.fi/pictures/1104_large.jpg",
+          "price": 50,
+          "price_text": "alk. 50,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "131",
+          "name": "Hautakimppu Kuulas",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/131/hautakimppu%20kuulas",
+          "image": "https://castanum.ekukka.fi/pictures/1163_large.jpg",
+          "price": 50,
+          "price_text": "alk. 50,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "64",
+          "name": "Hautakimppu Lämmöllä muistaen",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/64/hautakimppu%20l%C3%A4mm%C3%B6ll%C3%A4%20muistaen",
+          "image": "https://castanum.ekukka.fi/pictures/1105_large.jpg",
+          "price": 50,
+          "price_text": "alk. 50,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "63",
+          "name": "Hautakimppu Surussa",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/63/hautakimppu%20surussa",
+          "image": "https://castanum.ekukka.fi/pictures/1106_large.jpg",
+          "price": 50,
+          "price_text": "alk. 50,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "132",
+          "name": "Hautakimppu Taivas",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/132/hautakimppu%20taivas",
+          "image": "https://castanum.ekukka.fi/pictures/1164_large.jpg",
+          "price": 50,
+          "price_text": "alk. 50,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "130",
+          "name": "Hautakimppu Usva",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/130/hautakimppu%20usva",
+          "image": "https://castanum.ekukka.fi/pictures/1162_large.jpg",
+          "price": 50,
+          "price_text": "alk. 50,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "200",
+          "name": "Hautalaite",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/200/hautalaite",
+          "image": "https://castanum.ekukka.fi/pictures/1231_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "199",
+          "name": "Hautalaite",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/199/hautalaite",
+          "image": "https://castanum.ekukka.fi/pictures/1235_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "198",
+          "name": "Hautalaite",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/198/hautalaite",
+          "image": "https://castanum.ekukka.fi/pictures/1236_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "197",
+          "name": "Hautalaite",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/197/hautalaite",
+          "image": "https://castanum.ekukka.fi/pictures/1237_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "196",
+          "name": "Hautalaite",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/196/hautalaite",
+          "image": "https://castanum.ekukka.fi/pictures/1238_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "61",
+          "name": "Hautalaite Henkäys",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/61/hautalaite%20henk%C3%A4ys",
+          "image": "https://castanum.ekukka.fi/pictures/24_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "56",
+          "name": "Hautalaite Kaipaus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/56/hautalaite%20kaipaus",
+          "image": "https://castanum.ekukka.fi/pictures/29_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "62",
+          "name": "Hautalaite Kiitollisuus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/62/hautalaite%20kiitollisuus",
+          "image": "https://castanum.ekukka.fi/pictures/28_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "60",
+          "name": "Hautalaite Klassinen",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/60/hautalaite%20klassinen",
+          "image": "https://castanum.ekukka.fi/pictures/32_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "58",
+          "name": "Hautalaite Kunnioitus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/58/hautalaite%20kunnioitus",
+          "image": "https://castanum.ekukka.fi/pictures/31_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "57",
+          "name": "Hautalaite Perinteinen",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/57/hautalaite%20perinteinen",
+          "image": "https://castanum.ekukka.fi/pictures/22_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "59",
+          "name": "Hautalaite Rakkaus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/59/hautalaite%20rakkaus",
+          "image": "https://castanum.ekukka.fi/pictures/26_large.jpg",
+          "price": 70,
+          "price_text": "alk. 70,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "125",
+          "name": "Surunauha",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/125/surunauha",
+          "image": "https://castanum.ekukka.fi/pictures/1157_large.jpg",
+          "price": 22,
+          "price_text": "22,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "124",
+          "name": "Surunauha",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/124/surunauha",
+          "image": "https://castanum.ekukka.fi/pictures/1156_large.jpg",
+          "price": 22,
+          "price_text": "22,00 €",
+          "category": "Surukukat",
+          "subcategory": "Hautajaiskukat"
+        },
+        {
+          "id": "134",
+          "name": "Osanottokimppu Herkkyys",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/134/osanottokimppu%20herkkyys",
+          "image": "https://castanum.ekukka.fi/pictures/1166_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "97",
+          "name": "Osanottokimppu Ikuisuus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/97/osanottokimppu%20ikuisuus",
+          "image": "https://castanum.ekukka.fi/pictures/1130_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "135",
+          "name": "Osanottokimppu Illan sini",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/135/osanottokimppu%20illan%20sini",
+          "image": "https://castanum.ekukka.fi/pictures/1167_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "136",
+          "name": "Osanottokimppu Kaipaus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/136/osanottokimppu%20kaipaus",
+          "image": "https://castanum.ekukka.fi/pictures/1168_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "96",
+          "name": "Osanottokimppu Lämmin halaus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/96/osanottokimppu%20l%C3%A4mmin%20halaus",
+          "image": "https://castanum.ekukka.fi/pictures/1129_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "137",
+          "name": "Osanottokimppu Levollisuus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/137/osanottokimppu%20levollisuus",
+          "image": "https://castanum.ekukka.fi/pictures/1169_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "133",
+          "name": "Osanottokimppu Lohdutus",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/133/osanottokimppu%20lohdutus",
+          "image": "https://castanum.ekukka.fi/pictures/1165_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "84",
+          "name": "Osanottokimppu Muistoissa",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/84/osanottokimppu%20muistoissa",
+          "image": "https://castanum.ekukka.fi/pictures/1061_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        },
+        {
+          "id": "138",
+          "name": "Osanottokimppu Suuressa surussa",
+          "url": "https://castanum.ekukka.fi/tuotteet/onnittelukukat/kukkakimput/138/osanottokimppu%20suuressa%20surussa",
+          "image": "https://castanum.ekukka.fi/pictures/1170_large.jpg",
+          "price": 30,
+          "price_text": "alk. 30,00 €",
+          "category": "Surukukat",
+          "subcategory": "Osanottokukat"
+        }
+      ],
+      "source_endpoint": "https://castanum.ekukka.fi/controllers/Product.php",
+      "source_request": {
+        "function": "getProductsOverview"
+      },
+      "source_snapshot": "data/source_snapshots/castanum-products-20261104.json",
+      "checkout_mode": "original_merchant_platform",
+      "browser_review_status": "PENDING"
+    }
+  ]
 }

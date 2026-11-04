@@ -26,6 +26,7 @@ jobs:
             "galleria/|Galleria</h1>"
             "toimitus/|Helsinkiin, Espooseen ja Vantaalle."
             "yhteystiedot/|Eteläinen Hesperiankatu 6"
+            "verkkokauppa/|data-shop-controls"
             "assets/style.css|--paper:#ffebff"
             "assets/app.js|data-load-map"
           )

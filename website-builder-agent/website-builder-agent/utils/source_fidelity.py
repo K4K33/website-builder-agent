@@ -14,6 +14,7 @@ from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup
 
 from utils.content_parity import source_inventory_sha256
+from utils.commerce_parity import commerce_problems
 
 
 TASK_WORDS = (
@@ -117,6 +118,10 @@ def validate_source_plan(research: dict, *, source_url: str = "") -> dict:
 
     This is intentionally a completeness check, not a fake semantic judgment.
     """
+    commerce = commerce_problems(research)
+    if commerce:
+        raise RuntimeError("Original shop catalogue must be captured before Builder: " +
+                           "; ".join(x["kind"] + ":" + x["source"] for x in commerce[:8]))
     manifest=source_manifest(research)
     if not manifest["pages"]:
         if source_url and research.get("research_mode")!="verified_no_website":
@@ -175,6 +180,7 @@ def audit_source_fidelity(
     if isinstance(rendered_pages,dict):
         pages.update({_page_key(k):str(v) for k,v in rendered_pages.items() if isinstance(v,str)})
     soup_pages={p:BeautifulSoup(raw,"html.parser") for p,raw in pages.items()}
+    missing.extend(commerce_problems(research, pages))
     source_sha=manifest["source_sha256"]
     digest=sha256("".join(k+"\n"+pages[k] for k in sorted(pages)).encode("utf-8")).hexdigest()
     content_plan=research.get("source_content_map") or {}

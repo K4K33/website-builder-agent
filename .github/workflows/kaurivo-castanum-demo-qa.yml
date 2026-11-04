@@ -1,7 +1,7 @@
 name: Kaurivo Castanum source & responsive browser verification
 on:
   push:
-    branches: [feat/castanum-botanical-demo-20261104]
+    branches: [feat/castanum-commerce-continuity-20261104]
     paths:
       - ".github/workflows/kaurivo-castanum-demo-qa.yml"
       - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1/**"
@@ -36,15 +36,15 @@ jobs:
           print("CASTANUM_SOURCE_SHA256",actual,"expected",expected)
           assert actual==expected,"Source observation hash differs from proven source inventory"
           PY
-      - name: Inspect 7 real HTML routes at 4 viewport widths
+      - name: Inspect 8 real HTML routes at 4 viewport widths
         run: |
           python - <<'PY'
           from pathlib import Path
-          from playwright.sync_api import sync_playwright
+          from playwright.sync_api import sync_playwright, expect
           import json
           root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
           out=Path("qa-evidence/castanum/new");out.mkdir(parents=True,exist_ok=True)
-          routes=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot"]
+          routes=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot","verkkokauppa"]
           results=[]; blockers=[]
           with sync_playwright() as p:
             browser=p.chromium.launch(headless=True)
@@ -84,6 +84,7 @@ jobs:
                   });
                   return {h1:document.querySelectorAll('main h1').length,
                     viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+                    overflowNodes:[...document.querySelectorAll("main *")].filter(e=>e.getBoundingClientRect().right>innerWidth+3).slice(0,5).map(e=>e.className),
                     allImages:images.length,loaded:images.filter(i=>i.naturalWidth>0).length,
                     visibleMainPhotos:first.length,broken:images.filter(i=>i.complete&&i.naturalWidth===0).map(i=>i.currentSrc).slice(0,6),
                     linkCount:document.querySelectorAll('.main-nav a').length,
@@ -94,11 +95,11 @@ jobs:
                 page.screenshot(path=str(out/f"{filelabel}-{width}.png"),full_page=True,animations="disabled",timeout=25000)
                 results.append({"page":filelabel,"width":width,**observed,"page_errors":errors})
                 if observed["h1"]!=1:blockers.append(f"{filelabel} {width}: not exactly one h1")
-                if observed["scrollWidth"]>width+3:blockers.append(f"{filelabel} {width}: horizontal overflow "+str(observed["scrollWidth"]))
+                if observed["scrollWidth"]>width+3:blockers.append(f"{filelabel} {width}: horizontal overflow "+str(observed["scrollWidth"])+" "+str(observed["overflowNodes"]))
                 if observed["linkCount"]!=7:blockers.append(f"{filelabel} {width}: missing navigation")
                 if observed["broken"]:blockers.append(f"{filelabel} {width}: broken images "+str(observed["broken"]))
                 if errors:blockers.append(f"{filelabel} {width}: JavaScript "+str(errors))
-                if route in ("kimput","haakimput","surukukat","galleria") and observed["visibleMainPhotos"]==0:
+                if route in ("kimput","haakimput","surukukat","galleria","verkkokauppa") and observed["visibleMainPhotos"]==0:
                   blockers.append(f"{filelabel} {width}: original products absent from first viewport")
                 if route=="yhteystiedot" and not observed["contactText"]:
                   blockers.append(f"{filelabel} {width}: wrong address")
@@ -117,7 +118,7 @@ jobs:
           from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
           from functools import partial
           from threading import Thread
-          from playwright.sync_api import sync_playwright
+          from playwright.sync_api import sync_playwright, expect
           root=Path("docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1").resolve()
           Handler=partial(SimpleHTTPRequestHandler,directory=str(root))
           server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
@@ -141,14 +142,35 @@ jobs:
                   button.click()
                   mobile.keyboard.press("Escape")
                   assert button.get_attribute("aria-expanded")=="false"
-                  expected=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot"]
+                  expected=["","kimput","haakimput","surukukat","galleria","toimitus","yhteystiedot","verkkokauppa"]
                   desktop=browser.new_page(viewport={"width":1440,"height":900})
                   for route in expected:
                       desktop.goto(origin+"/"+route+"/",wait_until="domcontentloaded")
                       assert desktop.locator("main h1").count()==1,(route,"missing h1")
                       assert desktop.locator(".main-nav a").count()==7,(route,"missing nav")
                       assert desktop.locator('.brand[href]').count()==1,(route,"missing return home")
-                      assert desktop.locator('a[href^="https://castanum.ekukka.fi/"]').count()>0,(route,"original shop lost")
+                      assert desktop.locator('a[data-shop-entry]').count()>0,(route,"original shop lost")
+                  for width in (320,390,768,1440):
+                      shop=browser.new_page(viewport={"width":width,"height":900})
+                      shop.goto(origin+"/verkkokauppa/",wait_until="domcontentloaded")
+                      assert shop.locator('[data-product-source]').count()==87
+                      assert shop.evaluate("document.documentElement.scrollWidth<=innerWidth+1")
+                      shop.locator('#product-search').fill('Castanum')
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(1)
+                      shop.locator('#product-search').fill('zzzz-no-match')
+                      assert shop.locator('#shop-empty').is_visible()
+                      shop.locator('#shop-clear').click()
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(87)
+                      shop.locator('#product-category').select_option('Surukukat')
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(30)
+                      shop.locator('.shop-reset').click()
+                      expect(shop.locator('[data-product-source]:visible')).to_have_count(87)
+                      shop.locator('#product-budget').fill('25')
+                      assert shop.locator('[data-product-source]:visible').count()>0
+                      assert shop.locator('[data-product-source]:visible').evaluate_all("els=>els.every(e=>Number(e.dataset.price)<=25)")
+                      shop.locator('#product-sort').select_option('price-asc')
+                      assert shop.locator('[data-product-source]:visible').evaluate_all("els=>els.every((e,i)=>i===0||Number(els[i-1].dataset.price)<=Number(e.dataset.price))")
+                      shop.close()
                   desktop.goto(origin+"/yhteystiedot/",wait_until="domcontentloaded")
                   assert desktop.locator("main address").count()==1
                   assert desktop.locator('.contact-map iframe[title]').count()==1
