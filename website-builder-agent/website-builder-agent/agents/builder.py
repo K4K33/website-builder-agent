@@ -1535,7 +1535,7 @@ kokemusta staattiseksi geneeriseksi pohjaksi. Todelliset käyttöoikeudet,
 pitkäkestoinen suorituskyky, saavutettavuus ja reduced-motion ovat pakollisia.
 Puuttuva kuvien/videoiden käyttöoikeus on QA-este, ei lupa heikentää sivua.
 
-PENNY LANE -KRITIIKISTÄ YLEISTETTY MONISIVUISEN SIVUN LAATUPORTTI:
+MONISIVUISEN BRÄNDIUSKOLLISEN SIVUN LAATUPORTTI:
 - Suunnittele JOKAISEN reitin ensimmäinen näkymä kyseisen reitin aidon tehtävän
   mukaan. Älä käytä samaa jättimäistä tekstipainotteista heroa kaikilla
   alasivuilla: valikoimaan tuotteet, vuokraukseen vuokrattavat tuotteet,
