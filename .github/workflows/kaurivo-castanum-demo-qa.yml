@@ -67,6 +67,16 @@ jobs:
                     new Promise(resolve=>setTimeout(resolve,6000))
                   ]);
                 }""")
+                # Full-page screenshots must show below-fold photos, not
+                # empty blocks from untriggered browser lazy-loading.
+                page.evaluate("""async () => {
+                  const all=[...document.images];
+                  all.forEach(img => { img.loading='eager'; });
+                  await Promise.race([
+                    Promise.all(all.map(img=>img.decode().catch(()=>null))),
+                    new Promise(resolve=>setTimeout(resolve,6500))
+                  ]);
+                }""")
                 observed=page.evaluate("""() => {
                   const images=[...document.images];
                   const first=[...document.querySelectorAll('main img')].filter(i=>{
@@ -142,6 +152,12 @@ jobs:
                   desktop.goto(origin+"/yhteystiedot/",wait_until="domcontentloaded")
                   assert desktop.locator("main address").count()==1
                   assert desktop.locator('.contact-map iframe[title]').count()==1
+                  assert desktop.locator("#contact-map-frame").is_hidden()
+                  assert desktop.locator("#map-poster").is_visible()
+                  desktop.locator("[data-load-map]").click()
+                  assert desktop.locator("#contact-map-frame").is_visible()
+                  assert desktop.locator("#map-poster").is_hidden()
+                  assert "maps.google.com" in (desktop.locator("#contact-map-frame").get_attribute("src") or "")
                   desktop.locator('[name="name"]').fill("Testi henkilö")
                   desktop.locator('[name="email"]').fill("testi@example.com")
                   desktop.locator('[name="message"]').fill("Kysyisin kukista")
