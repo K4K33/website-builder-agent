@@ -83,6 +83,25 @@ class SourceSignatureLockTests(unittest.TestCase):
         self.assertEqual(roles["desk.jpg"],"gallery_photo")
         self.assertEqual(roles["decor.jpg"],"unclassified")
 
+    def test_real_lazy_loaded_source_logo_and_work_photos_are_inventoried(self):
+        from utils.source_experience import extract_source_experience
+        source="""<header><img src="data:image/svg+xml;base64,PHN2Zz4=" 
+                     data-src="/brand-real.png" alt="Company logo"></header>
+        <main><div class="team-member">
+         <img src="data:image/svg+xml;base64,PHN2Zz4="
+              data-src="/portrait-real.jpg" alt="Team member"></div>
+         <img src="data:image/svg+xml;base64,PHN2Zz4="
+              data-srcset="/real-work.jpg 600w, /real-work-xl.jpg 1200w"></main>"""
+        identity=extract_source_identity(source,"https://atelier.example/")
+        self.assertEqual(identity["original_logo_candidates"],
+                         ["https://atelier.example/brand-real.png"])
+        photos={p["src"]:p["role"] for p in identity["original_content_photos"]}
+        self.assertEqual(photos["https://atelier.example/portrait-real.jpg"],
+                         "staff_portrait")
+        self.assertIn("https://atelier.example/real-work.jpg",photos)
+        experience=extract_source_experience(source,"https://atelier.example/")
+        self.assertEqual(experience["observed_photo_assets"],2)
+
     def test_correct_multiroute_site_does_not_lose_original_media(self):
         report=audit_source_signature_lock(pages(), original())
         self.assertFalse(report["blocking"],report)
