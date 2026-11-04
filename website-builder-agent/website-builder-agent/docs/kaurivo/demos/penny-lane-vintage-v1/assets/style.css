@@ -1,0 +1,253 @@
+
+:root{--ink:#392720;--wine:#663846;--rose:#ad6971;--blush:#e6c5ba;--blush-light:#f1e3d9;--cream:#f1e4db;--ivory:#fff9f3;--line:#947e759a;--gold:#b89a72;--ease:cubic-bezier(.2,.8,.2,1);--bound:1280px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:"DM Sans",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+body.menu-open{overflow:hidden}
+img{display:block;max-width:100%}
+a{color:inherit}button{font:inherit}
+a:focus-visible,button:focus-visible{outline:3px solid var(--rose);outline-offset:4px}
+::selection{background:#f0b7c6;color:#392720}
+.skip{position:absolute;left:14px;top:-100px;background:var(--ink);color:white;padding:12px 20px;z-index:99}.skip:focus{top:10px}
+.bound{max-width:var(--bound);margin:0 auto;width:calc(100% - 104px)}
+.demo-flag{background:#392720;color:#f4e4d6;text-align:center;padding:7px 16px;font:500 10px/1.5 "DM Sans",sans-serif;letter-spacing:.035em}
+.demo-flag a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.header{background:var(--cream);position:sticky;top:0;z-index:30;border-bottom:1px solid #3b263229;box-shadow:0 3px 26px #482b3710}
+.header-inner{min-height:91px;display:grid;grid-template-columns:1fr 290px 1fr;align-items:center;gap:20px}
+.logo-link{justify-self:center;display:inline-flex;justify-content:center;align-items:center;width:245px;max-width:100%;height:82px}
+.logo-link img{width:240px;height:auto;max-height:74px;object-fit:contain}
+.nav-start,.nav-end{display:flex;gap:26px;align-items:center}
+.nav-start{justify-content:flex-start}.nav-end{justify-content:flex-end}
+.nav-link{font-size:11px;letter-spacing:.13em;text-decoration:none;text-transform:uppercase;font-weight:700;white-space:nowrap;position:relative;padding:12px 0}
+.nav-link::after{content:"";position:absolute;bottom:5px;left:0;width:0;height:1px;background:currentColor;transition:width .25s}
+.nav-link:hover::after,.nav-link[aria-current="page"]::after{width:100%}
+.nav-visit{border:1px solid var(--ink);padding:13px 20px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;letter-spacing:.1em;text-transform:uppercase;transition:background .2s,color .2s}
+.nav-visit:hover{background:var(--ink);color:white}
+.menu-toggle{display:none;border:1px solid #b89ea9;background:transparent;color:var(--ink);width:46px;height:44px;font-size:11px;letter-spacing:.1em;font-weight:700;text-transform:uppercase}
+.mobile-menu{display:none}
+.kicker{font-size:11px;letter-spacing:.21em;text-transform:uppercase;font-weight:700}
+.script{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-style:italic;letter-spacing:-.038em}
+.display{font-family:"Cormorant Garamond",Georgia,serif;letter-spacing:-.058em;font-weight:500;line-height:.93}
+h1,h2,h3,p{overflow-wrap:break-word}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:49px;padding:14px 23px;text-decoration:none;border:1px solid var(--ink);background:var(--ink);color:#fff;font-size:11px;letter-spacing:.085em;text-transform:uppercase;font-weight:700;transition:background .25s,color .25s,transform .25s var(--ease)}
+.button:hover{background:var(--wine);border-color:var(--wine);transform:translateY(-2px)}
+.button.light{background:var(--ivory);color:var(--ink);border-color:var(--ivory)}
+.button.light:hover{background:var(--blush-light)}
+.button.outline{background:transparent;color:var(--ink)}
+.button.outline:hover{background:var(--ink);color:var(--ivory)}
+.inline-link{display:inline-block;font-size:12px;font-weight:700;text-underline-offset:5px;letter-spacing:.025em}
+.inline-link:hover{text-decoration-thickness:2px}
+.hero{background:var(--blush);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;pointer-events:none;inset:0;opacity:.17;background:repeating-linear-gradient(90deg,transparent,transparent 3px,#5c2c3c13 4px),repeating-linear-gradient(0deg,transparent,transparent 5px,#fff4 6px)}
+.hero-grid{position:relative;display:grid;grid-template-columns:47% 53%;min-height:650px}
+.hero-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:70px 55px 70px 0}
+.hero-copy h1{font-size:clamp(83px,9.2vw,155px);margin:25px 0 21px;line-height:.8;letter-spacing:-.064em}
+.hero-copy h1 .second{display:block;padding-left:44px;font-size:.79em;font-style:italic;font-weight:400;color:var(--wine)}
+.hero-copy p{font:400 17px/1.7 "DM Sans",sans-serif;max-width:420px;margin:18px 0 28px}
+.hero-pic-wrap{position:relative;padding:35px 0 30px 40px;min-width:0}
+.hero-pic-wrap::before{content:"";position:absolute;inset:18px 14px 18px 54px;border:1px solid #58323a84}
+.hero-main-photo{position:relative;height:100%;max-height:630px;width:100%;object-fit:cover;object-position:center 50%;box-shadow:16px 19px 40px #4d233333}
+.hero-tag{position:absolute;bottom:65px;left:-12px;transform:rotate(-10deg);width:155px;height:155px;border-radius:100%;background:var(--wine);color:#fff8f2;border:1px dashed #f0c4d1;outline:5px solid var(--wine);display:grid;place-content:center;text-align:center;box-shadow:0 8px 20px #39222a55}
+.hero-tag span{font-family:"Cormorant Garamond",Georgia,serif;font-size:43px;font-weight:600;line-height:1}
+.hero-tag small{display:block;font-size:10px;line-height:1.4;letter-spacing:.17em;text-transform:uppercase;margin-top:7px}
+.hero-corner{position:absolute;right:21px;top:47px;background:#fdf7f0;color:var(--wine);padding:12px 15px;font-size:10px;letter-spacing:.15em;text-transform:uppercase;transform:rotate(3deg);box-shadow:0 4px 10px #0002}
+.section{padding:102px 0}
+.section-header{display:flex;align-items:end;justify-content:space-between;gap:45px;margin-bottom:42px}
+.section-header h2{font:500 clamp(57px,6vw,91px)/.94 "Cormorant Garamond",Georgia,serif;letter-spacing:-.053em;margin:15px 0 0;max-width:730px}
+.section-header p{font-size:14px;line-height:1.8;max-width:340px;margin:0;color:#584654}
+.style-ledger{display:flex;gap:30px;padding:21px 0 20px;align-items:center;justify-content:space-between;border-bottom:1px solid #70475455}
+.style-ledger span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.style-ledger em{font:italic 22px/1 "Cormorant Garamond",serif;color:var(--wine)}
+.featured-categories{display:grid;grid-template-columns:1.05fr .9fr 1fr;gap:22px;align-items:start}
+.category{min-width:0;text-decoration:none;display:block}
+.category:nth-child(2){margin-top:58px}
+.category:nth-child(3){margin-top:125px}
+.category-image{aspect-ratio:3/3.7;background:#d9b9b2;overflow:hidden;position:relative;border:9px solid var(--ivory);box-shadow:0 16px 25px #3c243019}
+.category-image img{width:100%;height:100%;object-fit:cover;transition:transform .55s var(--ease)}
+.category:hover img{transform:scale(1.055)}
+.category-num{position:absolute;top:10px;left:10px;padding:8px 10px;background:#fdf7f2e8;font-size:10px;letter-spacing:.1em}
+.category h3{font:500 38px/1 "Cormorant Garamond",Georgia,serif;letter-spacing:-.035em;margin:16px 0 7px}
+.category p{font-size:12px;line-height:1.65;color:#654c5b;margin:0;max-width:260px}
+.story{background:var(--ink);color:var(--cream);padding:100px 0;position:relative;overflow:hidden}
+.story::after{content:"";position:absolute;top:-45%;right:-180px;width:590px;height:980px;border-radius:50%;border:1px solid #bb8b9960;transform:rotate(-25deg);pointer-events:none}
+.story-grid{display:grid;grid-template-columns:40% 60%;gap:70px;position:relative;z-index:1}
+.story-photo-column{position:relative;align-self:center;padding:10px 28px 35px 20px}
+.story-photo-column::before{content:"";position:absolute;inset:0 45px 14px 0;background:#9b6073;transform:rotate(-5deg)}
+.story-photo{width:100%;height:410px;object-fit:cover;object-position:center;position:relative;filter:saturate(.85) contrast(1.05);box-shadow:10px 10px 25px #0005}
+.story-caption{position:relative;font:italic 23px/1 "Cormorant Garamond",Georgia,serif;color:#f8d9d2;margin:19px 0 0}
+.story-copy{padding:12px 20px 0 0}
+.story-copy h2{font:500 clamp(62px,7.5vw,118px)/.86 "Cormorant Garamond",Georgia,serif;letter-spacing:-.052em;margin:23px 0 33px}
+.story-copy h2 em{color:var(--blush);font-weight:400}
+.story-copy p{max-width:520px;color:#ebdde4;font-size:15px;line-height:1.9;margin:0 0 18px}
+.story-copy .inline-link{margin-top:23px;color:#fff}
+.letter-note{border-left:3px solid var(--rose);padding-left:18px;font:italic 27px/1.2 "Cormorant Garamond",Georgia,serif;color:#f5c6cf;margin-top:32px}
+.sell-panel{background:var(--ivory);padding:85px 0}
+.sell-inner{display:grid;grid-template-columns:1.4fr 1fr;gap:70px;align-items:center}
+.sell-inner h2{font:500 clamp(65px,7vw,112px)/.86 "Cormorant Garamond",Georgia,serif;letter-spacing:-.059em;margin:17px 0}
+.sell-inner h2 em{color:var(--rose)}
+.sell-inner p{font-size:15px;line-height:1.75;max-width:460px;color:#5a4752}
+.sell-steps{border-top:1px solid var(--line)}
+.sell-step{padding:24px 0;border-bottom:1px solid var(--line);display:block}
+.sell-step .step-number{font:italic 30px "Cormorant Garamond",Georgia,serif;color:var(--rose)}
+.sell-step h3{font-size:14px;margin:0 0 7px;font-weight:700}
+.sell-step p{font-size:13px;margin:0;color:#604d59;line-height:1.7}
+.rental{padding:80px 0;background:#cb9591;color:#392720}
+.rental-grid{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:70px}
+.rental h2{font:500 clamp(66px,7vw,112px)/.85 "Cormorant Garamond",Georgia,serif;letter-spacing:-.053em;margin:20px 0 24px}
+.rental p{font-size:15px;line-height:1.75;max-width:490px}
+.rental-card{height:420px;position:relative;background:#e7c2c7;overflow:hidden;max-width:470px;justify-self:center;width:100%;border:9px solid #f9e2e3;transform:rotate(3deg);box-shadow:15px 18px 20px #48263640}
+.rental-card img{width:100%;height:100%;object-fit:contain;object-position:center;background:#e6dfd9}
+.rental .button{margin-top:20px}
+.contact-band{background:#efe0d4;padding:95px 0}
+.contact-band-grid{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+.contact-band h2{font:500 clamp(69px,8vw,125px)/.84 "Cormorant Garamond",Georgia,serif;letter-spacing:-.052em;margin:16px 0 25px}
+.contact-band p{font-size:15px;line-height:1.85;max-width:400px}
+.visit-paper{border:1px solid #9e6d7d;background:var(--ivory);box-shadow:11px 13px 0 #b77481;padding:40px 45px;transform:rotate(-1.1deg)}
+.visit-paper h3{font:500 42px/1 "Cormorant Garamond",Georgia,serif;margin:0 0 20px}
+.visit-paper address{font-size:16px;font-style:normal;line-height:1.75;margin-bottom:16px}
+.visit-paper table{border-collapse:collapse;width:100%;font-size:13px}
+.visit-paper td{padding:13px 0;border-top:1px solid #70475433}
+.visit-paper td:last-child{text-align:right;font-weight:700}
+.visit-paper .inline-link{margin-top:25px}
+.footer{background:#33231d;color:#f7eaf0;padding:62px 0 25px}
+.footer-grid{display:grid;grid-template-columns:1.5fr 1fr .9fr;gap:50px}
+.footer-logo{display:block;background:#f9f1ea;max-width:220px;padding:5px 10px;box-shadow:7px 7px 0 #8c526a}
+.footer-logo img{width:100%;height:auto}
+.footer p{font-size:13px;line-height:1.7;color:#dfcbd5}
+.footer h3{font-size:11px;letter-spacing:.19em;text-transform:uppercase;font-weight:700;margin:2px 0 17px}
+.footer a{color:#f7eaf0}
+.footer-nav{display:grid;gap:11px}
+.footer-nav a{font-size:13px;text-decoration:none}.footer-nav a:hover{text-decoration:underline}
+.footer-contact a{display:block;font-size:13px;margin:10px 0;line-height:1.55;overflow-wrap:anywhere}
+.footer-bottom{margin-top:65px;border-top:1px solid #d4b4c34d;padding-top:22px;display:flex;gap:20px;justify-content:space-between;color:#bfa4b2;font-size:11px}
+.sub-hero{background:var(--blush-light);padding:95px 0 85px;position:relative;overflow:hidden}
+.sub-hero::before{content:"";width:340px;height:340px;border:1px solid #874e626e;transform:rotate(15deg);position:absolute;right:-190px;top:-155px;pointer-events:none}
+.sub-hero .bound{position:relative}
+.sub-hero h1{font:500 clamp(77px,11vw,165px)/.84 "Cormorant Garamond",Georgia,serif;letter-spacing:-.059em;margin:21px 0 20px;max-width:950px}
+.sub-hero .intro{font-size:17px;line-height:1.7;max-width:650px;margin:17px 0}
+.page-section{padding:85px 0}
+.page-two{display:grid;grid-template-columns:1fr 1fr;gap:85px;align-items:start}
+.page-two h2{font:500 clamp(58px,6vw,90px)/.91 "Cormorant Garamond",Georgia,serif;letter-spacing:-.052em;margin:10px 0 25px}
+.page-two p{font-size:15px;line-height:1.85;color:#5c4855;margin:0 0 17px}
+.page-figure{margin:0;position:relative}
+.page-figure img{width:100%;height:auto;max-height:620px;object-fit:cover}
+.page-figure figcaption{font:italic 21px "Cormorant Garamond",Georgia,serif;color:var(--wine);margin-top:12px}
+.collection{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:25px}
+.collection figure{margin:0;min-width:0}
+.collection .frame{background:var(--ivory);padding:10px;box-shadow:8px 9px 0 #bd8b9b30}
+.collection img{width:100%;height:330px;object-fit:cover;background:#eee5e1}
+.collection figcaption{font-family:"Cormorant Garamond",Georgia,serif;font-size:32px;line-height:1.1;padding-top:16px}
+.collection small{display:block;color:#634859;font-size:12px;line-height:1.5;margin-top:8px;font-family:"DM Sans",sans-serif}
+.subnote{font-size:13px;color:#654c58;line-height:1.75;margin:28px 0}
+.editorial-line{border-top:1px solid #a78390;padding:28px 0;display:grid;grid-template-columns:1fr 2fr;gap:40px}
+.editorial-line h3{font:500 30px "Cormorant Garamond",Georgia,serif;margin:0}
+.editorial-line p{font-size:14px;line-height:1.75;color:#5b4752;margin:0}
+.faq{display:grid;grid-template-columns:1fr 1.2fr;gap:55px;border-top:1px solid #9c7885;padding:24px 0}
+.faq h3{font:500 27px "Cormorant Garamond",Georgia,serif;margin:0}
+.faq p{font-size:14px;line-height:1.7;margin:0;color:#5a4855}
+.paper-card{border:1px solid #a78691;padding:42px 44px;background:#fffcf8;box-shadow:13px 14px 0 #e6c6cd}
+.paper-card h3{font:500 39px/1 "Cormorant Garamond",Georgia,serif;margin:0 0 23px}
+.paper-card p{font-size:14px;line-height:1.8;color:#5b4653}
+.paper-card a:not(.button){text-underline-offset:4px}
+.page-cta{background:var(--wine);color:#fff5ee;padding:70px 0}
+.page-cta .bound{display:flex;align-items:center;justify-content:space-between;gap:40px}
+.page-cta h2{font:500 clamp(50px,5vw,80px)/.92 "Cormorant Garamond",Georgia,serif;letter-spacing:-.052em;margin:12px 0}
+.page-cta .button{background:#fff4ed;color:var(--wine);border-color:#fff4ed;flex-shrink:0}
+.page-cta .button:hover{background:#efd4d7}
+.contact-row{display:grid;grid-template-columns:1.1fr .9fr;gap:75px}
+.contact-row .paper-card{margin-top:18px}
+.hours-list{padding:0;list-style:none}
+.hours-list li{display:flex;justify-content:space-between;padding:15px 0;border-bottom:1px solid #9c77873d;font-size:13px;gap:15px}
+.hours-list strong{font-size:13px}
+.duo-photo{display:grid;grid-template-columns:1fr .58fr;gap:18px;align-items:center}
+.duo-photo img:first-child{width:100%;height:480px;object-fit:cover}
+.duo-photo img:last-child{width:100%;height:300px;object-fit:cover}
+.notice{font-size:12px;color:#684c5a;line-height:1.6}
+@media(max-width:1090px){
+.bound{width:calc(100% - 64px)}
+.header-inner{grid-template-columns:1fr 220px 1fr;gap:12px}
+.logo-link{width:210px}.logo-link img{width:210px}
+.nav-start,.nav-end{gap:13px}.nav-link,.nav-visit{font-size:10px}
+.hero-copy{padding-right:20px}
+.hero-copy h1{font-size:clamp(76px,10vw,130px)}
+.hero-tag{width:125px;height:125px;left:2px;bottom:60px}
+.hero-tag span{font-size:34px}
+.story-grid{gap:40px}.sell-inner{gap:40px}
+}
+@media(max-width:740px){
+.bound{width:calc(100% - 38px)}
+.header-inner{grid-template-columns:1fr auto;min-height:75px}
+.logo-link{justify-self:start;width:205px;height:68px}.logo-link img{width:195px;max-height:61px}
+.nav-start,.nav-end{display:none}.menu-toggle{display:block;justify-self:end}
+.mobile-menu.open{display:flex;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:var(--cream);border-bottom:2px solid var(--wine);padding:18px 22px 27px;box-shadow:0 15px 28px #281b2d33}
+.mobile-menu a{padding:15px 6px;font-size:14px;font-weight:700;border-bottom:1px solid #9d798863;text-decoration:none}
+.mobile-menu a:last-child{background:var(--ink);color:#fff;padding:15px;margin-top:10px}
+.hero-grid{grid-template-columns:1fr;min-height:auto}
+.hero-copy{padding:55px 0 26px}
+.hero-copy h1{font-size:clamp(91px,18vw,133px);margin:24px 0 23px}
+.hero-copy p{font-size:15px;margin:8px 0 25px}
+.hero-pic-wrap{height:450px;padding:0 0 24px 25px}
+.hero-pic-wrap::before{inset:12px 17px 11px 36px}
+.hero-main-photo{height:100%;max-height:none;object-position:center 46%}
+.hero-tag{width:110px;height:110px;bottom:48px;left:7px}
+.hero-tag span{font-size:30px}
+.hero-corner{top:12px;right:9px}
+.section{padding:69px 0}
+.section-header{display:block;margin-bottom:27px}
+.section-header h2{font-size:clamp(56px,12vw,79px)}
+.section-header p{margin-top:18px}
+.style-ledger{display:block}.style-ledger span{display:block;margin-bottom:8px}
+.featured-categories{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.category:nth-child(2){margin-top:27px}
+.category:nth-child(3){margin-top:0;grid-column:1/-1;width:min(56%,270px);justify-self:center}
+.category-image{border-width:6px;aspect-ratio:3/4}
+.category h3{font-size:29px}.category p{font-size:11px}
+.story{padding:72px 0}
+.story-grid{grid-template-columns:1fr;gap:28px}
+.story-photo-column{max-width:365px;padding:10px 22px 20px 13px}
+.story-photo{height:300px}
+.story-copy{padding:5px 0 0}
+.story-copy h2{font-size:clamp(67px,14vw,100px);margin:17px 0 23px}
+.story-copy p{font-size:14px}
+.sell-panel{padding:70px 0}
+.sell-inner{grid-template-columns:1fr;gap:35px}
+.sell-inner h2{font-size:clamp(65px,13vw,100px)}
+.rental{padding:65px 0}.rental-grid{grid-template-columns:1fr;gap:38px}
+.rental h2{font-size:clamp(65px,14vw,105px)}
+.rental-card{max-width:330px;height:370px}
+.contact-band{padding:70px 0}
+.contact-band-grid{grid-template-columns:1fr;gap:32px}
+.contact-band h2{font-size:clamp(67px,14vw,104px)}
+.visit-paper{transform:none;box-shadow:7px 8px 0 #b77481;padding:32px}
+.footer{padding:50px 0 23px}
+.footer-grid{grid-template-columns:1fr 1fr;gap:33px}
+.footer-grid>div:first-child{grid-column:1/-1}
+.footer-bottom{display:block;margin-top:40px}.footer-bottom span{display:block;margin-top:5px}
+.sub-hero{padding:68px 0 61px}.sub-hero h1{font-size:clamp(75px,15vw,118px)}
+.sub-hero .intro{font-size:15px}
+.page-section{padding:65px 0}
+.page-two{grid-template-columns:1fr;gap:28px}
+.page-two h2{font-size:clamp(57px,12vw,88px)}
+.collection{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.collection figure:last-child{grid-column:1/-1;max-width:260px;justify-self:center}
+.collection .frame{padding:6px}.collection img{height:250px}
+.collection figcaption{font-size:28px}
+.editorial-line{grid-template-columns:1fr;gap:8px}
+.faq{grid-template-columns:1fr;gap:10px}
+.page-cta .bound{display:block}.page-cta .button{margin-top:22px}
+.contact-row{grid-template-columns:1fr;gap:35px}
+.duo-photo img:first-child{height:340px}.duo-photo img:last-child{height:220px}
+}
+@media(max-width:380px){
+.hero-copy h1{font-size:86px}
+.hero-copy h1 .second{padding-left:23px}
+.category h3{font-size:26px}.category-image{border-width:4px}
+.hero-pic-wrap{height:365px}
+.collection img{height:205px}
+.footer-grid{grid-template-columns:1fr}
+.footer-grid>div:first-child{grid-column:1}
+.logo-link{width:170px}.logo-link img{width:166px}
+.paper-card{padding:25px}
+.visit-paper{padding:25px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
