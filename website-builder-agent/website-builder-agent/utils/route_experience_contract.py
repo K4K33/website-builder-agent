@@ -188,6 +188,24 @@ def _first_section(raw: str):
     return (main.find(["section", "article"], recursive=False)
             or main.find(["section", "article"]) or main) if main else None
 
+def _meaningful_first_section_media(first) -> bool:
+    """Brand marks, decorative SVG icons and dummy placeholder IMG are not goods."""
+    if first.select_one("video,iframe[src]"):
+        return True
+    for image in first.select("img[src],img[data-src],picture img"):
+        src = str(image.get("data-src") or image.get("src") or "")
+        alt = str(image.get("alt") or "")
+        marker = (alt + " " + src.rsplit("/", 1)[-1]).casefold()
+        if re.search(r"logo|favicon|brand.?mark|placeholder|sponsor|partner|icon|ikoni|"
+                     r"yhteisty[oö]kumppani|logo.svg", marker):
+            continue
+        if urlsplit(src).path.casefold().endswith(".svg"):
+            continue
+        if not src or src.startswith(("data:image/svg+xml", "javascript:", "blob:")):
+            continue
+        return True
+    return False
+
 def _contact_evidence(first) -> bool:
     if first.select_one('address,a[href^="tel:"],a[href^="mailto:"]'):
         return True
@@ -207,9 +225,7 @@ def audit_route_experience(pages: dict[str, str], research: dict) -> dict:
         if route not in pages: continue  # Source architecture checks this.
         first = _first_section(pages[route])
         if first is None: continue
-        if row["product_media_required"] and first.select_one(
-            'img[src],img[data-src],picture img,video,iframe[src]'
-        ) is None:
+        if row["product_media_required"] and not _meaningful_first_section_media(first):
             issue = "product_media_missing_first_section:" + route
             if not _signed_exception(research,pages,contract["source_sha256"],issue):
                 blocking.append({
