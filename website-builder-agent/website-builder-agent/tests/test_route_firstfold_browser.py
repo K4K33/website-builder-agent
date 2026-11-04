@@ -44,6 +44,13 @@ class FirstFoldBrowserGateTests(unittest.TestCase):
         self.assertGreaterEqual(len(issues),2,issues)
         self.assertFalse(result["pass"])
 
+    def test_grossly_upscaled_original_product_thumbnail_is_rejected(self):
+        tiny=SVG.replace("800","60").replace("600","50")
+        result=self.run_page(html(hidden_below_fold=False).replace(SVG,tiny))
+        errors=[item for item in result["issues"]
+                if "severely enlarged" in item]
+        self.assertGreaterEqual(len(errors),1,errors)
+
     def test_product_actually_visible_at_first_fold_passes_specific_gate(self):
         result=self.run_page(html(hidden_below_fold=False))
         issues=[x for x in result["issues"] if "lacks meaningful merchandise" in x]
