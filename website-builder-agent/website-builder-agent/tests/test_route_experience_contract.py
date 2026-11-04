@@ -135,6 +135,43 @@ class PurposeFirstRouteTests(TestCase):
         self.assertIn("contact_page_hides_verified_visit_details",
                       {x["kind"] for x in issues})
 
+    def test_manual_demo_must_use_contact_from_captured_source_without_company_facts(self):
+        # External/Codex HTML previews only carry a provenance source inventory.
+        # The original hard gate inadvertently skipped every contact route
+        # because the preview checker did not pass company_facts.
+        data=research()
+        data.pop("company_facts")
+        data["source_inventory"]["pages"][0]["text"]=(
+            "Penny Lane, Runeberginkatu 37, 00100 Helsinki. "
+            "Aukioloajat arkisin 12-17.")
+        pages=good_pages()
+        pages["contact/index.html"]=page("Visit our boutique",
+            body='<a href="tel:+358999999">Call our showroom</a>')
+        blocked=audit_route_experience(pages,data)["blocking"]
+        self.assertIn("contact_page_hides_verified_visit_details",
+                      {x["kind"] for x in blocked})
+        pages["contact/index.html"]=page("Visit our boutique",
+            body='<p>Runeberginkatu 37, 00100 Helsinki</p>')
+        corrected=audit_route_experience(pages,data)["blocking"]
+        self.assertFalse(corrected,corrected)
+
+    def test_website_verified_contact_cannot_be_swapped_for_fabricated_phone(self):
+        data=research()
+        pages=good_pages()
+        pages["contact/index.html"]=page("Visit our workshop",
+            body='<a href="tel:+35899999999">Call us now</a>')
+        blocked=audit_route_experience(pages,data)["blocking"]
+        self.assertIn("contact_page_hides_verified_visit_details",
+                      {x["kind"] for x in blocked})
+
+    def test_missing_main_element_cannot_bypass_task_specific_contact_guard(self):
+        pages=good_pages()
+        pages["contact/index.html"]=(
+            '<!doctype html><html><body><h1>Contact us</h1></body></html>')
+        blocked=audit_route_experience(pages,research())["blocking"]
+        self.assertIn("missing_task_first_section",
+                      {x["kind"] for x in blocked})
+
     def test_one_photo_three_routes_and_identical_cta_rejected(self):
         pages=good_pages()
         picture="https://work.example/p0.jpg"
