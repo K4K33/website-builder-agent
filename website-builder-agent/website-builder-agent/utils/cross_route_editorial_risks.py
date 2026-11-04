@@ -51,6 +51,12 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
     research = research or {}
     if not isinstance(pages, dict) or len(pages) < 3:
         return {"pending": [], "observations": {"routes": len(pages or {})}}
+    original_hosts = {
+        (urlsplit(str(page.get("url") or "")).hostname or "").lower().removeprefix("www.")
+        for page in (research.get("source_inventory") or {}).get("pages") or []
+        if isinstance(page, dict) and page.get("url")
+    }
+    original_hosts.discard("")
     image_routes: dict[str, set[str]] = defaultdict(set)
     image_mentions = 0
     repeated_heading_routes: dict[str, set[str]] = defaultdict(set)
@@ -99,6 +105,21 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
     repetitions = sorted(((img, sorted(where)) for img, where in image_routes.items()
                           if len(where) >= 3),
                          key=lambda row: (-len(row[1]), row[0]))
+    source_hotlinks = sorted(
+        asset for asset in image_routes
+        if (urlsplit(asset).hostname or "").lower().removeprefix("www.")
+        in original_hosts
+    )
+    if source_hotlinks:
+        pending.append({
+            "category": "original_hosted_media_dependency",
+            "issue": "The new site still loads company photos from the old site's "
+                     "server. Confirm redistribution rights and package/download "
+                     "licensed assets into owner-controlled hosting before replacing "
+                     "the original site; deleting the old host could break the redesign.",
+            "external_source_asset_count": len(source_hotlinks),
+            "example_assets": source_hotlinks[:4],
+        })
     if repetitions:
         pending.append({
             "category": "recycled_business_photography",
@@ -150,6 +171,7 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
             "distinct_main_image_assets": unique_count,
             "image_placements": image_mentions,
             "same_photo_on_3plus_routes": len(repetitions),
+            "old_site_hotlinked_photo_assets": len(source_hotlinks),
             "text_only_first_sections": sorted(text_hero_routes),
         },
         "note": "Editorial review candidates, NOT pixel-level proof, copyright clearance or a numerical design score.",
