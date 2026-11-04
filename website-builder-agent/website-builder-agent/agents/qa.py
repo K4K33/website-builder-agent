@@ -25,6 +25,7 @@ from bs4 import BeautifulSoup
 
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
+from utils.route_experience_contract import derive_route_experience_contract
 from utils.visual_comparison import build_visual_comparison
 from utils.visual_media_gate import audit_visual_media
 from utils.site_architecture import (
@@ -1246,8 +1247,17 @@ def run_qa(slug_or_name: str) -> dict:
     if (automated["automated_pass"] and not parity_hard_missing
             and universal["automated_pass"] and visual_media["owner_preview_ready"]
             and originality["pass"]):
+        role_requirements={
+            item["route"]: item
+            for item in derive_route_experience_contract(research)["routes"]
+        }
         page_browsers={
-            route:inspect_site(site_root/route)
+            route:inspect_site(
+                site_root/route,
+                **({"first_view_requirement":role_requirements[route]}
+                   if role_requirements.get(route,{}).get("product_media_required")
+                   else {})
+            )
             for route in rendered_pages
         }
         browser=dict(page_browsers["index.html"])
