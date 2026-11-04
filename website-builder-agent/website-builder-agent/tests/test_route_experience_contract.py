@@ -130,6 +130,11 @@ class PurposeFirstRouteTests(TestCase):
     def test_exception_needs_genuine_exact_build_independent_evidence(self):
         pages=good_pages()
         pages["rental/index.html"]=page("No photo for this outfit")
+        # Keep only TWO text-only first sections, so this test isolates
+        # the source+build-specific exception rather than a second
+        # independent cross-route monotony violation.
+        pages["services/index.html"]=page(
+            "Our services", image="https://work.example/p3.jpg")
         data=research()
         issue="product_media_missing_first_section:rental/index.html"
         data["route_composition_exceptions"]=[{
@@ -174,25 +179,28 @@ class PurposeFirstRouteTests(TestCase):
         fake={
             "automated_pass":True,
         }
-        with TemporaryDirectory() as directory, (
-            patch("utils.site_build_pipeline.validate_creative_directions"),
-            patch("utils.site_build_pipeline.validate_site_navigation",
-                  return_value={"pass":True,"issues":[]}),
-            patch("agents.builder._validate_generated_content"),
-            patch("agents.builder._validate_plan_sections"),
-            patch("agents.qa._automated_checks",return_value=fake),
-            patch("utils.site_build_pipeline.audit_visual_media",
-                  return_value={"static_pass":True,"blockers":[]}),
-            patch("utils.site_build_pipeline.validate_locked_copy"),
-            patch("utils.site_build_pipeline.audit_content_parity",
-                  return_value={"missing":[],"review_required":[]}),
-            patch("utils.site_build_pipeline.audit_source_fidelity",
-                  return_value={"missing":[]}),
-            patch("utils.site_build_pipeline.audit_universal_standards",
-                  return_value={"automated_pass":True}),
-            patch("utils.site_build_pipeline.client_design_brief",
-                  return_value={}),
-        ):
+        from contextlib import ExitStack
+        with TemporaryDirectory() as directory, ExitStack() as patches:
+            for mocked in (
+                patch("utils.site_build_pipeline.validate_creative_directions"),
+                patch("utils.site_build_pipeline.validate_site_navigation",
+                      return_value={"pass":True,"issues":[]}),
+                patch("agents.builder._validate_generated_content"),
+                patch("agents.builder._validate_plan_sections"),
+                patch("agents.qa._automated_checks",return_value=fake),
+                patch("utils.site_build_pipeline.audit_visual_media",
+                      return_value={"static_pass":True,"blockers":[]}),
+                patch("utils.site_build_pipeline.validate_locked_copy"),
+                patch("utils.site_build_pipeline.audit_content_parity",
+                      return_value={"missing":[],"review_required":[]}),
+                patch("utils.site_build_pipeline.audit_source_fidelity",
+                      return_value={"missing":[]}),
+                patch("utils.site_build_pipeline.audit_universal_standards",
+                      return_value={"automated_pass":True}),
+                patch("utils.site_build_pipeline.client_design_brief",
+                      return_value={}),
+            ):
+                patches.enter_context(mocked)
             with self.assertRaisesRegex(RuntimeError,
                                         "Route-specific composition rejected"):
                 build_pages_from_response(
