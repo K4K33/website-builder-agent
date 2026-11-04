@@ -1535,6 +1535,24 @@ kokemusta staattiseksi geneeriseksi pohjaksi. Todelliset käyttöoikeudet,
 pitkäkestoinen suorituskyky, saavutettavuus ja reduced-motion ovat pakollisia.
 Puuttuva kuvien/videoiden käyttöoikeus on QA-este, ei lupa heikentää sivua.
 
+MONISIVUISEN BRÄNDIUSKOLLISEN SIVUN LAATUPORTTI:
+- Suunnittele JOKAISEN reitin ensimmäinen näkymä kyseisen reitin aidon tehtävän
+  mukaan. Älä käytä samaa jättimäistä tekstipainotteista heroa kaikilla
+  alasivuilla: valikoimaan tuotteet, vuokraukseen vuokrattavat tuotteet,
+  yritysesittelyyn oikeat ihmiset/tilat, yhteystietoihin osoite ja aukiolo.
+- Sama alkuperäinen tuotekuva ei saa muuttua yleiskuvaksi neljälle alasivulle.
+  Käytä lähdekuvien todellisia käyttötarkoituksia, ja jos kelvollisia
+  uniikkeja kuvia ei ole tarpeeksi, merkitse oikea puute tarkastettavaksi.
+  Älä keksi tai generoi yrityksen aitona esiteltyjä kuvia.
+- Pienen lähtökuvan suurentaminen isoon palstaan voi tehdä sen epätarkaksi;
+  suunnittele kuvan palstakoko alkuperäisen pikselitarkkuuden mukaan.
+- Älä toista identtistä leveää CTA-osaa tai koristeellisia postikorttikehyksiä
+  kaikilla reiteillä. Etsi yrityksen omaa, ei suunnittelutoimiston yleistä,
+  rytmiä. Visuaalinen ilmavuus EI saa peittää ohjeita, hintoja tai myyntipolkua.
+- Tarkista lähteen tuoteuutuusvirrat, galleriat ja mahdolliset dynaamiset
+  integraatiot ennen staattiseksi korvaamista. Käyttöoikeudettomat kuvat ja
+  vanhan sivun hotlinkit eivät kelpaa lopulliseksi omistajan hallinnoimaksi mediaksi.
+
 ASIAKKAAN BRÄNDIN SÄILYTTÄMINEN JA MUOKKAUSMAHDOLLISUUS:
 {json.dumps(brand_brief, ensure_ascii=False)}
 

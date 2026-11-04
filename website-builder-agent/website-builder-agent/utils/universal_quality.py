@@ -18,6 +18,7 @@ from utils.brand_experience import audit_brand_experience
 from utils.source_experience import audit_source_experience_parity
 from utils.source_experience_gate import audit_experience_continuity
 from utils.source_signature_lock import audit_source_signature_lock
+from utils.cross_route_editorial_risks import audit_cross_route_editorial_risks
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -64,6 +65,7 @@ UNIVERSAL_STANDARDS = (
     ("sector_recognition", "First-view company industry recognisability", "visual"),
     ("company_voice_and_rhythm", "Company-specific voice and page layout", "visual"),
     ("original_brand_experience", "Full original wordmark, palette mood and voice are source-verified", "brand"),
+    ("cross_route_visual_rhythm", "Photo diversity, substantive first views and non-repetitive CTA sections", "visual"),
     ("first_view_visual_priority", "Evidence-based first mobile viewport shows actual client work where appropriate", "visual"),
 
 
@@ -183,6 +185,13 @@ def audit_universal_standards(
         fail("original_visual_assets", str(item))
     for item in signature["pending"]:
         needs("original_visual_assets", str(item))
+
+    # A technically present gallery can still be repeated verbatim on four
+    # unrelated routes. Surface that to an independent reviewer instead of
+    # certifying a source-rich business as visually diversified.
+    editorial_risks = audit_cross_route_editorial_risks(pages, research)
+    for risk in editorial_risks["pending"]:
+        needs("cross_route_visual_rhythm", str(risk))
 
     source_experience = audit_source_experience_parity(pages, research)
     for issue in source_experience["blocking"]:
