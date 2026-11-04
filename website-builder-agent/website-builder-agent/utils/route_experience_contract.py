@@ -206,14 +206,67 @@ def _meaningful_first_section_media(first) -> bool:
         return True
     return False
 
-def _contact_evidence(first) -> bool:
+def _known_contact_markers(research: dict) -> list[str]:
+    """Grounded tokens from verified facts OR the captured original website.
+
+    External/hand-written demos do not always carry company_facts: their
+    source_inventory still contains real contact details. A made-up tel link
+    must not count as proof of the original address or email.
+    """
+    markers = []
+    facts = research.get("company_facts") or {}
+    for key in ("address", "phone", "email"):
+        value = str(facts.get(key) or "").strip()
+        if value:
+            markers.append(value.casefold())
+    for page in (research.get("source_inventory") or {}).get("pages") or []:
+        if not isinstance(page, dict):
+            continue
+        text = str(page.get("text") or "")
+        markers.extend(m.casefold() for m in re.findall(
+            r"\\b[\\wåäöÅÄÖ-]*(?:katu|tie|kuja|polku|vägen|gatan)\\s+\\d+[a-z]?\\b",
+            text, flags=re.I))
+        markers.extend(m.casefold() for m in re.findall(
+            r"[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}", text, flags=re.I))
+        for field in ("links", "footer_links"):
+            for link in page.get(field) or []:
+                if not isinstance(link, dict):
+                    continue
+                href = str(link.get("href") or "")
+                if href.lower().startswith(("mailto:", "tel:")):
+                    markers.append(href.split(":", 1)[1].strip().casefold())
+    return sorted({m for m in markers if len(m) >= 5})
+
+
+def _source_has_contact_facts(research: dict) -> bool:
+    if _known_contact_markers(research):
+        return True
+    facts = research.get("company_facts") or {}
+    if facts.get("opening_hours"):
+        return True
+    # Exact hours may be presented in prose, not structured research.
+    source_text = " ".join(str(page.get("text") or "")
+                           for page in (research.get("source_inventory") or {}).get("pages") or []
+                           if isinstance(page, dict))
+    return bool(re.search(r"\\b(?:aukioloaj\\w*|avoinna|opening hours|opening times)\\b",
+                          source_text, flags=re.I))
+
+
+def _contact_evidence(first, research: dict) -> bool:
+    visible = first.get_text(" ", strip=True).casefold()
+    hrefs = " ".join(str(a.get("href") or "") for a in first.select("a[href]")).casefold()
+    observed = visible + " " + hrefs
+    known = _known_contact_markers(research)
+    if known:
+        # Source-grounded identity matters: any arbitrary phone/address can
+        # be present in the markup but still belong to the wrong business.
+        return any(marker in observed for marker in known)
     if first.select_one('address,a[href^="tel:"],a[href^="mailto:"]'):
         return True
-    # Verified address may be presented beside a real route link.
     directions = first.select_one('a[href*="google.com/maps"],'
                                   'a[href*="maps.apple.com"],'
                                   'a[href*="openstreetmap.org"]')
-    return bool(directions and len(first.get_text(" ", strip=True)) >= 20)
+    return bool(directions and len(visible) >= 20)
 
 def audit_route_experience(pages: dict[str, str], research: dict) -> dict:
     contract = derive_route_experience_contract(research)
@@ -224,7 +277,13 @@ def audit_route_experience(pages: dict[str, str], research: dict) -> dict:
         route = row["route"]
         if route not in pages: continue  # Source architecture checks this.
         first = _first_section(pages[route])
-        if first is None: continue
+        if first is None:
+            if row["product_media_required"] or (
+                    row["contact_details_required"] and _source_has_contact_facts(research)):
+                blocking.append({"kind":"missing_task_first_section",
+                                 "route":route,
+                                 "detail":"No real first main content section for this visitor task."})
+            continue
         if row["product_media_required"] and not _meaningful_first_section_media(first):
             issue = "product_media_missing_first_section:" + route
             if not _signed_exception(research,pages,contract["source_sha256"],issue):
@@ -236,10 +295,7 @@ def audit_route_experience(pages: dict[str, str], research: dict) -> dict:
                              "photo several sections later are not equivalent.",
                 })
         if row["contact_details_required"]:
-            facts = research.get("company_facts") or {}
-            verified = any(facts.get(k) for k in
-                           ("address","phone","email","opening_hours"))
-            if verified and not _contact_evidence(first):
+            if _source_has_contact_facts(research) and not _contact_evidence(first, research):
                 issue = "real_contact_missing_first_section:" + route
                 if not _signed_exception(research,pages,contract["source_sha256"],issue):
                     blocking.append({
