@@ -330,6 +330,16 @@ HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
 
 FINAL_RESEARCH_PROMPT += SERVICE_QUALITY_POLICY + """
 Return these structured planning fields as part of the brief:
+- premium_experience_plan: editable_platform, preview_implementation,
+  delivery_parity_strategy, portfolio_strategy (real project groups, source
+  context and credits; or justified not-applicable), contact_continuity,
+  cold_load_test_plan, composition_selection (three real responsive options),
+  motion_purpose, and route_added_value (route-to-new-information mapping).
+  These describe intended work, never completed tests or client approval.
+- route_experience_plan: one row for every site_architecture page, with route,
+  visitor_task, composition, required_photo_subjects, available_source_images,
+  missing_assets, brand_character, type_hierarchy and motion_decision. Name
+  missing images honestly; record why a text-led page is appropriate if chosen.
 - business_task_plan: one record per observed source task, with task_id (from the
   supplied deterministic manifest when available), source_route, destination,
   completion_mode (existing_platform, local_flow or form_submission), and the

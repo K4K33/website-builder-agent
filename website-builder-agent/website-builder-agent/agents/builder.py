@@ -1461,7 +1461,8 @@ def build_site(
     slug: str,
     company: dict,
 ) -> str:
-
+    from utils.blind_trials import claim_trial_build
+    claim_trial_build(company, registry_path=Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json', slug=slug)
     research = company.get("research")
 
     if not research:
@@ -1852,6 +1853,8 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     that it has passed visual QA.
     """
     slug, company = _resolve_company(slug_or_name)
+    from utils.blind_trials import claim_trial_build
+    claim_trial_build(company, registry_path=Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json', slug=slug)
     research = company.get("research") or {}
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
@@ -1896,7 +1899,8 @@ def revise_site(
     company: dict,
     feedback: str,
 ) -> str:
-
+    from utils.blind_trials import refuse_trial_revision
+    refuse_trial_revision(company)
     path = _output_path(slug)
 
     if not os.path.exists(path):
