@@ -47,7 +47,7 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
                 'contract_sha256': service_brief(research)['contract_sha256'],
                 'items': [], 'missing': [], 'premium_approval': False}
 
-    def collect(file, kind, *, route='', viewport='', task_id=''):
+    def collect(file, kind, *, route='', viewport='', task_id='', asset_ids=None):
         try:
             original = Path(file)
             source = original.resolve()
@@ -56,12 +56,15 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
                 or not any(source.is_relative_to(base) for base in roots)):
                 raise ValueError('Untrusted evidence path')
             content_hash = file_hash(source)
-            identifier = digest([kind, route, viewport, task_id, content_hash])[:24]
+            identifier = digest([kind, route, viewport, task_id, content_hash] +
+                                ([asset_ids] if asset_ids is not None else []))[:24]
             name = 'files/' + identifier + source.suffix.lower()
             target = destination / name; target.parent.mkdir(exist_ok=True)
             shutil.copyfile(source, target)
             item = {'id': identifier, 'kind': kind, 'path': name, 'sha256': content_hash,
                     'route': route, 'viewport': viewport, 'task_id': task_id}
+            if asset_ids is not None:
+                item['asset_ids'] = asset_ids
             if item not in manifest['items']: manifest['items'].append(item)
             return item
         except (OSError, ValueError, TypeError):
@@ -101,6 +104,16 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
     if (research.get('source_inventory') or {}).get('pages'):
         for viewport in ('desktop', 'mobile'):
             collect(captures.get(viewport), 'original_screenshot', viewport=viewport)
+
+    # Per-source-page visual evidence includes unlabelled manufacturer marks.
+    # Keep distinct source URLs; a homepage capture does not prove a shop logo.
+    for row in research.get('source_visual_captures') or []:
+        if isinstance(row, dict) and row.get('source_url') in {
+                p.get('url') for p in (research.get('source_inventory') or {}).get('pages', [])}:
+            collect(row.get('path'), 'source_visual_capture', route=row['source_url'],
+                    viewport=str(row.get('viewport') or ''), asset_ids=row.get('asset_ids')
+                    if isinstance(row.get('asset_ids'), list) else [])
+    report('visual-plan', 'visual_asset_plan', research.get('visual_asset_plan') or [])
 
     for route, raw in pages.items():
         for image in BeautifulSoup(raw, 'html.parser').select('main img[src]'):

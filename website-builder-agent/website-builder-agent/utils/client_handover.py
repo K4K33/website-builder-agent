@@ -4,6 +4,8 @@ This is a *planning and locked-copy validation* layer, not a CMS.
 A static HTML delivery alone cannot be described as customer-editable.
 """
 import re
+from pathlib import Path
+from hashlib import sha256
 from datetime import date
 from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
@@ -231,6 +233,134 @@ def _https_url(value):
             and not parts.username and not parts.password)
 
 
+def _parity_evidence_complete(company, delivery, digest):
+    """Verify recorded capture bytes, never infer real CMS behavior from them."""
+    record = delivery.get('preview_cms_parity')
+    if not isinstance(record, dict):
+        return False
+    if (record.get('preview_sha256') != digest
+            or record.get('build_version') != (company.get('build') or {}).get('version')
+            or record.get('cms_platform') != delivery.get('cms_platform')
+            or not isinstance(record.get('cms_build_reference'), str)
+            or not record['cms_build_reference'].strip()):
+        return False
+    expected = [p.get('path') for p in ((company.get('research') or {}).get('site_architecture') or {}).get('pages', [])]
+    if (not expected or any(not isinstance(route, str) or not route.strip() for route in expected)
+            or len(set(expected)) != len(expected)):
+        return False
+    rows = record.get('routes')
+    if not isinstance(rows, list) or len(rows) != len(expected) or any(not isinstance(r, dict) for r in rows):
+        return False
+    names = [r.get('route') for r in rows]
+    if any(not isinstance(n, str) for n in names) or set(names) != set(expected):
+        return False
+    root_value = record.get('evidence_root')
+    if not isinstance(root_value, str) or not root_value.strip():
+        return False
+    try:
+        root = Path(root_value).resolve()
+        if not root.is_dir():
+            return False
+    except (OSError, ValueError):
+        return False
+    roles = {'approved_preview', 'cms_after_edit', 'mobile_after_edit', 'rollback', 'task_completion'}
+    for row in rows:
+        if any(row.get(k) is not True for k in ('layout_matches', 'content_matches', 'tasks_match')):
+            return False
+        if not isinstance(row.get('observation'), str) or not row['observation'].strip():
+            return False
+        files = row.get('captures')
+        if not isinstance(files, list) or any(not isinstance(f, dict) for f in files):
+            return False
+        if (any(not isinstance(f.get('role'), str) for f in files)
+                or {f['role'] for f in files} != roles or len(files) != len(roles)):
+            return False
+        for capture in files:
+            rel = capture.get('path')
+            if not isinstance(rel, str) or not rel.strip() or Path(rel).is_absolute():
+                return False
+            try:
+                path = (root / rel).resolve()
+                if (not path.is_relative_to(root) or path.suffix.lower() not in ('.png', '.jpg', '.jpeg', '.webp', '.webm')
+                        or not path.is_file() or not 0 < path.stat().st_size <= 30 * 1024 * 1024
+                        or sha256(path.read_bytes()).hexdigest() != capture.get('sha256')):
+                    return False
+            except (OSError, ValueError):
+                return False
+    return True
+
+
+
+def _shared_editor_evidence_complete(company, delivery, digest):
+    """Global content must be editable without asking a developer to edit HTML.
+
+    Capture integrity does not identify a real CMS or prove visual semantics;
+    actual independent observations are required before filling this record.
+    """
+    from utils.visual_asset_continuity import enabled
+    research = company.get('research') or {}
+    if not enabled(research):
+        return True
+    record = delivery.get('shared_cms_edit_evidence')
+    if not isinstance(record, dict):
+        return False
+    if (record.get('artifact_sha256') != digest
+            or record.get('build_version') != (company.get('build') or {}).get('version')
+            or record.get('independent_of_builder') is not True
+            or not str(record.get('reviewer_id') or '').strip()
+            or not str(record.get('checked_at') or '').strip() or record.get('open_issues') != []):
+        return False
+    facts = research.get('company_facts') or {}
+    required = {'header', 'footer'}
+    for key, aliases in {'phone': ('phone', 'contact_phone'), 'email': ('email', 'contact_email'),
+                         'opening_hours': ('hours', 'opening_hours')}.items():
+        if any(facts.get(alias) for alias in aliases):
+            required.add(key)
+    routes = {p.get('path') for p in (research.get('site_architecture') or {}).get('pages', [])}
+    tasks = record.get('tasks')
+    if not isinstance(tasks, list) or any(not isinstance(t, dict) for t in tasks):
+        return False
+    keys = [t.get('field') for t in tasks]
+    if any(not isinstance(k, str) for k in keys) or len(set(keys)) != len(keys) or not required <= set(keys):
+        return False
+    root_value = (delivery.get('preview_cms_parity') or {}).get('evidence_root')
+    if not isinstance(root_value, str) or not root_value.strip():
+        return False
+    root = Path(root_value).resolve()
+    for task in tasks:
+        if (task.get('method') != 'customer_editor' or task.get('requires_code_editing') is not False
+                or not str(task.get('observation') or '').strip()
+                or not isinstance(task.get('before_value'), str) or not isinstance(task.get('after_value'), str)
+                or task['before_value'] == task['after_value']):
+            return False
+        checked_routes = task.get('routes_reviewed')
+        if not isinstance(checked_routes, list) or any(not isinstance(r, str) for r in checked_routes) or set(checked_routes) != routes:
+            return False
+        captures = task.get('captures')
+        if not isinstance(captures, list) or len(captures) != 4 or any(not isinstance(c, dict) for c in captures):
+            return False
+        names = [c.get('role') for c in captures]
+        if any(not isinstance(n, str) for n in names) or set(names) != {'before', 'after', 'mobile_after', 'rollback'}:
+            return False
+        hashes = {}
+        for capture in captures:
+            rel = capture.get('path')
+            if not isinstance(rel, str) or not rel.strip() or Path(rel).is_absolute():
+                return False
+            try:
+                file = (root / rel).resolve()
+                if (not file.is_relative_to(root) or file.suffix.lower() not in ('.png', '.jpg', '.jpeg', '.webp', '.webm')
+                        or not file.is_file() or not 0 < file.stat().st_size <= 30 * 1024 * 1024
+                        or sha256(file.read_bytes()).hexdigest() != capture.get('sha256')):
+                    return False
+            except (OSError, ValueError):
+                return False
+            hashes[capture['role']] = capture['sha256']
+        if hashes['before'] == hashes['after']:
+            return False
+    return True
+
+
 def inspect_client_delivery(company, *, today=None):
     """Fail-closed, offline audit for CLIENT HANDOVER (not demo approval).
 
@@ -289,11 +419,21 @@ def inspect_client_delivery(company, *, today=None):
             or delivery.get("html_sha256") != digest
             or approval.get("html_sha256") != digest):
         problems.append("CMS handover is not bound to the current approved HTML.")
+    if not _parity_evidence_complete(company, delivery, digest):
+        problems.append('Preview/CMS parity needs current-build, per-route layout/content/task review '
+                        'and unchanged preview/edit/mobile/rollback/task capture files; a separate theme ZIP is insufficient.')
+    if not _shared_editor_evidence_complete(company, delivery, digest):
+        problems.append('Shared header/footer/contact/hours need actual customer-editor edits, all-route '
+                        'desktop/mobile observations and hash-bound before/after/rollback captures; raw code edits do not qualify.')
+    from utils.published_experience import audit_published_experience
+    published = audit_published_experience(company, today=today)
+    problems.extend(item['reason'] for item in published['issues'])
     return {
         "client_editable": True,
         "stage": "client_delivery",
         "ready_to_handover": not problems,
         "cms_platform": platform,
+        "published_experience": published,
         "issues": problems,
         "limitations": (
             "This offline audit checks recorded review evidence, not live "

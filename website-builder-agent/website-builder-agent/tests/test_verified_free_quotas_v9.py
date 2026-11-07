@@ -4,6 +4,7 @@ All tests use mocked provider traffic: no real keys, model downloads or credits.
 """
 import json
 import os
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -203,7 +204,10 @@ class FreeQuotaTests(TestCase):
             paid.assert_not_called()
 
     def test_tavily_free_is_fallback_when_osm_pool_missing(self):
-        with patch.dict(os.environ, {
+        # Isolate the persistent cache: another test/run may have cached this query.
+        with TemporaryDirectory() as cache_root, \
+             patch.object(research.config, "OUTPUT_DIR", cache_root), \
+             patch.dict(os.environ, {
                 "FREE_ONLY": "1", "TAVILY_API_KEY": "fixture",
                 "TAVILY_FREE_PLAN_CONFIRMED": "1"}), \
              patch.object(research, "discover_free_references", side_effect=RuntimeError("empty")), \

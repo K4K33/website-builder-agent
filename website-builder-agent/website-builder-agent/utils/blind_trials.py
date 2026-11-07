@@ -8,14 +8,27 @@ All methods are offline and avoid API, GitHub actions, or customer outreach.
 from __future__ import annotations
 from datetime import datetime, timezone
 import json
+import math
 import os
 from pathlib import Path
 import re
+import unicodedata
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlsplit
 
 def _normalize(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+","-",str(value or "").casefold()).strip("-")
+    text = unicodedata.normalize('NFKD', str(value or '').casefold())
+    return re.sub(r"[^a-z0-9]+", "-", text.encode('ascii', 'ignore').decode()).strip('-')
+
+def _company_keys(company, slug=''):
+    names = [slug, company.get('slug'), company.get('name')]
+    names += company.get('aliases') or []
+    keys = {_normalize(value) for value in names if value}
+    keys |= {re.sub(r'-(?:v\d+|20\d{6})$', '', key) for key in keys}
+    domains = {_domain(company.get(field)) for field in ('url', 'website')}
+    domains |= {_domain(value) for value in company.get('website_aliases', [])}
+    business_id = _normalize(company.get('business_id') or company.get('y_tunnus'))
+    return keys, domains - {''}, business_id
 
 def _domain(value: str) -> str:
     v=str(value or "").strip()
@@ -44,13 +57,14 @@ def assess_new_company(
     history: list[dict] | None = None
 ) -> dict:
     ident,domain=_identifiers(company,slug)
+    names, domains, business_id = _company_keys(company, slug)
     if not ident and not domain:
         raise ValueError("Trial company needs a name/slug or public site domain")
     used=history or []
     matches=[]
     for row in used:
-        seen_slug,seen_domain=_identifiers(row,row.get("slug") or "")
-        if (ident and seen_slug==ident) or (domain and seen_domain==domain):
+        seen_names, seen_domains, seen_id = _company_keys(row)
+        if names & seen_names or domains & seen_domains or (business_id and business_id == seen_id):
             matches.append(row)
     return {
         "eligible":not matches,
@@ -79,6 +93,10 @@ def reserve_blind_trial(
       "slug":outcome["slug"],"url":("https://"+outcome["domain"]) if outcome["domain"] else "",
       "started_at":when,"mode":"first_pass_unseen","status":"reserved",
       "revision_count":0,"quality_evidence":"not_verified",
+      "name": company.get('name', ''),
+      "aliases": company.get('aliases') or [],
+      "website_aliases": [company.get('website', '')] + (company.get('website_aliases') or []),
+      "business_id": company.get('business_id') or company.get('y_tunnus') or '',
       "sector":str((company.get("research") or {}).get("company_facts",{}).get("industry")
                    or company.get("industry") or "")[:100],
     }
@@ -98,13 +116,22 @@ def first_pass_metrics(history: list[dict]) -> dict:
     trials=[t for t in history if t.get("mode")=="first_pass_unseen"]
     evidenced=[t for t in trials if isinstance(t.get("independent_quality_score"),(int,float))
                and not isinstance(t.get("independent_quality_score"),bool)
+               and math.isfinite(t['independent_quality_score'])
+               and 0 <= t['independent_quality_score'] <= 10
                and t.get("quality_evidence")=="verified"]
+    sectors = sorted({str(t.get('sector') or 'unknown') for t in trials})
     return {
         "first_pass_trials":len(trials),
         "independently_reviewed":len(evidenced),
         "over_95_first_pass":sum(float(x["independent_quality_score"])>=9.5 for x in evidenced),
-        "pass_rate":(sum(float(x["independent_quality_score"])>=9.5 for x in evidenced)/len(evidenced))
+        "pass_rate":(sum(float(x["independent_quality_score"])>=9.5
+                         and x.get('release_eligible') is True for x in evidenced)/len(evidenced))
                      if evidenced else None,
+        "unreviewed": len(trials) - len(evidenced),
+        "coverage_by_sector": {sector: {
+            "trials": sum(str(t.get('sector') or 'unknown') == sector for t in trials),
+            "independently_reviewed": sum(str(t.get('sector') or 'unknown') == sector for t in evidenced),
+        } for sector in sectors},
         "note":"Historic hand-built demos are excluded; unverified quality is never counted as passed.",
     }
 
@@ -143,6 +170,7 @@ def record_first_pass_qa(registry_path: str | Path, *, slug: str,
         "internal_visual_review":(qa_report.get("content_review") or {}).get("visual_review") or {},
         "independent_quality_score":None,
         "independent_quality_evidence":"NOT VERIFIED",
+        "quality_scorecard": (qa_report.get('universal_quality') or {}).get('quality_scorecard'),
     }
     trial.update({
         "status":"first_pass_evaluated",
@@ -150,6 +178,7 @@ def record_first_pass_qa(registry_path: str | Path, *, slug: str,
         "first_pass_metrics":evidence,
         "quality_evidence":"not_verified",
         "first_pass_build_sha256":(build or {}).get("html_sha256") or qa_report.get("html_sha256") or "",
+        "first_pass_site_sha256": qa_report.get('site_sha256') or '',
     })
     with NamedTemporaryFile(mode="w",encoding="utf-8",dir=path.parent,
                              prefix=".trial-report-",delete=False) as handle:
@@ -157,3 +186,55 @@ def record_first_pass_qa(registry_path: str | Path, *, slug: str,
         temporary=handle.name
     os.replace(temporary,path)
     return evidence
+
+
+def record_trial_review(registry_path, *, slug, qa_report):
+    """Attach the first evidenced review only to the unchanged first build."""
+    path = Path(registry_path)
+    data = json.loads(path.read_text(encoding='utf-8'))
+    rows = [row for row in data['trials'] if row.get('slug') == _normalize(slug)]
+    card = (qa_report.get('universal_quality') or {}).get('quality_scorecard') or {}
+    if len(rows) != 1 or not rows[0].get('first_pass_recorded_at'):
+        return False
+    row = rows[0]
+    if row.get('quality_evidence') == 'verified':
+        return False  # never overwrite the original independent result
+    original = row.get('first_pass_site_sha256')
+    if not original or qa_report.get('site_sha256') != original:
+        raise RuntimeError('Independent review must describe the original first-pass site bundle.')
+    if card.get('complete') is not True or type(card.get('mean')) not in (int, float):
+        return False
+    row.update({'quality_evidence': 'verified', 'independent_quality_score': card['mean'],
+                'release_eligible': card.get('release_eligible') is True
+                                    and qa_report.get('overall_pass') is True,
+                'independent_scorecard': card})
+    with NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent, delete=False) as handle:
+        json.dump(data, handle, ensure_ascii=False, indent=2)
+        temporary = handle.name
+    os.replace(temporary, path)
+    return True
+
+
+def claim_trial_build(company, *, registry_path, slug):
+    """Consume a trial's single generation before any model call or import.
+
+    Failed attempts remain consumed. Fix the general service and select a new
+    company; do not turn a failed first pass into a silently revised pass.
+    """
+    if (company.get('quality_trial') or {}).get('mode') != 'first_pass_unseen':
+        return
+    path = Path(registry_path)
+    data = json.loads(path.read_text(encoding='utf-8'))
+    rows = [r for r in data['trials'] if r.get('slug') == _normalize(slug)]
+    if len(rows) != 1 or rows[0].get('build_attempted_at') or rows[0].get('first_pass_recorded_at'):
+        raise RuntimeError('Blind trial already attempted; choose a new company.')
+    rows[0]['build_attempted_at'] = datetime.now(timezone.utc).isoformat()
+    with NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent, delete=False) as handle:
+        json.dump(data, handle, ensure_ascii=False, indent=2)
+        temporary = handle.name
+    os.replace(temporary, path)
+
+
+def refuse_trial_revision(company):
+    if (company.get('quality_trial') or {}).get('mode') == 'first_pass_unseen':
+        raise RuntimeError('Blind quality experiments use a new company, not same-company revisions.')

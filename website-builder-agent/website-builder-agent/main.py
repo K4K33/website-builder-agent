@@ -781,6 +781,7 @@ def cmd_pipeline(args):
                          "docs" / "KAURIVO_HISTORICAL_DEMO_TRIALS.json",
             registry_path=Path(config.OUTPUT_DIR) / "_kaurivo_unseen_trials.json",
         )
+        upsert_company(selected_slug, {'quality_trial': trial})
         print("Reserved one unseen first-pass company: "
               + (trial.get("url") or trial.get("slug") or selected_slug))
     website_state = site_signal(selected_company)
@@ -1370,8 +1371,11 @@ def build_parser():
 
     parser_pipeline.add_argument("--company", default="",
         help="Run a previously researched or source-screened lead (skips Scout discovery).")
-    parser_pipeline.add_argument("--benchmark-mode", action="store_true",
+    pipeline_mode = parser_pipeline.add_mutually_exclusive_group()
+    pipeline_mode.add_argument("--benchmark-mode", action="store_true", default=True,
         help="Use ONE unseen company per quality trial. Repeats and same-company revision loops are blocked; no customer outreach.")
+    pipeline_mode.add_argument('--client-project', dest='benchmark_mode', action='store_false',
+        help='Explicit real client work; not a new-company quality experiment.')
     parser_pipeline.add_argument(
         "--count",
         type=int,

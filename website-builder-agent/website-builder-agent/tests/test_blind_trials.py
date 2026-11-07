@@ -73,7 +73,7 @@ class BlindTrialTests(unittest.TestCase):
             {"slug":"b","mode":"first_pass_unseen","quality_evidence":"verified",
              "independent_quality_score":8.5},
             {"slug":"c","mode":"first_pass_unseen","quality_evidence":"verified",
-             "independent_quality_score":9.7},
+             "independent_quality_score":9.7,"release_eligible":True},
         ])
         self.assertEqual(results["independently_reviewed"],2)
         self.assertEqual(results["over_95_first_pass"],1)

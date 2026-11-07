@@ -149,11 +149,14 @@ class ProductionGates(unittest.TestCase):
         self.addCleanup(os.chdir, self.cwd)
 
     def create_build(self, industry="transport", slug="demo"):
+        name = 'Demo yritys' if slug == 'demo' else 'Demo yritys ' + slug
+        research = research_fixture(self.root, industry)
+        research['company_facts']['name'] = name
         state.upsert_company(slug, {
-            "name": "Demo yritys", "url": "", "status": "researched",
-            "research": research_fixture(self.root, industry)
+            "name": name, "url": "", "status": "researched",
+            "research": research
         })
-        path = builder._write_html(slug, HTML)
+        path = builder._write_html(slug, HTML.replace('Demo yritys', name))
         state.upsert_company(slug, {"status": "built", "build": {
             "version": 1, "output_path": str(path), "generation_mode": "offline_fixture"}})
         return Path(path)

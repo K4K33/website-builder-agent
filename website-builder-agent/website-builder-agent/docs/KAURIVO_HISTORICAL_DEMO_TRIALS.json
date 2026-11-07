@@ -37,6 +37,192 @@
       "url": "https://www.kudelma.fi/",
       "mode": "historical_demo",
       "sector": "upholstery"
+    },
+    {
+      "slug": "castanum-toolon-kukkakauppa",
+      "aliases": [
+        "castanum-toolon-kukkakauppa-v1"
+      ],
+      "url": "https://www.castanum.fi/",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1"
+    },
+    {
+      "slug": "helsingin-koiratrimmaamo",
+      "aliases": [
+        "helsingin-koiratrimmaamo-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/helsingin-koiratrimmaamo-v1"
+    },
+    {
+      "slug": "jakomaen-suutari-ja-pyora",
+      "aliases": [
+        "jakomaen-suutari-ja-pyora-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/jakomaen-suutari-ja-pyora-v1"
+    },
+    {
+      "slug": "kotifixi",
+      "aliases": [
+        "kotifixi-v10"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/kotifixi-v10"
+    },
+    {
+      "slug": "kukkakauppa-karjalanneito",
+      "aliases": [
+        "kukkakauppa-karjalanneito-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/kukkakauppa-karjalanneito-v1"
+    },
+    {
+      "slug": "kukkakauppa-villiviini",
+      "aliases": [
+        "kukkakauppa-villiviini-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/kukkakauppa-villiviini-v1"
+    },
+    {
+      "slug": "munkkiniemen-suutari",
+      "aliases": [
+        "munkkiniemen-suutari-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/munkkiniemen-suutari-v1"
+    },
+    {
+      "slug": "penny-lane-vintage",
+      "aliases": [
+        "penny-lane-vintage-v1"
+      ],
+      "url": "https://pennylane.fi/",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/penny-lane-vintage-v1"
+    },
+    {
+      "slug": "verhoomo-etikki",
+      "aliases": [
+        "verhoomo-etikki-v1"
+      ],
+      "url": "https://etikki.fi/",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/verhoomo-etikki-v1"
+    },
+    {
+      "slug": "verhoomo-kudelma",
+      "aliases": [
+        "verhoomo-kudelma-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/verhoomo-kudelma-v1"
+    },
+    {
+      "slug": "visan-pyorahuolto",
+      "aliases": [
+        "visan-pyorahuolto-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/visan-pyorahuolto-v1"
+    },
+    {
+      "slug": "tampereen-soitinkorjaamo",
+      "name": "Tampereen Soitinkorjaamo",
+      "aliases": [
+        "tuuren-paja"
+      ],
+      "url": "https://www.soitinkorjaamo.net/",
+      "mode": "historical_demo",
+      "sector": "instrument repair"
+    },
+    {
+      "slug": "koivuranta-oy",
+      "aliases": [
+        "Koivuranta"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "koiviston-auto",
+      "aliases": [],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "suutarin-tie",
+      "aliases": [],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "pyorahullu",
+      "aliases": [
+        "Pyörähullu"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "kahvila-runo",
+      "url": "https://kahvilaruno.fi/",
+      "mode": "historical_demo",
+      "sector": "cafe"
+    },
+    {
+      "slug": "woode",
+      "url": "https://www.woode.fi/",
+      "mode": "historical_demo",
+      "sector": "carpentry"
+    },
+    {
+      "slug": "verhoomo-vekki",
+      "url": "https://www.verhoomovekki.fi/",
+      "mode": "historical_demo",
+      "sector": "upholstery"
+    },
+    {
+      "slug": "suutariesteri",
+      "name": "Suutariesteri",
+      "url": "https://www.suutariesteri.fi/",
+      "business_id": "2290769-0",
+      "mode": "historical_demo",
+      "sector": "shoe repair and footwear retail",
+      "self_review_mean": 6.375,
+      "independent_review": "not_verified",
+      "first_review_source": "20261107-1010-08.7514238.mp4",
+      "known_issues": [
+        "Six source footwear logos missing; two maker names also absent",
+        "Repair photo used as retail assortment photo",
+        "Crop/rhythm and CMS delivery not verified"
+      ]
     }
   ]
 }

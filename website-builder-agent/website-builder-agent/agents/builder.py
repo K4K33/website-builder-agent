@@ -15,6 +15,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from utils.concept_previews import validate_selected_concept
+from utils.visual_asset_continuity import POLICY as VISUAL_ASSET_POLICY
 from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, validate_service_plan
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
@@ -45,7 +46,7 @@ from utils.state import (
 import config
 
 
-BUILD_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + """
+BUILD_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + VISUAL_ASSET_POLICY + """
 SOURCE-EXPERIENCE CONTINUITY (EVERY REDESIGN):
 The source_experience_plan must be supplemented by actual browser-observed
 original_experience_profile, not only static source HTML and screenshots with
@@ -1461,7 +1462,8 @@ def build_site(
     slug: str,
     company: dict,
 ) -> str:
-
+    from utils.blind_trials import claim_trial_build
+    claim_trial_build(company, registry_path=Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json', slug=slug)
     research = company.get("research")
 
     if not research:
@@ -1852,6 +1854,8 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     that it has passed visual QA.
     """
     slug, company = _resolve_company(slug_or_name)
+    from utils.blind_trials import claim_trial_build
+    claim_trial_build(company, registry_path=Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json', slug=slug)
     research = company.get("research") or {}
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
@@ -1896,7 +1900,8 @@ def revise_site(
     company: dict,
     feedback: str,
 ) -> str:
-
+    from utils.blind_trials import refuse_trial_revision
+    refuse_trial_revision(company)
     path = _output_path(slug)
 
     if not os.path.exists(path):

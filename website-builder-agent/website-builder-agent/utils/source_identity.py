@@ -173,7 +173,9 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
         'iframe[src*="google.com/maps"],[class*="review-widget"],'
         '[data-widget*="review"]'
     ))
+    from utils.visual_asset_continuity import extract_visual_candidates
     return {
+        "visual_assets": extract_visual_candidates(html, source_url),
         "theme_color": theme_color,
         "source_experience": extract_source_experience(html, source_url),
         "original_logo_candidates": logo_candidates[:12],

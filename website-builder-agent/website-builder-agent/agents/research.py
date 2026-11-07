@@ -21,6 +21,7 @@ import json
 from urllib.parse import urlsplit
 from datetime import datetime, timezone
 from uuid import uuid4
+from pathlib import Path
 
 from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
@@ -31,6 +32,7 @@ from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
+from utils.visual_asset_continuity import POLICY as VISUAL_ASSET_POLICY, PROTOCOL as VISUAL_ASSET_PROTOCOL, visual_candidates, source_visual_image_inputs
 from utils.free_references import discover_free_references
 from utils.free_tavily_cache import cached_free_search
 from utils.reference_screenshot_cache import capture_cached
@@ -328,8 +330,18 @@ määrää monisivuisia reittejä, kuitenkin enintään 14.
 HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
 """
 
-FINAL_RESEARCH_PROMPT += SERVICE_QUALITY_POLICY + """
+FINAL_RESEARCH_PROMPT += SERVICE_QUALITY_POLICY + VISUAL_ASSET_POLICY + """
 Return these structured planning fields as part of the brief:
+- premium_experience_plan: editable_platform, preview_implementation,
+  delivery_parity_strategy, portfolio_strategy (real project groups, source
+  context and credits; or justified not-applicable), contact_continuity,
+  cold_load_test_plan, composition_selection (three real responsive options),
+  motion_purpose, and route_added_value (route-to-new-information mapping).
+  These describe intended work, never completed tests or client approval.
+- route_experience_plan: one row for every site_architecture page, with route,
+  visitor_task, composition, required_photo_subjects, available_source_images,
+  missing_assets, brand_character, type_hierarchy and motion_decision. Name
+  missing images honestly; record why a text-led page is appropriate if chosen.
 - business_task_plan: one record per observed source task, with task_id (from the
   supplied deterministic manifest when available), source_route, destination,
   completion_mode (existing_platform, local_flow or form_submission), and the
@@ -824,7 +836,10 @@ def run_research(
     # Zero-paid-credit browser probe of every inventoried source route.
     # Failure is explicitly incomplete, never interpreted as an absence of
     # original video, animation, galleries or background character.
-    original_experience_profile = probe_original_site_experience(source_inventory)
+    original_experience_profile = probe_original_site_experience(
+        source_inventory, capture_directory=Path(config.OUTPUT_DIR) / "screenshots" / ("source-visual-" + slug))
+    source_images, source_labels = source_visual_image_inputs(
+        {'source_inventory': source_inventory}, original_experience_profile, allowed_root=config.OUTPUT_DIR)
     source_excerpts = [
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
          "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
@@ -959,7 +974,13 @@ Raaka HTML:
     reference_evidence = _collect_reference_evidence(selected, url)
     reference_images, image_labels = reference_image_inputs(reference_evidence)
 
+    source_labels = [{**row, 'image_index': len(reference_images) + i + 1}
+                     for i, row in enumerate(source_labels)]
+
     final_prompt = f"""
+TARGET COMPANY SOURCE PIXELS (separate from inspiration references):
+{json.dumps(source_labels, ensure_ascii=False)}
+Classify source candidate ids using these actual target pixels. If not visible, leave unresolved.
 SOURCE-LED INDUSTRY CUSTOMER TASKS (not a layout template):
 {json.dumps(sector_guidance(industry), ensure_ascii=False)}
 
@@ -1039,6 +1060,8 @@ Tärkeää:
         "design brief..."
     )
 
+    final_prompt += "\nCOMPLETE SOURCE VISUAL CANDIDATES (classify all ids; blank alt is not decoration):\n" + json.dumps(
+        visual_candidates({"source_inventory": source_inventory}), ensure_ascii=False)
     final_prompt += "\nDETERMINISTIC SOURCE TASK MANIFEST (copy task ids exactly):\n" + json.dumps(
         service_brief({"source_inventory": source_inventory, "company_facts": company_facts}),
         ensure_ascii=False)
@@ -1047,7 +1070,7 @@ Tärkeää:
         final_prompt,
         max_tokens=6000,
         stage="research",
-        image_paths=reference_images,
+        image_paths=reference_images + source_images,
     )
 
     if not isinstance(
@@ -1081,8 +1104,10 @@ Tärkeää:
         # The design pass must not rewrite or invent extracted company facts.
         "company_facts": company_facts,
         "source_inventory": source_inventory,
+        "visual_inventory_protocol": VISUAL_ASSET_PROTOCOL,
         "original_screenshots": original_screenshots,
         "original_experience_profile": original_experience_profile,
+        "source_visual_captures": original_experience_profile.get("visual_captures") or [],
         "fact_sources": [{"url": url, "title": site_data.get("title", ""),
                           "text": site_data.get("visible_text", "")[:12000]}],
         "reference_sources": [

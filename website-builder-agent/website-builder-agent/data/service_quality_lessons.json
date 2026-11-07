@@ -4,7 +4,12 @@
     "scope": "service",
     "origin": "owner feedback and Castanum commerce omission",
     "root_cause": "A surviving shop link was treated as preservation of product discovery and purchase functions.",
-    "implementation": ["utils/service_quality.py", "utils/commerce_parity.py", "agents/builder.py", "utils/universal_quality.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "utils/commerce_parity.py",
+      "agents/builder.py",
+      "utils/universal_quality.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -14,7 +19,11 @@
     "scope": "service",
     "origin": "owner feedback and Castanum bouquet page",
     "root_cause": "Authentic source photography was accepted without inspecting its subject against the route's visitor task.",
-    "implementation": ["utils/service_quality.py", "agents/research.py", "agents/qa.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "agents/research.py",
+      "agents/qa.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -24,7 +33,10 @@
     "scope": "service",
     "origin": "recurring owner feedback across unrelated company demos",
     "root_cause": "Structural comparison alone missed repeated typography and editorial hero formulas.",
-    "implementation": ["utils/visual_originality.py", "utils/service_quality.py"],
+    "implementation": [
+      "utils/visual_originality.py",
+      "utils/service_quality.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -34,7 +46,11 @@
     "scope": "service",
     "origin": "owner feedback about generic copy and source narration",
     "root_cause": "No explicit source excerpt contract connected company voice decisions to observed company language and facts.",
-    "implementation": ["utils/service_quality.py", "agents/research.py", "agents/builder.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "agents/research.py",
+      "agents/builder.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -44,7 +60,11 @@
     "scope": "service",
     "origin": "owner feedback after technical tests were overemphasised",
     "root_cause": "Passing automation could be communicated as evidence of complete visual and commercial quality.",
-    "implementation": ["utils/service_quality.py", "utils/universal_quality.py", "agents/qa.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "utils/universal_quality.py",
+      "agents/qa.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -54,9 +74,109 @@
     "scope": "service",
     "origin": "owner clarification on 2026-11-04",
     "root_cause": "Feedback about a demo was interpreted too narrowly as a request to patch that demo.",
-    "implementation": ["utils/global_feedback.py", "utils/service_quality.py"],
+    "implementation": [
+      "utils/global_feedback.py",
+      "utils/service_quality.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
+    "real_new_company_validation": "pending"
+  },
+  {
+    "id": "stable-owner-rubric",
+    "scope": "service",
+    "origin": "owner clarification 2026-11-05",
+    "root_cause": "Review criteria and averaging changed across conversations; technical passes were confused with design quality.",
+    "implementation": [
+      "utils/quality_scorecard.py",
+      "utils/universal_quality.py",
+      "agents/qa.py"
+    ],
+    "regression_test": "tests/test_quality_scorecard.py",
+    "status": "implemented",
+    "real_new_company_validation": "pending"
+  },
+  {
+    "id": "unseen-company-every-experiment",
+    "scope": "service",
+    "origin": "owner clarification 2026-11-05",
+    "root_cause": "Historic companies were missing from the exclusion ledger; direct revisions could bypass benchmark-only protections.",
+    "implementation": [
+      "utils/blind_trials.py",
+      "main.py",
+      "agents/builder.py",
+      "docs/KAURIVO_HISTORICAL_DEMO_TRIALS.json"
+    ],
+    "regression_test": "tests/test_quality_scorecard.py",
+    "status": "implemented",
+    "real_new_company_validation": "pending"
+  },
+  {
+    "id": "route-experience-and-native-input-acceptance",
+    "scope": "service",
+    "origin": "Runo review and owner request 2026-11-05",
+    "root_cause": "Source assets and generic domain approval did not require page-specific media sufficiency, composition, hierarchy and observed native input behavior.",
+    "implementation": [
+      "utils/service_quality.py",
+      "agents/research.py",
+      "agents/qa.py"
+    ],
+    "regression_test": "tests/test_route_experience_acceptance.py",
+    "status": "implemented_in_development_branch",
+    "real_new_company_validation": "pending"
+  },
+  {
+    "id": "project-story-and-preview-cms-parity",
+    "scope": "service",
+    "origin": "Woode review and owner instruction 2026-11-06",
+    "root_cause": "Photo count and a separate CMS ZIP were presented without project storytelling, route added value or verified preview/delivery parity.",
+    "implementation": [
+      "utils/service_quality.py",
+      "utils/client_handover.py",
+      "agents/research.py",
+      "agents/qa.py"
+    ],
+    "regression_test": "tests/test_premium_experience_acceptance.py",
+    "status": "implemented_in_development_branch",
+    "real_new_company_validation": "pending"
+  },
+  {
+    "id": "published-clicks-and-real-contact-gate",
+    "scope": "service",
+    "origin": "Vekki production navigation failure and owner correction request",
+    "root_cause": "Local preview and direct-address checks did not exercise the deployed client router; final publication checks were only instructions.",
+    "implementation": [
+      "utils/published_experience.py",
+      "utils/universal_quality.py",
+      "utils/client_handover.py"
+    ],
+    "regression_test": "tests/test_published_experience.py",
+    "status": "implemented_in_development_branch",
+    "real_new_company_validation": "pending"
+  },
+  {
+    "id": "complete-visual-information-and-placement-proof",
+    "scope": "service",
+    "origin": "Suutariesteri review and owner correction request 2026-11-07",
+    "root_cause": "Text/alt extraction missed unlabelled manufacturer artwork; lead-image-only planning allowed repair photos under retail claims; a theme required developer edits for shared contact content.",
+    "implementation": [
+      "utils/visual_asset_continuity.py",
+      "utils/source_identity.py",
+      "utils/original_experience_probe.py",
+      "utils/service_quality.py",
+      "utils/universal_quality.py",
+      "utils/review_bundle.py",
+      "utils/client_handover.py",
+      "agents/research.py",
+      "agents/builder.py",
+      "scripts/audit_visual_continuity.py"
+    ],
+    "regression_test": [
+      "tests/test_visual_asset_continuity.py",
+      "tests/test_shared_cms_editing.py",
+      "tests/test_source_visual_inputs.py"
+    ],
+    "status": "implemented_in_development_branch",
     "real_new_company_validation": "pending"
   }
 ]
