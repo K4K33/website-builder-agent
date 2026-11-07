@@ -58,6 +58,8 @@ app. Do not call a mailto click a delivered lead. Test forms through receipt
 and honest success/failure feedback, using an authorized test recipient only.
 Client handover requires actual CMS text/image/contact edit, save, publish,
 mobile recheck and rollback evidence; a theme ZIP is not an editable-site test.
+Shared header/footer, phone, email and source hours must be editable through the
+customer editor; a developer changing theme HTML does not qualify.
 Plan actual visitor tasks before layout. Preserve every distinct original
 booking, shopping, quotation and application destination, including external
 platforms and forms. A mailto draft is not equivalent to a delivered form.
@@ -145,6 +147,8 @@ def service_brief(research):
                'tasks': tasks, 'routes': routes,
                'task_plan': research.get('business_task_plan') or [],
                'media_plan': research.get('media_purpose_plan') or [],
+               'visual_inventory_protocol': research.get('visual_inventory_protocol'),
+               'visual_asset_plan': research.get('visual_asset_plan') or [],
                'route_experience_plan': research.get('route_experience_plan') or [],
                'premium_experience_plan': research.get('premium_experience_plan') or {},
                'voice': research.get('company_voice_brief') or {},
@@ -158,6 +162,8 @@ def reset_generated_review_claims(research):
     """A Research model can propose plans, never author independent approvals."""
     research.pop('service_quality_reviews', None)
     research.pop('quality_scorecard', None)
+    research.pop('visual_source_review', None)
+    research.pop('visual_placement_review', None)
     research['service_quality_protocol'] = 'v1'
     research['route_experience_protocol'] = 'v1'
     research['premium_experience_protocol'] = 'v1'
@@ -174,6 +180,8 @@ def validate_service_plan(research):
         validate_premium_experience_plan(research)
     if research.get('route_experience_protocol') == 'v1':
         validate_route_experience_plan(research)
+    from utils.visual_asset_continuity import validate_visual_plan
+    validate_visual_plan(research)
     tasks = source_tasks(research)
     plans = research.get('business_task_plan')
     if plans is None and research.get('service_quality_protocol') != 'v1':
@@ -248,7 +256,9 @@ def validate_premium_experience_plan(research):
 ROUTE_REVIEW_CHECKS = {
     'visual': ('media_sufficiency', 'task_composition', 'brand_character',
                'readable_hierarchy', 'motion_suitability', 'project_presentation',
-               'new_information', 'composition_comparison'),
+               'new_information', 'composition_comparison', 'whitespace_rhythm',
+               'cta_repetition', 'image_subject_match', 'crop_integrity',
+               'visual_information_preserved', 'sector_specificity'),
     'technical': ('wheel_scroll', 'trackpad_scroll', 'touch_scroll',
                   'keyboard_scroll', 'reduced_motion', 'motion_input_response',
                   'cold_load', 'route_transition'),

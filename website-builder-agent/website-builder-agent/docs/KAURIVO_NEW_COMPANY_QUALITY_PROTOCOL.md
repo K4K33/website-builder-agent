@@ -212,3 +212,112 @@ coverage, production router errors, stale deployments, altered evidence,
 unreceived forms, and draft-vs-client-release separation. No real recipients,
 paid APIs or CMS platforms were contacted by these tests. Changes remain in
 the development branch until approved publication to the public source repo.
+
+## 7 November: complete visual information and placement evidence
+
+Suutariesteri's first self-review was 6.375/10, not an independent acceptance.
+The original had six footwear logos. Four manufacturer names survived as text,
+while two makers disappeared because their only evidence was unlabelled art.
+A genuine repair photo was also presented as a retail assortment. These are
+regression cases, not a reason to silently polish the same first-pass result.
+The business is now in the historical exclusion ledger.
+
+The implemented source extractor enumerates **all** HTML images (including
+blank-alt and lazy images), inline SVGs and inline image backgrounds, without
+the old 70-photo cap. Identical source artwork shared across pages is classified
+once while every source URL remains recorded. Wix resize variants are matched
+only for the identical CDN media ID. Filenames and alt text are hints, never
+semantic observations or proof that a blank image is decorative. External CSS,
+JS-loaded material, galleries and information within pixels still require
+actual source inspection; the static extractor is not OCR or complete browsing.
+
+`visual_asset_plan` must classify every deterministic candidate id before a
+Builder request. Each record contains role, observed_subject, visible_information,
+supported_uses, not_depicted and explicit destinations. Brand marks require name
+and uncropped image artwork; body text cannot replace them. An information
+graphic may instead map **all** observed facts to exact visible text destinations.
+Each image destination records route, unique selector, actual src, purpose,
+expected_alt and crop_mode. A placement purpose must be among observed supported
+uses and outside not_depicted. All output images, inline SVGs and inline image
+backgrounds are checked, including header/footer/partner marks and images after
+the first hero. Existing media integrity/licensing gates remain in force.
+
+Known missing placements, hidden artwork, wrong alternative text, unplanned
+images and inline cropped logos block preflight even with a high numerical score.
+Presence alone does not approve pixels, crops, identity or rights. Both original
+classification and **each output placement at desktop and mobile** require a
+separate reviewer, exact source/plan/contract/artifact hashes and actual verified
+review-bundle files. Every source capture names the asset ids it shows, not just
+an unrelated homepage URL. Per-placement observations cover subject_match,
+alt_accuracy, crop_integrity and visual_information_preserved. Changed source,
+plan, build, route or viewport invalidates old evidence. Generated Research
+approvals are discarded. Observations and file integrity do not authenticate a
+reviewer's identity or replace their actual inspection.
+
+The route visual review additionally requires whitespace_rhythm, cta_repetition,
+image_subject_match, crop_integrity, visual_information_preserved and
+sector_specificity. Existing technical wheel/trackpad/touch/keyboard,
+reduced-motion and motion-input observations remain mandatory. Static CSS is
+not proof of smooth scrolling. Numerical means still cannot override any
+blocking or pending acceptance condition.
+
+CMS delivery also requires current-build `shared_cms_edit_evidence` for header,
+footer and observed phone/email/opening-hours fields. It must describe customer
+editor actions without code editing, every affected route, before/after values,
+and hash-bound before/after/mobile/rollback captures. A developer editing theme
+HTML and a separate downloadable ZIP do not qualify as self-service editing.
+The actual CMS tasks must be performed before recording a passing observation.
+
+### External builders and Sites
+
+The same static gate is available without a model call through:
+
+```
+python scripts/audit_visual_continuity.py --research research.json --pages rendered-pages.json --stage preflight
+python scripts/audit_visual_continuity.py --research research.json --pages rendered-pages.json --stage acceptance --company company.json --artifact exact-deployment.tar.gz
+```
+
+`rendered-pages.json` maps real customer routes to their rendered HTML, **not**
+React source or a list of URLs. Preflight can exit successfully with pending
+visual inspection; its report explicitly keeps `ready: false`. Acceptance exits
+nonzero without independent verified evidence, and never grants whole-site
+release approval. It uses the normal review-bundle verifier for actual capture
+bytes. Apply this adapter to externally built/manual Sites demos before calling
+them complete. Sites hosting itself is not instrumented by this repository;
+there is no claim that an unrelated native deployment automatically runs this
+CLI. Main Builder, external-response import and QA use the integrated gate.
+
+Validation: counterexample tests exercise blank-alt logos, six-maker-style
+artwork losses, hidden/text-only substitutes, subject errors after the lead,
+alt mismatch, mobile crop failures, stale evidence, source-page/asset/viewport
+capture mismatch and shared editor tasks. Synthetic fixtures verify integrity
+rules only. A new unseen real-company field trial and real CMS/device validation
+are still pending; implementation alone is not a proven 9.5/10 service.
+
+Original page pixels now accompany Research's existing design-brief request:
+the existing source browser visit saves a full-page capture for each source
+route, hashes it and labels target-company images separately from competitor
+references. Before model/search credits, source image inputs must exist inside
+the permitted output directory, have image signatures and matching hashes, and
+cover all source routes. Missing captures stop the source-rich flow instead of
+inviting an alt-text-only classification. Captures start with empty `asset_ids`;
+a reviewer must identify which artworks are actually visible. Full-page capture
+does not establish that hidden gallery frames or JS backgrounds were observed.
+No additional model/search request was introduced. Source-pixel tests use a
+mocked browser and synthetic bytes; actual browser capture remains unverified
+in this environment.
+
+Final local validation (7 November): 204 targeted tests ran, 199 passed and 5
+were skipped. The 34 new visual/source-pixel/shared-CMS counterexamples passed.
+Compilation and whitespace checks passed. The full suite ran 834 tests with
+4 failures, 19 errors and 15 skips. An isolated unchanged correction-branch
+checkout ran 800 tests with the exact same 23 failing/error test names. Those
+cases depend on a Chromium executable unavailable in this environment. They
+are not counted as verified passes. A pre-existing Tavily fallback test was
+isolated from persistent cache contents so reruns do not consume or bypass its
+mocked request accidentally; no provider/cache behavior was changed.
+
+An offline check against the actual saved Suutariesteri source included all
+six known footwear logo assets in the new candidate inventory, including those
+with blank alt text. This proves discovery of this regression's files, not
+correct logo classification, licences, a new-company result or 9.5 quality.

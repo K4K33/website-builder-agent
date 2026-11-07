@@ -207,6 +207,22 @@
       "url": "https://www.verhoomovekki.fi/",
       "mode": "historical_demo",
       "sector": "upholstery"
+    },
+    {
+      "slug": "suutariesteri",
+      "name": "Suutariesteri",
+      "url": "https://www.suutariesteri.fi/",
+      "business_id": "2290769-0",
+      "mode": "historical_demo",
+      "sector": "shoe repair and footwear retail",
+      "self_review_mean": 6.375,
+      "independent_review": "not_verified",
+      "first_review_source": "20261107-1010-08.7514238.mp4",
+      "known_issues": [
+        "Six source footwear logos missing; two maker names also absent",
+        "Repair photo used as retail assortment photo",
+        "Crop/rhythm and CMS delivery not verified"
+      ]
     }
   ]
 }

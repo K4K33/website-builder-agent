@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
+from utils.visual_asset_continuity import audit_visual_continuity
 from utils.service_quality import audit_service_quality
 from utils.quality_scorecard import quality_scorecard
 from utils.kaurivo_site_quality_gate import lint_site_copy
@@ -36,6 +37,7 @@ UNIVERSAL_STANDARDS = (
     ("stable_quality_scorecard", "Eight fixed equally weighted evidenced dimensions; exact mean >=9.5 and no blockers", "release"),
     ("business_task_continuity", "Every source business action survives; a link is not completion evidence", "functional"),
     ("service_quality_acceptance", "Separate exact-bundle technical, content, visual and commercial decisions", "release"),
+    ("visual_information_continuity", "All source graphics classified, all output placements and crops independently evidenced", "content"),
     ("source_coverage", "All important old pages and facts have source evidence", "research"),
     ("same_industry_inspiration", "Three sourced leading sector sites; original adaptation", "research"),
     ("unique_art_direction", "Distinctive brand-specific visual composition", "visual"),
@@ -137,6 +139,14 @@ def audit_universal_standards(
              else "service_quality_acceptance", str(issue))
     for issue in service_quality["pending"]:
         needs("service_quality_acceptance", str(issue))
+
+    visual_continuity = audit_visual_continuity(
+        pages, research, artifact_digest=site_bundle_sha256, review_bundle=review_bundle,
+        contract_digest=service_quality['brief']['contract_sha256'])
+    for issue in visual_continuity['blocking']:
+        fail('visual_information_continuity', str(issue))
+    for issue in visual_continuity['pending']:
+        needs('visual_information_continuity', str(issue))
 
     # User-validated cross-company rule: decorative ↗/→ in every CTA is
     # template-like visual noise. Count across ALL rendered pages, including
@@ -484,6 +494,7 @@ def audit_universal_standards(
     decision = ("blocked" if problems else
                 "review_required" if pending else "client_ready")
     return {
+        "visual_asset_continuity": visual_continuity,
         "quality_scorecard": scorecard,
         "service_quality": service_quality,
         "published_experience": published,

@@ -15,6 +15,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from utils.concept_previews import validate_selected_concept
+from utils.visual_asset_continuity import POLICY as VISUAL_ASSET_POLICY
 from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, validate_service_plan
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
@@ -45,7 +46,7 @@ from utils.state import (
 import config
 
 
-BUILD_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + """
+BUILD_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + VISUAL_ASSET_POLICY + """
 SOURCE-EXPERIENCE CONTINUITY (EVERY REDESIGN):
 The source_experience_plan must be supplemented by actual browser-observed
 original_experience_profile, not only static source HTML and screenshots with
