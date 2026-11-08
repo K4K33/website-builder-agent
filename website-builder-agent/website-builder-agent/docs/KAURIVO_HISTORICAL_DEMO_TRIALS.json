@@ -270,6 +270,23 @@
         "Generic simplified 3D materials and limited explanatory value",
         "Actual editor save/publish/restore and independent review not verified"
       ]
+    },
+    {
+      "slug": "lasitaivas",
+      "name": "Lasitaivas",
+      "url": "https://www.lasitaivas.fi/",
+      "mode": "first_pass_unseen",
+      "sector": "glass art",
+      "review_status": "not_reviewed",
+      "independent_review": "not_verified",
+      "first_published_commit": "ddeb7f3f27daca3205384c45d1dc4f29690cae46",
+      "current_commit": "a3c5f6e4f87b0c0f048eaece23cf25760da4d870",
+      "new_site_url": "https://lasitaivas-kaurivo.kaarlo-kaukko1.chatgpt.site/",
+      "known_limits": [
+        "Independent visual and actual-device acceptance pending",
+        "ChatGPT editor requires user sign-in; save/publish/restore not verified",
+        "Original external contact form and cart retained; no new checkout or delivered-message claim"
+      ]
     }
   ]
 }
