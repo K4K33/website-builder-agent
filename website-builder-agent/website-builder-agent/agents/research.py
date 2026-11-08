@@ -333,6 +333,18 @@ HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
 
 FINAL_RESEARCH_PROMPT += SERVICE_QUALITY_POLICY + VISUAL_ASSET_POLICY + """
 Return these structured planning fields as part of the brief:
+- If source commerce_signals exist or the owner requests commerce, include
+  commerce_plan with protocol="commerce-v1", mode (inquiry_catalogue,
+  preserve_existing, woocommerce_native), and inspection: inspected_urls,
+  catalogue_url, captured_at, observed_product_count, catalogue_inspected,
+  purchasing_enabled, checkout_observed and a source-backed reason. Inspect
+  the actual catalogue and commerce entries. An empty cart is not evidence
+  that a business has no shop. Never invent products, prices or completed
+  inspections; unvisited endpoints remain a build blocker. Online modes also
+  need backend_url and catalogue_strategy. Use commerce_inventory snapshots
+  with discovery_urls to map multiple cart/shop/product entry points to the
+  same actually inspected catalogue. Native commerce is a distinct editable
+  WooCommerce workflow, never generated checkout HTML or a mailto replacement.
 - premium_experience_plan: editable_platform, preview_implementation,
   delivery_parity_strategy, portfolio_strategy (real project groups, source
   context and credits; or justified not-applicable), contact_continuity,

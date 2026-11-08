@@ -1041,6 +1041,8 @@ def extract_text_and_meta(
         "html.parser",
     )
     source_identity = extract_source_identity(html, base_url)
+    from utils.commerce_workflow import extract_commerce_signals
+    commerce_signals = extract_commerce_signals(html, base_url)
     price_faq_evidence = extract_price_faq_evidence(html)
     source_content_blocks = extract_source_content_blocks(html)
 
@@ -1188,6 +1190,7 @@ def extract_text_and_meta(
 
     data = {
         "success": True,
+        "commerce_signals": commerce_signals,
         "url": base_url,
         "final_url": base_url,
         "status_code": 200,

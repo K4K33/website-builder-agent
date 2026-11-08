@@ -277,7 +277,7 @@
       "url": "https://www.lasitaivas.fi/",
       "mode": "first_pass_unseen",
       "sector": "glass art",
-      "review_status": "not_reviewed",
+      "review_status": "self_reviewed_not_independently_accepted",
       "independent_review": "not_verified",
       "first_published_commit": "ddeb7f3f27daca3205384c45d1dc4f29690cae46",
       "current_commit": "a3c5f6e4f87b0c0f048eaece23cf25760da4d870",
@@ -286,6 +286,26 @@
         "Independent visual and actual-device acceptance pending",
         "ChatGPT editor requires user sign-in; save/publish/restore not verified",
         "Original external contact form and cart retained; no new checkout or delivered-message claim"
+      ],
+      "self_review_mean": 7.222222222222222,
+      "rubric": "kaurivo-nine-v2",
+      "first_review_source": "20261108-1848-49.8291251.mp4",
+      "first_review_date": "2026-11-08",
+      "self_review_scores": {
+        "brand_fidelity": 9,
+        "company_specificity": 8,
+        "photography": 8.5,
+        "visual_composition": 8,
+        "content_preservation": 9,
+        "commercial_quality": 5,
+        "navigation_technical": 8,
+        "motion_scroll": 6.5,
+        "client_handover": 3
+      },
+      "known_issues": [
+        "Gallery/enquiry implementation does not establish automatic ecommerce capability",
+        "Original empty cart is not proof of either an absent shop or a verified original checkout",
+        "Native editable store, gateway transaction, stock effects and independent acceptance unverified"
       ]
     }
   ]

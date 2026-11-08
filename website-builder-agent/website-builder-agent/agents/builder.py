@@ -1472,6 +1472,15 @@ def build_site(
             f"Aja ensin: python main.py research {slug}"
         )
 
+    from utils.commerce_workflow import validate_commerce_plan
+    commerce = validate_commerce_plan(research)
+    if commerce['mode'] == 'woocommerce_native':
+        from utils.woocommerce_build import prepare_woocommerce_build, CommerceStagingRequired
+        result = prepare_woocommerce_build(research, Path(_output_dir(slug)) / '_commerce')
+        upsert_company(slug, {'commerce_build': result})
+        # Deliberately do not mark a ZIP as 'built', create scores or continue to HTML QA.
+        raise CommerceStagingRequired(result)
+
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
     validate_brand_preservation_plan(research)
@@ -1831,6 +1840,9 @@ def run_build(
     slug, company = _resolve_company(
         slug_or_name
     )
+    from utils.commerce_workflow import validate_commerce_plan
+    if validate_commerce_plan(company.get('research') or {})['mode'] == 'woocommerce_native':
+        return build_site(slug, company)  # Before paid concept/Builder calls.
     if (company.get("research") or {}).get("visual_concepts_protocol") == "v1":
         from utils.concept_workflow import generate_concepts, choose_concept
         if not company.get("concept_previews"):
@@ -1857,6 +1869,8 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     from utils.blind_trials import claim_trial_build
     claim_trial_build(company, registry_path=Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json', slug=slug)
     research = company.get("research") or {}
+    from utils.commerce_workflow import require_static_build_allowed
+    require_static_build_allowed(research)
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
     validate_brand_preservation_plan(research)
@@ -1929,6 +1943,8 @@ def revise_site(
         {},
     )
 
+    from utils.commerce_workflow import require_static_build_allowed
+    require_static_build_allowed(research)
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
     validate_brand_preservation_plan(research)

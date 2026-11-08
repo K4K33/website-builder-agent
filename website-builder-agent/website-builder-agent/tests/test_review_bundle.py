@@ -39,6 +39,29 @@ def setup(folder, *, complete=True):
 
 
 class ReviewBundleTests(unittest.TestCase):
+    def test_commerce_collects_private_backend_bytes_and_viewport_captures_not_checkboxes(self):
+        with TemporaryDirectory() as folder:
+            root, r, pages, company, ref = setup(folder)
+            captures = Path(folder)/'captures'
+            (captures/'order.json').write_text('{"synthetic":true}')
+            company['delivery'] = {'commerce_runtime': {
+                'transaction_capture_path': str(captures/'order.json'),
+                'tests': [{'case':'payment_success','viewport':'mobile','result':'pass',
+                           'capture_paths':[str(captures/'mobile.png')]},
+                          {'case':'stock_update','viewport':'desktop','result':'pass',
+                           'capture_paths':[str(captures/'missing.png')]}]}}
+            company['review_bundle'] = collect_review_bundle(company, pages, {}, site_root=root,
+                output_parent=root/'_review_material', allowed_capture_roots=[captures])
+            bundle = current_review_bundle(company, pages)
+            backend = next(i for i in bundle['items'] if i['kind']=='commerce_backend_trace')
+            self.assertEqual((Path(company['review_bundle']['manifest_path']).parent/backend['path']).read_text(), '{"synthetic":true}')
+            self.assertTrue(any(i['kind']=='commerce_capture' and i['task_id']=='payment_success'
+                and i['viewport']=='mobile' for i in bundle['items']))
+            self.assertFalse(any(i['kind']=='commerce_capture' and i['task_id']=='stock_update'
+                for i in bundle['items']))
+            self.assertTrue(any(i['kind']=='commerce_capture' and i['task_id']=='stock_update'
+                for i in bundle['missing']))
+
     def test_same_folder_page_captures_do_not_overwrite_reviewed_route(self):
         with TemporaryDirectory() as folder:
             root = Path(folder)

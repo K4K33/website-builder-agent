@@ -153,6 +153,8 @@ def service_brief(research):
                'visual_asset_plan': research.get('visual_asset_plan') or [],
                'route_experience_plan': research.get('route_experience_plan') or [],
                'premium_experience_plan': research.get('premium_experience_plan') or {},
+               'commerce_plan': research.get('commerce_plan') or {},
+               'commerce_inventory': research.get('commerce_inventory') or [],
                'voice': research.get('company_voice_brief') or {},
                'creative_selection': research.get('creative_selection'),
                'review_evidence_protocol': research.get('review_evidence_protocol'),

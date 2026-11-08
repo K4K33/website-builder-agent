@@ -35,6 +35,7 @@ from utils.premium_quality_gate import (
 # Categories that apply across all sectors, not design layouts.
 UNIVERSAL_STANDARDS = (
     ("stable_quality_scorecard", "Nine fixed evidenced dimensions; exact mean >=9.5, each >=9 and no blockers", "release"),
+    ("commerce_runtime", "Classified business model, real backend, exact-deployment sandbox order/payment/stock/CMS tests", "functional"),
     ("business_task_continuity", "Every source business action survives; a link is not completion evidence", "functional"),
     ("service_quality_acceptance", "Separate exact-bundle technical, content, visual and commercial decisions", "release"),
     ("visual_information_continuity", "All source graphics classified, all output placements and crops independently evidenced", "content"),
@@ -139,6 +140,12 @@ def audit_universal_standards(
              else "service_quality_acceptance", str(issue))
     for issue in service_quality["pending"]:
         needs("service_quality_acceptance", str(issue))
+
+    from utils.commerce_workflow import audit_commerce
+    commerce = audit_commerce(research, company, artifact_digest=site_bundle_sha256,
+        contract_digest=service_quality['brief']['contract_sha256'], review_bundle=review_bundle, pages=pages)
+    for issue in commerce['blocking']: fail('commerce_runtime', issue)
+    for issue in commerce['pending']: needs('commerce_runtime', issue)
 
     visual_continuity = audit_visual_continuity(
         pages, research, artifact_digest=site_bundle_sha256, review_bundle=review_bundle,
@@ -497,6 +504,7 @@ def audit_universal_standards(
         "visual_asset_continuity": visual_continuity,
         "quality_scorecard": scorecard,
         "service_quality": service_quality,
+        "commerce": commerce,
         "published_experience": published,
         "quality_decision": decision,
         "blocking_categories": sorted(problems),
@@ -505,7 +513,7 @@ def audit_universal_standards(
         "internal_review_ready": (not problems and
                                   (not (company.get('delivery') or {}).get('published_url')
                                    or published['public_demo_ready'])),
-        "public_demo_ready": not problems and published['public_demo_ready'],
+        "public_demo_ready": not problems and published['public_demo_ready'] and commerce['runtime_pass'],
         "client_release_ready": not problems and not pending,
         "stage": stage,
         "standards": grouped,

@@ -4,23 +4,13 @@ A shop link is discovery evidence, never evidence that its catalogue survived.
 Checkout remains on the merchant's existing platform unless actually integrated.
 """
 from urllib.parse import urljoin, urlsplit
-import re
 from bs4 import BeautifulSoup
+from utils.commerce_workflow import commerce_signals, validate_commerce_plan
 
 
 def shop_urls(research):
-    urls = set()
-    for page in (research.get("source_inventory") or {}).get("pages", []):
-        for link in page.get("links", []):
-            label = str(link.get("text") or "").casefold()
-            href = urljoin(page.get("url", ""), str(link.get("href") or ""))
-            if re.search(r"verkkokau|webshop|webbutik|online\s*shop|\bshop\b|\bstore\b", label):
-                if urlsplit(href).scheme in ("https", "http"):
-                    urls.add(href.rstrip("/"))
-    explicit = (research.get("company_facts") or {}).get("external_shop_url")
-    if explicit:
-        urls.add(str(explicit).rstrip("/"))
-    return sorted(urls)
+    return sorted({str(s['url']).rstrip('/') for s in commerce_signals(research)
+                   if urlsplit(str(s.get('url') or '')).scheme in ('https', 'http')})
 
 
 def commerce_problems(research, pages=None):
@@ -32,9 +22,17 @@ def commerce_problems(research, pages=None):
     This does not certify live stock, checkout completion or visual quality.
     """
     issues = []
+    try:
+        plan = validate_commerce_plan(research)
+    except RuntimeError as error:
+        return [{'kind': 'commerce_plan_missing_or_invalid', 'source': ', '.join(shop_urls(research)),
+                 'reason': str(error)}]
+    if plan['mode'] == 'inquiry_catalogue':
+        return issues  # Classification still needs independently captured runtime evidence.
     captures = research.get("commerce_inventory") or []
     for shop in shop_urls(research):
-        capture = next((c for c in captures if str(c.get("shop_url", "")).rstrip("/") == shop), None)
+        capture = next((c for c in captures if shop in
+                        {str(u).rstrip('/') for u in [c.get('shop_url', '')] + c.get('discovery_urls', [])}), None)
         if not capture or not capture.get("captured_at") or capture.get("complete") is not True:
             issues.append({"kind": "shop_not_inspected", "source": shop})
             continue
@@ -53,6 +51,15 @@ def commerce_problems(research, pages=None):
             if (parsed.scheme != "https" or parsed.netloc != urlsplit(shop).netloc
                     or not product.get("name") or not price or not product.get("image")):
                 issues.append({"kind": "unverified_shop_product", "source": shop})
+            if plan['mode'] == 'woocommerce_native' and (
+                    type(product.get('backend_product_id')) is not int or product['backend_product_id'] <= 0):
+                issues.append({'kind': 'native_product_mapping_missing', 'source': product.get('url', shop)})
+        if plan['mode'] == 'woocommerce_native':
+            # Native Woo markup must not be forced to imitate static data-* cards.
+            # Complete source snapshots + native IDs are preflight only. Actual
+            # source/new catalogue, prices, variants and stock are separately
+            # inspected in the exact-backend catalogue_parity runtime case.
+            continue
         if pages is None:
             continue
         soup = BeautifulSoup(pages.get(target, ""), "html.parser")

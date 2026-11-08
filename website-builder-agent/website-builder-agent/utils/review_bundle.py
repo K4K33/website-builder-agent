@@ -126,6 +126,15 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
     for row in qa.get('journey_captures') or []:
         if isinstance(row, dict):
             collect(row.get('path'), 'journey_capture', task_id=str(row.get('task_id') or ''))
+    # Actual private commerce captures, never the generated QA JSON report alone.
+    commerce_record = (company.get('delivery') or {}).get('commerce_runtime') or {}
+    if commerce_record.get('transaction_capture_path'):
+        collect(commerce_record['transaction_capture_path'], 'commerce_backend_trace')
+    for row in commerce_record.get('tests', []):
+        if isinstance(row, dict):
+            for file in row.get('capture_paths') or []:
+                collect(file, 'commerce_capture', task_id=str(row.get('case') or ''),
+                        viewport=str(row.get('viewport') or ''))
     for row in qa.get('prior_client_captures') or []:
         if isinstance(row, dict):
             collect(row.get('path'), 'prior_client_screenshot', route=str(row.get('client') or ''))

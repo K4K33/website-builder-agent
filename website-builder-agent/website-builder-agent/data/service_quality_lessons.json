@@ -217,5 +217,31 @@
     ],
     "status": "implemented_in_development_branch",
     "real_new_company_validation": "pending"
+  },
+  {
+    "id": "commerce-is-native-business-function-not-gallery",
+    "scope": "service",
+    "origin": "Lasitaivas recording 20261108-1848-49.8291251.mp4 and owner correction 2026-11-08",
+    "root_cause": "Link-text discovery missed icon carts and checkout; catalogue preservation was confused with tested order/payment behavior.",
+    "implementation": [
+      "utils/commerce_workflow.py",
+      "utils/woocommerce_build.py",
+      "templates/woocommerce-native/kaurivo-commerce.php",
+      "utils/commerce_parity.py",
+      "utils/industry_workflow.py",
+      "utils/review_bundle.py",
+      "utils/universal_quality.py",
+      "agents/builder.py",
+      "agents/research.py",
+      "main.py",
+      "docs/KAURIVO_MESTARI_PROMPT.md"
+    ],
+    "regression_test": [
+      "tests/test_commerce_workflow.py",
+      "tests/test_commerce_parity.py"
+    ],
+    "status": "implemented_in_development_branch",
+    "real_new_company_validation": "pending",
+    "runtime_limit": "Actual WordPress/WooCommerce installation and payment-provider test transaction are unverified; package preparation is not a completed store."
   }
 ]
