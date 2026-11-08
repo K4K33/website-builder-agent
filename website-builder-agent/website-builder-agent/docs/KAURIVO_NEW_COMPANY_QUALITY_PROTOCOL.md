@@ -321,3 +321,69 @@ An offline check against the actual saved Suutariesteri source included all
 six known footwear logo assets in the new candidate inventory, including those
 with blank alt text. This proves discovery of this regression's files, not
 correct logo classification, licences, a new-company result or 9.5 quality.
+
+## 8 November: canonical master prompt and whole-site adapter
+
+Current instructions are in `docs/KAURIVO_MESTARI_PROMPT.md`, loaded by
+`utils/master_prompt.py` into the shared service policy. Research, Builder,
+revision and QA receive that same text. Its SHA-256 is part of the service
+contract; changing it invalidates previous exact-contract review evidence.
+The root AGENTS.md directs manual implementations to the same contract.
+
+Design Kehys remains a historical failed first pass (self-review 60/9, no
+independent acceptance) and is excluded from new-company trials. The review
+exposed a procedural bypass: the standalone visual preflight was used instead
+of the whole-site gates. Genuine framing photos were assigned to an unrelated
+service, FAQ depth was lost, source narration leaked into visitor text, 3D
+labels overlapped, and CMS operation remained untested. A static placement
+match cannot decide if the subject actually supports a service claim.
+
+Use the new offline whole-site adapter for manual/Sites output:
+
+```
+python scripts/audit_site_contract.py --research research.json --pages rendered-pages.json --stage preflight
+python scripts/audit_site_contract.py --research research.json --pages rendered-pages.json --company company.json --artifact deployment.tar.gz --stage public_demo
+python scripts/audit_site_contract.py --research research.json --pages rendered-pages.json --company company.json --artifact deployment.tar.gz --stage client_release
+```
+
+It combines the existing universal, visual, source-fidelity, price/FAQ and
+content checks. Source narration and missing observed questions block even
+when the visual-only preflight passes. Unverified runtime, semantic, visual,
+publication and CMS evidence stays pending; no passing preflight becomes
+client-release acceptance. Actual hosting is not instrumented by this adapter:
+an operator must run it. Files and attestations do not prove reviewer identity
+or the truth of an observation. No absolute “impossible to repeat” claim is made.
+
+FAQ extraction now includes question-shaped headings and accordion buttons,
+not only native details. Inventory truncation caps for headings, table prices
+and FAQ questions were removed. Script-only and HTML-hidden output questions
+cannot satisfy preservation. These checks establish explicit topic presence,
+not semantic answer equivalence, CSS visibility or nuanced factual completeness;
+source/new review is still required.
+
+The current rubric is `kaurivo-nine-v2`: the original eight dimensions plus a
+separate `motion_scroll` dimension. All nine are equally weighted. Historical
+eight-dimension reviews are retained as history, not silently converted.
+Missing dimensions produce no accepted mean. Purposeful static treatment can
+be justified; merely adding effects does not earn points. Device, reduced-motion
+and native scrolling evidence remain necessary.
+
+The new contract preserves company-specific layout decisions; it does not
+mandate one visual template, image aspect ratio, effect or card structure.
+No additional paid API/model request is introduced. This update does not rewrite
+the Design Kehys demo, run a real CMS, authorize messages or certify 9.5 quality.
+
+Validation on 8 November: 155 targeted offline tests passed, including all 10
+new master-contract counterexamples. One targeted browser-runtime test was
+excluded explicitly, not counted as passed. Compilation and diff checks passed.
+The full suite ran 844 tests with 4 failures, 19 errors and 15 skips. A fresh
+unchanged HEAD worktree ran 834 tests with exactly the same 23 failure/error
+names; the browser executable is unavailable and subsequent browser cases also
+report the inherited Playwright sync/async-loop issue. No new failure/error
+case was introduced. These are not successful browser or CMS tests.
+
+The existing customer-copy checker was also run on the 17 saved rendered
+Design Kehys routes. It found source narration on the article listing,
+contact page and portrait article. This confirms that the narrower visual
+preflight had missed known whole-contract blockers; it does not rescore or
+repair that published demo or prove semantic/visual acceptance.

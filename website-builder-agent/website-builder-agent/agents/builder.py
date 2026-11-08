@@ -1,7 +1,7 @@
 """
 Website Builder -agentti.
 
-Rakentaa research-datan perusteella yhden sivun verkkosivun.
+Rakentaa research-datan perusteella yrityksen sisältöön sopivan verkkosivuston.
 
 Tärkeä periaate:
 AI ei saa keksiä yrityksen faktoja.
@@ -188,7 +188,7 @@ VIIMEINEN VISUAALINEN LAATUVIIMEISTELY (KAIKKI ASIAKKAAT):
 Olet kokenut frontend-kehittäjä.
 
 Rakennat tutkimusdatan perusteella ammattimaisen,
-responsiivisen yhden sivun verkkosivun.
+responsiivisen, yrityksen sisältöön sopivan verkkosivuston.
 
 TÄRKEIN SÄÄNTÖ:
 

@@ -326,7 +326,8 @@ target pitää osoittaa site_architecturen oikean sivun ja osion polkuun,
 esim. palvelut/index.html#huolto. Myyntituotteiden oikea listaus,
 hinnasto ja muut ensisijaiset tehtävät eivät saa jäädä vanhan
 rikkinäisen verkkosivun linkiksi. Jos sisältö on laaja, käytä tarvittavaa
-määrää monisivuisia reittejä, kuitenkin enintään 14.
+määrää monisivuisia reittejä. Älä pudota sisältöä sivumäärän rajan vuoksi;
+jos toteutuksen raja ylittyy, raportoi estävä puute ja pilko työ.
 HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
 """
 

@@ -12,6 +12,7 @@ from urllib.parse import urljoin, urlsplit
 from pathlib import Path
 from bs4 import BeautifulSoup
 from utils.content_parity import source_inventory_sha256
+from utils.master_prompt import MASTER_PROMPT, MASTER_PROMPT_SHA256
 
 DOMAINS = ('technical', 'content', 'visual', 'commercial')
 TASK_PATTERNS = (
@@ -20,7 +21,7 @@ TASK_PATTERNS = (
     ('quotation', r'tarjouspy|pyydä tarjous|begär offert|offertförfrågan|be om offert|request.{0,8}quote'),
     ('application', r'ilmoittaudu|hae mukaan|anmäl|register|apply now'),
 )
-POLICY = '''SERVICE QUALITY CONTRACT — ALL CLIENTS:
+POLICY = MASTER_PROMPT + '\n\n' + '''SERVICE QUALITY CONTRACT — ALL CLIENTS:
 Plan the final editable platform before composition; build the customer preview
 in that implementation where possible. A separate stripped-down CMS theme is
 not delivery parity. Verify every preview route against the editable version,
@@ -82,7 +83,7 @@ Do not impose the same oversized heading or split hero on unrelated companies.
 Inspect each photo crop at desktop and mobile sizes; consistent boxes alone do
 not prove consistent image quality. Missing original working/people photos stay
 an intake gap, never a licence to invent a workshop or the owner's portrait.
-Report the same eight owner scorecard dimensions for every company. Evidence
+Report the same nine owner scorecard dimensions for every company. Evidence
 gaps remain unscored; fixed weights and the exact mean must not change between
 projects. A 9.5 mean never overrides lost functionality or untested CMS editing.
 '''
@@ -139,7 +140,8 @@ def service_brief(research):
               for p in (research.get('site_architecture') or {}).get('pages', [])]
     lessons_file = Path(__file__).resolve().parents[1] / 'data/service_quality_lessons.json'
     lessons = json.loads(lessons_file.read_text(encoding='utf-8')) if lessons_file.is_file() else []
-    payload = {'service_lessons': lessons,
+    payload = {'master_prompt_sha256': MASTER_PROMPT_SHA256,
+               'service_lessons': lessons,
                'route_review_requirements': ROUTE_REVIEW_CHECKS,
                'source_observation_sha256': _hash({'inventory': research.get('source_inventory') or {},
                                                    'fact_sources': research.get('fact_sources') or []}),

@@ -178,5 +178,25 @@
     ],
     "status": "implemented_in_development_branch",
     "real_new_company_validation": "pending"
+  },
+  {
+    "id": "design-kehys-whole-contract-before-acceptance",
+    "scope": "service",
+    "origin": "Design Kehys review 2026-11-07 and owner master-prompt update 2026-11-08",
+    "root_cause": "A manual Site used only the visual preflight despite existing whole-site rules. Genuine photos were assigned to the wrong service; source FAQ and editorial depth were reduced; source narration, unfinished motion labels and untested CMS delivery remained.",
+    "implementation": [
+      "docs/KAURIVO_MESTARI_PROMPT.md",
+      "utils/master_prompt.py",
+      "utils/master_audit.py",
+      "scripts/audit_site_contract.py",
+      "utils/source_identity.py",
+      "utils/quality_scorecard.py"
+    ],
+    "regression_test": [
+      "tests/test_master_contract.py",
+      "tests/test_quality_scorecard.py"
+    ],
+    "status": "implemented_in_development_branch",
+    "real_new_company_validation": "pending"
   }
 ]

@@ -1,6 +1,6 @@
 """Stable owner-facing rubric; scores come from review, never static tests.
 
-All eight dimensions have equal weight. Missing inspection is not a zero,
+All nine dimensions have equal weight. Missing inspection is not a zero,
 and an excellent mean cannot erase a failed business task or delivery check.
 """
 from decimal import Decimal, ROUND_HALF_UP
@@ -15,9 +15,10 @@ DIMENSIONS = (
     ('content_preservation', 'Sisällön säilyminen ja esittäminen'),
     ('commercial_quality', 'Myynnillisyys'),
     ('navigation_technical', 'Navigointi ja tekninen toteutus'),
+    ('motion_scroll', '3D, animaatiot ja skrollaus'),
     ('client_handover', 'Valmius asiakkaalle luovutettavaksi'),
 )
-RUBRIC = 'kaurivo-eight-v1'
+RUBRIC = 'kaurivo-nine-v2'
 
 
 def quality_scorecard(review=None, *, artifact_digest=None, contract_digest=None,

@@ -223,6 +223,23 @@
         "Repair photo used as retail assortment photo",
         "Crop/rhythm and CMS delivery not verified"
       ]
+    },
+    {
+      "slug": "design-kehys",
+      "name": "Helsingin Design Kehys Oy",
+      "url": "https://www.designkehys.fi/",
+      "mode": "historical_demo",
+      "sector": "picture framing",
+      "self_review_mean": 6.666666666666667,
+      "rubric": "kaurivo-nine-v2",
+      "independent_review": "not_verified",
+      "first_review_source": "20261107-1119-14.6471751.mp4",
+      "known_issues": [
+        "A framed document used to present mirrors",
+        "Source FAQ reduced and research narration exposed",
+        "Generic repeated layouts and unfinished motion labels",
+        "CMS runtime and final acceptance unverified"
+      ]
     }
   ]
 }

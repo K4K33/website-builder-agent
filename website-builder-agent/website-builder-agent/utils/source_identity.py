@@ -330,10 +330,15 @@ def extract_price_faq_evidence(html: str) -> dict:
     for details in soup.find_all("details"):
         summary = details.find("summary")
         if summary:
-            value = " ".join(summary.get_text(" ", strip=True).split())[:300]
+            value = " ".join(summary.get_text(" ", strip=True).split())
             if len(value) >= 7 and value not in questions:
                 questions.append(value)
-    return {"price_rows": rows[:120], "faq_questions": questions[:80]}
+    # WordPress accordions use headings/buttons too. No silent inventory cap.
+    for node in soup.select('h1,h2,h3,h4,h5,h6,button[aria-expanded],[role="button"][aria-expanded]'):
+        value = " ".join(node.get_text(" ", strip=True).split())
+        if value.endswith('?') and len(value) >= 7 and value not in questions:
+            questions.append(value)
+    return {"price_rows": rows, "faq_questions": questions}
 
 
 def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict) -> dict:
@@ -349,6 +354,9 @@ def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict)
                              for question in evidence.get("faq_questions") or [])
     soup = BeautifulSoup("<html><body>" + "\n".join(rendered_pages.values()) +
                          "</body></html>", "html.parser")
+    # Hidden/script-only copies do not preserve visitor-visible questions.
+    for node in soup.select('script,style,noscript,template,[hidden],[aria-hidden="true"]'):
+        node.decompose()
     units = []
     for node in soup.select("tr,li,article,details,[class*='pricing'],[class*='price-row']"):
         value = plain(node.get_text(" ", strip=True))

@@ -27,13 +27,13 @@ class QualityScorecardTests(unittest.TestCase):
         return quality_scorecard(review, artifact_digest='a'*64,
             contract_digest='b'*64, evidence_bundle=bundle, **kwargs)
 
-    def test_exact_eight_equal_weights_and_half_up_display(self):
+    def test_exact_nine_equal_weights_and_half_up_display(self):
         r, b = review_fixture()
-        for key, value in zip(r['scores'], [6.5, 7, 6.5, 7, 7.5, 6.5, 7.5, 2]):
+        for key, value in zip(r['scores'], [9, 7.5, 7.5, 7, 6.5, 6.5, 7.5, 5.5, 3]):
             r['scores'][key]['score'] = value
         out = self.evaluate(r, b)
-        self.assertEqual(out['mean'], 6.3125)
-        self.assertEqual(out['display_mean'], '6.3')
+        self.assertEqual(out['mean'], 60 / 9)
+        self.assertEqual(out['display_mean'], '6.7')
         self.assertFalse(out['release_eligible'])
         r, b = review_fixture(6.25)
         self.assertEqual(self.evaluate(r, b)['display_mean'], '6.3')

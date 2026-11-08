@@ -34,7 +34,7 @@ from utils.premium_quality_gate import (
 
 # Categories that apply across all sectors, not design layouts.
 UNIVERSAL_STANDARDS = (
-    ("stable_quality_scorecard", "Eight fixed equally weighted evidenced dimensions; exact mean >=9.5 and no blockers", "release"),
+    ("stable_quality_scorecard", "Nine fixed equally weighted evidenced dimensions; exact mean >=9.5 and no blockers", "release"),
     ("business_task_continuity", "Every source business action survives; a link is not completion evidence", "functional"),
     ("service_quality_acceptance", "Separate exact-bundle technical, content, visual and commercial decisions", "release"),
     ("visual_information_continuity", "All source graphics classified, all output placements and crops independently evidenced", "content"),

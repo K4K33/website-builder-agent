@@ -397,7 +397,7 @@ def _extract_headings(
                     text[:500]
                 )
 
-        result[tag_name] = headings[:30]
+        result[tag_name] = headings
 
     return result
 

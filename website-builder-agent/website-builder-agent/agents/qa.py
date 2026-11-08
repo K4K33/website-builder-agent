@@ -85,8 +85,8 @@ not prove delivery. Forms require authorized end-to-end receipt and honest
 success/failure feedback. A theme ZIP does not prove CMS editing or rollback.
 
 3D / ANIMATION REVIEW (owner requirement, 2026-11-05):
-Within visual_composition, explicitly assess purposeful, brand-appropriate
-3D and animations; within navigation_technical, assess their effect on native
+Under the separate motion_scroll score, explicitly assess purposeful, brand-appropriate
+3D and animations and their effect on native
 wheel, trackpad, touch and keyboard scrolling. Never award points merely for
 adding effects. Report scroll jank, scroll hijacking, delayed content or
 input-blocking overlays as failures requiring correction. Require observed
@@ -1553,7 +1553,7 @@ def approve_company(slug_or_name):
             evidence_bundle=evidence_bundle,
             blockers=service['blocking'], pending=service['pending'])
         if not scorecard['release_eligible']:
-            raise RuntimeError('Client acceptance: eight evidenced quality scores, exact mean >=9.5 '
+            raise RuntimeError('Client acceptance: nine evidenced quality scores, exact mean >=9.5 '
                                'and no open review issues are required.')
         release_audit = audit_universal_standards(
             rendered.get('index.html') or next(iter(rendered.values())), research,
