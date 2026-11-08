@@ -307,6 +307,30 @@
         "Original empty cart is not proof of either an absent shop or a verified original checkout",
         "Native editable store, gateway transaction, stock effects and independent acceptance unverified"
       ]
+    },
+    {
+      "slug": "veistovene",
+      "name": "Veneveistämö Veistovene",
+      "url": "https://www.veistovene.com/",
+      "business_id": "2193257-9",
+      "mode": "first_pass_unseen",
+      "implementation": "manual_sites_not_automatic_builder_validation",
+      "sector": "wooden boat repair and winter storage",
+      "review_status": "not_reviewed",
+      "independent_review": "not_verified",
+      "first_published_commit": "c014f5c1fa13dbd09507df8c780920e54ef17e0d",
+      "current_commit": "c014f5c1fa13dbd09507df8c780920e54ef17e0d",
+      "new_site_url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/",
+      "site_project_id": "appgprj_6af0ce2a2af48191835552fa2bcfa815",
+      "deployment_id": "appgdep_6af0d745898481919319bb4045aca806",
+      "evidence_path": "docs/kaurivo/demos/veistovene-v1/validation.json",
+      "known_limits": [
+        "Service-site trial, not ecommerce validation",
+        "Actual CMS save/publish/restore blocked by required owner sign-in; do not claim verified editable delivery",
+        "390px iframe checks do not prove physical-device touch or scroll performance",
+        "Whole-site preflight is not accepted: local source-image copies lack required client-signed identity/reuse approval; independent review is absent",
+        "Three rendered concepts were not compared before initial implementation"
+      ]
     }
   ]
 }
