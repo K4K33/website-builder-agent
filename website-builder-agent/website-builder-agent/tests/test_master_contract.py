@@ -40,6 +40,21 @@ class MasterContractTests(unittest.TestCase):
         self.assertEqual(report['faq_questions_checked'], 11)
         self.assertEqual(len(report['missing']), 8)
 
+    def test_word_layout_table_is_not_a_price_row(self):
+        layout = '<table><tr><td><table><tr><td>Etusivu</td></tr></table></td><td>Kirjan korjaus maksaa yleensä 60–180 euroa.</td></tr></table>'
+        self.assertEqual(extract_price_faq_evidence(layout)['price_rows'], [])
+        flat = '<table><tr><td>Selän korjaus</td><td>40–55 euroa</td></tr></table>'
+        self.assertEqual(len(extract_price_faq_evidence(flat)['price_rows']), 1)
+
+    def test_disclosed_draft_is_allowed_in_preflight_but_blocked_in_client_release(self):
+        research, pages = fixture()
+        pages['index.html'] += '<aside data-demo-disclosure="true">Kaurivon erillinen suunnitteludemo</aside>'
+        draft = audit_site_contract(pages, research)
+        release = audit_site_contract(pages, research, stage='client_release')
+        self.assertNotIn('demo_note_in_release', str(draft['blocking']))
+        self.assertIn('demo_note_in_release', str(release['blocking']))
+        self.assertFalse(release['client_release_ready'])
+
     def test_same_question_count_cannot_hide_different_missing_topics(self):
         research = {'source_inventory': {'pages': [{'url': 'https://example.org/',
             'price_faq_evidence': {'faq_questions': ['Miten repeämä korjataan?']}}]}}

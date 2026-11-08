@@ -22,7 +22,8 @@ def main(argv=None):
     pages = json.loads(Path(args.pages).read_text(encoding='utf-8'))
     company = json.loads(Path(args.company).read_text(encoding='utf-8')) if args.company else None
     digest = hashlib.sha256(Path(args.artifact).read_bytes()).hexdigest() if args.artifact else None
-    out = audit_site_contract(pages, research, company=company, artifact_digest=digest)
+    out = audit_site_contract(pages, research, company=company, artifact_digest=digest,
+        stage="client_release" if args.stage == "client_release" else "internal_demo")
     out['stage'] = args.stage
     print(json.dumps(out, ensure_ascii=False, indent=2))
     return 0 if out[{'preflight': 'preflight_pass', 'public_demo': 'public_demo_ready',

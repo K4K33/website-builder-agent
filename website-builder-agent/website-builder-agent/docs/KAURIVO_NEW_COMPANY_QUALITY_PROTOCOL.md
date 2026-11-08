@@ -387,3 +387,37 @@ Design Kehys routes. It found source narration on the article listing,
 contact page and portrait article. This confirms that the narrower visual
 preflight had missed known whole-contract blockers; it does not rescore or
 repair that published demo or prove semantic/visual acceptance.
+
+## 8 November: premium execution after Marttila
+
+Master Prompt v3 preserves brand fidelity as a baseline and adds explicit
+prebuild decisions for image scale, service-specific compositions, authentic
+work/context, motion material quality and enquiry preparation. The shared
+Research schema, service-plan validator and route review requirements use the
+same rules; manual/Sites operators remain responsible for running the adapter.
+New visual observations require actual display-scale image quality, image
+hierarchy, service composition rationale, responsive type detail, authentic
+company work and motion material quality. Commercial review additionally
+requires enquiry preparation. Static choices remain valid when justified.
+These records require observed evidence; strings/checklists cannot establish
+sharpness, taste, smoothness or independent reviewer identity automatically.
+
+Rubric kaurivo-nine-v3 keeps nine equal weights and the exact >=9.5 mean,
+adding a minimum of 9 for every dimension. Historical v2 reviews remain
+history and cannot approve a v3 build. Stricter existing consensus conditions
+are preserved. The first Marttila self-review (65/9, no independent acceptance)
+is recorded unchanged and the company excluded from future unseen trials.
+CMS runtime and native device proof remain pending, not synthetic successes.
+
+Validation: 165 selected offline tests passed (77 shared-contract/service/
+scorecard/route/premium tests plus 88 universal/source/media/CMS contract
+checks). Five new test methods cover all five missing plan fields, all seven
+missing/failed/pending review observations, stale image-scale plans, a >9.5
+mean with a dimension below 9, the exact floor boundary, and stale v2 reviews.
+Diff whitespace checks passed. No browser/CMS session, paid API request,
+customer message or new-company visual acceptance was run by this update.
+
+The adapter's internal-demo/client-release mapping and price-table extraction
+fixes from the Marttila build are included: honest draft disclosure is allowed
+in preflight, while client release still blocks it; nested legacy layout tables
+must not create false price rows. Their two regression tests are included above.

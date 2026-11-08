@@ -240,6 +240,36 @@
         "Generic repeated layouts and unfinished motion labels",
         "CMS runtime and final acceptance unverified"
       ]
+    },
+    {
+      "slug": "kirjansitomo-jari-marttila",
+      "name": "Kirjansitomo Jari Marttila",
+      "url": "https://www.kirjansitomo-jm.fi/index.html",
+      "business_id": "1969770-9",
+      "mode": "historical_demo",
+      "sector": "bookbinding",
+      "self_review_mean": 7.222222222222222,
+      "rubric": "kaurivo-nine-v2",
+      "independent_review": "not_verified",
+      "first_review_source": "20261108-1122-39.1620390.mp4",
+      "owner_brand_feedback": "Brand fidelity meets required level; premium execution needs improvement",
+      "self_review_scores": {
+        "brand_fidelity": 9,
+        "company_specificity": 7.5,
+        "photography": 6.5,
+        "visual_composition": 7.5,
+        "content_preservation": 8.5,
+        "commercial_quality": 7,
+        "navigation_technical": 8,
+        "motion_scroll": 7,
+        "client_handover": 4
+      },
+      "known_issues": [
+        "Low resolution source images enlarged in hero while service samples remain small",
+        "Repeated service opening compositions",
+        "Generic simplified 3D materials and limited explanatory value",
+        "Actual editor save/publish/restore and independent review not verified"
+      ]
     }
   ]
 }

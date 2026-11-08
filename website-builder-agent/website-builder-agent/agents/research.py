@@ -337,7 +337,13 @@ Return these structured planning fields as part of the brief:
   delivery_parity_strategy, portfolio_strategy (real project groups, source
   context and credits; or justified not-applicable), contact_continuity,
   cold_load_test_plan, composition_selection (three real responsive options),
-  motion_purpose, and route_added_value (route-to-new-information mapping).
+  motion_purpose, image_scale_strategy (actual pixel dimensions, display sizes,
+  density and observed sharpness plan), service_composition_strategy (compare
+  openings AND body layouts against the visitor tasks), craft_evidence_strategy
+  (authentic company work/context and missing assets), motion_quality_strategy
+  (materials, proportions, states, explanatory value or justified static choice),
+  enquiry_preparation (source-backed intake, price and delivery instructions),
+  and route_added_value (route-to-new-information mapping).
   These describe intended work, never completed tests or client approval.
 - route_experience_plan: one row for every site_architecture page, with route,
   visitor_task, composition, required_photo_subjects, available_source_images,

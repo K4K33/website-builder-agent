@@ -7,6 +7,37 @@ from utils.service_quality import audit_service_quality, validate_service_plan
 from utils.client_handover import inspect_client_delivery
 
 class PremiumExperienceTests(unittest.TestCase):
+    def test_marttila_lessons_require_specific_prebuild_decisions(self):
+        for field in ('image_scale_strategy', 'service_composition_strategy',
+                      'craft_evidence_strategy', 'motion_quality_strategy',
+                      'enquiry_preparation'):
+            r, p = fixture(); r['premium_experience_protocol'] = 'v1'
+            del r['premium_experience_plan'][field]
+            with self.assertRaisesRegex(RuntimeError, field):
+                validate_service_plan(r)
+
+    def test_brand_approval_cannot_replace_premium_observations(self):
+        checks = [('visual', key) for key in (
+            'image_quality_at_display_size', 'image_hierarchy',
+            'service_composition_rationale', 'responsive_type_detail',
+            'company_work_evidence', 'motion_material_quality')]
+        checks.append(('commercial', 'enquiry_preparation'))
+        for domain, key in checks:
+            for state in ('missing', 'fail', 'pending'):
+                r, p = fixture(); r['service_quality_reviews'] = reviews(r, p)
+                check = r['service_quality_reviews'][domain]['route_results'][0]['checks']
+                if state == 'missing':
+                    del check[key]
+                else:
+                    check[key]['result'] = state
+                self.assertFalse(audit_service_quality(p, r, artifact_digest='a'*64)['client_ready'],
+                                 (domain, key, state))
+
+    def test_changed_image_scale_plan_invalidates_existing_review(self):
+        r, p = fixture(); r['service_quality_reviews'] = reviews(r, p)
+        r['premium_experience_plan']['image_scale_strategy'] = 'Enlarge every small image'
+        self.assertFalse(audit_service_quality(p, r, artifact_digest='a'*64)['client_ready'])
+
     def test_platform_plan_required_before_new_build(self):
         for field in ('editable_platform', 'portfolio_strategy', 'contact_continuity', 'cold_load_test_plan'):
             r,p=fixture();r['premium_experience_protocol']='v1'

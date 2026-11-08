@@ -243,7 +243,9 @@ def validate_premium_experience_plan(research):
         raise RuntimeError('Premium experience plan is missing')
     for field in ('editable_platform', 'preview_implementation', 'delivery_parity_strategy',
                   'portfolio_strategy', 'contact_continuity', 'cold_load_test_plan',
-                  'composition_selection', 'motion_purpose'):
+                  'composition_selection', 'motion_purpose', 'image_scale_strategy',
+                  'service_composition_strategy', 'craft_evidence_strategy',
+                  'motion_quality_strategy', 'enquiry_preparation'):
         if not isinstance(plan.get(field), str) or not plan[field].strip():
             raise RuntimeError('Premium experience plan is missing ' + field)
     routes = [p.get('path') for p in (research.get('site_architecture') or {}).get('pages', [])]
@@ -260,11 +262,14 @@ ROUTE_REVIEW_CHECKS = {
                'readable_hierarchy', 'motion_suitability', 'project_presentation',
                'new_information', 'composition_comparison', 'whitespace_rhythm',
                'cta_repetition', 'image_subject_match', 'crop_integrity',
-               'visual_information_preserved', 'sector_specificity'),
+               'visual_information_preserved', 'sector_specificity',
+               'image_quality_at_display_size', 'image_hierarchy',
+               'service_composition_rationale', 'responsive_type_detail',
+               'company_work_evidence', 'motion_material_quality'),
     'technical': ('wheel_scroll', 'trackpad_scroll', 'touch_scroll',
                   'keyboard_scroll', 'reduced_motion', 'motion_input_response',
                   'cold_load', 'route_transition'),
-    'commercial': ('contact_continuity',),
+    'commercial': ('contact_continuity', 'enquiry_preparation'),
 }
 
 

@@ -44,6 +44,22 @@ class QualityScorecardTests(unittest.TestCase):
         self.assertEqual(out['display_mean'], '9.5')
         self.assertFalse(out['target_met'])
 
+    def test_high_mean_and_perfect_brand_cannot_hide_one_weak_dimension(self):
+        r, b = review_fixture(10)
+        r['scores']['photography']['score'] = 8.9
+        out = self.evaluate(r, b)
+        self.assertGreater(out['mean'], 9.5)
+        self.assertFalse(out['dimension_floor_met'])
+        self.assertFalse(out['target_met'])
+        self.assertFalse(out['release_eligible'])
+        r['scores']['photography']['score'] = 9
+        self.assertTrue(self.evaluate(r, b)['release_eligible'])
+
+    def test_old_nine_dimension_review_requires_new_premium_review(self):
+        r, b = review_fixture(10)
+        r['rubric'] = 'kaurivo-nine-v2'
+        self.assertFalse(self.evaluate(r, b)['complete'])
+
     def test_high_mean_never_erases_missing_business_task_or_handover(self):
         r, b = review_fixture(10)
         for kwargs in ({'blockers': ['lost shop']}, {'pending': ['CMS runtime untested']}):

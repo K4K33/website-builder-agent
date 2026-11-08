@@ -198,5 +198,24 @@
     ],
     "status": "implemented_in_development_branch",
     "real_new_company_validation": "pending"
+  },
+  {
+    "id": "marttila-premium-beyond-brand",
+    "scope": "service",
+    "origin": "Marttila recording 20261108-1122-39.1620390.mp4 and owner feedback 2026-11-08",
+    "root_cause": "Authentic brand and photos were preserved, but display-scale sharpness, image hierarchy, repeated service compositions and simplified motion remained below premium quality; CMS runtime was unverified.",
+    "implementation": [
+      "docs/KAURIVO_MESTARI_PROMPT.md",
+      "utils/service_quality.py",
+      "utils/quality_scorecard.py",
+      "utils/universal_quality.py",
+      "agents/research.py"
+    ],
+    "regression_test": [
+      "tests/test_premium_experience_acceptance.py",
+      "tests/test_quality_scorecard.py"
+    ],
+    "status": "implemented_in_development_branch",
+    "real_new_company_validation": "pending"
   }
 ]

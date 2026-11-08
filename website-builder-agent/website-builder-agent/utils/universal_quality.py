@@ -34,7 +34,7 @@ from utils.premium_quality_gate import (
 
 # Categories that apply across all sectors, not design layouts.
 UNIVERSAL_STANDARDS = (
-    ("stable_quality_scorecard", "Nine fixed equally weighted evidenced dimensions; exact mean >=9.5 and no blockers", "release"),
+    ("stable_quality_scorecard", "Nine fixed evidenced dimensions; exact mean >=9.5, each >=9 and no blockers", "release"),
     ("business_task_continuity", "Every source business action survives; a link is not completion evidence", "functional"),
     ("service_quality_acceptance", "Separate exact-bundle technical, content, visual and commercial decisions", "release"),
     ("visual_information_continuity", "All source graphics classified, all output placements and crops independently evidenced", "content"),
@@ -476,9 +476,9 @@ def audit_universal_standards(
         evidence_bundle=review_bundle,
         blockers=list(problems), pending=list(pending))
     if not scorecard['complete']:
-        needs('stable_quality_scorecard', 'Eight source/current-bundle reviewed scores are not complete.')
+        needs('stable_quality_scorecard', 'Nine source/current-bundle reviewed scores are not complete.')
     elif not scorecard['target_met']:
-        needs('stable_quality_scorecard', 'Unrounded equally weighted mean is below 9.5/10.')
+        needs('stable_quality_scorecard', 'Exact mean must be >=9.5/10 and every dimension >=9/10.')
     elif not scorecard['release_eligible']:
         needs('stable_quality_scorecard', 'A high mean cannot override open defects or missing acceptance evidence.')
     all_rules = {name: group for name, _, group in UNIVERSAL_STANDARDS}

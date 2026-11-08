@@ -41,6 +41,11 @@ def fixture():
         'cold_load_test_plan': 'Observe cold-cache first paint and navigation on mobile/desktop',
         'composition_selection': 'Compare three actual responsive workshop compositions',
         'motion_purpose': 'Static repair photo; immediate focus and press response',
+        'image_scale_strategy': 'Inspect real image pixels against 390px/desktop display and density',
+        'service_composition_strategy': 'One repair route; no artificial alternate layouts',
+        'craft_evidence_strategy': 'Source-backed instrument repair detail; no invented owner photo',
+        'motion_quality_strategy': 'Static repair photograph; no unverified product structure',
+        'enquiry_preparation': 'Explain source-backed external appointment requirements',
         'route_added_value': {'index.html': 'Identify actual repair service and book'}}
     return research, pages
 

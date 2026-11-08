@@ -7,7 +7,9 @@ from utils.source_identity import audit_price_faq_preservation
 from utils.content_parity import audit_content_parity
 
 
-def audit_site_contract(pages, research, *, company=None, artifact_digest=None):
+def audit_site_contract(pages, research, *, company=None, artifact_digest=None, stage="internal_demo"):
+    if stage not in ('internal_demo', 'client_release'):
+        raise ValueError('Unknown acceptance stage')
     if not isinstance(pages, dict) or not pages or any(
             not isinstance(k, str) or not isinstance(v, str) or not v.strip()
             for k, v in pages.items()):
@@ -19,7 +21,7 @@ def audit_site_contract(pages, research, *, company=None, artifact_digest=None):
         raise ValueError('Company and research must be the same reviewed contract')
     main = pages.get('index.html') or pages.get('/') or next(iter(pages.values()))
     universal = audit_universal_standards(main, research, company=company,
-        stage='client_release', rendered_pages=pages, site_bundle_sha256=artifact_digest)
+        stage=stage, rendered_pages=pages, site_bundle_sha256=artifact_digest)
     source = audit_source_fidelity(main, research,
         source_url=company.get('website') or company.get('url') or '', rendered_pages=pages)
     faq = audit_price_faq_preservation(pages, research)

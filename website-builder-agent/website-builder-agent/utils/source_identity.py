@@ -315,12 +315,16 @@ def extract_price_faq_evidence(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     rows = []
     for tr in soup.find_all("tr"):
+        # A nested-table layout row is not a flat price record.
+        if tr.find("table"):
+            continue
         cells = [" ".join(tag.get_text(" ", strip=True).split())
                  for tag in tr.find_all(["td", "th"], recursive=False)]
         if not 2 <= len(cells) <= 8 or len(cells[0]) < 3:
             continue
         price = next((cell for cell in reversed(cells[1:])
-                      if any(char.isdigit() for char in cell)
+                      if len(cell) <= 120 and re.match(
+                          r"^(?:(?:alkaen|alk\.|noin|from|från)\s*)?[0-9]", cell, re.I)
                       and ("€" in cell or " eur" in cell.lower())), "")
         if price:
             row = {"label": cells[0][:320], "price": price[:100]}

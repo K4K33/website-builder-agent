@@ -18,7 +18,7 @@ DIMENSIONS = (
     ('motion_scroll', '3D, animaatiot ja skrollaus'),
     ('client_handover', 'Valmius asiakkaalle luovutettavaksi'),
 )
-RUBRIC = 'kaurivo-nine-v2'
+RUBRIC = 'kaurivo-nine-v3'
 
 
 def quality_scorecard(review=None, *, artifact_digest=None, contract_digest=None,
@@ -65,13 +65,16 @@ def quality_scorecard(review=None, *, artifact_digest=None, contract_digest=None
             values.append(Decimal(str(score)))
     complete = len(values) == len(DIMENSIONS)
     mean = sum(values) / Decimal(len(DIMENSIONS)) if complete else None
+    floor_met = bool(complete and min(values) >= Decimal('9'))
+    target_met = bool(complete and mean >= Decimal('9.5') and floor_met)
     # Compare the exact mean, never the rounded display value (9.45 != 9.5).
-    eligible = bool(complete and mean >= Decimal('9.5')
+    eligible = bool(target_met
                     and not blockers and not pending and review.get('open_issues') == [])
     return {'rubric': RUBRIC, 'dimensions': dimensions,
             'complete': complete, 'mean': float(mean) if complete else None,
             'display_mean': str(mean.quantize(Decimal('.1'), rounding=ROUND_HALF_UP)) if complete else None,
-            'target': 9.5, 'target_met': bool(complete and mean >= Decimal('9.5')),
+            'target': 9.5, 'minimum_dimension': 9, 'dimension_floor_met': floor_met,
+            'target_met': target_met,
             'release_eligible': eligible,
             'blocking_issue_count': len(blockers), 'pending_issue_count': len(pending),
             'note': 'Equal weights; missing review stays unverified. Passing tests do not create scores.'}
