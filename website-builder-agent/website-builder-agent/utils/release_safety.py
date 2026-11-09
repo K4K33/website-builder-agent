@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 import hashlib
+import re
 
 import config
 from utils.creative_directions import validate_creative_directions
@@ -125,7 +126,7 @@ def check_actual_public_website(evidence, *, site_digest, routes, build_commit):
                 or item.get("broken_images") != 0
                 or item.get("page_errors") != []):
             problems.append("BROKEN or STALE PUBLIC PAGE: " + repr(key))
-        if not isinstance(item.get("screenshot_sha256"), str) or len(item["screenshot_sha256"]) != 64:
+        if not isinstance(item.get("screenshot_sha256"), str) or re.fullmatch(r"[0-9a-f]{64}", item["screenshot_sha256"]) is None:
             problems.append("Public screenshot proof missing: " + repr(key))
     required = {(route, width) for route in routes for width in MIN_VIEWPORTS}
     for missing in sorted(required - set(observed)):
