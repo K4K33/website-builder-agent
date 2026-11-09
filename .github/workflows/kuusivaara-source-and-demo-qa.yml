@@ -1,0 +1,34 @@
+name: Kuusivaara source and redesign real-browser evidence
+on:
+  pull_request:
+    paths:
+      - 'website-builder-agent/website-builder-agent/docs/kaurivo/demos/kuusivaara-v1/**'
+      - 'website-builder-agent/website-builder-agent/scripts/browser_check_kuusivaara_demo.py'
+      - '.github/workflows/kuusivaara-source-and-demo-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install playwright beautifulsoup4
+      - run: python -m playwright install --with-deps chromium
+      - name: Original/source browser and 12-route, 4-viewport interactions
+        run: python scripts/browser_check_kuusivaara_demo.py
+      - name: Preserve screenshots, response statuses and delivery errors
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuusivaara-evidence-${{ github.run_id }}
+          path: website-builder-agent/website-builder-agent/output/kuusivaara-browser/
+          if-no-files-found: warn
+          retention-days: 30
