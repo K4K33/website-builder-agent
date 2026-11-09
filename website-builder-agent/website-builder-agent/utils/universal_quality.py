@@ -21,6 +21,7 @@ from utils.source_experience_gate import audit_experience_continuity
 from utils.source_signature_lock import audit_source_signature_lock
 from utils.cross_route_editorial_risks import audit_cross_route_editorial_risks
 from utils.route_experience_contract import audit_route_experience
+from utils.visual_direction import audit_visual_motion
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -37,6 +38,7 @@ UNIVERSAL_STANDARDS = (
     ("source_coverage", "All important old pages and facts have source evidence", "research"),
     ("same_industry_inspiration", "Three sourced leading sector sites; original adaptation", "research"),
     ("unique_art_direction", "Distinctive brand-specific visual composition", "visual"),
+    ("visual_depth_and_motion", "Client-specific material depth and purposeful, accessible motion; static restraint must be justified by visual review", "visual"),
     ("original_brand", "Original client logo and approved brand preserved", "brand"),
     ("source_experience_parity", "Original video, galleries, texture, motion and media depth", "visual"),
     ("source_browser_experience_continuity", "Live browser inventory of original video, 3-D, animation, photography and texture", "visual"),
@@ -221,6 +223,15 @@ def audit_universal_standards(
         fail("source_experience_parity", issue)
     for issue in source_experience["pending"]:
         needs("source_experience_parity", issue)
+
+    # Material depth, motion accessibility and whether deliberate restraint is
+    # visually justified are distinct from source-media preservation. An HTML-
+    # only scan has incomplete asset coverage and must NEVER certify visuals.
+    depth_review = audit_visual_motion(pages, research)
+    for issue in depth_review["blocking"]:
+        fail("visual_depth_and_motion", issue)
+    for issue in depth_review["pending"]:
+        needs("visual_depth_and_motion", issue)
 
     # Complement source-HTML parity with actual original browser observations.
     # Inconclusive captures remain pending, never treated as no motion.
