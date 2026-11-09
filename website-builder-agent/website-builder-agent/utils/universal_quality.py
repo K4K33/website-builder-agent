@@ -22,6 +22,7 @@ from utils.source_signature_lock import audit_source_signature_lock
 from utils.cross_route_editorial_risks import audit_cross_route_editorial_risks
 from utils.route_experience_contract import audit_route_experience
 from utils.visual_direction import audit_visual_motion
+from utils.premium_art_direction import audit_premium_art_direction
 from utils.sector_presence import audit_sector_presence
 from utils.source_identity import audit_source_reviews, audit_price_faq_preservation
 from utils.trust_claims import audit_trust_claims
@@ -39,6 +40,8 @@ UNIVERSAL_STANDARDS = (
     ("same_industry_inspiration", "Three sourced leading sector sites; original adaptation", "research"),
     ("unique_art_direction", "Distinctive brand-specific visual composition", "visual"),
     ("visual_depth_and_motion", "Client-specific material depth and purposeful, accessible motion; static restraint must be justified by visual review", "visual"),
+    ("art_directed_premium_pages", "No generic visual filler in photo-rich client work; all routes receive independent art direction", "visual"),
+    ("source_lead_form_parity", "Original business contact form must remain a real lead flow; mailto does not replace delivery", "functional"),
     ("original_brand", "Original client logo and approved brand preserved", "brand"),
     ("source_experience_parity", "Original video, galleries, texture, motion and media depth", "visual"),
     ("source_browser_experience_continuity", "Live browser inventory of original video, 3-D, animation, photography and texture", "visual"),
@@ -232,6 +235,17 @@ def audit_universal_standards(
         fail("visual_depth_and_motion", issue)
     for issue in depth_review["pending"]:
         needs("visual_depth_and_motion", issue)
+
+    # Premium art direction and form continuity are source-bound, not
+    # aesthetic scores. In v2 we block known filler replacing actual client
+    # photography, and lost forms, before accepting the generated build.
+    premium_art = audit_premium_art_direction(pages, research)
+    for issue in premium_art["blocking"]:
+        key = ("source_lead_form_parity" if "form" in issue.casefold() and
+               "mailto" in issue.casefold() else "art_directed_premium_pages")
+        fail(key, issue)
+    for issue in premium_art["pending"]:
+        needs("art_directed_premium_pages", issue)
 
     # Complement source-HTML parity with actual original browser observations.
     # Inconclusive captures remain pending, never treated as no motion.
@@ -492,6 +506,7 @@ def audit_universal_standards(
         "brand_experience": brand_experience,
         "sector_presence": sector_presence,
         "source_browser_experience": browser_experience,
+        "premium_art_direction": premium_art,
         "premium_evidence": {
             "coverage": coverage,
             "independent_review": independently_reviewed,
