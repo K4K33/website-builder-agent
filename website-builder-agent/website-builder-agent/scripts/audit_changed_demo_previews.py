@@ -16,6 +16,7 @@ from utils.visual_originality import audit_design_originality
 from utils.route_experience_contract import audit_route_experience
 from utils.commerce_parity import commerce_problems
 from utils.visual_direction import audit_visual_motion
+from utils.brand_signature_plan import derive_brand_signature_plan
 from bs4 import BeautifulSoup
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
@@ -145,6 +146,11 @@ def main():
             print("VISUAL_REVIEW_PENDING", slug, "; ".join(motion["pending"][:3]))
         try:
             evidence=verified_source_evidence(slug)
+            # Source-approved and hand-authored demos share the same premium
+            # anti-filler, original-form and original-signature rules. No
+            # bypass by omitting a model-generated research protocol field.
+            evidence["premium_visual_protocol"] = "v2"
+            evidence["brand_signature_plan"] = derive_brand_signature_plan(evidence)
             for issue in commerce_problems(evidence, pages):
                 print("BLOCK", slug, issue["kind"], issue["source"])
                 failed=True
