@@ -136,8 +136,7 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict, *, compan
         if filler and photo_rich and v2:
             blockers.append(
                 f"{route}: generic decorative/filler panel substitutes for sourced client work; "
-                "choose a specific licensed photograph or record an independently approved "
-                "brand-signature exception."
+                "choose a specific licensed photograph or remove generic filler."
             )
         elif filler:
             pending.append(
@@ -172,12 +171,13 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict, *, compan
     if v2:
         plan = research.get("brand_signature_plan") or {}
         signatures = plan.get("signatures") if isinstance(plan, dict) else None
-        if (not isinstance(signatures, list) or not signatures) and research.get("research_mode") != "verified_no_website":
-            pending.append(
-                "No source-anchored visual signature inventory: examine original "
-                "logo AND background patterns, palette mood, material textures, "
-                "photographic style and typography before approving art direction."
-            )
+        if not isinstance(signatures, list) or not signatures:
+            if research.get("research_mode") != "verified_no_website":
+                pending.append(
+                    "No source-anchored visual signature inventory: examine original "
+                    "logo AND background patterns, palette mood, material textures, "
+                    "photographic style and typography before approving art direction."
+                )
         else:
             for item in signatures:
                 if not isinstance(item, dict) or not (
