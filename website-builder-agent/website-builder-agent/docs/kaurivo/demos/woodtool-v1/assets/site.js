@@ -8,6 +8,7 @@ if(menu&&nav){
  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
  document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!nav.contains(e.target))close()});
 }
+document.documentElement.classList.add('js');
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
 const reveal=document.querySelectorAll('[data-reveal]');
 if(reduced.matches||!('IntersectionObserver' in window)){
