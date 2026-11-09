@@ -205,5 +205,64 @@ class PremiumConceptChoiceTests(unittest.TestCase):
             self.assertTrue(all(e["sha256"] for e in evidence))
 
 
+class InternalAllRoutePreviewTests(unittest.TestCase):
+    def test_mediocre_subpage_blocks_preview_despite_high_home_score(self):
+        from agents.qa import route_visual_review_passes
+        pages = {"index.html": "<main>Home</main>",
+                 "palvelut/index.html": "<main>Services</main>"}
+        evidence_ids = ["real-home-desktop", "real-home-mobile",
+                        "real-services-desktop", "real-services-mobile"]
+        good = lambda: {
+            "desktop": 97, "mobile": 97, "premium_appeal": 97,
+            "brand_fidelity": 97, "image_authenticity": 97,
+            "art_direction": 97, "interaction_quality": 97,
+            "critical_issues": [],
+            "evidence": "Source photos, original brand motif and usable "
+                        "responsive page composition inspected in actual browser.",
+        }
+        report = {"route_visual_review": {route: good() for route in pages},
+                  "reviewed_route_view_ids": evidence_ids}
+        self.assertTrue(route_visual_review_passes(
+            report, pages, {"premium_visual_protocol": "v2"}, evidence_ids
+        ))
+        report["route_visual_review"]["palvelut/index.html"]["premium_appeal"] = 74
+        self.assertFalse(route_visual_review_passes(
+            report, pages, {"premium_visual_protocol": "v2"}, evidence_ids
+        ))
+        report["route_visual_review"]["palvelut/index.html"]["premium_appeal"] = 97
+        report["reviewed_route_view_ids"].remove("real-services-mobile")
+        self.assertFalse(route_visual_review_passes(
+            report, pages, {"premium_visual_protocol": "v2"}, evidence_ids
+        ))
+
+
+class OriginalBrandSignatureTests(unittest.TestCase):
+    def test_real_logo_palette_and_textured_background_are_inventory_not_fake(self):
+        from utils.brand_signature_plan import derive_brand_signature_plan
+        research = {"source_inventory": {"pages": [{
+            "url": "https://real-artisan.example/",
+            "source_identity": {
+                "original_logo_candidates": ["https://real-artisan.example/logo.png"],
+                "original_header_wordmark_candidates": ["Real Artisan"],
+                "theme_color": "#c25569",
+                "source_experience": {
+                    "observed_textured_backgrounds": [
+                        "https://real-artisan.example/pattern.svg"]},
+            }}]}}
+        result = derive_brand_signature_plan(research)
+        kinds = {signature["kind"] for signature in result["signatures"]}
+        self.assertTrue({"original_logo","original_wordmark",
+                         "observed_theme_color","original_background_texture"} <= kinds)
+        self.assertTrue(all(signature["source_url"] for signature in result["signatures"]))
+        self.assertTrue(all(signature["rights_status"] == "not_granted_by_observation"
+                            for signature in result["signatures"]))
+
+    def test_no_site_does_not_invent_visual_brand(self):
+        from utils.brand_signature_plan import derive_brand_signature_plan
+        result = derive_brand_signature_plan({"research_mode": "verified_no_website"})
+        self.assertEqual(result["signatures"], [])
+        self.assertEqual(result["status"], "no_original_site")
+
+
 if __name__ == "__main__":
     unittest.main()
