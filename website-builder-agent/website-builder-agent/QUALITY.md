@@ -4,6 +4,32 @@ The pipeline discovers redesign candidates, researches their real business, buil
 an independent HTML website, and evaluates the rendered result before human approval.
 This change does not establish parity with any particular frontier model.
 
+## Mandatory company-specific visual depth and motion (2026-11-09)
+
+A source-faithful, technically working static layout is **not** automatically
+premium. Every new build and revision receives a pre-build visual direction
+brief generated from the selected, source-backed creative direction and original
+browser/media inventory (`utils/visual_direction.py`). The brief documents
+first-screen composition, original brand/media anchors, separate route tasks,
+material/light/depth opportunity, mobile fallback and accessible motion.
+
+The old site's amount of animation is a **floor for continuity, not a cap** on
+creative quality. A quiet original can justify subtle layering, real-photo
+depth, glow or touch/focus feedback when it serves the product. A sober, static
+site remains acceptable when a reviewer establishes that motion would distract.
+Never award points for an effect count or insert the same 3-D template into every
+client. No synthetic client photo, fake 3-D product, changed logo or assumed
+asset licence. Preserve genuine original films, galleries, textures and content.
+
+Generated HTML gets a pre-write accessibility lint. Committed demo CSS and JS
+are inspected in the changed-demo QA gate. Keyframe CSS requires a
+`prefers-reduced-motion: reduce` override; pointer/scroll/RAF motion requires a
+JavaScript reduced-motion guard. A missing stylesheet, uninspected third-party
+script, unmeasured mobile framerate or untested keyboard/touch path is **PENDING**,
+never an unearned pass. Actual browser captures, human visual comparisons and
+independent premium reviewers remain mandatory at the release stage. Run
+`python -m unittest tests.test_visual_direction -v` offline for regression.
+
 ## Discovery
 
 Scout now uses the requested industry instead of always querying hairdressers.
