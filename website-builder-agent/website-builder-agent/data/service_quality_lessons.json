@@ -243,5 +243,27 @@
     "status": "implemented_in_development_branch",
     "real_new_company_validation": "pending",
     "runtime_limit": "Actual WordPress/WooCommerce installation and payment-provider test transaction are unverified; package preparation is not a completed store."
+  },
+  {
+    "id": "premium-gallery-pixels-evidence-and-delivery",
+    "scope": "service",
+    "origin": "Veistovene review and owner correction 2026-11-09",
+    "root_cause": "Source fidelity did not guarantee balanced final gallery rows, display-scale image quality or explanatory work examples; demo message storage and an available editor did not prove delivery and editing. Failed current observations could remain merely pending.",
+    "implementation": [
+      "utils/premium_execution.py",
+      "utils/service_quality.py",
+      "utils/published_experience.py",
+      "utils/client_handover.py",
+      "utils/review_bundle.py",
+      "docs/KAURIVO_MESTARI_PROMPT.md"
+    ],
+    "regression_test": [
+      "tests/test_premium_execution.py",
+      "tests/test_published_experience.py",
+      "tests/test_review_bundle.py"
+    ],
+    "status": "implemented_in_development_branch",
+    "real_new_company_validation": "pending",
+    "runtime_limit": "Offline integrity tests are synthetic. Actual independent visual, contact and CMS execution evidence remains required."
   }
 ]

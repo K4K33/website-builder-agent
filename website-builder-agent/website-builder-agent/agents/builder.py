@@ -1843,6 +1843,8 @@ def run_build(
     from utils.commerce_workflow import validate_commerce_plan
     if validate_commerce_plan(company.get('research') or {})['mode'] == 'woocommerce_native':
         return build_site(slug, company)  # Before paid concept/Builder calls.
+    if (company.get('research') or {}).get('premium_execution_protocol') == 'v1':
+        validate_service_plan(company['research'])  # Before paid concepts, not only the final HTML call.
     if (company.get("research") or {}).get("visual_concepts_protocol") == "v1":
         from utils.concept_workflow import generate_concepts, choose_concept
         if not company.get("concept_previews"):

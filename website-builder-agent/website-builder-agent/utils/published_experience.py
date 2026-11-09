@@ -7,6 +7,7 @@ from datetime import date, datetime
 from hashlib import sha256
 from pathlib import Path
 import re
+import json
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 
@@ -47,6 +48,36 @@ def _capture(record, capture):
                 and path.is_file() and 0 < path.stat().st_size <= 30 * 1024 * 1024
                 and sha256(path.read_bytes()).hexdigest() == capture.get('sha256'))
     except (OSError, ValueError):
+        return False
+
+
+def _delivery_receipt(record, contact, delivery):
+    """Private backend export integrity; never infer delivery from demo storage."""
+    capture = contact.get('backend_receipt')
+    if not isinstance(capture, dict) or not _text(record.get('evidence_root')):
+        return False
+    try:
+        root = Path(record['evidence_root']).resolve()
+        rel = Path(capture['path']); path = root / rel
+        if (rel.is_absolute() or path.is_symlink() or not path.resolve().is_relative_to(root)
+                or path.suffix != '.json' or not path.is_file() or not 0 < path.stat().st_size <= 1024*1024):
+            return False
+        raw = path.read_bytes()
+        if sha256(raw).hexdigest() != capture.get('sha256'): return False
+        receipt = json.loads(raw)
+        received = datetime.fromisoformat(receipt['received_at'].replace('Z', '+00:00'))
+        deployed = datetime.fromisoformat(delivery['deployed_at'].replace('Z', '+00:00'))
+        tested = datetime.fromisoformat(record['tested_at'].replace('Z', '+00:00'))
+        return (receipt.get('protocol') == 'contact-receipt-v1'
+                and receipt.get('scope') == 'authorized_delivery_test'
+                and receipt.get('channel') in ('email', 'crm', 'merchant_inbox')
+                and _text(contact.get('test_destination'))
+                and receipt.get('destination') == contact['test_destination']
+                and receipt.get('message_reference') == contact.get('receipt_reference')
+                and receipt.get('deployment_reference') == delivery.get('deployment_reference')
+                and bool(received.tzinfo and deployed.tzinfo and tested.tzinfo)
+                and deployed <= received <= tested)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
         return False
 
 
@@ -127,6 +158,8 @@ def audit_published_experience(company, *, research=None, expected_site_sha256=N
                 and contact.get('delivery_result') == 'received' and _text(contact.get('receipt_reference'))
                 and all(contact.get(k) == 'pass' for k in ('validation_feedback', 'success_feedback', 'error_feedback'))
                 and _capture(record, contact.get('capture')))
+        if research.get('premium_execution_protocol') == 'v1':
+            good = good and _delivery_receipt(record, contact, delivery)
     elif contact.get('mode') == 'existing_platform':
         good = (any(t['id'] == contact.get('task_id') and t['destination'] == contact.get('destination')
                     for t in tasks) and contact.get('completion_result') == 'pass'
@@ -146,7 +179,7 @@ def audit_published_experience(company, *, research=None, expected_site_sha256=N
     if not good:
         issue('contact', 'Contact needs observed source-appropriate behavior; a draft or unreceived form is not lead delivery.')
     navigation_pass = not any(item['kind'] == 'navigation' for item in issues)
-    disclosed_draft = (contact.get('mode') == 'draft_only'
+    disclosed_draft = (contact.get('mode') in ('draft_only', 'demo_storage')
                        and contact.get('draft_disclosure_verified') is True
                        and _capture(record, contact.get('capture')))
     return {'pass': not issues, 'navigation_pass': navigation_pass, 'contact_pass': bool(good),

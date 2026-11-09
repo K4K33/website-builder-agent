@@ -514,22 +514,19 @@ def _extract_forms(
         for field in form.find_all(
             ["input", "textarea", "select"]
         ):
-            inputs.append(
-                {
-                    "type": field.get(
-                        "type",
-                        field.name,
-                    ),
-                    "name": field.get(
-                        "name",
-                        "",
-                    )[:200],
-                    "placeholder": field.get(
-                        "placeholder",
-                        "",
-                    )[:300],
-                }
-            )
+            label = soup.find('label', attrs={'for': field.get('id')}) if field.get('id') else None
+            row = field.find_parent('tr')
+            text = (label.get_text(' ', strip=True) if label else
+                    row.get_text(' ', strip=True) if row else field.get('aria-label', ''))
+            declared = field.get('type', field.name).lower()
+            hint = ' '.join([text, field.get('autocomplete', ''), field.get('onblur', ''), field.get('name', '')])
+            semantic = declared
+            if declared not in ('hidden', 'submit', 'button', 'checkbox', 'radio'):
+                if re.search(r'email|e-mail|s[aä]hk[oö]posti|e-post', hint, re.I): semantic = 'email'
+                elif re.search(r'puhelin|phone|telefon|^tel$', hint, re.I): semantic = 'tel'
+            inputs.append({'type': declared, 'semantic_type': semantic,
+                           'name': field.get('name', '')[:200], 'label': text[:300],
+                           'placeholder': field.get('placeholder', '')[:300]})
 
         forms.append(
             {
@@ -541,11 +538,13 @@ def _extract_forms(
                     "method",
                     "get",
                 )[:20],
-                "fields": inputs[:30],
+                "fields": inputs,
+                "purpose": ('storage_enquiry' if re.search(r'vene|boat|b[aå]t|talvis[aä]ily|winter storage',
+                    form.get_text(' ', strip=True) + ' ' + str(form.get('action', '')), re.I) else 'unclassified'),
             }
         )
 
-    return forms[:30]
+    return forms
 
 
 def _extract_images(

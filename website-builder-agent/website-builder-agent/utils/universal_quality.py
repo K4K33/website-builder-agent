@@ -34,6 +34,7 @@ from utils.premium_quality_gate import (
 
 # Categories that apply across all sectors, not design layouts.
 UNIVERSAL_STANDARDS = (
+    ("premium_execution", "Actual gallery last rows, image pixels, sourced project stories and motion state captures", "visual"),
     ("stable_quality_scorecard", "Nine fixed evidenced dimensions; exact mean >=9.5, each >=9 and no blockers", "release"),
     ("commerce_runtime", "Classified business model, real backend, exact-deployment sandbox order/payment/stock/CMS tests", "functional"),
     ("business_task_continuity", "Every source business action survives; a link is not completion evidence", "functional"),
@@ -146,6 +147,12 @@ def audit_universal_standards(
         contract_digest=service_quality['brief']['contract_sha256'], review_bundle=review_bundle, pages=pages)
     for issue in commerce['blocking']: fail('commerce_runtime', issue)
     for issue in commerce['pending']: needs('commerce_runtime', issue)
+
+    from utils.premium_execution import audit_execution
+    execution = audit_execution(pages, research, company, artifact_digest=site_bundle_sha256,
+        contract_digest=service_quality['brief']['contract_sha256'], review_bundle=review_bundle)
+    for issue in execution['blocking']: fail('premium_execution', issue)
+    for issue in execution['pending']: needs('premium_execution', issue)
 
     visual_continuity = audit_visual_continuity(
         pages, research, artifact_digest=site_bundle_sha256, review_bundle=review_bundle,
@@ -501,6 +508,12 @@ def audit_universal_standards(
     decision = ("blocked" if problems else
                 "review_required" if pending else "client_ready")
     return {
+        "premium_execution": execution,
+        "acceptance_state": ('revision_required' if problems else
+            'client_ready' if not pending else
+            'checked_site' if service_quality['client_ready'] and execution['ready']
+                and published['pass'] and commerce['runtime_pass'] and scorecard['target_met'] else
+            'reviewable_demo'),
         "visual_asset_continuity": visual_continuity,
         "quality_scorecard": scorecard,
         "service_quality": service_quality,

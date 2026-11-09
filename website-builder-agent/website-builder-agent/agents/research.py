@@ -333,6 +333,18 @@ HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
 
 FINAL_RESEARCH_PROMPT += SERVICE_QUALITY_POLICY + VISUAL_ASSET_POLICY + """
 Return these structured planning fields as part of the brief:
+- premium_execution_plan, protocol="premium-execution-v1", with explicit
+  galleries/images/case_studies/motion lists (empty only when truly absent).
+  Every scope has id, route, selector. Gallery: purpose, last_row_strategy,
+  responsive_strategy, states [{id, expected_count}] for EVERY filter group.
+  Images: source_src and display_strategy for EVERY main content image.
+  Case studies: facts {context, work, result}, each {source_url, source_text,
+  rendered_text}, and missing_information. Missing facts are intake gaps,
+  never invented project details. Motion: purpose, material_strategy and
+  states [{id}] for initial/expanded/transition and other actual controls.
+  Builder receives balanced gallery row recipes; these never prove the
+  actual layout. Plan every last row, native image pixels/DPR and useful
+  headings; actual independent captures and customer editor tests follow.
 - If source commerce_signals exist or the owner requests commerce, include
   commerce_plan with protocol="commerce-v1", mode (inquiry_catalogue,
   preserve_existing, woocommerce_native), and inspection: inspected_urls,

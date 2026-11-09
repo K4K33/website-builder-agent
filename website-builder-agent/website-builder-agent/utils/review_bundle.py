@@ -47,7 +47,7 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
                 'contract_sha256': service_brief(research)['contract_sha256'],
                 'items': [], 'missing': [], 'premium_approval': False}
 
-    def collect(file, kind, *, route='', viewport='', task_id='', asset_ids=None):
+    def collect(file, kind, *, route='', viewport='', task_id='', asset_ids=None, asset_src=None, state=None):
         try:
             original = Path(file)
             source = original.resolve()
@@ -57,7 +57,7 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
                 raise ValueError('Untrusted evidence path')
             content_hash = file_hash(source)
             identifier = digest([kind, route, viewport, task_id, content_hash] +
-                                ([asset_ids] if asset_ids is not None else []))[:24]
+                                ([asset_ids] if asset_ids is not None else []) + [asset_src, state])[:24]
             name = 'files/' + identifier + source.suffix.lower()
             target = destination / name; target.parent.mkdir(exist_ok=True)
             shutil.copyfile(source, target)
@@ -65,11 +65,13 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
                     'route': route, 'viewport': viewport, 'task_id': task_id}
             if asset_ids is not None:
                 item['asset_ids'] = asset_ids
+            if asset_src is not None: item['asset_src'] = asset_src
+            if state is not None: item['state'] = state
             if item not in manifest['items']: manifest['items'].append(item)
             return item
         except (OSError, ValueError, TypeError):
             manifest['missing'].append({'kind': kind, 'route': route, 'viewport': viewport,
-                                        'task_id': task_id, 'reason': 'Actual permitted evidence file unavailable'})
+                                        'task_id': task_id, 'state': state, 'asset_src': asset_src, 'reason': 'Actual permitted evidence file unavailable'})
             return None
 
     def report(name, kind, value):
@@ -122,10 +124,17 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
                 manifest['missing'].append({'kind': 'media_asset', 'route': route,
                     'reason': 'Remote or inline media not captured as owner-controlled image bytes'})
                 continue
-            collect(root / unquote(parsed.path.lstrip('/')), 'media_asset', route=route)
+            collect(root / unquote(parsed.path.lstrip('/')), 'media_asset', route=route, asset_src=image['src'])
     for row in qa.get('journey_captures') or []:
         if isinstance(row, dict):
             collect(row.get('path'), 'journey_capture', task_id=str(row.get('task_id') or ''))
+    premium = (company.get('delivery') or {}).get('premium_execution') or {}
+    for row in premium.get('observations', []) or []:
+        if not isinstance(row, dict): continue
+        for file in row.get('capture_paths', []) or []:
+            collect(file, 'premium_capture', route=str(row.get('route') or ''),
+                    task_id=str(row.get('kind') or '') + ':' + str(row.get('scope_id') or ''),
+                    viewport=str(row.get('viewport') or ''), state=str(row.get('state') or ''))
     # Actual private commerce captures, never the generated QA JSON report alone.
     commerce_record = (company.get('delivery') or {}).get('commerce_runtime') or {}
     if commerce_record.get('transaction_capture_path'):

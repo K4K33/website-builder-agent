@@ -39,6 +39,22 @@ def setup(folder, *, complete=True):
 
 
 class ReviewBundleTests(unittest.TestCase):
+    def test_premium_collects_real_captures_with_state_and_missing_files(self):
+        with TemporaryDirectory() as folder:
+            root,r,pages,company,ref=setup(folder);captures=Path(folder)/'captures'
+            company['delivery']={'premium_execution':{'observations':[
+                {'kind':'galleries','scope_id':'work','route':'index.html','viewport':'mobile',
+                 'state':'selected','capture_paths':[str(captures/'mobile.png')]},
+                {'kind':'motion','scope_id':'object','route':'index.html','viewport':'desktop',
+                 'state':'drag','capture_paths':[str(captures/'missing.png')]}]}}
+            company['review_bundle']=collect_review_bundle(company,pages,{},site_root=root,
+                output_parent=root/'_review_material',allowed_capture_roots=[captures])
+            bundle=current_review_bundle(company,pages)
+            self.assertTrue(any(i['kind']=='premium_capture' and i['state']=='selected'
+                and i['task_id']=='galleries:work' and i['viewport']=='mobile' for i in bundle['items']))
+            self.assertTrue(any(i['kind']=='premium_capture' and i['state']=='drag' for i in bundle['missing']))
+            self.assertTrue(any(i['kind']=='media_asset' and i.get('asset_src')=='assets/photo.png' for i in bundle['items']))
+
     def test_commerce_collects_private_backend_bytes_and_viewport_captures_not_checkboxes(self):
         with TemporaryDirectory() as folder:
             root, r, pages, company, ref = setup(folder)

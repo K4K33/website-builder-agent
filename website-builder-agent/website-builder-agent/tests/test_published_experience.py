@@ -96,4 +96,45 @@ class PublishedExperienceTests(unittest.TestCase):
             c=delivery_fixture();c['delivery']['published_experience']['clicks'][0][field]={}
             self.assertFalse(audit_published_experience(c)['pass'])
 
+class DeliveryReceiptTests(unittest.TestCase):
+    def fixture(self):
+        import json
+        from pathlib import Path
+        from hashlib import sha256
+        c=delivery_fixture();c['research']['premium_execution_protocol']='v1'
+        record=c['delivery']['published_experience'];contact=record['contact']
+        contact.update(mode='live_form',test_recipient_authorized=True,delivery_result='received',
+            receipt_reference='synthetic-message',test_destination='authorized@example.org',
+            validation_feedback='pass',success_feedback='pass',error_feedback='pass')
+        receipt={'protocol':'contact-receipt-v1','scope':'authorized_delivery_test','channel':'email',
+            'destination':contact['test_destination'],'message_reference':contact['receipt_reference'],
+            'deployment_reference':c['delivery']['deployment_reference'],'received_at':record['tested_at']}
+        path=Path(record['evidence_root'])/'backend.json';raw=json.dumps(receipt).encode();path.write_bytes(raw)
+        contact['backend_receipt']={'path':'backend.json','sha256':sha256(raw).hexdigest()}
+        return c,path,receipt
+
+    def test_actual_private_export_required_and_bound_to_authorized_test(self):
+        import json
+        from hashlib import sha256
+        c,path,receipt=self.fixture();self.assertTrue(audit_published_experience(c)['pass'])
+        for key,value in [('scope','demo_storage'),('channel','demo_storage'),('destination','wrong'),
+                          ('message_reference','wrong'),('deployment_reference','old'),('received_at','2000-01-01T00:00:00Z')]:
+            changed=dict(receipt);changed[key]=value;raw=json.dumps(changed).encode();path.write_bytes(raw)
+            c['delivery']['published_experience']['contact']['backend_receipt']['sha256']=sha256(raw).hexdigest()
+            self.assertFalse(audit_published_experience(c)['pass'],key)
+
+    def test_missing_tampered_or_escaped_receipt_never_passes(self):
+        for mode in ('missing','tamper','escape'):
+            c,path,receipt=self.fixture()
+            if mode=='missing':path.unlink()
+            elif mode=='tamper':path.write_text('{}')
+            else:c['delivery']['published_experience']['contact']['backend_receipt']['path']='../backend.json'
+            self.assertFalse(audit_published_experience(c)['pass'])
+
+    def test_disclosed_demo_storage_is_reviewable_not_delivered(self):
+        c,path,receipt=self.fixture();c['delivery']['published_experience']['contact'].update(
+            mode='demo_storage',draft_disclosure_verified=True)
+        result=audit_published_experience(c)
+        self.assertTrue(result['public_demo_ready']);self.assertFalse(result['contact_pass'])
+
 if __name__=='__main__':unittest.main()

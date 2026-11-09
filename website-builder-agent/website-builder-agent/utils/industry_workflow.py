@@ -188,7 +188,7 @@ def crawl_original_website(
             "source_content_blocks": data.get("source_content_blocks") or {},
             "headings": data.get("headings") if isinstance(data.get("headings"), dict) else {},
             "images": (data.get("images") or [])[:70],
-            "forms": (data.get("forms") or [])[:15],
+            "forms": data.get("forms") or [],
             "links": (links if isinstance(links, list) else [])[:150],
             "footer_assets": (data.get("footer_assets") or [])[:30],
             "footer_links": (data.get("footer_links") or [])[:75],

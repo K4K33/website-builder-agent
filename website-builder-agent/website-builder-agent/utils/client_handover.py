@@ -299,19 +299,36 @@ def _shared_editor_evidence_complete(company, delivery, digest):
     """
     from utils.visual_asset_continuity import enabled
     research = company.get('research') or {}
-    if not enabled(research):
+    modern = research.get('premium_execution_protocol') == 'v1'
+    if not enabled(research) and not modern:
         return True
     record = delivery.get('shared_cms_edit_evidence')
     if not isinstance(record, dict):
         return False
-    if (record.get('artifact_sha256') != digest
+    expected_digest = (company.get('qa') or {}).get('site_sha256') if modern else digest
+    if ((modern and (not isinstance(expected_digest, str) or len(expected_digest) != 64))
+            or record.get('artifact_sha256') != expected_digest
             or record.get('build_version') != (company.get('build') or {}).get('version')
             or record.get('independent_of_builder') is not True
             or not str(record.get('reviewer_id') or '').strip()
             or not str(record.get('checked_at') or '').strip() or record.get('open_issues') != []):
         return False
+    if modern:
+        try:
+            from datetime import datetime, timezone
+            checked = datetime.fromisoformat(record['checked_at'].replace('Z', '+00:00'))
+            deployed = datetime.fromisoformat(delivery['deployed_at'].replace('Z', '+00:00'))
+            age = datetime.now(timezone.utc) - checked
+            if (not checked.tzinfo or not deployed.tzinfo or checked < deployed
+                    or not 0 <= age.total_seconds() <= 14*86400
+                    or not record.get('deployment_reference')
+                    or record['deployment_reference'] != delivery.get('deployment_reference')):
+                return False
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return False
     facts = research.get('company_facts') or {}
     required = {'header', 'footer'}
+    if modern: required.update({'text', 'image', 'navigation'})
     for key, aliases in {'phone': ('phone', 'contact_phone'), 'email': ('email', 'contact_email'),
                          'opening_hours': ('hours', 'opening_hours')}.items():
         if any(facts.get(alias) for alias in aliases):
@@ -333,6 +350,20 @@ def _shared_editor_evidence_complete(company, delivery, digest):
                 or not isinstance(task.get('before_value'), str) or not isinstance(task.get('after_value'), str)
                 or task['before_value'] == task['after_value']):
             return False
+        if modern:
+            if (task.get('saved_value') != task['after_value']
+                    or task.get('published_value') != task['after_value']
+                    or task.get('restored_value') != task['before_value']):
+                return False
+            steps = task.get('steps')
+            required_steps = {'login', 'edit', 'save', 'publish', 'verify_desktop',
+                              'verify_mobile', 'restore', 'verify_restored'}
+            if (not isinstance(steps, dict) or set(steps) != required_steps
+                    or any(not isinstance(s, dict) or s.get('result') != 'pass'
+                           or not isinstance(s.get('observation'), str) or not s['observation'].strip()
+                           or s.get('capture_role') not in {'before', 'after', 'mobile_after', 'rollback'}
+                           for s in steps.values())):
+                return False
         checked_routes = task.get('routes_reviewed')
         if not isinstance(checked_routes, list) or any(not isinstance(r, str) for r in checked_routes) or set(checked_routes) != routes:
             return False

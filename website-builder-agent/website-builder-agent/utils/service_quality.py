@@ -118,10 +118,12 @@ def source_tasks(research):
             fields = form.get('fields') or []
             # Search, consent and newsletter forms are not inferred to be sales forms.
             has_message = any(f.get('type') == 'textarea' for f in fields)
-            has_email = any(f.get('type') == 'email' for f in fields)
+            has_email = any(f.get('semantic_type', f.get('type')) == 'email' for f in fields)
+            has_phone = any(f.get('semantic_type', f.get('type')) in ('tel', 'phone') for f in fields)
             action_hint = str(form.get('action') or '')
             has_date = any(f.get('type') in ('date', 'datetime-local') for f in fields)
-            form_kind = ('contact_form' if has_message and has_email else
+            form_kind = ('contact_form' if has_message and (has_email or has_phone) else
+                         'quotation_form' if has_phone and form.get('purpose') == 'storage_enquiry' else
                          'booking_form' if has_email and has_date else
                          'quotation_form' if has_email and re.search(r'quote|offert|tarjous', action_hint, re.I) else None)
             if form_kind:
@@ -130,6 +132,21 @@ def source_tasks(research):
                                'destination': urljoin(source, form.get('action') or ''),
                                'label': 'Observed contact form',
                                'method': str(form.get('method') or 'get').lower()})
+    return result
+
+
+def _gallery_recipes(research):
+    from utils.premium_execution import balanced_gallery_rows
+    plan = research.get('premium_execution_plan') or {}
+    result = []
+    for gallery in plan.get('galleries', []) if isinstance(plan, dict) else []:
+        if not isinstance(gallery, dict): continue
+        for state in gallery.get('states', []):
+            if not isinstance(state, dict) or type(state.get('expected_count')) is not int or not 0 < state['expected_count'] <= 10000: continue
+            result.append({'gallery_id': gallery.get('id'), 'state': state.get('id'),
+                'desktop': balanced_gallery_rows(state['expected_count'], 3),
+                'mobile': balanced_gallery_rows(state['expected_count'], 2),
+                'note': 'Layout recipe; actual custom layout and last row still require browser review.'})
     return result
 
 
@@ -153,6 +170,9 @@ def service_brief(research):
                'visual_asset_plan': research.get('visual_asset_plan') or [],
                'route_experience_plan': research.get('route_experience_plan') or [],
                'premium_experience_plan': research.get('premium_experience_plan') or {},
+               'premium_execution_protocol': research.get('premium_execution_protocol'),
+               'premium_execution_plan': research.get('premium_execution_plan') or {},
+               'gallery_layout_recipes': _gallery_recipes(research),
                'commerce_plan': research.get('commerce_plan') or {},
                'commerce_inventory': research.get('commerce_inventory') or [],
                'voice': research.get('company_voice_brief') or {},
@@ -168,6 +188,8 @@ def reset_generated_review_claims(research):
     research.pop('quality_scorecard', None)
     research.pop('visual_source_review', None)
     research.pop('visual_placement_review', None)
+    research.pop('premium_execution_review', None)
+    research['premium_execution_protocol'] = 'v1'
     research['service_quality_protocol'] = 'v1'
     research['route_experience_protocol'] = 'v1'
     research['premium_experience_protocol'] = 'v1'
@@ -180,6 +202,9 @@ def validate_service_plan(research):
     Legacy research is still audited on output; newly researched projects use
     v1 and must map every discovered business task before spending on a build.
     """
+    if research.get('premium_execution_protocol') == 'v1':
+        from utils.premium_execution import validate_execution_plan
+        validate_execution_plan(research)
     if research.get('premium_experience_protocol') == 'v1':
         validate_premium_experience_plan(research)
     if research.get('route_experience_protocol') == 'v1':
@@ -267,7 +292,8 @@ ROUTE_REVIEW_CHECKS = {
                'visual_information_preserved', 'sector_specificity',
                'image_quality_at_display_size', 'image_hierarchy',
                'service_composition_rationale', 'responsive_type_detail',
-               'company_work_evidence', 'motion_material_quality'),
+               'company_work_evidence', 'motion_material_quality',
+               'gallery_final_row_balance', 'heading_information_value'),
     'technical': ('wheel_scroll', 'trackpad_scroll', 'touch_scroll',
                   'keyboard_scroll', 'reduced_motion', 'motion_input_response',
                   'cold_load', 'route_transition'),
@@ -443,6 +469,21 @@ def audit_service_quality(pages, research, *, artifact_digest=None, review_bundl
     for domain in DOMAINS:
         record = evidence.get(domain) or {}
         record = record if isinstance(record, dict) else {}
+        # A current observed failure is a blocker, even if an overall approval
+        # flag says true. Stale observations cannot block a changed build.
+        if (artifact_digest and record.get('artifact_sha256') == artifact_digest
+                and record.get('contract_sha256') == brief['contract_sha256']):
+            for row in record.get('route_results', []) or []:
+                if not isinstance(row, dict) or row.get('route') not in pages: continue
+                checks = row.get('checks') or {}
+                if not isinstance(checks, dict): continue
+                for name, check in checks.items():
+                    if isinstance(check, dict) and check.get('result') == 'fail':
+                        blocking.append({'kind': 'observed_quality_failure', 'domain': domain,
+                                         'route': row['route'], 'check': name})
+            for row in record.get('journey_results', []) or []:
+                if isinstance(row, dict) and row.get('result') == 'fail':
+                    blocking.append({'kind': 'observed_journey_failure', 'task_id': row.get('task_id')})
         observations_ok = _route_observations_complete(record, domain, pages)
         if not observations_ok:
             pending.append({'kind': 'route_experience_observations_missing', 'domain': domain})
