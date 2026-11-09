@@ -9,7 +9,7 @@
     "pages": [
       {
         "url": "https://woodtool.fi/",
-        "text": "Woodtool on pieni perheyritys Turun saaristossa. Verstas sijaitsee Nauvossa ja palvelee Turun seutua. Mittatilaustyöt suunnitellaan yhdessä asiakkaan kanssa. Massiivipuusta portaita, ikkunoita, ovia, huonekaluja ja panelien höyläystä. Palveluun kuuluvat suunnittelu, toteutus, pintakäsittely sekä tarvittaessa vanhan purku ja uuden asennus. Asiakkaita yrityksistä ja kotitalouksista. Työnäytteet: kalusteet, ovet, ikkunat ja portaat, noin 46 nimettyä toteutusta.",
+        "text": "Woodtool on pieni perheyritys Turun saaristossa. Verstas sijaitsee Nauvossa ja palvelee Turun seutua. Mittatilaustyöt suunnitellaan yhdessä asiakkaan kanssa. Massiivipuusta portaita, ikkunoita, ovia, huonekaluja ja panelien höyläystä. Palveluun kuuluvat suunnittelu, toteutus, pintakäsittely sekä tarvittaessa vanhan purku ja uuden asennus. Asiakkaita yrityksistä ja kotitalouksista. Työnäytteet: kalusteet, ovet, ikkunat ja portaat, 42 nimettyä toteutusta.",
         "headings": {
           "h1": [
             "WOODTOOL"
@@ -60,11 +60,6 @@
             "role": "kalusteet"
           },
           {
-            "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
-            "alt": "Koivuaskelmat",
-            "role": "portaat"
-          },
-          {
             "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
             "alt": "Pariovi vanhan mallin ja värin mukaan",
             "role": "ovet"
@@ -73,11 +68,6 @@
             "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
             "alt": "Massiivitammi pariovi",
             "role": "ovet"
-          },
-          {
-            "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
-            "alt": "Puutyöstö",
-            "role": "verstas"
           }
         ],
         "links": [
@@ -101,6 +91,7 @@
         "source_identity": {
           "original_logo_candidates": [],
           "original_header_wordmark_candidates": [
+            "woodtool.fi",
             "WOODTOOL"
           ],
           "original_content_photos": [
@@ -140,11 +131,6 @@
               "role": "gallery_photo"
             },
             {
-              "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
-              "alt": "Koivuaskelmat",
-              "role": "gallery_photo"
-            },
-            {
               "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
               "alt": "Pariovi vanhan mallin ja värin mukaan",
               "role": "gallery_photo"
@@ -153,11 +139,6 @@
               "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
               "alt": "Massiivitammi pariovi",
               "role": "gallery_photo"
-            },
-            {
-              "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
-              "alt": "Puutyöstö",
-              "role": "workshop_photo"
             }
           ],
           "source_experience": {
@@ -173,16 +154,14 @@
               "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
               "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
               "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
-              "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
               "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
-              "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
-              "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg"
+              "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp"
             ],
             "observed_textured_backgrounds": [],
             "original_language": "fi",
-            "evidence_scope": "Original published FI/SV copy and image source URLs verified; actual desktop/mobile browser captures are separately tested."
+            "evidence_scope": "Official FI/SV original pages opened in real Chromium (390 and 1440px), verified 200 response, full-page screenshots captured. Two image addresses were unavailable in browser and excluded from redesign."
           },
-          "theme_color": "",
+          "theme_color": "#2a1519",
           "reviews": [],
           "dynamic_review_widget": false,
           "source_url": "https://woodtool.fi/"
@@ -263,11 +242,6 @@
             "role": "kalusteet"
           },
           {
-            "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
-            "alt": "Koivuaskelmat",
-            "role": "portaat"
-          },
-          {
             "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
             "alt": "Pariovi vanhan mallin ja värin mukaan",
             "role": "ovet"
@@ -276,11 +250,6 @@
             "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
             "alt": "Massiivitammi pariovi",
             "role": "ovet"
-          },
-          {
-            "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
-            "alt": "Puutyöstö",
-            "role": "verstas"
           }
         ],
         "links": [
@@ -304,6 +273,7 @@
         "source_identity": {
           "original_logo_candidates": [],
           "original_header_wordmark_candidates": [
+            "woodtool.fi",
             "WOODTOOL"
           ],
           "original_content_photos": [
@@ -343,11 +313,6 @@
               "role": "gallery_photo"
             },
             {
-              "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
-              "alt": "Koivuaskelmat",
-              "role": "gallery_photo"
-            },
-            {
               "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
               "alt": "Pariovi vanhan mallin ja värin mukaan",
               "role": "gallery_photo"
@@ -356,11 +321,6 @@
               "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
               "alt": "Massiivitammi pariovi",
               "role": "gallery_photo"
-            },
-            {
-              "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
-              "alt": "Puutyöstö",
-              "role": "workshop_photo"
             }
           ],
           "source_experience": {
@@ -376,16 +336,14 @@
               "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
               "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
               "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
-              "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
               "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
-              "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
-              "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg"
+              "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp"
             ],
             "observed_textured_backgrounds": [],
             "original_language": "sv",
-            "evidence_scope": "Original published FI/SV copy and image source URLs verified; actual desktop/mobile browser captures are separately tested."
+            "evidence_scope": "Official FI/SV original pages opened in real Chromium (390 and 1440px), verified 200 response, full-page screenshots captured. Two image addresses were unavailable in browser and excluded from redesign."
           },
-          "theme_color": "",
+          "theme_color": "#2a1519",
           "reviews": [],
           "dynamic_review_widget": false,
           "source_url": "https://woodtool.fi/sv/"
@@ -441,12 +399,12 @@
     "source_sha256": "PENDING_BROWSER_COMPARISON",
     "capture_method": "browser",
     "complete": false,
-    "checked_at": "2026-11-09",
+    "checked_at": "2026-11-09T10:44:32Z",
     "source_routes": [
       "https://woodtool.fi/",
       "https://woodtool.fi/sv/"
     ],
-    "evidence_scope": "Browser screenshots not yet attached at creation; verified by separate QA workflow.",
+    "evidence_scope": "Original FI/SV site captured in Chromium at mobile+desktop, HTTP200, 48 original FI image elements and 41 original SV image elements; see first-pass original screenshots. Complete visual/manual source approval pending.",
     "features": {
       "video": {
         "present": false
@@ -467,11 +425,12 @@
         "present": true
       }
     },
-    "visual_review": "PENDING"
+    "visual_review": "PENDING",
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42603125225/artifacts/13666652463"
   },
   "source_comparison_evidence": {
-    "source_desktop": "PENDING_CAPTURE",
-    "source_mobile": "PENDING_CAPTURE",
+    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42603125225/artifacts/13666652463 (original-fi-1440.png; original-sv-1440.png)",
+    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42603125225/artifacts/13666652463 (original-fi-390.png; original-sv-390.png)",
     "redesign_desktop": "PENDING_CAPTURE",
     "redesign_mobile": "PENDING_CAPTURE",
     "extra_pages": "PENDING_CAPTURE",
@@ -490,7 +449,7 @@
       "kind": "official_source_html"
     }
   ],
-  "capture_status": "Awaiting reproducible real Chromium source/new comparison; cannot claim 9.5 score.",
+  "capture_status": "Original FI/SV real-browser capture succeeded; redesigned routes first pass found overflow and two nonloading images, corrected and re-testing. Independent rating still pending.",
   "limitations": [
     "No license to reuse original images for customer delivery; links are internal design review only.",
     "Contact uses transparent direct phone/email methods; no form was evidenced on source.",
