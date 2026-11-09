@@ -1,0 +1,38 @@
+name: Lyijylasi Tiffany original/new paired browser captures
+on:
+  push:
+    branches:
+      - demo/lyijylasi-tiffany-20261109
+    paths:
+      - ".github/workflows/lyijylasi-tiffany-source-capture.yml"
+      - "website-builder-agent/website-builder-agent/scripts/capture_lyijylasi_tiffany_source.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-pair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Capture original/new source screenshots and photo IDs with actual Chromium
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory docs/kaurivo/demos/lyijylasi-tiffany-v1 > /tmp/lyijylasi-http.log 2>&1 &
+          sleep 2
+          python scripts/capture_lyijylasi_tiffany_source.py
+      - name: Preserve private review media and browser observations (not source licence)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lyijylasi-tiffany-source-browser-pairs
+          path: website-builder-agent/website-builder-agent/qa-evidence/lyijylasi-tiffany/source-pair
+          retention-days: 14
+          if-no-files-found: warn
