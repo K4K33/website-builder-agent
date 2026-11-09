@@ -111,12 +111,15 @@ def main():
     "https://images.pexels.com/photos/29224637/pexels-photo-29224637.jpeg",
     "https://images.pexels.com/photos/36801652/pexels-photo-36801652.jpeg",
     "https://images.pexels.com/photos/31567147/pexels-photo-31567147.jpeg",
+    "https://images.pexels.com/photos/15016524/pexels-photo-15016524.jpeg",
    ]
    report["licensed_sample_probes"]=[]
    for target in samples:
     try:
      response=p.request.new_context().get(target,timeout=16000)
      report["licensed_sample_probes"].append({"url":target,"status":response.status,"type":response.headers.get("content-type",""),"size":len(response.body())})
+     if response.status!=200 or not response.headers.get("content-type","").startswith("image/"):
+      report["errors"].append(f"Licensed example photo unavailable: {target} HTTP {response.status}")
     except Exception as exc:
      report["licensed_sample_probes"].append({"url":target,"error":type(exc).__name__+": "+str(exc)[:80]})
    browser.close()

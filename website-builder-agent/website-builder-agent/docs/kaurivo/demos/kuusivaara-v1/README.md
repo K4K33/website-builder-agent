@@ -15,7 +15,9 @@ For upholstery service visuals only, the demo shows distinctly labelled **Pexels
 - https://www.pexels.com/photo/artisan-working-in-istanbul-s-workshop-29224637/ (Mesut Yalçın)
 - https://www.pexels.com/photo/craftsman-restoring-antique-wooden-chair-31567147/ (josemiguel67bio jose miguel)
 - https://www.pexels.com/photo/tailor-working-in-a-fabric-shop-focusing-on-textile-34563854/ (Nurullah Çakmak)
-All three exact CDN image URLs returned image/jpeg HTTP 200 in CI. Site code never passes off these photos as actual Kuusivaara works. Hero's real original logo is attempted and a readable non-invented text fallback remains if unavailable.
+- https://www.pexels.com/photo/people-making-furniture-in-workshop-15016524/ (Mandiri Abadi; illustrative upholstery production photo)
+
+The first three example URLs returned HTTP 200 in earlier browser CI; the fourth example is a replacement for visually repetitive first-fold imagery and requires a new exact-build HTTP check before publication. All are explicitly marked as illustrative photographs, not client work. Site code never passes off these photos as actual Kuusivaara works. Hero's real original logo is attempted and a readable non-invented text fallback remains if unavailable.
 
 Ten source-browser screenshots (390/1440px) proved original source pages readable; all 12 demo routes were also browsed at 320/390/768/1440px. Final exact-build comparison and independent visual review remain separate from objective functional QA. No source media redistribution licence, client approval, final CMS editability, or independent >=9.5/10 external review is claimed. IMPORTANT blockers for customer outreach and handover. Site includes a visible independent preview disclaimer, noindex.
 

@@ -6,7 +6,7 @@ if(menu&&btn){const close=()=>{menu.classList.remove('open');btn.setAttribute('a
 const licensedSamples=[
  ["adfcfb064c4702b08e0dd99f4c329270","https://images.pexels.com/photos/29224637/pexels-photo-29224637.jpeg?auto=compress&cs=tinysrgb&w=1400"],
  ["e08b1bd0fe4ad2e53e13151672f1338e","https://images.pexels.com/photos/31567147/pexels-photo-31567147.jpeg?auto=compress&cs=tinysrgb&w=1400"],
- ["85bfab0b28ec1265c1c809e752f210bd","https://images.pexels.com/photos/34563854/pexels-photo-34563854.jpeg?auto=compress&cs=tinysrgb&w=1400"]
+ ["85bfab0b28ec1265c1c809e752f210bd","https://images.pexels.com/photos/15016524/pexels-photo-15016524.jpeg?auto=compress&cs=tinysrgb&w=1400"]
 ];
 // Do not display broken-image glyphs in the header when the original host
 // blocks hotlinks. Real brand text remains as the honest accessible fallback.
