@@ -466,11 +466,26 @@
   },
   "commerce_inventory": [],
   "fact_sources": [
-    "https://www.verhoomokuusivaara.fi/",
-    "https://www.verhoomokuusivaara.fi/Palvelut/",
-    "https://www.verhoomokuusivaara.fi/YRITYKSEMME/",
-    "https://www.verhoomokuusivaara.fi/Tarinamme/",
-    "https://www.verhoomokuusivaara.fi/en/"
+    {
+      "url": "https://www.verhoomokuusivaara.fi/",
+      "text": "Laatua vuodesta 1913. Suomalainen perheyritys Kaarinan Littoisissa, Artekin tehtaan yhteydessä; yritys verhoilee kodin huonekaluja ja suurempia kokonaisuuksia sekä Savoyn kalusteita."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/Palvelut/",
+      "text": "Yritys ja yksityisasiakkaat, teollinen verhoilu ja uudelleenverhoilu, Artek satulavyötuolit, Karusellituoli, Artek varaosat, yhteistyökumppanit Orient Occident, Lauritzon's, Johanna Gullichen, Sorensen Leather; omat kankaat, kuljetus ja neljä vaihetta. Maksu käteinen tai MobilePay noudettaessa, yritykset laskulla."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/",
+      "text": "Henkilökunta Päivi Johanna Alina Hannu Kim, Katri taustajoukoissa ja Emmi vanhempainvapaalla; alkuperäinen sisältö sisältää jäsenyyden Turun Verhoilijamestareissa, arvoja ja asiakastietojen käsittelyn."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/Tarinamme/",
+      "text": "Perheyrityksen historia 1913 Brynolf ja Rauha, Jorma 1930 ja 1944 nimen muutos, Pertti 1985, Katri ja Kim 2012, Littoinen 2017, yhteistyö Artek/Aalto. Lähde kertoo myös Itäharjun vanhoista toimitiloista."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/en/",
+      "text": "Alkuperäinen sivusto tarjoaa en-kielivalinnan ja yhteystiedot."
+    }
   ],
   "capture_status": "original_and_redesign_browser_verified_current_site_code",
   "limitations": [
