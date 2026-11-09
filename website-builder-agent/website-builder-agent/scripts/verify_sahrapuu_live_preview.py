@@ -13,8 +13,8 @@ from datetime import datetime, timezone
 
 from playwright.sync_api import sync_playwright
 
-BASE = os.environ.get("KAURIVO_PREVIEW_URL", "https://kaurivo-sahrapuu-concept-2026.onrender.com/release-r3").rstrip("/")
-EXPECTED = "sahrapuu-20261109-release-r3"
+BASE = os.environ.get("KAURIVO_PREVIEW_URL", "https://kaurivo-sahrapuu-concept-2026.onrender.com/release-r4").rstrip("/")
+EXPECTED = "sahrapuu-20261109-release-r4"
 ROUTES = ["/index.html", "/palvelut/index.html", "/tarina/index.html", "/yhteys/index.html"]
 WIDTHS = [390, 768, 1440]
 OUT = Path("output/sahrapuu-live-smoke")
@@ -45,7 +45,7 @@ with sync_playwright() as playwright:
                 page.wait_for_timeout(200)
                 result = page.evaluate("""() => {
                     const h1 = document.querySelector("main h1");
-                    const logo = document.querySelector(".logo .wordmark");
+                    const logo = document.querySelector(".logo img.brand-original");
                     const nav = document.getElementById("site-nav");
                     const hero = document.querySelector(".hero,.sub-hero,.contact-hero");
                     return {
@@ -53,8 +53,8 @@ with sync_playwright() as playwright:
                         cssHref: [...document.styleSheets].some(s => s.href && s.href.endsWith("/styles.css")),
                         h1: h1?.innerText || "",
                         h1size: h1 ? parseFloat(getComputedStyle(h1).fontSize) : 0,
-                        logoText: logo?.innerText || "",
-                        logoSize: logo ? parseFloat(getComputedStyle(logo).fontSize) : 0,
+                        logoText: logo?.getAttribute("alt") || "",
+                        logoSize: logo ? logo.getBoundingClientRect().width : 0,
                         heroBg: hero ? getComputedStyle(hero).backgroundColor : "",
                         overflow: document.documentElement.scrollWidth > innerWidth + 2,
                         imagesBroken: [...document.images].filter(i => i.complete && !i.naturalWidth).length,
@@ -83,12 +83,22 @@ with sync_playwright() as playwright:
                     "/tarina/index.html": "rgb(232, 229, 217)",
                     "/yhteys/index.html": "rgb(37, 49, 39)",
                 }[route]
+                source_facts = {
+                    "/index.html": ("puusepän palvelut kolmannessa polvessa", "instagram", "facebook"),
+                    "/palvelut/index.html": ("nykyaikainen laitekanta", "mittatilaus", "kalusteasennukset"),
+                    "/tarina/index.html": ("kaappikelloja", "soittimia", "kuokkalassa", "2021"),
+                    "/yhteys/index.html": ("jyrki.paananen@sahrapuu.fi", "myynti@sahrapuu.fi", "3238958-3"),
+                }
+                actual_text = page.evaluate("document.body.textContent.toLocaleLowerCase('fi-FI')")
+                for required in source_facts[route]:
+                    assert required in actual_text, "Missing source-grounded content: "+required
+                assert page.locator('meta[name="robots"]').get_attribute("content").startswith("noindex"), "Public preview must be noindex"
                 assert response and response.status == 200, "Page not HTTP 200"
                 assert result["marker"] == EXPECTED, "Stale or missing release marker"
                 assert result["cssHref"], "External CSS did not load (regression: unstyled site)"
                 assert result["heroBg"] == expected_bg, "Incorrect computed branded hero background"
                 assert result["h1"] and result["h1size"] >= 48, "Missing unstyled/small heading"
-                assert result["logoText"] == "Sahrapuu" and 30 <= result["logoSize"] <= 100, "Broken brand text sizing"
+                assert result["logoText"] == "Sahrapuun alkuperäinen logo" and 60 <= result["logoSize"] <= 160, "Broken brand text sizing"
                 assert result["navLinks"] >= 5, "Missing navigation"
                 assert not result["overflow"], "Horizontal page overflow"
                 assert result["imagesBroken"] == 0, "Broken image"
