@@ -76,6 +76,10 @@ def main():
      report["errors"].append("Mobile menu failed to open")
     page.locator("[data-nav] a").first.click()
     page.goto(url+"palvelut/",wait_until="load")
+    if page.locator("section.service > .photo").count()!=3:
+     report["errors"].append("Service images must be sibling columns, never nested inside text")
+    if page.locator("[data-material]").get_attribute("data-material")!="webbing":
+     report["errors"].append("Material demo default visual state missing")
     page.locator("[data-fabric] button[data-tab='leather']").click()
     if page.locator("[data-material]").get_attribute("data-material")!="leather":
      report["errors"].append("Material demo not interactive")
@@ -83,9 +87,15 @@ def main():
     page.locator("[data-filters] button[data-filter='history']").click()
     if page.locator("[data-gallery]:visible").count()!=3:
      report["errors"].append("Gallery filter returned incorrect count")
+    archival=page.locator("[data-gallery]:visible").first
+    if not archival.get_attribute("href") or "verhoomokuusivaara.fi/Tarinamme" not in archival.get_attribute("href"):
+     report["errors"].append("Unavailable historic photos need working original archive links")
+    page.locator("[data-filters] button[data-filter='service']").click()
+    if page.locator("[data-gallery]:visible").count()!=3:
+     report["errors"].append("Service gallery filter returned incorrect count")
     page.locator("[data-gallery]:visible").first.click()
     if not page.locator("#photo-dialog").evaluate("el=>el.open"):
-     report["errors"].append("Photo dialog failed to open")
+     report["errors"].append("Service photo dialog failed to open")
     page.locator("[data-close]").click()
     if page.locator("#photo-dialog").evaluate("el=>el.open"):
      report["errors"].append("Photo dialog failed to close")
