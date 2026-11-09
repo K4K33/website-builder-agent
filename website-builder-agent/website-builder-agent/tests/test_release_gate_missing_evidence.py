@@ -74,6 +74,10 @@ class ExactPublicProofRegressions(unittest.TestCase):
             ("commit_sha", "d" * 40),
             ("release_marker", "old-release-marker"),
             ("ci_run_url", "https://example.org/not-a-ci-run"),
+            ("ci_run_url", "https://github.com/manual-review-required"),
+            ("ci_run_url", "https://github.com.evil/owner/repo/actions/runs/123"),
+            ("ci_run_url", "https://github.com/owner/repo/actions/runs/fake"),
+            ("ci_run_url", "https://github.com/owner/repo/actions/runs/0"),
             ("ci_verified_by_owner", False),
             ("checked_at", "2025-01-01T00:00:00Z"),
             ("checked_at", (datetime.now(timezone.utc) +
