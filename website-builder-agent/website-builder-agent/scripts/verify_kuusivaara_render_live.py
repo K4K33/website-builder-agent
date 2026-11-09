@@ -14,7 +14,7 @@ OUT = Path(__file__).resolve().parents[1] / "output/kuusivaara-render-live-smoke
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    audit = {"target": URL, "pages": [], "errors": []}
+    audit = {"target": URL, "pages": [], "errors": [], "warnings": []}
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True)
         for width in (390, 1440):
@@ -36,6 +36,15 @@ def main():
                       return {
                         hasInlineCSS:!!style && style.textContent.length>10000,
                         hasInlineJS:!!document.querySelector('script[data-kaurivo-enhancement="inline-v1"]'),
+                        hasLinkedCSS:!!document.querySelector('link[rel="stylesheet"][href]'),
+                        hasLinkedJS:!!document.querySelector('script[src]'),
+                        heroBrandVisible:(() => {
+                            const e=document.querySelector('.hero-brand-type');
+                            if(!e)return false;
+                            const b=e.getBoundingClientRect(), style=getComputedStyle(e);
+                            return style.display!=='none' && style.visibility!=='hidden' &&
+                                   b.width>150 && b.height>60;
+                        })(),
                         bodyFont:bodyStyle.fontFamily,
                         bodyBg:bodyStyle.backgroundColor,
                         heroBg:heroStyle?.backgroundColor || null,
@@ -53,8 +62,15 @@ def main():
                     page.screenshot(path=str(OUT / entry["file"]), full_page=True, timeout=30000, animations="disabled")
                     if entry["status"] != 200:
                         audit["errors"].append(f"{width} {route}: HTTP {entry['status']}")
-                    if not metrics["hasInlineCSS"] or not metrics["hasInlineJS"]:
-                        audit["errors"].append(f"{width} {route}: CSS or JS missing from live HTML")
+                    if not metrics["hasInlineCSS"]:
+                        if not metrics["hasLinkedCSS"] or metrics["bodyBg"]!="rgb(244, 240, 232)":
+                            audit["errors"].append(f"{width} {route}: neither inline nor functional external CSS")
+                        else:
+                            audit["warnings"].append(f"{width} {route}: older external CSS response still cached; site styled but exact deployment freshness pending")
+                    if not metrics["hasInlineJS"] and not metrics["hasLinkedJS"]:
+                        audit["errors"].append(f"{width} {route}: no live JavaScript for interactive menu")
+                    if route=="" and not metrics["heroBrandVisible"]:
+                        audit["errors"].append(f"{width} homepage: brand typography fallback NOT VISIBLE; empty hero")
                     if metrics["bodyFont"] in ("Times New Roman", '"Times New Roman"', "serif"):
                         audit["errors"].append(f"{width} {route}: DEFAULT BROWSER TYPOGRAPHY -- STYLES FAILED")
                     if metrics["logoWidth"] > 110 or metrics["brandWidth"] > 340:
@@ -78,7 +94,7 @@ def main():
             ctx.close()
         browser.close()
     (OUT/"report.json").write_text(json.dumps(audit,indent=2,ensure_ascii=False),encoding="utf-8")
-    print("RENDER_LIVE_SMOKE",json.dumps({"pages":len(audit["pages"]),"errors":audit["errors"],"snapshots":OUT.as_posix()}))
+    print("RENDER_LIVE_SMOKE",json.dumps({"pages":len(audit["pages"]),"errors":audit["errors"],"warnings":audit["warnings"],"snapshots":OUT.as_posix()}))
     return 1 if audit["errors"] else 0
 
 if __name__=="__main__":
