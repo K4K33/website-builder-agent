@@ -65,7 +65,7 @@ def source_contact_form_evidence(research: dict) -> dict:
     return {"present": bool(observed), "source_urls": sorted(set(observed))}
 
 
-def audit_premium_art_direction(pages: dict[str, str], research: dict) -> dict:
+def audit_premium_art_direction(pages: dict[str, str], research: dict, *, company: dict | None = None) -> dict:
     """Return deterministic blockers and separate pending visual judgments.
 
     Checks are stricter for source-rich v2 projects. Old static demo QA isn't
@@ -73,6 +73,27 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict) -> dict:
     count nor image count is used as a premium score.
     """
     v2 = research.get("premium_visual_protocol") == "v2"
+    company = company or {}
+    from utils.premium_quality_gate import (
+        verify_independent_premium_reviews, site_digest,
+    )
+    from utils.content_parity import source_inventory_sha256
+    build_sha = site_digest(pages)
+    source_sha = source_inventory_sha256(research.get("source_inventory") or {})
+    premium_approved = (
+        verify_independent_premium_reviews(
+            research.get("premium_independent_reviews"), pages, research
+        )["pass"] if v2 else False
+    )
+    visual_signature_review = research.get("brand_signature_review") or {}
+    signature_approved = bool(
+        visual_signature_review.get("approved") is True
+        and visual_signature_review.get("reviewer_kind") == "independent_human"
+        and visual_signature_review.get("build_sha256") == build_sha
+        and visual_signature_review.get("source_sha256") == source_sha
+        and visual_signature_review.get("critical_issues") == []
+        and str(visual_signature_review.get("evidence_reference") or "").strip()
+    )
     blockers, pending, route_evidence = [], [], {}
     source_images = observed_original_photos(research)
     photo_rich = len(source_images) >= 3
@@ -128,14 +149,22 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict) -> dict:
             "but redesign has no real email+message form. A mailto draft or "
             "link to the old website is not equivalent lead capture."
         )
-    if source_form["present"] and real_form_routes:
+    if (source_form["present"] and real_form_routes
+            and (company.get("release_evidence") or {}).get("real_lead_delivery_verified") is not True):
         pending.append(
             "Form markup is present, but end-to-end POST, delivery, privacy, "
             "validation and error/success states still need live browser tests."
         )
     if photo_rich and v2:
         repeated = [src for src, count in seen_images.items() if count >= 3]
-        if repeated and len(pages) >= 3:
+        photo_review = research.get("photo_role_review") or {}
+        photo_reviewed = (
+            photo_review.get("approved") is True
+            and photo_review.get("build_sha256") == build_sha
+            and photo_review.get("source_sha256") == source_sha
+            and photo_review.get("reviewer_kind") == "independent_human"
+        )
+        if repeated and len(pages) >= 3 and not photo_reviewed:
             pending.append(
                 "Identical client photographs reused in 3+ page image elements; "
                 "verify each is purpose-specific, not a substitute for original variety."
@@ -158,15 +187,17 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict) -> dict:
                 ):
                     blockers.append("Brand-signature plan includes an unsourced or unmapped item.")
                     break
+            if not signature_approved:
+                pending.append(
+                    "Review original/new screenshot pairs to verify every inventoried "
+                    "brand signature truly appears, rather than trusting textual mapping."
+                )
+        if not premium_approved:
             pending.append(
-                "Review original/new screenshot pairs to verify every inventoried "
-                "brand signature truly appears, rather than trusting textual mapping."
+                "Every route requires independent original/new desktop and mobile "
+                "visual assessment; technical QA and a strong home page cannot "
+                "certify the service, portfolio, person or contact pages."
             )
-        pending.append(
-            "Every route requires independent original/new desktop and mobile "
-            "visual assessment; technical QA and a strong home page cannot "
-            "certify the service, portfolio, person or contact pages."
-        )
     return {
         "blocking": blockers, "pending": pending,
         "source_photos": len(source_images),
