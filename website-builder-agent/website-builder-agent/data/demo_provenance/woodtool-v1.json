@@ -1,0 +1,499 @@
+{
+  "company": "PM Woodtool Ab Oy",
+  "observed_date": "2026-11-09",
+  "schema_version": 2,
+  "stage": "internal_demo",
+  "research_mode": "existing_website",
+  "source_url": "https://woodtool.fi/",
+  "source_inventory": {
+    "pages": [
+      {
+        "url": "https://woodtool.fi/",
+        "text": "Woodtool on pieni perheyritys Turun saaristossa. Verstas sijaitsee Nauvossa ja palvelee Turun seutua. Mittatilaustyöt suunnitellaan yhdessä asiakkaan kanssa. Massiivipuusta portaita, ikkunoita, ovia, huonekaluja ja panelien höyläystä. Palveluun kuuluvat suunnittelu, toteutus, pintakäsittely sekä tarvittaessa vanhan purku ja uuden asennus. Asiakkaita yrityksistä ja kotitalouksista. Työnäytteet: kalusteet, ovet, ikkunat ja portaat, noin 46 nimettyä toteutusta.",
+        "headings": {
+          "h1": [
+            "WOODTOOL"
+          ],
+          "h2": [
+            "Puusepäntuotteet ja palvelut",
+            "Työnäytteet",
+            "Ota yhteyttä"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammiovi-1080x1921.jpg.webp",
+            "alt": "Jugendtyylinen massiivitammi ovi",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/taystammiportaat-e1471552630309-1080x1920.jpg.webp",
+            "alt": "Täystammiportaat lasikaiteilla",
+            "role": "portaat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/sohvapoyta-1080x608.jpg.webp",
+            "alt": "Kahdeksankulmainen lakattu koivupöytä",
+            "role": "kalusteet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/vanhantalon-ikkunat.jpg.webp",
+            "alt": "Vanhantalon ikkunat läpiristikoilla",
+            "role": "ikkunat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
+            "alt": "Sisäovet peileillä",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
+            "alt": "Ulkoikkunat läpiristikoilla",
+            "role": "ikkunat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
+            "alt": "Pienen tilan sänky",
+            "role": "kalusteet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
+            "alt": "Koivuaskelmat",
+            "role": "portaat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
+            "alt": "Pariovi vanhan mallin ja värin mukaan",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
+            "alt": "Massiivitammi pariovi",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
+            "alt": "Puutyöstö",
+            "role": "verstas"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://woodtool.fi/sv/",
+            "text": "Svenska"
+          },
+          {
+            "href": "mailto:info@woodtool.fi",
+            "text": "info@woodtool.fi"
+          },
+          {
+            "href": "tel:+358400814160",
+            "text": "Petri"
+          },
+          {
+            "href": "tel:+358407519313",
+            "text": "Marika"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [],
+          "original_header_wordmark_candidates": [
+            "WOODTOOL"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammiovi-1080x1921.jpg.webp",
+              "alt": "Jugendtyylinen massiivitammi ovi",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/taystammiportaat-e1471552630309-1080x1920.jpg.webp",
+              "alt": "Täystammiportaat lasikaiteilla",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/sohvapoyta-1080x608.jpg.webp",
+              "alt": "Kahdeksankulmainen lakattu koivupöytä",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/vanhantalon-ikkunat.jpg.webp",
+              "alt": "Vanhantalon ikkunat läpiristikoilla",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
+              "alt": "Sisäovet peileillä",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
+              "alt": "Ulkoikkunat läpiristikoilla",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
+              "alt": "Pienen tilan sänky",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
+              "alt": "Koivuaskelmat",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
+              "alt": "Pariovi vanhan mallin ja värin mukaan",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
+              "alt": "Massiivitammi pariovi",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
+              "alt": "Puutyöstö",
+              "role": "workshop_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "gallery_rich_photographic",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "observed_photo_urls": [
+              "https://woodtool.fi/wp-content/uploads/2016/08/tammiovi-1080x1921.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/taystammiportaat-e1471552630309-1080x1920.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/sohvapoyta-1080x608.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/vanhantalon-ikkunat.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
+              "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg"
+            ],
+            "observed_textured_backgrounds": [],
+            "original_language": "fi",
+            "evidence_scope": "Original published FI/SV copy and image source URLs verified; actual desktop/mobile browser captures are separately tested."
+          },
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false,
+          "source_url": "https://woodtool.fi/"
+        },
+        "price_faq_evidence": {
+          "prices": [],
+          "faq_questions": []
+        },
+        "source_content_blocks": {
+          "original_form": false,
+          "verified_services": [
+            "Portaat",
+            "Ovet",
+            "Ikkunat",
+            "Kalusteet",
+            "Paneelien höyläys"
+          ],
+          "visual_media_categories": [
+            "Portaat",
+            "Ovet",
+            "Ikkunat",
+            "Kalusteet"
+          ],
+          "language": "fi",
+          "project_gallery_items": 46
+        }
+      },
+      {
+        "url": "https://woodtool.fi/sv/",
+        "text": "Woodtool är ett litet familjeföretag i Åbolands skärgård. Verkstad i Nagu, betjänar Åboregionen. Tillverkar snickeriarbeten efter kundens behov: trappor, fönster, dörrar, möbler och hyvling av panel. Planering, tillverkning, ytbehandling, vid behov rivning och montering. Kunder omfattar företag och hushåll. Verkliga referensarbeten i fyra kategorier.",
+        "headings": {
+          "h1": [
+            "WOODTOOL"
+          ],
+          "h2": [
+            "Snickeriprodukter och tjänster",
+            "Referensarbeten",
+            "Ta kontakt"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammiovi-1080x1921.jpg.webp",
+            "alt": "Jugendtyylinen massiivitammi ovi",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/taystammiportaat-e1471552630309-1080x1920.jpg.webp",
+            "alt": "Täystammiportaat lasikaiteilla",
+            "role": "portaat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/sohvapoyta-1080x608.jpg.webp",
+            "alt": "Kahdeksankulmainen lakattu koivupöytä",
+            "role": "kalusteet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/vanhantalon-ikkunat.jpg.webp",
+            "alt": "Vanhantalon ikkunat läpiristikoilla",
+            "role": "ikkunat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
+            "alt": "Sisäovet peileillä",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
+            "alt": "Ulkoikkunat läpiristikoilla",
+            "role": "ikkunat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
+            "alt": "Pienen tilan sänky",
+            "role": "kalusteet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
+            "alt": "Koivuaskelmat",
+            "role": "portaat"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
+            "alt": "Pariovi vanhan mallin ja värin mukaan",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
+            "alt": "Massiivitammi pariovi",
+            "role": "ovet"
+          },
+          {
+            "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
+            "alt": "Puutyöstö",
+            "role": "verstas"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://woodtool.fi/",
+            "text": "Suomi"
+          },
+          {
+            "href": "mailto:info@woodtool.fi",
+            "text": "info@woodtool.fi"
+          },
+          {
+            "href": "tel:+358400814160",
+            "text": "Petri"
+          },
+          {
+            "href": "tel:+358407519313",
+            "text": "Marika"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [],
+          "original_header_wordmark_candidates": [
+            "WOODTOOL"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammiovi-1080x1921.jpg.webp",
+              "alt": "Jugendtyylinen massiivitammi ovi",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/taystammiportaat-e1471552630309-1080x1920.jpg.webp",
+              "alt": "Täystammiportaat lasikaiteilla",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/sohvapoyta-1080x608.jpg.webp",
+              "alt": "Kahdeksankulmainen lakattu koivupöytä",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/vanhantalon-ikkunat.jpg.webp",
+              "alt": "Vanhantalon ikkunat läpiristikoilla",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
+              "alt": "Sisäovet peileillä",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
+              "alt": "Ulkoikkunat läpiristikoilla",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
+              "alt": "Pienen tilan sänky",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
+              "alt": "Koivuaskelmat",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
+              "alt": "Pariovi vanhan mallin ja värin mukaan",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
+              "alt": "Massiivitammi pariovi",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg",
+              "alt": "Puutyöstö",
+              "role": "workshop_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "gallery_rich_photographic",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "observed_photo_urls": [
+              "https://woodtool.fi/wp-content/uploads/2016/08/tammiovi-1080x1921.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/taystammiportaat-e1471552630309-1080x1920.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/sohvapoyta-1080x608.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/vanhantalon-ikkunat.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/peili-sisaovet-e1471601859702-1080x1920.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/kaksivari-ikkunat-1080x608.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/kerrossanky-1080x607.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/koivuaskelmat-1080x1440.jpg",
+              "https://woodtool.fi/wp-content/uploads/2016/08/pariovi-e1471601731175-1080x1918.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/08/tammi-pariovi.jpg.webp",
+              "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-1.jpg"
+            ],
+            "observed_textured_backgrounds": [],
+            "original_language": "sv",
+            "evidence_scope": "Original published FI/SV copy and image source URLs verified; actual desktop/mobile browser captures are separately tested."
+          },
+          "theme_color": "",
+          "reviews": [],
+          "dynamic_review_widget": false,
+          "source_url": "https://woodtool.fi/sv/"
+        },
+        "price_faq_evidence": {
+          "prices": [],
+          "faq_questions": []
+        },
+        "source_content_blocks": {
+          "original_form": false,
+          "verified_services": [
+            "Portaat",
+            "Ovet",
+            "Ikkunat",
+            "Kalusteet",
+            "Paneelien höyläys"
+          ],
+          "visual_media_categories": [
+            "Portaat",
+            "Ovet",
+            "Ikkunat",
+            "Kalusteet"
+          ],
+          "language": "sv",
+          "project_gallery_items": 46
+        }
+      }
+    ]
+  },
+  "company_facts": {
+    "name": "PM Woodtool Ab Oy",
+    "brand_name": "WOODTOOL",
+    "workshop": "Nauvo / Nagu",
+    "region": "Turun saaristo / Åbolands skärgård",
+    "address": "Ampumaradantie 1-1, 21650 Lillandet",
+    "swedish_address": "Skjutbanevägen 1-1, 21650 Lillandet",
+    "phone_petri": "0400 814 160",
+    "phone_marika": "040 751 9313",
+    "email": "info@woodtool.fi",
+    "services": [
+      "Massiivipuuportaat",
+      "Puuovet",
+      "Puuikkunat",
+      "Mittatilauskalusteet",
+      "Paneelien höyläys"
+    ],
+    "languages": [
+      "fi",
+      "sv"
+    ]
+  },
+  "original_experience_profile": {
+    "source_sha256": "PENDING_BROWSER_COMPARISON",
+    "capture_method": "browser",
+    "complete": false,
+    "checked_at": "2026-11-09",
+    "source_routes": [
+      "https://woodtool.fi/",
+      "https://woodtool.fi/sv/"
+    ],
+    "evidence_scope": "Browser screenshots not yet attached at creation; verified by separate QA workflow.",
+    "features": {
+      "video": {
+        "present": false
+      },
+      "three_d": {
+        "present": false
+      },
+      "motion": {
+        "present": false
+      },
+      "textured_background": {
+        "present": false
+      },
+      "gallery": {
+        "present": true
+      },
+      "photography": {
+        "present": true
+      }
+    },
+    "visual_review": "PENDING"
+  },
+  "source_comparison_evidence": {
+    "source_desktop": "PENDING_CAPTURE",
+    "source_mobile": "PENDING_CAPTURE",
+    "redesign_desktop": "PENDING_CAPTURE",
+    "redesign_mobile": "PENDING_CAPTURE",
+    "extra_pages": "PENDING_CAPTURE",
+    "notes": "No independent premium acceptance until real screenshot comparisons are reviewed."
+  },
+  "commerce_inventory": [],
+  "fact_sources": [
+    {
+      "url": "https://woodtool.fi/",
+      "checked_at": "2026-11-09",
+      "kind": "official_source_html"
+    },
+    {
+      "url": "https://woodtool.fi/sv/",
+      "checked_at": "2026-11-09",
+      "kind": "official_source_html"
+    }
+  ],
+  "capture_status": "Awaiting reproducible real Chromium source/new comparison; cannot claim 9.5 score.",
+  "limitations": [
+    "No license to reuse original images for customer delivery; links are internal design review only.",
+    "Contact uses transparent direct phone/email methods; no form was evidenced on source.",
+    "Customer CMS and independent visual reviewers not verified."
+  ]
+}
