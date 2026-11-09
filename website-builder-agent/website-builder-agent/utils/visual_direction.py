@@ -79,7 +79,7 @@ def visual_direction_plan(research: dict, creative: dict, architecture: dict) ->
     motion_budget = source.get("motion_budget", "undetermined")
     depth = (
         "Let the actual subject, material, existing light and meaningful crop "
-        "create visual depth. Consider optional very small photo translation "
+        "create visual depth. Consider optional very small photo parallax translation "
         "or purposeful perspective only if it helps show the real work. "
         "Never add pointer-following radial light, screen-blend halos or "
         "fake light reflections above genuine photography. Do not fabricate "
