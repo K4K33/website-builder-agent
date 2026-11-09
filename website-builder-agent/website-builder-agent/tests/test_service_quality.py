@@ -73,6 +73,20 @@ class ServiceQualityTests(unittest.TestCase):
         out = audit_service_quality(p, r)
         self.assertTrue(any(x['kind'] == 'lost_business_task' for x in out['blocking']))
 
+    def test_bare_fact_source_url_is_blocked_not_a_crashing_exception(self):
+        r, p = fixture()
+        r['fact_sources'] = ['https://repair.example/']
+        out = audit_service_quality(p, r)
+        self.assertIn('invalid_fact_source_entry', [row['kind'] for row in out['blocking']])
+        self.assertFalse(out['client_ready'])
+
+    def test_text_backed_fact_source_record_is_accepted(self):
+        r, p = fixture()
+        r['fact_sources'] = [{'url': 'https://repair.example/',
+                              'text': 'We repair brass instruments in our workshop.'}]
+        out = audit_service_quality(p, r)
+        self.assertNotIn('invalid_fact_source_entry', [row['kind'] for row in out['blocking']])
+
     def test_phone_link_cannot_replace_booking(self):
         r, p = fixture(); p['index.html'] = '<main><a href="tel:1234567">Call us</a></main>'
         self.assertTrue(audit_service_quality(p, r)['blocking'])
