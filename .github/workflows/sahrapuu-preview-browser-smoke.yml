@@ -5,6 +5,10 @@ on:
       - preview/sahrapuu-v1-20261109
   workflow_dispatch:
 
+concurrency:
+  group: sahrapuu-live-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
