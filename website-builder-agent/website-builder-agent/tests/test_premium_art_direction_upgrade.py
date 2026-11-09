@@ -41,6 +41,26 @@ class PremiumArtDirectionTests(unittest.TestCase):
         self.assertTrue(audit["blocking"])
         self.assertIn("generic decorative", audit["blocking"][0])
 
+    def test_honestly_disclosed_real_stock_photo_is_not_generic_filler(self):
+        research = photographed_source()
+        pages = {"services/index.html":
+            '<main><section class="services-hero"><figure>'
+            '<img src="https://images.pexels.com/photos/34563854/pexels-photo-34563854.jpeg" '
+            'alt="Lisensoitu esimerkkikuva tekstiilityöstä, ei asiakkaan oma työ">'
+            '<figcaption>ESIMERKKIKUVA · PEXELS, ei yrityksen oma työ</figcaption>'
+            '</figure></section></main>'}
+        result = audit_premium_art_direction(pages, research)
+        self.assertFalse(result["blocking"], result)
+        self.assertTrue(any("rights" in item for item in result["pending"]), result)
+
+    def test_true_empty_graphic_panel_remains_blocked_despite_stock_disclosure(self):
+        research = photographed_source()
+        pages = {"services/index.html":
+            '<main><figure class="surface-abstract">'
+            '<figcaption>ESIMERKKIKUVA · ei valokuvaa</figcaption>'
+            '</figure></main>'}
+        self.assertTrue(audit_premium_art_direction(pages, research)["blocking"])
+
     def test_authentic_photo_and_brand_texture_are_not_arbitrarily_rejected(self):
         research = photographed_source()
         html = '<main><h1>Studio</h1><section class="brand-geometric-pattern">' \
