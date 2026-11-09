@@ -89,10 +89,11 @@
           }
         ],
         "source_identity": {
-          "original_logo_candidates": [],
+          "original_logo_candidates": [
+            "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-logo.png"
+          ],
           "original_header_wordmark_candidates": [
-            "woodtool.fi",
-            "WOODTOOL"
+            "woodtool.fi"
           ],
           "original_content_photos": [
             {
@@ -159,7 +160,7 @@
             ],
             "observed_textured_backgrounds": [],
             "original_language": "fi",
-            "evidence_scope": "Official FI/SV original pages opened in real Chromium (390 and 1440px), verified 200 response, full-page screenshots captured. Two image addresses were unavailable in browser and excluded from redesign."
+            "evidence_scope": "Official FI/SV original pages opened in real Chromium (390 and 1440px), verified 200 response, full-page screenshots captured. Two image addresses were unavailable in browser and excluded from redesign. Original Woodtool logo URL was verified in real Chromium; source logo naturalWidth 384px."
           },
           "theme_color": "#2a1519",
           "reviews": [],
@@ -271,10 +272,11 @@
           }
         ],
         "source_identity": {
-          "original_logo_candidates": [],
+          "original_logo_candidates": [
+            "https://woodtool.fi/wp-content/uploads/2016/07/woodtool-logo.png"
+          ],
           "original_header_wordmark_candidates": [
-            "woodtool.fi",
-            "WOODTOOL"
+            "woodtool.fi"
           ],
           "original_content_photos": [
             {
@@ -341,7 +343,7 @@
             ],
             "observed_textured_backgrounds": [],
             "original_language": "sv",
-            "evidence_scope": "Official FI/SV original pages opened in real Chromium (390 and 1440px), verified 200 response, full-page screenshots captured. Two image addresses were unavailable in browser and excluded from redesign."
+            "evidence_scope": "Official FI/SV original pages opened in real Chromium (390 and 1440px), verified 200 response, full-page screenshots captured. Two image addresses were unavailable in browser and excluded from redesign. Original Woodtool logo URL was verified in real Chromium; source logo naturalWidth 384px."
           },
           "theme_color": "#2a1519",
           "reviews": [],
@@ -404,7 +406,7 @@
       "https://woodtool.fi/",
       "https://woodtool.fi/sv/"
     ],
-    "evidence_scope": "Live original FI/SV pages verified HTTP 200 in Chromium at 390 and 1440px; 48 FI and 41 SV image elements, original full-page screenshots captured. Static accessibility and subjective premium still require separate signoff.",
+    "evidence_scope": "Live original FI/SV pages verified HTTP 200 in Chromium at 390 and 1440px; 48 FI and 41 SV image elements, original full-page screenshots captured. Static accessibility and subjective premium still require separate signoff. Original visual brand logo verified at https://woodtool.fi/wp-content/uploads/2016/07/woodtool-logo.png.",
     "features": {
       "video": {
         "present": false
@@ -449,7 +451,7 @@
       "kind": "official_source_html"
     }
   ],
-  "capture_status": "Real original FI/SV captures and initial full browser route screenshots verified; narrow 320px title correction requires final CI rerun. Owner/media rights, independent aesthetic rating and CMS remain pending.",
+  "capture_status": "Updated provenance to include exact original woodtool.fi logo; recalculating source SHA and final live-browser checks.",
   "limitations": [
     "No license to reuse original images for customer delivery; links are internal design review only.",
     "Contact uses transparent direct phone/email methods; no form was evidenced on source.",
