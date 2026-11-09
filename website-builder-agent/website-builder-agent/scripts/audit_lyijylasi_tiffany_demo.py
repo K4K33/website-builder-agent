@@ -64,7 +64,7 @@ def audit():
             # Only the 23 labelled gallery cards count as portfolio entries.
             # The separate editorial hero may legitimately repeat a source image.
             card_urls=re.findall(
-                r'<button[^>]*\\bdata-enlarge\\b[^>]*>\\s*<img\\b[^>]*\\bsrc="([^"]+)"',
+                r'<button[^>]*\bdata-enlarge\b[^>]*>\s*<img\b[^>]*\bsrc="([^"]+)"',
                 html, flags=re.I|re.S)
             photo_ids=[]
             for u in card_urls:
