@@ -3,7 +3,7 @@
 
 No human-premium-score fabrication. Captures real upstream original and every
 FI/SV redesign route at desktop & mobile; tests navigation, gallery, image
-delivery, real pointer response, reduced motion and no horizontal overflow.
+delivery, subtle photo depth without simulated lighting, reduced motion and no horizontal overflow.
 """
 from __future__ import annotations
 import json
@@ -173,13 +173,21 @@ with sync_playwright() as pw:
         else:
             page.mouse.move(box["x"]+box["width"]*.25,box["y"]+box["height"]*.22)
             page.wait_for_timeout(500)
-            first=v.evaluate("(el)=>getComputedStyle(el).getPropertyValue('--px').trim()")
+            first=v.locator("img").evaluate("(el)=>getComputedStyle(el).transform")
             page.mouse.move(box["x"]+box["width"]*.76,box["y"]+box["height"]*.68)
-            page.wait_for_timeout(500)
-            second=v.evaluate("(el)=>getComputedStyle(el).getPropertyValue('--px').trim()")
-            if not first or first==second:issues.append("premium material-light motion is visually inert")
-            results.append({"route":"fi-home","width":1440,"test":"pointer-depth","before":first,"after":second})
-            note("POINTER_DEPTH",first,second)
+            page.wait_for_timeout(850)
+            second=v.locator("img").evaluate("(el)=>getComputedStyle(el).transform")
+            spotlight=v.evaluate("""el => ({
+                hasAfterContent:getComputedStyle(el,'::after').content!=='none',
+                pointerLightVars:!!el.style.getPropertyValue('--px')||
+                                 !!el.style.getPropertyValue('--py'),
+                lightBlend:getComputedStyle(el,'::after').mixBlendMode
+            })""")
+            if not first or first==second:issues.append("photo depth does not respond to pointer")
+            if spotlight["hasAfterContent"] or spotlight["pointerLightVars"] or spotlight["lightBlend"]!="normal":
+                issues.append("artificial cursor spotlight remains on hero photo")
+            results.append({"route":"fi-home","width":1440,"test":"subtle-photo-depth-no-spotlight","before":first,"after":second,"light":spotlight})
+            note("SUBTLE_PHOTO_DEPTH_NO_SPOTLIGHT",first,second,spotlight)
     except Exception as error:issues.append(f"Depth browser test: {error}")
     finally:context.close();browser.close()
 report={"source_inventory_sha256":digest,"checks":results,"issues":issues,
