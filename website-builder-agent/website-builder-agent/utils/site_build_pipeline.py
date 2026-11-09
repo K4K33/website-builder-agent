@@ -13,6 +13,7 @@ from utils.site_architecture import (
     pages_for_validation,
 )
 from utils.creative_directions import validate_creative_directions
+from utils.visual_direction import visual_direction_plan, audit_visual_motion
 from utils.visual_originality import audit_design_originality
 from utils.visual_media_gate import audit_visual_media
 from utils.design_distinctness import assert_unique_against_output
@@ -28,11 +29,23 @@ def build_pages_from_response(raw: str, *, slug: str,
     from agents.qa import _automated_checks
 
     research=company.get("research") or {}
-    validate_creative_directions(research)
+    creative=validate_creative_directions(research)
     architecture=validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
+    direction=visual_direction_plan(research, creative, architecture)
     pages=parse_generated_site(raw, architecture)
+    # The creative preflight is now an explicit implementation contract,
+    # not just a generic inspiration paragraph.
+    if not direction.get("source_anchor") or not direction.get("depth_direction"):
+        raise RuntimeError("Missing business-specific art direction.")
+    linked_style_or_script = any(
+        ('rel="stylesheet"' in html or "rel='stylesheet'" in html or
+         '<script src=' in html) for html in pages.values()
+    )
+    motion=audit_visual_motion(pages, research, assets_complete=not linked_style_or_script)
+    if motion["blocking"]:
+        raise RuntimeError("Inaccessible motion effects: " + "; ".join(motion["blocking"][:4]))
     navigation=validate_site_navigation(pages, architecture)
     if not navigation["pass"]:
         raise RuntimeError("Incomplete real multi-page navigation: " +
@@ -108,4 +121,6 @@ def build_pages_from_response(raw: str, *, slug: str,
             temporary.unlink(missing_ok=True)
     return {"output_path":str(root/"index.html"),"page_paths":sorted(pages),
             "visual_originality":uniqueness,"navigation":navigation,
-            "route_experience":route_experience}
+            "route_experience":route_experience,
+            "visual_direction":direction,
+            "motion_preflight":motion}

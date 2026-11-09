@@ -20,6 +20,7 @@ from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
 from utils.visual_media_gate import audit_visual_media
 from utils.creative_directions import validate_creative_directions
+from utils.visual_direction import visual_direction_plan
 from utils.site_architecture import validate_site_architecture
 from utils.site_build_pipeline import build_pages_from_response
 from utils.local_media_intake import stage_local_media
@@ -1483,6 +1484,7 @@ def build_site(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
 
+    visual_plan = visual_direction_plan(research, creative, architecture)
     benchmark = validate_benchmark(research, company.get("url", ""))
     decisions = validate_design_plan(research, company.get("url", ""))
     reference_images, image_labels = reference_image_inputs(benchmark)
@@ -1534,6 +1536,13 @@ VALITTU SELAIMESSA VERRATTU TODELLINEN PROTOTYYPPI (rakenna sama valittu ilme ko
 RELUMEN, WEBFLOW'N JA WIXIN KALTAISEN JÄSENNETYN SUUNNITTELUN INSPIROIMA
 YRITYSKOHTAINEN SIVUKARTTA → OSIOIDEN WIREFRAME → YHTEINEN BRÄNDITYYLIOHJE:
 {json.dumps(brand_blueprint, ensure_ascii=False)}
+
+YRITYSKOHTAINEN VISUAALINEN SYVYYS- JA LIIKESUUNNITELMA:
+{json.dumps(visual_plan, ensure_ascii=False)}
+Suunnittele harkittu, yrityksen tuotteeseen liittyvä syvyyden, valon tai
+vuorovaikutuksen ratkaisu tai perustele miksi hillintä on parempi.
+Jokaiselle reitille oma toiminnallinen sommittelu ilman toistuvaa korttipohjaa.
+Ei koristeellista 3D:tä väkisin. Kunnioita reduced-motion-asetusta ja mobiilia.
 SERVICE-WIDE BUSINESS, MEDIA AND VOICE CONTRACT:
 {json.dumps(service_brief(research), ensure_ascii=False)}
 Tämä suunnittelupaketti sisältää vain lähteissä havaitun yritysidentiteetin.
@@ -1547,8 +1556,9 @@ Tarkista yllä oleva source_experience_plan. Säilytä videon, galleriat,
 oikeat työ- ja tuotekuvat, materiaalitaustat ja merkitykselliset liikkeet,
 jos ne ovat olemassa lähteessä. Älä korvaa niitä koristeellisilla numeroilla,
 toistuvilla nuolilla, piirroksilla tai tyhjillä korttipinnoilla.
-Jos alkuperäisen sivun liike on hillittyä, ÄLÄ lisää 3D:tä tai raskaita
-animaatioita automaattisesti. Jos alkuperäinen on näyttävä, älä alenna
+Jos alkuperäisen sivun liike on hillittyä, harkitse silti oikeaan tuotteeseen
+liittyvää kevyttä syvyyttä, valoa tai mikrovuorovaikutusta. Älä lisää
+3D:tä väkisin tai raskaita animaatioita. Jos alkuperäinen on näyttävä, älä alenna
 kokemusta staattiseksi geneeriseksi pohjaksi. Todelliset käyttöoikeudet,
 pitkäkestoinen suorituskyky, saavutettavuus ja reduced-motion ovat pakollisia.
 Puuttuva kuvien/videoiden käyttöoikeus on QA-este, ei lupa heikentää sivua.
@@ -1865,8 +1875,10 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
         raise RuntimeError("Research company facts are required before completion.")
     if not producer.strip():
         raise ValueError("External response producer must be identified.")
-    validate_creative_directions(research)
+    creative = validate_creative_directions(research)
     derive_brand_site_blueprint(research)  # Same preflight for external-agent imports.
+    visual_direction_plan(research, creative, validate_site_architecture(
+        research, no_site=research.get("research_mode")=="verified_no_website"))
     validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
@@ -1932,6 +1944,7 @@ def revise_site(
     validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
+    visual_plan = visual_direction_plan(research, creative, architecture)
 
     company_facts = research.get(
         "company_facts",
@@ -1951,6 +1964,13 @@ def revise_site(
 JO SOVITTU YRITYSKOHTAINEN SIVUKARTTA, WIREFRAME JA BRÄNDITYYLIOHJE
 (käytä yhtenäisesti kaikilla alasivuilla; älä keksi uutta brändiä):
 {json.dumps(brand_blueprint, ensure_ascii=False)}
+
+YRITYSKOHTAINEN VISUAALINEN SYVYYS- JA LIIKEBRIEFI KORJAUSKIERROKSELLE:
+{json.dumps(visual_plan, ensure_ascii=False)}
+Korjaa geneerinen 2D-rakenne yritykseen sopivalla sommittelulla ja hallitulla
+valo-, syvyys- tai vuorovaikutusratkaisulla, jos se auttaa oikean tuotteen
+esittelyssä. Älä käytä samaa efektiä muille asiakkaille. Varmista
+prefers-reduced-motion, kosketusnäyttö ja keyboard sekä staattinen fallback.
 SERVICE-WIDE BUSINESS, MEDIA AND VOICE CONTRACT:
 {json.dumps(service_brief(research), ensure_ascii=False)}
 
