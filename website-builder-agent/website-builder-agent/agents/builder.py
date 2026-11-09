@@ -1944,6 +1944,7 @@ def revise_site(
     validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
+    visual_plan = visual_direction_plan(research, creative, architecture)
 
     company_facts = research.get(
         "company_facts",
@@ -1963,6 +1964,13 @@ def revise_site(
 JO SOVITTU YRITYSKOHTAINEN SIVUKARTTA, WIREFRAME JA BRÄNDITYYLIOHJE
 (käytä yhtenäisesti kaikilla alasivuilla; älä keksi uutta brändiä):
 {json.dumps(brand_blueprint, ensure_ascii=False)}
+
+YRITYSKOHTAINEN VISUAALINEN SYVYYS- JA LIIKEBRIEFI KORJAUSKIERROKSELLE:
+{json.dumps(visual_plan, ensure_ascii=False)}
+Korjaa geneerinen 2D-rakenne yritykseen sopivalla sommittelulla ja hallitulla
+valo-, syvyys- tai vuorovaikutusratkaisulla, jos se auttaa oikean tuotteen
+esittelyssä. Älä käytä samaa efektiä muille asiakkaille. Varmista
+prefers-reduced-motion, kosketusnäyttö ja keyboard sekä staattinen fallback.
 SERVICE-WIDE BUSINESS, MEDIA AND VOICE CONTRACT:
 {json.dumps(service_brief(research), ensure_ascii=False)}
 
