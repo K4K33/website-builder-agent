@@ -59,3 +59,39 @@
    with single long Finnish and Swedish craft-work words. */
 .page-title{overflow-wrap:anywhere;hyphens:auto}
 @media(max-width:360px){.page-title{font-size:clamp(43px,13.8vw,49px);letter-spacing:-.065em}}
+
+/* Route-specific real source photography at first view. Images are truthful
+   Woodtool works, rather than a repeated empty academic hero. */
+.subhero-visual{min-height:560px;display:flex;align-items:center;isolation:isolate;overflow:hidden;background:#d6c5af}
+.subhero-visual .shell{position:relative;z-index:3;width:min(1460px,91vw)}
+.subhero-visual .shell h1{max-width:58%}
+.subhero-visual .shell p{max-width:min(52%,640px)}
+.subhero-source{position:absolute;inset:0 0 0 55%;overflow:hidden;z-index:1;pointer-events:none}
+.subhero-source img{height:100%;object-fit:cover;object-position:center 39%}
+.subhero-source:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#d6c5afff,transparent 28%),linear-gradient(0deg,#29181947,transparent 45%)}
+.workshop-hero{background:#bfa88d}.workshop-hero .subhero-source:after{background:linear-gradient(90deg,#bfa88d,transparent 22%)}
+.gallery-lead{min-height:530px;display:flex;align-items:center}
+.gallery-lead>.shell{position:relative;z-index:3;padding:42px 0}
+.gallery-lead h1,.gallery-lead p{position:relative;z-index:3;max-width:60%}
+.gallery-hero-art{position:absolute;inset:0 0 0 56%;opacity:.95;overflow:hidden;z-index:1;pointer-events:none}
+.gallery-hero-art img{width:100%;height:100%;object-fit:cover;object-position:center 37%}
+.gallery-hero-art:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#241719 0%,#24171955 20%,transparent 58%),linear-gradient(0deg,#24171967,transparent 60%)}
+.archive h2,.archive-list li,.work strong{overflow-wrap:anywhere;hyphens:auto}
+@media(max-width:820px){
+ .subhero-visual{min-height:480px}
+ .subhero-source{left:49%;opacity:.52}
+ .subhero-visual .shell h1{max-width:78%}
+ .subhero-visual .shell p{max-width:74%}
+ .gallery-lead h1,.gallery-lead p{max-width:72%}
+ .gallery-hero-art{left:46%;opacity:.67}
+}
+@media(max-width:590px){
+ .subhero-visual{min-height:480px;align-items:flex-start}
+ .subhero-visual .shell{padding-top:12px}
+ .subhero-source{inset:0 0 0 38%;opacity:.33}
+ .subhero-visual .shell h1,.subhero-visual .shell p{max-width:100%;text-shadow:0 1px 0 #f5e9dc70}
+ .gallery-lead{min-height:480px}
+ .gallery-hero-art{inset:0 0 0 34%;opacity:.40}
+ .gallery-lead h1,.gallery-lead p{max-width:100%}
+}
+@media(max-width:360px){.archive h2{font-size:clamp(38px,12.5vw,43px)}}
