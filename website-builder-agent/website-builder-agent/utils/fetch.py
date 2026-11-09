@@ -397,7 +397,7 @@ def _extract_headings(
                     text[:500]
                 )
 
-        result[tag_name] = headings[:30]
+        result[tag_name] = headings
 
     return result
 
@@ -514,22 +514,19 @@ def _extract_forms(
         for field in form.find_all(
             ["input", "textarea", "select"]
         ):
-            inputs.append(
-                {
-                    "type": field.get(
-                        "type",
-                        field.name,
-                    ),
-                    "name": field.get(
-                        "name",
-                        "",
-                    )[:200],
-                    "placeholder": field.get(
-                        "placeholder",
-                        "",
-                    )[:300],
-                }
-            )
+            label = soup.find('label', attrs={'for': field.get('id')}) if field.get('id') else None
+            row = field.find_parent('tr')
+            text = (label.get_text(' ', strip=True) if label else
+                    row.get_text(' ', strip=True) if row else field.get('aria-label', ''))
+            declared = field.get('type', field.name).lower()
+            hint = ' '.join([text, field.get('autocomplete', ''), field.get('onblur', ''), field.get('name', '')])
+            semantic = declared
+            if declared not in ('hidden', 'submit', 'button', 'checkbox', 'radio'):
+                if re.search(r'email|e-mail|s[aä]hk[oö]posti|e-post', hint, re.I): semantic = 'email'
+                elif re.search(r'puhelin|phone|telefon|^tel$', hint, re.I): semantic = 'tel'
+            inputs.append({'type': declared, 'semantic_type': semantic,
+                           'name': field.get('name', '')[:200], 'label': text[:300],
+                           'placeholder': field.get('placeholder', '')[:300]})
 
         forms.append(
             {
@@ -541,11 +538,13 @@ def _extract_forms(
                     "method",
                     "get",
                 )[:20],
-                "fields": inputs[:30],
+                "fields": inputs,
+                "purpose": ('storage_enquiry' if re.search(r'vene|boat|b[aå]t|talvis[aä]ily|winter storage',
+                    form.get_text(' ', strip=True) + ' ' + str(form.get('action', '')), re.I) else 'unclassified'),
             }
         )
 
-    return forms[:30]
+    return forms
 
 
 def _extract_images(
@@ -1041,6 +1040,8 @@ def extract_text_and_meta(
         "html.parser",
     )
     source_identity = extract_source_identity(html, base_url)
+    from utils.commerce_workflow import extract_commerce_signals
+    commerce_signals = extract_commerce_signals(html, base_url)
     price_faq_evidence = extract_price_faq_evidence(html)
     source_content_blocks = extract_source_content_blocks(html)
 
@@ -1188,6 +1189,7 @@ def extract_text_and_meta(
 
     data = {
         "success": True,
+        "commerce_signals": commerce_signals,
         "url": base_url,
         "final_url": base_url,
         "status_code": 200,

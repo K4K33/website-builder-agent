@@ -10,7 +10,9 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
+from utils.visual_asset_continuity import audit_visual_continuity
 from utils.service_quality import audit_service_quality
+from utils.quality_scorecard import quality_scorecard
 from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.client_facing_integrity import audit_client_facing_integrity
 from utils.brand_design_blueprint import audit_sitewide_brand_consistency
@@ -32,8 +34,12 @@ from utils.premium_quality_gate import (
 
 # Categories that apply across all sectors, not design layouts.
 UNIVERSAL_STANDARDS = (
+    ("premium_execution", "Actual gallery last rows, image pixels, sourced project stories and motion state captures", "visual"),
+    ("stable_quality_scorecard", "Nine fixed evidenced dimensions; exact mean >=9.5, each >=9 and no blockers", "release"),
+    ("commerce_runtime", "Classified business model, real backend, exact-deployment sandbox order/payment/stock/CMS tests", "functional"),
     ("business_task_continuity", "Every source business action survives; a link is not completion evidence", "functional"),
     ("service_quality_acceptance", "Separate exact-bundle technical, content, visual and commercial decisions", "release"),
+    ("visual_information_continuity", "All source graphics classified, all output placements and crops independently evidenced", "content"),
     ("source_coverage", "All important old pages and facts have source evidence", "research"),
     ("same_industry_inspiration", "Three sourced leading sector sites; original adaptation", "research"),
     ("unique_art_direction", "Distinctive brand-specific visual composition", "visual"),
@@ -135,6 +141,26 @@ def audit_universal_standards(
              else "service_quality_acceptance", str(issue))
     for issue in service_quality["pending"]:
         needs("service_quality_acceptance", str(issue))
+
+    from utils.commerce_workflow import audit_commerce
+    commerce = audit_commerce(research, company, artifact_digest=site_bundle_sha256,
+        contract_digest=service_quality['brief']['contract_sha256'], review_bundle=review_bundle, pages=pages)
+    for issue in commerce['blocking']: fail('commerce_runtime', issue)
+    for issue in commerce['pending']: needs('commerce_runtime', issue)
+
+    from utils.premium_execution import audit_execution
+    execution = audit_execution(pages, research, company, artifact_digest=site_bundle_sha256,
+        contract_digest=service_quality['brief']['contract_sha256'], review_bundle=review_bundle)
+    for issue in execution['blocking']: fail('premium_execution', issue)
+    for issue in execution['pending']: needs('premium_execution', issue)
+
+    visual_continuity = audit_visual_continuity(
+        pages, research, artifact_digest=site_bundle_sha256, review_bundle=review_bundle,
+        contract_digest=service_quality['brief']['contract_sha256'])
+    for issue in visual_continuity['blocking']:
+        fail('visual_information_continuity', str(issue))
+    for issue in visual_continuity['pending']:
+        needs('visual_information_continuity', str(issue))
 
     # User-validated cross-company rule: decorative ↗/→ in every CTA is
     # template-like visual noise. Count across ALL rendered pages, including
@@ -437,6 +463,11 @@ def audit_universal_standards(
             "Final client signoff lacks an approval reference or is not bound "
             "to this exact site build and original source snapshot."
         )
+    from utils.published_experience import audit_published_experience
+    published = audit_published_experience(company, research=research,
+                                          expected_site_sha256=site_bundle_sha256)
+    for item in published['issues']:
+        needs('contact_and_forms' if item['kind'] == 'contact' else 'navigation_and_links', item['reason'])
     release = {
         "editable_cms": ("cms_edit_verified", "Client login, save, publish and restore"),
         "contact_and_forms": ("real_lead_delivery_verified", "End-to-end lead delivery"),
@@ -453,6 +484,17 @@ def audit_universal_standards(
         if release_manifest.get(field) is not True:
             needs("approved_domain_and_rights", f"Customer release: {desc} unverified.")
 
+    scorecard = quality_scorecard(
+        research.get('quality_scorecard'), artifact_digest=site_bundle_sha256,
+        contract_digest=service_quality['brief']['contract_sha256'],
+        evidence_bundle=review_bundle,
+        blockers=list(problems), pending=list(pending))
+    if not scorecard['complete']:
+        needs('stable_quality_scorecard', 'Nine source/current-bundle reviewed scores are not complete.')
+    elif not scorecard['target_met']:
+        needs('stable_quality_scorecard', 'Exact mean must be >=9.5/10 and every dimension >=9/10.')
+    elif not scorecard['release_eligible']:
+        needs('stable_quality_scorecard', 'A high mean cannot override open defects or missing acceptance evidence.')
     all_rules = {name: group for name, _, group in UNIVERSAL_STANDARDS}
     grouped = {
         key: {"group": group,
@@ -466,12 +508,25 @@ def audit_universal_standards(
     decision = ("blocked" if problems else
                 "review_required" if pending else "client_ready")
     return {
+        "premium_execution": execution,
+        "acceptance_state": ('revision_required' if problems else
+            'client_ready' if not pending else
+            'checked_site' if service_quality['client_ready'] and execution['ready']
+                and published['pass'] and commerce['runtime_pass'] and scorecard['target_met'] else
+            'reviewable_demo'),
+        "visual_asset_continuity": visual_continuity,
+        "quality_scorecard": scorecard,
         "service_quality": service_quality,
+        "commerce": commerce,
+        "published_experience": published,
         "quality_decision": decision,
         "blocking_categories": sorted(problems),
         "pending_categories": sorted(pending),
         "automated_pass": not problems,
-        "internal_review_ready": not problems,
+        "internal_review_ready": (not problems and
+                                  (not (company.get('delivery') or {}).get('published_url')
+                                   or published['public_demo_ready'])),
+        "public_demo_ready": not problems and published['public_demo_ready'] and commerce['runtime_pass'],
         "client_release_ready": not problems and not pending,
         "stage": stage,
         "standards": grouped,

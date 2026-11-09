@@ -173,7 +173,9 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
         'iframe[src*="google.com/maps"],[class*="review-widget"],'
         '[data-widget*="review"]'
     ))
+    from utils.visual_asset_continuity import extract_visual_candidates
     return {
+        "visual_assets": extract_visual_candidates(html, source_url),
         "theme_color": theme_color,
         "source_experience": extract_source_experience(html, source_url),
         "original_logo_candidates": logo_candidates[:12],
@@ -313,12 +315,16 @@ def extract_price_faq_evidence(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     rows = []
     for tr in soup.find_all("tr"):
+        # A nested-table layout row is not a flat price record.
+        if tr.find("table"):
+            continue
         cells = [" ".join(tag.get_text(" ", strip=True).split())
                  for tag in tr.find_all(["td", "th"], recursive=False)]
         if not 2 <= len(cells) <= 8 or len(cells[0]) < 3:
             continue
         price = next((cell for cell in reversed(cells[1:])
-                      if any(char.isdigit() for char in cell)
+                      if len(cell) <= 120 and re.match(
+                          r"^(?:(?:alkaen|alk\.|noin|from|från)\s*)?[0-9]", cell, re.I)
                       and ("€" in cell or " eur" in cell.lower())), "")
         if price:
             row = {"label": cells[0][:320], "price": price[:100]}
@@ -328,10 +334,15 @@ def extract_price_faq_evidence(html: str) -> dict:
     for details in soup.find_all("details"):
         summary = details.find("summary")
         if summary:
-            value = " ".join(summary.get_text(" ", strip=True).split())[:300]
+            value = " ".join(summary.get_text(" ", strip=True).split())
             if len(value) >= 7 and value not in questions:
                 questions.append(value)
-    return {"price_rows": rows[:120], "faq_questions": questions[:80]}
+    # WordPress accordions use headings/buttons too. No silent inventory cap.
+    for node in soup.select('h1,h2,h3,h4,h5,h6,button[aria-expanded],[role="button"][aria-expanded]'):
+        value = " ".join(node.get_text(" ", strip=True).split())
+        if value.endswith('?') and len(value) >= 7 and value not in questions:
+            questions.append(value)
+    return {"price_rows": rows, "faq_questions": questions}
 
 
 def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict) -> dict:
@@ -347,6 +358,9 @@ def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict)
                              for question in evidence.get("faq_questions") or [])
     soup = BeautifulSoup("<html><body>" + "\n".join(rendered_pages.values()) +
                          "</body></html>", "html.parser")
+    # Hidden/script-only copies do not preserve visitor-visible questions.
+    for node in soup.select('script,style,noscript,template,[hidden],[aria-hidden="true"]'):
+        node.decompose()
     units = []
     for node in soup.select("tr,li,article,details,[class*='pricing'],[class*='price-row']"):
         value = plain(node.get_text(" ", strip=True))

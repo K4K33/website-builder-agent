@@ -2,15 +2,26 @@
 All tests are offline and free; no external CMS or AI calls.
 """
 import unittest
+import base64
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from hashlib import sha256
 from datetime import date, timedelta
 from utils.client_handover import client_design_brief, inspect_client_delivery
 import main
 
+# Synthetic bytes test integrity rules only; these are not actual CMS evidence.
+_captures = TemporaryDirectory()
+_pixel = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1cAAAAASUVORK5CYII=')
+Path(_captures.name, 'capture.png').write_bytes(_pixel)
+
 
 def delivery_fixture():
     checked = date.today().isoformat()
-    return {
+    company = {
         "website": "https://example.org",
+        "research": {"site_architecture": {"pages": [{"path": "index.html"}]},
+                     "company_facts": {"email": "office@example.org", "phone": "1234567"}},
         "build": {"version": 3},
         "qa": {"overall_pass": True, "build_version": 3, "html_sha256": "demo-hash"},
         "approval": {"approved": True, "build_version": 3, "html_sha256": "demo-hash"},
@@ -31,8 +42,38 @@ def delivery_fixture():
             "customer_acceptance": True,
             "build_version": 3,
             "html_sha256": "demo-hash",
+            "preview_cms_parity": {
+                "preview_sha256": "demo-hash", "build_version": 3,
+                "cms_platform": "wordpress", "cms_build_reference": "fixture-only-cms-version",
+                "evidence_root": _captures.name,
+                "routes": [{"route": "index.html", "layout_matches": True,
+                    "content_matches": True, "tasks_match": True,
+                    "observation": "Synthetic comparison fixture, not real field validation",
+                    "captures": [{"role": role, "path": "capture.png", "sha256": sha256(_pixel).hexdigest()}
+                        for role in ('approved_preview', 'cms_after_edit', 'mobile_after_edit',
+                                     'rollback', 'task_completion')]}],
+            },
         }
     }
+    company['qa']['site_sha256'] = 'a'*64
+    delivery = company['delivery']
+    delivery.update(deployment_reference='fixture-deployment',
+                    deployed_at=checked+'T00:00:00+00:00',
+                    route_urls={'index.html':delivery['published_url']})
+    capture = {'path':'capture.png','sha256':sha256(_pixel).hexdigest()}
+    delivery['published_experience'] = {
+        'build_version':3,'site_sha256':'a'*64,'published_url':delivery['published_url'],
+        'deployment_reference':'fixture-deployment','verified_by_human':True,
+        'reviewer':'synthetic fixture only','tested_at':checked+'T00:00:01+00:00',
+        'evidence_root':_captures.name,
+        'clicks':[{'target_route':'index.html','viewport':vp,'method':'click','result':'pass',
+                   'source_url':delivery['published_url'],'clicked_href':'/',
+                   'observed_url':delivery['published_url'],'expected_heading':'Fixture home',
+                   'observed_heading':'Fixture home','site_errors':[],'capture':dict(capture)}
+                  for vp in ('desktop','mobile')],
+        'contact':{'mode':'source_email_phone','email_link':'pass','visible_email':'pass',
+                   'phone_link':'pass','capture':dict(capture)}}
+    return company
 
 
 class RequiredSelfEditingTests(unittest.TestCase):

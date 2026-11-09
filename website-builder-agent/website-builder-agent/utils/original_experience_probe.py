@@ -6,6 +6,8 @@ A missed page or a weak animation/texture heuristic is explicitly incomplete.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
+from hashlib import sha256
 
 from utils.content_parity import source_inventory_sha256
 from utils.screenshot import _safe_remote_url
@@ -90,11 +92,15 @@ def aggregate_source_experience(inventory: dict, observations: dict, failed: lis
 
 
 def probe_original_site_experience(inventory: dict, *, timeout_ms: int = 12000,
-                                   max_pages: int = 12) -> dict:
+                                   max_pages: int = 12, capture_directory: str | Path | None = None) -> dict:
     """Bounded real browser crawl; no AI, search API or billable third party key."""
     source_urls = [p.get("url") for p in inventory.get("pages") or []
                    if isinstance(p, dict) and p.get("url")]
     selected = source_urls[:max_pages]
+    captures = []
+    capture_root = Path(capture_directory).resolve() if capture_directory is not None else None
+    if capture_root is not None:
+        capture_root.mkdir(parents=True, exist_ok=True)
     observations, failed = {}, [u for u in source_urls[max_pages:]]
     if not selected:
         return aggregate_source_experience(inventory, observations, failed)
@@ -117,6 +123,16 @@ def probe_original_site_experience(inventory: dict, *, timeout_ms: int = 12000,
                             page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
                             page.wait_for_timeout(500)
                             observations[url] = page.evaluate(EXPERIENCE_SCRIPT)
+                            if capture_root is not None:
+                                # Reuse this source visit, rather than paying another
+                                # discovery request or supplying reference pixels as
+                                # though they belonged to the target company.
+                                file = capture_root / (sha256(url.encode()).hexdigest()[:24] + '.png')
+                                page.screenshot(path=str(file), full_page=True)
+                                captures.append({'source_url': url, 'path': str(file),
+                                    'viewport': 'desktop', 'sha256': sha256(file.read_bytes()).hexdigest(),
+                                    'asset_ids': [],  # Reviewer assigns only artwork actually visible.
+                                    'note': 'Source page pixels, not a classified/approved asset list'})
                         except Exception:
                             failed.append(url)
                         finally:
@@ -127,4 +143,7 @@ def probe_original_site_experience(inventory: dict, *, timeout_ms: int = 12000,
                 browser.close()
     except Exception:
         failed.extend(url for url in selected if url not in failed)
-    return aggregate_source_experience(inventory, observations, failed)
+    result = aggregate_source_experience(inventory, observations, failed)
+    result['visual_captures'] = captures
+    result['visual_capture_complete'] = capture_root is not None and len(captures) == len(source_urls)
+    return result

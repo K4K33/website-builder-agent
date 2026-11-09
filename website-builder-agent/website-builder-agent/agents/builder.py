@@ -1,7 +1,7 @@
 """
 Website Builder -agentti.
 
-Rakentaa research-datan perusteella yhden sivun verkkosivun.
+Rakentaa research-datan perusteella yrityksen sisältöön sopivan verkkosivuston.
 
 Tärkeä periaate:
 AI ei saa keksiä yrityksen faktoja.
@@ -15,6 +15,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from utils.concept_previews import validate_selected_concept
+from utils.visual_asset_continuity import POLICY as VISUAL_ASSET_POLICY
 from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, validate_service_plan
 from utils.quality import normalize_facts, DESIGN_CONTRACT
 from utils.design_distinctness import assert_unique_against_output
@@ -45,7 +46,7 @@ from utils.state import (
 import config
 
 
-BUILD_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + """
+BUILD_SYSTEM_PROMPT = SERVICE_QUALITY_POLICY + VISUAL_ASSET_POLICY + """
 SOURCE-EXPERIENCE CONTINUITY (EVERY REDESIGN):
 The source_experience_plan must be supplemented by actual browser-observed
 original_experience_profile, not only static source HTML and screenshots with
@@ -187,7 +188,7 @@ VIIMEINEN VISUAALINEN LAATUVIIMEISTELY (KAIKKI ASIAKKAAT):
 Olet kokenut frontend-kehittäjä.
 
 Rakennat tutkimusdatan perusteella ammattimaisen,
-responsiivisen yhden sivun verkkosivun.
+responsiivisen, yrityksen sisältöön sopivan verkkosivuston.
 
 TÄRKEIN SÄÄNTÖ:
 
@@ -1461,7 +1462,8 @@ def build_site(
     slug: str,
     company: dict,
 ) -> str:
-
+    from utils.blind_trials import claim_trial_build
+    claim_trial_build(company, registry_path=Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json', slug=slug)
     research = company.get("research")
 
     if not research:
@@ -1469,6 +1471,15 @@ def build_site(
             f"Yritykselle '{slug}' ei löydy research-dataa. "
             f"Aja ensin: python main.py research {slug}"
         )
+
+    from utils.commerce_workflow import validate_commerce_plan
+    commerce = validate_commerce_plan(research)
+    if commerce['mode'] == 'woocommerce_native':
+        from utils.woocommerce_build import prepare_woocommerce_build, CommerceStagingRequired
+        result = prepare_woocommerce_build(research, Path(_output_dir(slug)) / '_commerce')
+        upsert_company(slug, {'commerce_build': result})
+        # Deliberately do not mark a ZIP as 'built', create scores or continue to HTML QA.
+        raise CommerceStagingRequired(result)
 
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
@@ -1829,6 +1840,11 @@ def run_build(
     slug, company = _resolve_company(
         slug_or_name
     )
+    from utils.commerce_workflow import validate_commerce_plan
+    if validate_commerce_plan(company.get('research') or {})['mode'] == 'woocommerce_native':
+        return build_site(slug, company)  # Before paid concept/Builder calls.
+    if (company.get('research') or {}).get('premium_execution_protocol') == 'v1':
+        validate_service_plan(company['research'])  # Before paid concepts, not only the final HTML call.
     if (company.get("research") or {}).get("visual_concepts_protocol") == "v1":
         from utils.concept_workflow import generate_concepts, choose_concept
         if not company.get("concept_previews"):
@@ -1852,7 +1868,11 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     that it has passed visual QA.
     """
     slug, company = _resolve_company(slug_or_name)
+    from utils.blind_trials import claim_trial_build
+    claim_trial_build(company, registry_path=Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json', slug=slug)
     research = company.get("research") or {}
+    from utils.commerce_workflow import require_static_build_allowed
+    require_static_build_allowed(research)
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
     validate_brand_preservation_plan(research)
@@ -1896,7 +1916,8 @@ def revise_site(
     company: dict,
     feedback: str,
 ) -> str:
-
+    from utils.blind_trials import refuse_trial_revision
+    refuse_trial_revision(company)
     path = _output_path(slug)
 
     if not os.path.exists(path):
@@ -1924,6 +1945,8 @@ def revise_site(
         {},
     )
 
+    from utils.commerce_workflow import require_static_build_allowed
+    require_static_build_allowed(research)
     industry_brief = create_industry_brief(company, research)
     validate_design_intent(research)
     validate_brand_preservation_plan(research)

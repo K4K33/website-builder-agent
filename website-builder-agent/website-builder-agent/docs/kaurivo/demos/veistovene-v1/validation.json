@@ -1,0 +1,95 @@
+{
+  "published_url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/",
+  "source_commit": "c014f5c1fa13dbd09507df8c780920e54ef17e0d",
+  "archive_sha256": "ac6004472cc48adf83e1375a3561f1af8aa81eaee5733881ed99db23dbbf9c78",
+  "gallery_photo_count": 91,
+  "gallery_counts": {
+    "valmistuneet": 4,
+    "rungot": 41,
+    "kannet": 4,
+    "hytit": 12,
+    "sisustukset": 15,
+    "muut": 8,
+    "projektit": 7
+  },
+  "offline_tests": {
+    "passed": 6,
+    "failed": 0,
+    "scope": "input constraints, image allowlist, ignored extra authorization fields, media integrity and complete gallery copies"
+  },
+  "typescript": "pass",
+  "build": "pass",
+  "live_navigation": [
+    {
+      "brokenImages": [],
+      "h1": "Puuveneiden korjaukset ja muutostyöt.",
+      "url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/puuvenetyot"
+    },
+    {
+      "brokenImages": [],
+      "h1": "Veneitä ja veistämön töitä.",
+      "url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/tyonaytteet"
+    },
+    {
+      "brokenImages": [],
+      "h1": "Veneiden talvisäilytys Sikosaaressa.",
+      "url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/talvisailytys"
+    },
+    {
+      "brokenImages": [],
+      "h1": "Käsityötä Sikosaaressa vuodesta 1994.",
+      "url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/veistamo"
+    },
+    {
+      "brokenImages": [],
+      "h1": "Kerro, mitä veneesi tarvitsee.",
+      "url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/yhteystiedot"
+    }
+  ],
+  "live_api_checks": [
+    {
+      "path": "/api/content",
+      "status": 200
+    },
+    {
+      "path": "/api/editor",
+      "status": 403
+    },
+    {
+      "case": "anonymous_publish",
+      "status": 403
+    },
+    {
+      "case": "incomplete_enquiry",
+      "status": 400
+    }
+  ],
+  "live_form_receipt": {
+    "order_or_payment": false,
+    "kind": "synthetic_contact_enquiry",
+    "id": "d768b8bf-1846-40d5-8e10-505f398cccc4",
+    "created_at": "2026-11-08T20:12:19.150Z",
+    "verified_in": "owner-read live D1 demo_enquiries table",
+    "sent_to_company": false
+  },
+  "mobile": {
+    "method": "390px browser iframe",
+    "client_width": 373,
+    "scroll_width": 373,
+    "horizontal_overflow": false,
+    "physical_phone": false
+  },
+  "cms_runtime": "not_verified_owner_sign_in_required",
+  "public_demo_acceptance": false,
+  "client_release_ready": false,
+  "independent_review": "not_verified",
+  "source_preservation_audit": {
+    "missing_source_pages": 0,
+    "missing_price_faq": 0,
+    "missing_content": 0,
+    "full_premium_acceptance": false
+  },
+  "builder_limitations_observed": [
+    "Current typed-email business-task detector returned zero tasks for source legacy forms despite two visible source forms. The manual demo retains both forms and their distinct fields. General detection needs a separate fix and counterexample."
+  ]
+}

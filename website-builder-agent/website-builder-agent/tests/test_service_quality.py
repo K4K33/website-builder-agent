@@ -2,7 +2,7 @@
 import copy
 import unittest
 from utils.service_quality import (audit_service_quality, service_brief, source_tasks,
-                                   validate_service_plan)
+                                   validate_service_plan, ROUTE_REVIEW_CHECKS)
 from utils.global_feedback import record_owner_feedback
 from utils.visual_originality import audit_design_originality
 
@@ -25,8 +25,28 @@ def fixture():
     task = source_tasks(research)[0]
     research['business_task_plan'] = [{'task_id': task['id'], 'source_route': 'index.html',
         'destination': task['destination'], 'completion_mode': 'existing_platform'}]
+    research['route_experience_plan'] = [{'route': 'index.html',
+        'visitor_task': 'Book an instrument repair', 'composition': 'Workshop work before booking',
+        'required_photo_subjects': ['Actual instrument repair'],
+        'available_source_images': ['https://repair.example/workshop.jpg'], 'missing_assets': [],
+        'brand_character': 'Brass workshop craft', 'type_hierarchy': 'Readable repair details and booking',
+        'motion_decision': 'Static work image, immediate keyboard feedback'}]
     pages = {'index.html': '<main><h1>Brass repairs</h1><img src="https://repair.example/workshop.jpg">'
              '<a href="https://appointments.example/brass">Book your repair</a></main>'}
+    research['premium_experience_plan'] = {
+        'editable_platform': 'wordpress', 'preview_implementation': 'wordpress',
+        'delivery_parity_strategy': 'Compare every route after text/image edits and rollback',
+        'portfolio_strategy': 'Repair detail and context from verified workshop source',
+        'contact_continuity': 'Preserve exact external appointment platform',
+        'cold_load_test_plan': 'Observe cold-cache first paint and navigation on mobile/desktop',
+        'composition_selection': 'Compare three actual responsive workshop compositions',
+        'motion_purpose': 'Static repair photo; immediate focus and press response',
+        'image_scale_strategy': 'Inspect real image pixels against 390px/desktop display and density',
+        'service_composition_strategy': 'One repair route; no artificial alternate layouts',
+        'craft_evidence_strategy': 'Source-backed instrument repair detail; no invented owner photo',
+        'motion_quality_strategy': 'Static repair photograph; no unverified product structure',
+        'enquiry_preparation': 'Explain source-backed external appointment requirements',
+        'route_added_value': {'index.html': 'Identify actual repair service and book'}}
     return research, pages
 
 
@@ -47,6 +67,12 @@ def reviews(research, pages, digest='a'*64):
             'journey_results': [{'task_id': t['task_id'], 'result': 'pass',
                 'completion_evidence': 'fixture://observed-terminal-page',
                 'completion_mode': t['completion_mode']} for t in research['business_task_plan']]}
+        if domain in ROUTE_REVIEW_CHECKS:
+            result[domain]['route_results'] = [{'route': route,
+                'device': 'synthetic fixture device', 'browser': 'synthetic fixture browser',
+                'evidence_reference': 'fixture://observations-not-a-real-review',
+                'checks': {key: {'result': 'pass', 'observation': 'Synthetic positive observation for ' + key}
+                           for key in ROUTE_REVIEW_CHECKS[domain]}} for route in pages]
     return result
 
 

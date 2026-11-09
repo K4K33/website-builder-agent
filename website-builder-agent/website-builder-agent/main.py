@@ -159,8 +159,27 @@ def cmd_research(args):
 # =========================================================
 
 def cmd_build(args):
-    _require_paid_consent(args)
-    builder.run_build(args.company)
+    from utils.commerce_workflow import validate_commerce_plan
+    from utils.woocommerce_build import CommerceStagingRequired
+    _, company = get_company(args.company)
+    native = validate_commerce_plan((company or {}).get('research') or {})['mode'] == 'woocommerce_native'
+    if not native:
+        _require_paid_consent(args)
+    try:
+        builder.run_build(args.company)
+    except CommerceStagingRequired as prepared:
+        print(json.dumps(prepared.result, ensure_ascii=False, indent=2))
+
+
+def cmd_build_commerce(args):
+    from utils.woocommerce_build import prepare_woocommerce_build
+    slug, company = get_company(args.company)
+    if not company:
+        raise RuntimeError('Unknown company')
+    result = prepare_woocommerce_build(company.get('research') or {},
+                                      Path(config.OUTPUT_DIR) / slug / '_commerce')
+    upsert_company(slug, {'commerce_build': result})
+    print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 def cmd_concept_previews(args):
@@ -781,6 +800,7 @@ def cmd_pipeline(args):
                          "docs" / "KAURIVO_HISTORICAL_DEMO_TRIALS.json",
             registry_path=Path(config.OUTPUT_DIR) / "_kaurivo_unseen_trials.json",
         )
+        upsert_company(selected_slug, {'quality_trial': trial})
         print("Reserved one unseen first-pass company: "
               + (trial.get("url") or trial.get("slug") or selected_slug))
     website_state = site_signal(selected_company)
@@ -1091,6 +1111,11 @@ def build_parser():
         help="Explicitly authorize paid AI/search provider calls.")
     parser_build.set_defaults(func=cmd_build)
 
+    commerce_build = subparsers.add_parser('build-commerce',
+        help='Prepare native WooCommerce integration, without AI/API calls or a false runtime pass.')
+    commerce_build.add_argument('company')
+    commerce_build.set_defaults(func=cmd_build_commerce)
+
     concepts = subparsers.add_parser("concept-previews", help="Render three real private concept bundles before full Build.")
     concepts.add_argument("company")
     concepts.add_argument("--response", default=None, help="Import an externally authored concepts JSON without a model call.")
@@ -1370,8 +1395,11 @@ def build_parser():
 
     parser_pipeline.add_argument("--company", default="",
         help="Run a previously researched or source-screened lead (skips Scout discovery).")
-    parser_pipeline.add_argument("--benchmark-mode", action="store_true",
+    pipeline_mode = parser_pipeline.add_mutually_exclusive_group()
+    pipeline_mode.add_argument("--benchmark-mode", action="store_true", default=True,
         help="Use ONE unseen company per quality trial. Repeats and same-company revision loops are blocked; no customer outreach.")
+    pipeline_mode.add_argument('--client-project', dest='benchmark_mode', action='store_false',
+        help='Explicit real client work; not a new-company quality experiment.')
     parser_pipeline.add_argument(
         "--count",
         type=int,

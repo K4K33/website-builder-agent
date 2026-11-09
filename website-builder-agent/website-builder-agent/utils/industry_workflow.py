@@ -76,8 +76,9 @@ PRIORITY_WORDS = (
     "hinn", "price", "yhteys", "contact", "meist", "about", "yrity",
     "kohte", "referens", "project", "partner", "kumpp", "sponsor",
     "allergen", "ruokaval", "tiimi", "team", "faq", "kysymy",
+    "ostoskori", "varukorg", "cart", "checkout", "kassa", "shop", "kauppa",
 )
-SKIP_PATHS = ("/wp-admin", "/login", "/cart", "/checkout", "/feed",
+SKIP_PATHS = ("/wp-admin", "/login", "/feed",
               "/api/", "/cdn-cgi", "/privacy-policy", "/cookie")
 SKIP_ENDINGS = (".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp",
                 ".svg", ".zip", ".mp4", ".css", ".js", ".xml")
@@ -183,10 +184,11 @@ def crawl_original_website(
             "text": str(data.get("visible_text") or "")[:30000],
             "source_identity": data.get("source_identity") if isinstance(data.get("source_identity"), dict) else {},
             "price_faq_evidence": data.get("price_faq_evidence") or {},
+            "commerce_signals": data.get("commerce_signals") or [],
             "source_content_blocks": data.get("source_content_blocks") or {},
             "headings": data.get("headings") if isinstance(data.get("headings"), dict) else {},
             "images": (data.get("images") or [])[:70],
-            "forms": (data.get("forms") or [])[:15],
+            "forms": data.get("forms") or [],
             "links": (links if isinstance(links, list) else [])[:150],
             "footer_assets": (data.get("footer_assets") or [])[:30],
             "footer_links": (data.get("footer_links") or [])[:75],
@@ -256,6 +258,7 @@ def create_industry_brief(company: dict, research: dict) -> dict:
         "evidence_excerpt": str(p.get("text", ""))[:5500],
         "source_identity": p.get("source_identity") or {},
         "price_faq_evidence": p.get("price_faq_evidence") or {},
+        "commerce_signals": p.get("commerce_signals") or [],
         "source_content_blocks": p.get("source_content_blocks") or {},
         "image_candidates": (p.get("images") or [])[:14],
         "header_assets": (p.get("header_assets") or [])[:10],

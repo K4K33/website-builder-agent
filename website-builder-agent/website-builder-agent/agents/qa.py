@@ -60,6 +60,40 @@ from utils.state import (
 
 
 QA_SYSTEM_PROMPT = """
+PREMIUM EXPERIENCE ACCEPTANCE AFTER WOODE:
+For every route, review project presentation (verified context/detail/credits,
+not image count), new information beyond the homepage and actual composition
+comparison. Explicitly observe cold-cache first opening and route transitions;
+record blank/loading/error states without inventing a root cause. Contact
+continuity requires an intentionally coherent visitor flow, not merely a link
+back to the source site's old form. Valid external booking platforms remain
+valid. Client delivery needs per-route preview/CMS visual, content and task
+parity captures after editing, on mobile and after rollback. A separate theme
+archive or the builder's own claim cannot certify this. Missing proof stays pending.
+
+ROUTE EXPERIENCE ACCEPTANCE:
+Review EVERY route, not just the hero. Visual observations must cover actual
+photo sufficiency (not mere presence), route-specific task composition,
+brand character beyond logo/color, readable nav/body/CTA hierarchy and
+appropriate motion/static treatment. Technical observations must record actual
+wheel/trackpad/touch/keyboard scrolling, reduced-motion and animation input
+response, with device/browser and evidence references. Do not invent runtime
+observations from CSS or screenshots. A missing test remains pending.
+Media shortages require truthful intake gaps, not repeated or invented photos.
+For email actions confirm a selectable address fallback; a mailto click does
+not prove delivery. Forms require authorized end-to-end receipt and honest
+success/failure feedback. A theme ZIP does not prove CMS editing or rollback.
+
+3D / ANIMATION REVIEW (owner requirement, 2026-11-05):
+Under the separate motion_scroll score, explicitly assess purposeful, brand-appropriate
+3D and animations and their effect on native
+wheel, trackpad, touch and keyboard scrolling. Never award points merely for
+adding effects. Report scroll jank, scroll hijacking, delayed content or
+input-blocking overlays as failures requiring correction. Require observed
+motion/scroll evidence, reduced-motion and usable touch/static fallbacks;
+screenshots and source inspection alone cannot verify scroll smoothness.
+If runtime evidence is missing, mark this subcriterion unverified, not passed.
+
 V5 SOURCE-TO-NEW BRAND EXPERIENCE RED-TEAM:
 On REAL 320/390px screenshots, compare original and new first viewport.
 Does the original customer wordmark / script style survive as a full lockup,
@@ -1428,6 +1462,11 @@ def run_qa(slug_or_name: str) -> dict:
         result["review_bundle"] = bundle
         upsert_company(slug, {"review_bundle": bundle})
     upsert_company(slug, {"qa": result})
+    if ((company.get('quality_trial') or {}).get('mode') == 'first_pass_unseen'
+            and universal.get('quality_scorecard', {}).get('complete')):
+        from utils.blind_trials import record_trial_review
+        record_trial_review(Path(config.OUTPUT_DIR) / '_kaurivo_unseen_trials.json',
+                            slug=slug, qa_report=result)
     set_status(slug, "qa_passed" if result["overall_pass"] else "built")
     print("QA: " + ("PASS" if result["overall_pass"] else "FAIL"))
     return result
@@ -1507,6 +1546,23 @@ def approve_company(slug_or_name):
             raise RuntimeError("Service quality acceptance: technical, content, visual and commercial "
                                "reviews remain separate and must all be complete: "
                                + str((service["blocking"] + service["pending"])[:5]))
+        from utils.quality_scorecard import quality_scorecard
+        scorecard = quality_scorecard(
+            research.get('quality_scorecard'), artifact_digest=service_digest,
+            contract_digest=service['brief']['contract_sha256'],
+            evidence_bundle=evidence_bundle,
+            blockers=service['blocking'], pending=service['pending'])
+        if not scorecard['release_eligible']:
+            raise RuntimeError('Client acceptance: nine evidenced quality scores, exact mean >=9.5 '
+                               'and no open review issues are required.')
+        release_audit = audit_universal_standards(
+            rendered.get('index.html') or next(iter(rendered.values())), research,
+            company=company, rendered_pages=rendered, stage='client_release',
+            site_bundle_sha256=service_digest)
+        if not release_audit['client_release_ready']:
+            raise RuntimeError('Client acceptance: score cannot override unresolved source, '
+                               'task, CMS, performance or delivery evidence: '
+                               + str(release_audit['blocking_categories'] + release_audit['pending_categories']))
     upsert_company(slug, {"approval": {
         "approved": True,
         "build_version": qa["build_version"],

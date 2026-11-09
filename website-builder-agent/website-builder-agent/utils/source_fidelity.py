@@ -49,7 +49,7 @@ def _headings(page: dict) -> list[str]:
             label = " ".join(str(value).split()).strip()
             if 3 <= len(label) <= 160 and label not in result:
                 result.append(label)
-    return result[:32]
+    return result
 
 def source_manifest(research: dict) -> dict:
     """Produce a mandatory content and partner checklist from every source page."""

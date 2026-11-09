@@ -28,6 +28,8 @@ def build_pages_from_response(raw: str, *, slug: str,
     from agents.qa import _automated_checks
 
     research=company.get("research") or {}
+    from utils.commerce_workflow import require_static_build_allowed
+    require_static_build_allowed(research)
     validate_creative_directions(research)
     architecture=validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"

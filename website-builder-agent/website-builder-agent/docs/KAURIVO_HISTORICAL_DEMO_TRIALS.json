@@ -37,6 +37,300 @@
       "url": "https://www.kudelma.fi/",
       "mode": "historical_demo",
       "sector": "upholstery"
+    },
+    {
+      "slug": "castanum-toolon-kukkakauppa",
+      "aliases": [
+        "castanum-toolon-kukkakauppa-v1"
+      ],
+      "url": "https://www.castanum.fi/",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/castanum-toolon-kukkakauppa-v1"
+    },
+    {
+      "slug": "helsingin-koiratrimmaamo",
+      "aliases": [
+        "helsingin-koiratrimmaamo-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/helsingin-koiratrimmaamo-v1"
+    },
+    {
+      "slug": "jakomaen-suutari-ja-pyora",
+      "aliases": [
+        "jakomaen-suutari-ja-pyora-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/jakomaen-suutari-ja-pyora-v1"
+    },
+    {
+      "slug": "kotifixi",
+      "aliases": [
+        "kotifixi-v10"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/kotifixi-v10"
+    },
+    {
+      "slug": "kukkakauppa-karjalanneito",
+      "aliases": [
+        "kukkakauppa-karjalanneito-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/kukkakauppa-karjalanneito-v1"
+    },
+    {
+      "slug": "kukkakauppa-villiviini",
+      "aliases": [
+        "kukkakauppa-villiviini-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/kukkakauppa-villiviini-v1"
+    },
+    {
+      "slug": "munkkiniemen-suutari",
+      "aliases": [
+        "munkkiniemen-suutari-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/munkkiniemen-suutari-v1"
+    },
+    {
+      "slug": "penny-lane-vintage",
+      "aliases": [
+        "penny-lane-vintage-v1"
+      ],
+      "url": "https://pennylane.fi/",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/penny-lane-vintage-v1"
+    },
+    {
+      "slug": "verhoomo-etikki",
+      "aliases": [
+        "verhoomo-etikki-v1"
+      ],
+      "url": "https://etikki.fi/",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/verhoomo-etikki-v1"
+    },
+    {
+      "slug": "verhoomo-kudelma",
+      "aliases": [
+        "verhoomo-kudelma-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/verhoomo-kudelma-v1"
+    },
+    {
+      "slug": "visan-pyorahuolto",
+      "aliases": [
+        "visan-pyorahuolto-v1"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown",
+      "evidence_path": "docs/kaurivo/demos/visan-pyorahuolto-v1"
+    },
+    {
+      "slug": "tampereen-soitinkorjaamo",
+      "name": "Tampereen Soitinkorjaamo",
+      "aliases": [
+        "tuuren-paja"
+      ],
+      "url": "https://www.soitinkorjaamo.net/",
+      "mode": "historical_demo",
+      "sector": "instrument repair"
+    },
+    {
+      "slug": "koivuranta-oy",
+      "aliases": [
+        "Koivuranta"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "koiviston-auto",
+      "aliases": [],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "suutarin-tie",
+      "aliases": [],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "pyorahullu",
+      "aliases": [
+        "Pyörähullu"
+      ],
+      "url": "",
+      "mode": "historical_demo",
+      "sector": "unknown"
+    },
+    {
+      "slug": "kahvila-runo",
+      "url": "https://kahvilaruno.fi/",
+      "mode": "historical_demo",
+      "sector": "cafe"
+    },
+    {
+      "slug": "woode",
+      "url": "https://www.woode.fi/",
+      "mode": "historical_demo",
+      "sector": "carpentry"
+    },
+    {
+      "slug": "verhoomo-vekki",
+      "url": "https://www.verhoomovekki.fi/",
+      "mode": "historical_demo",
+      "sector": "upholstery"
+    },
+    {
+      "slug": "suutariesteri",
+      "name": "Suutariesteri",
+      "url": "https://www.suutariesteri.fi/",
+      "business_id": "2290769-0",
+      "mode": "historical_demo",
+      "sector": "shoe repair and footwear retail",
+      "self_review_mean": 6.375,
+      "independent_review": "not_verified",
+      "first_review_source": "20261107-1010-08.7514238.mp4",
+      "known_issues": [
+        "Six source footwear logos missing; two maker names also absent",
+        "Repair photo used as retail assortment photo",
+        "Crop/rhythm and CMS delivery not verified"
+      ]
+    },
+    {
+      "slug": "design-kehys",
+      "name": "Helsingin Design Kehys Oy",
+      "url": "https://www.designkehys.fi/",
+      "mode": "historical_demo",
+      "sector": "picture framing",
+      "self_review_mean": 6.666666666666667,
+      "rubric": "kaurivo-nine-v2",
+      "independent_review": "not_verified",
+      "first_review_source": "20261107-1119-14.6471751.mp4",
+      "known_issues": [
+        "A framed document used to present mirrors",
+        "Source FAQ reduced and research narration exposed",
+        "Generic repeated layouts and unfinished motion labels",
+        "CMS runtime and final acceptance unverified"
+      ]
+    },
+    {
+      "slug": "kirjansitomo-jari-marttila",
+      "name": "Kirjansitomo Jari Marttila",
+      "url": "https://www.kirjansitomo-jm.fi/index.html",
+      "business_id": "1969770-9",
+      "mode": "historical_demo",
+      "sector": "bookbinding",
+      "self_review_mean": 7.222222222222222,
+      "rubric": "kaurivo-nine-v2",
+      "independent_review": "not_verified",
+      "first_review_source": "20261108-1122-39.1620390.mp4",
+      "owner_brand_feedback": "Brand fidelity meets required level; premium execution needs improvement",
+      "self_review_scores": {
+        "brand_fidelity": 9,
+        "company_specificity": 7.5,
+        "photography": 6.5,
+        "visual_composition": 7.5,
+        "content_preservation": 8.5,
+        "commercial_quality": 7,
+        "navigation_technical": 8,
+        "motion_scroll": 7,
+        "client_handover": 4
+      },
+      "known_issues": [
+        "Low resolution source images enlarged in hero while service samples remain small",
+        "Repeated service opening compositions",
+        "Generic simplified 3D materials and limited explanatory value",
+        "Actual editor save/publish/restore and independent review not verified"
+      ]
+    },
+    {
+      "slug": "lasitaivas",
+      "name": "Lasitaivas",
+      "url": "https://www.lasitaivas.fi/",
+      "mode": "first_pass_unseen",
+      "sector": "glass art",
+      "review_status": "self_reviewed_not_independently_accepted",
+      "independent_review": "not_verified",
+      "first_published_commit": "ddeb7f3f27daca3205384c45d1dc4f29690cae46",
+      "current_commit": "a3c5f6e4f87b0c0f048eaece23cf25760da4d870",
+      "new_site_url": "https://lasitaivas-kaurivo.kaarlo-kaukko1.chatgpt.site/",
+      "known_limits": [
+        "Independent visual and actual-device acceptance pending",
+        "ChatGPT editor requires user sign-in; save/publish/restore not verified",
+        "Original external contact form and cart retained; no new checkout or delivered-message claim"
+      ],
+      "self_review_mean": 7.222222222222222,
+      "rubric": "kaurivo-nine-v2",
+      "first_review_source": "20261108-1848-49.8291251.mp4",
+      "first_review_date": "2026-11-08",
+      "self_review_scores": {
+        "brand_fidelity": 9,
+        "company_specificity": 8,
+        "photography": 8.5,
+        "visual_composition": 8,
+        "content_preservation": 9,
+        "commercial_quality": 5,
+        "navigation_technical": 8,
+        "motion_scroll": 6.5,
+        "client_handover": 3
+      },
+      "known_issues": [
+        "Gallery/enquiry implementation does not establish automatic ecommerce capability",
+        "Original empty cart is not proof of either an absent shop or a verified original checkout",
+        "Native editable store, gateway transaction, stock effects and independent acceptance unverified"
+      ]
+    },
+    {
+      "slug": "veistovene",
+      "name": "Veneveistämö Veistovene",
+      "url": "https://www.veistovene.com/",
+      "business_id": "2193257-9",
+      "mode": "first_pass_unseen",
+      "implementation": "manual_sites_not_automatic_builder_validation",
+      "sector": "wooden boat repair and winter storage",
+      "review_status": "not_reviewed",
+      "independent_review": "not_verified",
+      "first_published_commit": "c014f5c1fa13dbd09507df8c780920e54ef17e0d",
+      "current_commit": "c014f5c1fa13dbd09507df8c780920e54ef17e0d",
+      "new_site_url": "https://veistovene-kaurivo.kaarlo-kaukko1.chatgpt.site/",
+      "site_project_id": "appgprj_6af0ce2a2af48191835552fa2bcfa815",
+      "deployment_id": "appgdep_6af0d745898481919319bb4045aca806",
+      "evidence_path": "docs/kaurivo/demos/veistovene-v1/validation.json",
+      "known_limits": [
+        "Service-site trial, not ecommerce validation",
+        "Actual CMS save/publish/restore blocked by required owner sign-in; do not claim verified editable delivery",
+        "390px iframe checks do not prove physical-device touch or scroll performance",
+        "Whole-site preflight is not accepted: local source-image copies lack required client-signed identity/reuse approval; independent review is absent",
+        "Three rendered concepts were not compared before initial implementation"
+      ]
     }
   ]
 }
