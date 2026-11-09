@@ -174,22 +174,49 @@ def inspect_release_safety(company, *, customer_delivery=False):
         problems.append("Cannot verify the independent visual review without real current pages.")
     media = company.get("media_rights_review") or {}
     if (media.get("approved_by_owner") is not True
+            or media.get("site_sha256") != digest
             or not str(media.get("evidence_reference") or "").strip()
+            or not str(media.get("checked_at") or "").strip()
             or media.get("open_rights_issues") != []):
-        problems.append("Media rights and accurate image attribution are not approved.")
+        problems.append("Current-build media rights and truthful image attribution are not approved.")
     live = check_actual_public_website(
         company.get("public_release_evidence"),
         site_digest=digest,
         routes=set(pages),
         build_commit=build.get("commit_sha"))
     problems.extend(live["issues"])
+
+    # Distinct source business tasks (shop checkout, contact forms, booking,
+    # quotes) must be tested against the same public release by an authorized
+    # reviewer. An HTTP 200 or a styled screenshot cannot prove conversion.
+    from utils.service_quality import source_tasks
+    real_tasks = source_tasks(research)
+    if real_tasks:
+        business = company.get("business_task_live_review") or {}
+        required_ids = {task["id"] for task in real_tasks}
+        rows = business.get("tasks") or []
+        actual_ids = {row.get("task_id") for row in rows if isinstance(row, dict)}
+        if (business.get("site_sha256") != digest
+                or business.get("release_marker") != (company.get("public_release_evidence") or {}).get("release_marker")
+                or business.get("human_verified") is not True
+                or actual_ids != required_ids
+                or len(rows) != len(required_ids)
+                or any(row.get("real_flow_passed") is not True
+                       or not str(row.get("test_evidence") or "").strip()
+                       for row in rows if isinstance(row, dict))):
+            problems.append("Actual live booking/shop/quote/contact journeys not independently tested for this release.")
+
     if customer_delivery:
         from utils.client_handover import inspect_client_delivery
         cms = inspect_client_delivery(company)
         if cms.get("ready_to_handover") is not True:
             problems.extend(cms.get("issues") or ["Customer-editable CMS handover not verified."])
-        if (company.get("client_signoff") or {}).get("approved_current_release") is not True:
-            problems.append("Customer has not approved the exact live release.")
+        signoff = company.get("client_signoff") or {}
+        if (signoff.get("approved_current_release") is not True
+                or signoff.get("site_sha256") != digest
+                or signoff.get("release_marker") != (company.get("public_release_evidence") or {}).get("release_marker")
+                or not str(signoff.get("approval_evidence") or "").strip()):
+            problems.append("Customer has not approved this exact live site revision.")
     return {"status": "CLIENT_READY" if not problems and customer_delivery
             else "PRESENTATION_READY" if not problems else "HOLD",
             "approved": not problems, "issues": list(dict.fromkeys(problems)),
