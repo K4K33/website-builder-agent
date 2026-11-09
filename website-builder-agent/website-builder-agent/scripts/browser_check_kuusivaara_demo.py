@@ -98,6 +98,13 @@ def main():
    browser.close()
  finally: srv.shutdown()
  report["source_complete"]=(len(report["source"])==10 and all(i.get("status")==200 and i.get("file") for i in report["source"]))
+ manifest_path=ROOT/"data/demo_provenance/kuusivaara-v1.json"
+ if manifest_path.exists():
+  sys.path.insert(0,str(ROOT))
+  from utils.content_parity import source_inventory_sha256
+  inventory=json.loads(manifest_path.read_text(encoding="utf-8"))["source_inventory"]
+  print("SOURCE_INVENTORY_SHA256",source_inventory_sha256(inventory))
+
  (OUT/"report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
  print("KUUSIVAARA_BROWSER_SUMMARY "+json.dumps({"source_captures":len(report["source"]),"new_captures":len(report["new"]),"errors":report["errors"][:20],"image_delivery":report["image_delivery"][:14],"source_complete":report["source_complete"]},ensure_ascii=False))
  return int(bool(report["errors"]))
