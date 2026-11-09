@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 import hashlib
+import re
 
 import config
 from utils.creative_directions import validate_creative_directions
@@ -87,8 +88,12 @@ def check_actual_public_website(evidence, *, site_digest, routes, build_commit):
     marker = evidence.get("release_marker")
     if not isinstance(marker, str) or len(marker.strip()) < 10:
         problems.append("Unique release marker is missing.")
-    if (not isinstance(evidence.get("ci_run_url"), str)
-            or not evidence["ci_run_url"].startswith("https://github.com/")
+    ci_run_url = evidence.get("ci_run_url")
+    if (not isinstance(ci_run_url, str)
+            or re.fullmatch(
+                r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[1-9][0-9]*(?:/attempts/[1-9][0-9]*)?",
+                ci_run_url,
+            ) is None
             or evidence.get("ci_verified_by_owner") is not True):
         problems.append("Human-verified, externally run browser evidence is missing.")
     timestamp = evidence.get("checked_at")
@@ -125,7 +130,7 @@ def check_actual_public_website(evidence, *, site_digest, routes, build_commit):
                 or item.get("broken_images") != 0
                 or item.get("page_errors") != []):
             problems.append("BROKEN or STALE PUBLIC PAGE: " + repr(key))
-        if not isinstance(item.get("screenshot_sha256"), str) or len(item["screenshot_sha256"]) != 64:
+        if not isinstance(item.get("screenshot_sha256"), str) or re.fullmatch(r"[0-9a-f]{64}", item["screenshot_sha256"]) is None:
             problems.append("Public screenshot proof missing: " + repr(key))
     required = {(route, width) for route in routes for width in MIN_VIEWPORTS}
     for missing in sorted(required - set(observed)):
