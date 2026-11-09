@@ -30,7 +30,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Check actual public preview, all routes and 3 device widths
         env:
-          KAURIVO_PREVIEW_URL: https://kaurivo-sahrapuu-concept-2026.onrender.com
+          KAURIVO_PREVIEW_URL: https://kaurivo-sahrapuu-concept-2026.onrender.com/release-r3
         run: python scripts/verify_sahrapuu_live_preview.py
       - name: Preserve real screenshots and failures for review
         if: always()

@@ -13,9 +13,9 @@ from datetime import datetime, timezone
 
 from playwright.sync_api import sync_playwright
 
-BASE = os.environ.get("KAURIVO_PREVIEW_URL", "https://kaurivo-sahrapuu-concept-2026.onrender.com").rstrip("/")
-EXPECTED = "sahrapuu-20261109-concept-r2"
-ROUTES = ["/", "/palvelut/index.html", "/tarina/index.html", "/yhteys/index.html"]
+BASE = os.environ.get("KAURIVO_PREVIEW_URL", "https://kaurivo-sahrapuu-concept-2026.onrender.com/release-r3").rstrip("/")
+EXPECTED = "sahrapuu-20261109-release-r3"
+ROUTES = ["/index.html", "/palvelut/index.html", "/tarina/index.html", "/yhteys/index.html"]
 WIDTHS = [390, 768, 1440]
 OUT = Path("output/sahrapuu-live-smoke")
 OUT.mkdir(parents=True, exist_ok=True)
@@ -78,7 +78,7 @@ with sync_playwright() as playwright:
                 page.screenshot(path=str(shot), full_page=True, animations="disabled", timeout=30000)
                 image_digest = hashlib.sha256(shot.read_bytes()).hexdigest()
                 expected_bg = {
-                    "/": "rgb(28, 37, 31)",
+                    "/index.html": "rgb(28, 37, 31)",
                     "/palvelut/index.html": "rgb(38, 51, 41)",
                     "/tarina/index.html": "rgb(232, 229, 217)",
                     "/yhteys/index.html": "rgb(37, 49, 39)",
@@ -117,6 +117,33 @@ with sync_playwright() as playwright:
             page.remove_listener("console", onconsole)
             page.remove_listener("response", onresponse)
         ctx.close()
+
+    # A/B/C were coded as distinct first-fold concepts and captured in Chromium.
+    # Real screenshots are NOT independent quality reviews or source fidelity proof.
+    report["concept_captures"] = []
+    hashes = set()
+    for cw in (390,1440):
+        concept_context=browser.new_context(viewport={"width":cw,"height":900},reduced_motion="reduce")
+        concept_page=concept_context.new_page()
+        for ident,path in (("A","/index.html"),("B","/_concepts/b/index.html"),("C","/_concepts/c/index.html")):
+            try:
+                response=concept_page.goto(BASE+path,wait_until="networkidle",timeout=45000)
+                assert response and response.status == 200, "Concept source not HTTP 200"
+                assert concept_page.locator("h1").first.is_visible(), "Concept heading not visible"
+                assert concept_page.evaluate("document.documentElement.scrollWidth <= innerWidth+2"), "Concept horizontal overflow"
+                path_img=OUT/f"concept-{ident}-{cw}.png"
+                concept_page.screenshot(path=str(path_img),full_page=True,animations="disabled",timeout=30000)
+                sha=hashlib.sha256(path_img.read_bytes()).hexdigest()
+                assert sha not in hashes, "Same screenshot reused as different concept"
+                hashes.add(sha)
+                report["concept_captures"].append({"concept":ident,"viewport":cw,"sha256":sha,"passed":True})
+            except Exception as error:
+                report["concept_captures"].append({"concept":ident,"viewport":cw,"passed":False,"error":str(error)[:180]})
+                report["errors"].append(f"Concept {ident} at {cw}: {error}")
+        concept_context.close()
+    if len(hashes) != 6:
+        report["errors"].append("Not all six distinct real A/B/C concept renders exist")
+
     css_response = playwright.request.new_context().get(BASE + "/styles.css", timeout=25000)
     css_type = css_response.headers.get("content-type", "")
     report["stylesheet_response"] = {"status": css_response.status, "type": css_type,
@@ -127,6 +154,7 @@ with sync_playwright() as playwright:
 (OUT/"report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
 print(json.dumps({"url": BASE, "checked_views": len(report["views"]), "failures": report["errors"],
                   "stylesheet": report["stylesheet_response"],
+                  "concept_captures":len(report["concept_captures"]),
                   "failed_diagnostics":[{"route":v["route"],"width":v["width"],
                     "observed":v.get("observed"),
                     "cache_bust_probe":v.get("cache_bust_probe")}
