@@ -1543,6 +1543,27 @@ Suunnittele harkittu, yrityksen tuotteeseen liittyvä syvyyden, valon tai
 vuorovaikutuksen ratkaisu tai perustele miksi hillintä on parempi.
 Jokaiselle reitille oma toiminnallinen sommittelu ilman toistuvaa korttipohjaa.
 Ei koristeellista 3D:tä väkisin. Kunnioita reduced-motion-asetusta ja mobiilia.
+V2 PREMIUM-LASTEN YLEISET ESTOT (jokaisella sivulla, ei vain etusivulla):
+- Aito alkuperäinen logo, värien VOIMAKKUUS ja geometriset/materiaaliset
+  taustakuviot säilytetään lähdeaineiston mukaan. Muuten pyydä lisätietoa.
+- Kun lähteessä on aitoja työnäytekuvia, älä tee niiden tilalle isoja
+  "graafinen materiaalitutkielma" tai "abstrakti sommitelma" -täytealueita.
+  Pyydä tarvittavat kuvat; älä keksi uusia projektikuvia.
+- Etusivun lisäksi PALVELUT, TYÖT, TEKIJÄ ja YHTEYSTIEDOT tarvitsevat
+  omalle tehtävälleen uskottavan, yksilöllisen ja premium-tasoisen sommittelun.
+  Yksi näyttävä hero ei riitä, jos alasivut ovat geneerisiä.
+- Alkuperäisen yrityksen lähettävä yhteydenottolomake EI saa muuttua
+  mailto-luonnokseksi. Ilman testattua POST-toimitusta ei väitetä toimivaa
+  lomaketta, ja asiakasvalmius jää estetyksi.
+- Jos teet todellisen pointer-depth-, hover- tai focus-vaikutelman,
+  merkitse vuorovaikutuselementtiin data-premium-interaction="pointer-depth",
+  "hover" tai "focus". Selain testaa, että vaikutelma oikeasti näkyy
+  renderöitynä myös ilman reduced-motionia ja palautuu turvallisesti
+  liikkeen vähentämisellä. ÄLÄ lisää nimikettä staattiselle elementille.
+  Sivuston mielekäs hillintä on sallittu; efektien määrää ei pisteytetä.
+- Sivuston omaa premium-laatua ei saa itse todistaa numeerisesti. Kaikki
+  alasivut tarkastetaan erikseen ulkopuolisella kuvavertailulla.
+
 SERVICE-WIDE BUSINESS, MEDIA AND VOICE CONTRACT:
 {json.dumps(service_brief(research), ensure_ascii=False)}
 Tämä suunnittelupaketti sisältää vain lähteissä havaitun yritysidentiteetin.
@@ -1971,6 +1992,27 @@ Korjaa geneerinen 2D-rakenne yritykseen sopivalla sommittelulla ja hallitulla
 valo-, syvyys- tai vuorovaikutusratkaisulla, jos se auttaa oikean tuotteen
 esittelyssä. Älä käytä samaa efektiä muille asiakkaille. Varmista
 prefers-reduced-motion, kosketusnäyttö ja keyboard sekä staattinen fallback.
+V2 PREMIUM-LASTEN YLEISET ESTOT (jokaisella sivulla, ei vain etusivulla):
+- Aito alkuperäinen logo, värien VOIMAKKUUS ja geometriset/materiaaliset
+  taustakuviot säilytetään lähdeaineiston mukaan. Muuten pyydä lisätietoa.
+- Kun lähteessä on aitoja työnäytekuvia, älä tee niiden tilalle isoja
+  "graafinen materiaalitutkielma" tai "abstrakti sommitelma" -täytealueita.
+  Pyydä tarvittavat kuvat; älä keksi uusia projektikuvia.
+- Etusivun lisäksi PALVELUT, TYÖT, TEKIJÄ ja YHTEYSTIEDOT tarvitsevat
+  omalle tehtävälleen uskottavan, yksilöllisen ja premium-tasoisen sommittelun.
+  Yksi näyttävä hero ei riitä, jos alasivut ovat geneerisiä.
+- Alkuperäisen yrityksen lähettävä yhteydenottolomake EI saa muuttua
+  mailto-luonnokseksi. Ilman testattua POST-toimitusta ei väitetä toimivaa
+  lomaketta, ja asiakasvalmius jää estetyksi.
+- Jos teet todellisen pointer-depth-, hover- tai focus-vaikutelman,
+  merkitse vuorovaikutuselementtiin data-premium-interaction="pointer-depth",
+  "hover" tai "focus". Selain testaa, että vaikutelma oikeasti näkyy
+  renderöitynä myös ilman reduced-motionia ja palautuu turvallisesti
+  liikkeen vähentämisellä. ÄLÄ lisää nimikettä staattiselle elementille.
+  Sivuston mielekäs hillintä on sallittu; efektien määrää ei pisteytetä.
+- Sivuston omaa premium-laatua ei saa itse todistaa numeerisesti. Kaikki
+  alasivut tarkastetaan erikseen ulkopuolisella kuvavertailulla.
+
 SERVICE-WIDE BUSINESS, MEDIA AND VOICE CONTRACT:
 {json.dumps(service_brief(research), ensure_ascii=False)}
 
