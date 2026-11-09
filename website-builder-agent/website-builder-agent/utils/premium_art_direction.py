@@ -34,12 +34,10 @@ def observed_original_photos(research: dict) -> set[str]:
             src = item.get("src") if isinstance(item, dict) else None
             if isinstance(src, str) and src.strip():
                 photos.add(src.strip())
-        for item in page.get("images") or []:
-            if not isinstance(item, dict):
-                continue
-            src = item.get("src")
-            if isinstance(src, str) and src.strip():
-                photos.add(src.strip())
+        # A generic source <img> list may include logos, icons and partner marks.
+        # Do NOT count those as photographic client work and block legitimate
+        # geometric branding merely because a site had several icon assets.
+        # Content photographs must be inventoried by the source-identity step.
     return photos
 
 
