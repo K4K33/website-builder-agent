@@ -3,7 +3,7 @@
   "original_home": "https://www.lyijylasijatiffany.fi/",
   "original_gallery": "https://www.lyijylasijatiffany.fi/referenssit",
   "observed_date": "2026-11-09",
-  "evidence_status": "public text and image links inspected; no real visual browser screenshot or independent premium review yet",
+  "evidence_status": "Real Chromium original/new screenshots captured and stored as GitHub Actions artifact; independent design review, client CMS, and media reuse rights remain unverified.",
   "address_text": "KAUNIAINEN / SOMERO",
   "phone": "0456125115",
   "email": "lyijylasijatiffany@gmail.com",
@@ -196,7 +196,8 @@
             {
               "src": "https://static.wixstatic.com/media/313640_06c1a8d516d84cf0a273d0880940ae80~mv2.jpg",
               "alt": "Alkuperäinen mustavalkoinen ihmis- ja työpajakuva",
-              "role": "staff_portrait"
+              "role": "workshop_photo",
+              "role_note": "Image depicts people and craft work; neither a named employee portrait nor a verified team/about-page photograph. Preserve as workshop evidence without asserting staff identity."
             },
             {
               "src": "https://static.wixstatic.com/media/313640_d8304ba9f6b9407c803407ede3e55915~mv2.jpg",
@@ -585,7 +586,7 @@
     "facebook": "https://www.facebook.com/lyijylasiIkkunatJaTiffany"
   },
   "original_experience_profile": {
-    "source_sha256": "363984ee10ebdb87330663b599a7e189985d237f7b23ba1988cdbc49ccea6bc7",
+    "source_sha256": "8a0e45a2331166551ef0ca23b476d48f8ba55297456d7675accfb924c17ba611",
     "capture_method": "browser",
     "complete": true,
     "checked_at": "2026-11-09T07:23:46Z",
@@ -605,7 +606,8 @@
       "observed_images": true
     },
     "visual_review": "PENDING",
-    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767"
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767",
+    "media_role_correction": "The original home image shows craftspeople at work, not a verified named staff portrait. Label it workshop_photo, preserve it in the craft section; staff identity remains unverified."
   },
   "source_comparison_evidence": {
     "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767/original-home-1440.png",
