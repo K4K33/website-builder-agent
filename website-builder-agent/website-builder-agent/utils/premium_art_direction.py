@@ -120,7 +120,11 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict, *, compan
                                "classes": sorted(classes & _GENERIC_VISUAL_CLASSES)})
         form_count = sum(
             bool(form.select_one('input[type="email"]')) and
-            bool(form.find("textarea"))
+            bool(form.find("textarea")) and
+            str(form.get("method") or "").lower() == "post" and
+            not str(form.get("action") or "").lower().startswith(
+                ("mailto:", "javascript:", "data:")
+            )
             for form in main.find_all("form")
         )
         if form_count:
