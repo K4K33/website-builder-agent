@@ -40,6 +40,13 @@ def site_files(root: str | Path, page_paths: list[str]) -> list[tuple[str,Path]]
         rel = target.relative_to(base)
         if any(part.startswith(("_", ".")) for part in rel.parts):
             continue
+        # Private screenshots produced by the concept-review renderer are
+        # created AFTER the prototype HTML hash. They are verified separately
+        # by concept_previews (SHA256) and must not mutate the site's bundle
+        # digest when the screenshots are captured. Limit this exemption to
+        # internal prototype variant directories, never actual customer sites.
+        if base.name.startswith("variant-") and "qa" in rel.parts:
+            continue
         if target.is_symlink():
             raise RuntimeError("Symlink cannot be a published site asset.")
         if target.is_dir():
