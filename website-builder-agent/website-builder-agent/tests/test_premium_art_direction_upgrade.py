@@ -56,6 +56,15 @@ class PremiumArtDirectionTests(unittest.TestCase):
         audit = audit_premium_art_direction(only_mailto, research)
         self.assertTrue(any("mailto" in s for s in audit["blocking"]))
 
+    def test_mailto_form_does_not_count_as_real_lead_delivery(self):
+        research = photographed_source(form=True)
+        fake_form = {"index.html":
+                     '<main><h1>Contact</h1><form action="mailto:a@example.org" method="post">'
+                     '<input type="email"><textarea></textarea><button>Send</button>'
+                     '</form></main>'}
+        audit = audit_premium_art_direction(fake_form, research)
+        self.assertTrue(any("mailto" in item for item in audit["blocking"]))
+
     def test_real_form_markup_requires_live_delivery_evidence(self):
         research = photographed_source(form=True)
         real_form = {"index.html":
