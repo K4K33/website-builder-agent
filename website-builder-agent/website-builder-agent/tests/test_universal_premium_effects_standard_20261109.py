@@ -35,7 +35,6 @@ class UniversalPremiumMotionTests(unittest.TestCase):
         self.assertEqual(len(MASTER_PROMPT_SHA256), 64)
         brief = service_brief({})
         self.assertEqual(brief["master_prompt_sha256"], MASTER_PROMPT_SHA256)
-        self.assertIn("master_prompt_sha256", brief["policy"] if False else brief)
 
     def test_photo_spotlight_blocks_in_complete_inline_css(self):
         report = audit_visual_motion(
@@ -127,6 +126,10 @@ class UniversalPremiumMotionTests(unittest.TestCase):
         direction = visual_direction_plan(research,creative,{"page_paths":["index.html"]})
         self.assertIn("photo parallax", direction["depth_direction"])
         self.assertIn("Never add pointer-following radial light", direction["depth_direction"])
+        self.assertEqual(direction["premium_effect_choice"]["first_pass_candidate"], "B")
+        self.assertEqual(direction["premium_effect_choice"]["approval"],
+                         "proposal_only_not_visual_quality_score")
+        self.assertIn("licensed 3D", direction["premium_effect_choice"]["C"])
 
     def test_permanent_standard_has_different_effect_tiers_and_one_score(self):
         doc = (Path(__file__).resolve().parents[1]/"docs"/
