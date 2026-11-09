@@ -1,0 +1,193 @@
+{
+  "company": "Erikoismaalari Kati Pakarinen",
+  "observed_date": "2026-11-09",
+  "schema_version": 2,
+  "stage": "internal_demo",
+  "research_mode": "existing_website",
+  "source_url": "https://erikoismaalari.fi/",
+  "source_inventory": {
+    "pages": [
+      {
+        "url": "https://erikoismaalari.fi/",
+        "text": "Erikoismaalari Kati Pakarinen. UUSI ELÄMÄ PINNOILLE. Maalaus, tapetointi ja huonekalujen kunnostus. Sisäpintojen ja huonekalujen kunnostustyöt yli 20 vuoden kokemuksella. Maalaustyöt: ootraus, marmorointi, koristemaalaus sekä tavalliset maalaus- ja kunnostustyöt. Tapetointi: seinät, katot, kaapinovet, säilytyslaatikot ja hatturasiat. Entisöinti: huonekalujen, vanhojen ovien ja panelointien kunnostus alkuperäistä kunnioittaen. Materiaalien ja värien valinnan apu. Yrityksen kolme Esimerkkejä-linkkiä Instagramiin. Oikea yhteydenottolomake alkuperäisellä sivustolla. Fredrikinkatu 45 Helsinki (työhuone). 040 556 1618. kati@erikoismaalari.fi. Y-tunnus 1588339-5.",
+        "headings": {
+          "h1": [
+            "Maalaus, tapetointi, huonekalujen kunnostus"
+          ],
+          "h2": [
+            "Maalaustyöt",
+            "Tapetointi",
+            "Entisöinti- ja kunnostustyöt",
+            "Ota yhteyttä"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "images": [
+          {
+            "src": "https://erikoismaalari.fi/assets/images/image03.png?v=9bca4697"
+          },
+          {
+            "src": "https://erikoismaalari.fi/assets/images/image05.jpg?v=9bca4697"
+          },
+          {
+            "src": "https://erikoismaalari.fi/assets/images/image01.jpg?v=9bca4697"
+          },
+          {
+            "src": "https://erikoismaalari.fi/assets/images/image02.jpg?v=9bca4697"
+          },
+          {
+            "src": "https://erikoismaalari.fi/assets/images/image04.jpg?v=9bca4697"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://www.instagram.com/erikoismaalari/",
+            "text": "Esimerkkejä"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://erikoismaalari.fi/assets/images/image03.png?v=9bca4697"
+          ],
+          "original_header_wordmark_candidates": [
+            "Erikoismaalari Kati"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://erikoismaalari.fi/assets/images/image05.jpg?v=9bca4697",
+              "alt": "Kati Pakarinen puuoven äärellä",
+              "role": "staff_portrait"
+            },
+            {
+              "src": "https://erikoismaalari.fi/assets/images/image01.jpg?v=9bca4697",
+              "alt": "Siveltimet ja maalaustyövälineet",
+              "role": "workshop_photo"
+            },
+            {
+              "src": "https://erikoismaalari.fi/assets/images/image02.jpg?v=9bca4697",
+              "alt": "Kukkia ja lintuja esittävä maalattu seinäpinta",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://erikoismaalari.fi/assets/images/image04.jpg?v=9bca4697",
+              "alt": "Kunnostettava vanha puuovi",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "profile": "moderate",
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": true,
+            "has_meaningful_observed_motion": true,
+            "observed_photo_urls": [
+              "https://erikoismaalari.fi/assets/images/image05.jpg?v=9bca4697",
+              "https://erikoismaalari.fi/assets/images/image01.jpg?v=9bca4697",
+              "https://erikoismaalari.fi/assets/images/image02.jpg?v=9bca4697",
+              "https://erikoismaalari.fi/assets/images/image04.jpg?v=9bca4697"
+            ],
+            "observed_textured_backgrounds": [],
+            "evidence_scope": "Actual live original page captured in Chromium at 390px and 1440px after scrolling to expose lazy content; source-and-new screenshot artifact.",
+            "browser_inspection_required": true
+          },
+          "source_url": "https://erikoismaalari.fi/",
+          "theme_color": "#b51d27",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {
+          "prices": "not supplied on source"
+        },
+        "source_content_blocks": {
+          "original_form": true,
+          "services": [
+            "Erikoismaalaus",
+            "Tapetointi",
+            "Entisöinti"
+          ]
+        }
+      }
+    ]
+  },
+  "company_facts": {
+    "name": "Erikoismaalari Kati",
+    "full_name": "Erikoismaalaus ja entisöinti Kati Pakarinen",
+    "phone": "0405561618",
+    "email": "kati@erikoismaalari.fi",
+    "address": "Fredrikinkatu 45, Helsinki (työhuone)",
+    "business_id": "1588339-5",
+    "services": [
+      "maalaustyöt",
+      "ootraus",
+      "marmorointi",
+      "koristemaalaus",
+      "tapetointi",
+      "huonekalujen kunnostus",
+      "vanhojen ovien kunnostus",
+      "panelointien kunnostus"
+    ],
+    "instagram": "https://www.instagram.com/erikoismaalari/",
+    "years_experience": ">20"
+  },
+  "original_experience_profile": {
+    "source_sha256": "61ad2455e3e18e9cde3be087491ee68baf7ba770cd8da50e738ce5a2eb242a87",
+    "capture_method": "browser",
+    "complete": true,
+    "checked_at": "2026-11-09T08:58:00Z",
+    "source_routes": [
+      "https://erikoismaalari.fi/"
+    ],
+    "evidence_scope": "Real Chromium live browser 390px and 1440px original after scrolling and decoding five images; full source/new screenshot comparisons. 21 route/viewport/pointer checks, zero issues.",
+    "features": {
+      "video": {
+        "present": false
+      },
+      "three_d": {
+        "present": false
+      },
+      "motion": {
+        "present": true
+      },
+      "textured_background": {
+        "present": true
+      },
+      "gallery": {
+        "present": true
+      },
+      "photography": {
+        "present": true
+      }
+    },
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42589931237/artifacts/13660558527",
+    "visual_review": "PENDING"
+  },
+  "source_comparison_evidence": {
+    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42589931237/artifacts/13660558527 (alkuperainen-1440.png in ZIP)",
+    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42589931237/artifacts/13660558527 (alkuperainen-390.png in ZIP)",
+    "redesign_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42589931237/artifacts/13660558527 (uusi-etusivu-1440.png in ZIP)",
+    "redesign_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42589931237/artifacts/13660558527 (uusi-etusivu-390.png in ZIP)",
+    "extra_pages": "uusi-palvelut-390/1440.png, uusi-tyot-390/1440.png, uusi-tekija-390/1440.png, uusi-yhteys-390/1440.png",
+    "notes": "Original vs rebuilt screenshot files inside GitHub Actions artifact ZIP, not direct per-image URLs. Independent premium signoff and owner permissions are still PENDING."
+  },
+  "commerce_inventory": [],
+  "fact_sources": [
+    {
+      "url": "https://erikoismaalari.fi/",
+      "checked_at": "2026-11-09",
+      "kind": "official_live_site"
+    },
+    {
+      "url": "https://github.com/K4K33/website-builder-agent/actions/runs/42589931237/artifacts/13660558527",
+      "checked_at": "2026-11-09",
+      "kind": "chromium_browser_capture"
+    }
+  ],
+  "capture_status": "Original/source and redesign Chromium screenshots completed with 0 browser failures; not an independent 9.5 score.",
+  "limitations": [
+    "Images are hotlinked from original site only for internal concept demonstration; permission and self-hosted delivery not cleared.",
+    "Contact button uses mailto, not a server-side contact form.",
+    "Client-editable CMS, independent reviewers and copyright permissions not verified."
+  ]
+}

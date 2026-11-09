@@ -37,6 +37,13 @@
       "url": "https://www.kudelma.fi/",
       "mode": "historical_demo",
       "sector": "upholstery"
+    },
+    {
+      "slug": "erikoismaalari-kati-v1",
+      "url": "https://erikoismaalari.fi/",
+      "mode": "historical_demo",
+      "sector": "decorative painting and restoration",
+      "observed_date": "2026-11-09"
     }
   ]
 }
