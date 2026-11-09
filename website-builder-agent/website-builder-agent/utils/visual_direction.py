@@ -175,7 +175,10 @@ def audit_visual_motion(
                    ". Remove the pointer-following/screen-blend light and preserve "
                    "authentic photographic light. Any exceptional client-authorized "
                    "treatment needs independent, source-based visual review.")
-        (blockers if assets_complete else pending).append(problem)
+        # The offending CSS is actually present in the inspected source.
+        # Unrelated uninspected third-party assets must not downgrade this
+        # observed high-confidence flaw from blocker to pending.
+        blockers.append(problem)
     if animated and not css_reduced:
         issue = "CSS keyframe/animation motion has no prefers-reduced-motion: reduce override."
         (blockers if assets_complete else pending).append(issue)
