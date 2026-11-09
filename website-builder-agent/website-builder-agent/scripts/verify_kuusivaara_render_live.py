@@ -38,6 +38,13 @@ def main():
                         hasInlineJS:!!document.querySelector('script[data-kaurivo-enhancement="inline-v1"]'),
                         hasLinkedCSS:!!document.querySelector('link[rel="stylesheet"][href]'),
                         hasLinkedJS:!!document.querySelector('script[src]'),
+                        heroBrandNoWrap:(() => {
+                          const name=document.querySelector('.hero-brand-type strong');
+                          const parent=document.querySelector('.hero-brand-type');
+                          if(!name||!parent)return false;
+                          return getComputedStyle(name).whiteSpace==='nowrap'
+                              && name.getBoundingClientRect().width<=parent.clientWidth+1;
+                        })(),
                         heroBrandVisible:(() => {
                             const e=document.querySelector('.hero-brand-type');
                             if(!e)return false;
@@ -71,6 +78,8 @@ def main():
                         audit["errors"].append(f"{width} {route}: no live JavaScript for interactive menu")
                     if route=="" and not metrics["heroBrandVisible"]:
                         audit["errors"].append(f"{width} homepage: brand typography fallback NOT VISIBLE; empty hero")
+                    if route=="" and not metrics["heroBrandNoWrap"]:
+                        audit["errors"].append(f"{width} homepage: business name wraps or overflows hero typography")
                     if metrics["bodyFont"] in ("Times New Roman", '"Times New Roman"', "serif"):
                         audit["errors"].append(f"{width} {route}: DEFAULT BROWSER TYPOGRAPHY -- STYLES FAILED")
                     if metrics["logoWidth"] > 110 or metrics["brandWidth"] > 340:
