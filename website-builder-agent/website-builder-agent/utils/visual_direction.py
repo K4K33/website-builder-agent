@@ -23,9 +23,9 @@ _JS_REDUCED = re.compile(r"prefers-reduced-motion\s*:\s*reduce", re.I)
 # A high-confidence artificial photo spotlight: unlike an ordinary background
 # gradient, this puts a movable or screen-blended radial glow on a photo overlay.
 # Exact visual quality still requires source-versus-build browser comparison.
-_PHOTO_OVERLAY_RULE = re.compile(r"(?P<selector>[^{}]+)\\{(?P<body>[^{}]*)\\}", re.I | re.S)
+_PHOTO_OVERLAY_RULE = re.compile(r"(?P<selector>[^{}]+)\{(?P<body>[^{}]*)\}", re.I | re.S)
 _DYNAMIC_LIGHT_POSITION = re.compile(
-    r"var\\(\\s*--(?:px|py|mx|my|mouse-[xy]|pointer-[xy]|cursor-[xy]|glow-[xy])\\b", re.I
+    r"var\(\s*--(?:px|py|mx|my|mouse-[xy]|pointer-[xy]|cursor-[xy]|glow-[xy])\b", re.I
 )
 
 def _synthetic_photo_spotlights(css: str, pages: dict[str, str]) -> list[str]:
@@ -40,9 +40,9 @@ def _synthetic_photo_spotlights(css: str, pages: dict[str, str]) -> list[str]:
         selector, declarations = rule.group("selector"), rule.group("body")
         if "radial-gradient" not in declarations.casefold():
             continue
-        if not re.search(r"(?:::{0,1}(?:after|before)\\b|\\boverlay\\b)", selector, re.I):
+        if not re.search(r"(?:::{0,1}(?:after|before)\b|\boverlay\b)", selector, re.I):
             continue
-        blended = bool(re.search(r"mix-blend-mode\\s*:\\s*(?:screen|lighten|color-dodge)", declarations, re.I))
+        blended = bool(re.search(r"mix-blend-mode\s*:\s*(?:screen|lighten|color-dodge)", declarations, re.I))
         following = bool(_DYNAMIC_LIGHT_POSITION.search(declarations))
         if blended or following:
             flagged.append(selector.strip()[:140])
