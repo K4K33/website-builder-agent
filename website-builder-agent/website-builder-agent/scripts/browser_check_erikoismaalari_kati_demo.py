@@ -23,7 +23,16 @@ with sync_playwright() as pw:
         page=ctx.new_page()
         try:
             resp=page.goto("https://erikoismaalari.fi/",wait_until="domcontentloaded",timeout=45000)
-            page.wait_for_timeout(1600)
+            # Original uses scroll-triggered reveal and deferred images. Walk
+            # the whole document before judging its visual experience.
+            page.wait_for_timeout(1100)
+            end=page.evaluate('document.documentElement.scrollHeight')
+            for offset in range(0,min(int(end)+800,25000),550):
+                page.evaluate('(y)=>window.scrollTo(0,y)',offset)
+                page.wait_for_timeout(85)
+            page.wait_for_timeout(1000)
+            page.evaluate('window.scrollTo(0,0)')
+            page.wait_for_timeout(450)
             source=page.evaluate("""() => ({
               title:document.title, images:[...document.images].map(x=>({url:x.src,naturalWidth:x.naturalWidth})),
               text:document.body.innerText.slice(0,1300)
@@ -31,7 +40,7 @@ with sync_playwright() as pw:
             page.screenshot(path=str(OUT/f"alkuperainen-{width}.png"),full_page=True,timeout=45000,animations="disabled")
             (OUT/f"alkuperainen-{width}.json").write_text(json.dumps(source,ensure_ascii=False,indent=2))
             if not resp or resp.status>=400:issues.append(f"Original site {width}: HTTP {resp.status if resp else None}")
-            if "Kati" not in source["text"]:issues.append(f"Original site {width}: company identity absent")
+            if "kati" not in source["text"].casefold():issues.append(f"Original site {width}: company identity absent")
         except Exception as exc:issues.append(f"Original browser capture {width}: {exc}")
         finally:ctx.close()
 
