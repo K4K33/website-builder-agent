@@ -22,3 +22,17 @@
 /* Narrow-screen robustness: never let long Finnish compounds widen the viewport. */
 .headline,.page-head h1,.archive h2,.contact-lead h1,.footer-name,.gallery-label{overflow-wrap:anywhere;hyphens:auto;min-width:0}
 @media(max-width:530px){.contact-lead h1{font-size:clamp(49px,12vw,65px)}.headline{font-size:clamp(42px,9.2vw,62px)}.archive h2{font-size:32px}.gallery-label{font-size:21px}}
+
+/* Reliable photographic examples are unmistakably labelled; original media
+   is retained as a source reference, never rebranded as finished client work. */
+.source-image.sample-photo .source-tag{position:absolute;z-index:5;bottom:16px;left:16px;background:#123b2ee8;color:#f5f4e9;border:1px solid #b0c6a7;padding:7px 11px;font:800 10px/1.3 var(--sans);letter-spacing:.08em;box-shadow:0 3px 12px #0003}
+.gallery-card .source-image.sample-photo .source-tag{bottom:14px;left:14px}
+.person .source-image.media-failed{height:0!important;min-height:0;display:none}
+.person .source-image.media-failed+.copy{min-height:240px;display:flex;flex-direction:column;justify-content:center;border-top:4px solid #466c51;padding:44px 36px;background:#e0e9df}
+.person .source-image.media-failed+.copy h2{font-size:clamp(42px,4.4vw,60px)}
+.archive-media figure.source-unavailable{padding:36px 26px;min-height:190px;display:flex;flex-direction:column;justify-content:center;border-top:3px solid var(--forest);background:#d8e4d4}
+.archive-media figure.source-unavailable .source-image{display:none}
+.archive-media figure.source-unavailable figcaption{font:400 24px/1.24 var(--serif);color:#234c35}
+.archive-media figure.source-unavailable figcaption:after{content:" · alkuperäinen kuva ei lataudu";display:block;margin-top:15px;color:#5b745e;font:700 11px var(--sans)}
+.feature-image .source-image.media-failed .fallback{display:flex;background:#b1c7af;color:#1b4130;font:400 clamp(31px,4vw,63px)/1.1 var(--serif);text-align:left;padding:clamp(30px,6vw,90px)}
+@media(max-width:530px){.person .source-image.media-failed+.copy{min-height:185px;padding:35px 28px}.archive-media figure.source-unavailable{min-height:150px}}
