@@ -4,6 +4,57 @@ The pipeline discovers redesign candidates, researches their real business, buil
 an independent HTML website, and evaluates the rendered result before human approval.
 This change does not establish parity with any particular frontier model.
 
+## Mandatory premium visual evidence across the entire client site (2026-11-09)
+
+Erikoismaalari Kati exposed a repeated failure: an impressive first view can
+coexist with generic filler on service pages, missing original background
+geometry, negligible effects, and degraded real inquiry paths.
+
+**New v2 workflow for all new research and new-company builds:**
+
+- Inventory original source **logos, wordmarks, color signature, distinct
+  backgrounds/textures and actual photos**. A photograph or brand mark is not
+  licensed merely by appearing online. Do not fabricate missing visuals.
+- Three genuinely different **real HTML concepts** render into 12 screenshots
+  (home and an important secondary page × mobile/desktop × three concepts).
+  For existing sites compare these with the **real original desktop/mobile**
+  screenshot evidence; missing source screenshots stop selection before a
+  complete build is requested.
+- The separate concept reviewer must provide **brand, composition and media**
+  observations for every one of the 12 rendered views. If the selected concept
+  is weak in either page or viewport, stop rather than promote it to a full
+  site. Model observations are provisional, not human-independent 9.5 scores.
+- For new research, block unmistakable **generic material/graphic placeholder**
+  panels replacing real photographed client work. Preserve the identity of
+  the original patterns, textures and photo subject. Static cues cannot
+  determine whether a substitute motif matches, so source/new screenshots
+  still require explicit visual review.
+- Preserve core contact/quote forms when actually observed in the original
+  inventory. A **mailto** or link to an old form is not equivalent to actual
+  lead capture. Test POST, delivery and privacy before customer delivery.
+- Browser QA can test declared `data-premium-interaction` effects by comparing
+  real rendered views in normal and reduced-motion modes. It rejects inert
+  effects and reduced-motion regressions. Visible movement alone does not
+  prove appealing art direction or 60fps performance. Do not force 3D onto
+  brands where restraint works better.
+- The **internal owner-preview gate** now requires separate mobile/desktop
+  visual results for **each site route**, each at the existing high visual
+  threshold. It cannot average away weak service, gallery, team or contact
+  pages. The earlier global scores alone are insufficient.
+- The **client-release gate** remains stricter: two independently evidenced
+  reviewers must inspect **every page at 320, 390, 768 and 1440px**, assign
+  **at least 9.5/10 on every page-specific premium dimension**, supply
+  concrete feedback, and clear all critical issues. Client CMS save/publish,
+  media rights, real forms and owner permission still have separate gates.
+
+Revisions use specific browser and reviewer defects; do not loop indefinitely
+over unchanged feedback or spend model credits just to regenerate a pretty
+home hero. New rules are implemented in
+`utils/brand_signature_plan.py`, `utils/premium_art_direction.py`,
+`utils/concept_previews.py`, `utils/concept_workflow.py`,
+`utils/browser_motion_proof.py`, `agents/qa.py` and
+`utils/premium_quality_gate.py`. No cosmetic score is self-certified.
+
 ## Mandatory company-specific visual depth and motion (2026-11-09)
 
 A source-faithful, technically working static layout is **not** automatically
