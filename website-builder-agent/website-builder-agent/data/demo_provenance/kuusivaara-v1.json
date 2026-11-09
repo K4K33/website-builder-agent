@@ -1,0 +1,520 @@
+{
+  "company": "Verhoomo Kuusivaara Oy",
+  "observed_date": "2026-11-09",
+  "schema_version": 2,
+  "stage": "internal_demo",
+  "research_mode": "existing_website",
+  "source_url": "https://www.verhoomokuusivaara.fi/",
+  "source_inventory": {
+    "pages": [
+      {
+        "url": "https://www.verhoomokuusivaara.fi/",
+        "text": "Laatua vuodesta 1913. Suomalainen perheyritys Kaarinan Littoisissa, Artekin tehtaan yhteydessä; yritys verhoilee kodin huonekaluja ja suurempia kokonaisuuksia sekä Savoyn kalusteita.",
+        "headings": {
+          "h1": [
+            "Etusivu"
+          ],
+          "h2": [
+            "Laatua vuodesta 1913"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "links": [],
+        "images": [
+          {
+            "src": "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263",
+            "alt": "Etusivu company source media 1",
+            "role": "source_reference"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263"
+          ],
+          "original_header_wordmark_candidates": [
+            "Verhoomo Kuusivaara"
+          ],
+          "original_content_photos": [],
+          "theme_color": "#214a38",
+          "reviews": [],
+          "source_experience": {
+            "profile": "photo_led_branded_craft_workshop",
+            "original_language": "fi",
+            "observed_photo_urls": [
+              "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263"
+            ],
+            "observed_videos": null,
+            "observed_3d": null,
+            "original_live_browser_review": "PENDING",
+            "verified_media_licence": false,
+            "evidence_scope": "Public web source inspection; browser screenshot pending; image requests may receive HTTP 429."
+          }
+        }
+      },
+      {
+        "url": "https://www.verhoomokuusivaara.fi/Palvelut/",
+        "text": "Yritys ja yksityisasiakkaat, teollinen verhoilu ja uudelleenverhoilu, Artek satulavyötuolit, Karusellituoli, Artek varaosat, yhteistyökumppanit Orient Occident, Lauritzon's, Johanna Gullichen, Sorensen Leather; omat kankaat, kuljetus ja neljä vaihetta. Maksu käteinen tai MobilePay noudettaessa, yritykset laskulla.",
+        "headings": {
+          "h1": [
+            "Palvelut"
+          ],
+          "h2": [
+            "Laadukkaat materiaalit",
+            "Myös kuljetuksella",
+            "ASIANTUNTEVAA PALVELUA",
+            "Palvelumme",
+            "Verhoiluprosessin eteneminen"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "links": [],
+        "images": [
+          {
+            "src": "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/adfcfb064c4702b08e0dd99f4c329270_1268x763.61904761904.jpg",
+            "alt": "Palvelut company source media 1",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/e08b1bd0fe4ad2e53e13151672f1338e_1125x1241.3793103448.jpg",
+            "alt": "Palvelut company source media 2",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/85bfab0b28ec1265c1c809e752f210bd_1638.3333333333x1280.jpg",
+            "alt": "Palvelut company source media 3",
+            "role": "source_reference"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263"
+          ],
+          "original_header_wordmark_candidates": [
+            "Verhoomo Kuusivaara"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/adfcfb064c4702b08e0dd99f4c329270_1268x763.61904761904.jpg",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/e08b1bd0fe4ad2e53e13151672f1338e_1125x1241.3793103448.jpg",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/85bfab0b28ec1265c1c809e752f210bd_1638.3333333333x1280.jpg",
+              "role": "original_page_photo"
+            }
+          ],
+          "theme_color": "#214a38",
+          "reviews": [],
+          "source_experience": {
+            "profile": "photo_led_branded_craft_workshop",
+            "original_language": "fi",
+            "observed_photo_urls": [
+              "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/adfcfb064c4702b08e0dd99f4c329270_1268x763.61904761904.jpg",
+              "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/e08b1bd0fe4ad2e53e13151672f1338e_1125x1241.3793103448.jpg",
+              "https://www.verhoomokuusivaara.fi/Palvelut/gallery_gen/85bfab0b28ec1265c1c809e752f210bd_1638.3333333333x1280.jpg"
+            ],
+            "observed_videos": null,
+            "observed_3d": null,
+            "original_live_browser_review": "PENDING",
+            "verified_media_licence": false,
+            "evidence_scope": "Public web source inspection; browser screenshot pending; image requests may receive HTTP 429."
+          }
+        }
+      },
+      {
+        "url": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/",
+        "text": "Henkilökunta Päivi Johanna Alina Hannu Kim, Katri taustajoukoissa ja Emmi vanhempainvapaalla; alkuperäinen sisältö sisältää jäsenyyden Turun Verhoilijamestareissa, arvoja ja asiakastietojen käsittelyn.",
+        "headings": {
+          "h1": [
+            "Yrityksemme"
+          ],
+          "h2": [
+            "MEIDÄN TIIMIMME"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "links": [],
+        "images": [
+          {
+            "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/9377ccf5a6651599036d9ba84c194564_789x516_194x194_1147x765_crop.jpg?ts=1787748264",
+            "alt": "Yrityksemme company source media 1",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/2f53d9403180206928e391f714e313c9_1786x1163_0x632_1786x2679_crop.jpg?ts=1787748264",
+            "alt": "Yrityksemme company source media 2",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/e3d62dc3403dc149daa16426c489cf80_2463x1601_0x167_2652x1768_crop.jpg?ts=1787748265",
+            "alt": "Yrityksemme company source media 3",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/41088cde466dbbdd429c79b4d552037e_2508x1449_0x1226_2508x3762_crop.jpg?ts=1787748265",
+            "alt": "Yrityksemme company source media 4",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/62f3cecadded9c3c0eda7d9823a5535a_2508x1449_0x1273_2508x3762_crop.jpg?ts=1787748266",
+            "alt": "Yrityksemme company source media 5",
+            "role": "source_reference"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263"
+          ],
+          "original_header_wordmark_candidates": [
+            "Verhoomo Kuusivaara"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/9377ccf5a6651599036d9ba84c194564_789x516_194x194_1147x765_crop.jpg?ts=1787748264",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/2f53d9403180206928e391f714e313c9_1786x1163_0x632_1786x2679_crop.jpg?ts=1787748264",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/e3d62dc3403dc149daa16426c489cf80_2463x1601_0x167_2652x1768_crop.jpg?ts=1787748265",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/41088cde466dbbdd429c79b4d552037e_2508x1449_0x1226_2508x3762_crop.jpg?ts=1787748265",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/62f3cecadded9c3c0eda7d9823a5535a_2508x1449_0x1273_2508x3762_crop.jpg?ts=1787748266",
+              "role": "original_page_photo"
+            }
+          ],
+          "theme_color": "#214a38",
+          "reviews": [],
+          "source_experience": {
+            "profile": "photo_led_branded_craft_workshop",
+            "original_language": "fi",
+            "observed_photo_urls": [
+              "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/9377ccf5a6651599036d9ba84c194564_789x516_194x194_1147x765_crop.jpg?ts=1787748264",
+              "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/2f53d9403180206928e391f714e313c9_1786x1163_0x632_1786x2679_crop.jpg?ts=1787748264",
+              "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/e3d62dc3403dc149daa16426c489cf80_2463x1601_0x167_2652x1768_crop.jpg?ts=1787748265",
+              "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/41088cde466dbbdd429c79b4d552037e_2508x1449_0x1226_2508x3762_crop.jpg?ts=1787748265",
+              "https://www.verhoomokuusivaara.fi/YRITYKSEMME/gallery_gen/62f3cecadded9c3c0eda7d9823a5535a_2508x1449_0x1273_2508x3762_crop.jpg?ts=1787748266"
+            ],
+            "observed_videos": null,
+            "observed_3d": null,
+            "original_live_browser_review": "PENDING",
+            "verified_media_licence": false,
+            "evidence_scope": "Public web source inspection; browser screenshot pending; image requests may receive HTTP 429."
+          }
+        }
+      },
+      {
+        "url": "https://www.verhoomokuusivaara.fi/Tarinamme/",
+        "text": "Perheyrityksen historia 1913 Brynolf ja Rauha, Jorma 1930 ja 1944 nimen muutos, Pertti 1985, Katri ja Kim 2012, Littoinen 2017, yhteistyö Artek/Aalto. Lähde kertoo myös Itäharjun vanhoista toimitiloista.",
+        "headings": {
+          "h1": [
+            "Tarinamme"
+          ],
+          "h2": [
+            "Perheyrityksen jatkumo",
+            "Design-huonekaluihin erikoistuminen",
+            "Verhoomon historia"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "links": [],
+        "images": [
+          {
+            "src": "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/72cb1cc8edaecc57ad2f7ea7cd0cd00b_480x371.61290322581.jpg",
+            "alt": "Tarinamme company source media 1",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/627f414015d361d2037c648532933c2e_640x455.0289017341.jpg",
+            "alt": "Tarinamme company source media 2",
+            "role": "source_reference"
+          },
+          {
+            "src": "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/3b62d74224a1ad142d6a34903dad106b_617x457.71513353116.jpg",
+            "alt": "Tarinamme company source media 3",
+            "role": "source_reference"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263"
+          ],
+          "original_header_wordmark_candidates": [
+            "Verhoomo Kuusivaara"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/72cb1cc8edaecc57ad2f7ea7cd0cd00b_480x371.61290322581.jpg",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/627f414015d361d2037c648532933c2e_640x455.0289017341.jpg",
+              "role": "original_page_photo"
+            },
+            {
+              "src": "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/3b62d74224a1ad142d6a34903dad106b_617x457.71513353116.jpg",
+              "role": "original_page_photo"
+            }
+          ],
+          "theme_color": "#214a38",
+          "reviews": [],
+          "source_experience": {
+            "profile": "photo_led_branded_craft_workshop",
+            "original_language": "fi",
+            "observed_photo_urls": [
+              "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/72cb1cc8edaecc57ad2f7ea7cd0cd00b_480x371.61290322581.jpg",
+              "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/627f414015d361d2037c648532933c2e_640x455.0289017341.jpg",
+              "https://www.verhoomokuusivaara.fi/Tarinamme/gallery_gen/3b62d74224a1ad142d6a34903dad106b_617x457.71513353116.jpg"
+            ],
+            "observed_videos": null,
+            "observed_3d": null,
+            "original_live_browser_review": "PENDING",
+            "verified_media_licence": false,
+            "evidence_scope": "Public web source inspection; browser screenshot pending; image requests may receive HTTP 429."
+          }
+        }
+      },
+      {
+        "url": "https://www.verhoomokuusivaara.fi/en/",
+        "text": "Alkuperäinen sivusto tarjoaa en-kielivalinnan ja yhteystiedot.",
+        "headings": {
+          "h1": [
+            "English"
+          ],
+          "h2": [
+            "Verhoomo Kuusivaara"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [],
+        "links": [],
+        "images": [
+          {
+            "src": "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263",
+            "alt": "English company source media 1",
+            "role": "source_reference"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [
+            "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263"
+          ],
+          "original_header_wordmark_candidates": [
+            "Verhoomo Kuusivaara"
+          ],
+          "original_content_photos": [],
+          "theme_color": "#214a38",
+          "reviews": [],
+          "source_experience": {
+            "profile": "photo_led_branded_craft_workshop",
+            "original_language": "en",
+            "observed_photo_urls": [
+              "https://www.verhoomokuusivaara.fi/gallery_gen/d4431aea4e18f9c4e5a39579839f3d08_fit.png?ts=1787748263"
+            ],
+            "observed_videos": null,
+            "observed_3d": null,
+            "original_live_browser_review": "PENDING",
+            "verified_media_licence": false,
+            "evidence_scope": "Public web source inspection; browser screenshot pending; image requests may receive HTTP 429."
+          }
+        }
+      }
+    ]
+  },
+  "original_experience_profile": {
+    "source_sha256": "2b19383c9b2f080f48471134990cf14090a49479b1d060f9f688d36ef06eba9a",
+    "capture_method": "browser",
+    "complete": true,
+    "checked_at": "2026-11-09T17:37:45Z",
+    "source_routes": [
+      "https://www.verhoomokuusivaara.fi/",
+      "https://www.verhoomokuusivaara.fi/Palvelut/",
+      "https://www.verhoomokuusivaara.fi/YRITYKSEMME/",
+      "https://www.verhoomokuusivaara.fi/Tarinamme/",
+      "https://www.verhoomokuusivaara.fi/en/"
+    ],
+    "evidence_scope": "Five original official source routes each opened in real Playwright Chromium at 390 and 1440 px with HTTP 200 and full-page source screenshots. Current original CSS/JS richness not exhaustively assessed. Photo rights pending. Does not imply client approval.",
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271",
+    "features": {
+      "original_logo_present": true,
+      "photography_present": true,
+      "source_3d_presence": "not independently verified",
+      "video_presence": "not independently verified",
+      "gallery_presence": true
+    },
+    "visual_review": "PENDING_INDEPENDENT"
+  },
+  "source_comparison_evidence": {
+    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (original-1440-0.png to original-1440-4.png)",
+    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (original-390-0.png to original-390-4.png)",
+    "redesign_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (new-1440-0.png to new-1440-11.png)",
+    "redesign_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (new-390-0.png to new-390-11.png)",
+    "extra_viewports": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (new-320-0..11.png; new-768-0..11.png)",
+    "exact_site_code_commit": "ad45a3dcbad69df21bdb7dc35868062a61851a8f",
+    "evidence_scope": "Real browser screenshots from a tested source-identical site code; later commit changed README only. Shows authentic source pages and preview layout, not rights or independent visual signoff.",
+    "visual_review": "PENDING_INDEPENDENT",
+    "source_hash": "2b19383c9b2f080f48471134990cf14090a49479b1d060f9f688d36ef06eba9a"
+  },
+  "source_content_map": {
+    "pages": [
+      {
+        "source_url": "https://www.verhoomokuusivaara.fi/",
+        "status": "retain",
+        "target": "index.html",
+        "sections": [
+          {
+            "source_heading": "Laatua vuodesta 1913",
+            "target": "index.html"
+          }
+        ]
+      },
+      {
+        "source_url": "https://www.verhoomokuusivaara.fi/Palvelut/",
+        "status": "retain",
+        "target": "palvelut/index.html",
+        "sections": [
+          {
+            "source_heading": "Laadukkaat materiaalit",
+            "target": "palvelut/index.html"
+          },
+          {
+            "source_heading": "Myös kuljetuksella",
+            "target": "palvelut/index.html"
+          },
+          {
+            "source_heading": "ASIANTUNTEVAA PALVELUA",
+            "target": "palvelut/index.html"
+          },
+          {
+            "source_heading": "Palvelumme",
+            "target": "palvelut/index.html"
+          },
+          {
+            "source_heading": "Verhoiluprosessin eteneminen",
+            "target": "palvelut/index.html"
+          }
+        ]
+      },
+      {
+        "source_url": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/",
+        "status": "retain",
+        "target": "tekijat/index.html",
+        "sections": [
+          {
+            "source_heading": "MEIDÄN TIIMIMME",
+            "target": "tekijat/index.html"
+          }
+        ]
+      },
+      {
+        "source_url": "https://www.verhoomokuusivaara.fi/Tarinamme/",
+        "status": "retain",
+        "target": "tarinamme/index.html",
+        "sections": [
+          {
+            "source_heading": "Perheyrityksen jatkumo",
+            "target": "tarinamme/index.html"
+          },
+          {
+            "source_heading": "Design-huonekaluihin erikoistuminen",
+            "target": "tarinamme/index.html"
+          },
+          {
+            "source_heading": "Verhoomon historia",
+            "target": "tarinamme/index.html"
+          }
+        ]
+      },
+      {
+        "source_url": "https://www.verhoomokuusivaara.fi/en/",
+        "status": "retain",
+        "target": "en/index.html",
+        "sections": [
+          {
+            "source_heading": "Verhoomo Kuusivaara",
+            "target": "en/index.html"
+          }
+        ]
+      }
+    ]
+  },
+  "company_facts": {
+    "name": "Verhoomo Kuusivaara Oy",
+    "company_id": "0580652-1",
+    "address": "Otto Korhosen katu 2–4, 20660 Littoinen",
+    "phone": "+358 50 346 0359",
+    "email": "info@verhoomokuusivaara.fi"
+  },
+  "commerce_inventory": [],
+  "fact_sources": [
+    {
+      "url": "https://www.verhoomokuusivaara.fi/",
+      "text": "Laatua vuodesta 1913. Suomalainen perheyritys Kaarinan Littoisissa, Artekin tehtaan yhteydessä; yritys verhoilee kodin huonekaluja ja suurempia kokonaisuuksia sekä Savoyn kalusteita."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/Palvelut/",
+      "text": "Yritys ja yksityisasiakkaat, teollinen verhoilu ja uudelleenverhoilu, Artek satulavyötuolit, Karusellituoli, Artek varaosat, yhteistyökumppanit Orient Occident, Lauritzon's, Johanna Gullichen, Sorensen Leather; omat kankaat, kuljetus ja neljä vaihetta. Maksu käteinen tai MobilePay noudettaessa, yritykset laskulla."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/YRITYKSEMME/",
+      "text": "Henkilökunta Päivi Johanna Alina Hannu Kim, Katri taustajoukoissa ja Emmi vanhempainvapaalla; alkuperäinen sisältö sisältää jäsenyyden Turun Verhoilijamestareissa, arvoja ja asiakastietojen käsittelyn."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/Tarinamme/",
+      "text": "Perheyrityksen historia 1913 Brynolf ja Rauha, Jorma 1930 ja 1944 nimen muutos, Pertti 1985, Katri ja Kim 2012, Littoinen 2017, yhteistyö Artek/Aalto. Lähde kertoo myös Itäharjun vanhoista toimitiloista."
+    },
+    {
+      "url": "https://www.verhoomokuusivaara.fi/en/",
+      "text": "Alkuperäinen sivusto tarjoaa en-kielivalinnan ja yhteystiedot."
+    }
+  ],
+  "capture_status": "original_and_redesign_browser_verified_current_site_code",
+  "limitations": [
+    "Not commissioned or approved by source business.",
+    "Original image rights not proven.",
+    "Source images may return HTTP 429, fallback not a replacement for actual portfolio.",
+    "Current source homepage email differs from older indexed service pages; current info@ chosen.",
+    "No independent overall 9.5 review.",
+    "No customer CMS editor test or handover.",
+    "Ten original source screenshot captures verified, full current-build comparison pending"
+  ],
+  "release_status": "INTERNAL_CANDIDATE_NOT_APPROVED_FOR_OUTREACH",
+  "master_prompt": "KAURIVO_MESTARI_PROMPT_V6",
+  "premium_effect_tier": "B",
+  "independent_site_score": null,
+  "known_verified_checks": {
+    "new_routes_visited": 12,
+    "viewports": [
+      320,
+      390,
+      768,
+      1440
+    ],
+    "original_routes_captured": 5,
+    "source_viewports": [
+      390,
+      1440
+    ],
+    "browser_interaction_check_passed": true,
+    "independent_visual_review_pending": true
+  }
+}

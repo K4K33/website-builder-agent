@@ -250,7 +250,19 @@ def audit_service_quality(pages, research, *, artifact_digest=None, review_bundl
         voice = {}
     sources = {p.get('url'): str(p.get('text') or '')
                for p in (research.get('source_inventory') or {}).get('pages', [])}
-    sources.update({p.get('url'): str(p.get('text') or '') for p in research.get('fact_sources') or []})
+    # External and handwritten Research snapshots may contain bare URLs
+    # instead of source records. Never crash the all-demo QA workflow: report
+    # a blocking provenance error, keep only structured and text-backed facts.
+    facts = research.get('fact_sources') or []
+    if not isinstance(facts, list):
+        blocking.append({'kind': 'invalid_fact_sources', 'reason': 'fact_sources must be a list'})
+        facts = []
+    for source in facts:
+        if not isinstance(source, dict) or not str(source.get('url') or '').strip() or not isinstance(source.get('text'), str):
+            blocking.append({'kind': 'invalid_fact_source_entry',
+                             'reason': 'Source fact must contain url and text, never a bare URL'})
+            continue
+        sources[str(source['url'])] = source['text']
     excerpts = voice.get('source_excerpts') or []
     if not isinstance(excerpts, list) or any(not isinstance(e, dict) for e in excerpts):
         blocking.append({'kind': 'invalid_voice_excerpts'})
