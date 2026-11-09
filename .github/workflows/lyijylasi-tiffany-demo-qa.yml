@@ -1,5 +1,14 @@
 name: Lyijylasi Tiffany source-grounded concept browser QA
 on:
+  pull_request:
+    branches: [fix/general-quality-new-company-trials-20261105]
+    paths:
+      - ".github/workflows/lyijylasi-tiffany-source-capture.yml"
+      - ".github/workflows/lyijylasi-tiffany-demo-qa.yml"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/lyijylasi-tiffany-v1/**"
+      - "website-builder-agent/website-builder-agent/scripts/capture_lyijylasi_tiffany_source.py"
+      - "website-builder-agent/website-builder-agent/scripts/browser_check_lyijylasi_tiffany.py"
+      - "website-builder-agent/website-builder-agent/data/demo_provenance/lyijylasi-tiffany-v1.json"
   push:
     branches:
       - demo/lyijylasi-tiffany-20261109
