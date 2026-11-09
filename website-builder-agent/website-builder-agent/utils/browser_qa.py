@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from utils.browser_motion_proof import audit_declared_interactions
 
 
 def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_file_root=None):
@@ -365,6 +366,20 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                         page.screenshot(path=str(destination), full_page=True,
                                         animations="disabled", timeout=15000)
                         screenshots[name] = str(destination)
+                        # A CSS class or event handler is not visual proof.
+                        # Only inspect explicit effects in the real browser,
+                        # including a fresh no-preference load and a reduced-
+                        # motion fallback. Leave aesthetics to independent QA.
+                        if name == "desktop" and page.locator("[data-premium-interaction]").count():
+                            motion = audit_declared_interactions(page)
+                            for problem in motion["blocking"]:
+                                issues.append("desktop: visual interaction: " + problem)
+                            for observation in motion["observations"]:
+                                visual_review_flags.append({
+                                    "category": "actual_motion_browser_evidence",
+                                    **observation,
+                                    "note": "A changed screenshot is not a premium score."
+                                })
                     finally:
                         context.close()
             finally:
