@@ -230,7 +230,7 @@ class InternalAllRoutePreviewTests(unittest.TestCase):
                         "responsive page composition inspected in actual browser.",
         }
         report = {"route_visual_review": {route: good() for route in pages},
-                  "reviewed_route_view_ids": evidence_ids}
+                  "reviewed_route_view_ids": list(evidence_ids)}
         self.assertTrue(route_visual_review_passes(
             report, pages, {"premium_visual_protocol": "v2"}, evidence_ids
         ))
