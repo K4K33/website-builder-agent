@@ -66,6 +66,35 @@ class CompleteSiteIntegrityTests(unittest.TestCase):
             (root / "assets" / "identity.woff2").write_bytes(b"different font")
             self.assertNotEqual(site_sha256(root, routes), baseline)
 
+    def test_root_level_logo_and_custom_media_folder_are_hash_protected(self):
+        with TemporaryDirectory() as temp:
+            root=self.make_site(temp)
+            (root/"images").mkdir()
+            (root/"images"/"portrait.webp").write_bytes(b"actual-client-photo")
+            (root/"logo.svg").write_text("<svg>approved mark</svg>",encoding="utf-8")
+            routes=["index.html","palvelut/index.html"]
+            baseline=site_sha256(root,routes)
+            bundled={rel for rel,_ in site_files(root,routes)}
+            self.assertIn("images/portrait.webp",bundled)
+            self.assertIn("logo.svg",bundled)
+            (root/"images"/"portrait.webp").write_bytes(b"changed after approval")
+            self.assertNotEqual(site_sha256(root,routes),baseline)
+            (root/"images"/"portrait.webp").write_bytes(b"actual-client-photo")
+            (root/"logo.svg").write_text("<svg>replaced brand</svg>",encoding="utf-8")
+            self.assertNotEqual(site_sha256(root,routes),baseline)
+
+    def test_unreviewed_html_or_public_symlink_cannot_sneak_into_client_release(self):
+        with TemporaryDirectory() as temp:
+            root=self.make_site(temp)
+            (root/"secret-offer.html").write_text("<p>Not QA reviewed</p>",encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError,"Unreviewed HTML route"):
+                site_sha256(root,["index.html","palvelut/index.html"])
+            (root/"secret-offer.html").unlink()
+            (root/"images").mkdir()
+            (root/"images"/"fake-logo.png").symlink_to(root/"assets"/"photo.png")
+            with self.assertRaisesRegex(RuntimeError,"Symlink"):
+                site_sha256(root,["index.html","palvelut/index.html"])
+
     def test_publisher_copies_all_pages_and_refuses_stale_snapshot(self):
         with TemporaryDirectory() as temp:
             root=self.make_site(temp)

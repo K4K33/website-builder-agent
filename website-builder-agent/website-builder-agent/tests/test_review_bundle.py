@@ -95,6 +95,12 @@ class ReviewBundleTests(unittest.TestCase):
             outside = Path(folder)/'outside.png'; outside.write_bytes(PNG)
             symlink=root/'alias.png'; symlink.symlink_to(outside)
             qa={'browser':{'screenshots':{'desktop':str(outside),'mobile':str(symlink)}}}
+            # A symlink now invalidates the entire public bundle; silently
+            # ignoring it could conceal a post-QA logo/media replacement.
+            with self.assertRaisesRegex(RuntimeError, 'Symlink'):
+                collect_review_bundle(company,pages,qa,site_root=root,
+                    output_parent=root/'_review_material',allowed_capture_roots=[])
+            symlink.unlink()
             ref=collect_review_bundle(company,pages,qa,site_root=root,
                 output_parent=root/'_review_material',allowed_capture_roots=[])
             m=json.loads(Path(ref['manifest_path']).read_text())

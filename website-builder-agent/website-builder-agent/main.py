@@ -382,12 +382,15 @@ def cmd_handover_check(args):
     slug, company = get_company(args.company)
     if company is None:
         raise RuntimeError("Company not found.")
+    from utils.release_safety import inspect_release_safety
     result = inspect_client_delivery(company)
-    print(json.dumps({"company": slug, **result}, ensure_ascii=False, indent=2))
-    if not result["ready_to_handover"]:
+    release = inspect_release_safety(company, customer_delivery=True)
+    print(json.dumps({"company": slug, **result, "release_safety": release}, ensure_ascii=False, indent=2))
+    if not result["ready_to_handover"] or not release["approved"]:
         raise RuntimeError(
-            "Client delivery BLOCKED: CMS self-editing is not proven. "
-            "A website demo can still be reviewed without this check."
+            "Client delivery BLOCKED: an editable CMS, current V6 contract, "
+            "independent 9.5 review, media rights and an exact-build LIVE URL "
+            "browser check must ALL be proven. An internal demo is not a release."
         )
 
 

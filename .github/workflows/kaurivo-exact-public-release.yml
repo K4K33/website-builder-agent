@@ -1,0 +1,76 @@
+name: Kaurivo exact public website release gate (all clients)
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Committed client demo folder slug under docs/kaurivo/demos"
+        required: true
+        type: string
+      url:
+        description: "Actual published HTTPS URL, never a local preview"
+        required: true
+        type: string
+      release_marker:
+        description: "Exact data-kaurivo-release marker in the committed HTML"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kaurivo-exact-live-${{ inputs.slug }}
+  cancel-in-progress: false
+
+jobs:
+  public-browser-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install open-source browser runner only
+        run: python -m pip install playwright beautifulsoup4
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Reject wrong client path or missing exact released build
+        env:
+          SITE_SLUG: ${{ inputs.slug }}
+        shell: bash
+        run: |
+          if ! [[ "$SITE_SLUG" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+            echo "::error::Invalid site slug"
+            exit 1
+          fi
+          test -f "docs/kaurivo/demos/$SITE_SLUG/index.html" || exit 1
+      - name: Visit every published page on 390px and 1440px and reject broken assets
+        env:
+          SITE_SLUG: ${{ inputs.slug }}
+          LIVE_URL: ${{ inputs.url }}
+          RELEASE_MARKER: ${{ inputs.release_marker }}
+        run: |
+          python scripts/verify_public_release.py \
+            --url "$LIVE_URL" \
+            --site-root "docs/kaurivo/demos/$SITE_SLUG" \
+            --release-marker "$RELEASE_MARKER" \
+            --commit-sha "$GITHUB_SHA" \
+            --out "output/public-release-evidence/$SITE_SLUG"
+      - name: Preserve screenshots, exact revision, source digest, and defects even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaurivo-public-release-${{ inputs.slug }}-${{ github.run_id }}
+          path: website-builder-agent/website-builder-agent/output/public-release-evidence/
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Never auto-approve customer or outbound contact
+        if: success()
+        run: |
+          echo 'Browser-proof generated. Site remains HOLD until owner has independently'
+          echo 'reviewed this exact report, verified image rights, 9.5 review, and CMS handover.'

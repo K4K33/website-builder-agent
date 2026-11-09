@@ -2,8 +2,9 @@
 
 An index.html digest alone cannot protect a multi-page site against
 post-QA edits to pages, work photography, typography, CSS or JS interactions.
-Only assets inside the generated site bundle are content-addressed here;
-remote CDN assets still require separate source/rights and visual review.
+Every public image, logo, font, script and style is content-addressed even
+outside assets/ (for example images/, media/, or site-root logo.png).
+Remote CDN assets still require separate live verification and human rights review.
 """
 from __future__ import annotations
 from hashlib import sha256
@@ -30,19 +31,37 @@ def site_files(root: str | Path, page_paths: list[str]) -> list[tuple[str,Path]]
         files.append((route,target))
     if "index.html" not in seen:
         raise RuntimeError("Missing generated index.html.")
-    assets=base/"assets"
-    if assets.exists():
-        if not assets.is_dir() or assets.is_symlink():
-            raise RuntimeError("Unsafe assets directory.")
-        for target in sorted(assets.rglob("*")):
-            if target.is_symlink():
-                raise RuntimeError("Symlink cannot be a published site asset.")
-            if target.is_dir(): continue
-            if (not target.is_file()
-                or not target.resolve().is_relative_to(base)
-                or target.suffix.lower() not in ALLOWED_ASSET_EXTENSIONS):
-                raise RuntimeError("Untrusted asset in site bundle: "+str(target))
-            files.append((target.relative_to(base).as_posix(),target))
+    # Every public asset matters, wherever the author placed it. Previously
+    # only assets/ was hashed, so editing a root-level logo.png or images/
+    # portfolio photo after QA silently bypassed the review/delivery hash.
+    # Private captured review/concept evidence is not part of the published site.
+    public_routes = set(seen)
+    for target in sorted(base.rglob("*")):
+        rel = target.relative_to(base)
+        if any(part.startswith(("_", ".")) for part in rel.parts):
+            continue
+        # Private screenshots produced by the concept-review renderer are
+        # created AFTER the prototype HTML hash. They are verified separately
+        # by concept_previews (SHA256) and must not mutate the site's bundle
+        # digest when the screenshots are captured. Limit this exemption to
+        # internal prototype variant directories, never actual customer sites.
+        if base.name.startswith("variant-") and "qa" in rel.parts:
+            continue
+        if target.is_symlink():
+            raise RuntimeError("Symlink cannot be a published site asset.")
+        if target.is_dir():
+            continue
+        rel_text = rel.as_posix()
+        if rel_text in public_routes:
+            continue
+        if not target.is_file() or not target.resolve().is_relative_to(base):
+            raise RuntimeError("Unsafe site bundle file: " + str(target))
+        if target.suffix.lower() == ".html":
+            raise RuntimeError("Unreviewed HTML route exists in release bundle: "+rel_text)
+        if target.suffix.lower() in ALLOWED_ASSET_EXTENSIONS:
+            files.append((rel_text,target))
+        elif rel.parts[0] == "assets":
+            raise RuntimeError("Unsupported public asset in site bundle: "+rel_text)
     return sorted(files,key=lambda pair:pair[0])
 
 def site_sha256(root: str | Path, page_paths: list[str]) -> str:

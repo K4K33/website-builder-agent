@@ -187,6 +187,8 @@ def publish_site(
                 "path": destination,
                 "url": demo_url,
                 "published": True,
+                "release_status": "INTERNAL_PREVIEW_UNVERIFIED",
+                "client_ready": False,
             }
         },
     )
@@ -196,7 +198,7 @@ def publish_site(
         "========================================"
     )
     print(
-        " DEMO JULKAISTU"
+        " DEMON KOPIO VALMISTELTU, JULKISTA LIVE-TESTIÄ EI VIELÄ TEHTY"
     )
     print(
         "========================================"

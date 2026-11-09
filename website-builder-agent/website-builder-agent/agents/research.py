@@ -22,7 +22,7 @@ from urllib.parse import urlsplit
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims
+from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
@@ -701,6 +701,8 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
+        "quality_contract_version": 6,
+        "master_prompt_sha256": MASTER_PROMPT_SHA256,
         "visual_concepts_protocol": "v1",
         "premium_visual_protocol": "v2",  # Source/new proof for every concept and every final route.
         "review_evidence_protocol": "v1",
@@ -1077,6 +1079,8 @@ Tärkeää:
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
+        "quality_contract_version": 6,
+        "master_prompt_sha256": MASTER_PROMPT_SHA256,
         "visual_concepts_protocol": "v1",
         "premium_visual_protocol": "v2",  # Source/new proof for every concept and every final route.
         "review_evidence_protocol": "v1",
