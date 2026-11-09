@@ -239,7 +239,7 @@ def audit_universal_standards(
     # Premium art direction and form continuity are source-bound, not
     # aesthetic scores. In v2 we block known filler replacing actual client
     # photography, and lost forms, before accepting the generated build.
-    premium_art = audit_premium_art_direction(pages, research)
+    premium_art = audit_premium_art_direction(pages, research, company=company)
     for issue in premium_art["blocking"]:
         key = ("source_lead_form_parity" if "form" in issue.casefold() and
                "mailto" in issue.casefold() else "art_directed_premium_pages")
