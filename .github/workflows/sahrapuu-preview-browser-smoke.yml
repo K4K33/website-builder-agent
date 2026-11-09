@@ -1,0 +1,38 @@
+name: Sahrapuu concept - public browser smoke (not client approval)
+on:
+  push:
+    branches:
+      - preview/sahrapuu-v1-20261109
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install free Chromium browser
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Check actual public preview, all routes and 3 device widths
+        env:
+          KAURIVO_PREVIEW_URL: https://kaurivo-sahrapuu-concept-2026.onrender.com
+        run: python scripts/verify_sahrapuu_live_preview.py
+      - name: Preserve real screenshots and failures for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sahrapuu-real-browser-screenshots
+          path: website-builder-agent/website-builder-agent/output/sahrapuu-live-smoke/
+          if-no-files-found: warn
+          retention-days: 30
