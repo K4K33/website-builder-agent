@@ -1,5 +1,22 @@
 # Kaurivo — mandatory feedback-to-standard workflow
 
+## 2026-11-09 — Woodtool: single overall score, no synthetic moving photo light
+
+Owner feedback rejected the pointer-following light wash on a real carpentry
+photograph as non-premium. Use the source photograph's real materials,
+composition and authentic depth instead; do not layer an automatic spotlight
+on client work photos. An effect with a demonstrated brand rationale can be
+considered, but must receive actual desktop/mobile visual review and
+reduced-motion testing.
+
+**Assessment:** provide one overall website grade (x/10), with premium
+quality integrated into it, not a separate premium grade alongside the
+overall. Specific visual deficiencies can be explained in prose and the
+current build's proof stated explicitly. Release blockers remain binary.
+No independent rating is claimed for this code revision.
+
+
+
 ## 2026-11-02 — Kotifixi V15 owner design approval, stop unnecessary iterations
 
 User approved V15's appearance ("tämä on jo hyvä mielestäni") with a 31.4-second desktop walkthrough. Videos show the principal pages and contact test UI, but don't independently establish mobile readiness, production CMS access, direct customer lead routing or an external >=9.5 score. Decision: freeze V15 visual design as the owner-accepted *internal demo reference*; do not invent a V16 or score-chase. Carry forward learned universal rules and measure repeatability on three unrelated industry projects. Keep truthful demo labels, client content permission and branded-domain/outreach gates independent from design approval.
