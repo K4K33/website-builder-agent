@@ -1,0 +1,37 @@
+name: Kaurivo Kuusivaara actual Render production visual smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website-builder-agent/website-builder-agent/docs/kaurivo/demos/kuusivaara-v1/**'
+      - 'website-builder-agent/website-builder-agent/scripts/verify_kuusivaara_render_live.py'
+      - '.github/workflows/kuusivaara-render-production-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-published-css-and-navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install playwright
+      - run: python -m playwright install --with-deps chromium
+      - name: Verify actual Render public URL computed CSS and mobile navigation
+        env:
+          KUUSIVAARA_PUBLIC_URL: https://kaurivo-kuusivaara-demo-2026.onrender.com
+        run: python scripts/verify_kuusivaara_render_live.py
+      - name: Preserve exact live screenshots and computed CSS results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuusivaara-actual-render-smoke-${{ github.run_id }}
+          path: website-builder-agent/website-builder-agent/output/kuusivaara-render-live-smoke/
+          if-no-files-found: warn
+          retention-days: 14
