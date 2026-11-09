@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 from playwright.sync_api import sync_playwright
 
 BASE = os.environ.get("KAURIVO_PREVIEW_URL", "https://kaurivo-sahrapuu-concept-2026.onrender.com").rstrip("/")
-EXPECTED = "sahrapuu-20261109-concept-a"
-ROUTES = ["/", "/palvelut/", "/tarina/", "/yhteys/"]
+EXPECTED = "sahrapuu-20261109-concept-r2"
+ROUTES = ["/", "/palvelut/index.html", "/tarina/index.html", "/yhteys/index.html"]
 WIDTHS = [390, 768, 1440]
 OUT = Path("output/sahrapuu-live-smoke")
 OUT.mkdir(parents=True, exist_ok=True)
@@ -75,9 +75,9 @@ with sync_playwright() as playwright:
                 image_digest = hashlib.sha256(shot.read_bytes()).hexdigest()
                 expected_bg = {
                     "/": "rgb(28, 37, 31)",
-                    "/palvelut/": "rgb(38, 51, 41)",
-                    "/tarina/": "rgb(232, 229, 217)",
-                    "/yhteys/": "rgb(37, 49, 39)",
+                    "/palvelut/index.html": "rgb(38, 51, 41)",
+                    "/tarina/index.html": "rgb(232, 229, 217)",
+                    "/yhteys/index.html": "rgb(37, 49, 39)",
                 }[route]
                 assert response and response.status == 200, "Page not HTTP 200"
                 assert result["marker"] == EXPECTED, "Stale or missing release marker"
