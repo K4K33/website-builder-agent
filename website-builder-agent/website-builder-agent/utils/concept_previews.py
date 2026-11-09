@@ -39,7 +39,9 @@ def context_digest(research):
     return digest({'service': service_brief({**research, 'creative_selection': None})['contract_sha256'],
                    'directions': research.get('creative_directions'),
                    'architecture': research.get('site_architecture'),
-                   'brand_plan': research.get('brand_preservation_plan')})
+                   'brand_plan': research.get('brand_preservation_plan'),
+                   'premium_visual_protocol': research.get('premium_visual_protocol'),
+                   'brand_signature_plan': research.get('brand_signature_plan')})
 
 
 def intake_fingerprint(items, root):
