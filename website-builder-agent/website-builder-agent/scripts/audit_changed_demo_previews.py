@@ -17,6 +17,7 @@ from utils.route_experience_contract import audit_route_experience
 from utils.commerce_parity import commerce_problems
 from utils.visual_direction import audit_visual_motion
 from utils.brand_signature_plan import derive_brand_signature_plan
+from utils.demo_origin_gate import verify_demo_concept_evidence
 from bs4 import BeautifulSoup
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
@@ -146,6 +147,10 @@ def main():
             print("VISUAL_REVIEW_PENDING", slug, "; ".join(motion["pending"][:3]))
         try:
             evidence=verified_source_evidence(slug)
+            import json
+            manifest=json.loads((ROOT / "data" / "demo_provenance" / (slug + ".json")).read_text(encoding="utf-8"))
+            concepts=verify_demo_concept_evidence(slug, folder, manifest)
+            print("RENDERED_CONCEPT_GATE_PASS", slug, concepts["screenshots"], "original rendered screenshots")
             # Source-approved and hand-authored demos share the same premium
             # anti-filler, original-form and original-signature rules. No
             # bypass by omitting a model-generated research protocol field.
@@ -170,7 +175,7 @@ def main():
             result=audit_universal_standards(
                 pages["index.html"], research=evidence,
                 rendered_pages=pages, stage="internal_demo")
-        except (ValueError, KeyError, TypeError) as exc:
+        except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
             print("BLOCK",slug,"source_evidence",str(exc))
             failed=True
             continue
