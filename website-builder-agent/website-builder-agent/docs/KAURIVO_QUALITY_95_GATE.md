@@ -3,6 +3,32 @@
 **Scope:** Every customer demo, redesign, public preview, client pitch and
 production delivery. This is not a one-time Kotifixi-only milestone.
 
+## Integrated website score (owner rule, 2026-11-09)
+
+Report **one numerical overall website score, x/10**. Premium feel is a
+factor *inside* that overall score alongside brand identity, visual
+quality, verified content completeness, usefulness, mobile usability,
+accessibility and functional polish. Do not give a separate numerical
+"premium x/10" and a competing "overall x/10". Describe specific art
+direction strengths and deficiencies in prose. Each independently reviewed
+route and viewport can still have evidence-linked sub-assessments; these
+are diagnostic observations, not two separate headline site scores.
+
+The single score is never a substitute for actual pass/fail release gates:
+licensed media, client ownership, CMS editability, real forms, legal details
+and working user journeys. Do not claim a rating without a genuine reviewer.
+
+## Authentic photo motion (owner feedback, 2026-11-09)
+
+A moving radial glow, simulated light orb or screen-blend halo laid over
+real craft photography often looks artificial. Avoid such effects by default.
+If a particular brand genuinely uses motion lighting, require source
+evidence and owner approval. Depth should primarily come from authentic
+photographic content, layout, crop, typography and quiet transitions.
+Subtle photo parallax must be checked at desktop, touch and reduced motion.
+Source visual richness must still be preserved or meaningfully improved;
+this is not a rule to flatten all client sites into static sections.
+
 ## Release rule
 
 A demo may be built, revised and privately previewed before the gate passes,

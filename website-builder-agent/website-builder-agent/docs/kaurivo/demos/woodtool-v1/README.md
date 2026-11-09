@@ -17,7 +17,8 @@ official website, domain or client-approved production deliverable.
   works retained in archive lists. Some original photographs have not
   been reproduced in the curated demo and link to the official gallery.
 - Semantic navigation, FI/SV same-route switching, mobile menu with Escape,
-  large live preview, and an optional pointer-aware light/material layer.
+  large live preview, and tiny photographic movement on desktop without
+  the rejected cursor-following artificial glow/spotlight layer.
   All main content readable without JS and with reduced motion.
 
 ## Non-negotiable blockers before customer delivery
@@ -43,3 +44,10 @@ is full of real work; visual strategy uses dark architectural workshop
 layout, genuine solid-wood images, compressed high-contrast sans-serif
 typography and restrained oak/gold accents, rather than the sepia painter
 template or fabricated glossy designer-furniture imagery.
+
+## Owner feedback 2026-11-09
+
+The mouse-following fake light beam over the source carpentry photo was rejected
+as less premium. The artwork now relies on genuine photo tonal range and composition,
+with minimal photo depth (under 3 px) reset on leave and still on touch and
+reduced motion. A tested interaction does not imply a 9.5 visual score.
