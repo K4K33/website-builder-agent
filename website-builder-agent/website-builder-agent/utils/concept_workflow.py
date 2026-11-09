@@ -23,6 +23,36 @@ These are PRIVATE PROTOTYPES, never a completed client website or checkout.
 '''
 
 
+def source_visual_evidence(research):
+    """Require actual original-company screenshots in approved capture storage.
+
+    Never use customer supplied arbitrary file paths, stale image-only claims,
+    or competitor screenshots as a replacement for source brand experience.
+    """
+    if research.get("premium_visual_protocol") != "v2":
+        return []
+    if research.get("research_mode") == "verified_no_website":
+        return []
+    from utils.screenshot import OUTPUT_DIR as screenshots_root
+    from hashlib import sha256
+    safe_root = Path(screenshots_root).resolve()
+    captured = research.get("original_screenshots") or {}
+    evidence = []
+    for viewport in ("desktop", "mobile"):
+        original = captured.get(viewport)
+        if not isinstance(original, str) or not original:
+            raise RuntimeError("Premium concept selection requires real original " +
+                               viewport + " screenshots before full Build.")
+        file = Path(original).resolve()
+        if (not file.is_relative_to(safe_root) or not file.is_file()
+                or not file.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")):
+            raise RuntimeError("Original source screenshot missing or outside safe capture storage.")
+        evidence.append({"viewport": viewport, "path": str(file),
+                         "sha256": sha256(file.read_bytes()).hexdigest(),
+                         "role": "original_company_site_not_competitor"})
+    return evidence
+
+
 def _company(name):
     slug, company = get_company(name)
     if not company or not company.get('research'):
@@ -68,23 +98,42 @@ def choose_concept(name, *, review_path=None, reviewer=''):
     path, manifest = load_verified_set(reference, research, allowed_root=root)
     order = blind_order(manifest)
     views = [{'alias': alias, **view} for alias, entry in order.items() for view in entry['views']]
+    sources = source_visual_evidence(research)
     if review_path:
         if not reviewer.strip(): raise RuntimeError('External visual reviewer must be explicit')
         report = json.loads(Path(review_path).read_text(encoding='utf-8'))
     else:
         # Fresh context, shuffled aliases; no Builder self-praise or preferred winner.
         report = ask_claude_json(
-            'Compare all twelve actual concept screenshots against the verified business needs. '
-            'Do not assume the first option is best. Return selected_alias A/B/C, observations '
-            '(A/B/C each with concrete comparative reasons), critical_issues (A/B/C arrays), '
-            'and reviewed_view_ids containing every supplied view id. A winner must have no '
-            'unresolved critical issue. This is a provisional design choice, not a 9.5 score '
-            'or premium/client approval. If none is suitable, list its critical issues honestly.',
-            json.dumps({'facts': research.get('company_facts'),
-                        'visitor_tasks': (research.get('site_architecture') or {}).get('pages'),
-                        'views_in_image_order': [{k: v for k, v in view.items() if k != 'path'} for view in views]},
-                       ensure_ascii=False), stage='qa', max_tokens=4000,
-            image_paths=[str(path.parent / view['path']) for view in views])
+            'Compare all twelve real concept screenshots (three concepts x two routes x '
+            'desktop/mobile) with the verified client tasks and ORIGINAL company screens. '
+            'Do not prefer the first choice automatically. Return selected_alias A/B/C, '
+            'observations (A/B/C with concrete critical reasons), critical_issues '
+            '(A/B/C arrays) and reviewed_view_ids for every concept image. '
+            'For premium_visual_protocol=v2, return view_assessments for ALL twelve '
+            'view ids: verdict pass/needs_revision, brand_evidence, '
+            'composition_evidence and media_evidence (each >=35 concrete characters). '
+            'source_reference_reviewed=true only when actual original-company '
+            'screenshots were provided and inspected. Reject decorative filler, '
+            'repetitive layouts, lost original logos/patterns/textures, photo misuse, '
+            'weak content pages and inaccessible mobile compositions. The winning '
+            'concept needs a pass on each page at both viewports and zero unresolved '
+            'critical issues. An unsatisfactory candidate MUST be rejected. '
+            'This is a preliminary visual choice, NOT a 9.5 score, licence or '
+            'independent human client approval.',
+            json.dumps({
+                'facts': research.get('company_facts'),
+                'visitor_tasks': (research.get('site_architecture') or {}).get('pages'),
+                'views_in_image_order': [
+                    {k: v for k, v in view.items() if k != 'path'} for view in views],
+                'original_source_images_after_concept_images': [
+                    {k: v for k, v in view.items() if k != 'path'} for view in sources],
+                'premium_visual_protocol': research.get('premium_visual_protocol'),
+                'brand_signature_plan': research.get('brand_signature_plan') or {},
+            }, ensure_ascii=False),
+            stage='qa', max_tokens=6500,
+            image_paths=[str(path.parent / view['path']) for view in views]
+                        + [view['path'] for view in sources])
         reviewer = config.backend_for_stage('qa') + ':' + config.model_for_stage('qa')
     reference, choice = record_selection(reference, research, report, allowed_root=root, reviewer=reviewer)
     updated = dict(research); updated['creative_selection'] = choice
