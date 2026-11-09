@@ -64,6 +64,15 @@ def visual_direction_plan(research: dict, creative: dict, architecture: dict) ->
         "image_strategy": selected["image_strategy"],
         "typography": selected["typography"],
         "brand_lock": selected["brand_continuity"],
+        "observed_brand_signatures": research.get("brand_signature_plan") or {
+            "status": "original_visual_signature_unknown",
+            "note": "Do not invent geometry, colors or logo; collect source evidence."
+        },
+        "source_media_priority": (
+            "Give approved, genuine project photos and source brand motifs "
+            "priority over anonymous gradient blocks. A stand-in material "
+            "graphic is NOT the client's finished work."
+        ),
         "route_tasks": paths,
         "per_route_rule": (
             "Give each route its own composition for its real customer task. "
