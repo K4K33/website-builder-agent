@@ -112,9 +112,11 @@ def agreement_gate(project):
 
 def delivery_gate(company, site_audit):
     """Fail closed: a working static demo never counts as a delivered CMS."""
+    from utils.release_safety import inspect_release_safety
     delivery = inspect_client_delivery(company)
     site_audit = site_audit if isinstance(site_audit, dict) else {}
-    problems = list(delivery["issues"])
+    release = inspect_release_safety(company, customer_delivery=True)
+    problems = list(delivery["issues"]) + list(release["issues"])
     if site_audit.get("pass") is not True:
         problems.append("Automated HTML site preflight is not passing.")
     delivery_record = (company.get("delivery") or {}) if isinstance(company, dict) else {}
@@ -125,6 +127,7 @@ def delivery_gate(company, site_audit):
     ):
         problems.append("Site preflight warnings require human documented resolution.")
     return {"ready_to_deliver": not problems, "issues": sorted(set(problems)),
+            "release_status": release["status"],
             "cms_platform": delivery["cms_platform"],
             "limitations": ["Recorded confirmations are not live independently verified.",
                             "Run real customer editing, publishing, rollback and device checks."]}

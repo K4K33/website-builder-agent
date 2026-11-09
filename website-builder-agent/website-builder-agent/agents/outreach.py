@@ -487,6 +487,18 @@ def approve_outreach(
             + " ".join(gate["issues"][:4])
         )
 
+    # Never approve an email containing a public demo link just because
+    # offline checks and an independent-score record are green. The exact
+    # hosted build and ALL required pages must pass the final release gate.
+    from utils.release_safety import inspect_release_safety
+    release = inspect_release_safety(company, customer_delivery=False)
+    if not release["approved"]:
+        raise RuntimeError(
+            "KAURIVO HOLD: customer-facing demo is not independently reviewed "
+            "and verified at its actual live URL. "
+            + "; ".join(release["issues"][:6])
+        )
+
     outreach["approved"] = True
 
     upsert_company(
