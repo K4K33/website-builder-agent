@@ -91,7 +91,7 @@ def check_actual_public_website(evidence, *, site_digest, routes, build_commit):
     ci_run_url = evidence.get("ci_run_url")
     if (not isinstance(ci_run_url, str)
             or re.fullmatch(
-                r"https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[1-9][0-9]*(?:/attempts/[1-9][0-9]*)?",
+                r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[1-9][0-9]*(?:/attempts/[1-9][0-9]*)?",
                 ci_run_url,
             ) is None
             or evidence.get("ci_verified_by_owner") is not True):
