@@ -1,0 +1,42 @@
+name: Kaurivo Woodtool FI SV original-versus-redesign browser QA
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/woodtool-v1/**"
+      - "website-builder-agent/website-builder-agent/data/demo_provenance/woodtool-v1.json"
+      - "website-builder-agent/website-builder-agent/scripts/browser_check_woodtool_demo.py"
+      - ".github/workflows/woodtool-demo-qa.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install real Chromium and QA tools
+        run: |
+          python -m pip install playwright beautifulsoup4
+          python -m playwright install --with-deps chromium
+      - name: Serve complete local bilingual site
+        run: |
+          cd docs/kaurivo/demos/woodtool-v1
+          nohup python -m http.server 8765 --bind 127.0.0.1 >/tmp/woodtool-demo-server.log 2>&1 &
+          sleep 2
+      - name: Verify original and all redesigned pages in actual browser
+        run: python scripts/browser_check_woodtool_demo.py
+      - name: Preserve original/new browser screenshot and report evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: woodtool-original-and-premium-redesign-browser-evidence
+          path: website-builder-agent/website-builder-agent/qa-evidence/woodtool-v1
+          retention-days: 30
+          if-no-files-found: warn

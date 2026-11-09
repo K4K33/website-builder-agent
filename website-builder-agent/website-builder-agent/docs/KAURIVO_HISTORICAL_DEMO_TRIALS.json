@@ -44,6 +44,13 @@
       "mode": "historical_demo",
       "sector": "decorative painting and restoration",
       "observed_date": "2026-11-09"
+    },
+    {
+      "slug": "woodtool-v1",
+      "url": "https://woodtool.fi/",
+      "mode": "historical_demo",
+      "sector": "bilingual custom carpentry woodworking",
+      "observed_date": "2026-11-09"
     }
   ]
 }
