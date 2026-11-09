@@ -29,6 +29,7 @@ from utils.service_quality import audit_service_quality, POLICY as SERVICE_QUALI
 from utils.route_experience_contract import derive_route_experience_contract
 from utils.visual_comparison import build_visual_comparison
 from utils.visual_media_gate import audit_visual_media
+from utils.premium_effect_assets import audit_premium_effect_assets
 from utils.site_architecture import (
     validate_site_architecture, validate_site_navigation, pages_for_validation
 )
@@ -1201,6 +1202,9 @@ def run_qa(slug_or_name: str) -> dict:
         rendered_pages[route] = file.read_text(encoding="utf-8")
     if "index.html" not in rendered_pages:
         raise RuntimeError("Missing site homepage in built page manifest.")
+    # Read the exact assembled local CSS/JS, not just inline HTML. A beautiful
+    # first fold cannot override a known, business-agnostic motion defect.
+    premium_effects = audit_premium_effect_assets(rendered_pages, site_root)
     planned_architecture = None
     if research.get("site_architecture") or build.get("page_paths"):
         planned_architecture = validate_site_architecture(
@@ -1413,6 +1417,7 @@ def run_qa(slug_or_name: str) -> dict:
     result = {
         "layout_composition_review": layout_review,
         "automated": automated, "visual_media": visual_media,
+        "premium_effects": premium_effects,
         "originality": originality, "site_navigation": nav,
         "site_pages":list(rendered_pages),
         "browser": browser, "visual_comparison": visual_comparison,
@@ -1424,7 +1429,8 @@ def run_qa(slug_or_name: str) -> dict:
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "site_sha256": bundle_digest,
-        "overall_pass": (parity["pass"] and source_fidelity["pass"]
+        "overall_pass": (not premium_effects["blocking"]
+                         and parity["pass"] and source_fidelity["pass"]
                          and nav["pass"] and originality["pass"]
                          and universal["automated_pass"]
                          and not pending_general_rules
@@ -1449,7 +1455,8 @@ def run_qa(slug_or_name: str) -> dict:
     # Every future general failure is recorded without a new model request.
     # Repeating the same category across different clients makes it a
     # candidate for a universal regression check, not an invented fix.
-    issues = (list(automated.get("automated_issues") or [])
+    issues = (list(premium_effects.get("blocking") or [])
+              + list(automated.get("automated_issues") or [])
               + list(originality["blocking_problems"])
               + list(visual_media["blockers"])
               + list(visual_media["needs_public_verification"])

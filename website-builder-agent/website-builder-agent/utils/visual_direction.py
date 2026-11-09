@@ -20,6 +20,35 @@ _JS_TRACKING = re.compile(
 )
 _JS_REDUCED = re.compile(r"prefers-reduced-motion\s*:\s*reduce", re.I)
 
+# A high-confidence artificial photo spotlight: unlike an ordinary background
+# gradient, this puts a movable or screen-blended radial glow on a photo overlay.
+# Exact visual quality still requires source-versus-build browser comparison.
+_PHOTO_OVERLAY_RULE = re.compile(r"(?P<selector>[^{}]+)\{(?P<body>[^{}]*)\}", re.I | re.S)
+_DYNAMIC_LIGHT_POSITION = re.compile(
+    r"var\(\s*--(?:px|py|mx|my|mouse-[xy]|pointer-[xy]|cursor-[xy]|glow-[xy])\b", re.I
+)
+
+def _synthetic_photo_spotlights(css: str, pages: dict[str, str]) -> list[str]:
+    has_photography = any(
+        BeautifulSoup(html or "", "html.parser").select_one("main img, main picture img, .hero img")
+        for html in (pages or {}).values()
+    )
+    if not has_photography:
+        return []
+    flagged = []
+    for rule in _PHOTO_OVERLAY_RULE.finditer(css):
+        selector, declarations = rule.group("selector"), rule.group("body")
+        if "radial-gradient" not in declarations.casefold():
+            continue
+        if not re.search(r"(?:::{0,1}(?:after|before)\b|\boverlay\b)", selector, re.I):
+            continue
+        blended = bool(re.search(r"mix-blend-mode\s*:\s*(?:screen|lighten|color-dodge)", declarations, re.I))
+        following = bool(_DYNAMIC_LIGHT_POSITION.search(declarations))
+        if blended or following:
+            flagged.append(selector.strip()[:140])
+    return sorted(set(flagged))
+
+
 def visual_direction_plan(research: dict, creative: dict, architecture: dict) -> dict:
     """Create a specific PRE-BUILD design brief from an already validated choice.
 
@@ -49,12 +78,16 @@ def visual_direction_plan(research: dict, creative: dict, architecture: dict) ->
     photo_rich = len(images) >= 3
     motion_budget = source.get("motion_budget", "undetermined")
     depth = (
-        "Consider subtle source-photo parallax, light/material layering or "
-        "pointer-aware depth only where the photographed work benefits; "
-        "do not fabricate a 3D model of the product."
+        "Let the actual subject, material, existing light and meaningful crop "
+        "create visual depth. Consider optional very small photo parallax translation "
+        "or purposeful perspective only if it helps show the real work. "
+        "Never add pointer-following radial light, screen-blend halos or "
+        "fake light reflections above genuine photography. Do not fabricate "
+        "a 3D model of the client's product."
         if photo_rich else
-        "Use authentic brand typography, composition, elevation and subtle "
-        "surface lighting; do not invent a product photograph or a 3D asset."
+        "Create company-specific rhythm and depth using authentic typography, "
+        "real materials, balanced space and carefully chosen elevation. "
+        "Never invent a photograph, client product, or gratuitous 3D gimmick."
     )
     return {
         "selected_concept": selected["concept"],
@@ -79,6 +112,17 @@ def visual_direction_plan(research: dict, creative: dict, architecture: dict) ->
             "Avoid repeating hero split, numbered cards, CTA strips and empty title bands."
         ),
         "depth_direction": depth,
+        "premium_effect_choice": {
+            "first_pass_candidate": "B" if photo_rich else "A",
+            "approval": "proposal_only_not_visual_quality_score",
+            "A": "Business-led premium layout, typography, authentic imagery and restrained motion.",
+            "B": "Authentic case photography/video, purposeful gallery transitions, optional tiny parallax.",
+            "C": "Only a real source-bound, licensed 3D product/space/process with "
+                 "mobile/WebGL fallback, editability and performance review.",
+            "rule": "Choose by actual customer task and brand/source evidence, not "
+                    "because 3D is more impressive. No synthetic image spotlights.",
+            "reference": "docs/KAURIVO_3D_PREMIUM_MOTION_STANDARD_20261109.md",
+        },
         "motion_budget_from_source": motion_budget,
         "motion_decision": (
             "Propose at least one brand-relevant interaction or explain why "
@@ -135,6 +179,17 @@ def audit_visual_motion(
     css_reduced = bool(_CSS_REDUCED.search(css))
     js_reduced = bool(_JS_REDUCED.search(js))
     blockers, pending = [], []
+    spotlights = _synthetic_photo_spotlights(css, pages)
+    if spotlights:
+        problem = ("Synthetic photo spotlight risk: radial halo overlay on real image "
+                   "in " + ", ".join(spotlights[:4]) +
+                   ". Remove the pointer-following/screen-blend light and preserve "
+                   "authentic photographic light. Any exceptional client-authorized "
+                   "treatment needs independent, source-based visual review.")
+        # The offending CSS is actually present in the inspected source.
+        # Unrelated uninspected third-party assets must not downgrade this
+        # observed high-confidence flaw from blocker to pending.
+        blockers.append(problem)
     if animated and not css_reduced:
         issue = "CSS keyframe/animation motion has no prefers-reduced-motion: reduce override."
         (blockers if assets_complete else pending).append(issue)
@@ -167,6 +222,7 @@ def audit_visual_motion(
             "js_reduced_motion": js_reduced,
             "linked_assets_seen": sorted(set(linked_assets)),
             "assets_complete": bool(assets_complete),
+            "synthetic_photo_spotlights": spotlights,
         },
         "note": "Static source checks only; no fabricated independent score.",
     }

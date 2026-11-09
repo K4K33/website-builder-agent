@@ -38,6 +38,22 @@ unseen-company validation are separate statuses. Do not claim field validation
 from synthetic tests or the same demo revised repeatedly.
 '''
 
+# The canonical Master Prompt is an actual runtime dependency, not a file
+# that only a human might read. Load only its short active block to avoid
+# multiplying tokens/API costs for every Research/Builder/Revision/QA call.
+MASTER_PROMPT_PATH = Path(__file__).resolve().parents[1] / "docs/KAURIVO_MESTARI_PROMPT.md"
+MASTER_PROMPT_SOURCE = MASTER_PROMPT_PATH.read_text(encoding="utf-8")
+MASTER_PROMPT_SHA256 = hashlib.sha256(MASTER_PROMPT_SOURCE.encode("utf-8")).hexdigest()
+_MASTER_START = "<!-- ACTIVE_RUNTIME_CONTRACT_START -->"
+_MASTER_END = "<!-- ACTIVE_RUNTIME_CONTRACT_END -->"
+if MASTER_PROMPT_SOURCE.count(_MASTER_START) != 1 or MASTER_PROMPT_SOURCE.count(_MASTER_END) != 1:
+    raise RuntimeError("Canonical master prompt is missing its single active runtime contract")
+_active = MASTER_PROMPT_SOURCE.split(_MASTER_START, 1)[1].split(_MASTER_END, 1)[0].strip()
+if len(_active) < 500:
+    raise RuntimeError("Canonical master prompt runtime contract is incomplete")
+POLICY += "\n" + _active + "\n"
+
+
 
 def _hash(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False,
@@ -90,7 +106,8 @@ def service_brief(research):
               for p in (research.get('site_architecture') or {}).get('pages', [])]
     lessons_file = Path(__file__).resolve().parents[1] / 'data/service_quality_lessons.json'
     lessons = json.loads(lessons_file.read_text(encoding='utf-8')) if lessons_file.is_file() else []
-    payload = {'service_lessons': lessons,
+    payload = {'master_prompt_sha256': MASTER_PROMPT_SHA256,
+               'service_lessons': lessons,
                'source_observation_sha256': _hash({'inventory': research.get('source_inventory') or {},
                                                    'fact_sources': research.get('fact_sources') or []}),
                'source_sha256': source_inventory_sha256(research.get('source_inventory') or {}),
