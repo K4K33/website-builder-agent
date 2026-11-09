@@ -1,5 +1,5 @@
 # Kaurivon Mestari-Prompti
-Versio 5 · 9.11.2026 · Koskee Researchia, Builderia, korjauksia, QA:ta ja käsin/Sitesissä tehtyjä sivuja.
+Versio 6 · 9.11.2026 · Koskee Researchia, Builderia, korjauksia, QA:ta ja käsin/Sitesissä tehtyjä sivuja.
 
 ## Aktiivinen yhteinen laatukäsky (Research → Builder → Revision → QA)
 <!-- ACTIVE_RUNTIME_CONTRACT_START -->
