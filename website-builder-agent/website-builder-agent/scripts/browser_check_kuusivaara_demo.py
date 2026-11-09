@@ -61,6 +61,23 @@ def main():
        report["errors"].append(f"Bad new route {record}")
       if record["language"]!=("en" if route.startswith("en/") else "fi"):
        report["errors"].append(f"Wrong language {record}")
+      if route in ("", "en/"):
+       geometry=page.evaluate("""() => {
+         const name=document.querySelector('.hero-brand-type strong');
+         const hero=document.querySelector('.hero-art');
+         if(!name||!hero)return {ok:false,reason:'missing source-branded hero'};
+         const range=document.createRange();range.selectNodeContents(name);
+         const ink=Array.from(range.getClientRects()).filter(r=>r.width>0 && r.height>0);
+         const stage=hero.getBoundingClientRect();
+         const ok=getComputedStyle(name).whiteSpace==='nowrap' && ink.length===1
+            && ink[0].left>=stage.left+8 && ink[0].right<=stage.right-8
+            && name.scrollWidth<=name.clientWidth+1;
+         return {ok,lines:ink.length,font:getComputedStyle(name).fontSize,whiteSpace:getComputedStyle(name).whiteSpace,
+           rect:name.getBoundingClientRect().width,scroll:name.scrollWidth,client:name.clientWidth,
+           textRight:ink[0]?.right,stageRight:stage.right};
+       }""")
+       record["hero_brand_geometry"]=geometry
+       if not geometry["ok"]:report["errors"].append(f"Brand name clipping {route or 'fi'} at {width}px: {geometry}")
       if record["failed_images"]:
        report["image_delivery"].append(record)
      except Exception as e:
