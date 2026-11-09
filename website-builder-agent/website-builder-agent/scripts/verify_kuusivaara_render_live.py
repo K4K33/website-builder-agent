@@ -38,12 +38,33 @@ def main():
                         hasInlineJS:!!document.querySelector('script[data-kaurivo-enhancement="inline-v1"]'),
                         hasLinkedCSS:!!document.querySelector('link[rel="stylesheet"][href]'),
                         hasLinkedJS:!!document.querySelector('script[src]'),
-                        heroBrandNoWrap:(() => {
+                        heroBrandGeometry:(() => {
                           const name=document.querySelector('.hero-brand-type strong');
-                          const parent=document.querySelector('.hero-brand-type');
-                          if(!name||!parent)return false;
-                          return getComputedStyle(name).whiteSpace==='nowrap'
-                              && name.getBoundingClientRect().width<=parent.clientWidth+1;
+                          const stage=document.querySelector('.hero-art');
+                          if(!name || !stage) return {ok:false,reason:'title missing'};
+                          const style=getComputedStyle(name);
+                          const range=document.createRange();
+                          range.selectNodeContents(name);
+                          const ink=Array.from(range.getClientRects()).filter(r=>r.width>0 && r.height>0);
+                          const bounds=name.getBoundingClientRect();
+                          const canvas=stage.getBoundingClientRect();
+                          const isSingleLine=ink.length===1;
+                          const inside=ink.every(r=>r.left>=canvas.left+8 && r.right<=canvas.right-8);
+                          const ok=style.whiteSpace==='nowrap' && isSingleLine && inside
+                              && name.scrollWidth<=name.clientWidth+1;
+                          return {
+                            ok,
+                            lines:ink.length,
+                            text:name.textContent.trim(),
+                            fontSize:style.fontSize,
+                            whiteSpace:style.whiteSpace,
+                            rectWidth:Math.round(bounds.width),
+                            clientWidth:name.clientWidth,
+                            scrollWidth:name.scrollWidth,
+                            stageWidth:Math.round(canvas.width),
+                            textRight:ink[0]?Math.round(ink[0].right):null,
+                            stageRight:Math.round(canvas.right)
+                          };
                         })(),
                         heroBrandVisible:(() => {
                             const e=document.querySelector('.hero-brand-type');
@@ -78,8 +99,8 @@ def main():
                         audit["errors"].append(f"{width} {route}: no live JavaScript for interactive menu")
                     if route=="" and not metrics["heroBrandVisible"]:
                         audit["errors"].append(f"{width} homepage: brand typography fallback NOT VISIBLE; empty hero")
-                    if route=="" and not metrics["heroBrandNoWrap"]:
-                        audit["errors"].append(f"{width} homepage: business name wraps or overflows hero typography")
+                    if route=="" and not metrics["heroBrandGeometry"]["ok"]:
+                        audit["errors"].append(f"{width} homepage: business name wrap or clipping {metrics['heroBrandGeometry']}")
                     if metrics["bodyFont"] in ("Times New Roman", '"Times New Roman"', "serif"):
                         audit["errors"].append(f"{width} {route}: DEFAULT BROWSER TYPOGRAPHY -- STYLES FAILED")
                     if metrics["logoWidth"] > 110 or metrics["brandWidth"] > 340:
