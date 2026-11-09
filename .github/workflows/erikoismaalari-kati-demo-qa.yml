@@ -1,0 +1,40 @@
+name: Kaurivo Erikoismaalari Kati independent source/browser QA
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/erikoismaalari-kati-v1/**"
+      - "website-builder-agent/website-builder-agent/scripts/browser_check_erikoismaalari_kati_demo.py"
+      - ".github/workflows/erikoismaalari-kati-demo-qa.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install actual Chromium browser
+        run: |
+          python -m pip install playwright beautifulsoup4
+          python -m playwright install --with-deps chromium
+      - name: Run origin and redesigned server
+        run: |
+          cd docs/kaurivo/demos/erikoismaalari-kati-v1
+          nohup python -m http.server 8765 --bind 127.0.0.1 >/tmp/kaurivo-kati-http.log 2>&1 &
+          sleep 2
+      - name: Browser tests and true original/new screenshot pairs
+        run: python scripts/browser_check_erikoismaalari_kati_demo.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: erikoismaalari-kati-source-and-new-screenshots
+          path: website-builder-agent/website-builder-agent/qa-evidence/erikoismaalari-kati-v1
+          retention-days: 30
+          if-no-files-found: warn
