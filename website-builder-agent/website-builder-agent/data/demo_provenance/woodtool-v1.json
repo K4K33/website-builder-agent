@@ -398,7 +398,7 @@
     ]
   },
   "original_experience_profile": {
-    "source_sha256": "3674a9a1160cab933e7abad2128eeb69367e4ef4d34a5cc04c158c3cd6e9dc8d",
+    "source_sha256": "41c781dcf838e3b48e926d8a56895be5f068da38f78ed12c5ac616d28c05aab2",
     "capture_method": "browser",
     "complete": true,
     "checked_at": "2026-11-09T10:51:43Z",
@@ -451,7 +451,7 @@
       "kind": "official_source_html"
     }
   ],
-  "capture_status": "Updated provenance to include exact original woodtool.fi logo; recalculating source SHA and final live-browser checks.",
+  "capture_status": "Original Woodtool logo source verified in official browser; FI/SV source screenshots available. Final logo delivery uses original asset when accessible and a visible fallback if hotlinking is blocked. Final route/browser QA in progress; independent 9.5 reviewer and media license not verified.",
   "limitations": [
     "No license to reuse original images for customer delivery; links are internal design review only.",
     "Contact uses transparent direct phone/email methods; no form was evidenced on source.",
