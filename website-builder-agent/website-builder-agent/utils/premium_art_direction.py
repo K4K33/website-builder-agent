@@ -145,7 +145,7 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict) -> dict:
     if v2:
         plan = research.get("brand_signature_plan") or {}
         signatures = plan.get("signatures") if isinstance(plan, dict) else None
-        if not isinstance(signatures, list) or not signatures:
+        if (not isinstance(signatures, list) or not signatures) and research.get("research_mode") != "verified_no_website":
             pending.append(
                 "No source-anchored visual signature inventory: examine original "
                 "logo AND background patterns, palette mood, material textures, "
