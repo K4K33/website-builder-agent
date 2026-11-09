@@ -285,8 +285,16 @@ def record_selection(reference, research, report, *, allowed_root, reviewer):
             raise RuntimeError("The concept producer cannot be its only visual reviewer.")
     choice = {'selected_id': order[selected]['id'], 'business_reason': observations[selected],
               'rejected_ids': [e['id'] for alias, e in order.items() if alias != selected]}
+    source_proofs = []
+    if research.get("premium_visual_protocol") == "v2":
+        from utils.concept_workflow import source_visual_evidence
+        source_proofs = [
+            {"viewport": item["viewport"], "sha256": item["sha256"]}
+            for item in source_visual_evidence(research)
+        ]
     selection = {'set_sha256': manifest['set_sha256'], 'reviewer': reviewer, 'report': report,
-                 'choice': choice, 'premium_approval': False}
+                 'choice': choice, 'source_image_proofs': source_proofs,
+                 'premium_approval': False}
     selection['selection_sha256'] = digest(selection)
     (path.parent / 'selection.json').write_text(json.dumps(selection, ensure_ascii=False, indent=2), encoding='utf-8')
     return {**reference, 'selection_sha256': selection['selection_sha256'], 'selection_path': str(path.parent / 'selection.json')}, choice
@@ -311,4 +319,15 @@ def validate_selected_concept(company, *, allowed_root):
         or selection.get('set_sha256') != manifest['set_sha256']
         or selection.get('choice') != research.get('creative_selection')):
         raise RuntimeError('Concept choice changed or does not match the rendered comparison')
+    if research.get("premium_visual_protocol") == "v2":
+        from utils.concept_workflow import source_visual_evidence
+        expected_source = [
+            {"viewport": item["viewport"], "sha256": item["sha256"]}
+            for item in source_visual_evidence(research)
+        ]
+        if selection.get("source_image_proofs") != expected_source:
+            raise RuntimeError(
+                "Original brand screenshots changed since concept selection; "
+                "render/review the three design proposals again."
+            )
     return selection
