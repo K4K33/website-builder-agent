@@ -40,6 +40,66 @@ def _photo_rich_original(research: dict) -> bool:
     return len(photos) >= 3
 
 
+
+def _localized_page_groups(pages: dict[str, str]) -> dict[str, str]:
+    """Count reciprocal hreflang translations as one editorial visitor task.
+
+    A company's FI/SV versions legitimately reuse the SAME photographs.
+    Merely naming a locale cannot bypass repetition checks: pages must link
+    reciprocally to the exact real counterparts with different HTML language.
+    """
+    routes = set(pages)
+    languages = {}
+    alternates: dict[str, set[str]] = {}
+    for route, raw in pages.items():
+        soup = BeautifulSoup(raw or "", "html.parser")
+        languages[route] = str((soup.find("html") or {}).get("lang") or "").lower()
+        refs = set()
+        for link in soup.select('head link[rel~="alternate"][hreflang][href]'):
+            href = str(link.get("href") or "").strip()
+            resolved = urlsplit(urljoin("https://local.example/" + route, href))
+            if resolved.hostname != "local.example":
+                continue
+            path = resolved.path.lstrip("/")
+            if not path or path.endswith("/"):
+                path += "index.html"
+            if path in routes and path != route:
+                refs.add(path)
+        alternates[route] = refs
+    parent = {route: route for route in routes}
+
+    def find(route):
+        while parent[route] != route:
+            parent[route] = parent[parent[route]]
+            route = parent[route]
+        return route
+
+    for route, targets in alternates.items():
+        for target in targets:
+            if route not in alternates.get(target, set()):
+                continue
+            if not languages[route] or not languages[target] or languages[route] == languages[target]:
+                continue
+            a, b = find(route), find(target)
+            parent[max(a, b)] = min(a, b)
+    return {route: find(route) for route in routes}
+
+
+def _is_work_collection(route: str, main) -> bool:
+    """Portfolio grids naturally reuse actual work featured elsewhere.
+
+    Do not exempt a page solely because its URL says portfolio: require
+    actual collection controls plus original work images, or a substantial
+    photo-rich collection layout. Images remain counted for media variety,
+    license dependencies and real gallery completeness.
+    """
+    images = main.find_all("img")
+    has_filters = bool(main.select("[data-filter]")) and bool(main.select("[data-category]"))
+    visual_grid = len(images) >= 7 and bool(main.select("figure,button[data-image-open]"))
+    return len(images) >= 5 and (has_filters or visual_grid)
+
+
+
 def audit_cross_route_editorial_risks(pages: dict[str, str],
                                      research: dict | None = None) -> dict:
     """Flags structural monotony and repeated visual assets across all routes.
@@ -58,9 +118,11 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
     }
     original_hosts.discard("")
     image_routes: dict[str, set[str]] = defaultdict(set)
+    all_image_assets: set[str] = set()
+    localized_groups = _localized_page_groups(pages)
     image_mentions = 0
     repeated_heading_routes: dict[str, set[str]] = defaultdict(set)
-    text_hero_routes = []
+    text_hero_routes = set()
     routes = []
     for route, raw in pages.items():
         if not isinstance(raw, str):
@@ -71,6 +133,8 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
             continue
         routes.append(route)
         images = main.find_all("img")
+        collection = _is_work_collection(route, main)
+        editorial_group = localized_groups.get(route, route)
         for img in images:
             # Lazy-load placeholders often occupy src while the actual
             # original photo is data-src/data-lazy-src. Count the REAL
@@ -83,14 +147,16 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
                     break
             key = _media_key(value, route)
             if key:
-                image_routes[key].add(route)
+                all_image_assets.add(key)
+                if not collection:
+                    image_routes[key].add(editorial_group)
                 image_mentions += 1
         first = main.find("section")
         if first is not None:
             h1 = first.find("h1")
             if (h1 and not first.find(["img", "video", "picture"])
                     and len(h1.get_text(" ", strip=True).split()) <= 9):
-                text_hero_routes.append(route)
+                text_hero_routes.add(editorial_group)
         unique_headings = set()
         for header in main.select("h2,h3"):
             heading = _normalize(header.get_text(" ", strip=True))
@@ -106,7 +172,7 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
                           if len(where) >= 3),
                          key=lambda row: (-len(row[1]), row[0]))
     source_hotlinks = sorted(
-        asset for asset in image_routes
+        asset for asset in all_image_assets
         if (urlsplit(asset).hostname or "").lower().removeprefix("www.")
         in original_hosts
     )
@@ -129,7 +195,7 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
                      "using one attractive source picture.",
             "examples": [{"asset": img, "routes": where} for img, where in repetitions[:6]],
         })
-    unique_count = len(image_routes)
+    unique_count = len(all_image_assets)
     if len(routes) >= 4 and image_mentions >= 10 and unique_count > 0 and image_mentions >= 2.6 * unique_count:
         pending.append({
             "category": "low_media_variety",
