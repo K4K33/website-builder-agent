@@ -9,7 +9,6 @@ from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import unittest
 
-from tests.test_release_safety import public_evidence
 from utils.release_safety import check_actual_public_website, inspect_release_safety
 from utils.service_quality import MASTER_PROMPT_SHA256
 
@@ -17,6 +16,35 @@ from utils.service_quality import MASTER_PROMPT_SHA256
 ROUTES = {"index.html", "services/index.html"}
 SITE_DIGEST = "a" * 64
 COMMIT = "b" * 40
+
+
+def public_evidence():
+    """A complete, well-shaped offline browser report used as the control."""
+    import hashlib
+    marker = "source-exact-preview-version-1234"
+    return {
+        "url": "https://preview.example.org/",
+        "site_sha256": SITE_DIGEST,
+        "commit_sha": COMMIT,
+        "release_marker": marker,
+        "ci_run_url": "https://github.com/owner/repo/actions/runs/123456",
+        "ci_verified_by_owner": True,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "pages": [
+            {
+                "route": route, "viewport": viewport, "status": 200,
+                "release_marker": marker, "computed_styles_valid": True,
+                "scripts_valid": True, "navigation_valid": True,
+                "responsive_valid": True, "visible_brand_valid": True,
+                "broken_images": 0, "page_errors": [],
+                "screenshot_sha256": hashlib.sha256(
+                    f"{route}:{viewport}".encode()
+                ).hexdigest(),
+            }
+            for route in sorted(ROUTES) for viewport in ("390", "1440")
+        ],
+        "errors": [], "warnings": [],
+    }
 
 
 def check(record):
