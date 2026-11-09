@@ -8,6 +8,13 @@ const licensedSamples=[
  ["e08b1bd0fe4ad2e53e13151672f1338e","https://images.pexels.com/photos/31567147/pexels-photo-31567147.jpeg?auto=compress&cs=tinysrgb&w=1400"],
  ["85bfab0b28ec1265c1c809e752f210bd","https://images.pexels.com/photos/34563854/pexels-photo-34563854.jpeg?auto=compress&cs=tinysrgb&w=1400"]
 ];
+// Do not display broken-image glyphs in the header when the original host
+// blocks hotlinks. Real brand text remains as the honest accessible fallback.
+document.querySelectorAll('.brand-logo').forEach(i=>{
+ const fail=()=>{i.hidden=true;i.classList.add('unavailable-source-art')};
+ i.addEventListener('error',fail,{once:true});
+ if(i.complete&&!i.naturalWidth)fail();
+});
 document.querySelectorAll('.source-image img,.hero-art img').forEach(i=>{
  const holder=i.closest('.source-image,.hero-art');
  const original=i.getAttribute('src')||'';
