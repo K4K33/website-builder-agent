@@ -52,7 +52,7 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="Kaikki kuvat").click()
                     page.locator("figure[data-category] [data-enlarge]").first.click()
                     if not page.locator("dialog[open]").count():errors.append("gallery lightbox not open")
-                    page.get_by_role("button",name="Sulje").click()
+                    page.locator("dialog[open] [data-close]").click()
                 if width==390:
                     page.get_by_role("button",name="Avaa tai sulje valikko").click()
                     if not page.locator("nav.primary.is-open").count():errors.append(f"{name}: mobile nav did not open")
