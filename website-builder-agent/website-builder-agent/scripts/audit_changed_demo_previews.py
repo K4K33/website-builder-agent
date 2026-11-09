@@ -15,6 +15,8 @@ from utils.universal_quality import audit_universal_standards
 from utils.visual_originality import audit_design_originality
 from utils.route_experience_contract import audit_route_experience
 from utils.commerce_parity import commerce_problems
+from utils.visual_direction import audit_visual_motion
+from bs4 import BeautifulSoup
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
 
@@ -124,6 +126,23 @@ def main():
             print("BLOCK",slug,"missing index.html")
             failed=True
             continue
+        css = "\n".join(f.read_text(encoding="utf-8") for f in folder.rglob("*.css"))
+        js = "\n".join(f.read_text(encoding="utf-8") for f in folder.rglob("*.js"))
+        remote_assets = any(
+            str(tag.get("href") or tag.get("src") or "").startswith(("http:", "https:", "//"))
+            for html in pages.values()
+            for tag in BeautifulSoup(html, "html.parser").select(
+                'link[rel~="stylesheet"][href],script[src]')
+        )
+        # Inspect the real committed style/JS assets. Remote dependencies make
+        # completeness unprovable, so report them as pending, not safe.
+        motion = audit_visual_motion(
+            pages, css_text=css, js_text=js, assets_complete=not remote_assets)
+        for problem in motion["blocking"]:
+            print("BLOCK", slug, "inaccessible_visual_motion", problem)
+            failed=True
+        if motion["pending"]:
+            print("VISUAL_REVIEW_PENDING", slug, "; ".join(motion["pending"][:3]))
         try:
             evidence=verified_source_evidence(slug)
             for issue in commerce_problems(evidence, pages):
