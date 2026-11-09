@@ -61,14 +61,18 @@ def audit():
             if set(p.filters)!={"all","ovet","ikkunat","lasimaalaukset"}:
                 problems.append("gallery filters incomplete")
             valid_ids={s for values in SOURCE["gallery_source_ids"].values() for s in values}
+            # Only the 23 labelled gallery cards count as portfolio entries.
+            # The separate editorial hero may legitimately repeat a source image.
+            card_urls=re.findall(
+                r'<button[^>]*\\bdata-enlarge\\b[^>]*>\\s*<img\\b[^>]*\\bsrc="([^"]+)"',
+                html, flags=re.I|re.S)
             photo_ids=[]
-            for u in p.images:
-                if not u:continue
+            for u in card_urls:
                 m=re.search(r"7e296a_([a-z0-9]{32})~mv2[.]jpg",u)
-                if not m:problems.append(f"not original media: {u}");continue
+                if not m:problems.append(f"gallery card uses non-original media: {u}");continue
                 photo_ids.append(m.group(1))
-            if set(photo_ids)!=valid_ids or len(photo_ids)!=23:
-                problems.append("not all exact 23 original gallery image ids retained")
+            if len(photo_ids)!=23 or set(photo_ids)!=valid_ids or len(set(photo_ids))!=23:
+                problems.append("not all exact 23 original gallery images retained in gallery cards")
     service=(SITE/ROUTES[1]).read_text(encoding="utf-8")
     for s in ('id="lyijylasi"','id="tiffany"','id="entisointi"','id="lasimaalaukset"'):
         if s not in service:problems.append("missing service route "+s)
