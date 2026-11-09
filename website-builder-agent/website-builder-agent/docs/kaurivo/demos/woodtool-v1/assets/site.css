@@ -95,3 +95,8 @@
  .gallery-lead h1,.gallery-lead p{max-width:100%}
 }
 @media(max-width:360px){.archive h2{font-size:clamp(38px,12.5vw,43px)}}
+
+/* Exact original Woodtool wordmark; do not rebuild business logos as text. */
+.brand-logo{width:145px;height:48px;object-fit:contain;object-position:left center;flex-shrink:0}
+.footer-original-logo{width:255px;max-width:100%;height:auto;max-height:90px;object-fit:contain;object-position:left center}
+@media(max-width:360px){.brand-logo{width:130px;height:40px}}

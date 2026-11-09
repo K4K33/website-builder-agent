@@ -106,7 +106,15 @@ with sync_playwright() as pw:
                 if not response or response.status!=200:issues.append(f"{route or 'home'} {width}: HTTP {response.status if response else None}")
                 if state["heading"]!=1 or state["nav"]!=5 or state["active"]!=1:
                     issues.append(f"{name} {width}: main/navigation structure wrong: {state['heading']} h1 / {state['nav']} nav / {state['active']} active")
-                if state["overflow"]>3: issues.append(f"{name} {width}: horizontal overflow {state['overflow']}px")
+                if state["overflow"]>3:
+                    offenders=page.evaluate("""() => [...document.querySelectorAll('body *')].filter(
+                        e=>{const r=e.getBoundingClientRect();return r.right > innerWidth+3 ||
+                        r.left < -3 && getComputedStyle(e).position!=='fixed'}
+                    ).slice(0,8).map(e=>({tag:e.tagName,cls:e.className,
+                        text:(e.textContent||'').trim().slice(0,80),
+                        right:Math.round(e.getBoundingClientRect().right)}))""")
+                    note("OVERFLOW_ELEMENTS",name,width,offenders)
+                    issues.append(f"{name} {width}: horizontal overflow {state['overflow']}px")
                 if state["hiddenOnReduce"]:issues.append(f"{name} {width}: reduced motion hides content")
                 if state["broken"]:issues.append(f"{name} {width}: broken images {state['broken'][:3]}")
                 if route.startswith("sv/") and state["language"]!="sv":issues.append(f"{name}: Swedish language absent")
