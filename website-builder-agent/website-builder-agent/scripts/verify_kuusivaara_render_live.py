@@ -11,6 +11,11 @@ from playwright.sync_api import sync_playwright
 
 URL = os.environ.get("KUUSIVAARA_PUBLIC_URL", "https://kaurivo-kuusivaara-demo-2026.onrender.com/").rstrip("/")
 OUT = Path(__file__).resolve().parents[1] / "output/kuusivaara-render-live-smoke"
+EXPECTED_RELEASE = os.environ.get("KAURIVO_EXPECTED_RELEASE", "kv-20261109-render-fingerprint-v4")
+ROUTES = [
+    "", "palvelut/", "tyot/", "tekijat/", "tarinamme/", "yhteys/",
+    "en/", "en/services/", "en/work/", "en/people/", "en/story/", "en/contact/"
+]
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
@@ -20,7 +25,7 @@ def main():
         for width in (390, 1440):
             ctx = browser.new_context(viewport={"width": width, "height": 850}, device_scale_factor=1)
             page = ctx.new_page()
-            for route in ("", "palvelut/", "tyot/", "en/services/"):
+            for route in ROUTES:
                 entry = {"route": route, "width": width}
                 try:
                     response = page.goto(URL + "/" + route, wait_until="domcontentloaded", timeout=40000)
@@ -35,6 +40,17 @@ def main():
                       const nav=document.querySelector('header nav');
                       return {
                         hasInlineCSS:!!style && style.textContent.length>10000,
+                        releaseMarker:document.documentElement.getAttribute('data-kaurivo-release'),
+                        language:document.documentElement.lang,
+                        h1Count:document.querySelectorAll('main h1').length,
+                        heroNameFontPx:(() => {
+                          const name=document.querySelector('.hero-brand-type strong');
+                          return name?parseFloat(getComputedStyle(name).fontSize):null;
+                        })(),
+                        heroNameOverflowWrap:(() => {
+                          const name=document.querySelector('.hero-brand-type strong');
+                          return name?getComputedStyle(name).overflowWrap:null;
+                        })(),
                         hasInlineJS:!!document.querySelector('script[data-kaurivo-enhancement="inline-v1"]'),
                         hasLinkedCSS:!!document.querySelector('link[rel="stylesheet"][href]'),
                         hasLinkedJS:!!document.querySelector('script[src]'),
@@ -90,6 +106,12 @@ def main():
                     page.screenshot(path=str(OUT / entry["file"]), full_page=True, timeout=30000, animations="disabled")
                     if entry["status"] != 200:
                         audit["errors"].append(f"{width} {route}: HTTP {entry['status']}")
+                    if metrics["releaseMarker"] != EXPECTED_RELEASE:
+                        audit["errors"].append(f"{width} {route}: STALE BUILD: expected {EXPECTED_RELEASE}, got {metrics['releaseMarker']}")
+                    if metrics["language"] != ("en" if route.startswith("en/") else "fi"):
+                        audit["errors"].append(f"{width} {route}: incorrect html language")
+                    if metrics["h1Count"] != 1:
+                        audit["errors"].append(f"{width} {route}: expected one content h1")
                     if not metrics["hasInlineCSS"]:
                         if not metrics["hasLinkedCSS"] or metrics["bodyBg"]!="rgb(244, 240, 232)":
                             audit["errors"].append(f"{width} {route}: neither inline nor functional external CSS")
@@ -97,17 +119,19 @@ def main():
                             audit["warnings"].append(f"{width} {route}: older external CSS response still cached; site styled but exact deployment freshness pending")
                     if not metrics["hasInlineJS"] and not metrics["hasLinkedJS"]:
                         audit["errors"].append(f"{width} {route}: no live JavaScript for interactive menu")
-                    if route=="" and not metrics["heroBrandVisible"]:
+                    if route in ("", "en/") and not metrics["heroBrandVisible"]:
                         audit["errors"].append(f"{width} homepage: brand typography fallback NOT VISIBLE; empty hero")
-                    if route=="" and not metrics["heroBrandGeometry"]["ok"]:
+                    if route in ("", "en/") and not metrics["heroBrandGeometry"]["ok"]:
                         audit["errors"].append(f"{width} homepage: business name wrap or clipping {metrics['heroBrandGeometry']}")
+                    if route in ("", "en/") and (metrics["heroNameFontPx"] is None or metrics["heroNameFontPx"] > 60.5 or metrics["heroNameOverflowWrap"]!="normal"):
+                        audit["errors"].append(f"{width} {route}: old hero typography rules still served: {metrics['heroNameFontPx']} / {metrics['heroNameOverflowWrap']}")
                     if metrics["bodyFont"] in ("Times New Roman", '"Times New Roman"', "serif"):
                         audit["errors"].append(f"{width} {route}: DEFAULT BROWSER TYPOGRAPHY -- STYLES FAILED")
                     if metrics["logoWidth"] > 110 or metrics["brandWidth"] > 340:
                         audit["errors"].append(f"{width} {route}: HUGE UNSIZED BRAND ASSET")
                     if metrics["overflow"]:
                         audit["errors"].append(f"{width} {route}: HORIZONTAL OVERFLOW")
-                    if route=="" and metrics["heroBg"] not in ("rgb(14, 44, 35)", "rgb(14, 44, 35)"):
+                    if route in ("", "en/") and metrics["heroBg"] != "rgb(14, 44, 35)":
                         audit["errors"].append(f"{width} {route}: HERO BACKGROUND NOT STYLED ({metrics['heroBg']})")
                 except Exception as error:
                     audit["errors"].append(f"{width} {route}: {type(error).__name__}: {str(error)[:250]}")
@@ -124,7 +148,7 @@ def main():
             ctx.close()
         browser.close()
     (OUT/"report.json").write_text(json.dumps(audit,indent=2,ensure_ascii=False),encoding="utf-8")
-    print("RENDER_LIVE_SMOKE",json.dumps({"pages":len(audit["pages"]),"errors":audit["errors"],"warnings":audit["warnings"],"snapshots":OUT.as_posix()}))
+    print("RENDER_LIVE_SMOKE",json.dumps({"expected_release":EXPECTED_RELEASE,"pages":len(audit["pages"]),"errors":audit["errors"],"warnings":audit["warnings"],"snapshots":OUT.as_posix()}))
     return 1 if audit["errors"] else 0
 
 if __name__=="__main__":

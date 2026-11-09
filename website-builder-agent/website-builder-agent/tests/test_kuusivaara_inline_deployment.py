@@ -36,6 +36,7 @@ class KuusivaaraStaticDeliveryTests(unittest.TestCase):
                 self.assertIn("@media(max-width:530px)", style.get_text())
                 self.assertIn("prefers-reduced-motion", style.get_text())
                 self.assertEqual(soup.select_one("html").get("lang"), "en" if route.startswith("en/") else "fi")
+                self.assertEqual(soup.select_one("html").get("data-kaurivo-release"), "kv-20261109-render-fingerprint-v4")
                 self.assertEqual(len(soup.select("header .brand .brand-logo")), 1)
 
 if __name__ == "__main__":
