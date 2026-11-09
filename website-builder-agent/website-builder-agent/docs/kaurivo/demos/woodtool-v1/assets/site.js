@@ -17,23 +17,26 @@ if(reduced.matches||!('IntersectionObserver' in window)){
  const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}}),{threshold:.06,rootMargin:'0px 0px -6% 0px'});
  reveal.forEach(el=>io.observe(el));
 }
-/* Real, noticeable material-light response; no scroll jank or fake 3D product. */
+/* Tiny motion of the actual photograph; no cursor-following halo or light beam. */
 const panel=document.querySelector('[data-premium-interaction="pointer-depth"]');
 if(panel&&!reduced.matches&&window.matchMedia('(pointer:fine)').matches){
- let inFlight=false,targetX=48,targetY=40;
+ let inFlight=false,targetX=50,targetY=50;
+ const paint=()=>{
+  panel.style.setProperty('--shiftx',((50-targetX)*.045).toFixed(2)+'px');
+  panel.style.setProperty('--shifty',((50-targetY)*.045).toFixed(2)+'px');
+  inFlight=false;
+ };
  panel.addEventListener('pointermove',e=>{
   const r=panel.getBoundingClientRect();
   targetX=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));
   targetY=Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100));
   if(inFlight)return;
   inFlight=true;
-  requestAnimationFrame(()=>{
-   panel.style.setProperty('--px',targetX.toFixed(2)+'%');
-   panel.style.setProperty('--py',targetY.toFixed(2)+'%');
-   panel.style.setProperty('--shiftx',((50-targetX)*.11).toFixed(2)+'px');
-   panel.style.setProperty('--shifty',((50-targetY)*.11).toFixed(2)+'px');
-   inFlight=false;
-  });
+  requestAnimationFrame(paint);
+ },{passive:true});
+ panel.addEventListener('pointerleave',()=>{
+  targetX=50;targetY=50;
+  if(!inFlight){inFlight=true;requestAnimationFrame(paint)}
  },{passive:true});
 }
 const allFilters=[...document.querySelectorAll('[data-filter]')], works=[...document.querySelectorAll('[data-category]')];
