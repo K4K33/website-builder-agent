@@ -61,6 +61,10 @@ with sync_playwright() as playwright:
                         navLinks: nav ? nav.querySelectorAll("a").length : 0
                     };
                 }""")
+                item["observed"] = {"status": response.status if response else None,
+                    "final_url": response.url if response else None,
+                    "marker": result["marker"], "css_present": result["cssHref"],
+                    "hero_bg": result["heroBg"], "overflow": result["overflow"]}
                 if width <= 768:
                     toggle = page.locator("#menu-toggle")
                     toggle.click(timeout=5000)
@@ -93,6 +97,20 @@ with sync_playwright() as playwright:
                 item.update({"passed": True, "style": result, "screenshot_sha256": image_digest})
             except Exception as exc:
                 item.update({"passed": False, "error": str(exc)[:350]})
+                if width == 390:
+                    try:
+                        probe = page.request.get(BASE + route + "?release=" + EXPECTED,
+                                                 timeout=10000)
+                        snippet = probe.text()[:40000]
+                        import re
+                        marker = re.search(r'data-kaurivo-release="([^"]+)"', snippet)
+                        item["cache_bust_probe"] = {"status":probe.status,
+                            "marker":marker.group(1) if marker else None,
+                            "bytes":len(snippet),
+                            "x_cache":probe.headers.get("x-cache"),
+                            "etag":probe.headers.get("etag")}
+                    except Exception as diagnostic:
+                        item["cache_bust_probe"] = {"error":str(diagnostic)[:130]}
                 report["errors"].append(f"{route} @ {width}: {exc}")
             report["views"].append(item)
             page.remove_listener("pageerror", onerror)
@@ -108,5 +126,9 @@ with sync_playwright() as playwright:
     browser.close()
 (OUT/"report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
 print(json.dumps({"url": BASE, "checked_views": len(report["views"]), "failures": report["errors"],
-                  "stylesheet": report["stylesheet_response"]}, ensure_ascii=False))
+                  "stylesheet": report["stylesheet_response"],
+                  "failed_diagnostics":[{"route":v["route"],"width":v["width"],
+                    "observed":v.get("observed"),
+                    "cache_bust_probe":v.get("cache_bust_probe")}
+                    for v in report["views"] if not v["passed"]]}, ensure_ascii=False))
 sys.exit(1 if report["errors"] else 0)
