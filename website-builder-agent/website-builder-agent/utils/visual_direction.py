@@ -11,15 +11,14 @@ import re
 from bs4 import BeautifulSoup
 from utils.source_experience import source_experience_brief
 
-_CSS_MOTION = re.compile(r"@keyframes\\b|\\banimation(?:-name|-duration|-delay)?\\s*:", re.I)
-_CSS_DEPTH = re.compile(r"perspective\\s*:|preserve-3d|translateZ\\s*\\(|rotate[XY]\\s*\\(|matrix3d\\s*\\(", re.I)
-_CSS_REDUCED = re.compile(r"@media\\s*\\(\\s*prefers-reduced-motion\\s*:\\s*reduce\\s*\\)", re.I)
+_CSS_MOTION = re.compile(r"@keyframes\b|\banimation(?:-name|-duration|-delay)?\s*:", re.I)
+_CSS_DEPTH = re.compile(r"perspective\s*:|preserve-3d|translateZ\s*\(|rotate[XY]\s*\(|matrix3d\s*\(", re.I)
+_CSS_REDUCED = re.compile(r"@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)", re.I)
 _JS_TRACKING = re.compile(
-    r"(?:addEventListener\\s*\\(\\s*['\"](?:pointermove|mousemove|scroll)['\"]|"
-    r"\\.on(?:pointermove|mousemove|scroll)\\s*=|requestAnimationFrame\\s*\\()", re.I,
+    r'''(?:addEventListener\s*\(\s*['"](?:pointermove|mousemove|scroll)['"]|'''
+    r'''\.on(?:pointermove|mousemove|scroll)\s*=|requestAnimationFrame\s*\()''', re.I,
 )
-_JS_REDUCED = re.compile(r"prefers-reduced-motion\\s*:\\s*reduce", re.I)
-
+_JS_REDUCED = re.compile(r"prefers-reduced-motion\s*:\s*reduce", re.I)
 
 def visual_direction_plan(research: dict, creative: dict, architecture: dict) -> dict:
     """Create a specific PRE-BUILD design brief from an already validated choice.
