@@ -1147,6 +1147,38 @@ def ai_style_review_passes(review: dict, *, required: bool = True,
             and len(data["company_authenticity"].strip())>=25
             and data.get("unresolved")==[])
 
+def route_visual_review_passes(review: dict, rendered_pages: dict,
+                               research: dict, expected_view_ids=None) -> bool:
+    """V2 internal preview: 95/100 on EVERY route, not just the home page.
+
+    Reviewer scores are model judgments, NOT independent 9.5/10 certification.
+    They must refer to the actual captured desktop/mobile images of this build.
+    """
+    if research.get("premium_visual_protocol") != "v2":
+        return True
+    if not isinstance(review, dict) or not isinstance(rendered_pages, dict):
+        return False
+    route_reviews = review.get("route_visual_review")
+    if not isinstance(route_reviews, dict) or set(route_reviews) != set(rendered_pages):
+        return False
+    if (not expected_view_ids or
+        set(review.get("reviewed_route_view_ids") or []) != set(expected_view_ids)):
+        return False
+    minimum = config.QA_MIN_OWNER_PREVIEW_VISUAL_SCORE
+    for route, report in route_reviews.items():
+        if not isinstance(report, dict) or report.get("critical_issues") != []:
+            return False
+        if not isinstance(report.get("evidence"), str) or len(report["evidence"].strip()) < 60:
+            return False
+        for dimension in ("desktop", "mobile", "premium_appeal", "brand_fidelity",
+                          "image_authenticity", "art_direction", "interaction_quality"):
+            score = report.get(dimension)
+            if (isinstance(score, bool) or not isinstance(score, (int, float))
+                    or not minimum <= score <= 100):
+                return False
+    return True
+
+
 def run_qa(slug_or_name: str) -> dict:
     slug, company = get_company(slug_or_name)
     if company is None:
@@ -1297,12 +1329,25 @@ def run_qa(slug_or_name: str) -> dict:
                     if key in visual_comparison["pairs"]
                     and visual_comparison["pairs"][key].get("comparison_image")
                 ]
-                other_page_shots=[
-                    p for route,report in page_browsers.items()
-                    if route!="index.html"
-                    for key,p in (report.get("screenshots") or {}).items()
-                    if key in ("desktop","mobile") and p and os.path.isfile(p)
-                ][:12]
+                # Every route MUST reach the visual reviewer. The old [:12]
+                # silently omitted subpages of larger client sites.
+                route_view_ids=[]
+                other_page_shots=[]
+                for route, route_report in page_browsers.items():
+                    for viewport in ("desktop","mobile"):
+                        image=(route_report.get("screenshots") or {}).get(viewport)
+                        if not isinstance(image,str) or not os.path.isfile(image):
+                            continue
+                        identifier=hashlib.sha256(
+                            (route+"|"+viewport+"|"+
+                             hashlib.sha256(Path(image).read_bytes()).hexdigest()
+                            ).encode("utf-8")
+                        ).hexdigest()[:24]
+                        route_view_ids.append({
+                            "id":identifier,"route":route,"viewport":viewport
+                        })
+                        if route!="index.html":
+                            other_page_shots.append(image)
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT + SERVICE_QUALITY_POLICY,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
@@ -1349,10 +1394,14 @@ def run_qa(slug_or_name: str) -> dict:
                                   "creative_directions":research.get("creative_directions"),
                                   "creative_selection":research.get("creative_selection"),
                                   "originality_preflight":originality},ensure_ascii=False)
+                    + "\nPREMIUM VISUAL V2: score every source-grounded route separately, NEVER average a strong homepage over a weak subpage. If premium_visual_protocol=v2, return route_visual_review keyed by each route, with desktop, mobile, premium_appeal, brand_fidelity, image_authenticity, art_direction, interaction_quality scores 0..100; critical_issues array and concrete evidence >=60 characters on materials, real photos, layout rhythm, original brand pattern and conversion. Return reviewed_route_view_ids exactly for all listed image records. If a screenshot is missing, say so and FAIL; no self-certification as independent reviewer.\n"
+                    + json.dumps({"premium_visual_protocol":research.get("premium_visual_protocol"),
+                                  "all_routes_desktop_mobile_screenshot_order":route_view_ids},
+                                 ensure_ascii=False)
                     + "\nALL PAGE VISIBLE CONTENT:\n"
                     + "\n".join(route+": "+_build_ai_snapshot(body)
                                 for route,body in rendered_pages.items()),
-                    max_tokens=5000, stage="qa",
+                    max_tokens=7000, stage="qa",
                     image_paths=paired_images + list(browser["screenshots"].values()) + other_page_shots
                                 + benchmark_images,
                 )
@@ -1386,6 +1435,11 @@ def run_qa(slug_or_name: str) -> dict:
                          and layout_review["pass"]
                          and review_passes(review, benchmark_urls, decisions)
                          and owner_preview_visual_passes(review)
+                         and route_visual_review_passes(
+                             review, rendered_pages, research,
+                             expected_view_ids=[row["id"] for row in
+                                                (route_view_ids if "route_view_ids" in locals() else [])]
+                         )
                          and ai_style_review_passes(
                              review,required=bool(research.get("creative_directions")),
                              available_patterns=originality["reference_signatures"]
