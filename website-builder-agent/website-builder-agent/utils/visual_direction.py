@@ -112,6 +112,17 @@ def visual_direction_plan(research: dict, creative: dict, architecture: dict) ->
             "Avoid repeating hero split, numbered cards, CTA strips and empty title bands."
         ),
         "depth_direction": depth,
+        "premium_effect_choice": {
+            "first_pass_candidate": "B" if photo_rich else "A",
+            "approval": "proposal_only_not_visual_quality_score",
+            "A": "Business-led premium layout, typography, authentic imagery and restrained motion.",
+            "B": "Authentic case photography/video, purposeful gallery transitions, optional tiny parallax.",
+            "C": "Only a real source-bound, licensed 3D product/space/process with "
+                 "mobile/WebGL fallback, editability and performance review.",
+            "rule": "Choose by actual customer task and brand/source evidence, not "
+                    "because 3D is more impressive. No synthetic image spotlights.",
+            "reference": "docs/KAURIVO_3D_PREMIUM_MOTION_STANDARD_20261109.md",
+        },
         "motion_budget_from_source": motion_budget,
         "motion_decision": (
             "Propose at least one brand-relevant interaction or explain why "
