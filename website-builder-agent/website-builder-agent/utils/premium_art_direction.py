@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 _FILLER = re.compile(
     r"(?:graafinen materiaalitutkielma|abstrakti graafinen sommitelma|"
     r"graafinen tapettipinta|graphic material study|abstract graphic composition|"
-    r"placeholder image|esimerkkikuva|kuvapaikka|coming soon image)",
+    r"placeholder image|kuvapaikka|coming soon image)",
     re.I,
 )
 _GENERIC_VISUAL_CLASSES = {
@@ -137,6 +137,20 @@ def audit_premium_art_direction(pages: dict[str, str], research: dict, *, compan
             ],
             "note": "Image contents, licensing and actual browser appearance still require review.",
         }
+        # A visibly identified, real third-party sample photograph is not
+        # the same as an empty decorative placeholder. Ethical stock-photo
+        # disclosure ("esimerkkikuva") is REQUIRED and must not itself be a
+        # blocker. Actual rights/subject authenticity remain separate gates.
+        disclosed_samples = [
+            img for img in photos
+            if "esimerkkikuva" in str(img.get("alt") or "").casefold()
+            or "illustrative" in str(img.get("alt") or "").casefold()
+        ]
+        if disclosed_samples:
+            pending.append(
+                f"{route}: disclosed licensed-example photographs require "
+                "rights and subject-context verification before client release."
+            )
         if filler and photo_rich and v2:
             blockers.append(
                 f"{route}: generic decorative/filler panel substitutes for sourced client work; "
