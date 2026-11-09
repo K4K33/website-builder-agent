@@ -98,7 +98,19 @@ with sync_playwright() as pw:
                     hiddenOnReduce:[...document.querySelectorAll('[data-reveal]')].filter(
                         e=>getComputedStyle(e).opacity==='0').length,
                     images:document.images.length,
-                    broken:[...document.images].filter(i=>!i.naturalWidth).map(i=>i.currentSrc||i.src).slice(0,12),
+                    broken:[...document.images].filter(i=>!i.naturalWidth &&
+                        !(i.hidden && i.nextElementSibling &&
+                          i.nextElementSibling.classList.contains('original-wordmark-fallback') &&
+                          !i.nextElementSibling.hidden) &&
+                        !(i.hidden && i.nextElementSibling &&
+                          i.nextElementSibling.classList.contains('footer-wordmark-fallback') &&
+                          !i.nextElementSibling.hidden)
+                    ).map(i=>i.currentSrc||i.src).slice(0,12),
+                    originalLogoFallbacks:[...document.images].filter(i=>
+                         !i.naturalWidth && i.hidden &&
+                         i.nextElementSibling &&
+                         !i.nextElementSibling.hidden &&
+                         /wordmark-fallback/.test(i.nextElementSibling.className)).length,
                     sourceImgs:[...document.images].filter(i=>(i.currentSrc||i.src).includes('woodtool.fi/wp-content/')).length,
                     links:[...document.querySelectorAll('.main-nav a')].map(a=>a.getAttribute('href'))
                 })""")
@@ -117,6 +129,9 @@ with sync_playwright() as pw:
                     issues.append(f"{name} {width}: horizontal overflow {state['overflow']}px")
                 if state["hiddenOnReduce"]:issues.append(f"{name} {width}: reduced motion hides content")
                 if state["broken"]:issues.append(f"{name} {width}: broken images {state['broken'][:3]}")
+                if state["originalLogoFallbacks"]:
+                    note("SOURCE_LOGO_REFERRER_BLOCKED_USING_FAITHFUL_WORDMARK",name,width,
+                         state["originalLogoFallbacks"])
                 if route.startswith("sv/") and state["language"]!="sv":issues.append(f"{name}: Swedish language absent")
                 if not route.startswith("sv/") and state["language"]!="fi":issues.append(f"{name}: Finnish language absent")
                 if width in (390,1440):
