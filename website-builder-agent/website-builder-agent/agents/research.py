@@ -36,6 +36,7 @@ from utils.free_tavily_cache import cached_free_search
 from utils.reference_screenshot_cache import capture_cached
 from utils.reference_site_cache import cached_analyze
 from utils.premium_quality_gate import discover_source_journeys
+from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.creative_directions import validate_creative_directions
 from utils.site_architecture import validate_site_architecture
 
@@ -717,6 +718,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
         ],
     }
     reset_generated_review_claims(research_data)
+    research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, "")
     validate_creative_directions(research_data)
@@ -1104,6 +1106,7 @@ Tärkeää:
     }
 
     reset_generated_review_claims(research_data)
+    research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     validate_design_plan(research_data, url)
     # Do not spend a Builder request on a redesign that never planned to
