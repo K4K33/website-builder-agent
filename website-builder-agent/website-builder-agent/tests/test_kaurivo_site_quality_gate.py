@@ -125,14 +125,25 @@ class OutreachReleaseGateTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "HOLD"):
                     outreach.approve_outreach("kotifixi")
 
-    def test_outreach_approval_requires_three_good_distinct_reviewed_demos(self):
+    def test_three_good_reviewed_demos_are_not_enough_without_live_public_proof(self):
         record = self._record([review("kotifixi"), review("client-b"), review("client-c")])
         with patch.object(outreach, "get_company", return_value=("kotifixi", record)):
             with patch.object(outreach, "company_is_suppressed", return_value=False):
                 with patch.object(outreach, "upsert_company") as persist:
-                    with patch.object(outreach, "set_status"):
+                    with self.assertRaisesRegex(RuntimeError, "KAURIVO HOLD"):
                         outreach.approve_outreach("kotifixi")
-                        self.assertTrue(persist.call_args.args[1]["outreach"]["approved"])
+                    persist.assert_not_called()
+
+    def test_three_reviewed_demos_and_separately_verified_release_can_be_approved(self):
+        record = self._record([review("kotifixi"), review("client-b"), review("client-c")])
+        with patch.object(outreach, "get_company", return_value=("kotifixi", record)):
+            with patch.object(outreach, "company_is_suppressed", return_value=False):
+                with patch("utils.release_safety.inspect_release_safety",
+                           return_value={"approved": True, "issues": [], "status": "PRESENTATION_READY"}):
+                    with patch.object(outreach, "upsert_company") as persist:
+                        with patch.object(outreach, "set_status"):
+                            outreach.approve_outreach("kotifixi")
+                            self.assertTrue(persist.call_args.args[1]["outreach"]["approved"])
 
 
 if __name__ == "__main__":
