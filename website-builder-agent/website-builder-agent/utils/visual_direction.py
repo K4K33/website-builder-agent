@@ -128,10 +128,10 @@ def audit_visual_motion(
     blockers, pending = [], []
     if animated and not css_reduced:
         issue = "CSS keyframe/animation motion has no prefers-reduced-motion: reduce override."
-        (blockers if assets_complete or not linked_assets else pending).append(issue)
+        (blockers if assets_complete else pending).append(issue)
     if scripted and not js_reduced:
         issue = "Pointer/scroll/requestAnimationFrame motion has no JS reduced-motion guard."
-        (blockers if assets_complete or not linked_assets else pending).append(issue)
+        (blockers if assets_complete else pending).append(issue)
     if linked_assets and not assets_complete:
         pending.append(
             "External styles/scripts require full asset inspection and live-browser "
