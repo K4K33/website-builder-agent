@@ -353,7 +353,7 @@
       "https://www.verhoomokuusivaara.fi/en/"
     ],
     "evidence_scope": "Five original official source routes each opened in real Playwright Chromium at 390 and 1440 px with HTTP 200 and full-page source screenshots. Current original CSS/JS richness not exhaustively assessed. Photo rights pending. Does not imply client approval.",
-    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42665679831/artifacts/13696437223",
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271",
     "features": {
       "original_logo_present": true,
       "photography_present": true,
@@ -364,11 +364,15 @@
     "visual_review": "PENDING_INDEPENDENT"
   },
   "source_comparison_evidence": {
-    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42665679831/artifacts/13696437223 (original-1440-0.png to original-1440-4.png)",
-    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42665679831/artifacts/13696437223 (original-390-0.png to original-390-4.png)",
-    "redesign_desktop": null,
-    "redesign_mobile": null,
-    "pending": "Rebuild screenshots after current source-image fallback release and capture exact SHA."
+    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (original-1440-0.png to original-1440-4.png)",
+    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (original-390-0.png to original-390-4.png)",
+    "redesign_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (new-1440-0.png to new-1440-11.png)",
+    "redesign_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (new-390-0.png to new-390-11.png)",
+    "extra_viewports": "https://github.com/K4K33/website-builder-agent/actions/runs/42667926656/artifacts/13696234271 (new-320-0..11.png; new-768-0..11.png)",
+    "exact_site_code_commit": "ad45a3dcbad69df21bdb7dc35868062a61851a8f",
+    "evidence_scope": "Real browser screenshots from a tested source-identical site code; later commit changed README only. Shows authentic source pages and preview layout, not rights or independent visual signoff.",
+    "visual_review": "PENDING_INDEPENDENT",
+    "source_hash": "2b19383c9b2f080f48471134990cf14090a49479b1d060f9f688d36ef06eba9a"
   },
   "source_content_map": {
     "pages": [
@@ -468,7 +472,7 @@
     "https://www.verhoomokuusivaara.fi/Tarinamme/",
     "https://www.verhoomokuusivaara.fi/en/"
   ],
-  "capture_status": "verified_original_source_10_screenshots; redesign_current_build_pending",
+  "capture_status": "original_and_redesign_browser_verified_current_site_code",
   "limitations": [
     "Not commissioned or approved by source business.",
     "Original image rights not proven.",
@@ -478,8 +482,24 @@
     "No customer CMS editor test or handover.",
     "Ten original source screenshot captures verified, full current-build comparison pending"
   ],
-  "release_status": "BLOCKED_PENDING_EVIDENCE",
+  "release_status": "INTERNAL_CANDIDATE_NOT_APPROVED_FOR_OUTREACH",
   "master_prompt": "KAURIVO_MESTARI_PROMPT_V6",
   "premium_effect_tier": "B",
-  "independent_site_score": null
+  "independent_site_score": null,
+  "known_verified_checks": {
+    "new_routes_visited": 12,
+    "viewports": [
+      320,
+      390,
+      768,
+      1440
+    ],
+    "original_routes_captured": 5,
+    "source_viewports": [
+      390,
+      1440
+    ],
+    "browser_interaction_check_passed": true,
+    "independent_visual_review_pending": true
+  }
 }
