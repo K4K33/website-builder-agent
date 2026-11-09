@@ -331,6 +331,24 @@
         "Whole-site preflight is not accepted: local source-image copies lack required client-signed identity/reuse approval; independent review is absent",
         "Three rendered concepts were not compared before initial implementation"
       ]
+    },
+    {
+      "slug": "lyijylasi-tiffany-v1",
+      "name": "Lyijylasi & Tiffany",
+      "url": "https://www.lyijylasijatiffany.fi/",
+      "business_id": "3150714-6",
+      "mode": "first_pass_unseen",
+      "implementation": "manual_static_demo_awaiting_visual_review",
+      "sector": "stained glass and traditional glass art",
+      "review_status": "not_reviewed",
+      "independent_review": "not_verified",
+      "code_review_url": "https://github.com/K4K33/website-builder-agent/pull/79",
+      "known_limits": [
+        "Full original browser source/media inventory and paired mobile/desktop screenshots not yet captured",
+        "Independent premium visual reviewer and 9.5 quality score absent",
+        "Real original images externally hotlinked, transfer and client image rights unknown",
+        "CMS editing, live deploy and form receipt unverified"
+      ]
     }
   ]
 }
