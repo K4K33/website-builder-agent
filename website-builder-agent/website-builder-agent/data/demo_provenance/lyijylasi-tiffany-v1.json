@@ -95,13 +95,16 @@
   "first_pass_review": {
     "status": "NOT_REVIEWED",
     "technical": "STATIC_SOURCE_CHECKS_PENDING",
-    "visual": "UNVERIFIED",
+    "visual": "PENDING",
     "mobile_browser": "UNVERIFIED",
     "independent_score": null,
     "commercial_handover": "BLOCKED",
-    "client_cms": "NOT_INSTALLED",
+    "client_cms": "NOT_TESTED",
     "image_rights": "NOT_VERIFIED",
-    "public_deploy": "NOT_DEPLOYED"
+    "public_deploy": "NOT_DEPLOYED",
+    "source_browser_capture": "COMPLETE_WITH_SCREENSHOTS",
+    "original_23_media_decoded": "VERIFIED",
+    "customer_handover": "BLOCKED"
   },
   "blockers": [
     "Real desktop and mobile rendered screenshots, crop/asset-decoding, interactions and performance must be tested.",
@@ -109,5 +112,522 @@
     "Original hosted photographs cannot be handed over without permission and migration.",
     "No authenticated CMS edit/publish/rollback evidence.",
     "Public staging preview/deploy not yet confirmed."
-  ]
+  ],
+  "schema_version": 2,
+  "stage": "internal_demo",
+  "source_url": "https://www.lyijylasijatiffany.fi/",
+  "research_mode": "existing_website",
+  "source_inventory": {
+    "pages": [
+      {
+        "url": "https://www.lyijylasijatiffany.fi/",
+        "text": "Lyijylasi & Tiffany. Lyijylasityöt, taidelasit ja Jugend-ikkunat. Lyijylasi-ikkunat ja taidelasit vuodesta 1998. Suunnittelemme ja valmistamme lyijylasimaalauksia, ikkunalaseja ja tiffany-lasitöitä. Teemme korjaus- ja entisöintiä vanhoille ikkunoille ja valaisimille. Valmistamme tilaustyönä taidelasilahjoja. Toteutuksia kodeissa, edustustiloissa, kirkoissa, seurakuntasaleissa, mökeissä ja Jugend-huoneistoissa. Näin tilaat: (1) ota yhteyttä ja lähetä kuvat, (2) ideointi ja suunnittelu, (3) mittaus paikan päällä tai sapluuna ja kirjallinen tarjous sisältäen materiaalit, aikataulun ja hinnan, (4) suunnitelman ja tarjouksen hyväksyntä, (5) käsityönä valmistus ja haluttaessa asennus, tyypillisesti 2–8 viikkoa. Palvelut: Lyijylasi-ikkunoiden suunnittelu ja valmistus; Tiffany-lasitöiden suunnittelu ja valmistus; Lyijylasi- ja Tiffany-ikkunoiden restaurointi; Klassiset lasimaalaukset. Esittelyssä lyijykiskot ja tina; Tiffany-tekniikassa kuparifolio ja tina. Kohteessa voidaan tarkistaa lasisävyjen sopivuus. Suosituimpia lyijylasi- ja Tiffany-lasimalleja, työnäytteet. KAUNIAINEN / SOMERO. Puh. 0456125115. Sähköposti: lyijylasijatiffany@gmail.com. Y-tunnus 3150714-6. Facebook: https://www.facebook.com/lyijylasiIkkunatJaTiffany. Verkkosivulla on yhteydenottolomake, joka pyytää etu- ja sukunimen, sähköpostin, puhelinnumeron ja viestin.",
+        "title": "Lyijylasi & Tiffany｜Jugend-ikkunat ja lasimaalaukset",
+        "headings": {
+          "h1": [
+            "Lyijylasi-ikkunat & Taidelasit vuodesta 1998"
+          ],
+          "h2": [
+            "Tilaustyönä asiakkaan toiveiden mukaan jo vuodesta 1998",
+            "Näin tilaat yksilöllisen lyijylasityön",
+            "Palvelumme",
+            "Lyijylasi ikkunoiden suunnittelu ja valmistus",
+            "Tiffany-lasitöiden suunnittelu ja valmistus",
+            "Lyijylasi & Tiffany ikkunoiden restaurointi",
+            "Klassiset lasimaalaukset",
+            "Suosituimpia lyijylasi ja tiffany lasimallejamme"
+          ]
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [
+          {
+            "href": "https://www.facebook.com/lyijylasiIkkunatJaTiffany",
+            "text": "Facebook"
+          }
+        ],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_cb2aa03c9f64464babd27f8e6e4e2e0e~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/313640_06c1a8d516d84cf0a273d0880940ae80~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/313640_d8304ba9f6b9407c803407ede3e55915~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_b91f74fe622d4ab3bfc70deabfeb22f2~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_5cf306fabf104b6eb12073587b6e7d9a~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_afee349133814f60a1a6b4bcfee07a70~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_e13edad826b14b79b81bd668325100e3~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_e2a8e4b3422b4a76af2078143edb454b~mv2.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://www.lyijylasijatiffany.fi/referenssit",
+            "text": "Töitämme"
+          },
+          {
+            "href": "https://www.facebook.com/lyijylasiIkkunatJaTiffany",
+            "text": "Facebook"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [],
+          "original_header_wordmark_candidates": [
+            "Lyijylasi & Tiffany"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_cb2aa03c9f64464babd27f8e6e4e2e0e~mv2.jpg",
+              "alt": "Jugend-ikkunan tulppaaniaihe",
+              "role": "source_feature"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/313640_06c1a8d516d84cf0a273d0880940ae80~mv2.jpg",
+              "alt": "Alkuperäinen mustavalkoinen ihmis- ja työpajakuva",
+              "role": "staff_portrait"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/313640_d8304ba9f6b9407c803407ede3e55915~mv2.jpg",
+              "alt": "Alkuperäisen sivun käsityökuva",
+              "role": "source_feature"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_b91f74fe622d4ab3bfc70deabfeb22f2~mv2.jpg",
+              "alt": "Mökin värilliset lyijylasi-ikkunat",
+              "role": "source_feature"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_5cf306fabf104b6eb12073587b6e7d9a~mv2.jpg",
+              "alt": "Ristiinnaulittu-aiheinen lasimaalaus",
+              "role": "source_feature"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_afee349133814f60a1a6b4bcfee07a70~mv2.jpg",
+              "alt": "Helsingin Jugend-erkkerin ikkuna",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_e13edad826b14b79b81bd668325100e3~mv2.jpg",
+              "alt": "Olohuoneen jugend-lasityö",
+              "role": "gallery_photo"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_e2a8e4b3422b4a76af2078143edb454b~mv2.jpg",
+              "alt": "Helsingin jugend-talon lasiovi",
+              "role": "gallery_photo"
+            }
+          ],
+          "source_experience": {
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "evidence_scope": "Chromium actual live site mobile 390x844 and desktop 1440x900, 2026-11-09 at 07:23 UTC; two observed original routes",
+            "evidence_url": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767",
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/7e296a_cb2aa03c9f64464babd27f8e6e4e2e0e~mv2.jpg",
+              "https://static.wixstatic.com/media/313640_06c1a8d516d84cf0a273d0880940ae80~mv2.jpg",
+              "https://static.wixstatic.com/media/313640_d8304ba9f6b9407c803407ede3e55915~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_b91f74fe622d4ab3bfc70deabfeb22f2~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_5cf306fabf104b6eb12073587b6e7d9a~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_afee349133814f60a1a6b4bcfee07a70~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_e13edad826b14b79b81bd668325100e3~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_e2a8e4b3422b4a76af2078143edb454b~mv2.jpg"
+            ]
+          },
+          "source_url": "https://www.lyijylasijatiffany.fi/",
+          "theme_color": "#c5eafb",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {
+          "typical_delivery": "2–8 viikkoa",
+          "prices": "not listed"
+        },
+        "source_content_blocks": {
+          "order_steps": [
+            "Ota yhteyttä",
+            "Ideointi ja suunnittelu",
+            "Mittaus ja tarjous",
+            "Suunnitelman hyväksyntä",
+            "Toteutus ja asennus"
+          ],
+          "contact_form_fields": [
+            "Etunimi",
+            "Sukunimi",
+            "Sähköposti",
+            "Puhelinnumero",
+            "Viestisi"
+          ]
+        }
+      },
+      {
+        "url": "https://www.lyijylasijatiffany.fi/referenssit",
+        "text": "Lyijylasi & Tiffany. Töitämme. Työnäytegallerian kolme kuva-aluetta: Lyijylasi & Tiffany ovet (7 kuvaa), Lyijylasi & Tiffany ikkunat (10 kuvaa), Lasimaalaukset ja näkösuojat (6 kuvaa). KAUNIAINEN / SOMERO. 0456125115. lyijylasijatiffany@gmail.com. Y-tunnus 3150714-6. Facebook ja yhteydenottolomake.",
+        "title": "Referenssit | Lyijylasi & Tiffany",
+        "headings": {
+          "h1": [],
+          "h2": []
+        },
+        "header_assets": [],
+        "footer_assets": [],
+        "footer_links": [
+          {
+            "href": "https://www.facebook.com/lyijylasiIkkunatJaTiffany",
+            "text": "Facebook"
+          }
+        ],
+        "images": [
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_f9a576e4651641bb8e03d4ea55a23b30~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_e2a8e4b3422b4a76af2078143edb454b~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_ad6eec577a3a4fefbee62482914473ae~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_ea7452bfe74e45e9ac3f2e3480573b89~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_70300f6c821e44dbb1b0039ff164dffc~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_13bd40147c9b4df7ac992a6250c1afa8~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_1f95ddf478ad4fe6b88f61c2ae417d10~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_afee349133814f60a1a6b4bcfee07a70~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_e13edad826b14b79b81bd668325100e3~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_2c0c7114eec64482b81d9c6565ad8da9~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_8335bc034de244b6a6003a9029e20995~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_4516678eab7749a6a660e059a9d80d17~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_b672cf7063f54d00b4814999621acd24~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_885e1dd39a474c998f6ceed689a23652~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_1c01b7bfd8b244e897c170a822d9009d~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_7366c254ec5644cab2ab8f3046575367~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_0366d809b782467ea35c03326f02c0fe~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_5cf306fabf104b6eb12073587b6e7d9a~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_eb7227b2a391443c82700122c53fc182~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_c25d7e8a486f4580ae9ddc0d4f7c3417~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_7b6b3490caab476aa9334a6c57bf3581~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_4260b74977d94312977f53c1cbf4cb1e~mv2.jpg"
+          },
+          {
+            "src": "https://static.wixstatic.com/media/7e296a_46c4bd73339540a1a124ff55ba199108~mv2.jpg"
+          }
+        ],
+        "links": [
+          {
+            "href": "https://www.lyijylasijatiffany.fi/",
+            "text": "Etusivu"
+          }
+        ],
+        "source_identity": {
+          "original_logo_candidates": [],
+          "original_header_wordmark_candidates": [
+            "Lyijylasi & Tiffany"
+          ],
+          "original_content_photos": [
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_f9a576e4651641bb8e03d4ea55a23b30~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ovet"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_e2a8e4b3422b4a76af2078143edb454b~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ovet"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_ad6eec577a3a4fefbee62482914473ae~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ovet"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_ea7452bfe74e45e9ac3f2e3480573b89~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ovet"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_70300f6c821e44dbb1b0039ff164dffc~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ovet"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_13bd40147c9b4df7ac992a6250c1afa8~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ovet"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_1f95ddf478ad4fe6b88f61c2ae417d10~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ovet"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_afee349133814f60a1a6b4bcfee07a70~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_e13edad826b14b79b81bd668325100e3~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_2c0c7114eec64482b81d9c6565ad8da9~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_8335bc034de244b6a6003a9029e20995~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_4516678eab7749a6a660e059a9d80d17~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_b672cf7063f54d00b4814999621acd24~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_885e1dd39a474c998f6ceed689a23652~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_1c01b7bfd8b244e897c170a822d9009d~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_7366c254ec5644cab2ab8f3046575367~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_0366d809b782467ea35c03326f02c0fe~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "ikkunat"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_5cf306fabf104b6eb12073587b6e7d9a~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "lasimaalaukset"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_eb7227b2a391443c82700122c53fc182~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "lasimaalaukset"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_c25d7e8a486f4580ae9ddc0d4f7c3417~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "lasimaalaukset"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_7b6b3490caab476aa9334a6c57bf3581~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "lasimaalaukset"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_4260b74977d94312977f53c1cbf4cb1e~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "lasimaalaukset"
+            },
+            {
+              "src": "https://static.wixstatic.com/media/7e296a_46c4bd73339540a1a124ff55ba199108~mv2.jpg",
+              "alt": "",
+              "role": "gallery_photo",
+              "category": "lasimaalaukset"
+            }
+          ],
+          "source_experience": {
+            "observed_videos": 0,
+            "observed_3d": false,
+            "observed_css_or_js_animation": false,
+            "has_meaningful_observed_motion": false,
+            "observed_textured_backgrounds": [],
+            "evidence_scope": "Chromium actual live site mobile 390x844 and desktop 1440x900, 2026-11-09 at 07:23 UTC; two observed original routes",
+            "evidence_url": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767",
+            "observed_photo_urls": [
+              "https://static.wixstatic.com/media/7e296a_f9a576e4651641bb8e03d4ea55a23b30~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_e2a8e4b3422b4a76af2078143edb454b~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_ad6eec577a3a4fefbee62482914473ae~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_ea7452bfe74e45e9ac3f2e3480573b89~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_70300f6c821e44dbb1b0039ff164dffc~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_13bd40147c9b4df7ac992a6250c1afa8~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_1f95ddf478ad4fe6b88f61c2ae417d10~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_afee349133814f60a1a6b4bcfee07a70~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_e13edad826b14b79b81bd668325100e3~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_2c0c7114eec64482b81d9c6565ad8da9~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_8335bc034de244b6a6003a9029e20995~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_4516678eab7749a6a660e059a9d80d17~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_b672cf7063f54d00b4814999621acd24~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_885e1dd39a474c998f6ceed689a23652~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_1c01b7bfd8b244e897c170a822d9009d~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_7366c254ec5644cab2ab8f3046575367~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_0366d809b782467ea35c03326f02c0fe~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_5cf306fabf104b6eb12073587b6e7d9a~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_eb7227b2a391443c82700122c53fc182~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_c25d7e8a486f4580ae9ddc0d4f7c3417~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_7b6b3490caab476aa9334a6c57bf3581~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_4260b74977d94312977f53c1cbf4cb1e~mv2.jpg",
+              "https://static.wixstatic.com/media/7e296a_46c4bd73339540a1a124ff55ba199108~mv2.jpg"
+            ]
+          },
+          "source_url": "https://www.lyijylasijatiffany.fi/referenssit",
+          "theme_color": "#c5eafb",
+          "reviews": [],
+          "dynamic_review_widget": false
+        },
+        "price_faq_evidence": {},
+        "source_content_blocks": {
+          "gallery_groups": [
+            {
+              "name": "Lyijylasi & Tiffany ovet",
+              "count": 7
+            },
+            {
+              "name": "Lyijylasi & Tiffany ikkunat",
+              "count": 10
+            },
+            {
+              "name": "Lasimaalaukset ja näkösuojat",
+              "count": 6
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "company_facts": {
+    "name": "Lyijylasi & Tiffany",
+    "phone": "0456125115",
+    "email": "lyijylasijatiffany@gmail.com",
+    "business_id": "3150714-6",
+    "localities": [
+      "Kauniainen",
+      "Somero"
+    ],
+    "start_year": 1998,
+    "delivery_estimate": "2–8 viikkoa",
+    "facebook": "https://www.facebook.com/lyijylasiIkkunatJaTiffany"
+  },
+  "original_experience_profile": {
+    "source_sha256": "363984ee10ebdb87330663b599a7e189985d237f7b23ba1988cdbc49ccea6bc7",
+    "capture_method": "browser",
+    "complete": true,
+    "checked_at": "2026-11-09T07:23:46Z",
+    "source_routes": [
+      "https://www.lyijylasijatiffany.fi/",
+      "https://www.lyijylasijatiffany.fi/referenssit"
+    ],
+    "evidence_scope": "Chromium 390px and 1440px screenshots for both original pages; 23 of 23 original gallery IDs verified in browser; image media decoding on original 37/37 home and 89/89 gallery at both viewports",
+    "features": {
+      "video": {
+        "present": false
+      },
+      "three_d": {
+        "present": false
+      },
+      "native_wheel_scroll": true,
+      "observed_images": true
+    },
+    "visual_review": "PENDING",
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767"
+  },
+  "source_comparison_evidence": {
+    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767/original-home-1440.png",
+    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767/original-home-390.png",
+    "redesign_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767/redesign-home-1440.png",
+    "redesign_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767/redesign-home-390.png",
+    "source_gallery_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767/original-gallery-1440.png",
+    "source_gallery_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42578916511/artifacts/13655924767/original-gallery-390.png",
+    "notes": "File names are individual screenshots inside original GitHub Actions ZIP artifact (not direct static URLs). Visual independent signoff is PENDING."
+  },
+  "commerce_inventory": [],
+  "fact_sources": [
+    {
+      "claim": "Founded 1998, contact and ordering steps",
+      "url": "https://www.lyijylasijatiffany.fi/",
+      "captured": "2026-11-09"
+    },
+    {
+      "claim": "All 23 original portfolio photos by exact Wix media IDs",
+      "url": "https://www.lyijylasijatiffany.fi/referenssit",
+      "captured": "2026-11-09"
+    }
+  ],
+  "capture_status": "Chromium source/media observations completed, independent image/use-rights and editorial review pending"
 }
