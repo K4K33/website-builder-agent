@@ -1,0 +1,50 @@
+name: Kaurivo Erikoismaalari Kati public preview live smoke
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/erikoismaalari-kati-live-smoke.yml"]
+  workflow_run:
+    workflows: ["Deploy static content to Pages"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-preview:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Prove all five public pages and both assets respond and have current content
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://k4k33.github.io/website-builder-agent/kaurivo/demos/erikoismaalari-kati-v1/'
+          for item in \
+            '|Käsityö,' \
+            'palvelut/|Ootraus' \
+            'tyot/|Poimintoja töistä' \
+            'tekija/|Kati Pakarinen' \
+            'yhteys/|040 556 1618' \
+            'assets/site.css|--paper:' \
+            'assets/site.js|prefers-reduced-motion'; do
+            path="${item%%|*}"
+            marker="${item#*|}"
+            url="${base}${path}"
+            success=false
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              status="$(curl --max-time 20 -sSL -w '%{http_code}' -o /tmp/kati-preview "${url}" || true)"
+              if [[ "$status" == "200" ]] && grep -Fq -- "$marker" /tmp/kati-preview; then
+                success=true
+                echo "OK ${url} (HTTP 200; verified marker)"
+                break
+              fi
+              echo "Retry ${attempt}: ${url}, HTTP ${status}"
+              sleep 6
+            done
+            if [[ "$success" != "true" ]]; then
+              echo "::error::Unusable published Kaurivo demo URL: ${url}"
+              exit 1
+            fi
+          done
+          echo "PASS: all five real client-style pages and CSS/JS assets HTTP 200." >> "$GITHUB_STEP_SUMMARY"
