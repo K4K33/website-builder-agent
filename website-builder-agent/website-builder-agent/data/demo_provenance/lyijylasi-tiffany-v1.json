@@ -1,0 +1,113 @@
+{
+  "company": "Lyijylasi & Tiffany",
+  "original_home": "https://www.lyijylasijatiffany.fi/",
+  "original_gallery": "https://www.lyijylasijatiffany.fi/referenssit",
+  "observed_date": "2026-11-09",
+  "evidence_status": "public text and image links inspected; no real visual browser screenshot or independent premium review yet",
+  "address_text": "KAUNIAINEN / SOMERO",
+  "phone": "0456125115",
+  "email": "lyijylasijatiffany@gmail.com",
+  "business_id": "3150714-6",
+  "stated_start_year": 1998,
+  "stated_typical_delivery": "2–8 viikkoa",
+  "services": [
+    "lyijylasi-ikkunoiden suunnittelu ja valmistus",
+    "Tiffany-lasitöiden suunnittelu ja valmistus",
+    "lyijylasi- ja Tiffany-ikkunoiden entisöinti",
+    "klassiset lasimaalaukset",
+    "tilaustyönä taidelasilahjat",
+    "vanhojen valaisimien korjaus"
+  ],
+  "order_workflow": [
+    "yhteydenotto ja valokuvat",
+    "ideointi ja suunnittelu",
+    "mittaus tai sapluuna ja kirjallinen tarjous",
+    "suunnitelman sekä tarjouksen hyväksyntä",
+    "valmistus ja valinnainen asennus"
+  ],
+  "original_gallery_groups": {
+    "ovet": 7,
+    "ikkunat": 10,
+    "lasimaalaukset_ja_nakosuojat": 6
+  },
+  "gallery_source_ids": {
+    "ovet": [
+      "f9a576e4651641bb8e03d4ea55a23b30",
+      "e2a8e4b3422b4a76af2078143edb454b",
+      "ad6eec577a3a4fefbee62482914473ae",
+      "ea7452bfe74e45e9ac3f2e3480573b89",
+      "70300f6c821e44dbb1b0039ff164dffc",
+      "13bd40147c9b4df7ac992a6250c1afa8",
+      "1f95ddf478ad4fe6b88f61c2ae417d10"
+    ],
+    "ikkunat": [
+      "afee349133814f60a1a6b4bcfee07a70",
+      "e13edad826b14b79b81bd668325100e3",
+      "2c0c7114eec64482b81d9c6565ad8da9",
+      "8335bc034de244b6a6003a9029e20995",
+      "4516678eab7749a6a660e059a9d80d17",
+      "b672cf7063f54d00b4814999621acd24",
+      "885e1dd39a474c998f6ceed689a23652",
+      "1c01b7bfd8b244e897c170a822d9009d",
+      "7366c254ec5644cab2ab8f3046575367",
+      "0366d809b782467ea35c03326f02c0fe"
+    ],
+    "lasimaalaukset": [
+      "5cf306fabf104b6eb12073587b6e7d9a",
+      "eb7227b2a391443c82700122c53fc182",
+      "c25d7e8a486f4580ae9ddc0d4f7c3417",
+      "7b6b3490caab476aa9334a6c57bf3581",
+      "4260b74977d94312977f53c1cbf4cb1e",
+      "46c4bd73339540a1a124ff55ba199108"
+    ]
+  },
+  "design_decisions": {
+    "preserve_original_name": true,
+    "logo": "No separate authentic image mark verified: use original business-name wordmark as text; do not invent an icon.",
+    "palette": "Source's cool blue and orange palette, muted for legibility.",
+    "photography": "All 23 original gallery photos referenced by Wix media identifiers; no AI images/stock.",
+    "source_functions": "No evidenced online store or booking. Company original contact form remains accessible via clearly labeled official-site link. Demo has explicit mailto draft, not working recipient form.",
+    "pages": [
+      "etusivu",
+      "palvelut",
+      "tyonaytteet",
+      "tilaaminen",
+      "yhteystiedot"
+    ]
+  },
+  "industry_comparison": [
+    {
+      "name": "X-Glass",
+      "url": "https://www.xglass.fi/taidelasit/",
+      "lesson": "Explain techniques and restoration clearly; no facts borrowed."
+    },
+    {
+      "name": "Pentti Saares",
+      "url": "https://www.penttisaares.fi/",
+      "lesson": "Compact artisan profile with strong category navigation; no facts borrowed."
+    },
+    {
+      "name": "Wall Up Design",
+      "url": "https://wallupdesign.fi/tuotteet/tiffany-lasityot/",
+      "lesson": "Place art imagery near service descriptions; no facts borrowed."
+    }
+  ],
+  "first_pass_review": {
+    "status": "NOT_REVIEWED",
+    "technical": "STATIC_SOURCE_CHECKS_PENDING",
+    "visual": "UNVERIFIED",
+    "mobile_browser": "UNVERIFIED",
+    "independent_score": null,
+    "commercial_handover": "BLOCKED",
+    "client_cms": "NOT_INSTALLED",
+    "image_rights": "NOT_VERIFIED",
+    "public_deploy": "NOT_DEPLOYED"
+  },
+  "blockers": [
+    "Real desktop and mobile rendered screenshots, crop/asset-decoding, interactions and performance must be tested.",
+    "No independent reviewer evidence, score or 9.5 approval.",
+    "Original hosted photographs cannot be handed over without permission and migration.",
+    "No authenticated CMS edit/publish/rollback evidence.",
+    "Public staging preview/deploy not yet confirmed."
+  ]
+}
