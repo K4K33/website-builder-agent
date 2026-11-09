@@ -24,6 +24,14 @@ SCORE_DIMENSIONS = (
     "accessibility", "interaction_quality",
 )
 VIEWPORTS = ("desktop", "tablet", "mobile", "small_mobile")
+# Independent reviewers must score EACH real route; strong home-page averages
+# cannot conceal mediocre service, contact, staff or product pages.
+PAGE_PREMIUM_DIMENSIONS = (
+    "visual_design", "premium_appeal", "brand_signature",
+    "image_authenticity", "interaction_quality", "usability",
+    "mobile", "content_completeness",
+)
+
 
 
 def site_digest(rendered_pages: dict[str, str]) -> str:
@@ -168,8 +176,43 @@ def verify_independent_premium_reviews(
         covered = review.get("pages_reviewed")
         if not isinstance(covered, list) or set(covered) != set(rendered_pages):
             issues.append(f"Reviewer {identifier or index+1}: not every page inspected.")
+        # For research created under the stronger protocol, inspect every
+        # rendered route and every viewport. Old review records cannot bypass
+        # this merely by repeating a 9.5 overall score.
+        if research.get("premium_visual_protocol") == "v2":
+            page_scores = review.get("page_scores") or {}
+            route_screenshots = review.get("route_screenshots") or {}
+            observations = review.get("page_observations") or {}
+            if set(page_scores) != set(rendered_pages):
+                issues.append(f"Reviewer {identifier or index+1}: page-by-page scores missing.")
+            if set(route_screenshots) != set(rendered_pages):
+                issues.append(f"Reviewer {identifier or index+1}: per-route screenshots missing.")
+            if set(observations) != set(rendered_pages):
+                issues.append(f"Reviewer {identifier or index+1}: page-by-page evidence missing.")
+            for route in rendered_pages:
+                scores_by_route = page_scores.get(route) or {}
+                for dimension in PAGE_PREMIUM_DIMENSIONS:
+                    value = scores_by_route.get(dimension)
+                    if (isinstance(value, bool) or not isinstance(value, (int, float))
+                            or not 9.5 <= value <= 10):
+                        issues.append(
+                            f"Reviewer {identifier or index+1}: "
+                            f"{route}: {dimension} below 9.5/10 or unreviewed."
+                        )
+                explanation = observations.get(route)
+                if not isinstance(explanation, str) or len(explanation.strip()) < 45:
+                    issues.append(f"Reviewer {identifier or index+1}: {route}: no concrete visual analysis.")
+                shots = route_screenshots.get(route) or {}
+                for vp in VIEWPORTS:
+                    screenshot = shots.get(vp)
+                    if not isinstance(screenshot, str) or not Path(screenshot).is_file():
+                        issues.append(f"Reviewer {identifier or index+1}: {route}: {vp} screenshot missing.")
+                    elif not Path(screenshot).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
+                        issues.append(f"Reviewer {identifier or index+1}: {route}: {vp} screenshot is not PNG.")
+
     return {"pass": not issues, "issues": issues,
             "reviewers_checked": len(reviews), "dimensions": SCORE_DIMENSIONS,
+            "per_page_dimensions": PAGE_PREMIUM_DIMENSIONS if research.get("premium_visual_protocol") == "v2" else (),
             "build_sha256": digest}
 
 

@@ -39,7 +39,9 @@ def context_digest(research):
     return digest({'service': service_brief({**research, 'creative_selection': None})['contract_sha256'],
                    'directions': research.get('creative_directions'),
                    'architecture': research.get('site_architecture'),
-                   'brand_plan': research.get('brand_preservation_plan')})
+                   'brand_plan': research.get('brand_preservation_plan'),
+                   'premium_visual_protocol': research.get('premium_visual_protocol'),
+                   'brand_signature_plan': research.get('brand_signature_plan')})
 
 
 def intake_fingerprint(items, root):
@@ -257,10 +259,44 @@ def record_selection(reference, research, report, *, allowed_root, reviewer):
         or any(not isinstance(v, list) for v in issues.values()) or issues[selected]
         or set(report.get('reviewed_view_ids') or []) != view_ids or not str(reviewer).strip()):
         raise RuntimeError('Visual choice needs all twelve real views, comparison of all three, and no critical winner issue')
+    if research.get("premium_visual_protocol") == "v2":
+        # A screenshot list alone does not establish visual quality. Every
+        # variant, route and viewport must receive concrete, critical notes
+        # before the full site can consume API credits. The winning route's
+        # views need an explicitly acceptable verdict without unresolved gaps.
+        checks = report.get("view_assessments") or {}
+        if not isinstance(checks, dict) or set(checks) != view_ids:
+            raise RuntimeError("Premium concepts need individual critical reviews of all twelve actual views.")
+        winner_ids = {v["id"] for v in order[selected]["views"]}
+        for view_id, assessment in checks.items():
+            if not isinstance(assessment, dict) or assessment.get("verdict") not in (
+                "pass", "needs_revision"):
+                raise RuntimeError("Each real viewport needs a pass/needs_revision verdict.")
+            for dimension in ("brand_evidence", "composition_evidence", "media_evidence"):
+                detail = assessment.get(dimension)
+                if not isinstance(detail, str) or len(detail.strip()) < 35:
+                    raise RuntimeError(
+                        f"{view_id}: {dimension} needs concrete image-grounded reasoning."
+                    )
+            if view_id in winner_ids and assessment["verdict"] != "pass":
+                raise RuntimeError("Winning concept has a deficient route/viewport: revise before full Build.")
+        if (report.get("source_reference_reviewed") is not True
+            and research.get("research_mode") != "verified_no_website"):
+            raise RuntimeError("Premium concept choice has no verified original-site screenshot comparison.")
+        if str(reviewer).strip() == str(manifest.get("producer") or "").strip():
+            raise RuntimeError("The concept producer cannot be its only visual reviewer.")
     choice = {'selected_id': order[selected]['id'], 'business_reason': observations[selected],
               'rejected_ids': [e['id'] for alias, e in order.items() if alias != selected]}
+    source_proofs = []
+    if research.get("premium_visual_protocol") == "v2":
+        from utils.concept_workflow import source_visual_evidence
+        source_proofs = [
+            {"viewport": item["viewport"], "sha256": item["sha256"]}
+            for item in source_visual_evidence(research)
+        ]
     selection = {'set_sha256': manifest['set_sha256'], 'reviewer': reviewer, 'report': report,
-                 'choice': choice, 'premium_approval': False}
+                 'choice': choice, 'source_image_proofs': source_proofs,
+                 'premium_approval': False}
     selection['selection_sha256'] = digest(selection)
     (path.parent / 'selection.json').write_text(json.dumps(selection, ensure_ascii=False, indent=2), encoding='utf-8')
     return {**reference, 'selection_sha256': selection['selection_sha256'], 'selection_path': str(path.parent / 'selection.json')}, choice
@@ -285,4 +321,15 @@ def validate_selected_concept(company, *, allowed_root):
         or selection.get('set_sha256') != manifest['set_sha256']
         or selection.get('choice') != research.get('creative_selection')):
         raise RuntimeError('Concept choice changed or does not match the rendered comparison')
+    if research.get("premium_visual_protocol") == "v2":
+        from utils.concept_workflow import source_visual_evidence
+        expected_source = [
+            {"viewport": item["viewport"], "sha256": item["sha256"]}
+            for item in source_visual_evidence(research)
+        ]
+        if selection.get("source_image_proofs") != expected_source:
+            raise RuntimeError(
+                "Original brand screenshots changed since concept selection; "
+                "render/review the three design proposals again."
+            )
     return selection
