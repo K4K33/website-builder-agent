@@ -95,6 +95,20 @@ def main():
      report["errors"].append("Reduced-motion fallback missing")
    except Exception as e: report["errors"].append(f"Interaction failure {type(e).__name__}: {str(e)[:160]}")
    ctx.close()
+   # Candidate royalty-free example photos: record exact CDN availability.
+   samples=[
+    "https://images.pexels.com/photos/34563854/pexels-photo-34563854.jpeg",
+    "https://images.pexels.com/photos/29224637/pexels-photo-29224637.jpeg",
+    "https://images.pexels.com/photos/36801652/pexels-photo-36801652.jpeg",
+    "https://images.pexels.com/photos/31567147/pexels-photo-31567147.jpeg",
+   ]
+   report["licensed_sample_probes"]=[]
+   for target in samples:
+    try:
+     response=p.request.new_context().get(target,timeout=16000)
+     report["licensed_sample_probes"].append({"url":target,"status":response.status,"type":response.headers.get("content-type",""),"size":len(response.body())})
+    except Exception as exc:
+     report["licensed_sample_probes"].append({"url":target,"error":type(exc).__name__+": "+str(exc)[:80]})
    browser.close()
  finally: srv.shutdown()
  report["source_complete"]=(len(report["source"])==10 and all(i.get("status")==200 and i.get("file") for i in report["source"]))
@@ -106,6 +120,7 @@ def main():
   print("SOURCE_INVENTORY_SHA256",source_inventory_sha256(inventory))
 
  (OUT/"report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
+ print("LICENSED_IMAGE_PROBES "+json.dumps(report.get("licensed_sample_probes",[])))
  print("KUUSIVAARA_BROWSER_SUMMARY "+json.dumps({"source_captures":len(report["source"]),"new_captures":len(report["new"]),"errors":report["errors"][:20],"image_delivery":report["image_delivery"][:14],"source_complete":report["source_complete"]},ensure_ascii=False))
  return int(bool(report["errors"]))
 if __name__=="__main__":sys.exit(main())
