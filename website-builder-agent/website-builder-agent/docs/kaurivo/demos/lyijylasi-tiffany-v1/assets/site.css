@@ -243,3 +243,12 @@ nav.primary{display:none;position:absolute;left:0;right:0;top:100%;background:va
     max-height:100%;object-fit:contain
   }
 }
+
+
+/* Original opening photo is 1300 x 650 source pixels.
+   Never stretch its displayed height beyond those native pixels. */
+@media(min-width:1081px){
+  .hero-grid{min-height:640px}
+  .hero-art{height:640px;min-height:0}
+  .hero-art img{object-position:center center}
+}
