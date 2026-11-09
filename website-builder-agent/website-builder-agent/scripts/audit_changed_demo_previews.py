@@ -24,9 +24,19 @@ PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
 
 def changed_slugs(base,head):
     changed=subprocess.check_output(["git","diff","--name-only",base,head],cwd=ROOT,text=True).splitlines()
-    return sorted({p[len(PREFIX):].split("/",1)[0] for p in changed
-                   if p.startswith(PREFIX) and "/" in p[len(PREFIX):]
-                   and not p[len(PREFIX):].startswith("_shared/")})
+    slugs={p[len(PREFIX):].split("/",1)[0] for p in changed
+           if p.startswith(PREFIX) and "/" in p[len(PREFIX):]
+           and not p[len(PREFIX):].startswith("_shared/")}
+    # Changes to research/provenance MUST invalidate the old release gate too.
+    # Otherwise a manual agent can edit the source and concept evidence without
+    # re-running the QA against its corresponding built pages.
+    evidence_prefix="website-builder-agent/website-builder-agent/data/demo_provenance/"
+    for item in changed:
+        if item.startswith(evidence_prefix) and item.endswith(".json"):
+            slug=item[len(evidence_prefix):-len(".json")]
+            if slug and "/" not in slug and (DEMOS/slug).is_dir():
+                slugs.add(slug)
+    return sorted(slugs)
 
 def verified_source_evidence(slug):
     """A static demo may not pass without ORIGINAL researched source evidence.
