@@ -1,0 +1,54 @@
+name: Kaurivo Woodtool public preview delivery smoke
+on:
+  workflow_run:
+    workflows: ["Deploy static content to Pages"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-pages:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify every FI and SV public route plus CSS JS on GitHub Pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://k4k33.github.io/website-builder-agent/kaurivo/demos/woodtool-v1/'
+          routes=(
+            '|Puusta.'
+            'palvelut/|Puusepäntyöt'
+            'tyot/|Työn jälki kuuluu nähdä.'
+            'verstas/|Puusepäntyötä Nauvosta.'
+            'yhteys/|0400 814 160'
+            'sv/|Massivt trä.'
+            'sv/tjanster/|Träarbeten för varje plats.'
+            'sv/referenser/|Hantverket i bilder.'
+            'sv/verkstaden/|Hantverk från Nagu.'
+            'sv/kontakt/|040 751 9313'
+            'assets/site.css|--night:'
+            'assets/site.js|pointer-depth'
+          )
+          for item in "${routes[@]}"; do
+            route="${item%%|*}"
+            needle="${item#*|}"
+            url="${base}${route}"
+            ok=false
+            for attempt in {1..15}; do
+              status="$(curl --max-time 25 -fsSL -w '%{http_code}' -o /tmp/woodtool-page "${url}" || true)"
+              if [[ "${status}" == "200" ]] && grep -Fq -- "${needle}" /tmp/woodtool-page; then
+                echo "OK: ${url} HTTP 200 with verified content"
+                ok=true
+                break
+              fi
+              echo "Retry ${attempt}: ${url} HTTP ${status}"
+              sleep 7
+            done
+            if [[ "${ok}" != "true" ]]; then
+              echo "::error::Missing or stale actual Woodtool page: ${url}"
+              exit 1
+            fi
+          done
+          echo "ALL TWELVE LIVE WOODTOOL URLS VERIFIED" >> "$GITHUB_STEP_SUMMARY"
