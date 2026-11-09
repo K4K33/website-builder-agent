@@ -396,15 +396,15 @@
     ]
   },
   "original_experience_profile": {
-    "source_sha256": "PENDING_BROWSER_COMPARISON",
+    "source_sha256": "3674a9a1160cab933e7abad2128eeb69367e4ef4d34a5cc04c158c3cd6e9dc8d",
     "capture_method": "browser",
-    "complete": false,
-    "checked_at": "2026-11-09T10:44:32Z",
+    "complete": true,
+    "checked_at": "2026-11-09T10:51:43Z",
     "source_routes": [
       "https://woodtool.fi/",
       "https://woodtool.fi/sv/"
     ],
-    "evidence_scope": "Original FI/SV site captured in Chromium at mobile+desktop, HTTP200, 48 original FI image elements and 41 original SV image elements; see first-pass original screenshots. Complete visual/manual source approval pending.",
+    "evidence_scope": "Live original FI/SV pages verified HTTP 200 in Chromium at 390 and 1440px; 48 FI and 41 SV image elements, original full-page screenshots captured. Static accessibility and subjective premium still require separate signoff.",
     "features": {
       "video": {
         "present": false
@@ -426,15 +426,15 @@
       }
     },
     "visual_review": "PENDING",
-    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42603125225/artifacts/13666652463"
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42604221767/artifacts/13668210053"
   },
   "source_comparison_evidence": {
-    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42603125225/artifacts/13666652463 (original-fi-1440.png; original-sv-1440.png)",
-    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42603125225/artifacts/13666652463 (original-fi-390.png; original-sv-390.png)",
-    "redesign_desktop": "PENDING_CAPTURE",
-    "redesign_mobile": "PENDING_CAPTURE",
-    "extra_pages": "PENDING_CAPTURE",
-    "notes": "No independent premium acceptance until real screenshot comparisons are reviewed."
+    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42604221767/artifacts/13668210053 (original-fi-1440.png, original-sv-1440.png)",
+    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42604221767/artifacts/13668210053 (original-fi-390.png, original-sv-390.png)",
+    "redesign_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42604221767/artifacts/13668210053 (new-fi-home-1440.png, new-palvelut-1440.png, new-tyot-1440.png and other FI/SV routes)",
+    "redesign_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42604221767/artifacts/13668210053 (new-fi-home-390.png, new-palvelut-390.png, new-sv-390.png and other FI/SV routes)",
+    "extra_pages": "All ten redesign routes at 390 and 1440px, original FI/SV comparisons, QA report; new 320px typography correction tested separately on final HEAD.",
+    "notes": "This source/new artifact was captured before a 320px title-width correction; desktop/390px images are genuine. Final viewport checks must run against exact last commit. These captures are not independent 9.5 reviewer approval."
   },
   "commerce_inventory": [],
   "fact_sources": [
@@ -449,7 +449,7 @@
       "kind": "official_source_html"
     }
   ],
-  "capture_status": "Original FI/SV real-browser capture succeeded; redesigned routes first pass found overflow and two nonloading images, corrected and re-testing. Independent rating still pending.",
+  "capture_status": "Real original FI/SV captures and initial full browser route screenshots verified; narrow 320px title correction requires final CI rerun. Owner/media rights, independent aesthetic rating and CMS remain pending.",
   "limitations": [
     "No license to reuse original images for customer delivery; links are internal design review only.",
     "Contact uses transparent direct phone/email methods; no form was evidenced on source.",

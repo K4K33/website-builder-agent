@@ -54,3 +54,8 @@
  .mobile-toggle{padding:8px}
  .locale a{font-size:10px;padding:7px 5px}
 }
+
+/* Narrow-width typographic proof: old 55px title on 320px overflowed
+   with single long Finnish and Swedish craft-work words. */
+.page-title{overflow-wrap:anywhere;hyphens:auto}
+@media(max-width:360px){.page-title{font-size:clamp(43px,13.8vw,49px);letter-spacing:-.065em}}
