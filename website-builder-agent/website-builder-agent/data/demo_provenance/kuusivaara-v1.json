@@ -341,17 +341,34 @@
     ]
   },
   "original_experience_profile": {
-    "source_sha256": null,
-    "capture_method": "pending_browser_review",
-    "complete": false,
-    "checked_at": null,
-    "evidence_scope": "Browser source screenshots and comparison are pending, no approval claimed."
+    "source_sha256": "2b19383c9b2f080f48471134990cf14090a49479b1d060f9f688d36ef06eba9a",
+    "capture_method": "browser",
+    "complete": true,
+    "checked_at": "2026-11-09T17:37:45Z",
+    "source_routes": [
+      "https://www.verhoomokuusivaara.fi/",
+      "https://www.verhoomokuusivaara.fi/Palvelut/",
+      "https://www.verhoomokuusivaara.fi/YRITYKSEMME/",
+      "https://www.verhoomokuusivaara.fi/Tarinamme/",
+      "https://www.verhoomokuusivaara.fi/en/"
+    ],
+    "evidence_scope": "Five original official source routes each opened in real Playwright Chromium at 390 and 1440 px with HTTP 200 and full-page source screenshots. Current original CSS/JS richness not exhaustively assessed. Photo rights pending. Does not imply client approval.",
+    "source_capture_artifact": "https://github.com/K4K33/website-builder-agent/actions/runs/42665679831/artifacts/13696437223",
+    "features": {
+      "original_logo_present": true,
+      "photography_present": true,
+      "source_3d_presence": "not independently verified",
+      "video_presence": "not independently verified",
+      "gallery_presence": true
+    },
+    "visual_review": "PENDING_INDEPENDENT"
   },
   "source_comparison_evidence": {
-    "source_desktop": null,
-    "source_mobile": null,
+    "source_desktop": "https://github.com/K4K33/website-builder-agent/actions/runs/42665679831/artifacts/13696437223 (original-1440-0.png to original-1440-4.png)",
+    "source_mobile": "https://github.com/K4K33/website-builder-agent/actions/runs/42665679831/artifacts/13696437223 (original-390-0.png to original-390-4.png)",
     "redesign_desktop": null,
-    "redesign_mobile": null
+    "redesign_mobile": null,
+    "pending": "Rebuild screenshots after current source-image fallback release and capture exact SHA."
   },
   "source_content_map": {
     "pages": [
@@ -451,15 +468,15 @@
     "https://www.verhoomokuusivaara.fi/Tarinamme/",
     "https://www.verhoomokuusivaara.fi/en/"
   ],
-  "capture_status": "pending_original_website_browser",
+  "capture_status": "verified_original_source_10_screenshots; redesign_current_build_pending",
   "limitations": [
     "Not commissioned or approved by source business.",
     "Original image rights not proven.",
     "Source images may return HTTP 429, fallback not a replacement for actual portfolio.",
     "Current source homepage email differs from older indexed service pages; current info@ chosen.",
-    "No full source-vs-new screenshot verification yet.",
     "No independent overall 9.5 review.",
-    "No customer CMS editor test or handover."
+    "No customer CMS editor test or handover.",
+    "Ten original source screenshot captures verified, full current-build comparison pending"
   ],
   "release_status": "BLOCKED_PENDING_EVIDENCE",
   "master_prompt": "KAURIVO_MESTARI_PROMPT_V6",
