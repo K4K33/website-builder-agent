@@ -10,7 +10,6 @@ Public job logs never disclose private CRM rows, tokens or source page content.
 """
 from __future__ import annotations
 
-import hashlib
 import ipaddress
 import json
 import os
@@ -22,7 +21,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from urllib.parse import parse_qsl, urlencode, urlsplit
+from urllib.parse import urlsplit, urljoin, unquote
 import requests
 
 REPO="K4K33/website-builder-agent"
@@ -36,8 +35,10 @@ PROJECT=Path(__file__).resolve().parents[1]
 RUN_ID=int(os.environ.get("GITHUB_RUN_ID","0"))
 RUN_URL=f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
 TIMEOUT_PER_STAGE=900
+# Publish only site documents and expected static assets. Never copy JSON/TXT
+# scratch files, notes, evidence, build manifests or private company data.
 ALLOWED_EXTENSIONS={".html",".css",".js",".png",".jpg",".jpeg",".webp",
-                    ".svg",".ico",".woff",".woff2",".ttf",".json",".txt"}
+                    ".svg",".ico",".woff",".woff2",".ttf",".webmanifest",".pdf"}
 SKIP_FOLDERS={"_concept_previews","_review_material","_visual_reports",
               "_concept_evidence","__pycache__","node_modules"}
 working_job=None
@@ -229,11 +230,19 @@ def snapshot_for_preview(src, dest, marker):
     return files
 
 
-def verify_static_site(site_root):
+def verify_static_site(site_root,expected_routes):
     from bs4 import BeautifulSoup
+    from utils.site_architecture import route_path
     from utils.premium_experience_gate import audit_premium_experience
-    pages={str(p.relative_to(site_root)):p.read_text(encoding="utf-8")
-           for p in site_root.rglob("index.html")}
+    try:
+        expected={route_path(route) for route in expected_routes}
+    except (TypeError,ValueError) as exc:
+        raise HoldError("invalid_expected_page_route") from exc
+    actual={str(p.relative_to(site_root)) for p in site_root.rglob("*.html")}
+    if not expected or "index.html" not in expected or actual!=expected:
+        raise HoldError("site_route_manifest_mismatch")
+    pages={route:(site_root/route).read_text(encoding="utf-8")
+           for route in sorted(expected)}
     css="\n".join(p.read_text(encoding="utf-8") for p in site_root.rglob("*.css"))
     js="\n".join(p.read_text(encoding="utf-8") for p in site_root.rglob("*.js"))
     result=audit_premium_experience(pages,css_text=css,js_text=js)
@@ -284,7 +293,7 @@ def local_browser_smoke(site_root,routes):
         browser.close()
 
 
-def publish(site_root,job_id,slug,marker):
+def publish(site_root,job_id,slug,marker,expected_routes):
     # Commit to a dedicated Render-auto-deployed branch. Never modify main
     # or previously verified preview URLs; every job gets a new immutable URL.
     suffix=job_id.split("-")[0]
@@ -298,7 +307,7 @@ def publish(site_root,job_id,slug,marker):
                        cwd=PROJECT,check=True,stdout=subprocess.DEVNULL)
         directory=publish_root/PUBLISH_DIR/folder
         snapshot_for_preview(site_root,directory,marker)
-        routes=verify_static_site(directory)
+        routes=verify_static_site(directory,expected_routes)
         local_browser_smoke(directory,routes)
         subprocess.run(["git","add","--",str(PUBLISH_DIR/folder)],
                        cwd=publish_root,check=True,stdout=subprocess.DEVNULL)
@@ -322,53 +331,115 @@ def publish(site_root,job_id,slug,marker):
 
 
 def verify_public(preview_url,marker,routes,deadline_seconds=420):
-    """Render 'live' means nothing; prove actual new public HTML, CSS & JS."""
+    """Prove the exact public release, not just a Render 'live' status.
+
+    Every generated route, CSS/script, image and internal navigation target
+    is actually fetched from the versioned public preview at mobile/tablet/
+    desktop widths. A broken link or untested route always HOLDs the demo.
+    """
     from playwright.sync_api import sync_playwright
     page_root=preview_url.rsplit("/",1)[0]+"/"
+    base=urlsplit(page_root)
+    if base.scheme!="https" or base.hostname!="kaurivo-auto-demos-2026.onrender.com":
+        raise HoldError("wrong_preview_domain")
+    if len(routes)>14:
+        raise HoldError("site_route_count_invalid")
     until=time.monotonic()+deadline_seconds
     while time.monotonic()<until:
         try:
-            r=requests.get(preview_url,timeout=14,headers={"cache-control":"no-cache"})
-            if r.status_code==200 and f'data-kaurivo-release="{marker}"' in r.text:
+            response=requests.get(preview_url,timeout=14,
+                                 headers={"cache-control":"no-cache"})
+            if (response.status_code==200 and
+                    f'data-kaurivo-release="{marker}"' in response.text):
                 break
         except requests.RequestException:
             pass
         time.sleep(12)
     else:
         raise HoldError("render_not_serving_exact_release")
+    internal_links=set()
     with sync_playwright() as playwright:
         browser=playwright.chromium.launch(headless=True)
-        for width in (390,768,1440):
-            ctx=browser.new_context(viewport={"width":width,"height":900},
-                device_scale_factor=1,reduced_motion="reduce")
-            page=ctx.new_page()
-            for route in routes:
-                errors=[]
-                broken=[]
-                page.on("pageerror",lambda e:errors.append(str(e)[:130]))
-                page.on("response",lambda r:broken.append((r.status,r.url))
-                   if r.status>=400 and r.request.resource_type in
-                       ("stylesheet","script","image","font") else None)
-                url=page_root+route
-                response=page.goto(url,wait_until="networkidle",timeout=35000)
-                if not response or response.status!=200:
-                    raise HoldError("public_route_not_live")
-                result=page.evaluate("""() => ({
-                    release:document.documentElement.getAttribute("data-kaurivo-release"),
-                    css:[...document.querySelectorAll('link[rel~="stylesheet"]')]
-                      .every(e=>!!e.sheet),
-                    h1:!!document.querySelector("main h1"),
-                    overflow:document.documentElement.scrollWidth>innerWidth+2,
-                    broken:[...document.images].filter(i=>i.complete&&!i.naturalWidth).length,
-                    noindex:document.querySelector('meta[name="robots"]')?.content.includes("noindex")
-                })""")
-                if result["release"]!=marker:raise HoldError("wrong_public_release")
-                if not result["css"] or broken:raise HoldError("public_assets_broken")
-                if not result["h1"] or result["overflow"] or result["broken"] or not result["noindex"]:
-                    raise HoldError("public_visual_smoke_failed")
-                if errors:raise HoldError("public_script_error")
-            ctx.close()
-        browser.close()
+        try:
+            for width in (390,768,1440):
+                ctx=browser.new_context(
+                    viewport={"width":width,"height":900},
+                    device_scale_factor=1,reduced_motion="reduce",
+                )
+                try:
+                    page=ctx.new_page()
+                    errors=[]
+                    broken=[]
+                    page.on("pageerror",lambda e:errors.append(str(e)[:130]))
+                    page.on("response",lambda r:broken.append((r.status,r.url))
+                        if r.status>=400 and r.request.resource_type in
+                           ("stylesheet","script","image","font") else None)
+                    for route in routes:
+                        errors.clear()
+                        broken.clear()
+                        url=urljoin(page_root,route)
+                        response=page.goto(url,wait_until="networkidle",
+                                           timeout=35000)
+                        if not response or response.status!=200:
+                            raise HoldError("public_route_not_live")
+                        # Scroll to provoke loading of below-the-fold images.
+                        page.evaluate("""async () => {
+                          for (const img of document.images) img.loading='eager';
+                          await Promise.all([...document.images].map(img=>
+                            img.decode().catch(()=>{})));
+                        }""")
+                        result=page.evaluate("""() => {
+                          const head=document.querySelector('main h1');
+                          const main=document.querySelector('main');
+                          return {
+                            release:document.documentElement.getAttribute('data-kaurivo-release'),
+                            css:[...document.querySelectorAll('link[rel~="stylesheet"]')]
+                              .every(e=>!!e.sheet),
+                            headingVisible:!!(head&&main&&getComputedStyle(head).display!=='none'
+                              &&head.getBoundingClientRect().height>0),
+                            overflow:document.documentElement.scrollWidth>innerWidth+2,
+                            broken:[...document.images].filter(i=>!i.complete||!i.naturalWidth).length,
+                            noindex:document.querySelector('meta[name="robots"]')?.content.includes('noindex'),
+                            links:[...document.querySelectorAll('a[href]')].map(a=>a.getAttribute('href'))
+                          };
+                        }""")
+                        if result["release"]!=marker:
+                            raise HoldError("wrong_public_release")
+                        if not result["css"] or broken:
+                            raise HoldError("public_assets_broken")
+                        if (not result["headingVisible"] or result["overflow"] or
+                            result["broken"] or not result["noindex"]):
+                            raise HoldError("public_visual_smoke_failed")
+                        if errors:
+                            raise HoldError("public_script_error")
+                        if len(result["links"])>250:
+                            raise HoldError("too_many_site_links")
+                        for raw in result["links"]:
+                            href=str(raw or "").strip()
+                            if not href or href=="#" or href.lower().startswith("javascript:"):
+                                raise HoldError("dead_navigation_link")
+                            absolute=urljoin(url,href)
+                            parsed=urlsplit(absolute)
+                            if parsed.netloc!=base.netloc:
+                                continue  # Contact phone, email, social, external company links.
+                            if not parsed.path.startswith(base.path):
+                                raise HoldError("internal_link_escapes_preview")
+                            internal_links.add(parsed.scheme+"://"+parsed.netloc+parsed.path)
+                finally:
+                    ctx.close()
+        finally:
+            browser.close()
+    if len(internal_links)>200:
+        raise HoldError("too_many_internal_links")
+    for link in sorted(internal_links):
+        if link.endswith(("#","")):  # Empty value never possible here.
+            continue
+        try:
+            response=requests.get(link,timeout=13,allow_redirects=False)
+        except requests.RequestException as exc:
+            raise HoldError("internal_link_unreachable") from exc
+        if response.status_code!=200:
+            raise HoldError("broken_internal_navigation")
 
 
 def main():
@@ -417,7 +488,9 @@ def main():
                 raise HoldError("quality_gate_not_approved")
             site_root=get_site_directory(company)
             update("publishing","Julkaistaan sisäinen esikatselu versionumeroituna")
-            url,sha,routes=publish(site_root,working_job["id"],agent_slug,marker)
+            expected_routes=(company.get("build") or {}).get("page_paths") or []
+            url,sha,routes=publish(site_root,working_job["id"],agent_slug,
+                                   marker,expected_routes)
             update("publishing","Tarkistetaan julkinen osoite mobiililla ja tietokoneella")
             verify_public(url,marker,routes)
             update("internal_preview","Sisäinen teknisesti tarkistettu esikatselu on avattavissa",
