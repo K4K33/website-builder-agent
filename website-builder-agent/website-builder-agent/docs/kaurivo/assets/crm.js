@@ -13,7 +13,7 @@
  const helsinkiToday=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Helsinki",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
  let selectedDay=new URLSearchParams(location.search).get("day")||helsinkiToday();
  if(!/^\d{4}-\d{2}-\d{2}$/.test(selectedDay))selectedDay=helsinkiToday();
- let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[]};
+ let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[],demos:[]};
  let currentInvite=null,busy=false;
  const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava",unverified:"Tarkistamatta",researching:"Tutkitaan",needs_demo:"Demoehdokas",ready_for_demo:"Valmis demoon",skipped:"Ohitettu",weak_evidence:"Selvä uudistustarpeen näyttö",
  adequate_evidence:"Sivu vaikuttaa toimivalta",none_confirmed:"Sivun puuttuminen tarkistettu",
@@ -51,9 +51,9 @@
   $("mobile-more-close").focus();
  }
  function showTab(tab){
-  if(!["prospects","clients","projects","sales","queue","reviews"].includes(tab))return;
+  if(!["prospects","demos","clients","projects","sales","queue","reviews"].includes(tab))return;
   activeTab=tab;
-  for(const t of ["prospects","clients","projects","sales","queue","reviews"]){
+  for(const t of ["prospects","demos","clients","projects","sales","queue","reviews"]){
    $("tab-"+t).hidden=t!==tab;
    const desktopButton=document.querySelector('[data-tab="'+t+'"]');
    desktopButton.classList.toggle("current",t===tab);
@@ -67,7 +67,7 @@
   }
   const more=$("mobile-more-button");
   if(more){
-   const secondary=["sales","queue","reviews"].includes(tab);
+   const secondary=["projects","sales","queue","reviews"].includes(tab);
    more.classList.toggle("current",secondary);
    if(secondary)more.setAttribute("aria-current","page");
    else more.removeAttribute("aria-current");
@@ -385,6 +385,7 @@
   }
   $("now-label").textContent=new Date().toLocaleDateString("fi-FI",{day:"numeric",month:"long",year:"numeric"});
   renderOperations();
+  window.KaurivoDemoJobs.render(rows.demos);
   const prospects=$("prospect-list");prospects.replaceChildren();
   $("prospect-day").value=selectedDay;
   const isToday=selectedDay===helsinkiToday();
@@ -480,6 +481,15 @@
    if(candidate.marketing_opt_out)append(row.main,"div","record-warning","MARKKINOINTIKIELTO · ei yhteydenottoa");
    if(candidate.demo_stage!=="not_started")
     append(row.main,"div","record-sub","Demobrief: "+(candidate.demo_stage==="reviewed"?"tarkistettu":"valmisteltu, odottaa tarkistusta"));
+   const inProgress=rows.demos.find(j=>j.prospect_id===candidate.id&&window.KaurivoDemoJobs.isActive(j));
+   const build=button(inProgress?"Avaa rakennustyö":"Rakenna demo",()=>window.KaurivoDemoJobs.start(candidate,{
+    db,jobs:rows.demos,reload,showTab,toast
+   }),"small-action demo-build-trigger");
+   if(candidate.review_status==="skipped"||candidate.marketing_opt_out){
+    build.disabled=true;
+    build.title="Yritys ohitettu tai markkinointikielto – tarkista tiedot ensin";
+   }
+   row.actions.append(build);
    row.actions.append(button("Tarkista yritys",()=>openEditor("prospect",candidate)));
    if(candidate.demo_brief){
     row.actions.append(button("Kopioi demobrief",async()=>{
@@ -561,7 +571,7 @@
   busy=true;
   try{
    const entities=[
-    ["prospects","kaurivo_crm_prospects"],["events","kaurivo_pipeline_events"],["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
+    ["prospects","kaurivo_crm_prospects"],["demos","kaurivo_demo_build_jobs"],["events","kaurivo_pipeline_events"],["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
     ["sales","kaurivo_crm_sales"],["queue","kaurivo_crm_feedback_queue"],
     ["reviews","kaurivo_feedback_submissions"],["invitations","kaurivo_feedback_invitations"]
    ];
@@ -569,6 +579,7 @@
     let query=db.from(table).select("*");
     if(key==="prospects")return query.eq("discovery_date",selectedDay).order("created_at",{ascending:false}).limit(100);
     if(key==="events")return query.eq("event_day",selectedDay).order("created_at",{ascending:false}).limit(30);
+    if(key==="demos")return query.order("created_at",{ascending:false}).limit(120);
     return query.order(key==="reviews"?"submitted_at":"created_at",{ascending:false}).limit(250);
    }));
    for(let i=0;i<results.length;i++){
@@ -1221,8 +1232,9 @@
   $("send-login").addEventListener("click",sendLogin);
   $("verify-login").addEventListener("click",verifyLogin);
   $("login-proof").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();verifyLogin();}});
-  $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[]};setLogin(false);});
+  $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[],demos:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
+  $("refresh-demos").addEventListener("click",reload);
   $("start-manual-scan").addEventListener("click",startManualScan);
   $("suppression-form").addEventListener("submit",addSuppression);
   $("show-skipped-prospects").addEventListener("change",render);
@@ -1234,6 +1246,8 @@
   $("enable-push").addEventListener("click",enablePush);
   $("test-push").addEventListener("click",testPush);
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&$("dashboard").hidden===false)reload();});
+  window.setInterval(()=>{if(db&&!document.hidden&&$("dashboard").hidden===false&&
+     (activeTab==="demos"||rows.demos.some(j=>window.KaurivoDemoJobs.isActive(j))))reload();},30000);
   $("import-prospects").addEventListener("click",()=>$("prospect-file").click());
   $("prospect-file").addEventListener("change",async e=>{
    const file=e.target.files?.[0];e.target.value="";
