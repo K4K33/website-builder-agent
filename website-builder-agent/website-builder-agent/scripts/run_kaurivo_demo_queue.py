@@ -105,6 +105,8 @@ def free_model_configured():
         if not (re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.:-]+:free",model)
                 and " " not in model):
             raise HoldError("exact_free_model_required")
+    if os.environ.get("BUILDER_MODEL","").strip()==os.environ.get("QA_MODEL","").strip():
+        raise HoldError("independent_qa_model_required")
     # No paid/uncapped Tavily source queries are initiated by this worker.
     os.environ["TAVILY_API_KEY"]=""
     os.environ["TAVILY_FREE_PLAN_CONFIRMED"]="0"
