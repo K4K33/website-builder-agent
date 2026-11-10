@@ -301,7 +301,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
            "BUILDER_MODEL":"google/gemma-4-31b-it:free",
            "QA_MODEL":"qwen/qwen3.8-27b:free"
         }):
-           free_model_configured()
+           with patch("scripts.run_kaurivo_demo_queue.validate_free_api_key",
+                      return_value=True) as validate:
+               free_model_configured()
+               validate.assert_called_once_with()
 
     def test_authenticated_browser_only_mock_job_is_real_rpc(self):
         if os.getenv("SKIP_BROWSER_TESTS")=="1":
