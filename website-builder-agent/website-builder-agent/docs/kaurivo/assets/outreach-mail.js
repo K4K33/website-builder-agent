@@ -5,7 +5,7 @@
  "use strict";
  const compact=value=>String(value||"").replace(/[\r\n\u2028\u2029\t]+/g," ").replace(/\s+/g," ").trim();
  const SENT=new Set(["sent_manually","responded","won","opted_out"]);
- function firstContact(company){
+ function firstContactParts(company){
   if(!company||typeof company!=="object")throw Error("Yritystiedot puuttuvat.");
   if(company.marketing_opt_out||company.outreach_review!=="human_approved"||
      SENT.has(company.outreach_stage))
@@ -60,7 +60,11 @@
   const result="Aihe: "+subject+"\n\n"+body;
   if(result.length>1500||/https?:\/\//i.test(result))
     throw Error("Luonnos ei täytä ensiviestin toimitettavuusrajaa.");
-  return result;
+  return Object.freeze({subject,body});
  }
- root.KaurivoOutreach=Object.freeze({firstContact});
+ function firstContact(company){
+  const {subject,body}=firstContactParts(company);
+  return "Aihe: "+subject+"\n\n"+body;
+ }
+ root.KaurivoOutreach=Object.freeze({firstContact,firstContactParts});
 })(typeof window!=="undefined"?window:globalThis);
