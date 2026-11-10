@@ -21,7 +21,7 @@ class LanguageSafetyTests(unittest.TestCase):
         for expected in (
            'company.contact_language', 'if(language==="sv")',
            'if(language==="en")', 'ingen mer kontakt',
-           'Viestin kieli', 'human_approved'):
+           'Tarkista kieli', 'human_approved'):
             self.assertIn(expected.lower(),composer.lower(),expected)
         self.assertNotIn('navigator.sendMail(',js)
 
