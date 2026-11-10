@@ -107,7 +107,43 @@
   }
   if(job.github_run_url)external(actions,"Rakennuksen loki",job.github_run_url,"qa");
  }
- function render(jobs){
+ function getHealth(health){
+  if(Array.isArray(health))return health[0]||null;
+  return health&&typeof health==="object"?health:null;
+ }
+ function healthBlocked(health){
+  const item=getHealth(health);
+  if(!item)return false; // Missing data is enforced by the database insert gate.
+  if(item.status!=="ok")return true;
+  const checked=Date.parse(item.checked_at||"");
+  return !Number.isFinite(checked)||Date.now()-checked>2*60*60*1000;
+ }
+ function healthSummary(health){
+  const item=getHealth(health);
+  const output=$("demo-health");
+  if(!output)return;
+  output.replaceChildren();
+  output.className="demo-health";
+  if(!item){
+   append(output,"span","","Rakennuspalvelun terveystilaa ei voitu vahvistaa. Tietokanta estää keskeneräiset työt.");
+   return;
+  }
+  const unavailable=healthBlocked(health);
+  output.classList.add(unavailable?"demo-health-blocked":"demo-health-ready");
+  const status=unavailable?"Rakennuspalvelu keskeytetty":"Rakennuspalvelu käytettävissä";
+  append(output,"strong","",status);
+  const label=ERROR_LABELS[item.error_code]||"OpenRouterin avaimen tai ajastuksen toimivuus pitää tarkistaa.";
+  append(output,"span","",unavailable?label:"Ilmainen AI-avain on tarkistettu, ja rakennustöiden ajastus on käytössä.");
+  const checked=Date.parse(item.checked_at||"");
+  if(Number.isFinite(checked))append(output,"small","","Tarkistettu "+new Date(checked).toLocaleString("fi-FI"));
+  const log=validUrl(item.github_run_url,"qa");
+  if(log){
+    const a=append(output,"a","demo-health-log","GitHubin tarkistus");
+    a.href=log;a.target="_blank";a.rel="noopener noreferrer";
+  }
+ }
+ function render(jobs,health){
+  healthSummary(health);
   const all=Array.isArray(jobs)?jobs:[];
   const ready=all.filter(canShowPreview);
   const active=all.filter(isActive);
@@ -127,9 +163,14 @@
    else items.forEach(job=>card(el,job));
   }
  }
- async function start(candidate,{db,jobs,reload,showTab,toast}){
+ async function start(candidate,{db,jobs,health,reload,showTab,toast}){
   if(!candidate||!candidate.id||!db){toast("Kirjaudu uudelleen ja valitse yritys.","error");return;}
   const active=(jobs||[]).find(j=>j.prospect_id===candidate.id&&isActive(j));
+  if(!active&&healthBlocked(health)){
+   showTab("demos");
+   toast("Demon rakennus on estetty, kunnes automaation avain tai ajastus toimii. Katso Demot-näkymän virheilmoitus.","error");
+   return;
+  }
   if(active){showTab("demos");return;}
   try{
    const {data,error}=await db.rpc("kaurivo_request_demo_build",{p_prospect_id:candidate.id});
@@ -143,9 +184,10 @@
    const human=message.includes("daily free-build")?"Maksuttomien rakennuspyyntöjen päiväkohtainen raja (5) tuli vastaan."
     :message.includes("website URL must")?"Yrityksen nykyinen verkkosivulinkki on tarkistettava."
     :message.includes("opted out")?"Markkinointikiellon tehneen yrityksen työ vaatii manuaalisen käsittelyn."
+    :message.includes("demo builder disabled")?"Rakennuspalvelun AI-avain tai ajastus ei ole tällä hetkellä käytössä."
     :message.includes("skipped")?"Ohitetun yrityksen tila on muutettava ennen rakentamista.":message;
    toast("Rakennustyötä ei käynnistetty: "+human,"error");
   }
  }
- window.KaurivoDemoJobs=Object.freeze({render,start,isActive});
+ window.KaurivoDemoJobs=Object.freeze({render,start,isActive,healthBlocked});
 })();
