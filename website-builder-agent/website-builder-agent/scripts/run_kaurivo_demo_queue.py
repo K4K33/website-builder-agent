@@ -33,6 +33,9 @@ PUBLISH_BRANCH="auto/kaurivo-demos"
 PUBLISH_DIR=Path("website-builder-agent/website-builder-agent/docs/kaurivo/auto-previews")
 PREVIEW_HOST="https://kaurivo-auto-demos-2026.onrender.com"
 PROJECT=Path(__file__).resolve().parents[1]
+# Support both `python -m scripts.run_kaurivo_demo_queue` and direct execution.
+if str(PROJECT) not in sys.path:
+    sys.path.insert(0,str(PROJECT))
 RUN_ID=int(os.environ.get("GITHUB_RUN_ID","0"))
 RUN_URL=f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
 TIMEOUT_PER_STAGE=480
