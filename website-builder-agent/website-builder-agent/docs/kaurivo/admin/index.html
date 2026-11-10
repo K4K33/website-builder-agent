@@ -5,11 +5,11 @@
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1017"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Kaurivo"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/kaurivo-mark.webp"><title>Kaurivo — asiakashallinta</title>
 <link rel="icon" href="../assets/kaurivo-mark.webp" type="image/webp">
-<link rel="stylesheet" href="../assets/crm.css?v=20261110-health2">
+<link rel="stylesheet" href="../assets/crm.css?v=20261110-mail2">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
 <script defer src="../assets/demo-jobs.js?v=20261110-health2"></script>
-<script defer src="../assets/outreach-mail.js?v=20261110-mail1"></script>
-<script defer src="../assets/crm.js?v=20261110-mail1"></script>
+<script defer src="../assets/outreach-mail.js?v=20261110-mail2"></script>
+<script defer src="../assets/crm.js?v=20261110-mail2"></script>
 </head>
 <body>
 <div class="crm-shell">
@@ -184,4 +184,10 @@
 </dialog>
 <dialog id="editor" class="editor"><form method="dialog" id="editor-form"><div class="dialog-head"><div><div class="eyebrow">KAURIVO / CRM</div><h2 id="editor-heading">Lisää uusi</h2></div><button type="button" aria-label="Sulje" id="close-editor" class="close">×</button></div><div id="editor-fields" class="fields"></div><div class="dialog-actions"><button class="outline-button" type="button" id="cancel-editor">Peruuta</button><button class="primary-button" type="submit" id="save-editor">Tallenna ↗</button></div></form></dialog>
 <dialog id="invite-dialog" class="editor"><div class="dialog-head"><div><div class="eyebrow">PRIVATE INVITATION</div><h2>Palautekutsu on valmis</h2></div><button type="button" class="close" id="close-invite" aria-label="Sulje">×</button></div><p class="form-hint">Kopioi tämä kerran näkyvä viesti ja lähetä vain oikean asiakkaan vahvistettuun sähköpostiosoitteeseen. Älä jaa linkkiä julkisesti.</p><textarea rows="10" id="invite-copy" readonly></textarea><div class="dialog-actions"><button class="outline-button" id="copy-invite" type="button">Kopioi viesti</button><button class="primary-button" id="mark-sent" type="button">Merkitse lähetetyksi</button></div></dialog>
+<dialog id="outreach-dialog" class="editor" aria-labelledby="outreach-heading">
+ <div class="dialog-head"><div><div class="eyebrow">KAURIVO / TARKISTETTU ENSIVIESTI</div><h2 id="outreach-heading">Tarkista sähköpostiluonnos</h2></div><button class="close" type="button" id="outreach-close" aria-label="Sulje">×</button></div>
+ <p class="mail-preview-warning">Tämä ei lähetä viestiä. Tarkista vastaanottaja ja lainmukaisuus. Ei automaattisia lähetyksiä, liitteitä, kuvia tai seurantaa. Viestin päätymistä Saapuneet-kansioon ei voida luvata.</p>
+ <div class="mail-preview-fields"><label>Sähköpostin aihe<input id="outreach-subject" readonly aria-label="Sähköpostin aihe"></label><label>Viestin teksti<textarea id="outreach-body" readonly rows="9" aria-label="Viestin teksti"></textarea></label></div>
+ <div class="dialog-actions"><button id="outreach-copy-subject" type="button" class="outline-button">Kopioi aihe</button><button id="outreach-copy-body" type="button" class="primary-button">Kopioi viestiteksti</button></div>
+</dialog>
 </body></html>
