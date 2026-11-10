@@ -39,7 +39,8 @@ class FailureReportTests(unittest.TestCase):
 
     def test_pipeline_failure_step_and_personalized_optout_are_present(self):
         workflow=(ROOT.parents[1]/".github/workflows/kaurivo-national-prh.yml").read_text()
-        js=(ROOT/"docs/kaurivo/assets/crm.js").read_text()\n        composer=(ROOT/"docs/kaurivo/assets/outreach-mail.js").read_text()
+        js=(ROOT/"docs/kaurivo/assets/crm.js").read_text()
+        composer=(ROOT/"docs/kaurivo/assets/outreach-mail.js").read_text()
         self.assertIn("python -m utils.kaurivo_failure_report",workflow)
         self.assertIn("continue-on-error: true",workflow)
         self.assertIn("personalizedOutreachDraft(",js)
