@@ -164,6 +164,28 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(HoldError,"site_route_manifest_mismatch"):
                 verify_static_site(root,["index.html","palvelut.html"])
 
+    def test_qa_feedback_is_specific_and_autorepair_stays_bounded(self):
+        from scripts.run_kaurivo_demo_queue import (
+            qa_repair_feedback, MAX_AUTO_REVISIONS, AI_STAGE_BUDGET_SECONDS
+        )
+        packet=qa_repair_feedback({
+            "browser":{"issues":["Mobiilivalikko on rikki"]},
+            "content_parity":{"missing":[{"label":"Alkuperäinen hinnasto"}]},
+            "content_review":{"issues":["Pääkuvasta puuttuu logon oikea versio"]},
+        })
+        self.assertIn("Mobiilivalikko on rikki",packet)
+        self.assertIn("Alkuperäinen hinnasto",packet)
+        self.assertIn("logon oikea versio",packet)
+        self.assertIn("UNTRUSTED",packet)
+        self.assertIn("Never invent business details",packet)
+        self.assertEqual(MAX_AUTO_REVISIONS,2)
+        self.assertLessEqual(AI_STAGE_BUDGET_SECONDS,2400)
+        worker=WORKER.read_text(encoding="utf-8")
+        self.assertIn('run_cli(["revise",agent_slug,qa_repair_feedback(qa)]',worker)
+        self.assertIn('for revision in range(MAX_AUTO_REVISIONS+1)',worker)
+        self.assertIn('quality_gate_build_version_mismatch',worker)
+        self.assertNotIn('while True:',worker)
+
     def test_demo_navigation_does_not_leave_company_preview(self):
         from scripts.run_kaurivo_demo_queue import checked_preview_link, HoldError
         base="https://kaurivo-auto-demos-2026.onrender.com/yritys-1234/"
