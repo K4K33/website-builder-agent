@@ -261,70 +261,9 @@
   return String(value||"").trim().length>=20;
  }
  function personalizedOutreachDraft(company){
-  const language=String(company.contact_language||"undetermined");
-  const observations={
-   fi:String(company.outreach_observation||"").trim(),
-   sv:String(company.outreach_observation_sv||"").trim(),
-   en:String(company.outreach_observation_en||"").trim()
-  };
-  if(company.marketing_opt_out || company.outreach_review!=="human_approved" ||
-     company.business_activity_assessment!=="active_evidence" ||
-     !company.evidence_url || !company.language_evidence_url ||
-     !["fi","sv","en"].includes(language) ||
-     observations[language].length<20)
-     throw Error("Viestin kieli, oma havainto, lähteet ja laillisuustarkistus on vahvistettava ensin.");
-  const observation=observations[language];
-  if(language==="sv")return [
-    "Hej!",
-    "",
-    "Jag heter Kaarlo och skriver från Kaurivo. Kaurivo är en modern webbstudio som skapar nya webbplatser och förnyar befintliga åt företag.",
-    "",
-    "Jag tittade på hur "+company.company_name+" syns på nätet och noterade en konkret utvecklingsmöjlighet: "+observation,
-    "",
-    "Vi fokuserar på tydlig design, smidig mobilanvändning och innehåll som ni enkelt kan uppdatera själva.",
-    "",
-    "Jag skulle gärna visa en kort idé som utgår från er verksamhet och ert nuvarande varumärke. Skulle det vara intressant?",
-    "",
-    "Med vänliga hälsningar",
-    "Kaarlo från Kaurivo",
-    "Kaurivo – webbdesign och tjänster: https://k4k33.github.io/website-builder-agent/kaurivo/",
-    "",
-    "Om ni inte vill få fler marknadsföringsmeddelanden från Kaurivo kan ni svara på detta mejl med: ingen mer kontakt."
-   ].join("\n");
-  if(language==="en")return [
-    "Hello,",
-    "",
-    "I'm Kaarlo from Kaurivo. Kaurivo is a modern web design studio creating new websites and redesigning existing ones for businesses.",
-    "",
-    "I looked at "+company.company_name+"'s online presence and noticed a specific opportunity for improvement: "+observation,
-    "",
-    "We focus on distinctive design, a smooth mobile experience and content your team can easily update.",
-    "",
-    "I'd be happy to share a short concept based on your services and existing brand. Would that be of interest?",
-    "",
-    "Best regards",
-    "Kaarlo from Kaurivo",
-    "Kaurivo – website design and services: https://k4k33.github.io/website-builder-agent/kaurivo/",
-    "",
-    "If you would prefer not to receive further marketing emails from Kaurivo, simply reply to this message with: no further contact."
-   ].join("\n");
-  return [
-   "Hei,",
-   "",
-   "Olen Kaarlo Kaurivolta. Kaurivo on uuden sukupolven verkkosivustudio, joka toteuttaa yrityksille uusia verkkosivuja ja uudistaa nykyisiä.",
-   "",
-   "Tutustuin "+company.company_name+" -yrityksen verkkonäkyvyyteen ja huomasin yhden konkreettisen kehityskohdan: "+observation,
-   "",
-   "Yhdistämme yrityksen näköisen suunnittelun, sujuvan mobiilikäytön ja sisällöt, joita yritys voi päivittää myös itse.",
-   "",
-   "Voisin valmistella teille lyhyen, yrityksenne palveluihin ja nykyiseen ilmeeseen sopivan uudistusehdotuksen. Olisiko tällaisesta hyötyä teille?",
-   "",
-   "Ystävällisin terveisin",
-   "Kaarlo Kaurivolta",
-   "Kaurivo – verkkosivut ja palvelut: https://k4k33.github.io/website-builder-agent/kaurivo/?lang=fi",
-   "",
-   "Jos ette halua Kaurivolta uusia markkinointiyhteydenottoja, voitte vastata tähän viestiin: ei yhteydenottoja."
-  ].join("\n");
+  if(!window.KaurivoOutreach||typeof window.KaurivoOutreach.firstContact!=="function")
+   throw Error("Viestin toimitettavuustarkistus ei latautunut. Päivitä hallintapaneeli.");
+  return window.KaurivoOutreach.firstContact(company);
  }
  function draftDemoBrief(c){
   const url=c.website_found_url||c.website_listed_url||c.website_candidate_url||"Ei vahvistettua URL-osoitetta";
@@ -507,13 +446,14 @@
     row.actions.append(button("Valmistele demobrief",()=>prepareDemoBrief(candidate)));
    if(candidate.outreach_review==="human_approved" && !candidate.marketing_opt_out &&
       candidate.business_activity_assessment==="active_evidence" && companyHasMatchingObservation(candidate))
-    row.actions.append(button("Kopioi tarkistettu viestiluonnos",async()=>{
+    row.actions.append(button("Kopioi kevyt ensiviesti",async()=>{
      try{
-      const draft=personalizedOutreachDraft(candidate);
-      await navigator.clipboard.writeText(draft);
-      toast("Yksilöllinen myyntiviestiluonnos kopioitu. Tarkista vastaanottaja, laki ja sisältö ennen manuaalista lähetystä.","success");
+       const draft=personalizedOutreachDraft(candidate);
+       if(!window.confirm("Ennen lähetystä: varmista oikea yritysvastaanottaja ja laillisuus, ettei yritystä ole jo kontaktoitu, eikä osoite ole estolistalla. Lähetä Gmailista yksilöllinen tekstiviesti ilman ZIP-liitteitä, kuvia tai linkkejä. Lähetys ei tapahdu tässä. Jatketaanko luonnoksen kopiointiin?"))return;
+       await navigator.clipboard.writeText(draft);
+       toast("Aihe ja lyhyt tekstimuotoinen viesti kopioitu. Liitä aihe erikseen Gmailiin; ei liitteitä, linkkejä eikä massalähetystä.","success");
      }catch(err){
-      toast(err.message||"Viestiluonnoksen kopiointi ei onnistunut.","error");
+       toast(err.message||"Viestiluonnoksen kopiointi ei onnistunut.","error");
      }
     }));
 
