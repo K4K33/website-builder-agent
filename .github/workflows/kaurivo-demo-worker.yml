@@ -35,8 +35,8 @@ jobs:
       - name: Free model configuration check, without AI calls
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE }}
-          QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE }}
+          BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE || 'google/gemma-4-31b-it:free' }}
+          QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE || 'qwen/qwen3.8-27b:free' }}
         run: |
           python3 - <<'PY'
           import os,re
@@ -46,6 +46,7 @@ jobs:
           print("OpenRouter API key configured:", bool(os.environ.get("OPENROUTER_API_KEY")))
           print("Builder model is exact zero-cost:", free_exact("BUILDER_MODEL"))
           print("Visual QA model is exact zero-cost:", free_exact("QA_MODEL"))
+          print("Independent Builder and QA models:", os.environ.get("BUILDER_MODEL")!=os.environ.get("QA_MODEL"))
           print("Health check never calls paid or free AI APIs.")
           PY
       - id: claim
@@ -90,9 +91,9 @@ jobs:
           AI_BACKEND: openrouter
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: openrouter/free
-          RESEARCH_MODEL: ${{ vars.KAURIVO_RESEARCH_MODEL_FREE }}
-          BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE }}
-          QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE }}
+          RESEARCH_MODEL: ${{ vars.KAURIVO_RESEARCH_MODEL_FREE || 'google/gemma-4-26b-a4b-it:free' }}
+          BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE || 'google/gemma-4-31b-it:free' }}
+          QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE || 'qwen/qwen3.8-27b:free' }}
           TAVILY_API_KEY: ""
           TAVILY_FREE_PLAN_CONFIRMED: "0"
         run: python scripts/run_kaurivo_demo_queue.py
