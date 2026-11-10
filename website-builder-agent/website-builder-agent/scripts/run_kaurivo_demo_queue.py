@@ -330,6 +330,27 @@ def publish(site_root,job_id,slug,marker,expected_routes):
         shutil.rmtree(publish_root,ignore_errors=True)
 
 
+def checked_preview_link(raw, current_url, preview_root):
+    """Return HTTPS same-preview URL or None for external and tel/mail links.
+
+    Root-relative links escaping the customer-specific preview are a critical
+    error even when they return HTTP 200 for another site. '#' is never a
+    complete navigation target.
+    """
+    href=str(raw or "").strip()
+    if not href or href=="#" or href.lower().startswith("javascript:"):
+        raise HoldError("dead_navigation_link")
+    base=urlsplit(preview_root)
+    absolute=urljoin(current_url,href)
+    parsed=urlsplit(absolute)
+    if parsed.netloc != base.netloc:
+        return None
+    if (parsed.scheme!="https" or parsed.username or parsed.password or
+            not parsed.path.startswith(base.path)):
+        raise HoldError("internal_link_escapes_preview")
+    return parsed.scheme+"://"+parsed.netloc+parsed.path
+
+
 def verify_public(preview_url,marker,routes,deadline_seconds=420):
     """Prove the exact public release, not just a Render 'live' status.
 
@@ -415,16 +436,9 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
                         if len(result["links"])>250:
                             raise HoldError("too_many_site_links")
                         for raw in result["links"]:
-                            href=str(raw or "").strip()
-                            if not href or href=="#" or href.lower().startswith("javascript:"):
-                                raise HoldError("dead_navigation_link")
-                            absolute=urljoin(url,href)
-                            parsed=urlsplit(absolute)
-                            if parsed.netloc!=base.netloc:
-                                continue  # Contact phone, email, social, external company links.
-                            if not parsed.path.startswith(base.path):
-                                raise HoldError("internal_link_escapes_preview")
-                            internal_links.add(parsed.scheme+"://"+parsed.netloc+parsed.path)
+                            link=checked_preview_link(raw,url,page_root)
+                            if link is not None:
+                                internal_links.add(link)
                 finally:
                     ctx.close()
         finally:
@@ -433,9 +447,14 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
         raise HoldError("too_many_internal_links")
     for link in sorted(internal_links):
         try:
-            response=requests.get(link,timeout=13,allow_redirects=False)
+            response=requests.get(link,timeout=13,allow_redirects=True)
         except requests.RequestException as exc:
             raise HoldError("internal_link_unreachable") from exc
+        # All redirect destinations must remain inside the exact preview.
+        if checked_preview_link(response.url,link,page_root)!=(
+                urlsplit(response.url).scheme+"://"+urlsplit(response.url).netloc+
+                urlsplit(response.url).path):
+            raise HoldError("internal_link_escapes_preview")
         if response.status_code!=200:
             raise HoldError("broken_internal_navigation")
 
