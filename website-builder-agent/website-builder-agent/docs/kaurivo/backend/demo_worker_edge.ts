@@ -44,7 +44,7 @@ Deno.serve(async request=>{
    payload.ref!=="refs/heads/main"||
    payload.workflow_ref!==WORKFLOW_REF||
    payload.ref_type!=="branch"||
-   !["schedule","workflow_dispatch"].includes(String(payload.event_name)))throw Error("workflow");
+   !["schedule","workflow_dispatch","push"].includes(String(payload.event_name)))throw Error("workflow");
   run_id=Number(payload.run_id);
   if(!Number.isSafeInteger(run_id)||run_id<=0)throw Error("run_id");
  }catch(_){return reply(403,{ok:false,error:"unauthorized_workflow"});}

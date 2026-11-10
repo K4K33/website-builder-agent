@@ -1,5 +1,9 @@
 name: Kaurivo admin-triggered demo builder
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/kaurivo-demo-worker.yml"
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
@@ -28,6 +32,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Free model configuration check, without AI calls
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE }}
+          QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE }}
+        run: |
+          python3 - <<'PY'
+          import os,re
+          def free_exact(name):
+              value=os.environ.get(name,"").strip()
+              return bool(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.:-]+:free",value))
+          print("OpenRouter API key configured:", bool(os.environ.get("OPENROUTER_API_KEY")))
+          print("Builder model is exact zero-cost:", free_exact("BUILDER_MODEL"))
+          print("Visual QA model is exact zero-cost:", free_exact("QA_MODEL"))
+          print("Health check never calls paid or free AI APIs.")
+          PY
       - id: claim
         name: Securely claim one queued job
         shell: bash
