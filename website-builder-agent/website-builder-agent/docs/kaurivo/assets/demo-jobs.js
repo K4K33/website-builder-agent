@@ -4,6 +4,26 @@
 (function(){
  "use strict";
  const ACTIVE=new Set(["queued","researching","building","qa","publishing"]);
+ const ERROR_LABELS={
+  free_ai_key_missing:"Ilmaisen rakennusmallin API-avain puuttuu",
+  exact_free_model_required:"Ilmaiset Builder- ja QA-mallit pitää määrittää",
+  free_model_not_configured:"Ilmainen mallipalvelu ei ole valmis",
+  source_website_needs_verification:"Verkkosivun puuttuminen ja yrityksen faktat vaativat vahvistuksen",
+  source_dns_not_public:"Alkuperäinen osoite ei ole turvallisesti saavutettavissa",
+  research_failed:"Lähdesivun tutkimus ei läpäissyt vaatimuksia",
+  researching_failed:"Tutkimus ei läpäissyt vaatimuksia",
+  building_failed:"Konsepti tai sivustorakennus ei läpäissyt vaatimuksia",
+  qa_failed:"Sivuston laatutarkistus ei läpäissyt vaatimuksia",
+  quality_gate_not_approved:"Laadun hyväksyntää ei ole saavutettu",
+  premium_interaction_blocked:"Interaktiivinen ominaisuus ei täytä uusimpia laatustandardeja",
+  remote_image_rights_not_proven:"Ulkoisten kuvien oikeuksia ei ole vahvistettu",
+  runner_stale_timeout:"Rakennustyö katkesi ja vaatii uuden tarkistuksen",
+  runner_setup_failed:"Rakennuksen automaatio ei käynnistynyt oikein",
+  render_not_serving_exact_release:"Julkaisupalvelin ei palauttanut oikeaa uutta versiota",
+  public_assets_broken:"Julkaistun sivuston kuvat tai tyylit eivät latautuneet",
+  public_visual_smoke_failed:"Julkaistu sivusto ei läpäissyt todellista selaintarkistusta",
+  unexpected_worker_error:"Rakennuksessa tapahtui tekninen virhe"
+ };
  const STATUS={
   queued:"Jonossa",researching:"Taustatutkimus",building:"Rakenteilla",
   qa:"Laatutarkistus",publishing:"Julkaisutarkistus",
@@ -50,7 +70,7 @@
   const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
   append(main,"div","record-sub",job.progress||STATUS[job.status]||"Odottaa");
-  if(job.error_code)append(main,"div","record-warning","Korjausta vaativa vaihe: "+job.error_code);
+  if(job.error_code)append(main,"div","record-warning","Korjausta vaativa vaihe: "+(ERROR_LABELS[job.error_code]||"Työ vaatii lisätarkistuksen")+" ("+job.error_code+")");
   const actions=append(row,"div","record-actions");
   const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),STATUS[job.status]||"Tarkistettava");
   badge.setAttribute("aria-label","Työn tila");
