@@ -97,7 +97,7 @@ jobs:
           QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE || 'qwen/qwen3.8-27b:free' }}
           TAVILY_API_KEY: ""
           TAVILY_FREE_PLAN_CONFIRMED: "0"
-        run: python scripts/run_kaurivo_demo_queue.py
+        run: python -m scripts.run_kaurivo_demo_queue
       - name: Fail closed if runner setup failed after claim
         if: failure() && steps.claim.outputs.has_job == 'true'
         shell: bash
