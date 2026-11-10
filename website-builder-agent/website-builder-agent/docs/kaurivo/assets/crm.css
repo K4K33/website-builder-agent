@@ -233,3 +233,27 @@
  .research-priority-toolbar{display:grid;grid-template-columns:1fr;gap:7px;width:100%}
  .research-priority-toolbar select{width:100%;min-height:48px;max-width:100%;font-size:14px}
 }
+
+
+/* Demo building workspace – company work and status displayed separately
+   from customer projects. No unverified release URL is rendered as ready. */
+.demo-section{margin-top:36px;border-top:1px solid #2d4150;padding-top:24px}
+.demo-section h3{margin:0 0 7px;font:700 clamp(17px,2.2vw,21px) Manrope,sans-serif;letter-spacing:-.025em;color:#f0f5f8}
+.demo-section>p{color:#a5bbc9;font-size:12px;line-height:1.6;margin:0 0 19px}
+.demo-summary{padding:16px 20px;background:#192f3a;border:1px solid #3a596b;border-radius:9px;font-size:13px;font-weight:700;color:#dfeef2}
+.demo-record{align-items:start}
+.demo-record .record-main{max-width:750px}
+.demo-record .record-sub{margin-top:6px}
+.demo-external{text-decoration:none;display:inline-flex;justify-content:center;align-items:center;min-height:41px}
+.demo-external[href*="onrender.com"],.demo-external[href*="github.io"]{border-color:#7a9c8b;color:#e9f4ec;background:#214235}
+.demo-build-trigger{border-color:#9baebc;background:#274d56;color:#fff;font-weight:800}
+.demo-build-trigger:hover{background:#356673}
+.demo-build-trigger:disabled{cursor:not-allowed;opacity:.5}
+@media(max-width:850px){
+ #tab-demos>.section-head{align-items:stretch}
+ #tab-demos #refresh-demos{min-height:44px}
+ .demo-section{margin-top:26px;padding-top:18px}
+ .demo-record .record-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+ .demo-record .record-actions>*{min-width:0;max-width:100%;white-space:normal;text-align:center;line-height:1.4}
+}
+@media(max-width:370px){.demo-record .record-actions{grid-template-columns:1fr}}
