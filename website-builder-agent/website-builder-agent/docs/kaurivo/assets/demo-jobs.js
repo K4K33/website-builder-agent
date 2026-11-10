@@ -1,0 +1,112 @@
+/* Kaurivo demo-job panel. Private rows are loaded with the existing admin RLS
+   session. The browser cannot write job statuses, QA records or preview URLs.
+   An internal preview is NEVER a client-approved deliverable. */
+(function(){
+ "use strict";
+ const ACTIVE=new Set(["queued","researching","building","qa","publishing"]);
+ const STATUS={
+  queued:"Jonossa",researching:"Taustatutkimus",building:"Rakenteilla",
+  qa:"Laatutarkistus",publishing:"Julkaisutarkistus",
+  internal_preview:"Sisäinen esikatselu",hold:"Odottaa korjausta",failed:"Virhe"
+ };
+ const $=id=>document.getElementById(id);
+ const element=(tag,cls,content)=>{
+  const node=document.createElement(tag);
+  if(cls)node.className=cls;
+  if(content!==undefined)node.textContent=String(content);
+  return node;
+ };
+ function append(parent,tag,cls,text){
+  const e=element(tag,cls,text);parent.append(e);return e;
+ }
+ function validUrl(value,kind){
+  try{
+   const uri=new URL(value);
+   if(uri.protocol!=="https:"||uri.username||uri.password)return null;
+   if(kind==="preview"&&uri.hostname!=="k4k33.github.io"&&
+      !/^[a-z0-9-]+[.]onrender[.]com$/i.test(uri.hostname))return null;
+   if(kind==="qa"&&!(uri.hostname==="github.com"&&
+      /^\/K4K33\/website-builder-agent\/actions\/runs\/[0-9]+$/.test(uri.pathname)))return null;
+   return uri.href;
+  }catch(_){return null;}
+ }
+ function external(parent,title,value,kind){
+  const href=validUrl(value,kind);
+  if(!href)return false;
+  const link=append(parent,"a","small-action demo-external",title);
+  link.href=href;link.target="_blank";link.rel="noopener noreferrer";
+  return true;
+ }
+ function isActive(job){return job&&ACTIVE.has(job.status);}
+ function canShowPreview(job){
+  return job.status==="internal_preview"&&
+   /^[0-9a-f]{40}$/.test(job.release_sha||"")&&
+   validUrl(job.preview_url,"preview")&&validUrl(job.qa_url,"qa");
+ }
+ function card(target,job){
+  const row=append(target,"article","record demo-record");
+  const main=append(row,"div","record-main");
+  append(main,"div","record-title",job.company_name||"Tuntematon yritys");
+  const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
+  append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
+  append(main,"div","record-sub",job.progress||STATUS[job.status]||"Odottaa");
+  if(job.error_code)append(main,"div","record-warning","Korjausta vaativa vaihe: "+job.error_code);
+  const actions=append(row,"div","record-actions");
+  const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),STATUS[job.status]||"Tarkistettava");
+  badge.setAttribute("aria-label","Työn tila");
+  if(job.original_url){
+   if(!external(actions,"Vanha sivu",job.original_url))append(main,"div","record-warning","Alkuperäinen sivulinkki on tarkistettava.");
+  }else append(main,"div","record-sub","Alkuperäistä verkkosivua ei ole vahvistettu.");
+  if(canShowPreview(job)){
+   external(actions,"Avaa uusi demo",job.preview_url,"preview");
+   external(actions,"QA-raportti",job.qa_url,"qa");
+   append(main,"div","record-sub","Suora avattava sisäinen esikatselu. Ei vielä hyväksytty asiakkaalle.");
+  }else if(job.status==="internal_preview"){
+   append(main,"div","record-warning","Julkaisutodiste on puutteellinen. Uutta linkkiä ei näytetä.");
+  }else if(isActive(job)){
+   append(main,"div","record-sub","Uusi linkki näytetään vasta aidon julkaisun ja selaintarkistuksen jälkeen.");
+  }
+  if(job.github_run_url)external(actions,"Rakennuksen loki",job.github_run_url,"qa");
+ }
+ function render(jobs){
+  const all=Array.isArray(jobs)?jobs:[];
+  const ready=all.filter(canShowPreview);
+  const active=all.filter(isActive);
+  const held=all.filter(j=>j.status==="failed"||j.status==="hold"||
+    (j.status==="internal_preview"&&!canShowPreview(j)));
+  const summary=$("demo-summary");
+  if(summary)summary.textContent=ready.length+" sisäistä esikatselua · "+
+      active.length+" työn alla · "+held.length+" odottaa korjausta";
+  for(const [id,items,missing] of [
+   ["demo-ready-list",ready,"Ei vielä julkaistuja ja teknisesti tarkistettuja demoja."],
+   ["demo-running-list",active,"Ei tällä hetkellä rakennettavia demoja."],
+   ["demo-hold-list",held,"Ei pysähtyneitä tai hylättyjä rakennustöitä."]
+  ]){
+   const el=$(id);if(!el)continue;
+   el.replaceChildren();
+   if(!items.length)append(el,"div","empty",missing);
+   else items.forEach(job=>card(el,job));
+  }
+ }
+ async function start(candidate,{db,jobs,reload,showTab,toast}){
+  if(!candidate||!candidate.id||!db){toast("Kirjaudu uudelleen ja valitse yritys.","error");return;}
+  const active=(jobs||[]).find(j=>j.prospect_id===candidate.id&&isActive(j));
+  if(active){showTab("demos");return;}
+  try{
+   const {data,error}=await db.rpc("kaurivo_request_demo_build",{p_prospect_id:candidate.id});
+   if(error)throw error;
+   if(!data)throw Error("Rakennustyön tunnistetta ei saatu.");
+   await reload();
+   showTab("demos");
+   toast("Demon rakentaminen lisättiin työjonoon. Seuraa etenemistä tässä näkymässä.","success");
+  }catch(e){
+   const message=String(e.message||"Tuntematon virhe");
+   const human=message.includes("daily free-build")?"Maksuttomien rakennuspyyntöjen päiväkohtainen raja (5) tuli vastaan."
+    :message.includes("website URL must")?"Yrityksen nykyinen verkkosivulinkki on tarkistettava."
+    :message.includes("opted out")?"Markkinointikiellon tehneen yrityksen työ vaatii manuaalisen käsittelyn."
+    :message.includes("skipped")?"Ohitetun yrityksen tila on muutettava ennen rakentamista.":message;
+   toast("Rakennustyötä ei käynnistetty: "+human,"error");
+  }
+ }
+ window.KaurivoDemoJobs=Object.freeze({render,start,isActive});
+})();
