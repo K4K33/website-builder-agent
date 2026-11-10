@@ -66,6 +66,38 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertNotIn('grant insert on public.kaurivo_demo_build_jobs to authenticated',sql.lower())
         self.assertNotIn('grant update on public.kaurivo_demo_build_jobs to authenticated',sql.lower())
 
+    def test_builder_health_prevents_queueing_with_invalid_key_and_recovers(self):
+        health=(SITE/"backend/demo_builder_health_migration.sql").read_text(encoding="utf-8")
+        edge=EDGE.read_text(encoding="utf-8")
+        flow=FLOW.read_text(encoding="utf-8")
+        crm=CRM.read_text(encoding="utf-8")
+        dashboard=DASHBOARD.read_text(encoding="utf-8")
+        html=HTML.read_text(encoding="utf-8")
+        for term in ("enable row level security",
+                     "kaurivo_internal.is_kaurivo_admin()",
+                     "grant select on public.kaurivo_demo_builder_health to authenticated",
+                     "grant execute on function public.kaurivo_worker_record_health(bigint,integer)",
+                     "create trigger kaurivo_demo_health_before_insert",
+                     "when 401 then 'blocked'",
+                     "when 200 then 'ok'",
+                     "checked_at>=now()-interval '2 hours'"):
+            self.assertIn(term,health)
+        self.assertNotIn("grant insert on public.kaurivo_demo_builder_health to authenticated",health)
+        self.assertIn('if(data.action==="health")',edge)
+        self.assertIn("kaurivo_worker_record_health",edge)
+        self.assertIn('key_http_status',edge)
+        self.assertIn('key_http_status=',flow)
+        self.assertIn("health-demo.json",flow)
+        self.assertIn("key_http_status",flow)
+        self.assertIn('if [[ "$KEY_STATUS" != "200" ]]',flow)
+        self.assertIn("echo \"has_job=false\"",flow)
+        self.assertIn("demoHealth",crm)
+        self.assertIn("kaurivo_demo_builder_health",crm)
+        self.assertIn('id="demo-health"',html)
+        self.assertIn("healthBlocked",dashboard)
+        self.assertIn("demo-health-blocked",dashboard)
+        self.assertIn("Rakennuspalvelu keskeytetty",dashboard)
+
     def test_edge_verifies_exact_repository_workflow_and_oidc(self):
         edge=EDGE.read_text(encoding="utf-8")
         flow=FLOW.read_text(encoding="utf-8")

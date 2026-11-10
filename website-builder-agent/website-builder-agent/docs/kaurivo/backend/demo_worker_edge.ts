@@ -15,7 +15,7 @@ const reply=(status:number,value:Record<string,unknown>)=>new Response(JSON.stri
   "x-content-type-options":"nosniff","vary":"Authorization"}
 });
 type Work={action?:string;job_id?:string;status?:string;progress?:string;
- preview_url?:string;qa_url?:string;release_sha?:string;error_code?:string};
+ preview_url?:string;qa_url?:string;release_sha?:string;error_code?:string;key_http_status?:number};
 async function rpc(name:string,body:Record<string,unknown>){
  const resp=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{
   method:"POST",
@@ -58,6 +58,16 @@ Deno.serve(async request=>{
   if(!data||typeof data!=="object"||Array.isArray(data))throw Error("format");
  }catch(_){return reply(400,{ok:false,error:"invalid_json"});}
  try{
+  if(data.action==="health"){
+   if(Object.keys(data).length!==2||
+      !Number.isSafeInteger(data.key_http_status)||
+      ![0,200,401,403,429,500].includes(data.key_http_status!))
+      return reply(400,{ok:false,error:"invalid_health"});
+   const saved=await rpc("kaurivo_worker_record_health",{
+     p_run_id:run_id,p_http_status:data.key_http_status!
+   });
+   return reply(saved===true?200:503,{ok:saved===true});
+  }
   if(data.action==="claim"){
    if(Object.keys(data).length!==1)return reply(400,{ok:false,error:"claim_args"});
    const run_url="https://github.com/"+REPOSITORY+"/actions/runs/"+run_id;

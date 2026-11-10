@@ -13,7 +13,7 @@
  const helsinkiToday=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Helsinki",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
  let selectedDay=new URLSearchParams(location.search).get("day")||helsinkiToday();
  if(!/^\d{4}-\d{2}-\d{2}$/.test(selectedDay))selectedDay=helsinkiToday();
- let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[],demos:[]};
+ let db=null,activeTab="prospects",rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[],demos:[],demoHealth:[]};
  let currentInvite=null,busy=false;
  const label={lead:"Liidi",contacted:"Kontaktoitu",negotiating:"Neuvottelu",customer:"Asiakas",archived:"Arkistoitu",discovery:"Kartoitus",demo:"Demo",proposal:"Tarjous",building:"Rakenteilla",review:"Tarkistus",delivered:"Luovutettu",cancelled:"Peruttu",won:"Voitettu",lost:"Hävitty",pending:"Odottaa",prepared:"Valmisteltu",sent:"Lähetetty",urgent_review:"Kiireellinen",normal_review:"Normaali",clarify:"Tarkennettava",unverified:"Tarkistamatta",researching:"Tutkitaan",needs_demo:"Demoehdokas",ready_for_demo:"Valmis demoon",skipped:"Ohitettu",weak_evidence:"Selvä uudistustarpeen näyttö",
  adequate_evidence:"Sivu vaikuttaa toimivalta",none_confirmed:"Sivun puuttuminen tarkistettu",
@@ -385,7 +385,7 @@
   }
   $("now-label").textContent=new Date().toLocaleDateString("fi-FI",{day:"numeric",month:"long",year:"numeric"});
   renderOperations();
-  window.KaurivoDemoJobs.render(rows.demos);
+  window.KaurivoDemoJobs.render(rows.demos,rows.demoHealth);
   const prospects=$("prospect-list");prospects.replaceChildren();
   $("prospect-day").value=selectedDay;
   const isToday=selectedDay===helsinkiToday();
@@ -483,9 +483,13 @@
     append(row.main,"div","record-sub","Demobrief: "+(candidate.demo_stage==="reviewed"?"tarkistettu":"valmisteltu, odottaa tarkistusta"));
    const inProgress=rows.demos.find(j=>j.prospect_id===candidate.id&&window.KaurivoDemoJobs.isActive(j));
    const build=button(inProgress?"Avaa rakennustyö":"Rakenna demo",()=>window.KaurivoDemoJobs.start(candidate,{
-    db,jobs:rows.demos,reload,showTab,toast
+    db,jobs:rows.demos,health:rows.demoHealth,reload,showTab,toast
    }),"small-action demo-build-trigger");
-   if(candidate.review_status==="skipped"||candidate.marketing_opt_out){
+   if(!inProgress&&window.KaurivoDemoJobs.healthBlocked(rows.demoHealth)){
+     build.disabled=true;
+     build.title="Rakennuspalvelun API-avain tai ajastus on estynyt. Avaa Demot-näkymä.";
+    }
+    if(candidate.review_status==="skipped"||candidate.marketing_opt_out){
     build.disabled=true;
     build.title="Yritys ohitettu tai markkinointikielto – tarkista tiedot ensin";
    }
@@ -571,7 +575,7 @@
   busy=true;
   try{
    const entities=[
-    ["prospects","kaurivo_crm_prospects"],["demos","kaurivo_demo_build_jobs"],["events","kaurivo_pipeline_events"],["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
+    ["prospects","kaurivo_crm_prospects"],["demos","kaurivo_demo_build_jobs"],["demoHealth","kaurivo_demo_builder_health"],["events","kaurivo_pipeline_events"],["clients","kaurivo_crm_clients"],["projects","kaurivo_crm_projects"],
     ["sales","kaurivo_crm_sales"],["queue","kaurivo_crm_feedback_queue"],
     ["reviews","kaurivo_feedback_submissions"],["invitations","kaurivo_feedback_invitations"]
    ];
@@ -580,6 +584,7 @@
     if(key==="prospects")return query.eq("discovery_date",selectedDay).order("created_at",{ascending:false}).limit(100);
     if(key==="events")return query.eq("event_day",selectedDay).order("created_at",{ascending:false}).limit(30);
     if(key==="demos")return query.order("created_at",{ascending:false}).limit(120);
+    if(key==="demoHealth")return query.order("checked_at",{ascending:false}).limit(1);
     return query.order(key==="reviews"?"submitted_at":"created_at",{ascending:false}).limit(250);
    }));
    for(let i=0;i<results.length;i++){
@@ -1232,7 +1237,7 @@
   $("send-login").addEventListener("click",sendLogin);
   $("verify-login").addEventListener("click",verifyLogin);
   $("login-proof").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();verifyLogin();}});
-  $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[],demos:[]};setLogin(false);});
+  $("sign-out").addEventListener("click",async()=>{await unsubscribePush();await db.auth.signOut();rows={clients:[],projects:[],sales:[],queue:[],reviews:[],invitations:[],prospects:[],events:[],demos:[],demoHealth:[]};setLogin(false);});
   $("refresh").addEventListener("click",reload);
   $("refresh-demos").addEventListener("click",reload);
   $("start-manual-scan").addEventListener("click",startManualScan);
