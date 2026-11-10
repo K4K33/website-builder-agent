@@ -421,6 +421,12 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
                             overflow:document.documentElement.scrollWidth>innerWidth+2,
                             broken:[...document.images].filter(i=>!i.complete||!i.naturalWidth).length,
                             noindex:document.querySelector('meta[name="robots"]')?.content.includes('noindex'),
+                            missingAnchors:[...document.querySelectorAll('a[href*="#"]')].filter(a=>{
+                              const u=new URL(a.href,location.href);
+                              if(!u.hash||u.pathname!==location.pathname||u.origin!==location.origin)return false;
+                              const name=decodeURIComponent(u.hash.slice(1));
+                              return !document.getElementById(name)&&!document.getElementsByName(name).length;
+                            }).length,
                             links:[...document.querySelectorAll('a[href]')].map(a=>a.getAttribute('href'))
                           };
                         }""")
@@ -433,6 +439,8 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
                             raise HoldError("public_visual_smoke_failed")
                         if errors:
                             raise HoldError("public_script_error")
+                        if result["missingAnchors"]:
+                            raise HoldError("broken_inpage_navigation")
                         if len(result["links"])>250:
                             raise HoldError("too_many_site_links")
                         for raw in result["links"]:
