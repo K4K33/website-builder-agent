@@ -95,7 +95,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     'exact_free_model_required','noindex,nofollow','internal_preview',
                     'remote_image_rights_not_proven'):
             self.assertIn(key,worker)
-        self.assertIn('qa.get("overall_pass") is not True',worker)
+        self.assertIn('if qa.get("overall_pass") is True:',worker)
+        self.assertIn('quality_gate_build_version_mismatch',worker)
         self.assertIn('data-kaurivo-release',worker)
         self.assertIn('auto/kaurivo-demos',worker)
         self.assertIn('kaurivo-auto-demos-2026.onrender.com',worker)
