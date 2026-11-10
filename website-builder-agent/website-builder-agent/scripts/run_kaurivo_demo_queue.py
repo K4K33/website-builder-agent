@@ -185,42 +185,72 @@ def safe_company_url(url):
 
 
 def classify_stage_failure(handle,stage_name,start_position=0):
-    """Return a bounded, non-sensitive reason for a failed child command.
+    """Classify the LAST terminal exception, not arbitrary log fragments.
 
-    Runner stdout is public. Never print source pages, model completions,
-    contact information, API URLs, authorization headers or raw exceptions.
-    Extract only a whitelisted class of failure based on the PRIVATE stage log.
+    E.g. Wix can return HTTP 403 on the *client's website*. This MUST NOT be
+    mislabelled as an OpenRouter API-key failure. Do not expose any raw log text.
     """
     handle.flush()
     handle.seek(start_position)
-    # Only the current stage output is used. Never misattribute older failures.
-    tail=handle.read()[-12000:].casefold()
-    if any(x in tail for x in ("http 429","rate limit","quota exhausted",
-                               "free openrouter allowance exhausted",
-                               "daily resource limit","requests per day")):
-        return "free_ai_rate_limit"
-    if any(x in tail for x in ("http 401","invalid api key","unauthorized api key")):
-        return "free_ai_key_invalid"
-    if any(x in tail for x in ("http 403","permission denied","guardrail block")):
-        return "free_ai_key_forbidden"
-    if any(x in tail for x in ("http 402","payment required","negative balance")):
-        return "free_ai_account_blocked"
-    if any(x in tail for x in ("http 404","no endpoints found",
-                               "model not found")):
-        return "free_model_unavailable"
-    if any(x in tail for x in ("http 400","response_format","invalid response format")):
-        return "free_model_request_rejected"
-    if "modulenotfounderror:" in tail:
+    tail=handle.read()[-16000:].casefold()
+    last_lines=[
+        line.strip() for line in tail.splitlines()
+        if re.match(r"^[a-z_][a-z0-9_.]*(?:error|exception)\s*:",line.strip())
+    ]
+    terminal=last_lines[-1] if last_lines else (
+        tail.strip().splitlines()[-1] if tail.strip() else ""
+    )
+    provider=any(x in terminal for x in (
+        "openrouter rejected request",
+        "openrouter-kutsu epäonnistui",
+        "openrouter response",
+        "free openrouter allowance",
+        "free_only blocks paid model",
+    ))
+    site_fetch=any(x in terminal for x in (
+        "yrityksen sivun analyysi",
+        "website analysis failed","site fetch",
+        "source page","website request",
+    ))
+    if site_fetch:
+        if "http 403" in terminal or "http 401" in terminal:
+            return "source_http_access_blocked"
+        if "http 429" in terminal:
+            return "source_http_rate_limited"
+        if any(x in terminal for x in ("http 404","http 500","http 502",
+                                       "http 503","readtimeout","connectionerror")):
+            return "source_website_unreachable"
+        return "source_research_incomplete"
+    if provider:
+        if any(x in terminal for x in ("http 429","rate limit",
+                                       "quota exhausted","daily resource limit")):
+            return "free_ai_rate_limit"
+        if any(x in terminal for x in ("http 401","invalid api key",
+                                       "unauthorized api key")):
+            return "free_ai_key_invalid"
+        if any(x in terminal for x in ("http 403","permission denied",
+                                       "guardrail block")):
+            return "free_ai_key_forbidden"
+        if any(x in terminal for x in ("http 402","negative balance",
+                                       "payment required")):
+            return "free_ai_account_blocked"
+        if any(x in terminal for x in ("http 404","no endpoints found",
+                                       "model not found")):
+            return "free_model_unavailable"
+        if any(x in terminal for x in ("http 400","response_format",
+                                       "invalid response format")):
+            return "free_model_request_rejected"
+        if any(x in terminal for x in ("response truncated","token-rajaan",
+                                       "length finish reason")):
+            return "free_ai_response_truncated"
+    if "modulenotfounderror:" in terminal:
         return "missing_runtime_dependency"
-    if any(x in tail for x in ("connectionerror","certificate verify failed",
-                               "readtimeout","connecttimeout")):
+    if any(x in terminal for x in ("connectionerror","certificate verify failed",
+                                   "readtimeout","connecttimeout")):
         return "research_network_unavailable" if stage_name=="researching" else "network_unavailable"
-    if any(x in tail for x in ("response truncated","token-rajaan",
-                               "length finish reason")):
-        return "free_ai_response_truncated"
-    if any(x in tail for x in ("source inventory","source-content",
-                               "source content", "source website",
-                               "source-fidelity", "source visual")):
+    if any(x in terminal for x in ("source inventory","source-content",
+                                   "source content","source website",
+                                   "source-fidelity","source visual")):
         return "source_research_incomplete"
     return stage_name+"_failed"
 
