@@ -5,9 +5,9 @@
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1017"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Kaurivo"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/kaurivo-mark.webp"><title>Kaurivo — asiakashallinta</title>
 <link rel="icon" href="../assets/kaurivo-mark.webp" type="image/webp">
-<link rel="stylesheet" href="../assets/crm.css?v=20261101-leads2">
+<link rel="stylesheet" href="../assets/crm.css?v=20261110-demos1">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
-<script defer src="../assets/crm.js?v=20261101-brand2"></script>
+<script defer src="../assets/crm.js?v=20261110-demos1"></script>
 </head>
 <body>
 <div class="crm-shell">
@@ -57,6 +57,7 @@
 <div class="workspace">
 <nav class="tabs" role="tablist" aria-label="Hallinnan osiot">
 <button type="button" class="tab current" role="tab" aria-selected="true" data-tab="prospects">Aamun yritykset</button>
+<button type="button" class="tab" role="tab" aria-selected="false" data-tab="demos">Demot</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="clients">Yritykset</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="projects">Projektit</button>
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="sales">Kaupat</button>
@@ -118,6 +119,16 @@
  <p class="form-hint">Aineistolähde: <a href="https://avoindata.prh.fi/" target="_blank" rel="noopener noreferrer">PRH/YTJ avoin data</a>, <a href="https://creativecommons.org/licenses/by/4.0/deed.fi" target="_blank" rel="noopener noreferrer">CC BY 4.0 -lisenssi</a>. Rekisteritiedot on muunnettu Kaurivon sisäiseksi tarkistuslistaksi, ei itsenäisesti vahvistetuiksi yrityshavainnoiksi. JSON-tuonti on varavaihtoehto yöajolle.</p>
 </details>
 </div>
+<div class="panel" id="tab-demos" hidden>
+ <div class="section-head"><div><span class="eyebrow">KAURIVO / BUILD STUDIO</span>
+ <h2>Demot</h2><p>Rakenna yrityksen kortista. Valmiin sivun linkki avautuu suoraan selaimessa, ilman GitHubin tiedostonäkymää tai latausvaihetta.</p></div>
+ <button type="button" class="outline-button" id="refresh-demos">Päivitä demojen tila</button></div>
+ <p class="inline-alert">Demot rakennetaan uusimman Mestari-Promptin mukaan. Julkaistu sisäinen esikatselu ei vielä ole asiakasvalmis eikä sitä lähetetä yritykselle automaattisesti. Kuvien käyttöoikeudet, riippumaton laatutarkistus ja asiakkaan CMS-luovutus ovat erillisiä hyväksyntöjä.</p>
+ <div id="demo-summary" class="demo-summary" aria-live="polite">Haetaan demojen tilaa…</div>
+ <section class="demo-section" aria-labelledby="demo-preview-heading"><h3 id="demo-preview-heading">Julkaistut esikatselut</h3><p>Suora vanha ja uusi linkki, vain todistetun selainjulkaisun jälkeen.</p><div class="records" id="demo-ready-list"></div></section>
+ <section class="demo-section" aria-labelledby="demo-progress-heading"><h3 id="demo-progress-heading">Rakenteilla ja jonossa</h3><p>Rakennus, tarkistukset ja julkaisun eteneminen.</p><div class="records" id="demo-running-list"></div></section>
+ <section class="demo-section" aria-labelledby="demo-hold-heading"><h3 id="demo-hold-heading">Odottaa korjausta</h3><p>Laatu- tai aineistopuutteiset demot eivät avaudu valmiina.</p><div class="records" id="demo-hold-list"></div></section>
+</div>
 <div class="panel" id="tab-clients" hidden><div class="section-head"><div><h2>Yritysrekisteri</h2><p>Potentiaaliset asiakkaat ja nykyiset asiakkaat.</p></div><button class="primary-button" data-dialog="client" type="button">+ Lisää yritys</button></div><div id="client-list" class="records"></div></div>
 <div class="panel" id="tab-projects" hidden><div class="section-head"><div><h2>Verkkosivuprojektit</h2><p>Demosta toteutukseen, asiakkaan brändi ja muokattavuus säilyttäen.</p></div><button class="primary-button" data-dialog="project" type="button">+ Lisää projekti</button></div><div id="project-list" class="records"></div></div>
 <div class="panel" id="tab-sales" hidden><div class="section-head"><div><h2>Kaupat</h2><p>Vahvista kauppa vain oikeaan ostotapahtumaan perustuen.</p></div><button class="primary-button" data-dialog="sale" type="button">+ Lisää tarjous</button></div><div id="sale-list" class="records"></div></div>
@@ -127,13 +138,14 @@
 <nav id="mobile-dock" class="mobile-dock" aria-label="Kaurivon mobiilinavigaatio">
  <button type="button" class="dock-button current" data-mobile-tab="prospects" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 15h3"/></svg><span>Aamu</span></button>
  <button type="button" class="dock-button" data-mobile-tab="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V7l8-4 8 4v14M3 21h18M9 21v-6h4v6M7 10h1M15 10h1"/></svg><span>Yritykset</span></button>
- <button type="button" class="dock-button" data-mobile-tab="projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Projektit</span></button>
+ <button type="button" class="dock-button" data-mobile-tab="demos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Demot</span></button>
  <button type="button" class="dock-button" id="mobile-more-button" aria-expanded="false" aria-controls="mobile-more-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><span>Lisää</span></button>
 </nav>
 <div id="mobile-more-panel" class="mobile-more-panel" hidden>
  <button type="button" class="mobile-more-scrim" aria-label="Sulje lisävalikko" data-close-more></button>
  <div class="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="Kaurivon muut osiot">
   <div class="more-heading"><strong>Muut osiot</strong><button type="button" class="more-close" id="mobile-more-close" aria-label="Sulje valikko">×</button></div>
+  <button type="button" class="more-link" data-mobile-tab="projects"><span>Projektit</span><span aria-hidden="true">↗</span></button>
   <button type="button" class="more-link" data-mobile-tab="sales"><span>Kaupat</span><span aria-hidden="true">↗</span></button>
   <button type="button" class="more-link" data-mobile-tab="queue"><span>Palautepyynnöt</span><span aria-hidden="true">↗</span></button>
   <button type="button" class="more-link" data-mobile-tab="reviews"><span>Asiakaspalaute</span><span aria-hidden="true">↗</span></button>
