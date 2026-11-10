@@ -257,3 +257,14 @@
  .demo-record .record-actions>*{min-width:0;max-width:100%;white-space:normal;text-align:center;line-height:1.4}
 }
 @media(max-width:370px){.demo-record .record-actions{grid-template-columns:1fr}}
+
+/* Admin-only, automatically refreshed no-cost builder credential health. */
+.demo-health{display:flex;align-items:flex-start;flex-wrap:wrap;gap:7px 15px;padding:18px 20px;border:1px solid #385367;border-radius:10px;background:#182f3b;margin:8px 0 14px;color:#e8f3f5;font-size:12px;line-height:1.65}
+.demo-health strong{font-size:14px;width:100%;font-weight:800}
+.demo-health span{flex:1 1 300px}
+.demo-health small{font-size:11px;color:#b0c5cf}
+.demo-health a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.demo-health-blocked{border-color:#ba7b5e;background:#382b2c;color:#fff0e9}
+.demo-health-blocked small{color:#f0c6b4}
+.demo-health-ready{border-color:#638d7f;background:#203b35;color:#e7f5eb}
+@media(max-width:600px){.demo-health{flex-direction:column;gap:8px;padding:14px}}
