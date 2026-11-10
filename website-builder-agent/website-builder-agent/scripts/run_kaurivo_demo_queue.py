@@ -432,8 +432,6 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
     if len(internal_links)>200:
         raise HoldError("too_many_internal_links")
     for link in sorted(internal_links):
-        if link.endswith(("#","")):  # Empty value never possible here.
-            continue
         try:
             response=requests.get(link,timeout=13,allow_redirects=False)
         except requests.RequestException as exc:
