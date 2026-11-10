@@ -111,9 +111,44 @@ def free_model_configured():
             raise HoldError("exact_free_model_required")
     if os.environ.get("BUILDER_MODEL","").strip()==os.environ.get("QA_MODEL","").strip():
         raise HoldError("independent_qa_model_required")
+    validate_free_api_key()
     # No paid/uncapped Tavily source queries are initiated by this worker.
     os.environ["TAVILY_API_KEY"]=""
     os.environ["TAVILY_FREE_PLAN_CONFIRMED"]="0"
+
+
+def validate_free_api_key():
+    """Validate inference-key credentials through a no-inference API endpoint.
+
+    GET /api/v1/key generates no model tokens and incurs no model charge.
+    Never log the Authorization token or any response metadata.
+    """
+    token=os.environ.get("OPENROUTER_API_KEY","").strip()
+    if not token:
+        raise HoldError("free_ai_key_missing")
+    try:
+        response=requests.get(
+            "https://openrouter.ai/api/v1/key",
+            headers={"Authorization":"Bearer "+token},timeout=15
+        )
+    except requests.RequestException as exc:
+        raise HoldError("free_ai_key_validation_unavailable") from exc
+    if response.status_code==401:
+        raise HoldError("free_ai_key_invalid")
+    if response.status_code==403:
+        raise HoldError("free_ai_key_forbidden")
+    if response.status_code!=200:
+        raise HoldError("free_ai_key_validation_unavailable")
+    try:
+        obj=response.json()
+        data=obj.get("data") if isinstance(obj,dict) else None
+    except (TypeError,AttributeError,ValueError) as exc:
+        raise HoldError("free_ai_key_metadata_invalid") from exc
+    if not isinstance(data,dict):
+        raise HoldError("free_ai_key_metadata_invalid")
+    if data.get("is_management_key") or data.get("is_provisioning_key"):
+        raise HoldError("free_ai_wrong_key_type")
+    return True
 
 
 def safe_company_url(url):
@@ -164,9 +199,10 @@ def classify_stage_failure(handle,stage_name,start_position=0):
                                "free openrouter allowance exhausted",
                                "daily resource limit","requests per day")):
         return "free_ai_rate_limit"
-    if any(x in tail for x in ("http 401","http 403","invalid api key",
-                               "unauthorized api key")):
-        return "free_ai_access_rejected"
+    if any(x in tail for x in ("http 401","invalid api key","unauthorized api key")):
+        return "free_ai_key_invalid"
+    if any(x in tail for x in ("http 403","permission denied","guardrail block")):
+        return "free_ai_key_forbidden"
     if any(x in tail for x in ("http 402","payment required","negative balance")):
         return "free_ai_account_blocked"
     if any(x in tail for x in ("http 404","no endpoints found",
