@@ -28,3 +28,5 @@ with sync_playwright() as p:
    print("SOURCE_JSON",json.dumps({k:v for k,v in record.items() if k!="info"}|{"imgs":info["imgs"],"logos":info["logos"],"anchors":info["anchors"],"styles":info["styles"]},ensure_ascii=False))
   context.close()
  browser.close()
+
+# Source inspection is research evidence, not permission to republish images.
