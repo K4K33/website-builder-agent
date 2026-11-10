@@ -92,7 +92,8 @@ window.supabase={createClient:()=>({
                                 self.assertFalse(page.locator("#login").is_visible())
                                 self.assertEqual(page.locator("#m-clients").inner_text(),"0")
                                 if width<=850:
-                                    page.locator('#mobile-dock [data-mobile-tab="projects"]').click()
+                                    page.locator("#mobile-more-button").click()
+                                    page.locator('#mobile-more-panel [data-mobile-tab="projects"]').click()
                                 else:
                                     page.locator('[data-tab="projects"]').click()
                                 self.assertTrue(page.locator("#tab-projects").is_visible())
