@@ -180,6 +180,32 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(HoldError,"site_route_manifest_mismatch"):
                 verify_static_site(root,["index.html","palvelut.html"])
 
+    def test_research_stage_error_classification_never_reveals_private_output(self):
+        from tempfile import TemporaryFile
+        from scripts.run_kaurivo_demo_queue import classify_stage_failure
+        fixtures=[
+            ("OpenRouter rejected request: HTTP 429","free_ai_rate_limit"),
+            ("OpenRouter rejected request: HTTP 402","free_ai_account_blocked"),
+            ("OpenRouter rejected request: HTTP 400","free_model_request_rejected"),
+            ("ModuleNotFoundError: No module named 'missing'","missing_runtime_dependency"),
+            ("source inventory missing required services","source_research_incomplete"),
+            ("RuntimeError: website business details insufficient","researching_failed"),
+        ]
+        with TemporaryFile(mode="w+",encoding="utf-8") as log:
+            log.write("Previous stage: OpenRouter rejected request: HTTP 429\n")
+            for trace,reason in fixtures:
+                log.seek(0,2)
+                start=log.tell()
+                log.write("Company contact example@example.fi\n"+trace+"\n")
+                self.assertEqual(classify_stage_failure(log,"researching",start),reason)
+            log.seek(0,2)
+            start=log.tell()
+            log.write("Unfamiliar runtime failure for private company\n")
+            outcome=classify_stage_failure(log,"researching",start)
+            self.assertEqual(outcome,"researching_failed")
+            self.assertNotIn("company",outcome.lower())
+            self.assertNotIn("@",outcome)
+
     def test_qa_feedback_is_specific_and_autorepair_stays_bounded(self):
         from scripts.run_kaurivo_demo_queue import (
             qa_repair_feedback, MAX_AUTO_REVISIONS, AI_STAGE_BUDGET_SECONDS

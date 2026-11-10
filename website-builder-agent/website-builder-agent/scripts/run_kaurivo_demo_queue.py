@@ -149,7 +149,49 @@ def safe_company_url(url):
         raise HoldError("source_dns_check_failed")
 
 
+def classify_stage_failure(handle,stage_name,start_position=0):
+    """Return a bounded, non-sensitive reason for a failed child command.
+
+    Runner stdout is public. Never print source pages, model completions,
+    contact information, API URLs, authorization headers or raw exceptions.
+    Extract only a whitelisted class of failure based on the PRIVATE stage log.
+    """
+    handle.flush()
+    handle.seek(start_position)
+    # Only the current stage output is used. Never misattribute older failures.
+    tail=handle.read()[-12000:].casefold()
+    if any(x in tail for x in ("http 429","rate limit","quota exhausted",
+                               "free openrouter allowance exhausted",
+                               "daily resource limit","requests per day")):
+        return "free_ai_rate_limit"
+    if any(x in tail for x in ("http 401","http 403","invalid api key",
+                               "unauthorized api key")):
+        return "free_ai_access_rejected"
+    if any(x in tail for x in ("http 402","payment required","negative balance")):
+        return "free_ai_account_blocked"
+    if any(x in tail for x in ("http 404","no endpoints found",
+                               "model not found")):
+        return "free_model_unavailable"
+    if any(x in tail for x in ("http 400","response_format","invalid response format")):
+        return "free_model_request_rejected"
+    if "modulenotfounderror:" in tail:
+        return "missing_runtime_dependency"
+    if any(x in tail for x in ("connectionerror","certificate verify failed",
+                               "readtimeout","connecttimeout")):
+        return "research_network_unavailable" if stage_name=="researching" else "network_unavailable"
+    if any(x in tail for x in ("response truncated","token-rajaan",
+                               "length finish reason")):
+        return "free_ai_response_truncated"
+    if any(x in tail for x in ("source inventory","source-content",
+                               "source content", "source website",
+                               "source-fidelity", "source visual")):
+        return "source_research_incomplete"
+    return stage_name+"_failed"
+
+
 def run_cli(args,log_handle,deadline=None):
+    log_handle.seek(0,os.SEEK_END)
+    stage_start=log_handle.tell()
     remaining=(deadline-time.monotonic()) if deadline is not None else TIMEOUT_PER_STAGE
     duration=int(min(TIMEOUT_PER_STAGE,remaining))
     if duration<30:
@@ -164,7 +206,7 @@ def run_cli(args,log_handle,deadline=None):
     except subprocess.TimeoutExpired as exc:
         raise HoldError("stage_timeout") from exc
     except subprocess.CalledProcessError as exc:
-        raise HoldError(stage+"_failed") from exc
+        raise HoldError(classify_stage_failure(log_handle,stage,stage_start)) from exc
 
 
 def load_company(slug):
