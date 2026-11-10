@@ -49,6 +49,22 @@ jobs:
           print("Visual QA model is exact zero-cost:", free_exact("QA_MODEL"))
           print("Independent Builder and QA models:", os.environ.get("BUILDER_MODEL")!=os.environ.get("QA_MODEL"))
           print("Health check never calls paid or free AI APIs.")
+          # GET /key validates bearer authorization without any model tokens.
+          # Log ONLY the status and a boolean, never the token or key details.
+          import urllib.request,urllib.error
+          key=os.environ.get("OPENROUTER_API_KEY","").strip()
+          if key:
+              req=urllib.request.Request("https://openrouter.ai/api/v1/key",
+                  headers={"Authorization":"Bearer "+key})
+              try:
+                  with urllib.request.urlopen(req,timeout=15) as res:
+                      status=res.status
+              except urllib.error.HTTPError as err:
+                  status=err.code
+              except Exception:
+                  status=0
+              print("OpenRouter inference key check HTTP:",status)
+              print("OpenRouter inference key authentication valid:",status==200)
           PY
       - id: claim
         name: Securely claim one queued job

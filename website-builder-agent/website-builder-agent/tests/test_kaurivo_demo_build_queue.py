@@ -180,6 +180,39 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(HoldError,"site_route_manifest_mismatch"):
                 verify_static_site(root,["index.html","palvelut.html"])
 
+    def test_free_key_preflight_is_zero_token_and_rejects_unauthorized_keys(self):
+        from unittest.mock import patch, Mock
+        from scripts.run_kaurivo_demo_queue import validate_free_api_key, HoldError
+        def mock_response(status,data=None):
+            r=Mock()
+            r.status_code=status
+            r.json.return_value={"data":data if data is not None else {}}
+            return r
+        with patch.dict(os.environ,{"OPENROUTER_API_KEY":"test-only-key"}):
+            for http,reason in [(401,"free_ai_key_invalid"),(403,"free_ai_key_forbidden"),
+                                (500,"free_ai_key_validation_unavailable")]:
+                with self.subTest(http=http):
+                    with patch("scripts.run_kaurivo_demo_queue.requests.get",
+                               return_value=mock_response(http)) as get:
+                        with self.assertRaisesRegex(HoldError,reason):
+                            validate_free_api_key()
+                        self.assertIn("/api/v1/key",get.call_args.args[0])
+            with patch("scripts.run_kaurivo_demo_queue.requests.get",
+                       return_value=mock_response(200,{"is_management_key":True})):
+                with self.assertRaisesRegex(HoldError,"free_ai_wrong_key_type"):
+                    validate_free_api_key()
+            with patch("scripts.run_kaurivo_demo_queue.requests.get",
+                       return_value=mock_response(200,{"is_provisioning_key":True})):
+                with self.assertRaisesRegex(HoldError,"free_ai_wrong_key_type"):
+                    validate_free_api_key()
+            with patch("scripts.run_kaurivo_demo_queue.requests.get",
+                       return_value=mock_response(200,{"is_management_key":False})) as get:
+                self.assertTrue(validate_free_api_key())
+                self.assertEqual(get.call_count,1)
+        with patch.dict(os.environ,{"OPENROUTER_API_KEY":""}):
+            with self.assertRaisesRegex(HoldError,"free_ai_key_missing"):
+                validate_free_api_key()
+
     def test_research_stage_error_classification_never_reveals_private_output(self):
         from tempfile import TemporaryFile
         from scripts.run_kaurivo_demo_queue import classify_stage_failure
@@ -187,6 +220,11 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             ("OpenRouter rejected request: HTTP 429","free_ai_rate_limit"),
             ("OpenRouter rejected request: HTTP 402","free_ai_account_blocked"),
             ("OpenRouter rejected request: HTTP 400","free_model_request_rejected"),
+            ("OpenRouter rejected request: HTTP 401","free_ai_key_invalid"),
+            ("OpenRouter rejected request: HTTP 403","free_ai_key_forbidden"),
+            ("RuntimeError: Yrityksen sivun analyysi epäonnistui: HTTP 403","source_http_access_blocked"),
+            ("RuntimeError: Yrityksen sivun analyysi epäonnistui: HTTP 429","source_http_rate_limited"),
+            ("RuntimeError: Yrityksen sivun analyysi epäonnistui: HTTP 404","source_website_unreachable"),
             ("ModuleNotFoundError: No module named 'missing'","missing_runtime_dependency"),
             ("source inventory missing required services","source_research_incomplete"),
             ("RuntimeError: website business details insufficient","researching_failed"),
@@ -263,7 +301,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
            "BUILDER_MODEL":"google/gemma-4-31b-it:free",
            "QA_MODEL":"qwen/qwen3.8-27b:free"
         }):
-           free_model_configured()
+           with patch("scripts.run_kaurivo_demo_queue.validate_free_api_key",
+                      return_value=True) as validate:
+               free_model_configured()
+               validate.assert_called_once_with()
 
     def test_authenticated_browser_only_mock_job_is_real_rpc(self):
         if os.getenv("SKIP_BROWSER_TESTS")=="1":
