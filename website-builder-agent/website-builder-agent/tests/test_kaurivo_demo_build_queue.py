@@ -109,6 +109,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('auto/kaurivo-demos',worker)
         self.assertIn('kaurivo-auto-demos-2026.onrender.com',worker)
         self.assertNotIn('confirm-paid-apis',worker)
+        self.assertIn('Kaurivo worker redacted error:',worker)
+        self.assertIn('traceback.extract_tb',worker)
+        self.assertIn('worker_line',worker)
+        self.assertNotIn('print(str(exc))',worker)
 
     def test_job_is_not_suddenly_approved_by_static_site_smoke(self):
         from scripts.run_kaurivo_demo_queue import (
