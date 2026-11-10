@@ -86,6 +86,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('id-token: write',flow)
         self.assertIn('contents: write',flow)
         self.assertIn('FREE_ONLY: "1"',flow)
+        self.assertIn("google/gemma-4-31b-it:free",flow)
+        self.assertIn("qwen/qwen3.8-27b:free",flow)
+        self.assertIn("google/gemma-4-26b-a4b-it:free",flow)
+        self.assertIn("Independent Builder and QA models:",flow)
         self.assertIn('cron: "*/5 * * * *"',flow)
         self.assertIn('KAURIVO_CLAIMED_JOB_FILE',flow)
         self.assertNotIn('SUPABASE_SERVICE_ROLE_KEY:',flow)
@@ -208,6 +212,25 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             checked_preview_link("/toinen-yritys/",current,base)
         with self.assertRaisesRegex(HoldError,"internal_link_escapes_preview"):
             checked_preview_link("//kaurivo-auto-demos-2026.onrender.com/admin",current,base)
+
+    def test_duplicate_builder_and_qa_model_not_certified_as_independent(self):
+        from scripts.run_kaurivo_demo_queue import free_model_configured,HoldError
+        from unittest.mock import patch
+        same="google/gemma-4-31b-it:free"
+        with patch.dict(os.environ,{
+           "FREE_ONLY":"1","AI_BACKEND":"openrouter",
+           "OPENROUTER_API_KEY":"fake-for-local-testing-only",
+           "BUILDER_MODEL":same,"QA_MODEL":same
+        }):
+           with self.assertRaisesRegex(HoldError,"independent_qa_model_required"):
+               free_model_configured()
+        with patch.dict(os.environ,{
+           "FREE_ONLY":"1","AI_BACKEND":"openrouter",
+           "OPENROUTER_API_KEY":"fake-for-local-testing-only",
+           "BUILDER_MODEL":"google/gemma-4-31b-it:free",
+           "QA_MODEL":"qwen/qwen3.8-27b:free"
+        }):
+           free_model_configured()
 
     def test_authenticated_browser_only_mock_job_is_real_rpc(self):
         if os.getenv("SKIP_BROWSER_TESTS")=="1":
