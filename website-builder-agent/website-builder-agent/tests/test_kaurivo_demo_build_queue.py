@@ -114,6 +114,74 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(HoldError,'paid_ai_disabled'):
                 free_model_configured()
 
+    def test_static_preview_copies_real_html_and_not_private_json_or_txt(self):
+        from tempfile import TemporaryDirectory
+        from scripts.run_kaurivo_demo_queue import (
+            snapshot_for_preview, verify_static_site
+        )
+        site='<!doctype html><html lang="fi"><head><title>Yritys</title></head><body><main><h1>Palvelut</h1><p>Esimerkki</p></main></body></html>'
+        with TemporaryDirectory() as td:
+            root=Path(td)
+            original=root/"source"
+            (original/"palvelut").mkdir(parents=True)
+            (original/"index.html").write_text(site,encoding="utf-8")
+            (original/"palvelut/index.html").write_text(site,encoding="utf-8")
+            (original/"research-notes.json").write_text('{"private":"never publish"}')
+            (original/"client-contact.txt").write_text("Private contact data")
+            (original/"assets").mkdir()
+            (original/"assets/main.css").write_text("body{margin:0}")
+            target=root/"preview"
+            snapshot_for_preview(original,target,"kaurivo-test-unique")
+            self.assertEqual(
+                verify_static_site(target,["index.html","palvelut/index.html"]),
+                ["index.html","palvelut/index.html"]
+            )
+            self.assertFalse((target/"research-notes.json").exists())
+            self.assertFalse((target/"client-contact.txt").exists())
+            self.assertTrue((target/"assets/main.css").is_file())
+            rendered=(target/"index.html").read_text()
+            self.assertIn('data-kaurivo-release="kaurivo-test-unique"',rendered)
+            self.assertIn('content="noindex,nofollow"',rendered)
+            self.assertIn('ei yrityksen virallinen sivu',rendered)
+
+    def test_route_manifest_is_exact_including_flat_html_pages(self):
+        from tempfile import TemporaryDirectory
+        from scripts.run_kaurivo_demo_queue import (
+            verify_static_site, HoldError
+        )
+        site='<!doctype html><html><head><meta name="robots" content="noindex"></head><body><main><h1>Hei</h1></main></body></html>'
+        with TemporaryDirectory() as td:
+            root=Path(td)
+            (root/"index.html").write_text(site)
+            (root/"palvelut.html").write_text(site)
+            self.assertEqual(verify_static_site(root,["index.html","palvelut.html"]),
+                             ["index.html","palvelut.html"])
+            with self.assertRaisesRegex(HoldError,"site_route_manifest_mismatch"):
+                verify_static_site(root,["index.html","puuttuu.html"])
+            with self.assertRaisesRegex(HoldError,"site_route_manifest_mismatch"):
+                verify_static_site(root,["index.html"])
+            (root/"yhteystiedot.html").write_text(site)
+            with self.assertRaisesRegex(HoldError,"site_route_manifest_mismatch"):
+                verify_static_site(root,["index.html","palvelut.html"])
+
+    def test_demo_navigation_does_not_leave_company_preview(self):
+        from scripts.run_kaurivo_demo_queue import checked_preview_link, HoldError
+        base="https://kaurivo-auto-demos-2026.onrender.com/yritys-1234/"
+        current=base+"index.html"
+        self.assertEqual(checked_preview_link(
+            "palvelut/index.html",current,base),base+"palvelut/index.html")
+        self.assertEqual(checked_preview_link("#palvelut",current,base),current)
+        self.assertIsNone(checked_preview_link("https://example.com/",current,base))
+        self.assertIsNone(checked_preview_link("mailto:info@example.com",current,base))
+        with self.assertRaisesRegex(HoldError,"dead_navigation_link"):
+            checked_preview_link("#",current,base)
+        with self.assertRaisesRegex(HoldError,"dead_navigation_link"):
+            checked_preview_link("javascript:void(0)",current,base)
+        with self.assertRaisesRegex(HoldError,"internal_link_escapes_preview"):
+            checked_preview_link("/toinen-yritys/",current,base)
+        with self.assertRaisesRegex(HoldError,"internal_link_escapes_preview"):
+            checked_preview_link("//kaurivo-auto-demos-2026.onrender.com/admin",current,base)
+
     def test_authenticated_browser_only_mock_job_is_real_rpc(self):
         if os.getenv("SKIP_BROWSER_TESTS")=="1":
             self.skipTest("Browser intentionally disabled")
