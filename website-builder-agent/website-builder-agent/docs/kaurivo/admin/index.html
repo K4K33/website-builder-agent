@@ -8,7 +8,8 @@
 <link rel="stylesheet" href="../assets/crm.css?v=20261110-health2">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0"></script>
 <script defer src="../assets/demo-jobs.js?v=20261110-health2"></script>
-<script defer src="../assets/crm.js?v=20261110-health2"></script>
+<script defer src="../assets/outreach-mail.js?v=20261110-mail1"></script>
+<script defer src="../assets/crm.js?v=20261110-mail1"></script>
 </head>
 <body>
 <div class="crm-shell">
@@ -83,6 +84,14 @@
  <summary><span class="ops-led" aria-hidden="true"></span><strong>Automaation tila</strong><span id="ops-brief">Ei vielä todistettua ajoa valitulle päivälle</span><span class="ops-chevron" aria-hidden="true">+</span></summary>
  <div id="ops-events" class="ops-events" role="status" aria-live="polite">Näytetään vain palvelimen vahvistamat tapahtumat.</div>
  <p class="form-hint">Jos tapahtumaa ei näy, ajoa ei ole vahvistettu — se ei vielä todista virhettä. <a href="https://github.com/K4K33/website-builder-agent/actions" target="_blank" rel="noopener noreferrer">GitHubin ajoloki</a></p>
+</details>
+<details class="ops-health" id="mail-deliverability">
+ <summary><span class="ops-led" aria-hidden="true"></span><strong>Myyntisähköpostin toimitettavuus</strong><span class="ops-chevron" aria-hidden="true">+</span></summary>
+ <div class="ops-events">
+  <p><strong>Ei vielä varmennettu.</strong> Gmailin onnistunut Lähetetty-merkintä ei kerro, päätyikö viesti Saapuneisiin. Testaa ensin luvallisella Gmail- ja Outlook-vastaanottajalla; pyydä vastaanottajaa ilmoittamaan kansio sekä tarvittaessa SPF-, DKIM- ja DMARC-tulokset.</p>
+  <p>Kopioitava ensiviesti on nyt lyhyt tekstiluonnos ilman URL-osoitteita, kuvia, seurantaa tai liitteitä. Liitä Aihe-rivi erikseen Gmailin aiheeksi. Älä lähetä ZIP-teemoja tai henkilökohtaisia muokkauslinkkejä ensikontaktissa. Lähetä vain itse tarkistamallesi, lain mukaan sallitulle yritysvastaanottajalle; kunnioita kieltoja. Kaurivo ei tee automaattista myyntilähetystä.</p>
+  <p>Oman sähköpostiverkkotunnuksen SPF/DKIM/DMARC voidaan määrittää vasta sen hankinnan ja postipalvelun valinnan jälkeen. <a href="https://support.google.com/mail/answer/81126?hl=fi" target="_blank" rel="noopener noreferrer">Googlen lähettäjävaatimukset</a>.</p>
+ </div>
 </details>
 <div class="lead-pulse" id="lead-pulse" aria-live="polite">Tutkimustilanne haetaan…</div>
 <details class="ops-health sales-dashboard" id="sales-dashboard">
