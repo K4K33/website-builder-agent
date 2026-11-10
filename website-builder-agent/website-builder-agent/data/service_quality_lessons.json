@@ -4,7 +4,12 @@
     "scope": "service",
     "origin": "owner feedback and Castanum commerce omission",
     "root_cause": "A surviving shop link was treated as preservation of product discovery and purchase functions.",
-    "implementation": ["utils/service_quality.py", "utils/commerce_parity.py", "agents/builder.py", "utils/universal_quality.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "utils/commerce_parity.py",
+      "agents/builder.py",
+      "utils/universal_quality.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -14,7 +19,11 @@
     "scope": "service",
     "origin": "owner feedback and Castanum bouquet page",
     "root_cause": "Authentic source photography was accepted without inspecting its subject against the route's visitor task.",
-    "implementation": ["utils/service_quality.py", "agents/research.py", "agents/qa.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "agents/research.py",
+      "agents/qa.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -24,7 +33,10 @@
     "scope": "service",
     "origin": "recurring owner feedback across unrelated company demos",
     "root_cause": "Structural comparison alone missed repeated typography and editorial hero formulas.",
-    "implementation": ["utils/visual_originality.py", "utils/service_quality.py"],
+    "implementation": [
+      "utils/visual_originality.py",
+      "utils/service_quality.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -34,7 +46,11 @@
     "scope": "service",
     "origin": "owner feedback about generic copy and source narration",
     "root_cause": "No explicit source excerpt contract connected company voice decisions to observed company language and facts.",
-    "implementation": ["utils/service_quality.py", "agents/research.py", "agents/builder.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "agents/research.py",
+      "agents/builder.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -44,7 +60,11 @@
     "scope": "service",
     "origin": "owner feedback after technical tests were overemphasised",
     "root_cause": "Passing automation could be communicated as evidence of complete visual and commercial quality.",
-    "implementation": ["utils/service_quality.py", "utils/universal_quality.py", "agents/qa.py"],
+    "implementation": [
+      "utils/service_quality.py",
+      "utils/universal_quality.py",
+      "agents/qa.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
@@ -54,9 +74,28 @@
     "scope": "service",
     "origin": "owner clarification on 2026-11-04",
     "root_cause": "Feedback about a demo was interpreted too narrowly as a request to patch that demo.",
-    "implementation": ["utils/global_feedback.py", "utils/service_quality.py"],
+    "implementation": [
+      "utils/global_feedback.py",
+      "utils/service_quality.py"
+    ],
     "regression_test": "tests/test_service_quality.py",
     "status": "implemented",
     "real_new_company_validation": "pending"
+  },
+  {
+    "id": "2026-11-10-source-aesthetic-floor-and-real-drag",
+    "scope": "service",
+    "origin": "Owner's video review of Verhoomo 3 Ässää original vs new and independent premium-site research",
+    "root_cause": "Preview-only CI passed screenshot count and keyboard range tests but did not run universal master QA nor test image-surface drag; the builder relied on repeated full-width text bands and fake CSS fabric perspective.",
+    "implementation": [
+      "docs/KAURIVO_MESTARI_PROMPT.md",
+      "docs/KAURIVO_PREMIUM_EXPERIENCE_V6_20261110.md",
+      "utils/premium_experience_gate.py",
+      "scripts/audit_changed_demo_previews.py",
+      ".github/workflows/kaurivo-all-new-demos-universal-qa.yml"
+    ],
+    "regression_test": "tests/test_premium_experience_gate.py",
+    "status": "implemented_static_gate_waiting_ci",
+    "real_new_company_validation": "pending_independent_review_of_new_distinct_client"
   }
 ]
