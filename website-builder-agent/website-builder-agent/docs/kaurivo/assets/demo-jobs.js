@@ -42,7 +42,8 @@
  function validUrl(value,kind){
   try{
    const uri=new URL(value);
-   if(uri.protocol!=="https:"||uri.username||uri.password)return null;
+   if(!["https:","http:"].includes(uri.protocol)||uri.username||uri.password)return null;
+   if(kind&&uri.protocol!=="https:")return null;
    if(kind==="preview"&&uri.hostname!=="k4k33.github.io"&&
       !/^[a-z0-9-]+[.]onrender[.]com$/i.test(uri.hostname))return null;
    if(kind==="qa"&&!(uri.hostname==="github.com"&&
