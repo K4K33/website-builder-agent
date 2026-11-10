@@ -20,6 +20,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import traceback
 import time
 from urllib.parse import urlsplit, urljoin, unquote
 import requests
@@ -607,7 +608,14 @@ def main():
                 print("Kaurivo demo queue: unable to persist HOLD status.",file=sys.stderr)
             print("Kaurivo demo queue: HOLD / "+error.code)
             return 0
-        except Exception:
+        except Exception as exc:
+            # Never print str(exc): it may contain private CRM, source material,
+            # API URLs or auth headers. Keep exact worker file line/type only.
+            own_frames=[frame for frame in traceback.extract_tb(exc.__traceback__)
+                        if frame.filename.endswith("/run_kaurivo_demo_queue.py")]
+            location=(own_frames[-1].lineno if own_frames else 0)
+            print("Kaurivo worker redacted error:",type(exc).__name__,
+                  "worker_line",location,file=sys.stderr)
             try:
                 update("failed","Rakennus vaatii teknisen korjauksen",
                        error_code="unexpected_worker_error")

@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/kaurivo-demo-worker.yml"
+      - "website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py"
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
