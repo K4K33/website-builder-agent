@@ -34,7 +34,7 @@ PREVIEW_HOST="https://kaurivo-auto-demos-2026.onrender.com"
 PROJECT=Path(__file__).resolve().parents[1]
 RUN_ID=int(os.environ.get("GITHUB_RUN_ID","0"))
 RUN_URL=f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
-TIMEOUT_PER_STAGE=900
+TIMEOUT_PER_STAGE=480
 # Publish only site documents and expected static assets. Never copy JSON/TXT
 # scratch files, notes, evidence, build manifests or private company data.
 ALLOWED_EXTENSIONS={".html",".css",".js",".png",".jpg",".jpeg",".webp",
