@@ -268,3 +268,12 @@
 .demo-health-blocked small{color:#f0c6b4}
 .demo-health-ready{border-color:#638d7f;background:#203b35;color:#e7f5eb}
 @media(max-width:600px){.demo-health{flex-direction:column;gap:8px;padding:14px}}
+
+/* Owner-reviewed outreach: exact subject/body split, no automatic sending. */
+#outreach-dialog{max-width:min(680px,calc(100vw - 24px))}
+#outreach-dialog .mail-preview-fields{display:grid;gap:12px;margin-top:14px}
+#outreach-dialog .mail-preview-fields label{display:grid;gap:6px;font-size:12px;font-weight:800;color:#dae9f1}
+#outreach-dialog input,#outreach-dialog textarea{box-sizing:border-box;width:100%;border:1px solid #597385;border-radius:8px;background:#122734;color:#f1f7fc;padding:13px;font:500 14px/1.5 system-ui,sans-serif}
+#outreach-dialog textarea{resize:vertical;min-height:190px;max-height:52vh;font-family:system-ui,sans-serif;line-height:1.55}
+#outreach-dialog .mail-preview-warning{font-size:12px;line-height:1.6;color:#e6c6b0}
+@media(max-width:600px){#outreach-dialog .dialog-actions{display:grid;grid-template-columns:1fr}#outreach-dialog .dialog-actions button{min-height:48px}}

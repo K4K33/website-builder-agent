@@ -23,6 +23,11 @@ class KaurivoEmailDeliverabilityTests(unittest.TestCase):
         self.assertLess(html.index("outreach-mail.js"),html.index("crm.js"))
         self.assertIn("window.KaurivoOutreach.firstContact(company)",crm)
         self.assertIn("Kopioi kevyt ensiviesti",crm)
+        self.assertIn("firstContactParts(candidate)",crm)
+        self.assertIn("outreach-subject",html)
+        self.assertIn("outreach-body",html)
+        self.assertIn("outreach-copy-subject",html)
+        self.assertIn("outreach-copy-body",html)
         self.assertIn("markkinointikielto",crm.lower())
         self.assertIn("ei liitteitä",crm.lower())
         self.assertIn('id="mail-deliverability"',html)
@@ -38,6 +43,7 @@ class KaurivoEmailDeliverabilityTests(unittest.TestCase):
 const assert=require('node:assert/strict');
 require(process.argv[1]);
 const draft=globalThis.KaurivoOutreach.firstContact;
+const parts=globalThis.KaurivoOutreach.firstContactParts;
 const good={
  company_name:'Esimerkki Palvelu Oy',
  contact_language:'fi',
@@ -54,6 +60,11 @@ const good={
 for(const lang of ['fi','sv','en']){
  const x=draft({...good,contact_language:lang});
  assert.match(x,/^Aihe: /);
+ const p=parts({...good,contact_language:lang});
+ assert.ok(p.subject.length>10);
+ assert.ok(p.body.startsWith(lang==='sv'?'Hej!':lang==='en'?'Hello,':'Hei,'));
+ assert.equal(x,'Aihe: '+p.subject+'\n\n'+p.body);
+ assert.ok(!p.body.includes('Aihe: '));
  assert.ok(x.length<1500);
  assert.ok(!/https?:\/\//.test(x));
  assert.ok(!/<img|\.zip|<html/i.test(x));

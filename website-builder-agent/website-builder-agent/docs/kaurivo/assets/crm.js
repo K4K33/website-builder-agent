@@ -448,10 +448,14 @@
       candidate.business_activity_assessment==="active_evidence" && companyHasMatchingObservation(candidate))
     row.actions.append(button("Kopioi kevyt ensiviesti",async()=>{
      try{
-       const draft=personalizedOutreachDraft(candidate);
-       if(!window.confirm("Ennen lähetystä: varmista oikea yritysvastaanottaja ja laillisuus, ettei yritystä ole jo kontaktoitu, eikä osoite ole estolistalla. Lähetä Gmailista yksilöllinen tekstiviesti ilman ZIP-liitteitä, kuvia tai linkkejä. Lähetys ei tapahdu tässä. Jatketaanko luonnoksen kopiointiin?"))return;
-       await navigator.clipboard.writeText(draft);
-       toast("Aihe ja lyhyt tekstimuotoinen viesti kopioitu. Liitä aihe erikseen Gmailiin; ei liitteitä, linkkejä eikä massalähetystä.","success");
+       // Preserve the existing reviewed, opt-out-aware legal gate.
+       personalizedOutreachDraft(candidate);
+       if(!window.confirm("Varmista oikea yritysvastaanottaja ja lainmukainen yhteydenotto. Tarkista myös, ettei yritystä ole kontaktoitu tai merkitty estolistalle. Ei liitteitä, kuvia tai linkkejä. Viestiä EI lähetetä tässä."))return;
+       const parts=window.KaurivoOutreach.firstContactParts(candidate);
+       $("outreach-subject").value=parts.subject;
+       $("outreach-body").value=parts.body;
+       $("outreach-dialog").showModal();
+       toast("Tarkista viesti ja kopioi aihe sekä viestiteksti erikseen Gmailiin.","info");
      }catch(err){
        toast(err.message||"Viestiluonnoksen kopiointi ei onnistunut.","error");
      }
@@ -1202,6 +1206,15 @@
   $("close-editor").addEventListener("click",()=>$("editor").close());
   $("cancel-editor").addEventListener("click",()=>$("editor").close());
   $("close-invite").addEventListener("click",()=>{$("invite-dialog").close();currentInvite=null;$("invite-copy").value="";});
+  $("outreach-close").addEventListener("click",()=>$("outreach-dialog").close());
+  $("outreach-copy-subject").addEventListener("click",async()=>{
+   try{await navigator.clipboard.writeText($("outreach-subject").value);toast("Aihe kopioitu. Liitä Gmailin Aihe-kenttään.","success");}
+   catch(_){toast("Kopiointi epäonnistui. Valitse ja kopioi aihe käsin.","error");}
+  });
+  $("outreach-copy-body").addEventListener("click",async()=>{
+   try{await navigator.clipboard.writeText($("outreach-body").value);toast("Viestiteksti kopioitu. Liitä Gmailin viestikenttään ilman muotoiluja tai liitteitä.","success");}
+   catch(_){toast("Kopiointi epäonnistui. Valitse ja kopioi viesti käsin.","error");}
+  });
   $("copy-invite").addEventListener("click",copyInvite);
   $("mark-sent").addEventListener("click",()=>markSent());
   db.auth.onAuthStateChange((_event,session)=>{window.setTimeout(()=>{if(session?.user)handleAuth();else setLogin(false);},0);});
