@@ -1,0 +1,108 @@
+name: Kaurivo admin-triggered demo builder
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: kaurivo-demo-builder-main
+  cancel-in-progress: false
+
+jobs:
+  claim-and-build:
+    if: github.repository == 'K4K33/website-builder-agent' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - id: claim
+        name: Securely claim one queued job
+        shell: bash
+        env:
+          EDGE: https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-demo-worker
+        run: |
+          set -euo pipefail
+          OIDC_RESPONSE="$(curl -fsS --max-time 30 \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=kaurivo-demo-worker-xhsfbcwpwbgdbatrcyuk")"
+          JWT="$(printf '%s' "$OIDC_RESPONSE" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"])')"
+          unset OIDC_RESPONSE
+          curl -fsS --max-time 30 -X POST "$EDGE" \
+            -H "Authorization: Bearer $JWT" \
+            -H 'Content-Type: application/json' \
+            --data '{"action":"claim"}' > "$RUNNER_TEMP/claimed-demo.json"
+          unset JWT
+          python3 - <<'PY'
+          import json,os
+          p=os.path.join(os.environ["RUNNER_TEMP"],"claimed-demo.json")
+          with open(p,encoding="utf-8") as f:
+              result=json.load(f)
+          if result.get("ok") is not True:
+              raise SystemExit("Secure queue claim was rejected.")
+          value="true" if result.get("job") else "false"
+          with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as f:
+              f.write("has_job="+value+"\n")
+          print("Queued private Kaurivo demo available:",value)
+          PY
+      - name: Install dependencies only when a job exists
+        if: steps.claim.outputs.has_job == 'true'
+        run: |
+          python -m pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Research, create concepts, build, QA, publish and browser-verify
+        if: steps.claim.outputs.has_job == 'true'
+        env:
+          KAURIVO_CLAIMED_JOB_FILE: ${{ runner.temp }}/claimed-demo.json
+          FREE_ONLY: "1"
+          AI_BACKEND: openrouter
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: openrouter/free
+          RESEARCH_MODEL: ${{ vars.KAURIVO_RESEARCH_MODEL_FREE }}
+          BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE }}
+          QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE }}
+          TAVILY_API_KEY: ""
+          TAVILY_FREE_PLAN_CONFIRMED: "0"
+        run: python scripts/run_kaurivo_demo_queue.py
+      - name: Fail closed if runner setup failed after claim
+        if: failure() && steps.claim.outputs.has_job == 'true'
+        shell: bash
+        env:
+          EDGE: https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-demo-worker
+        run: |
+          python3 - <<'PY'
+          import json,os,urllib.request
+          from urllib.parse import urlencode
+          try:
+              p=os.path.join(os.environ["RUNNER_TEMP"],"claimed-demo.json")
+              with open(p,encoding="utf-8") as f:
+                  job=json.load(f)["job"]
+              if not job: raise ValueError("empty")
+              url=os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]+"&"+urlencode(
+                  {"audience":"kaurivo-demo-worker-xhsfbcwpwbgdbatrcyuk"})
+              request=urllib.request.Request(url,headers={
+                "Authorization":"Bearer "+os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]})
+              with urllib.request.urlopen(request,timeout=20) as r:
+                  jwt=json.load(r)["value"]
+              body=json.dumps({"action":"update","job_id":job["id"],"status":"hold",
+                  "progress":"Automaation käynnistys epäonnistui",
+                  "error_code":"runner_setup_failed"}).encode()
+              request=urllib.request.Request(os.environ["EDGE"],data=body,method="POST",
+                  headers={"authorization":"Bearer "+jwt,"content-type":"application/json"})
+              with urllib.request.urlopen(request,timeout=20) as r:
+                  print("Fail-closed status request:",r.status)
+          except Exception:
+              print("Manual recovery may be needed for a claimed job. No success reported.")
+          PY
