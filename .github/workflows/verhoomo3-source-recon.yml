@@ -1,0 +1,27 @@
+name: Verhoomo 3 Assaa source reconnaissance
+on:
+  push:
+    branches: [preview/verhoomo-3-assaa-20261110]
+    paths:
+      - "website-builder-agent/website-builder-agent/scripts/inspect_verhoomo3_source.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: python website-builder-agent/website-builder-agent/scripts/inspect_verhoomo3_source.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verhoomo3-source-evidence
+          path: output/verhoomo3-source
+          retention-days: 10
