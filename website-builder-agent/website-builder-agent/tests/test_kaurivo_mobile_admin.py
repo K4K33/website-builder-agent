@@ -32,12 +32,12 @@ window.supabase={createClient:()=>({
 
 
 class MobileAdminTests(unittest.TestCase):
-    def test_mobile_navigation_has_all_six_sections(self):
+    def test_mobile_navigation_has_all_seven_sections(self):
         html=HTML.read_text(encoding="utf-8")
         js=JS.read_text(encoding="utf-8")
         self.assertIn('id="mobile-dock"',html)
         self.assertIn('id="mobile-more-panel"',html)
-        for name in ("prospects","clients","projects","sales","queue","reviews"):
+        for name in ("prospects","demos","clients","projects","sales","queue","reviews"):
             self.assertIn('data-mobile-tab="'+name+'"',html)
         self.assertIn("navigateMobile",js)
         self.assertIn("closeMobileMore",js)
@@ -110,14 +110,14 @@ class MobileAdminTests(unittest.TestCase):
                             self.assertLess(
                                 page.locator("#prospect-list").evaluate("(node)=>node.getBoundingClientRect().top"),
                                 page.locator(".push-settings").evaluate("(node)=>node.getBoundingClientRect().top"))
-                            for nav in ("prospects","clients","projects"):
+                            for nav in ("prospects","clients","demos"):
                                 b=page.locator('#mobile-dock [data-mobile-tab="'+nav+'"]')
                                 self.assertGreaterEqual(b.evaluate("(node)=>node.getBoundingClientRect().height"),44)
                                 b.click()
                                 self.assertTrue(page.locator("#tab-"+nav).is_visible())
                             page.locator("#mobile-more-button").click()
                             self.assertTrue(page.locator("#mobile-more-panel").is_visible())
-                            for nav in ("sales","queue","reviews"):
+                            for nav in ("projects","sales","queue","reviews"):
                                 page.locator("#mobile-more-button").click() if not page.locator("#mobile-more-panel").is_visible() else None
                                 page.locator('#mobile-more-panel [data-mobile-tab="'+nav+'"]').click()
                                 self.assertTrue(page.locator("#tab-"+nav).is_visible())
