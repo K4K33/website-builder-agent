@@ -18,6 +18,7 @@ from utils.commerce_parity import commerce_problems
 from utils.visual_direction import audit_visual_motion
 from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.demo_origin_gate import verify_demo_concept_evidence
+from utils.premium_experience_gate import audit_premium_experience
 from bs4 import BeautifulSoup
 DEMOS=ROOT/"docs"/"kaurivo"/"demos"
 PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
@@ -155,6 +156,13 @@ def main():
             failed=True
         if motion["pending"]:
             print("VISUAL_REVIEW_PENDING", slug, "; ".join(motion["pending"][:3]))
+        premium=audit_premium_experience(pages,css_text=css,js_text=js)
+        for problem in premium["blocking"]:
+            print("BLOCK",slug,"premium_interaction",problem["kind"],"@",problem.get("route"))
+            failed=True
+        if premium["review_required"]:
+            print("PREMIUM_VISUAL_REVIEW_PENDING",slug,
+                  "; ".join(p["kind"] for p in premium["review_required"][:4]))
         try:
             evidence=verified_source_evidence(slug)
             import json
