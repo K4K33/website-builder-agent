@@ -63,7 +63,7 @@ for(const lang of ['fi','sv','en']){
  const p=parts({...good,contact_language:lang});
  assert.ok(p.subject.length>10);
  assert.ok(p.body.startsWith(lang==='sv'?'Hej!':lang==='en'?'Hello,':'Hei,'));
- assert.equal(x,'Aihe: '+p.subject+'\\n\\n'+p.body);
+ assert.equal(x,'Aihe: '+p.subject+'\n\n'+p.body);
  assert.ok(!p.body.includes('Aihe: '));
  assert.ok(x.length<1500);
  assert.ok(!/https?:\/\//.test(x));
