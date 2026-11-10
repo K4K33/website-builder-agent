@@ -374,7 +374,14 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
 def main():
     global working_job
     if RUN_ID<=0:raise HoldError("not_github_actions")
-    claimed=call_worker("claim").get("job")
+    claim_file=os.environ.get("KAURIVO_CLAIMED_JOB_FILE","")
+    if claim_file:
+        file=Path(claim_file)
+        if not file.is_file() or not file.is_relative_to(Path(os.environ.get("RUNNER_TEMP","/tmp"))):
+            raise HoldError("claim_file_missing")
+        claimed=json.loads(file.read_text(encoding="utf-8")).get("job")
+    else:
+        claimed=call_worker("claim").get("job")
     if not claimed:
         print("Kaurivo demo queue: no work.")
         return 0
@@ -389,17 +396,13 @@ def main():
         try:
             free_model_configured()
             source=safe_company_url(str(claimed.get("original_url") or ""))
-            from utils.state import upsert_company
-            upsert_company(slug,{"name":str(claimed["company_name"])[:160],
-                                 "url":source,"status":"found"})
-            # CLI does fuzzy company lookup by display name; use name itself.
-            # Agent state's slug must match utils.state.make_slug(name).
-            from utils.state import make_slug
-            company_name=str(claimed["company_name"])
+            from utils.state import make_slug, upsert_company
+            company_name=str(claimed["company_name"])[:160]
             agent_slug=make_slug(company_name)
-            if agent_slug != slug:
-                upsert_company(agent_slug,{"name":company_name,
-                                          "url":source,"status":"found"})
+            if not agent_slug or len(agent_slug)>120:
+                raise HoldError("company_name_invalid")
+            upsert_company(agent_slug,{"name":company_name,
+                                      "url":source,"status":"found"})
             update("researching","Tutkitaan alkuperäistä sivustoa ja kolmea suunnittelusuuntaa")
             run_cli(["research",agent_slug],stage_log)
             update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
