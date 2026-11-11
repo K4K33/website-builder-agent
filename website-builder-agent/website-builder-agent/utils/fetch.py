@@ -220,16 +220,29 @@ def fetch_html(
         except requests.exceptions.ConnectionError as err:
             if (host in _PLAIN_HEADERS_HOSTS or
                     "RemoteDisconnected" not in str(err)):
+                # A real browser may reach the public HTML when the Python
+                # transport fails at TCP/TLS. Do not invent source facts.
+                browser_result = _fetch_html_from_browser(url, timeout)
+                if browser_result:
+                    print("  [fetch] Browser recovered public source after connection error.")
+                    return browser_result
                 raise
             # Exactly one alternate HTTP request, same URL, no credentials,
             # no paid service and no invented fallback website material.
             session.close()
             session = requests.Session()
-            response = session.get(
-                url,
-                timeout=timeout,
-                allow_redirects=True,
-            )
+            try:
+                response = session.get(
+                    url,
+                    timeout=timeout,
+                    allow_redirects=True,
+                )
+            except requests.exceptions.ConnectionError:
+                browser_result = _fetch_html_from_browser(url, timeout)
+                if browser_result:
+                    print("  [fetch] Browser recovered public source after alternate transport failed.")
+                    return browser_result
+                raise
             if response.status_code < 400:
                 _PLAIN_HEADERS_HOSTS.add(host)
                 print("  [fetch] Alternate HTTP transport accepted by source host.")
@@ -240,7 +253,7 @@ def fetch_html(
         # A host can serve genuine pages to Chromium while returning 403 to
         # Python HTTP clients. Use the real PUBLIC browser for evidence,
         # never an invented summary or external paid scraping API.
-        if status_code == 403 or (status_code == 202
+        if status_code in (401, 403, 408, 429, 500, 502, 503, 504) or (status_code == 202
                 and len(response.content) < 500):
             browser_result = _fetch_html_from_browser(url, timeout)
             if browser_result:
@@ -328,6 +341,10 @@ def fetch_html(
         }
 
     except requests.exceptions.SSLError as e:
+        browser_result = _fetch_html_from_browser(url, timeout)
+        if browser_result:
+            print("  [fetch] Browser recovered public source after TLS error.")
+            return browser_result
         error = f"SSL-virhe: {e}"
 
         print(
@@ -343,6 +360,10 @@ def fetch_html(
         }
 
     except requests.exceptions.Timeout as e:
+        browser_result = _fetch_html_from_browser(url, timeout)
+        if browser_result:
+            print("  [fetch] Browser recovered public source after HTTP timeout.")
+            return browser_result
         error = f"Timeout: {e}"
 
         print(
