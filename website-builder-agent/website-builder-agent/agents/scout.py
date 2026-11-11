@@ -65,6 +65,7 @@ def _build_overpass_query(
         "pyöräliike": [("shop", "bicycle")],
         "suutari": [("craft", "shoemaker")],
         "leipomo": [("shop", "bakery")],
+        "asianajotoimisto": [("office", "lawyer")],
 
     }
     tags = categories.get(industry.strip().casefold())

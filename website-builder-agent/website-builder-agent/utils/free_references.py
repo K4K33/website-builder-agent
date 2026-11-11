@@ -36,6 +36,15 @@ INDUSTRY_ALIASES = {
     "bicycle shop": "pyöräliike", "bike repair": "pyöräliike",
     "suutari": "suutari", "shoemaker": "suutari",
     "leipomo": "leipomo", "bakery": "leipomo",
+    "asianajotoimisto": "asianajotoimisto",
+    "asianajopalvelut": "asianajotoimisto",
+    "asianajaja": "asianajotoimisto",
+    "lakitoimisto": "asianajotoimisto",
+    "lakipalvelut": "asianajotoimisto",
+    "lakiasiaintoimisto": "asianajotoimisto",
+    "law firm": "asianajotoimisto",
+    "legal services": "asianajotoimisto",
+    "attorney": "asianajotoimisto",
 }
 
 DEFAULT_REGIONS = ("Tampere", "Turku", "Helsinki", "Oulu")
