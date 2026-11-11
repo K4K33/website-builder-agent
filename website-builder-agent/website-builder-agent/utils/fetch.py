@@ -181,6 +181,16 @@ def _fetch_html_from_browser(url: str, timeout: int = 20) -> dict | None:
         return None
 
 
+def _is_dns_resolution_failure(error: Exception) -> bool:
+    """DNS failures are non-retryable: don't load unverified hosts in Chrome."""
+    detail=str(error).casefold()
+    return any(marker in detail for marker in (
+        "nameresolutionerror", "failed to resolve", "getaddrinfo",
+        "name or service not known", "temporary failure in name resolution",
+        "nodename nor servname", "dns resolution"
+    ))
+
+
 def fetch_html(
     url: str,
     timeout: int = 20,
@@ -218,6 +228,8 @@ def fetch_html(
                 allow_redirects=True,
             )
         except requests.exceptions.ConnectionError as err:
+            if _is_dns_resolution_failure(err):
+                raise
             if (host in _PLAIN_HEADERS_HOSTS or
                     "RemoteDisconnected" not in str(err)):
                 # A real browser may reach the public HTML when the Python
@@ -253,6 +265,8 @@ def fetch_html(
         # A host can serve genuine pages to Chromium while returning 403 to
         # Python HTTP clients. Use the real PUBLIC browser for evidence,
         # never an invented summary or external paid scraping API.
+        # The source may return status_code == 403 for Python HTTP clients
+        # while a permitted public Chromium page returns actual content.
         if status_code in (401, 403, 408, 429, 500, 502, 503, 504) or (status_code == 202
                 and len(response.content) < 500):
             browser_result = _fetch_html_from_browser(url, timeout)
