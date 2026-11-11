@@ -171,6 +171,23 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertNotIn('SUPABASE_SERVICE_ROLE_KEY:',flow)
         self.assertNotIn('sb_secret_',edge)
 
+    def test_source_diagnostics_identify_paths_without_exposing_queries_or_content(self):
+        from io import StringIO
+        from scripts.run_kaurivo_demo_queue import source_failure_diagnostic
+        log=StringIO(
+          "Some unrelated HTML text should not appear here.\n"
+          "RuntimeError: Original-site content research incomplete; review these pages: "
+          "https://business.example/palvelut?token=private, "
+          "https://business.example/ihmiset?email=private\n"
+        )
+        detail=source_failure_diagnostic(log)
+        self.assertIn("/palvelut",detail)
+        self.assertIn("/ihmiset",detail)
+        self.assertNotIn("private",detail)
+        self.assertNotIn("token=",detail)
+        self.assertNotIn("business.example",detail)
+        self.assertEqual(source_failure_diagnostic(StringIO("generic network error")),"")
+
     def test_worker_never_marks_unverified_site_ready_or_spends_paid_credits(self):
         worker=WORKER.read_text(encoding="utf-8")
         for key in ('research','concept-previews','choose-concept','build','qa',
