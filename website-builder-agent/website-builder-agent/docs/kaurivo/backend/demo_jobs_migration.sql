@@ -65,6 +65,7 @@ declare
  old_id uuid;
  made_id uuid;
  chosen_url text;
+ source_candidate text;
  chosen_language text;
 begin
  if (select kaurivo_internal.is_kaurivo_admin()) is not true then
@@ -90,16 +91,22 @@ begin
  if old_id is not null then return old_id; end if;
  -- The free-provider constraint belongs to the WORKER, not the button.
  -- Every owner request is recorded in the queue; models stay FREE_ONLY.
- chosen_url := coalesce(nullif(trim(p.website_found_url), ''),
-                        nullif(trim(p.website_listed_url), ''),
-                        nullif(trim(p.website_candidate_url), ''), '');
- -- Unusable registry links must not prevent the owner from requesting work.
- -- The worker will research independently, then require real source evidence.
- if chosen_url <> '' and
-    (chosen_url !~ '^https://[A-Za-z0-9]' or
-      chosen_url ~ '[[:space:]@]' or char_length(chosen_url)>1500) then
-    chosen_url := '';
- end if;
+ chosen_url := '';
+ -- Use the first *syntactically safe* site hint. A malformed manually
+ -- recorded URL must not mask a usable PRH source or block owner intent.
+ for source_candidate in
+   select trim(t.url)
+   from unnest(array[p.website_found_url,p.website_listed_url,
+                     p.website_candidate_url]) as t(url)
+   where nullif(trim(t.url),'') is not null
+ loop
+   if source_candidate ~ '^https://[A-Za-z0-9]' and
+      source_candidate !~ '[[:space:]@]' and
+      char_length(source_candidate)<=1500 then
+     chosen_url := source_candidate;
+     exit;
+   end if;
+ end loop;
  chosen_language := coalesce(nullif(trim(p.website_languages), ''),
                               'undetermined');
  -- Missing websites remain legitimate research jobs, but the worker must
