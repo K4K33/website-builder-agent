@@ -7,6 +7,7 @@ Paikallisesti niitä voidaan lukea .env-tiedostosta.
 """
 
 import os
+import re
 from dotenv import load_dotenv
 
 
@@ -107,6 +108,43 @@ def model_for_stage(stage=None):
             f"Set {stage.upper()}_MODEL explicitly to a vision/code-capable model."
         )
     return model
+
+
+# OpenRouter server-side model fallback uses ONE outer API call. It does not
+# bypass the account-wide free quota. Every configured candidate is audited
+# before sending anything; unknown, paid or router models fail closed.
+_FREE_MODEL_ID = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.:-]+:free$")
+
+
+def stage_model_candidates(stage=None):
+    primary = model_for_stage(stage)
+    if backend_for_stage(stage) != "openrouter":
+        return [primary]
+    key = f"{stage.upper()}_FALLBACK_MODELS" if stage else "OPENROUTER_FALLBACK_MODELS"
+    raw = os.getenv(key, "")
+    if len(raw) > 500:
+        raise RuntimeError("Too many AI fallback models configured.")
+    extra = [entry.strip() for entry in raw.split(",") if entry.strip()]
+    if len(extra) > 2:
+        raise RuntimeError("At most two fallback models per AI stage.")
+    models = [primary]
+    for candidate in extra:
+        if not _FREE_MODEL_ID.fullmatch(candidate):
+            raise RuntimeError("FREE_ONLY requires exact :free fallback IDs; no paid fallback.")
+        if candidate not in models:
+            models.append(candidate)
+    if stage in {"builder", "qa"}:
+        # Independent reviewer must never be the same underlying model as any
+        # builder fallback, not merely a distinct primary name.
+        other = "qa" if stage == "builder" else "builder"
+        other_primary = os.getenv(f"{other.upper()}_MODEL", "").strip()
+        other_extra = [
+            value.strip() for value in
+            os.getenv(f"{other.upper()}_FALLBACK_MODELS", "").split(",") if value.strip()
+        ]
+        if other_primary and set(models) & set([other_primary, *other_extra]):
+            raise RuntimeError("Independent QA requires disjoint Builder and QA model pools.")
+    return models
 
 
 BUILDER_MAX_TOKENS = int(os.getenv("BUILDER_MAX_TOKENS", "16000"))
