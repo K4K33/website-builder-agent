@@ -38,8 +38,14 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('kaurivo_demo_build_jobs',js)
         self.assertIn('kaurivo_request_demo_build',panel)
         self.assertIn('internal_preview',panel)
-        self.assertIn('Avaa uusi demo',panel)
+        self.assertIn('Uusi sivu',panel)
         self.assertIn('Vanha sivu',panel)
+        self.assertIn('Kopioi molemmat linkit',panel)
+        self.assertIn('comparisonLinks(main,job,options)',panel)
+        self.assertIn('Uusi sivu valmistuu laatutarkistuksen jälkeen',panel)
+        self.assertIn('Ei aiempaa verkkosivua',panel)
+        self.assertIn('demo-comparison',CSS.read_text(encoding="utf-8"))
+        self.assertIn('crm.css?v=20261111-links2',html)
         self.assertIn('qa_url',panel)
         self.assertIn('release_sha',panel)
         self.assertIn('onrender',panel)
@@ -138,7 +144,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("revoke all on function public.kaurivo_claim_demo_dispatch(uuid) from public,anon",sql)
         self.assertNotIn('sb_secret_',js)
         self.assertNotIn('ghp_',js)
-        self.assertIn('demo-jobs.js?v=20261111-quota1',html)
+        self.assertIn('demo-jobs.js?v=20261111-links2',html)
 
     def test_edge_verifies_exact_repository_workflow_and_oidc(self):
         edge=EDGE.read_text(encoding="utf-8")
@@ -617,10 +623,14 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     page.wait_for_function(
                        "document.querySelector('#demo-ready-list').textContent.includes('Esimerkki Verhoomo')"
                     )
-                    link=page.locator("#demo-ready-list a.demo-external[href*='onrender.com']")
-                    self.assertEqual(link.count(),1)
-                    self.assertEqual(link.get_attribute('target'),'_blank')
-                    self.assertTrue(link.get_attribute('href').endswith('/test/index.html'))
+                    old_link=page.locator("#demo-ready-list a.demo-comparison-link")
+                    self.assertEqual(old_link.count(),2)
+                    self.assertEqual(old_link.nth(0).inner_text(),"Vanha sivu")
+                    self.assertEqual(old_link.nth(0).get_attribute("href"),"https://example.com/")
+                    self.assertEqual(old_link.nth(1).inner_text(),"Uusi sivu")
+                    self.assertEqual(old_link.nth(1).get_attribute("target"),"_blank")
+                    self.assertTrue(old_link.nth(1).get_attribute("href").endswith("/test/index.html"))
+                    self.assertEqual(page.locator("#demo-ready-list .demo-copy-comparison").count(),1)
                     # The operator must be able to request a fresh build
                     # from the failure card when verified business facts arrive.
                     page.evaluate("""()=>{
