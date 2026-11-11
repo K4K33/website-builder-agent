@@ -17,6 +17,7 @@ import json
 import mimetypes
 import os
 import time
+from datetime import datetime, timezone
 
 import requests
 
@@ -242,7 +243,17 @@ def ask_claude(
         current_max_tokens = min(current_max_tokens, config.AI_MAX_OUTPUT_TOKENS)
         payload["max_tokens"] = current_max_tokens
 
-        if not resource_manager.reserve("openrouter"):
+        reserved = resource_manager.reserve("openrouter")
+        if not reserved and config.free_only() and (
+            resource_manager.openrouter_reservation_block_reason() == "minute"
+        ):
+            # A temporary, local per-minute guard must not defer the ENTIRE
+            # client's build until tomorrow. Wait for at most one minute edge,
+            # then make ONE bounded reserve attempt. No paid escalation.
+            seconds = datetime.now(timezone.utc).second
+            time.sleep(max(1, 61 - seconds))
+            reserved = resource_manager.reserve("openrouter")
+        if not reserved:
             if config.free_only():
                 return _local_free_quota_fallback(
                     system, user_prompt, stage=stage, max_tokens=max_tokens,

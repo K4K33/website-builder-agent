@@ -366,6 +366,52 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     claude_client.ask_claude("system","content",stage="research")
                 request.assert_not_called()
 
+    def test_minute_cap_waits_once_then_uses_free_endpoint_without_daily_defer(self):
+        from utils import claude_client, resource_manager
+        from unittest.mock import patch, Mock
+        response=Mock(status_code=200)
+        response.json.return_value={
+          "choices":[{"message":{"content":"Public verified summary"},
+                      "finish_reason":"stop"}]
+        }
+        with patch.dict(os.environ,{"FREE_ONLY":"1","OLLAMA_MODEL":""}), \
+             patch.object(resource_manager,"reserve",side_effect=[False,True]) as reserve, \
+             patch.object(resource_manager,"openrouter_reservation_block_reason",
+                          return_value="minute"), \
+             patch.object(claude_client,"_get_headers",return_value={}), \
+             patch.object(claude_client.config,"model_for_stage",
+                          return_value="google/gemma-4-26b-a4b-it:free"), \
+             patch.object(claude_client.config,"backend_for_stage",
+                          return_value="openrouter"), \
+             patch.object(claude_client.time,"sleep") as pause, \
+             patch.object(claude_client.requests,"post",return_value=response) as post:
+            self.assertEqual(claude_client.ask_claude(
+                "system","prompt",stage="research"),"Public verified summary")
+            self.assertEqual(reserve.call_count,2)
+            pause.assert_called_once()
+            post.assert_called_once()
+            self.assertTrue(post.call_args.kwargs["json"]["model"].endswith(":free"))
+
+    def test_daily_cap_does_not_retry_or_use_paid_provider(self):
+        from utils import claude_client, resource_manager
+        from unittest.mock import patch
+        with patch.dict(os.environ,{"FREE_ONLY":"1","OLLAMA_MODEL":"",
+                         "OLLAMA_RESEARCH_MODEL":""}), \
+             patch.object(resource_manager,"reserve",return_value=False), \
+             patch.object(resource_manager,"openrouter_reservation_block_reason",
+                          return_value="daily"), \
+             patch.object(claude_client,"_get_headers",return_value={}), \
+             patch.object(claude_client.config,"model_for_stage",
+                          return_value="google/gemma-4-26b-a4b-it:free"), \
+             patch.object(claude_client.config,"backend_for_stage",
+                          return_value="openrouter"), \
+             patch.object(claude_client.time,"sleep") as pause, \
+             patch.object(claude_client.requests,"post") as post:
+            with self.assertRaisesRegex(RuntimeError,"FREE_AI_CAPACITY_UNAVAILABLE"):
+                claude_client.ask_claude("system","prompt",stage="research")
+            pause.assert_not_called()
+            post.assert_not_called()
+
     def test_research_stage_error_classification_never_reveals_private_output(self):
         from tempfile import TemporaryFile
         from scripts.run_kaurivo_demo_queue import classify_stage_failure
