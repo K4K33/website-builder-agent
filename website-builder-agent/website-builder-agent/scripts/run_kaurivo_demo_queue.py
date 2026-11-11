@@ -747,6 +747,9 @@ def main():
             free_model_configured()
             ai_deadline=time.monotonic()+AI_STAGE_BUDGET_SECONDS
             source=safe_company_url(str(claimed.get("original_url") or ""))
+            # Keep public original-company pages on the verified browser path;
+            # untrusted competitor URLs do NOT inherit this preference.
+            os.environ["KAURIVO_PRIMARY_SOURCE_HOST"]=urlsplit(source).hostname or ""
             from utils.state import make_slug, upsert_company
             company_name=str(claimed["company_name"])[:160]
             agent_slug=make_slug(company_name)
