@@ -38,6 +38,7 @@ def connection_subtype(result):
     return "not_classified"
 
 def check():
+    print("TRANSPORT_FIX_VERSION", "ua-retry-1")
     import socket
     for host in ("www.kurki-suonio.fi","kurki-suonio.fi"):
         try:
