@@ -102,6 +102,43 @@ class PublicSiteFetchResilienceTests(unittest.TestCase):
         with patch.dict(os.environ,{"KAURIVO_BROWSER_SOURCE_FALLBACK":"0"}):
             self.assertIsNone(_fetch_html_from_browser(PAGE))
 
+    def test_owner_selected_source_uses_real_browser_before_flaky_http(self):
+        verified={"success":True,"html":"<html><body>Authentic public company website</body></html>",
+                  "status_code":200,"final_url":PAGE,"error":""}
+        with patch.dict(os.environ,{
+             "KAURIVO_PRIMARY_SOURCE_HOST":"fixture.example.org",
+             "KAURIVO_BROWSER_SOURCE_FALLBACK":"1"}),patch(
+             "utils.fetch._fetch_html_from_browser",return_value=verified) as browser,patch(
+             "utils.fetch.requests.Session") as sessions:
+            result=fetch_html(PAGE)
+        self.assertTrue(result["success"])
+        self.assertEqual(result["html"],verified["html"])
+        browser.assert_called_once_with(PAGE,20)
+        sessions.assert_not_called()
+
+    def test_unrelated_benchmark_still_uses_http_first(self):
+        source=fake_session(result=response())
+        with patch.dict(os.environ,{
+             "KAURIVO_PRIMARY_SOURCE_HOST":"client-other.example.org",
+             "KAURIVO_BROWSER_SOURCE_FALLBACK":"1"}),patch(
+             "utils.fetch._fetch_html_from_browser") as browser,patch(
+             "utils.fetch.requests.Session",return_value=source):
+            result=fetch_html(PAGE)
+        self.assertTrue(result["success"])
+        browser.assert_not_called()
+
+    def test_failed_client_browser_falls_back_to_unmodified_http(self):
+        source=fake_session(result=response())
+        with patch.dict(os.environ,{
+             "KAURIVO_PRIMARY_SOURCE_HOST":"fixture.example.org",
+             "KAURIVO_BROWSER_SOURCE_FALLBACK":"1"}),patch(
+             "utils.fetch._fetch_html_from_browser",return_value=None) as browser,patch(
+             "utils.fetch.requests.Session",return_value=source):
+            result=fetch_html(PAGE)
+        self.assertTrue(result["success"])
+        browser.assert_called_once_with(PAGE,20)
+        source.get.assert_called_once()
+
     def test_worker_enables_bounded_browser_fallback_after_chromium_setup(self):
         from pathlib import Path
         root=Path(__file__).resolve().parents[3]
@@ -112,6 +149,10 @@ class PublicSiteFetchResilienceTests(unittest.TestCase):
         self.assertIn("status_code == 403",fetch)
         self.assertIn("status_code == 202",fetch)
         self.assertIn("wait_until=\"domcontentloaded\"",fetch)
+        worker=(root/"website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py").read_text()
+        self.assertIn('KAURIVO_PRIMARY_SOURCE_HOST',worker)
+        self.assertLess(worker.index('source=safe_company_url'),worker.index('os.environ["KAURIVO_PRIMARY_SOURCE_HOST"]'))
+
 
 
 if __name__=="__main__":
