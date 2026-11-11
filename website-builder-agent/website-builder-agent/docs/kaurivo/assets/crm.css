@@ -246,6 +246,19 @@
 .demo-record .record-sub{margin-top:6px}
 .demo-external{text-decoration:none;display:inline-flex;justify-content:center;align-items:center;min-height:41px}
 .demo-external[href*="onrender.com"],.demo-external[href*="github.io"]{border-color:#7a9c8b;color:#e9f4ec;background:#214235}
+/* Automatic old/new comparison: source and verified release are visibly
+   paired without using an iframe or hiding the actual destination. */
+.demo-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:15px;width:100%}
+.demo-comparison-tile{min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;padding:15px 16px;border:1px solid #365165;border-radius:10px;background:#152632}
+.demo-comparison-tile:has(.demo-comparison-link[href*="onrender.com"]),
+.demo-comparison-tile:has(.demo-comparison-link[href*="github.io"]){border-color:#628d7a;background:#193a32}
+.demo-comparison-link{display:inline-flex;align-items:center;min-height:44px;color:#f2f7fb;font-weight:800;font-size:15px;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+.demo-comparison-link:focus-visible,.demo-copy-comparison:focus-visible{outline:3px solid #b4e5ce;outline-offset:3px}
+.demo-comparison-address{color:#b9cad3;font-size:11px;overflow-wrap:anywhere;line-height:1.5;max-width:100%}
+.demo-comparison-label{font-size:14px;font-weight:800;color:#c6d4df}
+.demo-comparison-empty{font-size:12px;line-height:1.5;color:#a6bdcb}
+.demo-copy-comparison{min-height:44px;margin-top:11px;align-self:flex-start}
+@media(max-width:520px){.demo-comparison{grid-template-columns:1fr;gap:9px}.demo-comparison-tile{padding:12px 14px}.demo-comparison-link{font-size:15px}}
 .demo-build-trigger{border-color:#9baebc;background:#274d56;color:#fff;font-weight:800}
 .demo-build-trigger:hover{background:#356673}
 .demo-build-trigger:disabled{cursor:not-allowed;opacity:.5}
