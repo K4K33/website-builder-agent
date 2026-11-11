@@ -80,7 +80,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                      "create trigger kaurivo_demo_health_before_insert",
                      "when 401 then 'blocked'",
                      "when 200 then 'ok'",
-                     "checked_at>=now()-interval '2 hours'"):
+                     "and h.checked_at<=now()"):
             self.assertIn(term,health)
         self.assertNotIn("grant insert on public.kaurivo_demo_builder_health to authenticated",health)
         self.assertIn('if(data.action==="health")',edge)
@@ -95,6 +95,11 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("kaurivo_demo_builder_health",crm)
         self.assertIn('id="demo-health"',html)
         self.assertIn("healthBlocked",dashboard)
+        self.assertIn("healthStale",dashboard)
+        self.assertIn("demo-health-stale",dashboard)
+        self.assertIn("demo_queue_stale_health_20261111.sql",(SITE/"backend/demo_queue_stale_health_20261111.sql").as_posix())
+        self.assertIn("voit lisätä työn jonoon",dashboard)
+        self.assertIn('return !item||item.status!=="ok";',dashboard)
         self.assertIn("demo-health-blocked",dashboard)
         self.assertIn("Rakennuspalvelu keskeytetty",dashboard)
 
@@ -124,7 +129,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("qwen/qwen3.8-27b:free",flow)
         self.assertIn("google/gemma-4-26b-a4b-it:free",flow)
         self.assertIn("Independent Builder and QA models:",flow)
-        self.assertIn('cron: "*/5 * * * *"',flow)
+        self.assertIn('cron: "3-59/5 * * * *"',flow)
         self.assertIn('KAURIVO_CLAIMED_JOB_FILE',flow)
         self.assertNotIn('SUPABASE_SERVICE_ROLE_KEY:',flow)
         self.assertNotIn('sb_secret_',edge)
@@ -378,7 +383,11 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
              select(){return this;},eq(){return this;},
              order(){return this;},limit:async()=>({
                data:table==='kaurivo_crm_prospects'?[lead]:
-                    table==='kaurivo_demo_build_jobs'?window.__demoRows:[],
+                    table==='kaurivo_demo_build_jobs'?window.__demoRows:
+                    table==='kaurivo_demo_builder_health'?[{
+                      singleton:true,status:'ok',error_code:'',
+                      checked_at:'2026-01-01T00:00:00.000Z',github_run_url:''
+                    }]:[],
                error:null})
           }),
           rpc:async(name,args)=>{
@@ -406,6 +415,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     page.wait_for_function(
                         "document.querySelector('#prospect-list .record-title')?.textContent === 'Esimerkki Verhoomo'"
                     )
+                    self.assertTrue(page.locator("#prospect-list .demo-build-trigger").is_enabled())
+                    self.assertIn("Tarkistus vanhentunut",page.locator("#demo-health").inner_text())
                     page.locator("#prospect-list .demo-build-trigger").click()
                     page.wait_for_function(
                         "document.querySelector('#demo-running-list').textContent.includes('Esimerkki Verhoomo')"

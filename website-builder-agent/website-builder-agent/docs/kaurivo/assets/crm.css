@@ -277,3 +277,7 @@
 #outreach-dialog textarea{resize:vertical;min-height:190px;max-height:52vh;font-family:system-ui,sans-serif;line-height:1.55}
 #outreach-dialog .mail-preview-warning{font-size:12px;line-height:1.6;color:#e6c6b0}
 @media(max-width:600px){#outreach-dialog .dialog-actions{display:grid;grid-template-columns:1fr}#outreach-dialog .dialog-actions button{min-height:48px}}
+
+/* Stale GitHub scheduling is a queue warning, not an invalid API key. */
+.demo-health-stale{border-color:#b69b61;background:#363227;color:#f6eacb}
+.demo-health-stale small{color:#e2d2a8}
