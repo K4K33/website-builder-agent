@@ -70,6 +70,21 @@ class KaurivoFreeModelFallbackTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,"unapproved model"):
                 claude_client.ask_claude("sys","text",stage="research")
 
+    def test_already_capped_truncated_output_does_not_burn_identical_request(self):
+        reply=Mock(status_code=200)
+        reply.json.return_value={"choices":[{
+            "message":{"content":"unfinished"},"finish_reason":"length"}]}
+        env={"FREE_ONLY":"1","AI_BACKEND":"openrouter",
+             "BUILDER_MODEL":"google/primary:free","QA_MODEL":"qwen/qa:free"}
+        with patch.dict(os.environ,env,clear=True), \\
+             patch.object(claude_client,"_get_headers",return_value={"Authorization":"mock"}), \\
+             patch.object(resource_manager,"reserve",return_value=True), \\
+             patch.object(claude_client.requests,"post",return_value=reply) as call, \\
+             patch.object(config,"AI_MAX_OUTPUT_TOKENS",8000):
+            with self.assertRaisesRegex(RuntimeError,"truncated"):
+                claude_client.ask_claude("system","text",stage="builder",max_tokens=8000)
+            call.assert_called_once()
+
     def test_shared_daily_429_does_not_fan_out_more_cloud_requests(self):
         reply=Mock(status_code=429,headers={},text="daily limit")
         env={"FREE_ONLY":"1","AI_BACKEND":"openrouter",
