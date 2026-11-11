@@ -1,0 +1,29 @@
+name: Kaurivo public-source diagnostic (no AI)
+on:
+  push:
+    branches:
+      - diagnostic/kaurivo-source-check-20261111
+    paths:
+      - '.github/workflows/kaurivo-public-source-diagnostic.yml'
+      - 'website-builder-agent/website-builder-agent/scripts/diagnose_kaurivo_public_source.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free public-page parser only
+        run: python -m pip install requests beautifulsoup4 lxml
+      - name: Reproduce exact homepage and 24-page crawler on public domain
+        run: python -m scripts.diagnose_kaurivo_public_source
