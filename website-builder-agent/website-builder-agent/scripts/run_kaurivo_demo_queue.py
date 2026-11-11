@@ -782,7 +782,8 @@ def restore_private_checkpoint(agent_slug, company_name, source):
                 hashlib.sha256(reply.content).hexdigest()!=digest):
             raise CheckpointError("private checkpoint corrupted")
         restored=unpack_archive(PROJECT,agent_slug,working_job["id"],phase,
-                                reply.content,digest)
+                                reply.content,digest,
+                                expected_name=company_name,expected_source=source)
         if (restored.get("name")!=company_name or restored.get("url")!=source):
             raise CheckpointError("private checkpoint identity conflict")
         # The full company record is written LAST, after archive validation.
