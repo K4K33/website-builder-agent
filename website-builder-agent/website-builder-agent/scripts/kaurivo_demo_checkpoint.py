@@ -107,6 +107,12 @@ def _validate_phase(company: dict, slug: str, phase: str, project: Path) -> None
             raise CheckpointError("built home route missing")
         if not build.get("version"):
             raise CheckpointError("built version marker missing")
+        for route in build["page_paths"]:
+            if not isinstance(route, str) or not route.endswith(".html"):
+                raise CheckpointError("invalid build route")
+            route_path = (project / "output" / slug / route).resolve()
+            if not route_path.is_relative_to(project / "output" / slug) or not route_path.is_file():
+                raise CheckpointError("build route missing from snapshot")
 
 
 def make_archive(project: Path, slug: str, job_id: str,
@@ -189,7 +195,8 @@ def _relocate(value, old_root: str, new_root: str):
 
 
 def unpack_archive(project: Path, slug: str, job_id: str,
-                   phase: str, archive: bytes, sha256: str) -> dict:
+                   phase: str, archive: bytes, sha256: str,
+                   *, expected_name: str, expected_source: str) -> dict:
     """Validate complete contents before writing ANY files into working tree."""
     _identity(slug, job_id, phase)
     project = project.resolve()
@@ -208,7 +215,8 @@ def unpack_archive(project: Path, slug: str, job_id: str,
                 relative = PurePosixPath(name)
                 if (member.is_dir() or name in extracted or
                     name.startswith("/") or "\\" in name or
-                    any(part in ("", ".", "..") for part in relative.parts)):
+                    any(part in ("", ".", "..") for part in relative.parts) or
+                    str(relative) != name):
                     raise CheckpointError("unsafe checkpoint member")
                 mode = (member.external_attr >> 16) & 0xFFFF
                 if stat.S_IFMT(mode) not in (0, stat.S_IFREG):
@@ -240,8 +248,22 @@ def unpack_archive(project: Path, slug: str, job_id: str,
     if not isinstance(old_root, str) or not Path(old_root).is_absolute():
         raise CheckpointError("invalid old project root")
     company = _relocate(company, old_root, str(project))
-    if not isinstance(company, dict) or company.get("slug") != slug:
-        raise CheckpointError("invalid company checkpoint")
+    if (not isinstance(company, dict) or company.get("slug") != slug or
+            company.get("name") != expected_name or
+            company.get("url") != expected_source):
+        raise CheckpointError("checkpoint company identity conflict")
+    # Ensure all required paths exist IN THE ARCHIVE before touching the
+    # workspace. A missing route cannot be excused by an old checkout file.
+    if STAGES.index(phase) >= STAGES.index("built"):
+        build = company.get("build")
+        if not isinstance(build, dict) or not isinstance(build.get("page_paths"), list):
+            raise CheckpointError("built manifest not preserved")
+        expected = {"output/" + slug + "/" + route for route in build["page_paths"]
+                    if isinstance(route, str) and route.endswith(".html")}
+        if (not expected or len(expected) != len(build["page_paths"]) or
+                "output/" + slug + "/index.html" not in expected or
+                not expected.issubset(extracted)):
+            raise CheckpointError("incomplete built route snapshot")
     # Atomic-ish restore: all input validated first, then write files under
     # pre-approved workspace roots; company state is published by caller LAST.
     for name, data in sorted(extracted.items()):
