@@ -54,6 +54,27 @@ def check():
              "status":result.get("status_code"),"success":result.get("success"),
              "type":failure_code(result),"connection":connection_subtype(result),
              "final_path":clean_path(result.get("final_url") or alt)}))
+    import requests
+    from utils.fetch import HEADERS
+    for label,headers,no_env in (
+      ("original",HEADERS,False),
+      ("normal_browser",{"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"},False),
+      ("direct_normal_browser",{"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"},True),
+      ("no_useragent",{},False),
+    ):
+        sess=requests.Session()
+        sess.trust_env=not no_env
+        try:
+            resp=sess.get(START,headers=headers,timeout=9)
+            print("VARIANT",label,"http",resp.status_code,"len",len(resp.content),
+                  "redirect_path",clean_path(resp.url))
+        except Exception as err:
+            low=str(err).lower()
+            flags=[name for name in (
+              "remotedisconnected","proxyerror","connectionreset","ssleoferror",
+              "name resolution","timeout","connection refused","max retries exceeded"
+            ) if name in low]
+            print("VARIANT",label,"failed",",".join(flags) or type(err).__name__)
     home=analyze_url(START)
     print("ROOT",json.dumps({"success":home.get("success"),
       "status":home.get("status_code"),
