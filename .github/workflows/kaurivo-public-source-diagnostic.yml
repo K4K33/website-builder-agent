@@ -25,5 +25,9 @@ jobs:
           python-version: '3.11'
       - name: Install free public-page parser only
         run: python -m pip install requests beautifulsoup4 lxml
+      - name: Install browser for real source access check
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
       - name: Reproduce exact homepage and 24-page crawler on public domain
         run: python -m scripts.diagnose_kaurivo_public_source
