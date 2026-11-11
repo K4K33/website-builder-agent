@@ -245,6 +245,20 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         if any(x in terminal for x in ("response truncated","token-rajaan",
                                        "length finish reason")):
             return "free_ai_response_truncated"
+    if "original-site content research incomplete" in terminal or (
+       "important source pages not researched" in terminal
+    ):
+        return "source_research_incomplete"
+    if "fewer than three inspectable operator candidates" in terminal:
+        return "comparison_candidates_insufficient"
+    if "fewer than three source-backed same-industry operators" in terminal:
+        return "comparison_sources_insufficient"
+    if "not enough real operator candidates from free sources" in terminal:
+        return "comparison_free_sources_insufficient"
+    if "three same-industry references with both desktop/mobile views" in terminal:
+        return "comparison_visual_evidence_missing"
+    if "ai ei palauttanut" in terminal and "json" in terminal:
+        return "research_ai_invalid_json"
     if "modulenotfounderror:" in terminal:
         return "missing_runtime_dependency"
     if any(x in terminal for x in ("connectionerror","certificate verify failed",
@@ -291,6 +305,30 @@ def source_failure_diagnostic(handle,start_position=0):
     return ("Puuttuvat sivut: "+", ".join(safe_paths))[:200] if safe_paths else ""
 
 
+def private_stage_error_location(handle,start_position=0):
+    """Keep only the exception TYPE and repository line for admin diagnostics.
+
+    This deliberately removes source text, firm URLs, email addresses, query
+    parameters, provider responses and auth headers from the public error
+    report. Exact research logs remain ephemeral.
+    """
+    handle.flush()
+    handle.seek(start_position)
+    tail=handle.read()[-16000:]
+    classes=re.findall(
+        r"(?m)^([A-Za-z_][A-Za-z_0-9.]*(?:Error|Exception))\s*:",
+        tail,
+    )
+    kind=classes[-1].split(".")[-1] if classes else "UnknownError"
+    locations=re.findall(
+        r'File "[^"\n]+/(agents/research\.py|utils/[a-z_]+\.py)", line ([0-9]{1,5})',
+        tail,
+    )
+    location=locations[-1] if locations else None
+    suffix=" @"+location[0]+":"+location[1] if location else ""
+    return (kind+suffix)[:105]
+
+
 def run_cli(args,log_handle,deadline=None):
     log_handle.seek(0,os.SEEK_END)
     stage_start=log_handle.tell()
@@ -311,6 +349,8 @@ def run_cli(args,log_handle,deadline=None):
         code=classify_stage_failure(log_handle,stage,stage_start)
         detail=(source_failure_diagnostic(log_handle,stage_start)
                 if code=="source_research_incomplete" else "")
+        safe_location=private_stage_error_location(log_handle,stage_start)
+        detail=(detail+" · " if detail else "")+safe_location
         raise HoldError(code,detail) from exc
 
 
