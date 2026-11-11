@@ -137,6 +137,20 @@ class BulkPrhTests(unittest.TestCase):
         self.assertGreater(sum(x["website_listed_url"] != "" for x in result["shortlist"]), 0)
         self.assertGreater(sum(not x["website_listed_url"] for x in result["shortlist"]), 0)
 
+    def test_sales_first_night_search_has_known_sites_when_both_groups_exist(self):
+        # The default shortlist matches Kaurivo's real redesign sales target:
+        # 70% businesses with a listed website, 30% separate no-site research.
+        rows=[record(i,has_url=(i%2==0)) for i in range(1,201)]
+        result=rank_bulk(rows,day=date(2026,11,11),
+                         max_candidates=60,shortlist_size=20)
+        self.assertEqual(sum(bool(x["website_listed_url"])
+                             for x in result["new_candidates"]),42)
+        self.assertEqual(sum(bool(x["website_listed_url"])
+                             for x in result["shortlist"]),14)
+        self.assertTrue(all(x["business_activity"]=="unverified" and
+                            x["outreach_authorized"] is False
+                            for x in result["shortlist"]))
+
     def test_previous_seen_ids_are_skipped_and_not_lost(self):
         rows = [record(i) for i in range(1, 8)]
         result = rank_bulk(rows, day=date(2026,10,30),
