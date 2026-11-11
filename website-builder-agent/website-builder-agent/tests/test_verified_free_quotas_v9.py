@@ -89,6 +89,60 @@ class FreeQuotaTests(TestCase):
                              "Local reply")
             send.assert_called_once()
 
+    def test_verified_short_openrouter_free_429_waits_only_once_and_recovers(self):
+        rate_limited = Mock(
+            status_code=429, text="Rate limit exceeded",
+            headers={"X-RateLimit-Remaining": "0",
+                     "X-RateLimit-Reset": "1800000010000"})
+        success = Mock(status_code=200)
+        success.json.return_value = {"choices": [
+            {"message": {"content": "Actual verified AI response"},
+             "finish_reason": "stop"}]}
+        env = {"FREE_ONLY": "1", "AI_BACKEND": "openrouter",
+               "RESEARCH_MODEL": "provider/research:free",
+               "OLLAMA_MODEL": "", "OLLAMA_RESEARCH_MODEL": ""}
+        with patch.dict(os.environ, env), \
+             patch.object(claude_client, "_get_headers", return_value={"Authorization":"mock"}), \
+             patch.object(resource_manager, "reserve", return_value=True) as reserve, \
+             patch.object(claude_client.time, "time", return_value=1_800_000_000.0), \
+             patch.object(claude_client.time, "sleep") as wait, \
+             patch.object(claude_client.requests, "post",
+                          side_effect=[rate_limited, success]) as send:
+            actual = claude_client.ask_claude("sys", "prompt", stage="research")
+        self.assertEqual(actual, "Actual verified AI response")
+        self.assertEqual(send.call_count, 2)
+        self.assertEqual(reserve.call_count, 2)
+        wait.assert_called_once_with(12)
+
+    def test_free_daily_reset_or_unknown_provider_429_never_retries(self):
+        env = {"FREE_ONLY": "1", "AI_BACKEND": "openrouter",
+               "RESEARCH_MODEL": "provider/research:free",
+               "OLLAMA_MODEL": "", "OLLAMA_RESEARCH_MODEL": ""}
+        for headers in (
+            {"X-RateLimit-Remaining": "0",
+             "X-RateLimit-Reset": "1800086400000"},
+            {},
+            {"X-RateLimit-Remaining": "0",
+             "X-RateLimit-Reset": "malformed"},
+        ):
+            reply = Mock(status_code=429, text="Rate limit exceeded",
+                         headers=headers)
+            with self.subTest(headers=headers), patch.dict(os.environ, env), \
+                 patch.object(claude_client, "_get_headers",
+                              return_value={"Authorization":"mock"}), \
+                 patch.object(resource_manager, "reserve", return_value=True) as reserve, \
+                 patch.object(claude_client.time, "time",
+                              return_value=1_800_000_000.0), \
+                 patch.object(claude_client.time, "sleep") as wait, \
+                 patch.object(claude_client.requests, "post",
+                              return_value=reply) as send:
+                with self.assertRaisesRegex(RuntimeError,
+                                            "FREE_AI_CAPACITY_UNAVAILABLE"):
+                    claude_client.ask_claude("sys", "prompt", stage="research")
+                send.assert_called_once()
+                reserve.assert_called_once()
+                wait.assert_not_called()
+
     def test_missing_local_fallback_fails_closed_at_free_quota(self):
         env = {"FREE_ONLY": "1", "AI_BACKEND": "openrouter",
                "RESEARCH_MODEL": "provider/research:free",
