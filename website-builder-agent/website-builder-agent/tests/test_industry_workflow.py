@@ -110,6 +110,41 @@ class IndustryWorkflowTests(unittest.TestCase):
         self.assertIn("optional_source_routes_unavailable",result["issues"])
         self.assertEqual(result["optional_source_route_count"],1)
 
+    def test_proven_removed_legal_link_is_warned_not_fabricated_or_blocked(self):
+        root="https://business.example.org/"
+        missing=root+"en/privacy-statement"
+        home={"success":True,"final_url":root,"visible_text":"Verified source",
+              "links":[{"href":"/en/privacy-statement","text":"Privacy notice"},
+                       {"href":"/palvelut","text":"Services"}]}
+        def fetch(url):
+            if url==missing:
+                return {"success":False,"status_code":404,"error":"HTTP 404"}
+            return {"success":True,"final_url":url,"visible_text":"Services verified",
+                    "links":[]}
+        inventory=crawl_original_website(root,fetch,first_page=home,max_pages=24)
+        self.assertIn(missing,inventory["failed_urls"])
+        self.assertEqual(inventory["confirmed_removed_urls"],[missing])
+        report=validate_inventory({"url":root},{"source_inventory":inventory})
+        self.assertIn("verified_removed_original_links_require_client_review",report["issues"])
+        self.assertIn(missing,report["confirmed_removed_source_links"])
+        self.assertEqual(report["pages"],2)
+        brief=create_industry_brief({"url":root,"name":"Firm"},{
+            "source_inventory":inventory,"company_facts":{"industry":"palvelut"}})
+        self.assertIn(missing,brief["confirmed_removed_original_links"])
+
+    def test_unconfirmed_or_forbidden_essential_link_still_blocks(self):
+        root="https://business.example.org/"
+        home={"success":True,"final_url":root,"visible_text":"Home",
+              "links":[{"href":"/privacy-statement","text":"Privacy"}]}
+        for status in (401,403,429,503,None):
+            with self.subTest(status=status):
+                inventory=crawl_original_website(root,lambda _: {
+                    "success":False,"status_code":status,"error":"unavailable"},
+                    first_page=home,max_pages=24)
+                self.assertFalse(inventory["confirmed_removed_urls"])
+                with self.assertRaisesRegex(RuntimeError,"Original source pages failed"):
+                    validate_inventory({"url":root},{"source_inventory":inventory})
+
     def test_missing_legal_or_people_page_stays_a_hard_stop(self):
         root="https://law.example.org/"
         home={"success":True,"final_url":root,"visible_text":"Law office",

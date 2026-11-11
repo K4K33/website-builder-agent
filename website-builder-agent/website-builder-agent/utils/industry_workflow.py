@@ -159,6 +159,7 @@ def crawl_original_website(
         raise ValueError("Crawl cap must be 1..24")
     queue = [start]
     visited, pages, failed = set(), [], []
+    confirmed_removed = []
     known = {start}
     while queue and len(visited) < max_pages:
         queue.sort(key=lambda u: (0 if u == start and u not in visited else 1, _priority(u)))
@@ -169,6 +170,12 @@ def crawl_original_website(
         data = first_page if current == start and first_page is not None else fetch_page(current)
         if not isinstance(data, dict) or data.get("success") is not True:
             failed.append(current)
+            # Only a confirmed HTTP 404/410 means the original endpoint
+            # itself is gone. Do not treat 401/403, network failures,
+            # CAPTCHA, timeouts or missing status as safe-to-ignore pages.
+            code=data.get("status_code") if isinstance(data,dict) else None
+            if type(code) is int and code in (404,410):
+                confirmed_removed.append(current)
             continue
         final = _same_site_url(start, str(data.get("final_url") or current))
         if not final:
@@ -204,6 +211,7 @@ def crawl_original_website(
         "root_url": start,
         "pages": pages,
         "failed_urls": failed,
+        "confirmed_removed_urls": confirmed_removed,
         "unvisited_urls": unvisited,
         "priority_unvisited_urls": priority_unvisited,
         "max_pages": max_pages,
@@ -243,18 +251,25 @@ def validate_inventory(company: dict, research: dict) -> dict:
     # but only when every critical route (including contact, people,
     # languages, legal notices, prices and original service pages) loaded.
     failed = inventory.get("failed_urls") or []
+    confirmed_removed=set(inventory.get("confirmed_removed_urls") or [])
     important_failed = [url for url in failed
-                        if _priority(str(url))[0] == 0
-                        or str(url) == str(inventory.get("root_url"))]
+                        if (url not in confirmed_removed
+                            or url == inventory.get("root_url"))
+                        and (_priority(str(url))[0] == 0
+                             or str(url) == str(inventory.get("root_url")))]
     if important_failed:
         raise RuntimeError(
             "Original source pages failed to load: "
             + ", ".join(important_failed[:5])
         )
-    issues = (["optional_source_routes_unavailable"] if failed else [])
+    other_failures=[u for u in failed if u not in confirmed_removed]
+    issues=(["optional_source_routes_unavailable"] if other_failures else [])
+    if confirmed_removed:
+        issues.append("verified_removed_original_links_require_client_review")
     return {"mode": "multi_page_snapshot", "pages": len(pages),
             "issues": issues,
-            "optional_source_route_count": len(failed)}
+            "confirmed_removed_source_links": sorted(confirmed_removed),
+            "optional_source_route_count": len(other_failures)}
 
 
 def create_industry_brief(company: dict, research: dict) -> dict:
@@ -284,6 +299,9 @@ def create_industry_brief(company: dict, research: dict) -> dict:
         **guidance,
         "inventory_status": status,
         "source_pages": source_pages,
+        "confirmed_removed_original_links": inventory.get("confirmed_removed_urls",[]),
+        # Correct broken source navigation; never reconstruct or invent
+        # missing legal notices, products, staff profiles or permissions.
         "sector_identity_expectation": (
             "At five seconds with the logo hidden the actual customer task, "
             "business category and working environment should be recognisable. "
