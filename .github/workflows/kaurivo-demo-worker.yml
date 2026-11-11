@@ -5,6 +5,11 @@ on:
     paths:
       - ".github/workflows/kaurivo-demo-worker.yml"
       - "website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py"
+      # When a source/research/model bug is repaired, resume eligible owner
+      # demos with the NEW code rather than re-running a stale old workflow.
+      - "website-builder-agent/website-builder-agent/agents/research.py"
+      - "website-builder-agent/website-builder-agent/utils/industry_workflow.py"
+      - "website-builder-agent/website-builder-agent/utils/claude_client.py"
   schedule:
     # GitHub scheduled events are best-effort and can be delayed or dropped.
     # Refresh the schedule actor and keep this as a fallback only; private
