@@ -58,10 +58,10 @@ class IndustryWorkflowTests(unittest.TestCase):
             calls.append(url)
             return records[url]
         result = crawl_original_website(
-            root, fake_fetch, first_page=records[root], max_pages=4
+            root, fake_fetch, first_page=records[root], max_pages=5
         )
-        self.assertEqual(len(result["pages"]), 4)
-        self.assertEqual(len(calls), 3)  # No duplicate homepage request.
+        self.assertEqual(len(result["pages"]), 5)
+        self.assertEqual(len(calls), 4)  # No duplicate homepage request.
         self.assertNotIn(root, calls)
         self.assertFalse(any("evil" in item["url"] for item in result["pages"]))
         self.assertFalse(result["priority_unvisited_urls"])
@@ -89,6 +89,36 @@ class IndustryWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Source inventory missing"):
             create_industry_brief({"url": root}, {"company_facts": {
                 "industry": "construction"}})
+
+    def test_login_routes_are_not_content_and_optional_404_is_not_false_core_failure(self):
+        root="https://law.example.org/"
+        home={"success":True,"final_url":root,"visible_text":"Law office",
+              "links":[{"href":"/kirjaudu","text":"Kirjaudu"},
+                       {"href":"/ihmiset","text":"Ihmiset"},
+                       {"href":"/palvelut","text":"Palvelut"},
+                       {"href":"/2019-news","text":"Old news"}]}
+        called=[]
+        def fetch(url):
+            called.append(url)
+            if url.endswith("2019-news"):return {"success":False,"error":"HTTP 404"}
+            return {"success":True,"final_url":url,"visible_text":"Law facts","links":[]}
+        inventory=crawl_original_website(root,fetch,first_page=home,max_pages=24)
+        self.assertFalse(any("kirjaudu" in u for u in called))
+        self.assertEqual(len(inventory["pages"]),3)
+        self.assertEqual(inventory["failed_urls"],["https://law.example.org/2019-news"])
+        result=validate_inventory({"url":root},{"source_inventory":inventory})
+        self.assertIn("optional_source_routes_unavailable",result["issues"])
+        self.assertEqual(result["optional_source_route_count"],1)
+
+    def test_missing_legal_or_people_page_stays_a_hard_stop(self):
+        root="https://law.example.org/"
+        home={"success":True,"final_url":root,"visible_text":"Law office",
+              "links":[{"href":"/ihmiset","text":"People"},
+                       {"href":"/tietosuoja","text":"Privacy"}]}
+        inventory=crawl_original_website(root,lambda u: {"success":False,
+                        "error":"HTTP 503"},first_page=home,max_pages=24)
+        with self.assertRaisesRegex(RuntimeError,"Original source pages failed"):
+            validate_inventory({"url":root},{"source_inventory":inventory})
 
     def test_preflight_prevents_private_ip_or_localhost(self):
         for url in ("http://127.0.0.1/", "http://localhost/",
