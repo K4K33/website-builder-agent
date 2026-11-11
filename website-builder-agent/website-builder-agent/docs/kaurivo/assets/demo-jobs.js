@@ -105,6 +105,57 @@
   link.href=href;link.target="_blank";link.rel="noopener noreferrer";
   return true;
  }
+ function comparisonLink(group,label,url,kind,emptyLabel){
+  const tile=append(group,"div","demo-comparison-tile");
+  const href=validUrl(url,kind);
+  if(!href){
+   append(tile,"span","demo-comparison-label",label);
+   append(tile,"span","demo-comparison-empty",emptyLabel);
+   return null;
+  }
+  const a=append(tile,"a","demo-comparison-link",label);
+  a.href=href;
+  a.target="_blank";
+  a.rel="noopener noreferrer";
+  // Show the actual host/path so the owner can verify the comparison.
+  // Never render URL data as HTML or embed third-party previews in admin.
+  const parsed=new URL(href);
+  append(tile,"span","demo-comparison-address",
+    parsed.hostname+parsed.pathname+(parsed.search?"…":""));
+  return href;
+ }
+ function comparisonLinks(parent,job,options){
+  const ready=canShowPreview(job);
+  const group=append(parent,"div","demo-comparison");
+  group.setAttribute("aria-label","Vanhan ja uuden verkkosivun vertailulinkit");
+  const oldHref=comparisonLink(group,"Vanha sivu",job.original_url,null,
+    job.original_url?"Vanhan sivun osoitetta ei voitu vahvistaa.":"Ei aiempaa verkkosivua");
+  const newHref=comparisonLink(group,"Uusi sivu",ready?job.preview_url:null,"preview",
+    job.status==="internal_preview"?"Julkaisun vahvistus puuttuu":
+    ACTIVE.has(job.status)?"Uusi sivu valmistuu laatutarkistuksen jälkeen":
+    "Uutta sivua ei ole vielä hyväksytysti julkaistu");
+  if(oldHref&&newHref){
+   const copy=append(parent,"button","small-action demo-copy-comparison","Kopioi molemmat linkit");
+   copy.type="button";
+   copy.addEventListener("click",async()=>{
+    try{
+     if(!navigator.clipboard||typeof navigator.clipboard.writeText!=="function")
+      throw Error("clipboard_unavailable");
+     await navigator.clipboard.writeText(
+      String(job.company_name||"Yritys")+"\n"+
+      "Vanha sivu: "+oldHref+"\n"+
+      "Uusi sivu: "+newHref);
+     if(options?.toast)options.toast("Molemmat sivulinkit kopioitu.","success");
+    }catch(_){
+     if(options?.toast)options.toast("Linkkien kopiointi ei onnistunut. Avaa linkit suoraan niiden otsikoista.","error");
+    }
+   });
+  }
+  if(!oldHref&&newHref){
+   append(parent,"div","record-sub",
+    "Yritykselle ei ole vahvistettua vanhaa sivua, joten vertailulinkkiä ei keksitä.");
+  }
+ }
  function isActive(job){return job&&ACTIVE.has(job.status);}
  function canShowPreview(job){
   return job.status==="internal_preview"&&
@@ -132,17 +183,14 @@
   const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
     deferred?"Odottaa ilmaiskäyttöä":STATUS[job.status]||"Tarkistettava");
   badge.setAttribute("aria-label","Työn tila");
-  if(job.original_url){
-   if(!external(actions,"Vanha sivu",job.original_url))append(main,"div","record-warning","Alkuperäinen sivulinkki on tarkistettava.");
-  }else append(main,"div","record-sub","Alkuperäistä verkkosivua ei ole vahvistettu.");
+  // One consistent, prominent old/new comparison for EVERY automatic
+  // demo job, from queue through verified preview. No invented URLs.
+  comparisonLinks(main,job,options);
   if(canShowPreview(job)){
-   external(actions,"Avaa uusi demo",job.preview_url,"preview");
    external(actions,"QA-raportti",job.qa_url,"qa");
-   append(main,"div","record-sub","Suora avattava sisäinen esikatselu. Ei vielä hyväksytty asiakkaalle.");
+   append(main,"div","record-sub","Uusi sivu on suora, selaimessa tarkistettu sisäinen esikatselu. Ei vielä hyväksytty asiakkaalle.");
   }else if(job.status==="internal_preview"){
    append(main,"div","record-warning","Julkaisutodiste on puutteellinen. Uutta linkkiä ei näytetä.");
-  }else if(isActive(job)){
-   append(main,"div","record-sub","Uusi linkki näytetään vasta aidon julkaisun ja selaintarkistuksen jälkeen.");
   }
   if(job.status==="queued"&&!deferred){
    // Scheduling is a backup, not a guaranteed five-minute service. Attempt
