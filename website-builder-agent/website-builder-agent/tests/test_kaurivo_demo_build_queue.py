@@ -130,6 +130,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('eq("status","queued")',edge)
         self.assertIn('kaurivo_claim_demo_dispatch',edge)
         self.assertIn('KAURIVO_GITHUB_DISPATCH_TOKEN',edge)
+        self.assertIn('x-client-info, x-region',edge)
         self.assertIn('github.com/repos/K4K33/website-builder-agent/actions/workflows/',edge)
         self.assertIn('github_token_not_configured',edge)
         self.assertIn('kaurivo_internal.is_kaurivo_admin()',sql)
