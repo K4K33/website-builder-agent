@@ -119,8 +119,9 @@ Deno.serve(async request=>{
    // Delete only a prior unreferenced snapshot; failure to prune never
    // downgrades the verified current pointer or exposes private bytes.
    if(previous&&previous.object_path!==path){
-    await fetch(objectUrl(previous.object_path),{
-      method:"DELETE",headers:storageHeaders()}).catch(()=>{});
+    await fetch(SUPABASE_URL+"/storage/v1/object/"+CHECKPOINT_BUCKET,{
+      method:"DELETE",headers:{...storageHeaders(),"content-type":"application/json"},
+      body:JSON.stringify({prefixes:[previous.object_path]})}).catch(()=>{});
    }
    return reply(200,{ok:true,stage:phase,sha256:checksum,byte_count:length});
   }catch(_){return reply(503,{ok:false,error:"checkpoint_backend_unavailable"});}
