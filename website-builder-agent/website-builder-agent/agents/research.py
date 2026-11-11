@@ -28,7 +28,7 @@ from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.screenshot import capture_website
 from utils.original_experience_probe import probe_original_site_experience
-from utils.industry_workflow import crawl_original_website, sector_guidance
+from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
 from utils.free_references import discover_free_references
@@ -810,11 +810,19 @@ def run_research(
     # The no-credit bounded crawl reuses the homepage fetch and audits
     # subpages, source assets and footer marks before paid AI/Tavily calls.
     source_inventory = crawl_original_website(
-        normalize_url(url), analyze_url, first_page=site_data, max_pages=12
+        normalize_url(url), analyze_url, first_page=site_data, max_pages=24
     )
     if not source_inventory["pages"]:
         raise RuntimeError("No source-backed pages found.")
-    source_gaps = (source_inventory["failed_urls"]
+    # A bounded 24-page crawl preserves more of complex source websites.
+    # Only essential pages can block the expensive AI build. Login pages
+    # are ignored, but optional inaccessible routes remain recorded in
+    # source_inventory and QA must not infer they contained no content.
+    essential_failed = [
+        u for u in source_inventory["failed_urls"]
+        if _priority(u)[0] == 0 or u == source_inventory["root_url"]
+    ]
+    source_gaps = (essential_failed
                    + source_inventory["priority_unvisited_urls"])
     if source_gaps:
         raise RuntimeError(
