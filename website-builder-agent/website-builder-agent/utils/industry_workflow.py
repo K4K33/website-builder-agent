@@ -76,9 +76,14 @@ PRIORITY_WORDS = (
     "hinn", "price", "yhteys", "contact", "meist", "about", "yrity",
     "kohte", "referens", "project", "partner", "kumpp", "sponsor",
     "allergen", "ruokaval", "tiimi", "team", "faq", "kysymy",
+    "ihmis", "henkil", "staff", "people", "asianajaj", "jurist", "lawyer",
+    "english", "svenska", "terms", "ehdot", "tietosuo", "privacy",
+    "ehtoja", "eväste", "cookie-policy", "toimit", "return",
 )
-SKIP_PATHS = ("/wp-admin", "/login", "/cart", "/checkout", "/feed",
-              "/api/", "/cdn-cgi", "/privacy-policy", "/cookie")
+SKIP_PATHS = ("/wp-admin", "/wp-login", "/login", "/kirjaudu",
+              "/logga-in", "/inloggning", "/sign-in", "/signin",
+              "/logout", "/kirjaudu-ulos", "/cart", "/checkout", "/feed",
+              "/api/", "/cdn-cgi")
 SKIP_ENDINGS = (".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp",
                 ".svg", ".zip", ".mp4", ".css", ".js", ".xml")
 
@@ -233,12 +238,23 @@ def validate_inventory(company: dict, research: dict) -> dict:
             "Important source pages not researched: "
             + ", ".join(inventory["priority_unvisited_urls"][:5])
         )
-    if inventory.get("failed_urls"):
+    # Missing key pages remains a hard error. Optional archives or expired
+    # non-customer-action URLs can be marked as incomplete investigation,
+    # but only when every critical route (including contact, people,
+    # languages, legal notices, prices and original service pages) loaded.
+    failed = inventory.get("failed_urls") or []
+    important_failed = [url for url in failed
+                        if _priority(str(url))[0] == 0
+                        or str(url) == str(inventory.get("root_url"))]
+    if important_failed:
         raise RuntimeError(
             "Original source pages failed to load: "
-            + ", ".join(inventory["failed_urls"][:5])
+            + ", ".join(important_failed[:5])
         )
-    return {"mode": "multi_page_snapshot", "pages": len(pages), "issues": []}
+    issues = (["optional_source_routes_unavailable"] if failed else [])
+    return {"mode": "multi_page_snapshot", "pages": len(pages),
+            "issues": issues,
+            "optional_source_route_count": len(failed)}
 
 
 def create_industry_brief(company: dict, research: dict) -> dict:
