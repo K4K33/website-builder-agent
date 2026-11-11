@@ -1,4 +1,7 @@
 """Kaurivo: owner-triggered demo builder, no fake success or paid AI calls.
+ 
+2026-11-11 source-recovery production smoke uses verified browser fallback,
+legal-operator free source lookup and redacted Research error coordinates.
 
 GitHub Actions OIDC claims ONE private admin-approved job from Supabase.
 Stages: exact current V6 master -> source research -> 3 concept renders ->
