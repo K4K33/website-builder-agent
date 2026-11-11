@@ -384,14 +384,12 @@ def ask_claude(
                     "ilman varsinaista content-vastausta."
                 )
 
-                if attempt < max_retries:
-                    next_limit = retry_token_limits[
-                        min(
-                            attempt,
-                            len(retry_token_limits) - 1,
-                        )
-                    ]
-
+                next_limit = min(config.AI_MAX_OUTPUT_TOKENS,
+                                 retry_token_limits[min(
+                                     attempt,len(retry_token_limits)-1)])
+                # Never spend another counted free request asking for exactly
+                # the same already-capped output length.
+                if attempt < max_retries and next_limit > current_max_tokens:
                     print(
                         f"  [OpenRouter] Vastaus katkaistiin "
                         f"token-rajaan. Yritetään "
