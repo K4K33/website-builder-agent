@@ -206,6 +206,16 @@ def fetch_html(
     # browser User-Agent while accepting the library's default transport.
     # Reuse the confirmed-safe transport for subsequent pages on this host.
     host = urlparse(url).hostname or ""
+    # Owner-selected target source: browser-first. Some real client sites
+    # intermittently drop even the alternate HTTP request while serving their
+    # actual public pages to Chromium. Only the worker's already-validated
+    # company hostname gets this preference; benchmarks keep cheap HTTP-first.
+    target = os.environ.get("KAURIVO_PRIMARY_SOURCE_HOST", "").casefold()
+    if (target and target == host.casefold() and
+            os.environ.get("KAURIVO_BROWSER_SOURCE_FALLBACK") == "1"):
+        browser_result = _fetch_html_from_browser(url, timeout)
+        if browser_result:
+            return browser_result
     session = requests.Session()
     if host not in _PLAIN_HEADERS_HOSTS:
         session.headers.update(HEADERS)
