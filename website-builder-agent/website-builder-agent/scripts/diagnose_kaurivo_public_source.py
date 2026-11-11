@@ -76,6 +76,24 @@ def check():
               "name resolution","timeout","connection refused","max retries exceeded"
             ) if name in low]
             print("VARIANT",label,"failed",",".join(flags) or type(err).__name__)
+    # The real premium builder includes Chromium. Probe the actual
+    # browser response before deciding this host cannot be researched.
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True,args=["--no-sandbox"])
+            page=browser.new_page()
+            response=page.goto(START,wait_until="domcontentloaded",timeout=20000)
+            page.wait_for_timeout(1800)
+            title=page.title()
+            body=page.locator("body").inner_text(timeout=5000)
+            print("BROWSER",json.dumps({"status":response.status if response else None,
+                "title_length":len(title),"body_text_length":len(body),
+                "links":page.locator("a[href]").count(),
+                "path":clean_path(page.url)}))
+            browser.close()
+    except Exception as exc:
+        print("BROWSER_ERROR",type(exc).__name__)
     home=analyze_url(START)
     print("ROOT",json.dumps({"success":home.get("success"),
       "status":home.get("status_code"),
