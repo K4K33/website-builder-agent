@@ -76,10 +76,10 @@ class KaurivoFreeModelFallbackTests(unittest.TestCase):
             "message":{"content":"unfinished"},"finish_reason":"length"}]}
         env={"FREE_ONLY":"1","AI_BACKEND":"openrouter",
              "BUILDER_MODEL":"google/primary:free","QA_MODEL":"qwen/qa:free"}
-        with patch.dict(os.environ,env,clear=True), \\
-             patch.object(claude_client,"_get_headers",return_value={"Authorization":"mock"}), \\
-             patch.object(resource_manager,"reserve",return_value=True), \\
-             patch.object(claude_client.requests,"post",return_value=reply) as call, \\
+        with patch.dict(os.environ,env,clear=True), \
+             patch.object(claude_client,"_get_headers",return_value={"Authorization":"mock"}), \
+             patch.object(resource_manager,"reserve",return_value=True), \
+             patch.object(claude_client.requests,"post",return_value=reply) as call, \
              patch.object(config,"AI_MAX_OUTPUT_TOKENS",8000):
             with self.assertRaisesRegex(RuntimeError,"truncated"):
                 claude_client.ask_claude("system","text",stage="builder",max_tokens=8000)
