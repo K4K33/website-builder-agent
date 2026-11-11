@@ -321,9 +321,50 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                        return_value=mock_response(200,{"is_management_key":False})) as get:
                 self.assertTrue(validate_free_api_key())
                 self.assertEqual(get.call_count,1)
+            with patch("scripts.run_kaurivo_demo_queue.requests.get",
+                       return_value=mock_response(200,{"free_model_daily_requests":{
+                           "used":50,"limit":50,"remaining":0}})) as get:
+                with self.assertRaisesRegex(HoldError,"free_ai_capacity_unavailable"):
+                    validate_free_api_key()
+                self.assertIn("/api/v1/key",get.call_args.args[0])
+            with patch("scripts.run_kaurivo_demo_queue.requests.get",
+                       return_value=mock_response(200,{"free_model_daily_requests":{
+                           "used":1,"limit":50,"remaining":49}})):
+                self.assertTrue(validate_free_api_key())
         with patch.dict(os.environ,{"OPENROUTER_API_KEY":""}):
             with self.assertRaisesRegex(HoldError,"free_ai_key_missing"):
                 validate_free_api_key()
+
+    def test_free_provider_capacity_defers_instead_of_marking_false_qa_pass(self):
+        from utils import claude_client, resource_manager
+        from unittest.mock import patch
+        migration=(SITE/"backend/demo_free_capacity_defer_20261111.sql").read_text(
+            encoding="utf-8")
+        worker=WORKER.read_text(encoding="utf-8")
+        bridge=EDGE.read_text(encoding="utf-8")
+        self.assertIn("next_eligible_at",migration)
+        self.assertIn("j.attempt<3",migration)
+        self.assertIn("interval '1 day 10 minutes'",migration)
+        self.assertIn("p_error_code<>'free_ai_capacity_unavailable'",migration)
+        self.assertIn("kaurivo_worker_update_demo",migration)
+        self.assertIn("p_run_id",migration)
+        self.assertIn("internal_preview",migration)
+        self.assertIn('update("queued"',worker)
+        self.assertIn('FREE CAPACITY DEFERRED',worker)
+        self.assertIn('data.status==="queued"&&code!=="free_ai_capacity_unavailable"',bridge)
+        with patch.dict(os.environ,{"FREE_ONLY":"1",
+                   "FREE_CLOUD_LOCAL_FALLBACK":"1","OLLAMA_MODEL":"",
+                   "OLLAMA_RESEARCH_MODEL":""}):
+            with patch.object(resource_manager,"reserve",return_value=False), \
+                 patch.object(claude_client,"_get_headers",return_value={}), \
+                 patch.object(claude_client.config,"model_for_stage",
+                    return_value="google/gemma-4-26b-a4b-it:free"), \
+                 patch.object(claude_client.config,"backend_for_stage",
+                    return_value="openrouter"), \
+                 patch.object(claude_client.requests,"post") as request:
+                with self.assertRaisesRegex(RuntimeError,"FREE_AI_CAPACITY_UNAVAILABLE"):
+                    claude_client.ask_claude("system","content",stage="research")
+                request.assert_not_called()
 
     def test_research_stage_error_classification_never_reveals_private_output(self):
         from tempfile import TemporaryFile
@@ -339,6 +380,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             ("RuntimeError: Yrityksen sivun analyysi epäonnistui: HTTP 404","source_website_unreachable"),
             ("ModuleNotFoundError: No module named 'missing'","missing_runtime_dependency"),
             ("source inventory missing required services","source_research_incomplete"),
+            ("RuntimeError: FREE_AI_CAPACITY_UNAVAILABLE: no paid fallback",
+             "free_ai_capacity_unavailable"),
             ("RuntimeError: website business details insufficient","researching_failed"),
         ]
         with TemporaryFile(mode="w+",encoding="utf-8") as log:
