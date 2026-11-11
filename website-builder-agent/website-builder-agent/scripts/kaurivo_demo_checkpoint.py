@@ -116,7 +116,9 @@ def _validate_phase(company: dict, slug: str, phase: str, project: Path) -> None
 
 
 def make_archive(project: Path, slug: str, job_id: str,
-                 phase: str, company: dict) -> bytes:
+                 phase: str, company: dict, *,
+                 requested_name: str | None = None,
+                 requested_source: str | None = None) -> bytes:
     """Create content-only ZIP; no symlinks, secrets, other client state."""
     _identity(slug, job_id, phase)
     project = project.resolve()
@@ -159,7 +161,9 @@ def make_archive(project: Path, slug: str, job_id: str,
         entries.append((str(relative), payload))
 
     manifest = {"format": 1, "job_id": job_id, "slug": slug,
-                "phase": phase, "project_root": str(project)}
+                "phase": phase, "project_root": str(project),
+                "requested_name": requested_name or company.get("name"),
+                "requested_source": requested_source or company.get("url")}
     entries += [
         ("checkpoint.json", json.dumps(manifest, sort_keys=True).encode()),
         ("company.json", json.dumps(company, ensure_ascii=False, sort_keys=True).encode()),
@@ -244,12 +248,15 @@ def unpack_archive(project: Path, slug: str, job_id: str,
             meta.get("format"), meta.get("job_id"), meta.get("slug"), meta.get("phase")) != (
                 1, job_id, slug, phase):
         raise CheckpointError("checkpoint belongs to different job or stage")
+    if (meta.get("requested_name") != expected_name or
+            meta.get("requested_source") != expected_source):
+        raise CheckpointError("checkpoint requested company differs")
     old_root = meta.get("project_root")
     if not isinstance(old_root, str) or not Path(old_root).is_absolute():
         raise CheckpointError("invalid old project root")
     company = _relocate(company, old_root, str(project))
     if (not isinstance(company, dict) or company.get("slug") != slug or
-            company.get("name") != expected_name or
+            not isinstance(company.get("name"), str) or not company.get("name") or
             company.get("url") != expected_source):
         raise CheckpointError("checkpoint company identity conflict")
     # Ensure all required paths exist IN THE ARCHIVE before touching the
