@@ -71,7 +71,7 @@ class IndustryWorkflowTests(unittest.TestCase):
             {**inventory, "company_facts": {"industry": "autokorjaamo"}},
         )
         self.assertEqual(brief["sector"], "automotive")
-        self.assertEqual(brief["inventory_status"]["pages"], 4)
+        self.assertEqual(brief["inventory_status"]["pages"], 5)
 
     def test_crawl_blocks_missing_important_pages_before_paid_builder(self):
         root = "https://test.example.org/"
