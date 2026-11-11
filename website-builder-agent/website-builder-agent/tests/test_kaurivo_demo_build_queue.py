@@ -367,20 +367,20 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
     def test_free_provider_capacity_defers_instead_of_marking_false_qa_pass(self):
         from utils import claude_client, resource_manager
         from unittest.mock import patch
-        migration=(SITE/"backend/demo_free_capacity_defer_20261111.sql").read_text(
+        migration=(SITE/"backend/kaurivo_targeted_durable_worker_20261111.sql").read_text(
             encoding="utf-8")
         worker=WORKER.read_text(encoding="utf-8")
         bridge=EDGE.read_text(encoding="utf-8")
         self.assertIn("next_eligible_at",migration)
-        self.assertIn("j.attempt<3",migration)
+        self.assertIn("retry_claims_today<3",migration)
         self.assertIn("interval '1 day 10 minutes'",migration)
-        self.assertIn("p_error_code<>'free_ai_capacity_unavailable'",migration)
+        self.assertIn("p_error_code='free_ai_capacity_unavailable'",migration)
         self.assertIn("kaurivo_worker_update_demo",migration)
         self.assertIn("p_run_id",migration)
         self.assertIn("internal_preview",migration)
         self.assertIn('update("queued"',worker)
-        self.assertIn('FREE CAPACITY DEFERRED',worker)
-        self.assertIn('data.status==="queued"&&code!=="free_ai_capacity_unavailable"',bridge)
+        self.assertIn('TRANSIENT FAILURE DEFERRED',worker)
+        self.assertIn('data.status==="queued"&&![' ,bridge)
         with patch.dict(os.environ,{"FREE_ONLY":"1",
                    "FREE_CLOUD_LOCAL_FALLBACK":"1","OLLAMA_MODEL":"",
                    "OLLAMA_RESEARCH_MODEL":""}):
