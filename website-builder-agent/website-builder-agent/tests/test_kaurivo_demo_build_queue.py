@@ -374,16 +374,16 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
           "choices":[{"message":{"content":"Public verified summary"},
                       "finish_reason":"stop"}]
         }
-        with patch.dict(os.environ,{"FREE_ONLY":"1","OLLAMA_MODEL":""}), \\
-             patch.object(resource_manager,"reserve",side_effect=[False,True]) as reserve, \\
+        with patch.dict(os.environ,{"FREE_ONLY":"1","OLLAMA_MODEL":""}), \
+             patch.object(resource_manager,"reserve",side_effect=[False,True]) as reserve, \
              patch.object(resource_manager,"openrouter_reservation_block_reason",
-                          return_value="minute"), \\
-             patch.object(claude_client,"_get_headers",return_value={}), \\
+                          return_value="minute"), \
+             patch.object(claude_client,"_get_headers",return_value={}), \
              patch.object(claude_client.config,"model_for_stage",
-                          return_value="google/gemma-4-26b-a4b-it:free"), \\
+                          return_value="google/gemma-4-26b-a4b-it:free"), \
              patch.object(claude_client.config,"backend_for_stage",
-                          return_value="openrouter"), \\
-             patch.object(claude_client.time,"sleep") as pause, \\
+                          return_value="openrouter"), \
+             patch.object(claude_client.time,"sleep") as pause, \
              patch.object(claude_client.requests,"post",return_value=response) as post:
             self.assertEqual(claude_client.ask_claude(
                 "system","prompt",stage="research"),"Public verified summary")
@@ -396,16 +396,16 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         from utils import claude_client, resource_manager
         from unittest.mock import patch
         with patch.dict(os.environ,{"FREE_ONLY":"1","OLLAMA_MODEL":"",
-                         "OLLAMA_RESEARCH_MODEL":""}), \\
-             patch.object(resource_manager,"reserve",return_value=False), \\
+                         "OLLAMA_RESEARCH_MODEL":""}), \
+             patch.object(resource_manager,"reserve",return_value=False), \
              patch.object(resource_manager,"openrouter_reservation_block_reason",
-                          return_value="daily"), \\
-             patch.object(claude_client,"_get_headers",return_value={}), \\
+                          return_value="daily"), \
+             patch.object(claude_client,"_get_headers",return_value={}), \
              patch.object(claude_client.config,"model_for_stage",
-                          return_value="google/gemma-4-26b-a4b-it:free"), \\
+                          return_value="google/gemma-4-26b-a4b-it:free"), \
              patch.object(claude_client.config,"backend_for_stage",
-                          return_value="openrouter"), \\
-             patch.object(claude_client.time,"sleep") as pause, \\
+                          return_value="openrouter"), \
+             patch.object(claude_client.time,"sleep") as pause, \
              patch.object(claude_client.requests,"post") as post:
             with self.assertRaisesRegex(RuntimeError,"FREE_AI_CAPACITY_UNAVAILABLE"):
                 claude_client.ask_claude("system","prompt",stage="research")
