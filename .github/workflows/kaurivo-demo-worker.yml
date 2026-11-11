@@ -128,7 +128,12 @@ jobs:
         if: steps.claim.outputs.has_job == 'true'
         run: |
           python -m pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
+          python -m playwright install chromium
+          if ! python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'; then
+            echo "Browser launch needs Linux runtime libraries; install them only now."
+            python -m playwright install-deps chromium
+            python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'
+          fi
       - name: Research, create concepts, build, QA, publish and browser-verify
         if: steps.claim.outputs.has_job == 'true'
         env:

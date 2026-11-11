@@ -732,6 +732,73 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
             raise HoldError("broken_internal_navigation")
 
 
+def save_private_checkpoint(phase, agent_slug):
+    """Persist the exact last completed phase; no public artifacts or tokens."""
+    import hashlib
+    from urllib.parse import urlencode
+    from scripts.kaurivo_demo_checkpoint import make_archive, CheckpointError
+    try:
+        bundle=make_archive(PROJECT,agent_slug,working_job["id"],
+                            phase,load_company(agent_slug),
+                            requested_name=str(working_job["company_name"])[:160],
+                            requested_source=str(working_job.get("original_url") or ""))
+        digest=hashlib.sha256(bundle).hexdigest()
+        query=urlencode({"checkpoint":"write","job_id":working_job["id"],
+                         "stage":phase,"sha256":digest})
+        reply=requests.post(EDGE+"?"+query,headers={
+            "Authorization":"Bearer "+_oidc(),
+            "Content-Type":"application/zip"},data=bundle,timeout=95)
+        if reply.status_code!=200 or reply.json().get("ok") is not True:
+            raise HoldError("checkpoint_write_failed")
+    except (requests.RequestException,ValueError,CheckpointError) as exc:
+        raise HoldError("checkpoint_write_failed") from exc
+
+
+def restore_private_checkpoint(agent_slug, company_name, source):
+    """Resume only a verified same-job snapshot and re-run unfinished stages."""
+    import hashlib
+    from scripts.kaurivo_demo_checkpoint import (
+        STAGES,unpack_archive,CheckpointError)
+    try:
+        info=call_worker("checkpoint_info",job_id=working_job["id"]).get(
+            "checkpoint")
+        if info is None:
+            return None
+        phase=info.get("stage")
+        digest=info.get("sha256")
+        length=info.get("byte_count")
+        if phase not in STAGES or not isinstance(digest,str) or (
+                type(length) is not int or length<1 or length>30*1024*1024):
+            raise CheckpointError("invalid private checkpoint metadata")
+        reply=requests.post(EDGE,headers={
+            "Authorization":"Bearer "+_oidc(),
+            "Content-Type":"application/json"},
+            json={"action":"checkpoint_read","job_id":working_job["id"]},
+            timeout=95)
+        if reply.status_code!=200 or reply.headers.get(
+                "content-type","").split(";")[0]!="application/zip":
+            raise CheckpointError("private checkpoint missing")
+        if (len(reply.content)!=length or
+                reply.headers.get("x-checkpoint-stage")!=phase or
+                reply.headers.get("x-checkpoint-sha256")!=digest or
+                hashlib.sha256(reply.content).hexdigest()!=digest):
+            raise CheckpointError("private checkpoint corrupted")
+        restored=unpack_archive(PROJECT,agent_slug,working_job["id"],phase,
+                                reply.content,digest,
+                                expected_name=company_name,expected_source=source)
+        if restored.get("url")!=source:
+            raise CheckpointError("private checkpoint identity conflict")
+        # The full company record is written LAST, after archive validation.
+        from utils.state import load_companies,save_companies
+        companies=load_companies()
+        companies[agent_slug]=restored
+        save_companies(companies)
+        print("Kaurivo demo queue: private stage checkpoint restored:",phase)
+        return phase
+    except (requests.RequestException,ValueError,CheckpointError) as exc:
+        raise HoldError("checkpoint_restore_failed") from exc
+
+
 def main():
     global working_job
     if RUN_ID<=0:raise HoldError("not_github_actions")
@@ -763,18 +830,35 @@ def main():
             agent_slug=make_slug(company_name)
             if not agent_slug or len(agent_slug)>120:
                 raise HoldError("company_name_invalid")
-            upsert_company(agent_slug,{"name":company_name,
-                                      "url":source,"status":"found"})
-            update("researching","Tutkitaan alkuperäistä sivustoa ja kolmea suunnittelusuuntaa")
-            run_cli(["research",agent_slug],stage_log,ai_deadline)
-            update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
-            run_cli(["concept-previews",agent_slug],stage_log,ai_deadline)
-            run_cli(["choose-concept",agent_slug],stage_log,ai_deadline)
-            run_cli(["build",agent_slug],stage_log,ai_deadline)
+            resume=restore_private_checkpoint(agent_slug,company_name,source)
+            done=(-1 if resume is None else
+                  ("researched","concepts","selected","built",
+                   "revised_1","revised_2").index(resume))
+            if resume is None:
+                upsert_company(agent_slug,{"name":company_name,
+                                          "url":source,"status":"found"})
+            if done<0:
+                update("researching","Tutkitaan alkuperäistä sivustoa ja kolmea suunnittelusuuntaa")
+                run_cli(["research",agent_slug],stage_log,ai_deadline)
+                save_private_checkpoint("researched",agent_slug)
+            if done<1:
+                update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
+                run_cli(["concept-previews",agent_slug],stage_log,ai_deadline)
+                save_private_checkpoint("concepts",agent_slug)
+            if done<2:
+                update("building","Arvioidaan kolme visuaalista konseptia")
+                run_cli(["choose-concept",agent_slug],stage_log,ai_deadline)
+                save_private_checkpoint("selected",agent_slug)
+            if done<3:
+                update("building","Rakennetaan valittu monisivuinen demo")
+                run_cli(["build",agent_slug],stage_log,ai_deadline)
+                save_private_checkpoint("built",agent_slug)
             # A rejected build is automatically diagnosed and repaired, but
             # never labelled ready on the strength of an attempted revision.
             # Bounded iterations protect free quotas and the runner deadline.
-            for revision in range(MAX_AUTO_REVISIONS+1):
+            next_qa_revision=(int(resume[-1]) if resume and
+                              resume.startswith("revised_") else 0)
+            for revision in range(next_qa_revision,MAX_AUTO_REVISIONS+1):
                 update("qa","Laatutarkistus "+str(revision+1)+"/"+
                        str(MAX_AUTO_REVISIONS+1))
                 run_cli(["qa",agent_slug],stage_log,ai_deadline)
@@ -788,6 +872,7 @@ def main():
                        str(revision+1)+"/"+str(MAX_AUTO_REVISIONS))
                 run_cli(["revise",agent_slug,qa_repair_feedback(qa)],
                         stage_log,ai_deadline)
+                save_private_checkpoint("revised_"+str(revision+1),agent_slug)
             # The QA report must correspond to the LAST real built version.
             company=load_company(agent_slug)
             if ((company.get("qa") or {}).get("overall_pass") is not True or

@@ -1,0 +1,46 @@
+name: Kaurivo private checkpoint safety
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/kaurivo-private-checkpoints-qa.yml"
+      - "website-builder-agent/website-builder-agent/scripts/kaurivo_demo_checkpoint.py"
+      - "website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/backend/demo_worker_edge.ts"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/backend/demo_private_checkpoints_20261111.sql"
+      - "website-builder-agent/website-builder-agent/tests/test_kaurivo_demo_checkpoint.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/kaurivo-private-checkpoints-qa.yml"
+      - "website-builder-agent/website-builder-agent/scripts/kaurivo_demo_checkpoint.py"
+      - "website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/backend/demo_worker_edge.ts"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/backend/demo_private_checkpoints_20261111.sql"
+      - "website-builder-agent/website-builder-agent/tests/test_kaurivo_demo_checkpoint.py"
+permissions:
+  contents: read
+jobs:
+  safe-archive:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify isolated stage snapshots and no secret leakage
+        run: python -m unittest discover -s tests -p "test_kaurivo_demo_checkpoint.py" -v
+  oidc-edge-typecheck:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Typecheck authenticated private checkpoint broker
+        run: deno check docs/kaurivo/backend/demo_worker_edge.ts

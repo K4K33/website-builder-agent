@@ -19,7 +19,14 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Fast syntax check before expensive browser setup
         run: python -m compileall -q agents utils tests scripts main.py
-      - run: python -m playwright install --with-deps chromium
+      - name: Install browser without apt when base system already supports it
+        run: |
+          python -m playwright install chromium
+          if ! python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'; then
+            echo "Browser launch needs Linux runtime libraries; install them only now."
+            python -m playwright install-deps chromium
+            python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'
+          fi
       - name: Full suite with automatic root-cause report (must be zero failures)
         run: python scripts/quality_diagnostics.py --json output/quality-diagnostics.json --markdown output/quality-diagnostics.md
         env:
