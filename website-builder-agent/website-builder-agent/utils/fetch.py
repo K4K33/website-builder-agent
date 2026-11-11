@@ -23,6 +23,7 @@ Tärkeää:
 - Yksittäinen huono verkkosivu ei kaada koko Scout-ajokertaa.
 """
 
+import os
 import re
 from urllib.parse import urlparse
 
@@ -32,6 +33,9 @@ from bs4 import BeautifulSoup
 from utils.source_identity import extract_source_identity, extract_price_faq_evidence
 from utils.source_content_blocks import extract_source_content_blocks
 
+
+# Process-local cache, populated only after a real alternate HTTP success.
+_PLAIN_HEADERS_HOSTS: set[str] = set()
 
 HEADERS = {
     "User-Agent": (
@@ -139,6 +143,44 @@ def _empty_result(
     }
 
 
+def _fetch_html_from_browser(url: str, timeout: int = 20) -> dict | None:
+    """Read the PUBLIC page in a real browser when HTTP rejects this agent.
+
+    Never sign in, fill forms, bypass CAPTCHAs, or treat a 403/empty challenge
+    page as valid source. Optional: only enabled for the real demo worker,
+    where Playwright Chromium is already installed. No AI/API credits.
+    """
+    if os.environ.get("KAURIVO_BROWSER_SOURCE_FALLBACK") != "1":
+        return None
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return None
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True, args=["--no-sandbox"])
+            try:
+                page = browser.new_page()
+                response = page.goto(
+                    url, timeout=max(5000, min(timeout, 25) * 1000),
+                    wait_until="domcontentloaded",
+                )
+                if not response or not 200 <= response.status < 300:
+                    return None
+                html = page.content()
+                text = page.locator("body").inner_text(timeout=5000)
+                if len(html) < 450 or (len(text.strip()) < 60
+                                      and page.locator("img").count() == 0):
+                    return None
+                return {"success": True, "html": html,
+                        "final_url": page.url,
+                        "status_code": response.status, "error": ""}
+            finally:
+                browser.close()
+    except Exception:
+        return None
+
+
 def fetch_html(
     url: str,
     timeout: int = 20,
@@ -160,18 +202,50 @@ def fetch_html(
             "error": "Tyhjä URL.",
         }
 
+    # Some small-business hosts abruptly close requests advertising a
+    # browser User-Agent while accepting the library's default transport.
+    # Reuse the confirmed-safe transport for subsequent pages on this host.
+    host = urlparse(url).hostname or ""
     session = requests.Session()
-    session.headers.update(HEADERS)
+    if host not in _PLAIN_HEADERS_HOSTS:
+        session.headers.update(HEADERS)
 
     try:
-        response = session.get(
-            url,
-            timeout=timeout,
-            allow_redirects=True,
-        )
+        try:
+            response = session.get(
+                url,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+        except requests.exceptions.ConnectionError as err:
+            if (host in _PLAIN_HEADERS_HOSTS or
+                    "RemoteDisconnected" not in str(err)):
+                raise
+            # Exactly one alternate HTTP request, same URL, no credentials,
+            # no paid service and no invented fallback website material.
+            session.close()
+            session = requests.Session()
+            response = session.get(
+                url,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+            if response.status_code < 400:
+                _PLAIN_HEADERS_HOSTS.add(host)
+                print("  [fetch] Alternate HTTP transport accepted by source host.")
 
         status_code = response.status_code
         final_url = response.url or url
+
+        # A host can serve genuine pages to Chromium while returning 403 to
+        # Python HTTP clients. Use the real PUBLIC browser for evidence,
+        # never an invented summary or external paid scraping API.
+        if status_code == 403 or (status_code == 202
+                and len(response.content) < 500):
+            browser_result = _fetch_html_from_browser(url, timeout)
+            if browser_result:
+                print("  [fetch] Browser-based source HTML verified.")
+                return browser_result
 
         if status_code >= 400:
             error = f"HTTP {status_code}"
@@ -220,10 +294,12 @@ def fetch_html(
 
         html = response.text or ""
 
-        if not html.strip():
+        if not html.strip() or (
+            status_code == 202 and len(html.strip()) < 500
+        ):
             error = (
-                "Palvelin palautti tyhjän "
-                "HTML-vastauksen."
+                "Palvelin palautti tyhjän tai tutkimukseen "
+                "kelpaamattoman HTML-vastauksen."
             )
 
             print(
