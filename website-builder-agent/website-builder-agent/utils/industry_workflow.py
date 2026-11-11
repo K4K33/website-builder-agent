@@ -168,6 +168,22 @@ def crawl_original_website(
             continue
         visited.add(current)
         data = first_page if current == start and first_page is not None else fetch_page(current)
+        # The de-duplicated inventory URLs intentionally remove trailing "/".
+        # WordPress and other CMSs may serve /en/privacy-statement/ but
+        # deny/404 /en/privacy-statement. Retry exactly ONE same-host
+        # canonical path variant before declaring important content missing.
+        # Never retry 401 authentication, 429 rate-limits, 5xx or DNS failures.
+        code=data.get("status_code") if isinstance(data,dict) else None
+        if (current != start and isinstance(data,dict)
+                and data.get("success") is not True
+                and type(code) is int and code in (403,404)
+                and not urlsplit(current).path.endswith("/")):
+            canonical=current+"/"
+            alternate=fetch_page(canonical)
+            if (isinstance(alternate,dict)
+                    and alternate.get("success") is True
+                    and _same_site_url(start,str(alternate.get("final_url") or canonical))==current):
+                data=alternate
         if not isinstance(data, dict) or data.get("success") is not True:
             failed.append(current)
             # Only a confirmed HTTP 404/410 means the original endpoint
