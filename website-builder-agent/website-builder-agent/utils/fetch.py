@@ -33,6 +33,9 @@ from utils.source_identity import extract_source_identity, extract_price_faq_evi
 from utils.source_content_blocks import extract_source_content_blocks
 
 
+# Process-local cache, populated only after a real alternate HTTP success.
+_PLAIN_HEADERS_HOSTS: set[str] = set()
+
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -160,15 +163,37 @@ def fetch_html(
             "error": "Tyhjä URL.",
         }
 
+    # Some small-business hosts abruptly close requests advertising a
+    # browser User-Agent while accepting the library's default transport.
+    # Reuse the confirmed-safe transport for subsequent pages on this host.
+    host = urlparse(url).hostname or ""
     session = requests.Session()
-    session.headers.update(HEADERS)
+    if host not in _PLAIN_HEADERS_HOSTS:
+        session.headers.update(HEADERS)
 
     try:
-        response = session.get(
-            url,
-            timeout=timeout,
-            allow_redirects=True,
-        )
+        try:
+            response = session.get(
+                url,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+        except requests.exceptions.ConnectionError as err:
+            if (host in _PLAIN_HEADERS_HOSTS or
+                    "RemoteDisconnected" not in str(err)):
+                raise
+            # Exactly one alternate HTTP request, same URL, no credentials,
+            # no paid service and no invented fallback website material.
+            session.close()
+            session = requests.Session()
+            response = session.get(
+                url,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+            if response.status_code < 400:
+                _PLAIN_HEADERS_HOSTS.add(host)
+                print("  [fetch] Alternate HTTP transport accepted by source host.")
 
         status_code = response.status_code
         final_url = response.url or url
