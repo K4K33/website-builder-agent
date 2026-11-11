@@ -80,11 +80,13 @@ Deno.serve(async request=>{
   if(data.action==="update"){
    if(typeof data.job_id!=="string"||
      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.job_id)||
-     !["researching","building","qa","publishing","internal_preview","hold","failed"].includes(data.status||""))
+     !["queued","researching","building","qa","publishing","internal_preview","hold","failed"].includes(data.status||""))
      return reply(400,{ok:false,error:"update_args"});
    const cleaned=typeof data.progress==="string"?data.progress.slice(0,300):"";
    const code=typeof data.error_code==="string"&&/^[a-z0-9_]{0,80}$/.test(data.error_code)
       ?data.error_code:"";
+   if(data.status==="queued"&&code!=="free_ai_capacity_unavailable")
+     return reply(400,{ok:false,error:"invalid_defer_code"});
    const updated=await rpc("kaurivo_worker_update_demo",{
     p_id:data.job_id,p_run_id:run_id,p_status:data.status,
     p_progress:cleaned,p_preview_url:typeof data.preview_url==="string"?data.preview_url:"",

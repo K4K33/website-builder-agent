@@ -156,6 +156,12 @@ def validate_free_api_key():
         raise HoldError("free_ai_key_metadata_invalid")
     if data.get("is_management_key") or data.get("is_provisioning_key"):
         raise HoldError("free_ai_wrong_key_type")
+    # /key is zero-inference. Some accounts expose their global per-day free
+    # remaining quota here. Do not claim a demo when no cloud tokens remain.
+    daily=data.get("free_model_daily_requests")
+    remaining=daily.get("remaining") if isinstance(daily,dict) else None
+    if type(remaining) in (int,float) and remaining<=0:
+        raise HoldError("free_ai_capacity_unavailable")
     return True
 
 
@@ -208,6 +214,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
     terminal=last_lines[-1] if last_lines else (
         tail.strip().splitlines()[-1] if tail.strip() else ""
     )
+    if "free_ai_capacity_unavailable" in terminal:
+        return "free_ai_capacity_unavailable"
     provider=any(x in terminal for x in (
         "openrouter rejected request",
         "openrouter-kutsu epäonnistui",
@@ -798,6 +806,23 @@ def main():
             print("Kaurivo demo queue: exact-release internal preview verified.")
             return 0
         except HoldError as error:
+            if error.code=="free_ai_capacity_unavailable":
+                try:
+                    # Database defers the same authenticated job to next UTC
+                    # day's quota window, with at most 3 total attempts.
+                    # It turns the third failure into explicit HOLD instead
+                    # of a runaway daily loop. No paid fallback or fake QA.
+                    update("queued",
+                           "Ilmaisen AI-palvelun kapasiteetti täynnä: "
+                           "automaattinen uusinta seuraavana UTC-päivänä "
+                           "(enintään kolme yritystä).",
+                           error_code="free_ai_capacity_unavailable")
+                    print("Kaurivo demo queue: FREE CAPACITY DEFERRED (no paid AI).")
+                    return 0
+                except Exception:
+                    print("Kaurivo demo queue: quota deferral persistence failed.",
+                          file=sys.stderr)
+                    # Continue into the normal fail-closed HOLD path.
             try:
                 progress="Rakentaminen pysäytetty: "+error.code
                 if error.detail:
