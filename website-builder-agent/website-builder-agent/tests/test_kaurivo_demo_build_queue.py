@@ -166,7 +166,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("qwen/qwen3.8-27b:free",flow)
         self.assertIn("google/gemma-4-26b-a4b-it:free",flow)
         self.assertIn("Independent Builder and QA models:",flow)
-        self.assertIn('cron: "3-59/5 * * * *"',flow)
+        self.assertIn('cron: "4-59/5 * * * *"',flow)
         self.assertIn('KAURIVO_CLAIMED_JOB_FILE',flow)
         self.assertNotIn('SUPABASE_SERVICE_ROLE_KEY:',flow)
         self.assertNotIn('sb_secret_',edge)
