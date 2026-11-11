@@ -190,10 +190,19 @@
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
   const dispatchFailure=job.status==="queued"&&job.dispatch_error_code;
   const dispatchAccepted=job.status==="queued"&&!dispatchFailure&&!!job.dispatch_accepted_at;
+  const dispatchElapsed=dispatchAccepted?
+    Date.now()-Date.parse(job.dispatch_accepted_at||""):0;
+  const dispatchStalled=dispatchAccepted&&Number.isFinite(dispatchElapsed)
+    &&dispatchElapsed>120000;
   append(main,"div","record-sub",
     dispatchFailure?"GitHub-käynnistys epäonnistui. Rakennus ei ole käynnissä.":
+    dispatchStalled?"GitHubille lähetetty käynnistyspyyntö ei ole johtanut vahvistettuun rakennuksen aloitukseen.":
     dispatchAccepted?"Käynnistyspyyntö lähetetty GitHubille. Odotetaan rakennuksen aloitusta.":
     job.progress||STATUS[job.status]||"Odottaa");
+  if(dispatchStalled){
+   append(main,"div","record-warning",
+     "GitHubin käynnistyminen on viivästynyt. Painike lähetti pyynnön, mutta rakennustyö ei ole vielä alkanut. Tarkista GitHub Actionsin estot ja laskutusasetukset; toistuva klikkaaminen ei nopeuta sitä.");
+  }
   if(dispatchFailure){
    append(main,"div","record-warning",
     (DISPATCH_MESSAGES[job.dispatch_error_code]||"GitHub-käynnistystä ei voitu vahvistaa.")+
@@ -213,6 +222,7 @@
   const actions=append(row,"div","record-actions");
   const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
     deferred?"Jatkuu automaattisesti":dispatchFailure?"Käynnistys estynyt":
+    dispatchStalled?"Aloitus vahvistamatta":
     dispatchAccepted?"Käynnistys lähetetty":STATUS[job.status]||"Tarkistettava");
   badge.setAttribute("aria-label","Työn tila");
   // One consistent, prominent old/new comparison for EVERY automatic
