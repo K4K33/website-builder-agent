@@ -818,9 +818,11 @@ def run_research(
     # Only essential pages can block the expensive AI build. Login pages
     # are ignored, but optional inaccessible routes remain recorded in
     # source_inventory and QA must not infer they contained no content.
+    removed=set(source_inventory.get("confirmed_removed_urls") or [])
     essential_failed = [
         u for u in source_inventory["failed_urls"]
-        if _priority(u)[0] == 0 or u == source_inventory["root_url"]
+        if (u not in removed or u == source_inventory["root_url"])
+        and (_priority(u)[0] == 0 or u == source_inventory["root_url"])
     ]
     source_gaps = (essential_failed
                    + source_inventory["priority_unvisited_urls"])
