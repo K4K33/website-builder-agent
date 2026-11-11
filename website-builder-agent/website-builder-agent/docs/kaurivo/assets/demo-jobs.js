@@ -189,6 +189,20 @@
   if(canShowPreview(job)){
    external(actions,"QA-raportti",job.qa_url,"qa");
    append(main,"div","record-sub","Uusi sivu on suora, selaimessa tarkistettu sisäinen esikatselu. Ei vielä hyväksytty asiakkaalle.");
+   // Every published demo also carries an explicit CMS/customer handover
+   // checklist. A static link is not a WordPress install or edit permission.
+   const handover=append(main,"details","demo-handover");
+   append(handover,"summary","","Asiakasluovutus · muokattava CMS vielä todentamatta");
+   append(handover,"p","record-sub",
+     "Demolinkki on sisäinen esikatselu. Luovutus tehdään vasta sopimuksen, asiakkaan oman verkkotunnuksen ja erikseen testatun WordPressin tai muun CMS:n jälkeen.");
+   const steps=append(handover,"ul","demo-handover-list");
+   for(const step of [
+    "Siirrä hyväksytty ulkoasu ja kaikki alisivut asiakkaan hallitsemaan CMS:ään.",
+    "Testaa asiakkaan omilla oikeuksilla kirjautuminen ja tekstin, kuvan sekä yhteystietojen muokkaus.",
+    "Julkaise muutos ja tarkista mobiili, lomakkeet, animaatiot ja kauppatoiminnot.",
+    "Testaa varmuuskopio ja palautus. Anna asiakkaalle kirjalliset muokkausohjeet.",
+    "Pyydä asiakkaan hyväksyntä. Vasta tämän jälkeen sivusto on luovutusvalmis."
+   ]) append(steps,"li","",step);
   }else if(job.status==="internal_preview"){
    append(main,"div","record-warning","Julkaisutodiste on puutteellinen. Uutta linkkiä ei näytetä.");
   }
