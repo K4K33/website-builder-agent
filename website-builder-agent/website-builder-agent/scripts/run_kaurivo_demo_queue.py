@@ -119,6 +119,14 @@ def free_model_configured():
             raise HoldError("exact_free_model_required")
     if os.environ.get("BUILDER_MODEL","").strip()==os.environ.get("QA_MODEL","").strip():
         raise HoldError("independent_qa_model_required")
+    # Reject paid, invalid and overlapping Builder/QA backups BEFORE the
+    # first inference request; never discover a paid fallback in production.
+    import config
+    try:
+        for phase in ("research","builder","qa"):
+            config.stage_model_candidates(phase)
+    except RuntimeError as exc:
+        raise HoldError("free_model_not_configured") from exc
     validate_free_api_key()
     # No paid/uncapped Tavily source queries are initiated by this worker.
     os.environ["TAVILY_API_KEY"]=""
