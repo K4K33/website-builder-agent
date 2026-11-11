@@ -739,7 +739,9 @@ def save_private_checkpoint(phase, agent_slug):
     from scripts.kaurivo_demo_checkpoint import make_archive, CheckpointError
     try:
         bundle=make_archive(PROJECT,agent_slug,working_job["id"],
-                            phase,load_company(agent_slug))
+                            phase,load_company(agent_slug),
+                            requested_name=str(working_job["company_name"])[:160],
+                            requested_source=str(working_job.get("original_url") or ""))
         digest=hashlib.sha256(bundle).hexdigest()
         query=urlencode({"checkpoint":"write","job_id":working_job["id"],
                          "stage":phase,"sha256":digest})
@@ -784,7 +786,7 @@ def restore_private_checkpoint(agent_slug, company_name, source):
         restored=unpack_archive(PROJECT,agent_slug,working_job["id"],phase,
                                 reply.content,digest,
                                 expected_name=company_name,expected_source=source)
-        if (restored.get("name")!=company_name or restored.get("url")!=source):
+        if restored.get("url")!=source:
             raise CheckpointError("private checkpoint identity conflict")
         # The full company record is written LAST, after archive validation.
         from utils.state import load_companies,save_companies
