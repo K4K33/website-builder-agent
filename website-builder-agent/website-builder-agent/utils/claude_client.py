@@ -160,7 +160,7 @@ def _local_free_quota_fallback(
         # without manufacturing a result or retrying a capped free API.
         raise RuntimeError(
             "FREE_AI_CAPACITY_UNAVAILABLE: no local free fallback installed; "
-            "OpenRouter free request allowance/rate unavailable."
+            "OpenRouter free request allowance/rate unavailable; no paid fallback."
         )
     from utils.local_ai import chat_local
     return chat_local(
