@@ -425,6 +425,11 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     exceptions=[]
                     page.on("pageerror",lambda err:exceptions.append(str(err)))
                     page.goto(HTML.as_uri(),wait_until="domcontentloaded")
+                    # Owner may choose All companies even if outreach is
+                    # prohibited: private demo building and sales eligibility
+                    # are independent. 'Research next 20' intentionally hides
+                    # opt-outs to preserve its sales-focused semantics.
+                    page.locator("#lead-view").select_option("all")
                     page.wait_for_function(
                         "document.querySelector('#prospect-list .record-title')?.textContent === 'Esimerkki Verhoomo'"
                     )
