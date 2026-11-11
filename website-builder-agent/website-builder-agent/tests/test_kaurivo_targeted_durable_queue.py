@@ -35,7 +35,6 @@ class KaurivoDurableQueueSafetyTests(unittest.TestCase):
         self.assertIn('WORKFLOW_REF',bridge)
         self.assertIn('repository_owner_id',bridge)
         self.assertIn('repository_id',bridge)
-        self.assertIn('payload.ref==="refs/heads/main"',bridge.replace('!==','===')) if False else None
         self.assertIn('payload.ref!=="refs/heads/main"',bridge)
         self.assertIn('"workflow_dispatch"',bridge)
         self.assertNotIn('SUPABASE_SERVICE_ROLE_KEY:',flow)
