@@ -172,6 +172,28 @@ def _local_free_quota_fallback(
     )
 
 
+def _verified_free_minute_wait_seconds(response) -> int | None:
+    """Retry only a provable, near-term OpenRouter free RPM reset.
+
+    OpenRouter's own 429 includes rate-limit headers; an upstream provider
+    429 without them, malformed values or a UTC-day reset must NOT cause
+    a blind cloud retry. Both attempts still reserve daily free requests.
+    """
+    headers = getattr(response, "headers", None)
+    if not headers or str(headers.get("X-RateLimit-Remaining", "")).strip() != "0":
+        return None
+    try:
+        reset = float(headers.get("X-RateLimit-Reset", ""))
+        if reset > 1_000_000_000_000:  # Unix milliseconds
+            reset /= 1000
+        delta = reset - time.time()
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not (0 < delta <= 65):
+        return None
+    return max(1, min(67, int(delta) + 2))
+
+
 def ask_claude(
     system: str,
     user_prompt: str,
@@ -230,6 +252,7 @@ def ask_claude(
     ]
 
     last_error = None
+    free_provider_minute_retried = False
 
     for attempt in range(1, max_retries + 1):
 
@@ -271,6 +294,16 @@ def ask_claude(
 
             if response.status_code == 429:
                 if config.free_only():
+                    # One bounded retry ONLY if OpenRouter itself proves the
+                    # minute window resets soon. A daily cap or unknown 429
+                    # still defers; never retry indefinitely or use paid AI.
+                    wait_seconds = (_verified_free_minute_wait_seconds(response)
+                                    if not free_provider_minute_retried
+                                    and attempt < max_retries else None)
+                    if wait_seconds is not None:
+                        free_provider_minute_retried = True
+                        time.sleep(wait_seconds)
+                        continue
                     return _local_free_quota_fallback(
                         system, user_prompt, stage=stage, max_tokens=max_tokens,
                         image_paths=image_paths, json_mode=json_mode,
