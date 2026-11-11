@@ -111,10 +111,17 @@
   if(Array.isArray(health))return health[0]||null;
   return health&&typeof health==="object"?health:null;
  }
+ // "ok" is an observation by a verified worker, not a promise of completion.
+ // A delayed cron does not invalidate that observation for QUEUEING only.
+ // Before any AI work the worker validates the actual key again, and the
+ // database blocks new inserts when it has an explicit bad/unknown status.
  function healthBlocked(health){
   const item=getHealth(health);
-  if(!item)return false; // Missing data is enforced by the database insert gate.
-  if(item.status!=="ok")return true;
+  return !item||item.status!=="ok";
+ }
+ function healthStale(health){
+  const item=getHealth(health);
+  if(!item||item.status!=="ok")return false;
   const checked=Date.parse(item.checked_at||"");
   return !Number.isFinite(checked)||Date.now()-checked>2*60*60*1000;
  }
@@ -129,11 +136,15 @@
    return;
   }
   const unavailable=healthBlocked(health);
-  output.classList.add(unavailable?"demo-health-blocked":"demo-health-ready");
-  const status=unavailable?"Rakennuspalvelu keskeytetty":"Rakennuspalvelu käytettävissä";
+  const stale=healthStale(health);
+  output.classList.add(unavailable?"demo-health-blocked":stale?"demo-health-stale":"demo-health-ready");
+  const status=unavailable?"Rakennuspalvelu keskeytetty":
+    stale?"Tarkistus vanhentunut – voit lisätä työn jonoon":"Rakennuspalvelu käytettävissä";
   append(output,"strong","",status);
   const label=ERROR_LABELS[item.error_code]||"OpenRouterin avaimen tai ajastuksen toimivuus pitää tarkistaa.";
-  append(output,"span","",unavailable?label:"Ilmainen AI-avain on tarkistettu, ja rakennustöiden ajastus on käytössä.");
+  append(output,"span","",unavailable?label:stale?
+    "Edellinen avaintarkistus onnistui, mutta GitHubin automaattinen ajo on viivästynyt. Jonoon lisääminen on sallittu; työntekijä tarkistaa avaimen uudelleen ennen rakentamista. Uutta demoa ei näytetä valmiina ennen kaikkia QA- ja julkaisukokeita.":
+    "Ilmainen AI-avain on tarkistettu. Lopullinen demovalmius vaatii erillisen rakentamisen ja QA-tarkistuksen.");
   const checked=Date.parse(item.checked_at||"");
   if(Number.isFinite(checked))append(output,"small","","Tarkistettu "+new Date(checked).toLocaleString("fi-FI"));
   const log=validUrl(item.github_run_url,"qa");
@@ -168,7 +179,7 @@
   const active=(jobs||[]).find(j=>j.prospect_id===candidate.id&&isActive(j));
   if(!active&&healthBlocked(health)){
    showTab("demos");
-   toast("Demon rakennus on estetty, kunnes automaation avain tai ajastus toimii. Katso Demot-näkymän virheilmoitus.","error");
+   toast("Rakentaminen estetty: viimeisin työntekijän avaintarkistus epäonnistui tai puuttuu. Tarkista Demot-näkymä.","error");
    return;
   }
   if(active){showTab("demos");return;}
@@ -178,7 +189,9 @@
    if(!data)throw Error("Rakennustyön tunnistetta ei saatu.");
    await reload();
    showTab("demos");
-   toast("Demon rakentaminen lisättiin työjonoon. Seuraa etenemistä tässä näkymässä.","success");
+   toast(healthStale(health)?
+    "Demo lisätty jonoon. GitHubin ajastus on viivästynyt; työntekijä tarkistaa avaimen ennen rakentamista.":
+    "Demo lisätty jonoon. Seuraa etenemistä Demot-näkymässä.","success");
   }catch(e){
    const message=String(e.message||"Tuntematon virhe");
    const human=message.includes("daily free-build")?"Maksuttomien rakennuspyyntöjen päiväkohtainen raja (5) tuli vastaan."
