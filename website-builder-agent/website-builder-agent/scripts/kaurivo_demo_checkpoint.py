@@ -130,7 +130,12 @@ def make_archive(project: Path, slug: str, job_id: str,
             if path.is_symlink():
                 raise CheckpointError("symlink in demo output")
             if path.is_file():
-                targets.add(path.resolve())
+                relative = PurePosixPath(path.relative_to(project).as_posix())
+                # Scratch logs, dotfiles and generated temp data are never
+                # required build artifacts; skip rather than leaking them or
+                # interrupting an otherwise valid owner build.
+                if _allowed(relative, slug, referenced=False):
+                    targets.add(path.resolve())
     targets |= _referenced_paths(project, company, slug)
 
     # Original-company images may be created before Research finishes but
