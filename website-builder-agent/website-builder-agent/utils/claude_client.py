@@ -206,6 +206,7 @@ def ask_claude(
 ) -> str:
 
     model = config.model_for_stage(stage)
+    models = config.stage_model_candidates(stage)
     if max_retries < 1 or max_tokens < 1:
         raise ValueError("max_retries and max_tokens must be positive")
 
@@ -242,6 +243,10 @@ def ask_claude(
         ],
         "max_tokens": max_tokens,
     }
+    if len(models) > 1:
+        # OpenRouter handles provider/model failover within a SINGLE counted
+        # chat request. Include only exact :free IDs. No extra cloud retry.
+        payload["models"] = models
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
 
@@ -352,6 +357,14 @@ def ask_claude(
                 continue
 
             data = response.json()
+            # A successful fallback must still use a free model from the
+            # explicit allowlist. Never trust a paid model ID from a provider.
+            if len(models) > 1:
+                returned_model = data.get("model")
+                if (returned_model is not None and
+                        (not isinstance(returned_model, str) or
+                         returned_model not in models)):
+                    raise RuntimeError("FREE_ONLY model fallback returned unapproved model.")
 
             content = _extract_content(data)
 
@@ -371,14 +384,12 @@ def ask_claude(
                     "ilman varsinaista content-vastausta."
                 )
 
-                if attempt < max_retries:
-                    next_limit = retry_token_limits[
-                        min(
-                            attempt,
-                            len(retry_token_limits) - 1,
-                        )
-                    ]
-
+                next_limit = min(config.AI_MAX_OUTPUT_TOKENS,
+                                 retry_token_limits[min(
+                                     attempt,len(retry_token_limits)-1)])
+                # Never spend another counted free request asking for exactly
+                # the same already-capped output length.
+                if attempt < max_retries and next_limit > current_max_tokens:
                     print(
                         f"  [OpenRouter] Vastaus katkaistiin "
                         f"token-rajaan. Yritetään "
