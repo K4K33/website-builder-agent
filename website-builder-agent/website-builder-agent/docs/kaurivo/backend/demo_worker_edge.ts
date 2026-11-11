@@ -26,6 +26,33 @@ async function rpc(name:string,body:Record<string,unknown>){
  if(!resp.ok)throw Error("database_rpc");
  return await resp.json();
 }
+const CHECKPOINT_BUCKET="kaurivo-demo-checkpoints";
+const CHECKPOINT_MAX_BYTES=31457280;
+const CHECKPOINT_STAGES=new Set(["researched","concepts","selected","built","revised_1","revised_2"]);
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SHA=/^[0-9a-f]{64}$/;
+type Checkpoint={stage:string;checksum:string;object_path:string;byte_count:number};
+async function checkpointMeta(job:string,run:number):Promise<Checkpoint|null>{
+ const rows=await rpc("kaurivo_worker_checkpoint_get",{p_id:job,p_run_id:run});
+ const found=Array.isArray(rows)?rows[0]||null:null;
+ if(!found)return null;
+ if(!CHECKPOINT_STAGES.has(found.stage)||!SHA.test(found.checksum)||
+    found.object_path!==job+"/"+found.checksum+".zip"||
+    !Number.isSafeInteger(found.byte_count)||found.byte_count<1||
+    found.byte_count>CHECKPOINT_MAX_BYTES)throw Error("invalid_checkpoint_record");
+ return found;
+}
+function objectUrl(path:string):string{
+ return SUPABASE_URL+"/storage/v1/object/"+CHECKPOINT_BUCKET+"/"+path;
+}
+function storageHeaders():Record<string,string>{
+ return {apikey:SERVICE_ROLE,authorization:"Bearer "+SERVICE_ROLE,
+  "cache-control":"no-store"};
+}
+async function shaHex(buffer:ArrayBuffer):Promise<string>{
+ const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",buffer));
+ return [...digest].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
 Deno.serve(async request=>{
  if(request.method!=="POST")return reply(405,{ok:false,error:"method"});
  if(!SUPABASE_URL||!SERVICE_ROLE)return reply(503,{ok:false,error:"backend_unavailable"});
@@ -48,6 +75,56 @@ Deno.serve(async request=>{
   run_id=Number(payload.run_id);
   if(!Number.isSafeInteger(run_id)||run_id<=0)throw Error("run_id");
  }catch(_){return reply(403,{ok:false,error:"unauthorized_workflow"});}
+ // Only the currently claimed run may PUT/GET its own private checkpoint.
+ // Browser/admin users cannot authenticate as this GitHub workflow.
+ const mode=new URL(request.url).searchParams.get("checkpoint");
+ if(mode){
+  if(mode!=="write")return reply(400,{ok:false,error:"checkpoint_mode"});
+  const params=new URL(request.url).searchParams;
+  const job=params.get("job_id")||"";
+  const phase=params.get("stage")||"";
+  const checksum=params.get("sha256")||"";
+  const length=Number(request.headers.get("content-length")||0);
+  if(!UUID.test(job)||!CHECKPOINT_STAGES.has(phase)||!SHA.test(checksum)||
+     !Number.isSafeInteger(length)||length<1||length>CHECKPOINT_MAX_BYTES||
+     (request.headers.get("content-type")||"").split(";")[0]!=="application/zip")
+   return reply(400,{ok:false,error:"checkpoint_args"});
+  try{
+   const allowed=await rpc("kaurivo_worker_checkpoint_can_write",{
+    p_id:job,p_run_id:run_id});
+   if(allowed!==true)return reply(403,{ok:false,error:"checkpoint_not_claimed"});
+   const previous=await checkpointMeta(job,run_id);
+   const data=await request.arrayBuffer();
+   if(data.byteLength!==length||data.byteLength>CHECKPOINT_MAX_BYTES||
+      await shaHex(data)!==checksum)
+    return reply(422,{ok:false,error:"checkpoint_integrity"});
+   const path=job+"/"+checksum+".zip";
+   const stored=await fetch(objectUrl(path),{
+    method:"POST",headers:{...storageHeaders(),"content-type":"application/zip",
+                             "x-upsert":"false"},body:data});
+   if(!stored.ok){
+    // An identical content-addressed archive can already exist when an
+    // earlier Storage upload succeeded but its DB acknowledgement failed.
+    if(stored.status!==409)return reply(503,{ok:false,error:"checkpoint_store"});
+    const existing=await fetch(SUPABASE_URL+"/storage/v1/object/authenticated/"+
+      CHECKPOINT_BUCKET+"/"+path,{headers:storageHeaders()});
+    if(!existing.ok)return reply(503,{ok:false,error:"checkpoint_store"});
+    const bytes=await existing.arrayBuffer();
+    if(bytes.byteLength!==length||await shaHex(bytes)!==checksum)
+     return reply(503,{ok:false,error:"checkpoint_store_integrity"});
+   }
+   const recorded=await rpc("kaurivo_worker_checkpoint_record",{
+    p_id:job,p_run_id:run_id,p_stage:phase,p_checksum:checksum,p_bytes:length});
+   if(recorded!==true)return reply(409,{ok:false,error:"checkpoint_not_recorded"});
+   // Delete only a prior unreferenced snapshot; failure to prune never
+   // downgrades the verified current pointer or exposes private bytes.
+   if(previous&&previous.object_path!==path){
+    await fetch(objectUrl(previous.object_path),{
+      method:"DELETE",headers:storageHeaders()}).catch(()=>{});
+   }
+   return reply(200,{ok:true,stage:phase,sha256:checksum,byte_count:length});
+  }catch(_){return reply(503,{ok:false,error:"checkpoint_backend_unavailable"});}
+ }
  if(Number(request.headers.get("content-length")||0)>4096)
   return reply(413,{ok:false,error:"size"});
  let data:Work;
@@ -67,6 +144,29 @@ Deno.serve(async request=>{
      p_run_id:run_id,p_http_status:data.key_http_status!
    });
    return reply(saved===true?200:503,{ok:saved===true});
+  }
+  if(data.action==="checkpoint_info"||data.action==="checkpoint_read"){
+   if(Object.keys(data).length!==2||typeof data.job_id!=="string"||
+      !UUID.test(data.job_id))
+    return reply(400,{ok:false,error:"checkpoint_args"});
+   const allowed=await rpc("kaurivo_worker_checkpoint_can_write",{
+    p_id:data.job_id,p_run_id:run_id});
+   if(allowed!==true)return reply(403,{ok:false,error:"checkpoint_not_claimed"});
+   const info=await checkpointMeta(data.job_id,run_id);
+   if(data.action==="checkpoint_info")
+    return reply(200,{ok:true,checkpoint:info?{
+      stage:info.stage,sha256:info.checksum,byte_count:info.byte_count}:null});
+   if(!info)return reply(404,{ok:false,error:"checkpoint_absent"});
+   const response=await fetch(SUPABASE_URL+"/storage/v1/object/authenticated/"+
+     CHECKPOINT_BUCKET+"/"+info.object_path,{headers:storageHeaders()});
+   if(!response.ok)return reply(503,{ok:false,error:"checkpoint_fetch"});
+   const bytes=await response.arrayBuffer();
+   if(bytes.byteLength!==info.byte_count||await shaHex(bytes)!==info.checksum)
+    return reply(503,{ok:false,error:"checkpoint_integrity"});
+   return new Response(bytes,{status:200,headers:{
+    "content-type":"application/zip","cache-control":"no-store",
+    "x-content-type-options":"nosniff","x-checkpoint-stage":info.stage,
+    "x-checkpoint-sha256":info.checksum,"vary":"Authorization"}});
   }
   if(data.action==="claim"){
    if(Object.keys(data).length!==1)return reply(400,{ok:false,error:"claim_args"});
