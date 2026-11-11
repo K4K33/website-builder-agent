@@ -297,7 +297,7 @@ def report_md(data, day, *, mode):
              "Sales rubric: inspect real site improvements (30%), verified finances (20%),", 
              "commercial need (20%), source completeness (15%), demo value (15%).", 
              "The weights are REVIEW CRITERIA, not fabricated PRH-based scores.",
-             "Check actual business, site status, brand identity and commercial relevance"
+             "Check actual business, site status, brand identity and commercial relevance",
              "before any independent research, demo, email draft or client contact.",
              "Only build bespoke top-quality demos with actual sector benchmarks",
              "and full real-browser QA. Every final client delivery needs a working CMS.",
