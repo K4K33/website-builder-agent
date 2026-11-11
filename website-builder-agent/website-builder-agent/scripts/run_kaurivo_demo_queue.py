@@ -316,12 +316,12 @@ def private_stage_error_location(handle,start_position=0):
     handle.seek(start_position)
     tail=handle.read()[-16000:]
     classes=re.findall(
-        r"(?m)^([A-Za-z_][A-Za-z_0-9.]*(?:Error|Exception))\\s*:",
+        r"(?m)^([A-Za-z_][A-Za-z_0-9.]*(?:Error|Exception))\s*:",
         tail,
     )
     kind=classes[-1].split(".")[-1] if classes else "UnknownError"
     locations=re.findall(
-        r'File "[^"\\n]+/(agents/research\\.py|utils/[a-z_]+\\.py)", line ([0-9]{1,5})',
+        r'File "[^"\n]+/(agents/research\.py|utils/[a-z_]+\.py)", line ([0-9]{1,5})',
         tail,
     )
     location=locations[-1] if locations else None
