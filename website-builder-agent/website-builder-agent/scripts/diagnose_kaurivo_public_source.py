@@ -24,7 +24,36 @@ def failure_code(result):
             return name.lower().replace("-virhe","_failure")
     return "other_fetch_failure"
 
+def connection_subtype(result):
+    # Fixed public-site check only. Never print raw exception strings or HTML.
+    s=str(result.get("error") or "").casefold()
+    for name in ("nameresolutionerror","temporary failure in name resolution",
+                 "connection refused","connectionreseterror",
+                 "remotedisconnected","proxyerror","ssleoferror",
+                 "ssl","timed out","timeout","forcibly closed",
+                 "network is unreachable","max retries exceeded",
+                 "remote end closed connection"):
+        if name in s:
+            return name.replace(" ","_")
+    return "not_classified"
+
 def check():
+    import socket
+    for host in ("www.kurki-suonio.fi","kurki-suonio.fi"):
+        try:
+            addresses=socket.getaddrinfo(host,443)
+            print("DNS",host,"ok",len(addresses),"records")
+        except socket.gaierror as e:
+            print("DNS",host,"failed",e.errno)
+    for alt in ("https://www.kurki-suonio.fi/",
+                "https://kurki-suonio.fi/",
+                "http://www.kurki-suonio.fi/"):
+        result=analyze_url(alt)
+        print("ALT",json.dumps({"url_kind":alt.split("://",1)[0]+
+             ("/www" if "://www." in alt else "/apex"),
+             "status":result.get("status_code"),"success":result.get("success"),
+             "type":failure_code(result),"connection":connection_subtype(result),
+             "final_path":clean_path(result.get("final_url") or alt)}))
     home=analyze_url(START)
     print("ROOT",json.dumps({"success":home.get("success"),
       "status":home.get("status_code"),
