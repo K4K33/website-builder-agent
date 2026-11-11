@@ -110,6 +110,43 @@ class IndustryWorkflowTests(unittest.TestCase):
         self.assertIn("optional_source_routes_unavailable",result["issues"])
         self.assertEqual(result["optional_source_route_count"],1)
 
+    def test_important_wordpress_link_recovers_actual_trailing_slash_source(self):
+        root="https://demo.example.org/"
+        path=root+"en/privacy-statement"
+        home={"success":True,"final_url":root,"visible_text":"Actual homepage",
+              "links":[{"href":"/en/privacy-statement/","text":"Privacy"}]}
+        calls=[]
+        def fetch(url):
+            calls.append(url)
+            if url==path:return {"success":False,"status_code":404,"error":"HTTP 404"}
+            if url==path+"/":return {"success":True,"status_code":200,
+                                      "final_url":path+"/","visible_text":"Verified privacy terms",
+                                      "links":[]}
+            raise AssertionError("unexpected external request")
+        inventory=crawl_original_website(root,fetch,first_page=home,max_pages=24)
+        self.assertEqual(calls,[path,path+"/"])
+        self.assertFalse(inventory["failed_urls"])
+        self.assertEqual(len(inventory["pages"]),2)
+        self.assertIn("Verified privacy terms",inventory["pages"][1]["text"])
+        self.assertEqual(validate_inventory({"url":root},{
+            "source_inventory":inventory})["pages"],2)
+
+    def test_canonical_retry_never_retries_auth_limit_server_or_unknown_errors(self):
+        root="https://demo.example.org/"
+        home={"success":True,"final_url":root,"visible_text":"Homepage",
+              "links":[{"href":"/privacy-statement/","text":"Privacy"}]}
+        for code in (401,429,500,503,None):
+            calls=[]
+            def fetch(url):
+                calls.append(url)
+                return {"success":False,"status_code":code,"error":"HTTP failure"}
+            with self.subTest(code=code):
+                inventory=crawl_original_website(root,fetch,first_page=home,max_pages=24)
+                self.assertEqual(len(calls),1)
+                self.assertEqual(len(inventory["failed_urls"]),1)
+                with self.assertRaisesRegex(RuntimeError,"Original source pages failed"):
+                    validate_inventory({"url":root},{"source_inventory":inventory})
+
     def test_proven_removed_legal_link_is_warned_not_fabricated_or_blocked(self):
         root="https://business.example.org/"
         missing=root+"en/privacy-statement"
@@ -117,7 +154,7 @@ class IndustryWorkflowTests(unittest.TestCase):
               "links":[{"href":"/en/privacy-statement","text":"Privacy notice"},
                        {"href":"/palvelut","text":"Services"}]}
         def fetch(url):
-            if url==missing:
+            if url.rstrip("/")==missing:
                 return {"success":False,"status_code":404,"error":"HTTP 404"}
             return {"success":True,"final_url":url,"visible_text":"Services verified",
                     "links":[]}
