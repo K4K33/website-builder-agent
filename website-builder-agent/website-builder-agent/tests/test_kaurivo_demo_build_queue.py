@@ -138,7 +138,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("revoke all on function public.kaurivo_claim_demo_dispatch(uuid) from public,anon",sql)
         self.assertNotIn('sb_secret_',js)
         self.assertNotIn('ghp_',js)
-        self.assertIn('demo-jobs.js?v=20261111-dispatch1',html)
+        self.assertIn('demo-jobs.js?v=20261111-quota1',html)
 
     def test_edge_verifies_exact_repository_workflow_and_oidc(self):
         edge=EDGE.read_text(encoding="utf-8")
