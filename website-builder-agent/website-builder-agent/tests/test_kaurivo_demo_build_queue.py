@@ -623,10 +623,14 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     page.wait_for_function(
                        "document.querySelector('#demo-ready-list').textContent.includes('Esimerkki Verhoomo')"
                     )
-                    link=page.locator("#demo-ready-list a.demo-external[href*='onrender.com']")
-                    self.assertEqual(link.count(),1)
-                    self.assertEqual(link.get_attribute('target'),'_blank')
-                    self.assertTrue(link.get_attribute('href').endswith('/test/index.html'))
+                    old_link=page.locator("#demo-ready-list a.demo-comparison-link")
+                    self.assertEqual(old_link.count(),2)
+                    self.assertEqual(old_link.nth(0).inner_text(),"Vanha sivu")
+                    self.assertEqual(old_link.nth(0).get_attribute("href"),"https://example.com/")
+                    self.assertEqual(old_link.nth(1).inner_text(),"Uusi sivu")
+                    self.assertEqual(old_link.nth(1).get_attribute("target"),"_blank")
+                    self.assertTrue(old_link.nth(1).get_attribute("href").endswith("/test/index.html"))
+                    self.assertEqual(page.locator("#demo-ready-list .demo-copy-comparison").count(),1)
                     # The operator must be able to request a fresh build
                     # from the failure card when verified business facts arrive.
                     page.evaluate("""()=>{
