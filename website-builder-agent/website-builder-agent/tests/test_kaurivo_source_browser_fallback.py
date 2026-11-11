@@ -107,7 +107,9 @@ class PublicSiteFetchResilienceTests(unittest.TestCase):
         root=Path(__file__).resolve().parents[3]
         workflow=(root/".github/workflows/kaurivo-demo-worker.yml").read_text()
         self.assertIn('KAURIVO_BROWSER_SOURCE_FALLBACK: "1"',workflow)
-        self.assertIn("python -m playwright install --with-deps chromium",workflow)
+        self.assertIn("python -m playwright install chromium",workflow)
+        self.assertIn("python -m playwright install-deps chromium",workflow)
+        self.assertIn("if ! python -c ",workflow)
         fetch=(root/"website-builder-agent/website-builder-agent/utils/fetch.py").read_text()
         self.assertIn("status_code == 403",fetch)
         self.assertIn("status_code == 202",fetch)
