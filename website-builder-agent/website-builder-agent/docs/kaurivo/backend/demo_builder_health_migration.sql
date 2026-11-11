@@ -56,24 +56,14 @@ revoke all on function public.kaurivo_worker_record_health(bigint,integer)
 grant execute on function public.kaurivo_worker_record_health(bigint,integer)
  to service_role;
 
--- Protect direct privileged INSERTs, not just the browser button.
--- Only a last OBSERVED failure/missing observation blocks QUEUEING.
--- Scheduled GitHub checks can be delayed: an old positive result must not
--- falsely disable the user control. The runner revalidates live API credentials
--- before claiming/starting any queued job. Bad credentials never permit an AI call.
--- This insert gate does not certify a finished demo, which is controlled by QA.
+-- Owner's build request is not a claim that AI credentials are healthy.
+-- Keep observing health in the protected table; the GitHub worker MUST
+-- authenticate and validate the free-only key before making model calls.
+-- A failed key must delay processing, not prevent the owner's queue request.
 create or replace function public.kaurivo_demo_require_healthy_worker()
 returns trigger language plpgsql security invoker set search_path = ''
 as $$
 begin
- if not exists (
-   select 1 from public.kaurivo_demo_builder_health h
-   where h.singleton=true and h.status='ok'
-     and h.checked_at<=now()
- ) then
-   raise exception 'demo builder disabled: OpenRouter key last verification failed or missing'
-      using errcode='22023';
- end if;
  return new;
 end;
 $$;

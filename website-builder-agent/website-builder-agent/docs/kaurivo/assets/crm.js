@@ -324,7 +324,7 @@
   }
   $("now-label").textContent=new Date().toLocaleDateString("fi-FI",{day:"numeric",month:"long",year:"numeric"});
   renderOperations();
-  window.KaurivoDemoJobs.render(rows.demos,rows.demoHealth);
+  window.KaurivoDemoJobs.render(rows.demos,rows.demoHealth,{db,reload,showTab,toast});
   const prospects=$("prospect-list");prospects.replaceChildren();
   $("prospect-day").value=selectedDay;
   const isToday=selectedDay===helsinkiToday();
@@ -424,14 +424,14 @@
    const build=button(inProgress?"Avaa rakennustyö":"Rakenna demo",()=>window.KaurivoDemoJobs.start(candidate,{
     db,jobs:rows.demos,health:rows.demoHealth,reload,showTab,toast
    }),"small-action demo-build-trigger");
-   if(!inProgress&&window.KaurivoDemoJobs.healthBlocked(rows.demoHealth)){
-     build.disabled=true;
-     build.title="Rakennuspalvelun API-avaimen tarkistus epäonnistui tai puuttuu. Avaa Demot-näkymä.";
-    }
-    if(candidate.review_status==="skipped"||candidate.marketing_opt_out){
-    build.disabled=true;
-    build.title="Yritys ohitettu tai markkinointikielto – tarkista tiedot ensin";
-   }
+   // The owner decides whether to generate a PRIVATE preview. Prospect
+   // scores, skipped status and marketing restrictions do not gate building.
+   // Marketing opt-out STILL blocks all outreach and email actions.
+   if(candidate.marketing_opt_out)
+    build.title="Vain sisäinen demo. Yritykselle ei saa lähettää markkinointia.";
+   else if(window.KaurivoDemoJobs.healthBlocked(rows.demoHealth))
+    build.title="Rakennuspyyntö tallentuu jonoon, vaikka AI-palvelu olisi tauolla.";
+
    row.actions.append(build);
    row.actions.append(button("Tarkista yritys",()=>openEditor("prospect",candidate)));
    if(candidate.demo_brief){

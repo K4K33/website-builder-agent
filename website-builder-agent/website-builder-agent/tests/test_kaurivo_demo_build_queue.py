@@ -62,11 +62,15 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("p_status='internal_preview'",sql)
         self.assertIn("status <> 'internal_preview'",sql)
         self.assertIn('release_sha ~',sql)
-        self.assertIn('daily free-build request cap reached',sql)
+        self.assertNotIn('daily free-build request cap reached',sql)
+        self.assertNotIn("company is skipped",sql)
+        self.assertNotIn("company has opted out",sql)
+        self.assertIn("kaurivo_request_demo_build",sql)
+        self.assertIn("chosen_url := '';",sql)
         self.assertNotIn('grant insert on public.kaurivo_demo_build_jobs to authenticated',sql.lower())
         self.assertNotIn('grant update on public.kaurivo_demo_build_jobs to authenticated',sql.lower())
 
-    def test_builder_health_prevents_queueing_with_invalid_key_and_recovers(self):
+    def test_builder_health_pauses_execution_not_admin_queue(self):
         health=(SITE/"backend/demo_builder_health_migration.sql").read_text(encoding="utf-8")
         edge=EDGE.read_text(encoding="utf-8")
         flow=FLOW.read_text(encoding="utf-8")
@@ -80,7 +84,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                      "create trigger kaurivo_demo_health_before_insert",
                      "when 401 then 'blocked'",
                      "when 200 then 'ok'",
-                     "and h.checked_at<=now()"):
+                     "return new;"):
             self.assertIn(term,health)
         self.assertNotIn("grant insert on public.kaurivo_demo_builder_health to authenticated",health)
         self.assertIn('if(data.action==="health")',edge)
@@ -101,7 +105,16 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("voit lisätä työn jonoon",dashboard)
         self.assertIn('return !item||item.status!=="ok";',dashboard)
         self.assertIn("demo-health-blocked",dashboard)
-        self.assertIn("Rakennuspalvelu keskeytetty",dashboard)
+        self.assertIn("Rakentaja tauolla",dashboard)
+        self.assertIn("Voit silti lisätä uuden demon jonoon",dashboard)
+        self.assertNotIn('build.disabled=true;',crm)
+        self.assertIn("Rakenna uudelleen",dashboard)
+        self.assertIn("marketing_opt_out",crm)
+        migration=(SITE/"backend/demo_owner_request_independent_20261111.sql").read_text(encoding="utf-8")
+        self.assertIn("kaurivo_request_demo_build",migration)
+        self.assertIn("kaurivo_demo_require_healthy_worker",migration)
+        self.assertNotIn("company has opted out",migration)
+        self.assertNotIn("daily free-build request cap reached",migration)
 
     def test_edge_verifies_exact_repository_workflow_and_oidc(self):
         edge=EDGE.read_text(encoding="utf-8")
@@ -358,12 +371,12 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
           website_listed_url:'https://example.com/',website_found_url:'',
           website_candidate_url:'',research_notes:'',
           discovery_date:new Date().toISOString().slice(0,10),
-          review_status:'needs_demo',website_assessment:'weak_evidence',
-          business_activity_assessment:'active_evidence',
-          payment_signal:'unknown',customer_need:'strong',
+          review_status:'unverified',website_assessment:'unreviewed',
+          business_activity_assessment:'unreviewed',
+          payment_signal:'unknown',customer_need:'unknown',
           evidence_url:'https://example.com/',demo_stage:'not_started',
           demo_brief:'',outreach_review:'not_reviewed',
-          outreach_stage:'not_contacted',marketing_opt_out:false,
+          outreach_stage:'not_contacted',marketing_opt_out:true,
           website_languages:'fi',contact_language:'fi'};
         window.__rpcCalls=[];window.__demoRows=[];
         window.__insertQueue=()=>window.__demoRows=[{
@@ -385,7 +398,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                data:table==='kaurivo_crm_prospects'?[lead]:
                     table==='kaurivo_demo_build_jobs'?window.__demoRows:
                     table==='kaurivo_demo_builder_health'?[{
-                      singleton:true,status:'ok',error_code:'',
+                      singleton:true,status:'blocked',error_code:'free_ai_key_invalid',
                       checked_at:'2026-01-01T00:00:00.000Z',github_run_url:''
                     }]:[],
                error:null})
@@ -412,11 +425,16 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     exceptions=[]
                     page.on("pageerror",lambda err:exceptions.append(str(err)))
                     page.goto(HTML.as_uri(),wait_until="domcontentloaded")
+                    # Owner may choose All companies even if outreach is
+                    # prohibited: private demo building and sales eligibility
+                    # are independent. 'Research next 20' intentionally hides
+                    # opt-outs to preserve its sales-focused semantics.
+                    page.locator("#lead-view").select_option("all")
                     page.wait_for_function(
                         "document.querySelector('#prospect-list .record-title')?.textContent === 'Esimerkki Verhoomo'"
                     )
                     self.assertTrue(page.locator("#prospect-list .demo-build-trigger").is_enabled())
-                    self.assertIn("Tarkistus vanhentunut",page.locator("#demo-health").inner_text())
+                    self.assertIn("Rakentaja tauolla",page.locator("#demo-health").inner_text())
                     page.locator("#prospect-list .demo-build-trigger").click()
                     page.wait_for_function(
                         "document.querySelector('#demo-running-list').textContent.includes('Esimerkki Verhoomo')"
@@ -440,6 +458,19 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     self.assertEqual(link.count(),1)
                     self.assertEqual(link.get_attribute('target'),'_blank')
                     self.assertTrue(link.get_attribute('href').endswith('/test/index.html'))
+                    # The operator must be able to request a fresh build
+                    # from the failure card when verified business facts arrive.
+                    page.evaluate("""()=>{
+                       window.__demoRows[0].status='hold';
+                       window.__demoRows[0].error_code='source_research_incomplete';
+                       window.__demoRows[0].preview_url='';
+                    }""")
+                    page.locator("#refresh-demos").click()
+                    self.assertTrue(page.locator("#demo-hold-list .demo-build-retry").is_enabled())
+                    page.locator("#demo-hold-list .demo-build-retry").click()
+                    page.wait_for_function(
+                      "window.__rpcCalls.filter(x=>x.name==='kaurivo_request_demo_build').length===2"
+                    )
                     self.assertEqual(exceptions,[],exceptions)
                     page.close()
             finally:

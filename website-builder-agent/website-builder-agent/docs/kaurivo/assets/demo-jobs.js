@@ -82,7 +82,7 @@
    /^[0-9a-f]{40}$/.test(job.release_sha||"")&&
    validUrl(job.preview_url,"preview")&&validUrl(job.qa_url,"qa");
  }
- function card(target,job){
+ function card(target,job,options){
   const row=append(target,"article","record demo-record");
   const main=append(row,"div","record-main");
   append(main,"div","record-title",job.company_name||"Tuntematon yritys");
@@ -106,6 +106,21 @@
    append(main,"div","record-sub","Uusi linkki näytetään vasta aidon julkaisun ja selaintarkistuksen jälkeen.");
   }
   if(job.github_run_url)external(actions,"Rakennuksen loki",job.github_run_url,"qa");
+  // A failed job is not permanent. A fresh owner request snapshots the
+  // latest corrected website from the prospect record and gets a new job.
+  if((job.status==="hold"||job.status==="failed")&&options?.db){
+   const retry=append(actions,"button","small-action demo-build-retry","Rakenna uudelleen");
+   retry.type="button";
+   retry.addEventListener("click",async()=>{
+    retry.disabled=true;
+    try{
+     await start({id:job.prospect_id},{
+      db:options.db,jobs:options.jobs,health:options.health,
+      reload:options.reload,showTab:options.showTab,toast:options.toast
+     });
+    }finally{retry.disabled=false;}
+   });
+  }
  }
  function getHealth(health){
   if(Array.isArray(health))return health[0]||null;
@@ -132,17 +147,17 @@
   output.replaceChildren();
   output.className="demo-health";
   if(!item){
-   append(output,"span","","Rakennuspalvelun terveystilaa ei voitu vahvistaa. Tietokanta estää keskeneräiset työt.");
+   append(output,"span","","Rakennuspalvelun terveystilaa ei voitu vahvistaa. Voit lisätä demon jonoon, mutta rakentaminen vaatii toimivan ilmaisen AI-palvelun.");
    return;
   }
   const unavailable=healthBlocked(health);
   const stale=healthStale(health);
   output.classList.add(unavailable?"demo-health-blocked":stale?"demo-health-stale":"demo-health-ready");
-  const status=unavailable?"Rakennuspalvelu keskeytetty":
+  const status=unavailable?"Rakentaja tauolla – uusia pyyntöjä voi lisätä":
     stale?"Tarkistus vanhentunut – voit lisätä työn jonoon":"Rakennuspalvelu käytettävissä";
   append(output,"strong","",status);
   const label=ERROR_LABELS[item.error_code]||"OpenRouterin avaimen tai ajastuksen toimivuus pitää tarkistaa.";
-  append(output,"span","",unavailable?label:stale?
+  append(output,"span","",unavailable?label+" Voit silti lisätä uuden demon jonoon, mutta rakentaja tarvitsee toimivan avaimen.":stale?
     "Edellinen avaintarkistus onnistui, mutta GitHubin automaattinen ajo on viivästynyt. Jonoon lisääminen on sallittu; työntekijä tarkistaa avaimen uudelleen ennen rakentamista. Uutta demoa ei näytetä valmiina ennen kaikkia QA- ja julkaisukokeita.":
     "Ilmainen AI-avain on tarkistettu. Lopullinen demovalmius vaatii erillisen rakentamisen ja QA-tarkistuksen.");
   const checked=Date.parse(item.checked_at||"");
@@ -153,7 +168,7 @@
     a.href=log;a.target="_blank";a.rel="noopener noreferrer";
   }
  }
- function render(jobs,health){
+ function render(jobs,health,options={}){
   healthSummary(health);
   const all=Array.isArray(jobs)?jobs:[];
   const ready=all.filter(canShowPreview);
@@ -171,17 +186,15 @@
    const el=$(id);if(!el)continue;
    el.replaceChildren();
    if(!items.length)append(el,"div","empty",missing);
-   else items.forEach(job=>card(el,job));
+   else items.forEach(job=>card(el,job,{...options,jobs,health}));
   }
  }
  async function start(candidate,{db,jobs,health,reload,showTab,toast}){
   if(!candidate||!candidate.id||!db){toast("Kirjaudu uudelleen ja valitse yritys.","error");return;}
   const active=(jobs||[]).find(j=>j.prospect_id===candidate.id&&isActive(j));
-  if(!active&&healthBlocked(health)){
-   showTab("demos");
-   toast("Rakentaminen estetty: viimeisin työntekijän avaintarkistus epäonnistui tai puuttuu. Tarkista Demot-näkymä.","error");
-   return;
-  }
+  // The owner can ALWAYS submit a private build request. A failed provider
+  // health observation slows processing, not registration of the intent.
+  // No paid model is enabled here; the GitHub worker checks credentials.
   if(active){showTab("demos");return;}
   try{
    const {data,error}=await db.rpc("kaurivo_request_demo_build",{p_prospect_id:candidate.id});
@@ -189,16 +202,16 @@
    if(!data)throw Error("Rakennustyön tunnistetta ei saatu.");
    await reload();
    showTab("demos");
-   toast(healthStale(health)?
+   toast(healthBlocked(health)?
+    "Rakennuspyyntö tallennettu. AI-palvelussa on häiriö; työ käsitellään vasta kun ilmainen rakentaja toimii.":
+    healthStale(health)?
     "Demo lisätty jonoon. GitHubin ajastus on viivästynyt; työntekijä tarkistaa avaimen ennen rakentamista.":
     "Demo lisätty jonoon. Seuraa etenemistä Demot-näkymässä.","success");
   }catch(e){
    const message=String(e.message||"Tuntematon virhe");
-   const human=message.includes("daily free-build")?"Maksuttomien rakennuspyyntöjen päiväkohtainen raja (5) tuli vastaan."
-    :message.includes("website URL must")?"Yrityksen nykyinen verkkosivulinkki on tarkistettava."
-    :message.includes("opted out")?"Markkinointikiellon tehneen yrityksen työ vaatii manuaalisen käsittelyn."
-    :message.includes("demo builder disabled")?"Rakennuspalvelun AI-avain tai ajastus ei ole tällä hetkellä käytössä."
-    :message.includes("skipped")?"Ohitetun yrityksen tila on muutettava ennen rakentamista.":message;
+   const human=message.includes("not authorized")?"Rakennuspyyntö vaatii Kaurivon ylläpitäjän kirjautumisen."
+    :message.includes("company not found")?"Yritystä ei löydy yrityslistasta."
+    :message;
    toast("Rakennustyötä ei käynnistetty: "+human,"error");
   }
  }
