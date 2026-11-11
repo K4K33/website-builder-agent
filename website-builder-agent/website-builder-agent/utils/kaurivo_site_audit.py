@@ -16,6 +16,7 @@ import socket
 from urllib.parse import urlsplit, urljoin
 import requests
 from bs4 import BeautifulSoup
+from .kaurivo_lead_quality import sales_research_key, observed_technical_opportunity
 
 MAX_CHECKS = 12
 MAX_PACKET_BYTES = 500_000
@@ -191,6 +192,47 @@ def audit_packet(packet_path,cache_path,*,get=requests.get,head=None,
         lead["site_technical_audit"]=audit
         lead["website_audit_checked_at"]=cache[key]["at"]
         if audit.get("status")=="html_checked":ok+=1
+    # Second-stage, evidence-backed ordering AFTER the no-cost HTML checks.
+    # This is research order, not proof of a poor-looking site, active
+    # operation, solvency or intent to buy. Never remove an unknown prospect
+    # merely because the PRH register omitted a website.
+    packet["candidates"].sort(
+        key=lambda c:sales_research_key(c,str(packet.get("date") or ""))
+    )
+    report=[
+        "# Kaurivo – myyntiin tähtäävä yöhaun tutkimusjärjestys", "",
+        "Ensisijainen kohde: yritys, jolla on olemassa oleva parannettavissa oleva verkkosivu.",
+        "Mukana on myös yrityksiä, joilta PRH ei ilmoita sivua (ei todista sivuttomuutta).",
+        "Arvioinnin tavoitteet: sivuston parannus 30 %, maksukyky 20 %, ostotarve 20 %,",
+        "brändi- ja lähdeaineisto 15 %, demon todistettava arvo 15 %.",
+        "Nämä ovat IHMISEN TARKISTUKSEN painot, eivät rekisteristä keksittyjä pisteitä.",
+        "Aktiivisuus, maksukyky, asiakkaan tarve ja visuaalinen laatu ovat",
+        "VAHVISTAMATTA ennen erillistä riippumatonta tutkimusta.",
+        "",
+        "| Yritys | PRH: sivuosoite | Etusivun HTML | Todennetut tekniset havainnot |",
+        "|---|---|---|---|",
+    ]
+    def cell(x):
+        return re.sub(r"[\r\n|]", " ", str(x or ""))[:105]
+    for company in packet["candidates"]:
+        audit=company.get("site_technical_audit") or {}
+        checked=audit.get("status") if isinstance(audit,dict) else ""
+        hints=observed_technical_opportunity(company)
+        issues=", ".join(audit.get("issues",[])) if checked=="html_checked" else ""
+        signal=(issues or "ei havaittuja HTML-puutteita") if checked=="html_checked" else "ei tutkittu"
+        report.append(
+            "| "+cell(company.get("name"))+" | "+
+            ("ilmoitettu, EI vahvistettu" if company.get("website_listed_url") else
+              "ei ilmoitettu")+" | "+cell(checked or "ei tarkistettu")+" | "+
+            cell(signal)+(f" (tutkimusvihje {hints}/30)" if hints else "")+" |"
+        )
+    report.extend(["","Huom: HTML-puutteet ovat teknisiä tutkimusvihjeitä,",
+       "eivät automaattinen tuomio ulkoasusta, laadusta tai ostohalukkuudesta.",
+       "Kaikki yritykset edellyttävät aktiivisuuden ja maksukyvyn vahvistamista.",
+       "Yöajo ei rakenna demoja eikä lähetä markkinointia."])
+    (packet_path.parent/"sales-priority-report.md").write_text(
+        "\n".join(report)+"\n",encoding="utf-8"
+    )
     if len(cache)>CACHE_MAX:
         cache=dict(sorted(cache.items(),key=lambda x:str(x[1].get("at","")),
                           reverse=True)[:CACHE_MAX])

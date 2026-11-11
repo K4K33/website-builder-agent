@@ -240,9 +240,9 @@ def rank_bulk(records, *, day, seen=(), max_candidates=5000, shortlist_size=50, 
         payload = (day.isoformat() + "|" + company["identity"]).encode("utf-8")
         score = int.from_bytes(sha256(payload).digest()[:8], "big")
         _offer(pools[category], (-score, company["identity"], company), max_candidates)
-    # Spread across both types: 70% unlisted URLs, 30% known-site leads.
-    # Missing website tags do NOT prove no website exists.
-    no_count = round(max_candidates * .7)
+    # Sales-first candidate pool: ~70% websites listed in PRH, ~30% with
+    # no listed URL for separate discovery. Lack of listing is NOT absence.
+    no_count = round(max_candidates * .30)
     both = [
         sorted(pools["no_url"], reverse=True)[:no_count],
         sorted(pools["url_listed"], reverse=True)[:max_candidates-no_count],
@@ -281,6 +281,9 @@ def report_md(data, day, *, mode):
         "**Important:** No URL listed in PRH DOES NOT prove a missing website.",
         "The register alone DOES NOT prove business activity, financial capacity,",
         "web design quality, marketing permission or image rights.",
+        "Selection: primarily companies with a listed website (target 70%),",
+        "plus a reserve for businesses whose website status needs investigation.",
+        "The subsequent bounded homepage audit checks technical hints, NOT design quality.",
         "",
         "| Business | City hint | Website field | Reference |",
         "|---|---|---|---|",
@@ -291,6 +294,9 @@ def report_md(data, day, *, mode):
         rows.append(f"| {clean(company['name'])} | {clean(company['city_hint'])} | "
                     f"{listed} | {company['business_id']} |")
     rows += ["", "## Next step: verified needs and premium demo", "",
+             "Sales rubric: inspect real site improvements (30%), verified finances (20%),", 
+             "commercial need (20%), source completeness (15%), demo value (15%).", 
+             "The weights are REVIEW CRITERIA, not fabricated PRH-based scores.",
              "Check actual business, site status, brand identity and commercial relevance",
              "before any independent research, demo, email draft or client contact.",
              "Only build bespoke top-quality demos with actual sector benchmarks",
@@ -312,7 +318,10 @@ def research_queue_md(shortlist, day):
         "",
         "Lähde: PRH/YTJ avoin data, CC BY 4.0.",
         "Nämä ovat taustatutkimustehtäviä, EIVÄT valmiita verkkosivudemoja.",
-        "Vähintään kolme oikeaa saman alan kilpailija-/vertailusivua ja",
+        "Priorisoi: parannuspotentiaali 30 %, maksukyky 20 %, ostotarve 20 %,", 
+        "lähdeaineiston riittävyys 15 %, demon osoitettavissa oleva arvo 15 %.",
+        "Tuntemattomasta maksukyvystä, aktiviteetista tai ulkoasusta EI saa arvata pisteitä.",
+        "Vähintään kolme oikeaa saman alan kilpailija-/vertailusivua ja"
         "asiakkaan nykyinen visuaalinen ilme tarkistetaan ennen rakentamista.",
         "",
     ]
