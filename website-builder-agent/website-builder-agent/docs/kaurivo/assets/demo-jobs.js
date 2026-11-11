@@ -47,6 +47,34 @@
   qa:"Laatutarkistus",publishing:"Julkaisutarkistus",
   internal_preview:"Sisäinen esikatselu",hold:"Odottaa korjausta",failed:"Virhe"
  };
+ const GITHUB_WORKFLOW="https://github.com/K4K33/website-builder-agent/actions/workflows/kaurivo-demo-worker.yml";
+ const DISPATCH_MESSAGES={
+  github_token_not_configured:"GitHubin suoran käynnistyksen avain puuttuu Supabasesta.",
+  github_token_permissions:"GitHubin käynnistysavaimelta puuttuu Actions:write-oikeus tai se ei kelpaa.",
+  github_rate_limited:"GitHub rajoitti käynnistyspyyntöjä.",
+  github_unreachable:"GitHubiin ei saatu yhteyttä.",
+  already_requested_or_not_queued:"Käynnistystä on jo pyydetty tai työ on jo käynnissä.",
+  admin_queued_job_required:"Rakennuspyyntö ei ole enää jonossa tai kirjautuminen ei oikeuta käynnistystä."
+ };
+ async function dispatchNow(db,jobId){
+  if(!db?.functions?.invoke)return {ok:false,reason:"dispatch_client_unavailable"};
+  try{
+   const {data,error}=await db.functions.invoke("kaurivo-demo-dispatch",{
+    body:{job_id:jobId}
+   });
+   if(error)return {ok:false,reason:data?.reason||"github_dispatch_unavailable"};
+   return data?.ok===true&&data.dispatch==="accepted"?
+      {ok:true}:{ok:false,reason:data?.reason||"github_dispatch_unavailable"};
+  }catch(_){return {ok:false,reason:"github_dispatch_unavailable"};}
+ }
+ function dispatchFeedback(result,toast){
+  if(result.ok){
+   toast("GitHub vastaanotti käynnistyspyynnön. Seuraa rakennuksen etenemistä Demot-näkymässä.","success");
+   return;
+  }
+  const explanation=DISPATCH_MESSAGES[result.reason]||"GitHubin käynnistystä ei voitu vahvistaa.";
+  toast("Rakennuspyyntö on jonossa. "+explanation+" Käynnistä työntekijä tarvittaessa GitHub Actionsista.","error");
+ }
  const $=id=>document.getElementById(id);
  const element=(tag,cls,content)=>{
   const node=document.createElement(tag);
@@ -104,6 +132,25 @@
    append(main,"div","record-warning","Julkaisutodiste on puutteellinen. Uutta linkkiä ei näytetä.");
   }else if(isActive(job)){
    append(main,"div","record-sub","Uusi linkki näytetään vasta aidon julkaisun ja selaintarkistuksen jälkeen.");
+  }
+  if(job.status==="queued"){
+   // Scheduling is a backup, not a guaranteed five-minute service. Attempt
+   // private authenticated REST workflow_dispatch and offer owner GH UI as
+   // safe fallback when the one-time token has not been configured.
+   if(options?.db){
+    const kick=append(actions,"button","small-action demo-build-dispatch","Käynnistä nyt");
+    kick.type="button";
+    kick.addEventListener("click",async()=>{
+     kick.disabled=true;
+     try{
+      const status=await dispatchNow(options.db,job.id);
+      dispatchFeedback(status,options.toast);
+     }finally{kick.disabled=false;}
+    });
+   }
+   const link=append(actions,"a","small-action demo-gh-manual","GitHubin käynnistys");
+   link.href=GITHUB_WORKFLOW;link.target="_blank";link.rel="noopener noreferrer";
+   append(main,"div","record-sub","Jos GitHubin suora käynnistys ei ole käytössä, avaa GitHubin käynnistys ja valitse Run workflow. Jonossa olo ei tarkoita käynnissä olevaa työtä.");
   }
   if(job.github_run_url)external(actions,"Rakennuksen loki",job.github_run_url,"qa");
   // A failed job is not permanent. A fresh owner request snapshots the
@@ -200,13 +247,13 @@
    const {data,error}=await db.rpc("kaurivo_request_demo_build",{p_prospect_id:candidate.id});
    if(error)throw error;
    if(!data)throw Error("Rakennustyön tunnistetta ei saatu.");
+   // Trigger immediately with an authenticated owner session. Never put a
+   // GitHub token in static HTML. Failed dispatch does NOT delete the job:
+   // admin can retry or start GitHub manually.
+   const dispatch=await dispatchNow(db,data);
    await reload();
    showTab("demos");
-   toast(healthBlocked(health)?
-    "Rakennuspyyntö tallennettu. AI-palvelussa on häiriö; työ käsitellään vasta kun ilmainen rakentaja toimii.":
-    healthStale(health)?
-    "Demo lisätty jonoon. GitHubin ajastus on viivästynyt; työntekijä tarkistaa avaimen ennen rakentamista.":
-    "Demo lisätty jonoon. Seuraa etenemistä Demot-näkymässä.","success");
+   dispatchFeedback(dispatch,toast);
   }catch(e){
    const message=String(e.message||"Tuntematon virhe");
    const human=message.includes("not authorized")?"Rakennuspyyntö vaatii Kaurivon ylläpitäjän kirjautumisen."
