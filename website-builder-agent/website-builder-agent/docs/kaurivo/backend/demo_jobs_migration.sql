@@ -64,7 +64,6 @@ declare
  p record;
  old_id uuid;
  made_id uuid;
- job_count integer;
  chosen_url text;
  chosen_language text;
 begin
@@ -81,35 +80,25 @@ begin
  if not found then
    raise exception 'company not found' using errcode = '22023';
  end if;
- if p.review_status='skipped' then
-   raise exception 'company is skipped' using errcode = '22023';
- end if;
- if p.marketing_opt_out then
-   raise exception 'company has opted out; manual handling required' using errcode = '22023';
- end if;
+ -- Owner's explicit demo instruction is independent of SALES selection,
+ -- prior skip state, marketing permission and potential customer solvency.
+ -- Outreach and contact permissions are enforced by separate gates.
  select id into old_id from public.kaurivo_demo_build_jobs
  where prospect_id=p_prospect_id and status in
    ('queued','researching','building','qa','publishing')
  order by created_at desc limit 1;
  if old_id is not null then return old_id; end if;
- -- Free-cap safeguard: at most five newly requested builds per Helsinki day.
- select count(*) into job_count from public.kaurivo_demo_build_jobs
- where created_at >= ((now() at time zone 'Europe/Helsinki')::date
-   ::timestamp at time zone 'Europe/Helsinki')
-   and created_at < (((now() at time zone 'Europe/Helsinki')::date + 1)
-   ::timestamp at time zone 'Europe/Helsinki');
- if job_count >= 5 then
-   raise exception 'daily free-build request cap reached (5)'
-     using errcode = '22023';
- end if;
+ -- The free-provider constraint belongs to the WORKER, not the button.
+ -- Every owner request is recorded in the queue; models stay FREE_ONLY.
  chosen_url := coalesce(nullif(trim(p.website_found_url), ''),
                         nullif(trim(p.website_listed_url), ''),
                         nullif(trim(p.website_candidate_url), ''), '');
+ -- Unusable registry links must not prevent the owner from requesting work.
+ -- The worker will research independently, then require real source evidence.
  if chosen_url <> '' and
-    (chosen_url !~ '^https?://[A-Za-z0-9]' or
-      char_length(chosen_url)>1500) then
-    raise exception 'website URL must be reviewed before building'
-      using errcode = '22023';
+    (chosen_url !~ '^https://[A-Za-z0-9]' or
+      chosen_url ~ '[[:space:]@]' or char_length(chosen_url)>1500) then
+    chosen_url := '';
  end if;
  chosen_language := coalesce(nullif(trim(p.website_languages), ''),
                               'undetermined');
@@ -122,7 +111,7 @@ begin
    p_prospect_id,(select auth.uid()),p.business_id,p.company_name,
    chosen_url,chosen_language,'queued',
    case when chosen_url='' then
-     'Jonossa: ensin vahvistettava, ettei yrityksellä ole verkkosivua'
+     'Jonossa: selvitetään alkuperäinen sivu tai julkinen yritysaineisto'
    else 'Jonossa: alkuperäinen verkkosivu tutkitaan ennen rakentamista' end
  )
  returning id into made_id;
