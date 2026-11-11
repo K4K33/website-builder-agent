@@ -274,7 +274,7 @@ def source_failure_diagnostic(handle,start_position=0):
     marker="Original-site content research incomplete; review these pages:"
     if marker not in terminal:
         return ""
-    urls=re.findall(r"https?://[^\\s,]+",terminal.split(marker,1)[-1])
+    urls=re.findall(r"https?://[^\s,]+",terminal.split(marker,1)[-1])
     safe_paths=[]
     for uri in urls:
         try:
