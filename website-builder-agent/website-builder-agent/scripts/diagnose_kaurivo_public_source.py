@@ -76,6 +76,20 @@ def check():
               "name resolution","timeout","connection refused","max retries exceeded"
             ) if name in low]
             print("VARIANT",label,"failed",",".join(flags) or type(err).__name__)
+    import requests
+    links_to_check=["/ihmiset","/palvelut-yrityksille",
+                    "/palvelut-yksityisille","/yritys","/tietosuojaseloste"]
+    persisted=requests.Session()
+    try:
+        homepage=persisted.get(START,timeout=10)
+        print("SESSION_ROOT",homepage.status_code,len(homepage.content))
+        for path in links_to_check:
+            resp=persisted.get(START.rstrip("/")+path,timeout=10)
+            print("SESSION_PAGE",path,resp.status_code,len(resp.content))
+    except Exception as exc:
+        print("SESSION_ERROR",type(exc).__name__)
+    finally:
+        persisted.close()
     # The real premium builder includes Chromium. Probe the actual
     # browser response before deciding this host cannot be researched.
     try:
@@ -91,6 +105,12 @@ def check():
                 "title_length":len(title),"body_text_length":len(body),
                 "links":page.locator("a[href]").count(),
                 "path":clean_path(page.url)}))
+            for subpath in links_to_check:
+                res=page.goto(START.rstrip("/")+subpath,
+                  wait_until="domcontentloaded",timeout=15000)
+                body=page.locator("body").inner_text(timeout=4000)
+                print("BROWSER_PAGE",subpath,res.status if res else None,
+                      "text_length",len(body),"html_length",len(page.content()))
             browser.close()
     except Exception as exc:
         print("BROWSER_ERROR",type(exc).__name__)
