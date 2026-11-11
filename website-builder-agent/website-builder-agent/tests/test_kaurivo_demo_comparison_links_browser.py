@@ -96,6 +96,35 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_queued_dispatch_failure_is_not_mislabelled_as_running(self):
+        page=self.page(width=390)
+        try:
+            job=self.job(status="queued")
+            job["dispatch_error_code"]="github_token_not_configured"
+            job["dispatch_checked_at"]="2026-11-11T19:45:13Z"
+            self.render(page,[job])
+            self.assertIn("Käynnistys estynyt",
+                          page.locator("#demo-running-list").inner_text())
+            self.assertIn("KAURIVO_GITHUB_DISPATCH_TOKEN",
+                          page.locator("#demo-running-list").inner_text())
+            self.assertEqual(page.locator(".demo-comparison-link").count(),1)
+            self.assertEqual(page.locator(".demo-comparison-empty").count(),1)
+        finally:
+            page.close()
+
+    def test_sent_to_github_is_not_labelled_as_started(self):
+        page=self.page()
+        try:
+            job=self.job(status="queued")
+            job["dispatch_accepted_at"]="2026-11-11T19:45:13Z"
+            self.render(page,[job])
+            self.assertIn("Käynnistys lähetetty",
+                          page.locator("#demo-running-list").inner_text())
+            self.assertNotIn("Rakenteilla",
+                             page.locator("#demo-running-list .tag").inner_text())
+        finally:
+            page.close()
+
     def test_no_previous_website_has_explicit_empty_state_not_fake_url(self):
         page=self.page()
         try:
