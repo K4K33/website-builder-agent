@@ -132,6 +132,7 @@ jobs:
         env:
           KAURIVO_CLAIMED_JOB_FILE: ${{ runner.temp }}/claimed-demo.json
           FREE_ONLY: "1"
+          KAURIVO_BROWSER_SOURCE_FALLBACK: "1"
           AI_BACKEND: openrouter
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: openrouter/free
