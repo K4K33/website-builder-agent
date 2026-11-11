@@ -426,7 +426,7 @@
    }),"small-action demo-build-trigger");
    if(!inProgress&&window.KaurivoDemoJobs.healthBlocked(rows.demoHealth)){
      build.disabled=true;
-     build.title="Rakennuspalvelun API-avain tai ajastus on estynyt. Avaa Demot-näkymä.";
+     build.title="Rakennuspalvelun API-avaimen tarkistus epäonnistui tai puuttuu. Avaa Demot-näkymä.";
     }
     if(candidate.review_status==="skipped"||candidate.marketing_opt_out){
     build.disabled=true;
