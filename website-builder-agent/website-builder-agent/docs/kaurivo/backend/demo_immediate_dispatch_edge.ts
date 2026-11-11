@@ -52,10 +52,27 @@ Deno.serve(async req=>{
   .eq("status","queued").maybeSingle();
  if(dbError)return reply(503,{ok:false,reason:"db_unavailable"});
  if(!job)return reply(403,{ok:false,reason:"admin_queued_job_required"});
- if(!GH_TOKEN)return reply(503,{ok:false,reason:"github_token_not_configured"});
+ // Persist only allowlisted operational reason codes, never credentials or
+ // user data. The UI can then distinguish accepted dispatch from a failed one
+ // even after refresh. A failed dispatch is not a failed website build.
+ async function reportDispatch(reason:string,accepted=false){
+  try{
+   const {error}=await userClient.rpc("kaurivo_report_demo_dispatch",{
+    p_job_id:jobId,p_error_code:reason,p_accepted:accepted
+   });
+   if(error)console.warn("Kaurivo dispatch status could not be recorded.");
+  }catch(_){console.warn("Kaurivo dispatch status unavailable.");}
+ }
+ if(!GH_TOKEN){
+  await reportDispatch("github_token_not_configured");
+  return reply(503,{ok:false,reason:"github_token_not_configured"});
+ }
  const {data:claimed,error:claimError}=await userClient
   .rpc("kaurivo_claim_demo_dispatch",{p_job_id:jobId});
- if(claimError)return reply(503,{ok:false,reason:"dispatch_claim_failed"});
+ if(claimError){
+  await reportDispatch("dispatch_claim_failed");
+  return reply(503,{ok:false,reason:"dispatch_claim_failed"});
+ }
  if(claimed!==true)return reply(409,{ok:false,reason:"already_requested_or_not_queued"});
  try{
   const response=await fetch(WORKFLOW,{
@@ -68,12 +85,22 @@ Deno.serve(async req=>{
    signal:AbortSignal.timeout(10000)
   });
   // 204 means DISPATCH ACCEPTED, not that the build completed.
-  if(response.status===204)return reply(202,{ok:true,dispatch:"accepted"});
-  if(response.status===401||response.status===403)
+  if(response.status===204){
+   await reportDispatch("",true);
+   return reply(202,{ok:true,dispatch:"accepted"});
+  }
+  if(response.status===401||response.status===403){
+   await reportDispatch("github_token_permissions");
    return reply(503,{ok:false,reason:"github_token_permissions"});
-  if(response.status===429)return reply(503,{ok:false,reason:"github_rate_limited"});
+  }
+  if(response.status===429){
+   await reportDispatch("github_rate_limited");
+   return reply(503,{ok:false,reason:"github_rate_limited"});
+  }
+  await reportDispatch("github_dispatch_failed");
   return reply(502,{ok:false,reason:"github_dispatch_failed"});
  }catch(_){
+  await reportDispatch("github_unreachable");
   return reply(503,{ok:false,reason:"github_unreachable"});
  }
 });
