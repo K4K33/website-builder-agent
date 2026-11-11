@@ -356,6 +356,21 @@ def status(provider: str) -> dict:
     )
 
 
+def openrouter_reservation_block_reason() -> str:
+    """Distinguish a 1-minute safety cap from the daily free quota.
+
+    This is only a reading of a local guardrail, NEVER an extra provider
+    request or proof that OpenRouter has remaining cloud quota.
+    """
+    state = _load_state()
+    usage = state["providers"]["openrouter"]
+    if int(usage.get("used_today", 0)) >= _openrouter_safe_limit():
+        return "daily"
+    if config_free_openrouter() and int(usage.get("used_this_minute", 0)) >= 18:
+        return "minute"
+    return "unknown"
+
+
 def reserve(provider: str) -> bool:
     """
     Varaa yhden resurssin juuri ennen todellista
