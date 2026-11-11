@@ -193,10 +193,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         from scripts.run_kaurivo_demo_queue import (
             classify_stage_failure, private_stage_error_location)
         log=StringIO(
-          'Traceback (most recent call last):\\n'
-          '  File "/home/runner/work/website-builder-agent/agents/research.py", line 619, in research\\n'
-          '    raise RuntimeError("hidden private customer information")\\n'
-          'RuntimeError: Fewer than three source-backed same-industry operators; cannot build.\\n'
+          'Traceback (most recent call last):\n'
+          '  File "/home/runner/work/website-builder-agent/agents/research.py", line 619, in research\n'
+          '    raise RuntimeError("hidden private customer information")\n'
+          'RuntimeError: Fewer than three source-backed same-industry operators; cannot build.\n'
         )
         self.assertEqual(classify_stage_failure(log,"researching"),
                          "comparison_sources_insufficient")
@@ -205,7 +205,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("research.py:619",safe)
         self.assertNotIn("hidden private",safe)
         self.assertNotIn("/home/runner",safe)
-        other=StringIO("RuntimeError: AI ei palauttanut lopullista Research-briefiä JSON-objektina.\\n")
+        other=StringIO("RuntimeError: AI ei palauttanut lopullista Research-briefiä JSON-objektina.\n")
         self.assertEqual(classify_stage_failure(other,"researching"),
                          "research_ai_invalid_json")
 
