@@ -1,4 +1,7 @@
 """Kaurivo: owner-triggered demo builder, no fake success or paid AI calls.
+
+Controlled production verification 2026-11-11: test verified-browser public source
+fallback for a previously failed queued demo; publish only after full QA.
  
 2026-11-11 source-recovery production smoke uses verified browser fallback,
 legal-operator free source lookup and redacted Research error coordinates.
