@@ -116,6 +116,29 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertNotIn("company has opted out",migration)
         self.assertNotIn("daily free-build request cap reached",migration)
 
+    def test_immediate_dispatch_is_admin_authenticated_and_not_public(self):
+        js=DASHBOARD.read_text(encoding="utf-8")
+        edge=(SITE/"backend/demo_immediate_dispatch_edge.ts").read_text(encoding="utf-8")
+        sql=(SITE/"backend/demo_immediate_dispatch_20261111.sql").read_text(encoding="utf-8")
+        html=HTML.read_text(encoding="utf-8")
+        self.assertIn('functions.invoke("kaurivo-demo-dispatch"',js)
+        self.assertIn('Rakenna uudelleen',js)
+        self.assertIn('Käynnistä nyt',js)
+        self.assertIn('GitHubin käynnistys',js)
+        self.assertIn('getUser(auth.slice(7))',edge)
+        self.assertIn('.from("kaurivo_demo_build_jobs")',edge)
+        self.assertIn('eq("status","queued")',edge)
+        self.assertIn('kaurivo_claim_demo_dispatch',edge)
+        self.assertIn('KAURIVO_GITHUB_DISPATCH_TOKEN',edge)
+        self.assertIn('github.com/repos/K4K33/website-builder-agent/actions/workflows/',edge)
+        self.assertIn('github_token_not_configured',edge)
+        self.assertIn('kaurivo_internal.is_kaurivo_admin()',sql)
+        self.assertIn("90 seconds",sql)
+        self.assertIn("revoke all on function public.kaurivo_claim_demo_dispatch(uuid) from public,anon",sql)
+        self.assertNotIn('sb_secret_',js)
+        self.assertNotIn('ghp_',js)
+        self.assertIn('demo-jobs.js?v=20261111-dispatch1',html)
+
     def test_edge_verifies_exact_repository_workflow_and_oidc(self):
         edge=EDGE.read_text(encoding="utf-8")
         flow=FLOW.read_text(encoding="utf-8")
@@ -378,7 +401,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
           demo_brief:'',outreach_review:'not_reviewed',
           outreach_stage:'not_contacted',marketing_opt_out:true,
           website_languages:'fi',contact_language:'fi'};
-        window.__rpcCalls=[];window.__demoRows=[];
+        window.__rpcCalls=[];window.__demoRows=[];window.__dispatchCalls=[];
         window.__insertQueue=()=>window.__demoRows=[{
            id:'4fab441f-b8a1-4b7e-af94-d813b8a232c0',
            prospect_id:lead.id,
@@ -403,6 +426,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     }]:[],
                error:null})
           }),
+          functions:{invoke:async(name,params)=>{
+             window.__dispatchCalls.push({name,job:params?.body?.job_id});
+             return {data:{ok:true,dispatch:'accepted'},error:null};
+          }},
           rpc:async(name,args)=>{
              window.__rpcCalls.push({name,args});
              if(name==='kaurivo_request_demo_build'){
@@ -444,6 +471,11 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     self.assertEqual(page.evaluate(
                         "window.__rpcCalls.filter(x=>x.name==='kaurivo_request_demo_build').length"
                     ),1)
+                    page.wait_for_function("window.__dispatchCalls.length===1")
+                    self.assertEqual(page.evaluate(
+                        "window.__dispatchCalls[0].name"),"kaurivo-demo-dispatch")
+                    self.assertEqual(page.locator("#demo-running-list .demo-gh-manual").count(),1)
+                    self.assertTrue(page.locator("#demo-running-list .demo-build-dispatch").is_enabled())
                     page.evaluate("""()=>{
                       window.__demoRows[0].status='internal_preview';
                       window.__demoRows[0].preview_url='https://kaurivo-auto-demos-2026.onrender.com/test/index.html';
@@ -471,6 +503,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                     page.wait_for_function(
                       "window.__rpcCalls.filter(x=>x.name==='kaurivo_request_demo_build').length===2"
                     )
+                    page.wait_for_function("window.__dispatchCalls.length===2")
                     self.assertEqual(exceptions,[],exceptions)
                     page.close()
             finally:
