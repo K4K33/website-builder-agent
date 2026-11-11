@@ -9,6 +9,7 @@ on:
     # GitHub scheduled events are best-effort and can be delayed or dropped.
     # Refresh the schedule actor and keep this as a fallback only; private
     # admin workflow_dispatch is the primary immediate trigger.
+    # Production verification: free quota exhaustion defers the same job, never charges.
     - cron: "4-59/5 * * * *"
   workflow_dispatch:
 
