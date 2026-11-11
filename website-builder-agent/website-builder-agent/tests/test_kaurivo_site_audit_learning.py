@@ -8,7 +8,7 @@ import unittest
 from utils.kaurivo_site_audit import (
     safe_homepage, inspect_site, extract_html_signals, audit_packet,
 )
-from utils.kaurivo_lead_quality import choose_shortlist
+from utils.kaurivo_lead_quality import choose_shortlist, observed_technical_opportunity
 from utils.kaurivo_feedback_priors import get_weights
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -98,6 +98,45 @@ class SiteLearningTests(unittest.TestCase):
             self.assertEqual(r["checked"],1)
             self.assertEqual(len(calls),2)
 
+    def test_technical_hints_are_not_fabricated_quality_scores(self):
+        lead={"site_technical_audit":{"status":"html_checked",
+            "issues":["viewport_missing","contact_link_missing"],
+            "possible_broken_internal_links":1}}
+        self.assertEqual(observed_technical_opportunity(lead),18)
+        self.assertEqual(observed_technical_opportunity({}),0)
+        self.assertEqual(observed_technical_opportunity({
+            "site_technical_audit":{"status":"redirect_not_followed",
+                                    "issues":["viewport_missing"]}}),0)
+
+    def test_nightly_audit_promotes_observed_hints_and_reports_unverified_finances(self):
+        class WeakSite(FakeSite):
+            def iter_content(self,chunk_size=None):
+                yield b'<html><head></head><body><p>Palvelut</p></body></html>'
+        with tempfile.TemporaryDirectory() as temp:
+            packet=Path(temp)/"shortlist.json"
+            cache=Path(temp)/"cache.json"
+            records=[{"name":"Good Company Oy","business_id":"1234567-8",
+                      "industry_code_hint":"43220",
+                      "website_listed_url":"https://good.fi/"},
+                     {"name":"Needs Research Oy","business_id":"7654321-0",
+                      "industry_code_hint":"43220",
+                      "website_listed_url":"https://weak.fi/"}]
+            packet.write_text(json.dumps({"schema":"kaurivo_prh_shortlist_v1",
+                 "mode":"pilot-live","date":"2026-11-11","candidates":records}),
+                 encoding="utf-8")
+            def get(url,**kwargs):
+                return WeakSite() if "weak.fi" in url else FakeSite()
+            result=audit_packet(packet,cache,get=get,resolve=public_dns,
+                                max_checks=2,now=datetime(2026,11,11,tzinfo=timezone.utc))
+            self.assertEqual(result["checked"],2)
+            updated=json.loads(packet.read_text(encoding="utf-8"))
+            self.assertEqual(updated["candidates"][0]["name"],"Needs Research Oy")
+            report=(Path(temp)/"sales-priority-report.md").read_text(encoding="utf-8")
+            self.assertIn("maksukyky",report.lower())
+            self.assertIn("VAHVISTAMATTA",report)
+            self.assertIn("viewport_missing",report)
+            self.assertIn("Yöajo ei rakenna demoja",report)
+
     def test_human_feedback_prior_requires_eight_reviews(self):
         leads=[{"name":f"Palveluyritys {i} Oy",
                 "business_id":f"{i:07d}-{i%10}",
@@ -125,6 +164,7 @@ class SiteLearningTests(unittest.TestCase):
         ingest=(ROOT/"docs/kaurivo/backend/prh_ingest_edge.ts").read_text()
         self.assertIn("--max-candidates 9000",yaml)
         self.assertIn("--max-checks 12",yaml)
+        self.assertIn("sales-priority-report.md",yaml)
         self.assertIn("kaurivo_site_audit_cache.json",yaml)
         self.assertIn("kaurivo_feedback_priors",yaml)
         self.assertIn("website_technical_audit:technicalAudit",ingest)
