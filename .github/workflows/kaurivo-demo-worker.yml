@@ -60,20 +60,30 @@ jobs:
           import urllib.request,urllib.error
           key=os.environ.get("OPENROUTER_API_KEY","").strip()
           status=0
+          capacity_known_empty=False
           if key:
               req=urllib.request.Request("https://openrouter.ai/api/v1/key",
                   headers={"Authorization":"Bearer "+key})
               try:
                   with urllib.request.urlopen(req,timeout=15) as res:
                       status=res.status
+                      # The key endpoint does not spend model credits. This
+                      # avoids CLAIMING and burning a job attempt on a known
+                      # exhausted account-wide free allowance.
+                      data=__import__("json").load(res).get("data",{})
+                      budget=data.get("free_model_daily_requests") if isinstance(data,dict) else None
+                      remaining=budget.get("remaining") if isinstance(budget,dict) else None
+                      capacity_known_empty=(type(remaining) in (int,float) and remaining<=0)
               except urllib.error.HTTPError as err:
                   status=err.code
               except Exception:
                   status=0
               print("OpenRouter inference key check HTTP:",status)
               print("OpenRouter inference key authentication valid:",status==200)
+              print("Known exhausted free daily quota:",capacity_known_empty)
           with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as output:
               output.write("key_http_status="+str(status)+"\n")
+              output.write("free_quota_empty="+("true" if capacity_known_empty else "false")+"\n")
           PY
       - id: claim
         name: Securely claim one queued job
@@ -104,6 +114,11 @@ jobs:
           PY
           if [[ "$KEY_STATUS" != "200" ]]; then
             echo "Kaurivo free builder paused: OpenRouter inference key HTTP $KEY_STATUS."
+            echo "has_job=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "${{ steps.keycheck.outputs.free_quota_empty }}" == "true" ]]; then
+            echo "Known free account daily capacity exhausted: leave the job queued without consuming an attempt."
             echo "has_job=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
