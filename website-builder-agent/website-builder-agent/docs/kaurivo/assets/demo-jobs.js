@@ -17,6 +17,7 @@
   source_http_rate_limited:"Alkuperäinen sivusto rajoitti automaattista hakua. Vältä jatkuvia uudelleenyrityksiä.",
   source_website_unreachable:"Alkuperäinen sivu ei vastannut rakennusagentin tutkimuspyyntöön.",
   free_ai_rate_limit:"Ilmaisen tekoälypalvelun päivä- tai minuuttiraja täyttyi",
+  free_ai_capacity_unavailable:"Ilmainen OpenRouter-kiintiö tai palveluntarjoajan kapasiteetti loppui. Työtä yritetään automaattisesti uudelleen enintään kolme kertaa.",
   free_ai_access_rejected:"Ilmainen tekoälypalvelu hylkäsi API-tunnistuksen",
   free_ai_key_invalid:"OpenRouterin API-avain ei kelpaa tai se on vanhentunut. Päivitä GitHubin OPENROUTER_API_KEY.",
   free_ai_key_forbidden:"OpenRouter esti mallipyynnön (403). Tarkista API-avaimen oikeudet ja tilin suojausasetukset.",
@@ -111,15 +112,25 @@
    validUrl(job.preview_url,"preview")&&validUrl(job.qa_url,"qa");
  }
  function card(target,job,options){
+  const deferred=job.status==="queued"&&job.error_code==="free_ai_capacity_unavailable"&&
+    Number.isFinite(Date.parse(job.next_eligible_at||""))&&
+    Date.parse(job.next_eligible_at)>Date.now();
   const row=append(target,"article","record demo-record");
   const main=append(row,"div","record-main");
   append(main,"div","record-title",job.company_name||"Tuntematon yritys");
   const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
   append(main,"div","record-sub",job.progress||STATUS[job.status]||"Odottaa");
-  if(job.error_code)append(main,"div","record-warning","Korjausta vaativa vaihe: "+(ERROR_LABELS[job.error_code]||"Työ vaatii lisätarkistuksen")+" ("+job.error_code+")");
+  if(job.error_code)append(main,"div","record-warning",
+    (deferred?"Odottaa kiintiön palautumista: ":"Korjausta vaativa vaihe: ")+
+    (ERROR_LABELS[job.error_code]||"Työ vaatii lisätarkistuksen")+" ("+job.error_code+")");
+  if(deferred)append(main,"div","record-sub",
+    "Seuraava sallittu yritys: "+new Date(job.next_eligible_at).toLocaleString("fi-FI",{
+      timeZone:"Europe/Helsinki"
+    })+" Suomen aikaa. Älä käynnistä samaa työtä käsin ennen tätä.");
   const actions=append(row,"div","record-actions");
-  const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),STATUS[job.status]||"Tarkistettava");
+  const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
+    deferred?"Odottaa ilmaiskäyttöä":STATUS[job.status]||"Tarkistettava");
   badge.setAttribute("aria-label","Työn tila");
   if(job.original_url){
    if(!external(actions,"Vanha sivu",job.original_url))append(main,"div","record-warning","Alkuperäinen sivulinkki on tarkistettava.");
@@ -133,7 +144,7 @@
   }else if(isActive(job)){
    append(main,"div","record-sub","Uusi linkki näytetään vasta aidon julkaisun ja selaintarkistuksen jälkeen.");
   }
-  if(job.status==="queued"){
+  if(job.status==="queued"&&!deferred){
    // Scheduling is a backup, not a guaranteed five-minute service. Attempt
    // private authenticated REST workflow_dispatch and offer owner GH UI as
    // safe fallback when the one-time token has not been configured.
