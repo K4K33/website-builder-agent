@@ -96,8 +96,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('id="demo-health"',html)
         self.assertIn("healthBlocked",dashboard)
         self.assertIn("healthStale",dashboard)
+        self.assertIn("demo-health-stale",dashboard)
+        self.assertIn("demo_queue_stale_health_20261111.sql",(SITE/"backend/demo_queue_stale_health_20261111.sql").as_posix())
         self.assertIn("voit lisätä työn jonoon",dashboard)
-        self.assertNotIn("Date.now()-checked>2*60*60*1000;\n }\n function healthSummary",dashboard)
+        self.assertIn('return !item||item.status!=="ok";',dashboard)
         self.assertIn("demo-health-blocked",dashboard)
         self.assertIn("Rakennuspalvelu keskeytetty",dashboard)
 
