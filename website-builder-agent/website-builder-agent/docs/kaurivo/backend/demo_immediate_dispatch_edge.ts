@@ -12,7 +12,7 @@ const ORIGIN="https://k4k33.github.io";
 const WORKFLOW="https://api.github.com/repos/K4K33/website-builder-agent/actions/workflows/kaurivo-demo-worker.yml/dispatches";
 const cors={"Access-Control-Allow-Origin":ORIGIN,
  "Access-Control-Allow-Methods":"POST, OPTIONS",
- "Access-Control-Allow-Headers":"authorization, apikey, content-type",
+ "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info, x-region",
  "Vary":"Origin","Cache-Control":"no-store"};
 function reply(status:number,body:Record<string,unknown>){
  return new Response(JSON.stringify(body),{
