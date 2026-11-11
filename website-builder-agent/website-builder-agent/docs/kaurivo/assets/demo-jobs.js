@@ -55,7 +55,13 @@
   github_rate_limited:"GitHub rajoitti käynnistyspyyntöjä.",
   github_unreachable:"GitHubiin ei saatu yhteyttä.",
   already_requested_or_not_queued:"Käynnistystä on jo pyydetty tai työ on jo käynnissä.",
-  admin_queued_job_required:"Rakennuspyyntö ei ole enää jonossa tai kirjautuminen ei oikeuta käynnistystä."
+  admin_queued_job_required:"Rakennuspyyntö ei ole enää jonossa tai kirjautuminen ei oikeuta käynnistystä.",
+  db_unavailable:"Tietokantayhteys ei vastannut, eikä GitHub-käynnistystä lähetetty.",
+  backend_unavailable:"Supabasen käynnistyspalvelun asetukset puuttuvat.",
+  dispatch_claim_failed:"Rakennuksen käynnistysvarausta ei saatu tietokannasta.",
+  github_dispatch_failed:"GitHub hylkäsi käynnistyspyynnön.",
+  github_dispatch_unavailable:"GitHub-käynnistyspalvelusta ei saatu vahvistusta.",
+  dispatch_client_unavailable:"Kirjautumista tai käynnistysasiakasta ei saatu käyttöön."
  };
  async function dispatchNow(db,jobId){
   if(!db?.functions?.invoke)return {ok:false,reason:"dispatch_client_unavailable"};
@@ -63,7 +69,18 @@
    const {data,error}=await db.functions.invoke("kaurivo-demo-dispatch",{
     body:{job_id:jobId}
    });
-   if(error)return {ok:false,reason:data?.reason||"github_dispatch_unavailable"};
+   if(error){
+    // supabase-js normally returns data=null on a 4xx/5xx Edge response.
+    // Read the authenticated HTTP error body to expose its allowlisted code.
+    let reason=data?.reason;
+    try{
+     if(!reason && typeof error.context?.json==="function"){
+      const body=await error.context.json();
+      reason=body?.reason;
+     }
+    }catch(_){/* Non-JSON transport failure: no fabricated success. */}
+    return {ok:false,reason:typeof reason==="string"?reason:"github_dispatch_unavailable"};
+   }
    return data?.ok===true&&data.dispatch==="accepted"?
       {ok:true}:{ok:false,reason:data?.reason||"github_dispatch_unavailable"};
   }catch(_){return {ok:false,reason:"github_dispatch_unavailable"};}
@@ -171,7 +188,21 @@
   append(main,"div","record-title",job.company_name||"Tuntematon yritys");
   const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
-  append(main,"div","record-sub",job.progress||STATUS[job.status]||"Odottaa");
+  const dispatchFailure=job.status==="queued"&&job.dispatch_error_code;
+  const dispatchAccepted=job.status==="queued"&&!dispatchFailure&&!!job.dispatch_accepted_at;
+  append(main,"div","record-sub",
+    dispatchFailure?"GitHub-käynnistys epäonnistui. Rakennus ei ole käynnissä.":
+    dispatchAccepted?"Käynnistyspyyntö lähetetty GitHubille. Odotetaan rakennuksen aloitusta.":
+    job.progress||STATUS[job.status]||"Odottaa");
+  if(dispatchFailure){
+   append(main,"div","record-warning",
+    (DISPATCH_MESSAGES[job.dispatch_error_code]||"GitHub-käynnistystä ei voitu vahvistaa.")+
+    " Työ on tallessa mutta ei käynnissä. Korjaa käynnistysyhteys ja valitse Käynnistä nyt.");
+   if(job.dispatch_error_code==="github_token_not_configured"){
+    append(main,"div","record-sub",
+      "Ylläpidon pitää lisätä KAURIVO_GITHUB_DISPATCH_TOKEN Supabasen Edge Function Secrets -asetuksiin. Tunnusta ei saa kirjoittaa tähän sivuun.");
+   }
+  }
   if(job.error_code)append(main,"div","record-warning",
     (deferred?"Odottaa kiintiön palautumista: ":"Korjausta vaativa vaihe: ")+
     (ERROR_LABELS[job.error_code]||"Työ vaatii lisätarkistuksen")+" ("+job.error_code+")");
@@ -181,7 +212,8 @@
     })+" Suomen aikaa. Älä käynnistä samaa työtä käsin ennen tätä.");
   const actions=append(row,"div","record-actions");
   const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
-    deferred?"Odottaa ilmaiskäyttöä":STATUS[job.status]||"Tarkistettava");
+    deferred?"Odottaa ilmaiskäyttöä":dispatchFailure?"Käynnistys estynyt":
+    dispatchAccepted?"Käynnistys lähetetty":STATUS[job.status]||"Tarkistettava");
   badge.setAttribute("aria-label","Työn tila");
   // One consistent, prominent old/new comparison for EVERY automatic
   // demo job, from queue through verified preview. No invented URLs.
@@ -217,13 +249,14 @@
      kick.disabled=true;
      try{
       const status=await dispatchNow(options.db,job.id);
+      if(options.reload)await options.reload();
       dispatchFeedback(status,options.toast);
      }finally{kick.disabled=false;}
     });
    }
    const link=append(actions,"a","small-action demo-gh-manual","GitHubin käynnistys");
    link.href=GITHUB_WORKFLOW;link.target="_blank";link.rel="noopener noreferrer";
-   append(main,"div","record-sub","Jos GitHubin suora käynnistys ei ole käytössä, avaa GitHubin käynnistys ja valitse Run workflow. Jonossa olo ei tarkoita käynnissä olevaa työtä.");
+   append(main,"div","record-sub","Rakenna demo lähettää käynnistyspyynnön automaattisesti. GitHubin käynnistys on vain varavaihtoehto, jos palvelinyhteys ei toimi. Jonossa olo ei tarkoita käynnissä olevaa työtä.");
   }
   if(job.github_run_url)external(actions,"Rakennuksen loki",job.github_run_url,"qa");
   // A failed job is not permanent. A fresh owner request snapshots the

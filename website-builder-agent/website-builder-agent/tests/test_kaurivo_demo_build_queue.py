@@ -147,7 +147,27 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("revoke all on function public.kaurivo_claim_demo_dispatch(uuid) from public,anon",sql)
         self.assertNotIn('sb_secret_',js)
         self.assertNotIn('ghp_',js)
-        self.assertIn('demo-jobs.js?v=20261111-freeqa3',html)
+        self.assertIn('demo-jobs.js?v=20261111-dispatch4',html)
+
+    def test_dispatch_failures_have_private_persistent_reason_and_real_response_body(self):
+        panel=DASHBOARD.read_text(encoding="utf-8")
+        edge=(SITE/"backend/demo_immediate_dispatch_edge.ts").read_text(encoding="utf-8")
+        sql=(SITE/"backend/demo_dispatch_status_20261111.sql").read_text(encoding="utf-8")
+        self.assertIn('error.context.json()',panel)
+        self.assertIn('dispatch_error_code',panel)
+        self.assertIn('dispatch_accepted_at',panel)
+        self.assertIn('Käynnistys estynyt',panel)
+        self.assertIn('KAURIVO_GITHUB_DISPATCH_TOKEN',panel)
+        self.assertIn('reportDispatch("github_token_not_configured")',edge)
+        self.assertIn('reportDispatch("",true)',edge)
+        self.assertIn('reportDispatch("github_token_permissions")',edge)
+        self.assertIn('kaurivo_report_demo_dispatch',edge)
+        self.assertIn('kaurivo_internal.is_kaurivo_admin()',sql)
+        self.assertIn('status=\'queued\'',sql)
+        self.assertIn('dispatch_error_code',sql)
+        self.assertIn('dispatch_accepted_at',sql)
+        self.assertNotIn('service_role',panel.lower())
+        self.assertNotIn('sb_secret_',panel)
 
     def test_edge_verifies_exact_repository_workflow_and_oidc(self):
         edge=EDGE.read_text(encoding="utf-8")
