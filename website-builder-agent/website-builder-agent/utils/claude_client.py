@@ -156,9 +156,11 @@ def _local_free_quota_fallback(
             if stage else "")
     name = name or os.getenv("OLLAMA_MODEL", "").strip()
     if not name or name.lower().endswith(":cloud"):
+        # Distinct, non-sensitive error: the worker can defer this private job
+        # without manufacturing a result or retrying a capped free API.
         raise RuntimeError(
-            "Free OpenRouter allowance exhausted and no installed local "
-            "fallback model configured; no paid fallback."
+            "FREE_AI_CAPACITY_UNAVAILABLE: no local free fallback installed; "
+            "OpenRouter free request allowance/rate unavailable."
         )
     from utils.local_ai import chat_local
     return chat_local(
