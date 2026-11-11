@@ -175,10 +175,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         from io import StringIO
         from scripts.run_kaurivo_demo_queue import source_failure_diagnostic
         log=StringIO(
-          "Some unrelated HTML text should not appear here.\\n"
+          "Some unrelated HTML text should not appear here.\n"
           "RuntimeError: Original-site content research incomplete; review these pages: "
           "https://business.example/palvelut?token=private, "
-          "https://business.example/ihmiset?email=private\\n"
+          "https://business.example/ihmiset?email=private\n"
         )
         detail=source_failure_diagnostic(log)
         self.assertIn("/palvelut",detail)
