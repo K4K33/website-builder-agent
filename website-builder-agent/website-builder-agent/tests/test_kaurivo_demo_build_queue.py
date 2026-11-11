@@ -463,7 +463,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertLessEqual(AI_STAGE_BUDGET_SECONDS,2400)
         worker=WORKER.read_text(encoding="utf-8")
         self.assertIn('run_cli(["revise",agent_slug,qa_repair_feedback(qa)]',worker)
-        self.assertIn('for revision in range(MAX_AUTO_REVISIONS+1)',worker)
+        # Resume at the last saved revision, while retaining the strict
+        # MAX_AUTO_REVISIONS bound rather than restarting a paid/free QA loop.
+        self.assertIn('for revision in range(next_qa_revision,MAX_AUTO_REVISIONS+1)',worker)
+        self.assertIn('resume.startswith("revised_")',worker)
         self.assertIn('quality_gate_build_version_mismatch',worker)
         self.assertNotIn('while True:',worker)
 
