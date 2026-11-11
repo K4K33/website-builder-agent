@@ -52,9 +52,11 @@ stage="queue"
 
 
 class HoldError(RuntimeError):
-    def __init__(self,code):
+    def __init__(self,code,detail=""):
         super().__init__(code)
         self.code=code
+        # Bounded, sanitized diagnostics only. Never store raw model logs.
+        self.detail=detail
 
 
 def _oidc():
@@ -255,6 +257,40 @@ def classify_stage_failure(handle,stage_name,start_position=0):
     return stage_name+"_failed"
 
 
+def source_failure_diagnostic(handle,start_position=0):
+    """Extract ONLY publicly visible original-site paths from known errors.
+
+    This is for admin RLS progress, never the public GitHub log. No content,
+    query parameters, credentials or raw exception strings are copied.
+    """
+    handle.flush()
+    handle.seek(start_position)
+    lines=handle.read()[-16000:].splitlines()
+    terminals=[line.strip() for line in lines if
+               line.strip().startswith("RuntimeError:")]
+    if not terminals:
+        return ""
+    terminal=terminals[-1]
+    marker="Original-site content research incomplete; review these pages:"
+    if marker not in terminal:
+        return ""
+    urls=re.findall(r"https?://[^\\s,]+",terminal.split(marker,1)[-1])
+    safe_paths=[]
+    for uri in urls:
+        try:
+            path=urlsplit(uri).path
+            if not path:
+                continue
+            safe=re.sub(r"[^A-Za-z0-9%._/-]","",path)[:75]
+            if safe.startswith("/") and safe not in safe_paths:
+                safe_paths.append(safe)
+        except Exception:
+            continue
+        if len(safe_paths)>=3:
+            break
+    return ("Puuttuvat sivut: "+", ".join(safe_paths))[:200] if safe_paths else ""
+
+
 def run_cli(args,log_handle,deadline=None):
     log_handle.seek(0,os.SEEK_END)
     stage_start=log_handle.tell()
@@ -272,7 +308,10 @@ def run_cli(args,log_handle,deadline=None):
     except subprocess.TimeoutExpired as exc:
         raise HoldError("stage_timeout") from exc
     except subprocess.CalledProcessError as exc:
-        raise HoldError(classify_stage_failure(log_handle,stage,stage_start)) from exc
+        code=classify_stage_failure(log_handle,stage,stage_start)
+        detail=(source_failure_diagnostic(log_handle,stage_start)
+                if code=="source_research_incomplete" else "")
+        raise HoldError(code,detail) from exc
 
 
 def load_company(slug):
@@ -714,7 +753,10 @@ def main():
             return 0
         except HoldError as error:
             try:
-                update("hold","Rakentaminen pysäytetty: "+error.code,error_code=error.code)
+                progress="Rakentaminen pysäytetty: "+error.code
+                if error.detail:
+                    progress+=" · "+error.detail
+                update("hold",progress,error_code=error.code)
             except Exception:
                 print("Kaurivo demo queue: unable to persist HOLD status.",file=sys.stderr)
             print("Kaurivo demo queue: HOLD / "+error.code)
