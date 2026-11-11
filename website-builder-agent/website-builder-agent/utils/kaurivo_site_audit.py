@@ -213,7 +213,7 @@ def audit_packet(packet_path,cache_path,*,get=requests.get,head=None,
         "|---|---|---|---|",
     ]
     def cell(x):
-        return re.sub(r"[\\r\\n|]", " ", str(x or ""))[:105]
+        return re.sub(r"[\r\n|]", " ", str(x or ""))[:105]
     for company in packet["candidates"]:
         audit=company.get("site_technical_audit") or {}
         checked=audit.get("status") if isinstance(audit,dict) else ""
