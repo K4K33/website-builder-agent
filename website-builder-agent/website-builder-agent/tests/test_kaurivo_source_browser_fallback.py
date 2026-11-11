@@ -104,7 +104,7 @@ class PublicSiteFetchResilienceTests(unittest.TestCase):
 
     def test_worker_enables_bounded_browser_fallback_after_chromium_setup(self):
         from pathlib import Path
-        root=Path(__file__).resolve().parents[2]
+        root=Path(__file__).resolve().parents[3]
         workflow=(root/".github/workflows/kaurivo-demo-worker.yml").read_text()
         self.assertIn('KAURIVO_BROWSER_SOURCE_FALLBACK: "1"',workflow)
         self.assertIn("python -m playwright install --with-deps chromium",workflow)
