@@ -101,7 +101,8 @@ class RealtimeWakeupTests(unittest.TestCase):
         self.assertIn('data.dispatch==="local_running"',PANEL)
         self.assertIn('data.dispatch==="local_waiting"',PANEL)
         self.assertIn('["local_ready","local_waiting","local_running"].includes(',PANEL)
-        self.assertIn("Windows-rakentaja on jo aloittanut demon tutkimisen",PANEL)
+        self.assertIn("Windows- tai GitHub-rakentaja on aloittanut valitun yrityksen työn",PANEL)
+        self.assertIn('if(verified==="running")',PANEL)
 
 
 if __name__=="__main__":
