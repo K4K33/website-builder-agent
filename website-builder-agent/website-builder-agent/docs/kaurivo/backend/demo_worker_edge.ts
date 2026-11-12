@@ -154,7 +154,12 @@ Deno.serve(async request=>{
  }catch(_){return reply(400,{ok:false,error:"invalid_json"});}
  try{
   if(data.action==="ping"&&local){
-   if(Object.keys(data).length!==2||typeof data.ready!=="boolean")
+   const keys=Object.keys(data);
+   if((keys.length!==2&&keys.length!==3)
+      ||keys.some(key=>!["action","ready","job_id"].includes(key))
+      ||typeof data.ready!=="boolean"
+      ||(data.job_id!==undefined &&
+         (typeof data.job_id!=="string"||!UUID.test(data.job_id))))
      return reply(400,{ok:false,error:"ping_args"});
    const token=authorization.slice(7);
    const digest=[...new Uint8Array(await crypto.subtle.digest(
@@ -163,8 +168,25 @@ Deno.serve(async request=>{
    const result=await rpc("kaurivo_local_worker_validate",{
     p_digest:digest,p_ready:data.ready
    });
-   return reply(Number(result)===run_id?200:403,
-    {ok:Number(result)===run_id,run_id});
+   if(Number(result)!==run_id)
+    return reply(403,{ok:false,error:"local_worker_not_enrolled"});
+   // Only heartbeat an actual currently live child process. An idle
+   // authenticated daemon must NEVER keep crashed builds falsely alive.
+   const leaseActive=typeof data.job_id==="string"?
+      await rpc("kaurivo_local_worker_heartbeat",{
+        p_id:data.job_id,p_run_id:run_id
+      }):false;
+   return reply(200,{ok:true,run_id,lease_active:leaseActive===true});
+  }
+  if(data.action==="release"&&local){
+   if(Object.keys(data).length!==2||
+      typeof data.job_id!=="string"||!UUID.test(data.job_id))
+    return reply(400,{ok:false,error:"release_args"});
+   const resumed=await rpc("kaurivo_local_worker_release",{
+      p_id:data.job_id,p_run_id:run_id
+   });
+   // False means job already has terminal status: never fake a retry.
+   return reply(200,{ok:true,requeued:resumed===true});
   }
   if(local&&data.action==="health")
     return reply(400,{ok:false,error:"github_health_only"});
