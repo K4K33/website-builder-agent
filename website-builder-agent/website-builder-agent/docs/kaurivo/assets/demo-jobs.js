@@ -356,6 +356,11 @@
     :verifiedLocal===false
      ?"Paikallinen Ollama ei ole vahvistetusti valmis. Pidä Windows-rakentaja käynnissä; jonossa oleva työ säilyy."
      :"Tarkistetaan Windows-rakentajan todellista tilaa.");
+  if(verifiedLocal!==true){
+   const help=append(root,"a","demo-local-guide","Ohje: päivitä ja käynnistä vahvistettu Ollama-rakentaja");
+   help.href="https://github.com/K4K33/website-builder-agent/blob/main/website-builder-agent/website-builder-agent/docs/KAURIVO_OFFLINE_WINDOWS_20261112.md";
+   help.target="_blank";help.rel="noopener noreferrer";
+  }
   if(checkingLocal||Date.now()-verifiedLocalAt<25000)return;
   checkingLocal=true;
   Promise.resolve().then(()=>db.rpc("kaurivo_local_worker_online")).then(({data,error})=>{
