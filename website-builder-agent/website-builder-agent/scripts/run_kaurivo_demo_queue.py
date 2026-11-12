@@ -251,6 +251,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
     )
     if "free_ai_capacity_unavailable" in terminal:
         return "free_ai_capacity_unavailable"
+    if "free_ai_rate_limit" in terminal:
+        return "free_ai_rate_limit"
     provider=any(x in terminal for x in (
         "openrouter rejected request",
         "openrouter-kutsu epäonnistui",
