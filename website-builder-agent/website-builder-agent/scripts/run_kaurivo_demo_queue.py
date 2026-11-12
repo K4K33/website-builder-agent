@@ -47,6 +47,14 @@ RUN_URL=f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
 TIMEOUT_PER_STAGE=480
 AI_STAGE_BUDGET_SECONDS=2200
 MAX_AUTO_REVISIONS=2
+# The exact same owner-requested demo remains recoverable across temporary
+# zero-cost provider and network outages. Daily attempts are bounded in SQL;
+# evidence/quality blockers remain explicit HOLD, never silently bypassed.
+TRANSIENT_RETRY_CODES=frozenset({
+    "free_ai_capacity_unavailable","free_ai_rate_limit",
+    "research_network_unavailable","network_unavailable",
+    "source_http_rate_limited","stage_timeout","runner_stale_timeout",
+})
 # Publish only site documents and expected static assets. Never copy JSON/TXT
 # scratch files, notes, evidence, build manifests or private company data.
 ALLOWED_EXTENSIONS={".html",".css",".js",".png",".jpg",".jpeg",".webp",
@@ -899,23 +907,22 @@ def main():
             print("Kaurivo demo queue: exact-release internal preview verified.")
             return 0
         except HoldError as error:
-            if error.code=="free_ai_capacity_unavailable":
+            if error.code in TRANSIENT_RETRY_CODES:
                 try:
-                    # Database defers the same authenticated job to next UTC
-                    # day's quota window, with at most 3 total attempts.
-                    # It turns the third failure into explicit HOLD instead
-                    # of a runaway daily loop. No paid fallback or fake QA.
+                    # Durable, quota-bounded retry on the SAME private job.
+                    # Never erase existing verified research/build checkpoints.
+                    # The DB enforces at most 3 actual claims per UTC day.
                     update("queued",
-                           "Ilmaisen AI-palvelun kapasiteetti täynnä: "
-                           "automaattinen uusinta seuraavana UTC-päivänä "
-                           "(enintään kolme yritystä).",
-                           error_code="free_ai_capacity_unavailable")
-                    print("Kaurivo demo queue: FREE CAPACITY DEFERRED (no paid AI).")
+                           "Tilapäinen häiriö: "+error.code+
+                           ". Rakentaminen jatkuu automaattisesti "
+                           "seuraavassa sallitussa ajoikkunassa.",
+                           error_code=error.code)
+                    print("Kaurivo demo queue: TRANSIENT FAILURE DEFERRED (no paid AI).")
                     return 0
                 except Exception:
-                    print("Kaurivo demo queue: quota deferral persistence failed.",
+                    print("Kaurivo demo queue: retry deferral persistence failed.",
                           file=sys.stderr)
-                    # Continue into the normal fail-closed HOLD path.
+                    # If persistence itself fails, retain HOLD, never fake done.
             try:
                 progress="Rakentaminen pysäytetty: "+error.code
                 if error.detail:

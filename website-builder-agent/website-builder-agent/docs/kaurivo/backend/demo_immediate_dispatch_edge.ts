@@ -81,7 +81,9 @@ Deno.serve(async req=>{
     "Authorization":"Bearer "+GH_TOKEN,
     "X-GitHub-Api-Version":"2022-11-28",
     "Content-Type":"application/json","User-Agent":"KaurivoDemoDispatcher/1.0"},
-   body:JSON.stringify({ref:"main"}),
+   // The worker must claim THIS company, not some older queued prospect.
+   // 204 acknowledges dispatch only; the runner's signed claim proves start.
+   body:JSON.stringify({ref:"main",inputs:{job_id:jobId}}),
    signal:AbortSignal.timeout(10000)
   });
   // 204 means DISPATCH ACCEPTED, not that the build completed.

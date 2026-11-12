@@ -17,7 +17,7 @@
   source_http_rate_limited:"Alkuperäinen sivusto rajoitti automaattista hakua. Vältä jatkuvia uudelleenyrityksiä.",
   source_website_unreachable:"Alkuperäinen sivu ei vastannut rakennusagentin tutkimuspyyntöön.",
   free_ai_rate_limit:"Ilmaisen tekoälypalvelun päivä- tai minuuttiraja täyttyi",
-  free_ai_capacity_unavailable:"Ilmainen OpenRouter-kiintiö tai palveluntarjoajan kapasiteetti loppui. Työtä yritetään automaattisesti uudelleen enintään kolme kertaa.",
+  free_ai_capacity_unavailable:"Ilmainen OpenRouter-kiintiö tai palveluntarjoajan kapasiteetti loppui. Työ jatkuu seuraavana sallittuna käyttöpäivänä ilman maksullista mallia.",
   free_ai_access_rejected:"Ilmainen tekoälypalvelu hylkäsi API-tunnistuksen",
   free_ai_key_invalid:"OpenRouterin API-avain ei kelpaa tai se on vanhentunut. Päivitä GitHubin OPENROUTER_API_KEY.",
   free_ai_key_forbidden:"OpenRouter esti mallipyynnön (403). Tarkista API-avaimen oikeudet ja tilin suojausasetukset.",
@@ -180,7 +180,7 @@
    validUrl(job.preview_url,"preview")&&validUrl(job.qa_url,"qa");
  }
  function card(target,job,options){
-  const deferred=job.status==="queued"&&job.error_code==="free_ai_capacity_unavailable"&&
+  const deferred=job.status==="queued"&&
     Number.isFinite(Date.parse(job.next_eligible_at||""))&&
     Date.parse(job.next_eligible_at)>Date.now();
   const row=append(target,"article","record demo-record");
@@ -190,10 +190,19 @@
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
   const dispatchFailure=job.status==="queued"&&job.dispatch_error_code;
   const dispatchAccepted=job.status==="queued"&&!dispatchFailure&&!!job.dispatch_accepted_at;
+  const dispatchElapsed=dispatchAccepted?
+    Date.now()-Date.parse(job.dispatch_accepted_at||""):0;
+  const dispatchStalled=dispatchAccepted&&Number.isFinite(dispatchElapsed)
+    &&dispatchElapsed>120000;
   append(main,"div","record-sub",
     dispatchFailure?"GitHub-käynnistys epäonnistui. Rakennus ei ole käynnissä.":
+    dispatchStalled?"GitHubille lähetetty käynnistyspyyntö ei ole johtanut vahvistettuun rakennuksen aloitukseen.":
     dispatchAccepted?"Käynnistyspyyntö lähetetty GitHubille. Odotetaan rakennuksen aloitusta.":
     job.progress||STATUS[job.status]||"Odottaa");
+  if(dispatchStalled){
+   append(main,"div","record-warning",
+     "GitHubin käynnistyminen on viivästynyt. Painike lähetti pyynnön, mutta rakennustyö ei ole vielä alkanut. Tarkista GitHub Actionsin estot ja laskutusasetukset; toistuva klikkaaminen ei nopeuta sitä.");
+  }
   if(dispatchFailure){
    append(main,"div","record-warning",
     (DISPATCH_MESSAGES[job.dispatch_error_code]||"GitHub-käynnistystä ei voitu vahvistaa.")+
@@ -204,15 +213,16 @@
    }
   }
   if(job.error_code)append(main,"div","record-warning",
-    (deferred?"Odottaa kiintiön palautumista: ":"Korjausta vaativa vaihe: ")+
+    (deferred?"Automaattinen jatkaminen: ":"Korjausta vaativa vaihe: ")+
     (ERROR_LABELS[job.error_code]||"Työ vaatii lisätarkistuksen")+" ("+job.error_code+")");
   if(deferred)append(main,"div","record-sub",
-    "Seuraava sallittu yritys: "+new Date(job.next_eligible_at).toLocaleString("fi-FI",{
+    "Seuraava automaattinen yritys aikaisintaan: "+new Date(job.next_eligible_at).toLocaleString("fi-FI",{
       timeZone:"Europe/Helsinki"
-    })+" Suomen aikaa. Älä käynnistä samaa työtä käsin ennen tätä.");
+    })+" Suomen aikaa. Vanhat tarkistuspisteet säilyvät.");
   const actions=append(row,"div","record-actions");
   const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
-    deferred?"Odottaa ilmaiskäyttöä":dispatchFailure?"Käynnistys estynyt":
+    deferred?"Jatkuu automaattisesti":dispatchFailure?"Käynnistys estynyt":
+    dispatchStalled?"Aloitus vahvistamatta":
     dispatchAccepted?"Käynnistys lähetetty":STATUS[job.status]||"Tarkistettava");
   badge.setAttribute("aria-label","Työn tila");
   // One consistent, prominent old/new comparison for EVERY automatic

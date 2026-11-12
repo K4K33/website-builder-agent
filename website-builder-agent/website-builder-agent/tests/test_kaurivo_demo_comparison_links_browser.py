@@ -4,6 +4,7 @@ No CRM credentials, Supabase calls or customer traffic. All jobs are synthetic.
 """
 from __future__ import annotations
 from pathlib import Path
+from datetime import datetime, timezone
 import unittest
 from playwright.sync_api import sync_playwright
 
@@ -116,12 +117,26 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
         page=self.page()
         try:
             job=self.job(status="queued")
-            job["dispatch_accepted_at"]="2026-11-11T19:45:13Z"
+            job["dispatch_accepted_at"]=datetime.now(timezone.utc).isoformat()
             self.render(page,[job])
             self.assertIn("Käynnistys lähetetty",
                           page.locator("#demo-running-list").inner_text())
             self.assertNotIn("Rakenteilla",
                              page.locator("#demo-running-list .tag").inner_text())
+        finally:
+            page.close()
+
+    def test_stalled_runner_is_not_falsely_shown_as_building(self):
+        page=self.page(width=390)
+        try:
+            job=self.job(status="queued")
+            job["dispatch_accepted_at"]="2020-01-01T00:00:00Z"
+            self.render(page,[job])
+            self.assertIn("Aloitus vahvistamatta",
+                page.locator("#demo-running-list").inner_text())
+            self.assertIn("ei ole vielä alkanut",
+                page.locator("#demo-running-list").inner_text())
+            self.assertEqual(page.locator(".demo-comparison-empty").count(),1)
         finally:
             page.close()
 

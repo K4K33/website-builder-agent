@@ -170,11 +170,19 @@ Deno.serve(async request=>{
     "x-checkpoint-sha256":info.checksum,"vary":"Authorization"}});
   }
   if(data.action==="claim"){
-   if(Object.keys(data).length!==1)return reply(400,{ok:false,error:"claim_args"});
+   const keys=Object.keys(data);
+   if(keys.length>2||keys.some(key=>!["action","job_id"].includes(key))||
+      (data.job_id!==undefined &&
+       (typeof data.job_id!=="string"||!UUID.test(data.job_id))))
+      return reply(400,{ok:false,error:"claim_args"});
    const run_url="https://github.com/"+REPOSITORY+"/actions/runs/"+run_id;
-   const result=await rpc("kaurivo_worker_claim_demo",{
-    p_run_id:run_id,p_run_url:run_url
-   });
+   // An explicitly clicked Rakenna demo job gets priority. Scheduled and
+   // push backups still claim oldest eligible via the legacy RPC.
+   const targeted=typeof data.job_id==="string";
+   const result=await rpc(targeted?"kaurivo_worker_claim_specific_demo":
+       "kaurivo_worker_claim_demo",targeted?
+       {p_run_id:run_id,p_run_url:run_url,p_job_id:data.job_id}:
+       {p_run_id:run_id,p_run_url:run_url});
    const job=Array.isArray(result)?result[0]||null:null;
    return reply(200,{ok:true,job});
   }
@@ -186,8 +194,11 @@ Deno.serve(async request=>{
    const cleaned=typeof data.progress==="string"?data.progress.slice(0,300):"";
    const code=typeof data.error_code==="string"&&/^[a-z0-9_]{0,80}$/.test(data.error_code)
       ?data.error_code:"";
-   if(data.status==="queued"&&code!=="free_ai_capacity_unavailable")
-     return reply(400,{ok:false,error:"invalid_defer_code"});
+   if(data.status==="queued"&&![
+      "free_ai_capacity_unavailable","free_ai_rate_limit",
+      "research_network_unavailable","network_unavailable",
+      "source_http_rate_limited","stage_timeout","runner_stale_timeout"
+     ].includes(code))return reply(400,{ok:false,error:"invalid_defer_code"});
    const updated=await rpc("kaurivo_worker_update_demo",{
     p_id:data.job_id,p_run_id:run_id,p_status:data.status,
     p_progress:cleaned,p_preview_url:typeof data.preview_url==="string"?data.preview_url:"",
