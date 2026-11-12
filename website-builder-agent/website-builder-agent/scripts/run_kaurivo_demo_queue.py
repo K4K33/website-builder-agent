@@ -366,7 +366,7 @@ def private_stage_error_location(handle,start_position=0):
     """
     handle.flush()
     handle.seek(start_position)
-    tail=handle.read()[-16000:]
+    tail=handle.read()[-16000:].replace("\\","/")
     classes=re.findall(
         r"(?m)^([A-Za-z_][A-Za-z_0-9.]*(?:Error|Exception))\s*:",
         tail,
@@ -388,12 +388,15 @@ def run_cli(args,log_handle,deadline=None):
     duration=int(min(TIMEOUT_PER_STAGE,remaining))
     if duration<30:
         raise HoldError("worker_time_budget_exhausted")
+    child_env=os.environ.copy()
+    # On Windows, redirected Python output otherwise uses the ANSI code page.
+    child_env["PYTHONIOENCODING"]="utf-8"
     try:
         subprocess.run(
             [sys.executable,"main.py",*args],cwd=PROJECT,
             stdout=log_handle,stderr=subprocess.STDOUT,
             check=True,timeout=duration,
-            env=os.environ.copy(),
+            env=child_env,
         )
     except subprocess.TimeoutExpired as exc:
         raise HoldError("stage_timeout") from exc
@@ -541,7 +544,7 @@ def verify_static_site(site_root,expected_routes):
         expected={route_path(route) for route in expected_routes}
     except (TypeError,ValueError) as exc:
         raise HoldError("invalid_expected_page_route") from exc
-    actual={str(p.relative_to(site_root)) for p in site_root.rglob("*.html")}
+    actual={p.relative_to(site_root).as_posix() for p in site_root.rglob("*.html")}
     if not expected or "index.html" not in expected or actual!=expected:
         raise HoldError("site_route_manifest_mismatch")
     pages={route:(site_root/route).read_text(encoding="utf-8")
@@ -877,7 +880,7 @@ def main():
     marker="kaurivo-auto-"+working_job["id"].split("-")[0]
     # Keeping detailed vendor/model output only in ephemeral runner temporary
     # storage avoids exposing private prospect data in GitHub public logs.
-    with tempfile.TemporaryFile(mode="w+",encoding="utf-8") as stage_log:
+    with tempfile.TemporaryFile(mode="w+",encoding="utf-8",errors="replace") as stage_log:
         try:
             free_model_configured()
             ai_deadline=time.monotonic()+AI_STAGE_BUDGET_SECONDS
@@ -986,7 +989,7 @@ def main():
             # Never print str(exc): it may contain private CRM, source material,
             # API URLs or auth headers. Keep exact worker file line/type only.
             own_frames=[frame for frame in traceback.extract_tb(exc.__traceback__)
-                        if frame.filename.endswith("/run_kaurivo_demo_queue.py")]
+                        if Path(frame.filename).name=="run_kaurivo_demo_queue.py"]
             location=(own_frames[-1].lineno if own_frames else 0)
             print("Kaurivo worker redacted error:",type(exc).__name__,
                   "worker_line",location,file=sys.stderr)
