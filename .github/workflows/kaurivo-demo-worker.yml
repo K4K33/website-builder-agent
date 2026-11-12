@@ -188,6 +188,12 @@ jobs:
           KAURIVO_BROWSER_SOURCE_FALLBACK: "1"
           AI_BACKEND: openrouter
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Optional only: deliberately OFF until the owner creates a
+          # Workers Free account, verifies no paid billing and installs a
+          # restricted GitHub Actions token. Never fall back to paid Workers.
+          KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
           OPENROUTER_MODEL: openrouter/free
           RESEARCH_MODEL: ${{ vars.KAURIVO_RESEARCH_MODEL_FREE || 'google/gemma-4-26b-a4b-it:free' }}
           RESEARCH_FALLBACK_MODELS: ${{ vars.KAURIVO_RESEARCH_FALLBACK_MODELS_FREE || 'google/gemma-4-31b-it:free' }}
