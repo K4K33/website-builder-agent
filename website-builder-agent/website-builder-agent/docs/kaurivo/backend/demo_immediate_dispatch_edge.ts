@@ -52,6 +52,14 @@ Deno.serve(async req=>{
   .eq("status","queued").maybeSingle();
  if(dbError)return reply(503,{ok:false,reason:"db_unavailable"});
  if(!job)return reply(403,{ok:false,reason:"admin_queued_job_required"});
+ // When an enrolled Windows machine is actually heartbeating with verified
+ // locally installed Ollama models, it claims the job directly (1s poll).
+ // Never falsely claim 'running' until its private authenticated claim.
+ const {data:localOnline,error:localError}=await userClient
+  .rpc("kaurivo_local_worker_online");
+ if(!localError&&localOnline===true)
+  return reply(202,{ok:true,dispatch:"local_ready"});
+ // The cloud workflow is retained only when no local worker is ready.
  // Persist only allowlisted operational reason codes, never credentials or
  // user data. The UI can then distinguish accepted dispatch from a failed one
  // even after refresh. A failed dispatch is not a failed website build.
