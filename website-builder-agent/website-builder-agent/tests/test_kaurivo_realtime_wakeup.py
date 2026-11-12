@@ -95,7 +95,7 @@ class RealtimeWakeupTests(unittest.TestCase):
 
     def test_owner_sees_true_fast_claim_not_already_queued_error(self):
         self.assertIn('dispatch:"local_running"',EDGE)
-        self.assertIn('dispatch:"local_waiting"',EDGE)
+        self.assertIn('"local_ready":"local_waiting"',EDGE)
         self.assertIn("kaurivo_local_worker_wakeup",EDGE)
         self.assertIn("job.runner_kind",EDGE)
         self.assertIn('data.dispatch==="local_running"',PANEL)
