@@ -60,8 +60,9 @@ def chat_cloudflare_free(
     max_tokens: int,
     image_paths: list[str] | None = None,
     json_mode: bool = False,
+    _allow_length_retry: bool = True,
 ) -> str:
-    """Perform ONE allowlisted Workers Free request. Never attempt a paid model.
+    """Perform a bounded allowlisted Workers Free request. Never use a paid model.
 
     Fail closed on incomplete output, exhausted free capacity, invalid model,
     unapproved accounts, or unknown responses. Never log prompts or keys.
@@ -122,6 +123,16 @@ def chat_cloudflare_free(
         choices = data["choices"]
         first = choices[0]
         if first.get("finish_reason") == "length":
+            # The first long, source-verified JSON response can consume its
+            # initial 3,500-token output budget. Allow ONE controlled increase
+            # (never an unbounded loop). _reserve() caps both requests and
+            # Workers Free account enforces the no-charge daily allowance.
+            if _allow_length_retry and max_tokens < 10000:
+                return chat_cloudflare_free(
+                    system, user_prompt, stage=stage,
+                    max_tokens=min(10000, max_tokens * 2),
+                    image_paths=image_paths, json_mode=json_mode,
+                    _allow_length_retry=False)
             raise RuntimeError("FREE_AI_RESPONSE_TRUNCATED: Cloudflare model exhausted output tokens.")
         if first.get("finish_reason") not in ("stop",):
             raise ValueError("incomplete response")
