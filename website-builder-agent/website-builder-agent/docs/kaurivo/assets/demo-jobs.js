@@ -17,9 +17,9 @@
   source_http_access_blocked:"Yrityksen alkuperäinen sivusto esti automaattisen lukemisen (401/403). Tarvitaan erillinen lähdeaineiston tarkistus.",
   source_http_rate_limited:"Alkuperäinen sivusto rajoitti automaattista hakua. Vältä jatkuvia uudelleenyrityksiä.",
   source_website_unreachable:"Alkuperäinen sivu ei vastannut rakennusagentin tutkimuspyyntöön.",
-  free_ai_rate_limit:"Pilvessä toimiva OpenRouter rajoitti maksuttoman AI-mallin pyyntöjä. Tämä ei ole Codexin käyttöraja. Mallin saatavuutta ei voida taata.",
-  free_ai_capacity_unavailable:"Pilven OpenRouterin ilmainen kiintiö tai mallikapasiteetti ei riitä juuri nyt. Codexia ei käytetä. Työ säilyy jonossa, mutta jatko riippuu ilmaisesta kapasiteetista.",
-  free_ai_access_rejected:"Ilmainen tekoälypalvelu hylkäsi API-tunnistuksen",
+  free_ai_rate_limit:"Pilven maksuton OpenRouter tai Cloudflare rajoitti AI-pyyntöjä. Tämä ei ole Codexin käyttöraja.",
+  free_ai_capacity_unavailable:"Pilven maksuttoman AI:n (OpenRouter tai Cloudflare) kapasiteetti ei riittänyt. Työ on tallessa ja jatkuu sallitussa ajoikkunassa.",
+  free_ai_access_rejected:"Pilvi-AI:n (OpenRouter tai Cloudflare) API-tunnistus tai käyttöoikeus hylättiin",
   free_ai_key_invalid:"OpenRouterin API-avain ei kelpaa tai se on vanhentunut. Päivitä GitHubin OPENROUTER_API_KEY.",
   free_ai_key_forbidden:"OpenRouter esti mallipyynnön (403). Tarkista API-avaimen oikeudet ja tilin suojausasetukset.",
   free_ai_wrong_key_type:"OpenRouteriin on asetettu hallinta-avain, joka ei käy mallikutsuihin.",
@@ -27,11 +27,11 @@
   free_ai_key_metadata_invalid:"OpenRouter palautti virheellisen avaimen tarkistusvastauksen.",
   free_ai_account_blocked:"Mallipalvelun tili ei salli edes ilmaista pyyntöä",
   free_model_unavailable:"Valittu ilmainen AI-malli ei ole saatavilla",
-  free_model_request_rejected:"Ilmainen AI-malli ei hyväksynyt pyynnön muotoa",
+  free_model_request_rejected:"Maksuton pilvi-AI hylkäsi pyynnön muodon tai koon. Rakentajassa on korjattava tekninen syy ennen jatkoa.",
   missing_runtime_dependency:"Rakennusympäristöstä puuttuu ohjelmistoriippuvuus",
   research_network_unavailable:"Alkuperäisen sivun tutkiminen epäonnistui verkkoyhteyden takia",
   network_unavailable:"Rakennuksen verkkoyhteys epäonnistui",
-  free_ai_response_truncated:"Ilmaisen AI-mallin vastaus katkesi kesken",
+  free_ai_response_truncated:"Ilmaisen AI-mallin vastaus katkesi tokenrajaan eikä sitä hyväksytty valmiiksi. Tehty työ säilyy.",
   building_failed:"Konsepti tai sivustorakennus ei läpäissyt vaatimuksia",
   qa_failed:"Sivuston laatutarkistus ei läpäissyt vaatimuksia",
   quality_gate_not_approved:"Laadun hyväksyntää ei ole saavutettu",
@@ -266,7 +266,7 @@
   if(job.runner_kind==="github"&&
      ["free_ai_rate_limit","free_ai_capacity_unavailable"].includes(job.error_code))
    append(main,"div","record-sub",
-     "Rakentaja: GitHub Actions + OpenRouter. Codexia tai oman koneen AI:ta ei käytetä. API-avaimen onnistunut tarkistus ei takaa ilmaisen AI-mallin kapasiteettia.");
+     "Rakentaja: GitHub Actions + OpenRouter / Cloudflare Workers Free. Codexia tai oman koneen AI:ta ei käytetä. API-avaimen onnistunut tarkistus ei takaa mallin kapasiteettia.");
   if(deferred)append(main,"div","record-sub",
     "Seuraava automaattinen yritys aikaisintaan: "+new Date(job.next_eligible_at).toLocaleString("fi-FI",{
       timeZone:"Europe/Helsinki"

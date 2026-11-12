@@ -260,6 +260,19 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "free_ai_capacity_unavailable"
     if "free_ai_rate_limit" in terminal:
         return "free_ai_rate_limit"
+    if "free_ai_response_truncated" in terminal:
+        return "free_ai_response_truncated"
+    if "free_model_request_rejected" in terminal:
+        return "free_model_request_rejected"
+    if "free_ai_access_rejected" in terminal:
+        return "free_ai_access_rejected"
+    if "free_ai_account_blocked" in terminal:
+        return "free_ai_account_blocked"
+    if "free_model_unavailable" in terminal:
+        return "free_model_unavailable"
+    if "network_unavailable" in terminal:
+        return ("research_network_unavailable" if stage_name=="researching"
+                else "network_unavailable")
     if "codex_stage_timeout" in terminal:
         return "stage_timeout"
     # Restart a local worker after an actual temporary Ollama transport
@@ -1014,10 +1027,12 @@ def main():
                         "free_ai_rate_limit","free_ai_capacity_unavailable"
                     })
                     if cloud_limit:
-                        message=("Pilven OpenRouterin maksuton AI rajoitti "
-                                 "pyyntöä vaiheessa "+interrupted_stage+
+                        message=("Maksuttoman pilvi-AI:n (OpenRouter tai "
+                                 "Cloudflare) kapasiteetti rajoitti pyyntöä "
+                                 "vaiheessa "+interrupted_stage+
                                  ". Codexia ei käytetä. Työ on tallessa; "
-                                 "jatko riippuu ilmaisesta AI-kapasiteetista.")
+                                 "jatko riippuu palveluntarjoajan "
+                                 "kapasiteetista.")
                     else:
                         message=("Tilapäinen häiriö: "+error.code+
                                  ". Työ on tallessa ja sitä jatketaan "

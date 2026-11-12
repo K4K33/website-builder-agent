@@ -129,7 +129,7 @@ class AgencyPreflightTests(unittest.TestCase):
         self.assertIn('dispatchFeedback(dispatch,toast,confirmed)',PANEL)
         self.assertIn('dispatchFeedback(result,toast,confirmed)',PANEL)
         self.assertIn('dispatchFeedback(status,options.toast,confirmed)',PANEL)
-        self.assertIn('demo-jobs.js?v=20261112-openrouter-status5',HTML)
+        self.assertIn('demo-jobs.js?v=20261112-cloudflare-codes6',HTML)
         self.assertNotIn("Rakennustyö valmis","Rakenna demo")
 
 if __name__=="__main__":

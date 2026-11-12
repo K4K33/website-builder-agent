@@ -14,7 +14,7 @@ FLOW=(ROOT.parents[1]/".github/workflows/kaurivo-demo-worker.yml").read_text(enc
 
 class ExplicitCloudQuotaTests(unittest.TestCase):
     def test_status_explicitly_names_openrouter_not_codex(self):
-        self.assertIn('free_ai_rate_limit:"Pilvessä toimiva OpenRouter',JS)
+        self.assertIn('free_ai_rate_limit:"Pilven maksuton OpenRouter tai Cloudflare',JS)
         self.assertIn('Tämä ei ole Codexin käyttöraja',JS)
         self.assertIn('OpenRouter-avain toimii (mallikapasiteettia ei vahvistettu)',JS)
         self.assertIn('Tämä ei varmista, että maksuton malli hyväksyy uuden pyynnön',JS)
@@ -22,12 +22,12 @@ class ExplicitCloudQuotaTests(unittest.TestCase):
         self.assertIn('job.runner_kind==="github"',JS)
         self.assertIn('GitHub Actions + OpenRouter',JS)
         self.assertNotIn('Rakennuspalvelu käytettävissä',JS)
-        self.assertIn('demo-jobs.js?v=20261112-openrouter-status5',HTML)
+        self.assertIn('demo-jobs.js?v=20261112-cloudflare-codes6',HTML)
 
     def test_deferral_progress_is_truthful_without_bypassing_qa(self):
         self.assertIn("cloud_limit=(not LOCAL_WORKER",RUNNER)
         self.assertIn('Codexia ei käytetä. Työ on tallessa;',RUNNER)
-        self.assertIn("jatko riippuu ilmaisesta AI-kapasiteetista.",RUNNER)
+        self.assertIn('jatko riippuu palveluntarjoajan ',RUNNER)
         self.assertIn('update("queued",message,error_code=error.code)',RUNNER)
         self.assertIn('if error.code in TRANSIENT_RETRY_CODES:',RUNNER)
         self.assertIn('quality_gate_build_version_mismatch',RUNNER)
