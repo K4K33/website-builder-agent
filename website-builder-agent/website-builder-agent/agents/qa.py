@@ -26,6 +26,7 @@ from bs4 import BeautifulSoup
 from utils.claude_client import ask_claude_json
 from utils.browser_qa import inspect_site
 from utils.service_quality import audit_service_quality, POLICY as SERVICE_QUALITY_POLICY
+from utils.agency_handoff import agency_handoff
 from utils.route_experience_contract import derive_route_experience_contract
 from utils.visual_comparison import build_visual_comparison
 from utils.visual_media_gate import audit_visual_media
@@ -1358,6 +1359,8 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps(normalize_facts(research.get("company_facts")), ensure_ascii=False)
                     + "\nDESIGN BRIEF (not company facts):\n"
                     + json.dumps(research.get("design_recommendations", {}), ensure_ascii=False)
+                    + "\nAGENCY DESIGN HANDOFF — check EACH route's task, source floor and permitted components with actual screenshots:\n"
+                    + json.dumps(agency_handoff(research), ensure_ascii=False)
                     + "\nINDUSTRY REFERENCES (not company facts; their images follow generated views):\n"
                     + json.dumps(benchmark, ensure_ascii=False)
                     + "\nIMAGE ORDER: FIRST real source (LEFT) vs generated (RIGHT) "
