@@ -111,7 +111,7 @@ def preferred_benchmark_regions(facts: dict | None = None, original_text: str = 
     search_sources = (hints, str(original_text or "")[:10000])
     for raw in search_sources:
         for city in BENCHMARK_REGIONS:
-            if re.search(r"(?<!\\w)" + re.escape(city) + r"(?!\\w)", raw, re.I):
+            if re.search(r"(?<!\w)" + re.escape(city) + r"(?!\w)", raw, re.I):
                 return (city,) + tuple(region for region in DEFAULT_REGIONS if region != city)
     return DEFAULT_REGIONS
 
