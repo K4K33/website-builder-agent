@@ -1,6 +1,7 @@
 # Kaurivo first-time Windows setup. Installs ONLY into the local user's
 # existing checkout; no paid AI, new cloud services or background processes
 # are created without explicit confirmation.
+param([switch]$Codex)
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $root
@@ -22,18 +23,30 @@ $python = Join-Path $root ".venv\Scripts\python.exe"
 if ($LASTEXITCODE -ne 0) { throw "Python-riippuvuuksien asennus epäonnistui." }
 & $python -m playwright install chromium
 if ($LASTEXITCODE -ne 0) { throw "Chromiumin asennus epäonnistui." }
-if (!(Get-Command ollama -ErrorAction SilentlyContinue)) {
-  throw "Ollama puuttuu. Asenna ilmainen Ollama: https://ollama.com/download/windows"
-}
-$allow = Read-Host "Asennetaanko paikalliset tekoälymallit? (n. 9–12 GB levytilaa, kyllä/ei)"
-if ($allow -notin @("kyllä","k","yes","y")) {
-  Write-Host "Voit myöhemmin suorittaa: ollama pull qwen2.5-coder:7b ja ollama pull llava:7b"
+if ($Codex) {
+  if (!(Get-Command codex -ErrorAction SilentlyContinue)) {
+    throw "Asenna ensin Codex CLI. Ohje: https://developers.openai.com/codex/cli"
+  }
+  Write-Host "Kirjaudu Codexiin ChatGPT-tililläsi selaimessa."
+  & codex login
+  if ($LASTEXITCODE -ne 0) { throw "Codex-kirjautuminen epäonnistui." }
+  & $python -m utils.codex_ai
+  if ($LASTEXITCODE -ne 0) { throw "Codexin tilin tai mallien tarkistus epäonnistui." }
 } else {
-  & ollama pull qwen2.5-coder:7b
-  if ($LASTEXITCODE -ne 0) { throw "Koodimallin asennus epäonnistui." }
-  & ollama pull llava:7b
-  if ($LASTEXITCODE -ne 0) { throw "Kuvia ymmärtävän QA-mallin asennus epäonnistui." }
+  if (!(Get-Command ollama -ErrorAction SilentlyContinue)) {
+    throw "Ollama puuttuu. Asenna ilmainen Ollama: https://ollama.com/download/windows"
+  }
+  $allow = Read-Host "Asennetaanko paikalliset tekoälymallit? (n. 9–12 GB levytilaa, kyllä/ei)"
+  if ($allow -notin @("kyllä","k","yes","y")) {
+    Write-Host "Voit myöhemmin suorittaa: ollama pull qwen2.5-coder:7b ja ollama pull llava:7b"
+  } else {
+    & ollama pull qwen2.5-coder:7b
+    if ($LASTEXITCODE -ne 0) { throw "Koodimallin asennus epäonnistui." }
+    & ollama pull llava:7b
+    if ($LASTEXITCODE -ne 0) { throw "Kuvia ymmärtävän QA-mallin asennus epäonnistui." }
+  }
 }
+
 $folder=Join-Path $env:LOCALAPPDATA "Kaurivo"
 New-Item -ItemType Directory -Force -Path $folder | Out-Null
 Write-Host "Avaa Kaurivon hallinnasta Demot ja paina 'Luo Windows-rakentajan avain'."
@@ -47,6 +60,8 @@ try {
 } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($plain) }
 $dest=Join-Path $folder "worker.token.dpapi"
 $secure | ConvertFrom-SecureString | Set-Content -Encoding ascii -Path $dest
+$backend = if ($Codex) { "codex" } else { "ollama" }
+Set-Content -Encoding ascii -Path (Join-Path $folder "worker.backend") -Value $backend
 Write-Host "Avain tallennettiin nykyisen Windows-käyttäjän DPAPI-suojattuna."
 Write-Host "Huomio: GitHubin sisäisen demon julkaisu tarvitsee Git Credential Managerissa hyväksytyn sisäänkirjautumisen, jolla on Contents:write."
 $auto=Read-Host "Käynnistetäänkö Windows-rakentaja automaattisesti sisäänkirjautumisen yhteydessä? (k/e)"
