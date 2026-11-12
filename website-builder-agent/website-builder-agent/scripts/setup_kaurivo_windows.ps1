@@ -63,4 +63,4 @@ if ($auto -in @("k","kyllä","y","yes")) {
   }
 }
 Write-Host "Asennus valmis. Avaa uusi PowerShell ja suorita:"
-Write-Host "powershell -ExecutionPolicy Bypass -File \"$PSScriptRoot\start_kaurivo_worker.ps1\""
+Write-Host ('powershell -ExecutionPolicy Bypass -File "' + (Join-Path $PSScriptRoot "start_kaurivo_worker.ps1") + '"')
