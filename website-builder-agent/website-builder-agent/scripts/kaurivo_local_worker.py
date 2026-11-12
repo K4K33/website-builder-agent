@@ -7,6 +7,7 @@ needed to *start*. Uses exactly the existing source/brand/QA pipeline.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -23,8 +24,11 @@ EDGE="https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-demo-worker"
 OLLAMA="http://127.0.0.1:11434"
 TOKEN_RE=re.compile(r"^kvl_[0-9a-f]{64}$")
 UUID_RE=re.compile(r"^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$",re.I)
-POLL_SECONDS=1.0
-PING_SECONDS=10.0
+# Event-triggered startup over Realtime, NOT a costly 1 Hz Edge Function loop.
+# Missed messages are recovered by a rare poll so the owner's request persists.
+FALLBACK_POLL_SECONDS=90.0
+PING_SECONDS=20.0
+PUBLIC_KEY="sb_publishable_eESXBcqgycaQXzflfZN34w_nWP2ixvU"
 
 
 class LocalWorkerError(RuntimeError):
@@ -74,6 +78,72 @@ def server(session:requests.Session,token:str,action:str,**kwargs)->dict:
     if data.get("ok") is not True:
         raise LocalWorkerError("Private worker rejected "+action+" request.")
     return data
+
+
+def realtime_wakeup(token:str,wake:threading.Event,keep_running:threading.Event) -> None:
+    """Low-latency, secret-topic, payload-free Supabase Broadcast listener.
+
+    The topic is derived from the 256-bit device key; no token or business
+    identity is transmitted over the public channel. It only WAKES the
+    authenticated claim RPC. The websocket never receives a job record.
+    """
+    import websocket
+    digest=hashlib.sha256(token.encode("ascii")).hexdigest()[:48]
+    topic="realtime:kaurivo-demo-local-"+digest
+    uri=("wss://xhsfbcwpwbgdbatrcyuk.supabase.co/realtime/v1/websocket"
+         "?apikey="+PUBLIC_KEY+"&vsn=1.0.0")
+    while keep_running.is_set():
+        ws=None
+        try:
+            ws=websocket.create_connection(uri,timeout=12,
+                origin="https://k4k33.github.io",enable_multithread=True)
+            ws.settimeout(2.0)
+            ws.send(json.dumps({
+                "topic":topic,"event":"phx_join","ref":"1","join_ref":"1",
+                "payload":{"config":{
+                    "broadcast":{"ack":False,"self":False},
+                    "presence":{"enabled":False},
+                    "private":False}}
+            },separators=(",",":")))
+            last_heartbeat=time.monotonic()
+            joined=False
+            while keep_running.is_set():
+                if time.monotonic()-last_heartbeat>20:
+                    ws.send(json.dumps({"topic":"phoenix","event":"heartbeat",
+                        "payload":{},"ref":"2"},separators=(",",":")))
+                    last_heartbeat=time.monotonic()
+                try:
+                    raw=ws.recv()
+                except websocket.WebSocketTimeoutException:
+                    continue
+                if not raw:break
+                if not isinstance(raw,str) or len(raw)>6000:continue
+                try:packet=json.loads(raw)
+                except ValueError:continue
+                if not isinstance(packet,dict):continue
+                if packet.get("topic")!=topic:continue
+                kind=packet.get("event")
+                payload=packet.get("payload")
+                if not isinstance(payload,dict):payload={}
+                if kind=="phx_reply" and packet.get("ref")=="1":
+                    if payload.get("status")!="ok":break
+                    joined=True
+                    wake.set()  # Also recover requests created before join.
+                elif kind in ("phx_error","phx_close"):
+                    break
+                elif joined and kind=="broadcast" and payload.get("event")=="wake":
+                    wake.set()
+        except (websocket.WebSocketException,OSError,ValueError):
+            # Never log the websocket URL/token or prospect metadata.
+            pass
+        finally:
+            if ws is not None:
+                try:ws.close()
+                except OSError:pass
+        if keep_running.is_set():
+            for _ in range(5):
+                if not keep_running.is_set():break
+                time.sleep(1)
 
 
 def singleton_lock():
@@ -172,6 +242,8 @@ def main() -> int:
         last_model_check=0.0
         keep_running=threading.Event()
         keep_running.set()
+        wake=threading.Event()
+        wake.set()  # Always check pending durable jobs on first startup.
         # The process lease is deliberately separate from the idle daemon.
         # A crashed child must not be kept alive by the daemon's own heartbeat.
         active_job={"id":None}
@@ -188,11 +260,14 @@ def main() -> int:
                     except (requests.RequestException,LocalWorkerError,ValueError):
                         pass
                     # Event.wait(true) would spin, so use shutdown-aware sleep.
-                    for _ in range(10):
+                    for _ in range(int(PING_SECONDS)):
                         if not keep_running.is_set():break
                         time.sleep(1)
         thread=threading.Thread(target=safe_heartbeat,daemon=True)
         thread.start()
+        listener=threading.Thread(target=realtime_wakeup,
+            args=(token,wake,keep_running),daemon=True)
+        listener.start()
         try:
             while True:
                 # Recheck model readiness every 10 seconds, but poll the DB
@@ -212,6 +287,10 @@ def main() -> int:
                 if not ready:
                     time.sleep(5)
                     continue
+                # The wake event normally arrives within a second of the
+                # admin's request. No HTTP polling is done while idle.
+                wake.wait(timeout=FALLBACK_POLL_SECONDS)
+                wake.clear()
                 try:
                     data=server(session,token,"claim")
                     job=data.get("job")
@@ -221,8 +300,9 @@ def main() -> int:
                         print("Kaurivo aloittaa valitun yrityksen rakennustyön.",flush=True)
                         execute_claim(session,token,job,worker_id,
                                       model_names,active_job)
-                    else:
-                        time.sleep(POLL_SECONDS)
+                        # Drain any additional queued companies without
+                        # waiting for another notification.
+                        wake.set()
                 except (requests.RequestException,LocalWorkerError,ValueError,
                         OSError,subprocess.SubprocessError) as error:
                     print("Kaurivo: yhteys tilapäisesti poikki. Työ ja tarkistuspisteet säilyvät.",
@@ -233,6 +313,7 @@ def main() -> int:
         finally:
             keep_running.clear()
             thread.join(timeout=2)
+            listener.join(timeout=2)
     return 0
 
 
