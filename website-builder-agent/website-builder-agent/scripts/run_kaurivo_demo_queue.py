@@ -123,12 +123,13 @@ def free_model_configured():
     if os.environ.get("FREE_ONLY","1") not in {"1","true","yes"}:
         raise HoldError("paid_ai_disabled")
     if LOCAL_WORKER:
-        if os.environ.get("AI_BACKEND")!="ollama":
+        backend=os.environ.get("AI_BACKEND")
+        if backend not in {"ollama","codex"}:
             raise HoldError("local_models_required")
         from config import model_for_stage, backend_for_stage
         try:
             names={phase:model_for_stage(phase) for phase in ("research","builder","qa")}
-            if (any(backend_for_stage(phase)!="ollama"
+            if (any(backend_for_stage(phase)!=backend
                     for phase in ("research","builder","qa")) or
                     names["builder"]==names["qa"]):
                 raise RuntimeError("local independent QA model missing")

@@ -36,6 +36,9 @@ class LocalWorkerError(RuntimeError):
 
 
 def models() -> dict[str,str]:
+    if os.environ.get("KAURIVO_WINDOWS_BACKEND")=="codex":
+        from utils.codex_ai import discover_models
+        return discover_models()
     result={
         "research":os.environ.get("OLLAMA_RESEARCH_MODEL","qwen2.5-coder:7b").strip(),
         "builder":os.environ.get("OLLAMA_BUILDER_MODEL","qwen2.5-coder:7b").strip(),
@@ -179,16 +182,20 @@ def run_claim(job:dict,run_id:int,token:str,model_names:dict[str,str]) -> None:
     with tempfile.TemporaryDirectory(prefix="kaurivo-local-") as tmp:
         claim=Path(tmp)/"claim.json"
         claim.write_text(json.dumps({"job":job},ensure_ascii=False),encoding="utf-8")
+        backend=os.environ.get("KAURIVO_WINDOWS_BACKEND","ollama")
         env=os.environ.copy()
         env.update({
            "KAURIVO_LOCAL_WORKER":"1",
            "KAURIVO_LOCAL_WORKER_TOKEN":token,
            "KAURIVO_CLAIMED_JOB_FILE":str(claim),
            "RUNNER_TEMP":tmp,"GITHUB_RUN_ID":str(run_id),
-           "FREE_ONLY":"1","AI_BACKEND":"ollama",
-           "RESEARCH_AI_BACKEND":"ollama",
-           "BUILDER_AI_BACKEND":"ollama",
-           "QA_AI_BACKEND":"ollama",
+           "FREE_ONLY":"1","AI_BACKEND":backend,
+           "RESEARCH_AI_BACKEND":backend,
+           "BUILDER_AI_BACKEND":backend,
+           "QA_AI_BACKEND":backend,
+           "KAURIVO_CODEX_RESEARCH_MODEL":model_names["research"],
+           "KAURIVO_CODEX_BUILDER_MODEL":model_names["builder"],
+           "KAURIVO_CODEX_QA_MODEL":model_names["qa"],
            "KAURIVO_BROWSER_SOURCE_FALLBACK":"1",
            "FREE_CLOUD_LOCAL_FALLBACK":"1",
            "OLLAMA_RESEARCH_MODEL":model_names["research"],
@@ -232,7 +239,14 @@ def main() -> int:
     token=os.environ.get("KAURIVO_LOCAL_WORKER_TOKEN","").strip()
     if not TOKEN_RE.fullmatch(token):
         raise LocalWorkerError("Windows setup token missing or invalid.")
+    codex_mode=os.environ.get("KAURIVO_WINDOWS_BACKEND")=="codex"
     model_names=models()
+
+    def ai_ready(session):
+        # Discover Codex account/models at startup. Each turn checks account
+        # authentication again. Idle heartbeats must not launch model requests.
+        return codex_mode or ollama_ready(session,model_names)
+
     file=singleton_lock()
     with file,requests.Session() as session:
         print("Kaurivo Windows-rakentaja käynnissä. Realtime-heräte käytössä; varatarkistus 90 s.",
@@ -255,7 +269,7 @@ def main() -> int:
                     try:
                         lease=active_job["id"]
                         server(ping_session,token,"ping",
-                               ready=ollama_ready(ping_session,model_names),
+                               ready=ai_ready(ping_session),
                                **({"job_id":lease} if lease else {}))
                     except (requests.RequestException,LocalWorkerError,ValueError):
                         pass
@@ -275,13 +289,14 @@ def main() -> int:
                 # call, yet fetching model metadata each second is wasteful.
                 now=time.monotonic()
                 if ready_before is None or now-last_model_check>=10:
-                    ready=ollama_ready(session,model_names)
+                    ready=ai_ready(session)
                     last_model_check=now
                 else:
                     ready=ready_before
                 if ready!=ready_before:
                     print("Kaurivo local AI "+("valmis" if ready else "ei vielä valmis")+
-                          " (kaikki mallit oltava asennettuna; QA-mallilla näkökyky).",
+                          (" (Codex / ChatGPT)." if codex_mode else
+                           " (kaikki mallit oltava asennettuna; QA-mallilla näkökyky)."),
                           flush=True)
                     ready_before=ready
                 if not ready:

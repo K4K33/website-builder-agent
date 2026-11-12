@@ -386,6 +386,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                    "FREE_CLOUD_LOCAL_FALLBACK":"1","OLLAMA_MODEL":"",
                    "OLLAMA_RESEARCH_MODEL":""}):
             with patch.object(resource_manager,"reserve",return_value=False), \
+                 patch.object(resource_manager,"openrouter_reservation_block_reason", \
+                              return_value="daily"), \
                  patch.object(claude_client,"_get_headers",return_value={}), \
                  patch.object(claude_client.config,"model_for_stage",
                     return_value="google/gemma-4-26b-a4b-it:free"), \

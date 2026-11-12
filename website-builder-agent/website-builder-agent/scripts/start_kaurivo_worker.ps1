@@ -17,6 +17,14 @@ try {
 }
 $env:PYTHONUNBUFFERED = "1"
 $env:FREE_ONLY = "1"
+$backendFile = Join-Path $settings "worker.backend"
+$env:KAURIVO_WINDOWS_BACKEND = "ollama"
+if (Test-Path $backendFile) {
+  $env:KAURIVO_WINDOWS_BACKEND = (Get-Content -Raw -Path $backendFile).Trim()
+}
+if ($env:KAURIVO_WINDOWS_BACKEND -notin @("codex", "ollama")) {
+  throw "Tuntematon Kaurivon AI-asetus. Suorita asennus uudelleen."
+}
 $env:OLLAMA_RESEARCH_MODEL = "qwen2.5-coder:7b"
 $env:OLLAMA_BUILDER_MODEL = "qwen2.5-coder:7b"
 $env:OLLAMA_QA_MODEL = "llava:7b"

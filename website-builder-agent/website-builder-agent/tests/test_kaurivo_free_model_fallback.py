@@ -85,8 +85,8 @@ class KaurivoFreeModelFallbackTests(unittest.TestCase):
                 claude_client.ask_claude("system","text",stage="builder",max_tokens=8000)
             call.assert_called_once()
 
-    def test_shared_daily_429_does_not_fan_out_more_cloud_requests(self):
-        reply=Mock(status_code=429,headers={},text="daily limit")
+    def test_unverified_429_does_not_fan_out_more_cloud_requests(self):
+        reply=Mock(status_code=429,headers={},text="provider limit")
         env={"FREE_ONLY":"1","AI_BACKEND":"openrouter",
              "RESEARCH_MODEL":"google/primary:free",
              "RESEARCH_FALLBACK_MODELS":"google/backup:free",
@@ -95,7 +95,7 @@ class KaurivoFreeModelFallbackTests(unittest.TestCase):
              patch.object(claude_client,"_get_headers",return_value={"Authorization":"mock"}), \
              patch.object(resource_manager,"reserve",return_value=True), \
              patch.object(claude_client.requests,"post",return_value=reply) as request:
-            with self.assertRaisesRegex(RuntimeError,"FREE_AI_CAPACITY_UNAVAILABLE"):
+            with self.assertRaisesRegex(RuntimeError,"FREE_AI_RATE_LIMIT"):
                 claude_client.ask_claude("system","text",stage="research")
             request.assert_called_once()
 

@@ -210,7 +210,12 @@ def ask_claude(
     if max_retries < 1 or max_tokens < 1:
         raise ValueError("max_retries and max_tokens must be positive")
 
-    if config.backend_for_stage(stage) == "ollama":
+    backend = config.backend_for_stage(stage)
+    if backend == "codex":
+        from utils.codex_ai import chat_codex
+        return chat_codex(system, user_prompt, model=model,
+                          image_paths=image_paths, json_mode=json_mode)
+    if backend == "ollama":
         from utils.local_ai import chat_local
         # No OpenRouter headers, credits, reservations, or cloud fallback.
         return chat_local(
