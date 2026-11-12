@@ -58,7 +58,7 @@ class LocalWindowsTests(TestCase):
         self.assertIn("runner_kind='local'",SQL)
         self.assertIn("kaurivo_local_worker_online",DISPATCH)
         self.assertIn('"local_ready":"local_waiting"',DISPATCH)
-        self.assertIn("Windows-rakentaja on valmiina",PANEL)
+        self.assertIn("Windows-rakentajalle lähetettiin pikailmoitus",PANEL)
         self.assertIn("status!==\"queued\"",PANEL)
         self.assertIn("Käynnistys lähetetty",PANEL)
         self.assertIn("local_qa_public_proof_missing",RUNNER)
