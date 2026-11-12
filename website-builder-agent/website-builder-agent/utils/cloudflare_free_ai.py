@@ -67,11 +67,11 @@ def chat_cloudflare_free(
     unapproved accounts, or unknown responses. Never log prompts or keys.
     """
     if stage not in FREE_MODELS:
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare stage not approved.")
+        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare stage not approved.")
     if not enabled():
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare Free not confirmed.")
+        raise RuntimeError("FREE_AI_ACCESS_REJECTED: Cloudflare Workers Free not confirmed.")
     if not _reserve():
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare run cap reached.")
+        raise RuntimeError("FREE_AI_RATE_LIMIT: Cloudflare per-run safety cap reached.")
     if not isinstance(max_tokens, int) or not 1 <= max_tokens <= 10000:
         raise ValueError("Cloudflare output token budget out of range.")
     from utils.claude_client import _build_user_content
@@ -97,13 +97,22 @@ def chat_cloudflare_free(
             json=payload, timeout=170, allow_redirects=False,
         )
     except requests.RequestException as exc:
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare connection failure.") from exc
-    if resp.status_code in (429, 503, 502, 504):
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare Free capacity exceeded.")
-    if resp.status_code in (401, 403, 402):
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare Free credentials or billing not verified.")
+        raise RuntimeError("NETWORK_UNAVAILABLE: Cloudflare request transport failed.") from exc
+    # Distinguish a provider quota from a malformed request; previously all
+    # HTTP 4xx/5xx and truncated model responses were incorrectly deferred
+    # to the next day as free_ai_capacity_unavailable. Never log HTTP bodies.
+    if resp.status_code == 429:
+        raise RuntimeError("FREE_AI_RATE_LIMIT: Cloudflare Workers Free HTTP 429.")
+    if resp.status_code in (502, 503, 504):
+        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare temporarily unavailable.")
+    if resp.status_code in (401, 403):
+        raise RuntimeError("FREE_AI_ACCESS_REJECTED: Cloudflare access denied.")
+    if resp.status_code == 402:
+        raise RuntimeError("FREE_AI_ACCOUNT_BLOCKED: Cloudflare Free billing boundary.")
+    if resp.status_code == 404:
+        raise RuntimeError("FREE_MODEL_UNAVAILABLE: Cloudflare exact model unavailable.")
     if resp.status_code != 200:
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare model request rejected.")
+        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare HTTP "+str(resp.status_code)+".")
     try:
         data = resp.json()
         if not isinstance(data, dict) or (
@@ -112,6 +121,8 @@ def chat_cloudflare_free(
             raise ValueError("unapproved model")
         choices = data["choices"]
         first = choices[0]
+        if first.get("finish_reason") == "length":
+            raise RuntimeError("FREE_AI_RESPONSE_TRUNCATED: Cloudflare model exhausted output tokens.")
         if first.get("finish_reason") not in ("stop",):
             raise ValueError("incomplete response")
         content = first["message"]["content"]
@@ -122,4 +133,4 @@ def chat_cloudflare_free(
             raise ValueError("empty response")
         return content.strip()
     except (ValueError, KeyError, IndexError, TypeError) as exc:
-        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare returned no verified full response.") from exc
+        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare response invalid or incomplete.") from exc
