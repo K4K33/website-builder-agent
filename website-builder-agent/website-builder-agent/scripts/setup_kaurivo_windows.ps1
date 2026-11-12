@@ -3,6 +3,9 @@
 # are created without explicit confirmation.
 param([switch]$Codex)
 $ErrorActionPreference = "Stop"
+if ($Codex) {
+  throw "Codex ei ole enää tuettu Kaurivon Windows-rakentajassa. Käytä paikallista Ollamaa."
+}
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $root
 Write-Host "Kaurivo – Windows-rakentajan ensiasennus"
@@ -23,9 +26,6 @@ $python = Join-Path $root ".venv\Scripts\python.exe"
 if ($LASTEXITCODE -ne 0) { throw "Python-riippuvuuksien asennus epäonnistui." }
 & $python -m playwright install chromium
 if ($LASTEXITCODE -ne 0) { throw "Chromiumin asennus epäonnistui." }
-if ($Codex) {
-  throw "Codex ei ole enää tuettu Kaurivon Windows-rakentajassa. Käytä paikallista Ollamaa."
-}
 if (!(Get-Command ollama -ErrorAction SilentlyContinue)) {
   throw "Ollama puuttuu. Asenna ilmainen Ollama: https://ollama.com/download/windows"
 }
