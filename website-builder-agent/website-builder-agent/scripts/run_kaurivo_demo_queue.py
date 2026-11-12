@@ -910,11 +910,11 @@ def main():
             # Professional agency-style handoff, before another AI call.
             # This also rechecks restored checkpoints against the ACTIVE
             # canonical Master Prompt, not the version used by an old job.
-            from utils.agency_preflight import verify_design_handoff
+            from utils.agency_preflight import verify_design_handoff, safe_preflight_reason
             try:
                 verify_design_handoff(load_company(agent_slug),selected=False)
             except (RuntimeError,ValueError,TypeError,KeyError) as exc:
-                raise HoldError("design_handoff_incomplete","research") from exc
+                raise HoldError("design_handoff_incomplete","research:"+safe_preflight_reason(exc)) from exc
             if done<1:
                 update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
                 run_cli(["concept-previews",agent_slug],stage_log,ai_deadline)
@@ -929,7 +929,7 @@ def main():
             try:
                 verify_design_handoff(load_company(agent_slug),selected=True)
             except (RuntimeError,ValueError,TypeError,KeyError) as exc:
-                raise HoldError("design_handoff_incomplete","selected_concept") from exc
+                raise HoldError("design_handoff_incomplete","selected_concept:"+safe_preflight_reason(exc)) from exc
             if done<3:
                 update("building","Rakennetaan valittu monisivuinen demo")
                 run_cli(["build",agent_slug],stage_log,ai_deadline)
