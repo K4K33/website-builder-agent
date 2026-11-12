@@ -154,3 +154,39 @@ revoke all on function public.kaurivo_worker_claim_specific_demo(bigint,text,uui
  from public,anon,authenticated;
 grant execute on function public.kaurivo_worker_claim_specific_demo(bigint,text,uuid)
  to service_role;
+
+-- The same authenticated owner can wake an already queued job explicitly,
+-- e.g. after clicking "Käynnistä nyt". Never broadcast job identifiers.
+create or replace function public.kaurivo_local_worker_wakeup(
+ p_job_id uuid
+) returns boolean language plpgsql security definer set search_path=''
+as $$
+declare d record;
+declare sent boolean:=false;
+begin
+ if (select kaurivo_internal.is_kaurivo_admin()) is not true
+   or auth.uid() is null then
+   raise exception 'not authorized' using errcode='42501';
+ end if;
+ if not exists(select 1 from public.kaurivo_demo_build_jobs j
+     where j.id=p_job_id and j.status='queued'
+       and j.requested_by=auth.uid())
+ then return false; end if;
+ for d in select token_hash from kaurivo_internal.local_worker_devices
+  where owner_id=auth.uid() and ai_ready=true and expires_at>now()
+    and last_seen_at>now()-interval '55 seconds'
+ loop
+  begin
+   perform realtime.send(jsonb_build_object('ready',true),
+      'wake','kaurivo-demo-local-'||left(d.token_hash,48),false);
+   sent:=true;
+  exception when others then null;
+  end;
+ end loop;
+ return sent;
+end;
+$$;
+revoke all on function public.kaurivo_local_worker_wakeup(uuid)
+ from public,anon;
+grant execute on function public.kaurivo_local_worker_wakeup(uuid)
+ to authenticated;
