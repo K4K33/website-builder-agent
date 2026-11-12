@@ -11,6 +11,9 @@ on:
       - "website-builder-agent/website-builder-agent/agents/research.py"
       - "website-builder-agent/website-builder-agent/utils/industry_workflow.py"
       - "website-builder-agent/website-builder-agent/utils/claude_client.py"
+      # A reviewed cloud queue migration also wakes the scheduled cloud
+      # builder once on merge; normal UTC-day and account limits still apply.
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/backend/kaurivo_cloud_first_recovery_20261112.sql"
   schedule:
     # GitHub scheduled events are best-effort and can be delayed or dropped.
     # Refresh the schedule actor and keep this as a fallback only; private

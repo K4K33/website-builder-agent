@@ -3,6 +3,7 @@
    An internal preview is NEVER a client-approved deliverable. */
 (function(){
  "use strict";
+ const CLOUD_FIRST=true;
  const ACTIVE=new Set(["queued","researching","building","qa","publishing"]);
  const ERROR_LABELS={
   free_ai_key_missing:"Ilmaisen rakennusmallin API-avain puuttuu",
@@ -218,6 +219,11 @@
   const deferred=job.status==="queued"&&
     Number.isFinite(Date.parse(job.next_eligible_at||""))&&
     Date.parse(job.next_eligible_at)>Date.now();
+  const utcDay=new Date().toISOString().slice(0,10);
+  const cloudRecovery=job.status==="queued"&&job.runner_kind==="local"&&
+    ["free_ai_rate_limit","free_ai_capacity_unavailable"].includes(job.error_code)&&
+    job.retry_claims_today>=3&&job.retry_day===utcDay&&
+    job.cloud_recovery_day!==utcDay;
   const row=append(target,"article","record demo-record");
   const main=append(row,"div","record-main");
   append(main,"div","record-title",job.company_name||"Tuntematon yritys");
@@ -261,7 +267,22 @@
     "Seuraava automaattinen yritys aikaisintaan: "+new Date(job.next_eligible_at).toLocaleString("fi-FI",{
       timeZone:"Europe/Helsinki"
     })+" Suomen aikaa. Vanhat tarkistuspisteet säilyvät.");
+  if(cloudRecovery)append(main,"div","record-sub",
+    "Vanhan Codex-työn rajoitus ei estä yhtä pilvijatkoa. Työ jatkuu tallennetuista vaiheista, jos ilmaista pilvikapasiteettia on.");
   const actions=append(row,"div","record-actions");
+  if(cloudRecovery&&options?.db){
+    const resume=append(actions,"button","small-action demo-build-dispatch","Jatka pilvessä");
+    resume.type="button";
+    resume.addEventListener("click",async()=>{
+      resume.disabled=true;
+      try{
+        const status=await dispatchNow(options.db,job.id);
+        const confirmed=status.ok?await verifyBuildStart(options.db,job.id):"unknown";
+        if(options.reload)await options.reload();
+        dispatchFeedback(status,options.toast,confirmed);
+      }finally{resume.disabled=false;}
+    });
+  }
   const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
     deferred?"Jatkuu automaattisesti":dispatchFailure?"Käynnistys estynyt":
     dispatchStalled?"Aloitus vahvistamatta":
@@ -469,8 +490,16 @@
  }
  function render(jobs,health,options={}){
   healthSummary(health);
-  localWorkerIndicator(options.db);
-  windowsEnrollment(options);
+  // Until the first customer sale, the owner's Windows laptop runs no AI.
+  // The legacy local enrollment tools remain available for a future upgrade.
+  if(!CLOUD_FIRST){
+   localWorkerIndicator(options.db);
+   windowsEnrollment(options);
+  }else{
+   const el=$("demo-health");
+   if(el)append(el,"div","demo-cloud-mode",
+     "Pilvirakentaja käytössä: GitHub Actions ja maksuttomat AI-mallit. Oma tietokone voi olla suljettuna.");
+  }
   const all=Array.isArray(jobs)?jobs:[];
   const ready=all.filter(canShowPreview);
   const active=all.filter(isActive);
