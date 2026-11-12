@@ -3,8 +3,10 @@
 Runs without customer sources, Supabase, model calls or paid credentials.
 """
 from pathlib import Path
+import os
 import unittest
 from unittest.mock import patch
+from scripts import run_kaurivo_demo_queue as demo_queue
 
 from utils.agency_preflight import verify_design_handoff, safe_preflight_reason
 from utils.creative_directions import FIELDS
@@ -93,6 +95,12 @@ class AgencyPreflightTests(unittest.TestCase):
                    side_effect=RuntimeError("not a real winner")):
             with self.assertRaisesRegex(RuntimeError, "not a real winner"):
                 verify_design_handoff(company, selected=True)
+
+    def test_direct_local_runner_rejects_codex_backend(self):
+        with patch.object(demo_queue, "LOCAL_WORKER", True), \
+             patch.dict(os.environ, {"FREE_ONLY":"1", "AI_BACKEND":"codex"}):
+            with self.assertRaisesRegex(demo_queue.HoldError, "local_models_required"):
+                demo_queue.free_model_configured()
 
     def test_private_source_urls_never_leave_the_preflight_gate(self):
         raw = RuntimeError("Source content missing from https://private.example/secret")
