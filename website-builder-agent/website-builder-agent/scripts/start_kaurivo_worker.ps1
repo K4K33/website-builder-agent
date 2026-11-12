@@ -30,6 +30,7 @@ $env:OLLAMA_BUILDER_MODEL = "qwen2.5-coder:7b"
 $env:OLLAMA_QA_MODEL = "llava:7b"
 # Local inference can be slower than a cloud model; it still fails QA closed.
 $env:OLLAMA_TIMEOUT_SECONDS = "1200"
+$env:OLLAMA_NUM_CTX = "8192"
 $env:KAURIVO_BROWSER_SOURCE_FALLBACK = "1"
 Write-Host "Kaurivo Windows builder: starting (Ctrl+C stops this terminal only)."
 Push-Location $root
