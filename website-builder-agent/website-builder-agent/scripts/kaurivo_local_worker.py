@@ -169,6 +169,7 @@ def main() -> int:
               flush=True)
         worker_id=None
         ready_before=None
+        last_model_check=0.0
         keep_running=threading.Event()
         keep_running.set()
         # The process lease is deliberately separate from the idle daemon.
@@ -194,7 +195,15 @@ def main() -> int:
         thread.start()
         try:
             while True:
-                ready=ollama_ready(session,model_names)
+                # Recheck model readiness every 10 seconds, but poll the DB
+                # every second while ready. /api/show is not an inference
+                # call, yet fetching model metadata each second is wasteful.
+                now=time.monotonic()
+                if ready_before is None or now-last_model_check>=10:
+                    ready=ollama_ready(session,model_names)
+                    last_model_check=now
+                else:
+                    ready=ready_before
                 if ready!=ready_before:
                     print("Kaurivo local AI "+("valmis" if ready else "ei vielä valmis")+
                           " (kaikki mallit oltava asennettuna; QA-mallilla näkökyky).",
