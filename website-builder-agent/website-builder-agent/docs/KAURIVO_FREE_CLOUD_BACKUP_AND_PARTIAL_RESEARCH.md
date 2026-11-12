@@ -51,8 +51,8 @@ Free-only configuration does not guarantee Cloudflare Free if the owner
 has subsequently upgraded the account to Workers Paid. Confirm the provider
 plan and usage controls again before enabling it. If the variable is not 1,
 or the credentials are missing/malformed, absolutely no Cloudflare request
-is made. There is NO paid-model escalation, no arbitrary user-supplied model
-ID and no unbounded retry. At most six Cloudflare fallback API calls are
+is made. When OpenRouter's account metadata proves the free daily quota is empty, a confirmed Cloudflare Free account can claim the job directly, without first making a known-failing OpenRouter inference request. Without confirmed Cloudflare Free, that job remains queued without burning a claim. There is NO paid-model escalation, no arbitrary user-supplied model
+ID and no unbounded retry. At most fourteen Cloudflare fallback API calls are
 made during one GitHub process. On Cloudflare 429/403/503 or unsupported
 response, the *original job stays queued* with its checkpoints intact.
 
