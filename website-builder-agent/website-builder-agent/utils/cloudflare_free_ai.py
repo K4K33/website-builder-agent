@@ -27,7 +27,7 @@ FREE_MODELS = {
 _CF_ACCOUNT = re.compile(r"^[a-f0-9]{32}$")
 _CF_TOKEN = re.compile(r"^[A-Za-z0-9_-]{25,250}$")
 _CF_URL = "https://api.cloudflare.com/client/v4/accounts/{account}/ai/v1/chat/completions"
-_MAX_CALLS_PER_RUN = 6
+_MAX_CALLS_PER_RUN = 14
 _LOCK = Lock()
 _ATTEMPTS = 0
 
