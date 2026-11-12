@@ -340,6 +340,37 @@
     a.href=log;a.target="_blank";a.rel="noopener noreferrer";
   }
  }
+ let pendingWindowsToken="";
+ function showWindowsToken(host,token,toast){
+  host.replaceChildren();
+  const guide=append(host,"a","","Windows-rakentajan käyttöönotto-ohje");
+  guide.href="https://github.com/K4K33/website-builder-agent/blob/main/website-builder-agent/website-builder-agent/docs/kaurivo/LOCAL_WINDOWS_WORKER.md";
+  guide.target="_blank";guide.rel="noopener noreferrer";
+  append(host,"strong","","Windows-rakentajan avain luotiin");
+  append(host,"span","","Kopioi avain nyt Windowsin asennusohjelmaan. Uusi avain mitätöi aiemman; älä jaa tätä avainta.");
+  const input=append(host,"input","demo-local-token");
+  input.type="password";input.readOnly=true;input.value=token;
+  input.autocomplete="off";input.setAttribute("aria-label","Kertaluonteinen Windows-rakentajan avain");
+  const copy=append(host,"button","small-action","Kopioi Windows-avain");
+  copy.type="button";
+  copy.addEventListener("click",async()=>{
+   try{
+    if(!navigator.clipboard?.writeText)throw Error("clipboard_unavailable");
+    await navigator.clipboard.writeText(token);
+    toast("Avain kopioitu. Liitä se Windowsin asennusohjelmaan.","success");
+   }catch(_){input.type="text";input.select();
+    toast("Kopiointi estyi. Valitse näkyvä avain ja kopioi käsin.","error");}
+  });
+  const reveal=append(host,"button","small-action","Näytä tai piilota");
+  reveal.type="button";
+  reveal.addEventListener("click",()=>{input.type=input.type==="password"?"text":"password";});
+  const close=append(host,"button","small-action","Piilota avain pysyvästi tästä välilehdestä");
+  close.type="button";
+  close.addEventListener("click",()=>{
+   pendingWindowsToken="";input.value="";host.replaceChildren();
+   append(host,"span","","Avain piilotettu. Jos et kopioinut sitä, luo uusi avain.");
+  });
+ }
  async function enrollWindows(db,toast,host){
   const {data,error}=await db.functions.invoke("kaurivo-local-enroll",{
     body:{action:"enroll"}
@@ -348,26 +379,19 @@
    toast("Windows-tunnuksen luominen ei onnistunut. Tarkista ylläpitäjän kirjautuminen.","error");
    return;
   }
-  const token=data.token;
-  host.replaceChildren();
-  append(host,"strong","","Windows-rakentajan avain luotiin");
-  append(host,"span","","Kopioi avain nyt Windowsin asennusohjelmaan. Tätä avainta ei näytetä uudelleen. Uuden avaimen luominen mitätöi vanhan.");
-  const input=append(host,"input","demo-local-token");
-  input.type="password";input.readOnly=true;input.value=token;
-  input.autocomplete="off";input.setAttribute("aria-label","Kertakäyttöinen Windows-rakentajan avain");
-  const copy=append(host,"button","small-action","Kopioi Windows-avain");
-  copy.type="button";
-  copy.addEventListener("click",()=>navigator.clipboard.writeText(token).then(
-    ()=>toast("Avain kopioitu. Liitä se Windowsin asennusohjelmaan.","success"),
-    ()=>toast("Kopiointi estyi. Valitse avain ja kopioi käsin.","error")));
-  const reveal=append(host,"button","small-action","Näytä tai piilota");
-  reveal.type="button";
-  reveal.addEventListener("click",()=>{input.type=input.type==="password"?"text":"password";});
+  pendingWindowsToken=data.token;
+  showWindowsToken(host,pendingWindowsToken,toast);
  }
  function windowsEnrollment(options){
   const health=$("demo-health");
   if(!health||!options?.db)return;
   const container=append(health,"div","demo-local-enroll");
+  // CRM refreshes every few seconds; keep the one-time secret only in this
+  // tab's memory until the operator explicitly clears it. No localStorage.
+  if(pendingWindowsToken){
+   showWindowsToken(container,pendingWindowsToken,options.toast||(()=>{}));
+   return;
+  }
   const guide=append(container,"a","","Windows-rakentajan käyttöönotto-ohje");
   guide.href="https://github.com/K4K33/website-builder-agent/blob/main/website-builder-agent/website-builder-agent/docs/kaurivo/LOCAL_WINDOWS_WORKER.md";
   guide.target="_blank";guide.rel="noopener noreferrer";

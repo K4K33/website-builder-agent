@@ -136,6 +136,28 @@ def run_claim(job:dict,run_id:int,token:str,model_names:dict[str,str]) -> None:
                   flush=True)
 
 
+def execute_claim(session:requests.Session,token:str,job:dict,run_id:int,
+                  model_names:dict[str,str],active_job:dict) -> None:
+    """Run one verified job and always release any unfinished subprocess lease.
+
+    Neither a successful quality HOLD nor a verified finished preview is
+    reopened by the server; only unexpectedly still-active jobs are requeued.
+    """
+    job_id=str(job.get("id") or "")
+    if not UUID_RE.fullmatch(job_id):
+        raise LocalWorkerError("Invalid claimed demo ID.")
+    active_job["id"]=job_id
+    try:
+        run_claim(job,run_id,token,model_names)
+    finally:
+        active_job["id"]=None
+        try:
+            server(session,token,"release",job_id=job_id)
+        except (requests.RequestException,LocalWorkerError,ValueError):
+            print("Kaurivo: vapautus odottaa yhteyden palaamista; "
+                  "vanhentunut työ palautuu automaattisesti.",flush=True)
+
+
 def main() -> int:
     token=os.environ.get("KAURIVO_LOCAL_WORKER_TOKEN","").strip()
     if not TOKEN_RE.fullmatch(token):
@@ -147,15 +169,22 @@ def main() -> int:
               flush=True)
         worker_id=None
         ready_before=None
+        last_model_check=0.0
         keep_running=threading.Event()
         keep_running.set()
+        # The process lease is deliberately separate from the idle daemon.
+        # A crashed child must not be kept alive by the daemon's own heartbeat.
+        active_job={"id":None}
         # A local model may take more than 70 minutes. Keep a separate
         # Session and thread so the SQL lease stays fresh through inference.
         def safe_heartbeat():
             with requests.Session() as ping_session:
                 while keep_running.is_set():
-                    try:server(ping_session,token,"ping",
-                               ready=ollama_ready(ping_session,model_names))
+                    try:
+                        lease=active_job["id"]
+                        server(ping_session,token,"ping",
+                               ready=ollama_ready(ping_session,model_names),
+                               **({"job_id":lease} if lease else {}))
                     except (requests.RequestException,LocalWorkerError,ValueError):
                         pass
                     # Event.wait(true) would spin, so use shutdown-aware sleep.
@@ -166,7 +195,15 @@ def main() -> int:
         thread.start()
         try:
             while True:
-                ready=ollama_ready(session,model_names)
+                # Recheck model readiness every 10 seconds, but poll the DB
+                # every second while ready. /api/show is not an inference
+                # call, yet fetching model metadata each second is wasteful.
+                now=time.monotonic()
+                if ready_before is None or now-last_model_check>=10:
+                    ready=ollama_ready(session,model_names)
+                    last_model_check=now
+                else:
+                    ready=ready_before
                 if ready!=ready_before:
                     print("Kaurivo local AI "+("valmis" if ready else "ei vielä valmis")+
                           " (kaikki mallit oltava asennettuna; QA-mallilla näkökyky).",
@@ -180,11 +217,14 @@ def main() -> int:
                     job=data.get("job")
                     if job:
                         worker_id=int(data["run_id"])
+                        job_id=str(job.get("id") or "")
                         print("Kaurivo aloittaa valitun yrityksen rakennustyön.",flush=True)
-                        run_claim(job,worker_id,token,model_names)
+                        execute_claim(session,token,job,worker_id,
+                                      model_names,active_job)
                     else:
                         time.sleep(POLL_SECONDS)
-                except (requests.RequestException,LocalWorkerError,ValueError) as error:
+                except (requests.RequestException,LocalWorkerError,ValueError,
+                        OSError,subprocess.SubprocessError) as error:
                     print("Kaurivo: yhteys tilapäisesti poikki. Työ ja tarkistuspisteet säilyvät.",
                           flush=True)
                     time.sleep(5)
