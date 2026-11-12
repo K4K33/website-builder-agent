@@ -183,6 +183,10 @@ def run_claim(job:dict,run_id:int,token:str,model_names:dict[str,str]) -> None:
         claim.write_text(json.dumps({"job":job},ensure_ascii=False),encoding="utf-8")
         backend="ollama"  # No Codex or metered cloud fallback, even if env was altered.
         env=os.environ.copy()
+        # Do not pass metered provider credentials to the offline child.
+        for secret in ("OPENAI_API_KEY", "OPENROUTER_API_KEY",
+                       "ANTHROPIC_API_KEY", "CODEX_HOME"):
+            env.pop(secret, None)
         env.update({
            "KAURIVO_LOCAL_WORKER":"1",
            "KAURIVO_LOCAL_WORKER_TOKEN":token,
@@ -192,9 +196,6 @@ def run_claim(job:dict,run_id:int,token:str,model_names:dict[str,str]) -> None:
            "RESEARCH_AI_BACKEND":backend,
            "BUILDER_AI_BACKEND":backend,
            "QA_AI_BACKEND":backend,
-           "KAURIVO_CODEX_RESEARCH_MODEL":model_names["research"],
-           "KAURIVO_CODEX_BUILDER_MODEL":model_names["builder"],
-           "KAURIVO_CODEX_QA_MODEL":model_names["qa"],
            "KAURIVO_BROWSER_SOURCE_FALLBACK":"1",
            "FREE_CLOUD_LOCAL_FALLBACK":"1",
            "OLLAMA_RESEARCH_MODEL":model_names["research"],
