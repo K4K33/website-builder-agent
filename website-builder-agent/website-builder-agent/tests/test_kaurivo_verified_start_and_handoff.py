@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from utils.agency_preflight import verify_design_handoff
+from utils.agency_preflight import verify_design_handoff, safe_preflight_reason
 from utils.creative_directions import FIELDS
 from utils.service_quality import MASTER_PROMPT_SHA256
 
@@ -94,11 +94,18 @@ class AgencyPreflightTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "not a real winner"):
                 verify_design_handoff(company, selected=True)
 
+    def test_private_source_urls_never_leave_the_preflight_gate(self):
+        raw = RuntimeError("Source content missing from https://private.example/secret")
+        self.assertEqual(safe_preflight_reason(raw), "original_source")
+        self.assertNotIn("private.example", safe_preflight_reason(raw))
+        self.assertEqual(safe_preflight_reason(
+            RuntimeError("Canonical Master Prompt outdated")), "master_prompt_version")
+
     def test_worker_enforces_handoff_when_restoring_checkpoints(self):
         self.assertIn("verify_design_handoff(load_company(agent_slug),selected=False)",RUNNER)
         self.assertIn("verify_design_handoff(load_company(agent_slug),selected=True)",RUNNER)
-        self.assertIn('HoldError("design_handoff_incomplete","research")',RUNNER)
-        self.assertIn('HoldError("design_handoff_incomplete","selected_concept")',RUNNER)
+        self.assertIn('HoldError("design_handoff_incomplete","research:"+safe_preflight_reason(exc))',RUNNER)
+        self.assertIn('HoldError("design_handoff_incomplete","selected_concept:"+safe_preflight_reason(exc))',RUNNER)
         self.assertLess(RUNNER.index('selected=False)'),
                         RUNNER.index('run_cli(["concept-previews"'))
         self.assertLess(RUNNER.index('selected=True)'),
