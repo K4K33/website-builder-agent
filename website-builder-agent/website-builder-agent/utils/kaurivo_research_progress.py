@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 
-from utils.state import upsert_company
+from utils.state import upsert_company, get_company
 
 MILESTONES = ("source", "facts", "references")
 _MAX_JSON_BYTES = 16 * 1024 * 1024
@@ -45,7 +45,12 @@ def save_progress(slug: str, company: dict, *, milestone: str,
                   **data) -> dict:
     if milestone not in MILESTONES:
         raise ValueError("unapproved research milestone")
-    prior = get_progress(company, source_url=source_url,
+    # Each milestone is persisted; reload the latest record rather than
+    # relying on the caller's pre-save copy of the company state.
+    _, latest = get_company(slug)
+    if not isinstance(latest, dict) or latest.get("url") != source_url:
+        raise ValueError("research checkpoint company/source changed")
+    prior = get_progress(latest, source_url=source_url,
                          master_prompt_sha256=master_prompt_sha256)
     if prior and MILESTONES.index(milestone) < MILESTONES.index(prior["milestone"]):
         raise ValueError("research checkpoint cannot regress")
