@@ -1,4 +1,4 @@
-# Kaurivo first-time Windows setup. Installs ONLY into the local user's
+﻿# Kaurivo first-time Windows setup. Installs ONLY into the local user's
 # existing checkout; no paid AI, new cloud services or background processes
 # are created without explicit confirmation.
 param([switch]$Codex)
