@@ -5,6 +5,7 @@ remote network fallback, or sends user content to a public AI endpoint.
 The developer/operator must approve installation on the host computer.
 """
 import base64
+import os
 from pathlib import Path
 
 import requests
@@ -33,6 +34,14 @@ def chat_local(system, prompt, *, model, max_tokens, image_paths=None,
         raise ValueError("Invalid local AI token limit")
     if not isinstance(timeout, (int, float)) or not 5 <= timeout <= 1800:
         raise ValueError("Invalid local Ollama timeout")
+    # Ollama's small default context can silently discard the source/brand
+    # evidence needed by Kaurivo's quality gates. Require an explicit budget.
+    try:
+        context = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
+    except ValueError as exc:
+        raise ValueError("Invalid local Ollama context length") from exc
+    if not 4096 <= context <= 32768:
+        raise ValueError("Local Ollama context must be 4096..32768 tokens")
 
     message = {"role": "user", "content": prompt}
     if image_paths:
@@ -41,7 +50,7 @@ def chat_local(system, prompt, *, model, max_tokens, image_paths=None,
         "model": model.strip(),
         "messages": [{"role": "system", "content": system}, message],
         "stream": False,
-        "options": {"num_predict": max_tokens},
+        "options": {"num_predict": max_tokens, "num_ctx": context},
     }
     if json_mode:
         payload["format"] = "json"
