@@ -175,12 +175,26 @@ def _local_free_quota_fallback(
 def _verified_free_minute_wait_seconds(response) -> int | None:
     """Retry only a provable, near-term OpenRouter free RPM reset.
 
-    OpenRouter's own 429 includes rate-limit headers; an upstream provider
-    429 without them, malformed values or a UTC-day reset must NOT cause
-    a blind cloud retry. Both attempts still reserve daily free requests.
+    OpenRouter's own 429 includes rate-limit headers; upstream free
+    providers may instead return a short Retry-After. Only one bounded,
+    explicitly timed retry is allowed. Never blindly retry a bare 429,
+    a malformed header or a UTC-day reset. Both requests still reserve
+    a daily free-model request; there is no paid model escalation.
     """
     headers = getattr(response, "headers", None)
-    if not headers or str(headers.get("X-RateLimit-Remaining", "")).strip() != "0":
+    if not headers:
+        return None
+    retry_after = str(headers.get("Retry-After", "")).strip()
+    if retry_after:
+        try:
+            seconds = float(retry_after)
+        except (TypeError, ValueError, OverflowError):
+            seconds = 0
+        # Ignore long provider waits and avoid spending a second request
+        # on known daily/account-wide capacity blocks.
+        if 0 < seconds <= 90:
+            return max(1, min(92, int(seconds) + 2))
+    if str(headers.get("X-RateLimit-Remaining", "")).strip() != "0":
         return None
     try:
         reset = float(headers.get("X-RateLimit-Reset", ""))
