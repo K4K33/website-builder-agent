@@ -48,10 +48,8 @@ class LocalCrashRecoveryTests(unittest.TestCase):
         self.assertIn('const leaseActive=typeof data.job_id==="string"',EDGE)
         self.assertIn('"kaurivo_local_worker_heartbeat"',EDGE)
         self.assertIn('"kaurivo_local_worker_release"',EDGE)
-        self.assertIn("if(Objects",EDGE.replace("Object.keys","Objects")) if False else None
         fn=SQL.split("create or replace function public.kaurivo_local_worker_validate(")[1].split("$$;")[0]
         self.assertNotIn("update public.kaurivo_demo_build_jobs",fn)
-        self.assertIn("p_id=p_id",SQL.replace("j.id=p_id","p_id=p_id")) if False else None
         self.assertIn("j.id=p_id and j.github_run_id=p_run_id",SQL)
         self.assertIn("j.runner_kind='local'",SQL)
         self.assertIn('active_job={"id":None}',DAEMON)
