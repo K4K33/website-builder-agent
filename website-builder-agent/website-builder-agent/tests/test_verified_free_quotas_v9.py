@@ -114,7 +114,7 @@ class FreeQuotaTests(TestCase):
         self.assertEqual(reserve.call_count, 2)
         wait.assert_called_once_with(12)
 
-    def test_free_daily_reset_or_unknown_provider_429_never_retries(self):
+    def test_unconfirmed_provider_429_defers_to_queue_without_inline_retry(self):
         env = {"FREE_ONLY": "1", "AI_BACKEND": "openrouter",
                "RESEARCH_MODEL": "provider/research:free",
                "OLLAMA_MODEL": "", "OLLAMA_RESEARCH_MODEL": ""}
@@ -137,7 +137,7 @@ class FreeQuotaTests(TestCase):
                  patch.object(claude_client.requests, "post",
                               return_value=reply) as send:
                 with self.assertRaisesRegex(RuntimeError,
-                                            "FREE_AI_CAPACITY_UNAVAILABLE"):
+                                            "FREE_AI_RATE_LIMIT"):
                     claude_client.ask_claude("sys", "prompt", stage="research")
                 send.assert_called_once()
                 reserve.assert_called_once()
@@ -150,8 +150,9 @@ class FreeQuotaTests(TestCase):
         with patch.dict(os.environ, env), \
              patch.object(claude_client, "_get_headers", return_value={"Authorization":"mock"}), \
              patch.object(resource_manager, "reserve", return_value=False), \
+             patch.object(resource_manager, "openrouter_reservation_block_reason", return_value="daily"), \
              patch.object(claude_client.requests, "post") as provider:
-            with self.assertRaisesRegex(RuntimeError, "no paid fallback"):
+            with self.assertRaisesRegex(RuntimeError, "FREE_AI_CAPACITY_UNAVAILABLE.*no paid fallback"):
                 claude_client.ask_claude("sys", "prompt", stage="research")
             provider.assert_not_called()
 
