@@ -56,11 +56,9 @@ class AgencyOneClickTests(unittest.TestCase):
         self.assertEqual(BUILDER.count("agency_plan = agency_handoff(research)"),2)
         self.assertIn("agency_handoff(research)",QA)
         self.assertIn("TOIMISTOTASON YRITYSKOHTAINEN LUOVUTUSTARKISTUS",BUILDER)
-        self.assertIn("master_prompt_sha256",DB) if False else None
 
     def test_verified_local_dispatch_ignores_legacy_codex_pings(self):
         self.assertIn("inference_backend='ollama'",DB)
-        self.assertIn("p_backend:'ollama'",EDGE.replace('"ollama"','\'ollama\'')) if False else None
         self.assertIn('data.backend!=="ollama"',EDGE)
         self.assertIn('p_backend:"ollama"',EDGE)
         self.assertIn('backend="ollama"',WORKER)
@@ -78,7 +76,7 @@ class AgencyOneClickTests(unittest.TestCase):
         self.assertIn("and j.offline_recovery_day is distinct from utc_today",DB)
         self.assertIn("j.retry_claims_today<3",DB)
         self.assertIn("for update skip locked limit 1",DB)
-        self.assertIn("when j.retry_day=utc_today",DB)
+        self.assertIn("when retry_day=utc_today",DB)
         self.assertIn("dispatchNow(db,active.id)",PANEL)
         self.assertNotIn('if(active){showTab("demos");return;}',PANEL)
 
