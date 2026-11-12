@@ -121,3 +121,61 @@ jobs:
           print("CLOUDFLARE_WORKERS_FREE_VISUAL_QA_VERIFIED=True")
           print("Qwen visual QA accepted a synthetic PNG with a complete response.")
           PY
+
+      - name: Check realistic free Cloudflare Research JSON request
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, re, json, urllib.request, urllib.error
+          if os.getenv("FREE_CONFIRMED") != "1":
+              raise SystemExit("Free plan not confirmed")
+          account=os.getenv("ACCOUNT","").strip()
+          token=os.getenv("TOKEN","").strip()
+          if not re.fullmatch(r"[a-f0-9]{32}",account) or not re.fullmatch(r"[A-Za-z0-9_-]{25,250}",token):
+              raise SystemExit("Missing approved Workers Free credentials")
+          # No customer details. Approximate factual extraction's length,
+          # JSON output mode and maximum output budget. One request only.
+          system="Extract only sourced facts into strict JSON. "+(
+               "Preserve every heading, menu, service and brand color. "*85)
+          user="Source pages (synthetic): "+(
+               "Service: coffee, opening hours: unknown, brand color: teal. "*260)
+          payload={"model":"@cf/google/gemma-4-26b-a4b-it","stream":False,
+                   "max_tokens":3500,"response_format":{"type":"json_object"},
+                   "messages":[{"role":"system","content":system},
+                               {"role":"user","content":user}]}
+          req=urllib.request.Request(
+              "https://api.cloudflare.com/client/v4/accounts/"+account+"/ai/v1/chat/completions",
+              data=json.dumps(payload).encode(),method="POST",
+              headers={"Authorization":"Bearer "+token,"Content-Type":"application/json"})
+          try:
+              with urllib.request.urlopen(req,timeout=160) as result:
+                  status=result.status
+                  body=json.load(result)
+          except urllib.error.HTTPError as exc:
+              print("REALISTIC_RESEARCH_HTTP_STATUS="+str(exc.code))
+              try:
+                  err=json.loads(exc.read(2500).decode("utf-8"))
+                  code=err.get("errors",[{}])[0].get("code")
+                  if isinstance(code,int):
+                      print("REALISTIC_RESEARCH_PROVIDER_ERROR_CODE="+str(code))
+              except Exception:
+                  pass
+              raise SystemExit("Cloudflare Free rejected realistic research shape") from None
+          except Exception as exc:
+              raise SystemExit("Cloudflare Free research request transport error: "+type(exc).__name__) from None
+          first=body.get("choices",[{}])[0]
+          reason=first.get("finish_reason")
+          msg=first.get("message",{})
+          answer=msg.get("content") if isinstance(msg,dict) else None
+          print("REALISTIC_RESEARCH_HTTP_STATUS="+str(status))
+          print("REALISTIC_RESEARCH_FINISH_REASON="+str(reason)[:28])
+          print("REALISTIC_RESEARCH_HAS_CONTENT="+str(bool(answer)))
+          if not isinstance(answer,str) or not answer.strip() or reason!="stop":
+              raise SystemExit("Cloudflare realistic JSON research was truncated or empty")
+          try:
+              json.loads(answer)
+          except json.JSONDecodeError:
+              raise SystemExit("Cloudflare realistic JSON research is malformed")
+          print("REALISTIC_RESEARCH_JSON_VERIFIED=True")
+          PY
