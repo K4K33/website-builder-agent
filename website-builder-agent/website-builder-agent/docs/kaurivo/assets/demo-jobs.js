@@ -442,7 +442,23 @@
   // The owner can ALWAYS submit a private build request. A failed provider
   // health observation slows processing, not registration of the intent.
   // No paid model is enabled here; the GitHub worker checks credentials.
-  if(active){showTab("demos");return;}
+  if(active){
+   // A repeated click must offer useful feedback and re-signal an eligible
+   // existing job instead of silently doing nothing or creating duplicates.
+   if(active.status==="queued"){
+    const retryAt=Date.parse(active.next_eligible_at||"");
+    if(Number.isFinite(retryAt)&&retryAt>Date.now()&&
+       !["free_ai_rate_limit","free_ai_capacity_unavailable"].includes(active.error_code)){
+     toast("Työ on tallessa. Seuraava sallittu yritys näkyy Demot-näkymässä.","error");
+    }else{
+     const result=await dispatchNow(db,active.id);
+     dispatchFeedback(result,toast);
+    }
+   }else{
+    toast("Yrityksen rakennustyö on jo käynnissä. Seuraa Demot-näkymää.","success");
+   }
+   showTab("demos");return;
+  }
   try{
    const {data,error}=await db.rpc("kaurivo_request_demo_build",{p_prospect_id:candidate.id});
    if(error)throw error;
