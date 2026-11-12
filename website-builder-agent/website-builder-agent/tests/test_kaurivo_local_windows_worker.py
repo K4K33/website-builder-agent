@@ -106,7 +106,7 @@ class LocalWindowsTests(TestCase):
         self.assertIn('qa_url=proof_url,release_sha=sha',RUNNER)
         self.assertIn("qa[.]html",SQL)
         self.assertIn("replace(p_qa_url,'/qa.html','/index.html')<>p_preview_url",SQL)
-        self.assertIn("k4k33.github.io",SQL)
+        self.assertIn("k4k33[.]github[.]io",SQL)
         self.assertIn("kaurivo-auto-demos-2026.onrender.com",PANEL)
         self.assertIn("qa[.]html",PANEL)
         self.assertIn("noindex,nofollow,noarchive",RUNNER)
@@ -116,7 +116,7 @@ class LocalWindowsTests(TestCase):
         self.assertIn('RESEARCH_AI_BACKEND":"ollama"',DAEMON)
         self.assertIn('QA_AI_BACKEND":"ollama"',DAEMON)
         self.assertIn('FREE_ONLY":"1"',DAEMON)
-        self.assertIn('OLLLAMA',DAEMON.replace('OLLAMA','OLLLAMA'))  # local only
+        self.assertIn('http://127.0.0.1:11434',DAEMON)
         self.assertIn("restore_private_checkpoint(",RUNNER)
         self.assertIn("save_private_checkpoint(",RUNNER)
         self.assertIn("stage_timeout",RUNNER)
