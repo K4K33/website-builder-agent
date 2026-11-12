@@ -99,5 +99,22 @@ class OfflineOnlyWorkerTests(unittest.TestCase):
             self.assertIn(guard, RUNNER)
 
 
+    def test_local_inference_keeps_source_context_and_loopback_only(self):
+        from utils.local_ai import chat_local
+        response = MagicMock()
+        response.json.return_value = {
+            "done_reason": "stop",
+            "message": {"content": "validoitu vastaus"}
+        }
+        with patch.dict(os.environ, {"OLLAMA_NUM_CTX": "8192"}), \
+             patch("utils.local_ai.requests.post", return_value=response) as post:
+            self.assertEqual(chat_local("system", "prompt",
+                model="qwen2.5-coder:7b", max_tokens=1024),
+                "validoitu vastaus")
+        self.assertEqual(post.call_args.args[0], "http://127.0.0.1:11434/api/chat")
+        self.assertFalse(post.call_args.kwargs["allow_redirects"])
+        self.assertEqual(post.call_args.kwargs["json"]["options"]["num_ctx"], 8192)
+
+
 if __name__ == "__main__":
     unittest.main()
