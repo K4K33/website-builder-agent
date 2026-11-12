@@ -300,3 +300,11 @@
 /* Stale GitHub scheduling is a queue warning, not an invalid API key. */
 .demo-health-stale{border-color:#b69b61;background:#363227;color:#f6eacb}
 .demo-health-stale small{color:#e2d2a8}
+
+/* Owner-only local Windows worker enrollment: readable on 320px phones. */
+.demo-local-enroll{display:flex;align-items:center;flex-wrap:wrap;gap:10px;width:100%;margin-top:10px}
+.demo-local-enroll>a{color:#d5e7ef;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.demo-local-enroll>strong,.demo-local-enroll>span{width:100%;font-size:12px}
+.demo-local-enroll .demo-local-token{flex:1 1 200px;min-width:0;padding:12px;border:1px solid #60838e;
+ border-radius:8px;background:#091b25;color:#e8f3fb;font:12px/1.5 monospace}
+.demo-local-enroll button{min-height:44px;max-width:100%;white-space:normal}
