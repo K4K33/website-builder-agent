@@ -244,6 +244,18 @@ def ask_claude(
             timeout=int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "600")),
         )
 
+    # When the no-inference key endpoint proves OpenRouter daily FREE quota
+    # already exhausted, do not burn a known-failed OpenRouter 429 merely
+    # to reach our confirmed independent Workers Free backup.
+    if (config.free_only() and
+            os.environ.get("KAURIVO_OPENROUTER_FREE_EXHAUSTED") == "1"):
+        from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
+        if not enabled():
+            raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: no verified free cloud capacity.")
+        return chat_cloudflare_free(
+            system, user_prompt, stage=stage, max_tokens=max_tokens,
+            image_paths=image_paths, json_mode=json_mode)
+
     # Validate again at the final paid-provider boundary. An unrelated
     # funded API key must never make a non-free model billable in FREE_ONLY.
     if config.free_only() and not config.is_zero_cost_openrouter_model(model):
