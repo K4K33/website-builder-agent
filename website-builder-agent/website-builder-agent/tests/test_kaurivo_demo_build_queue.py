@@ -111,7 +111,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("healthStale",dashboard)
         self.assertIn("demo-health-stale",dashboard)
         self.assertIn("demo_queue_stale_health_20261111.sql",(SITE/"backend/demo_queue_stale_health_20261111.sql").as_posix())
-        self.assertIn("voit lisätä työn jonoon",dashboard)
+        self.assertIn("Voit lisätä demon jonoon",dashboard)
+        self.assertIn("OpenRouter-avain toimii (mallikapasiteettia ei vahvistettu)",dashboard)
         self.assertIn('return !item||item.status!=="ok";',dashboard)
         self.assertIn("demo-health-blocked",dashboard)
         self.assertIn("Rakentaja tauolla",dashboard)
@@ -148,7 +149,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("revoke all on function public.kaurivo_claim_demo_dispatch(uuid) from public,anon",sql)
         self.assertNotIn('sb_secret_',js)
         self.assertNotIn('ghp_',js)
-        self.assertIn('demo-jobs.js?v=20261112-cloud-first4',html)
+        self.assertIn('demo-jobs.js?v=20261112-openrouter-status5',html)
 
     def test_dispatch_failures_have_private_persistent_reason_and_real_response_body(self):
         panel=DASHBOARD.read_text(encoding="utf-8")

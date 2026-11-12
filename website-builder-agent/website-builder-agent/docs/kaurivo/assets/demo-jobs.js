@@ -17,8 +17,8 @@
   source_http_access_blocked:"Yrityksen alkuperäinen sivusto esti automaattisen lukemisen (401/403). Tarvitaan erillinen lähdeaineiston tarkistus.",
   source_http_rate_limited:"Alkuperäinen sivusto rajoitti automaattista hakua. Vältä jatkuvia uudelleenyrityksiä.",
   source_website_unreachable:"Alkuperäinen sivu ei vastannut rakennusagentin tutkimuspyyntöön.",
-  free_ai_rate_limit:"Ilmaisen tekoälypalvelun päivä- tai minuuttiraja täyttyi",
-  free_ai_capacity_unavailable:"Ilmainen OpenRouter-kiintiö tai palveluntarjoajan kapasiteetti loppui. Työ jatkuu seuraavana sallittuna käyttöpäivänä ilman maksullista mallia.",
+  free_ai_rate_limit:"Pilvessä toimiva OpenRouter rajoitti maksuttoman AI-mallin pyyntöjä. Tämä ei ole Codexin käyttöraja. Mallin saatavuutta ei voida taata.",
+  free_ai_capacity_unavailable:"Pilven OpenRouterin ilmainen kiintiö tai mallikapasiteetti ei riitä juuri nyt. Codexia ei käytetä. Työ säilyy jonossa, mutta jatko riippuu ilmaisesta kapasiteetista.",
   free_ai_access_rejected:"Ilmainen tekoälypalvelu hylkäsi API-tunnistuksen",
   free_ai_key_invalid:"OpenRouterin API-avain ei kelpaa tai se on vanhentunut. Päivitä GitHubin OPENROUTER_API_KEY.",
   free_ai_key_forbidden:"OpenRouter esti mallipyynnön (403). Tarkista API-avaimen oikeudet ja tilin suojausasetukset.",
@@ -261,8 +261,12 @@
    }
   }
   if(job.error_code)append(main,"div","record-warning",
-    (deferred?"Automaattinen jatkaminen: ":"Korjausta vaativa vaihe: ")+
+    (deferred?"Jatkoaikataulu: ":"Korjausta vaativa vaihe: ")+
     (ERROR_LABELS[job.error_code]||"Työ vaatii lisätarkistuksen")+" ("+job.error_code+")");
+  if(job.runner_kind==="github"&&
+     ["free_ai_rate_limit","free_ai_capacity_unavailable"].includes(job.error_code))
+   append(main,"div","record-sub",
+     "Rakentaja: GitHub Actions + OpenRouter. Codexia tai oman koneen AI:ta ei käytetä. API-avaimen onnistunut tarkistus ei takaa ilmaisen AI-mallin kapasiteettia.");
   if(deferred)append(main,"div","record-sub",
     "Seuraava automaattinen yritys aikaisintaan: "+new Date(job.next_eligible_at).toLocaleString("fi-FI",{
       timeZone:"Europe/Helsinki"
@@ -284,6 +288,8 @@
     });
   }
   const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
+    deferred&&["free_ai_rate_limit","free_ai_capacity_unavailable"].includes(job.error_code)
+     ?"Odottaa pilvi-AI:ta":
     deferred?"Jatkuu automaattisesti":dispatchFailure?"Käynnistys estynyt":
     dispatchStalled?"Aloitus vahvistamatta":
     dispatchAccepted?"Käynnistys lähetetty":STATUS[job.status]||"Tarkistettava");
@@ -409,12 +415,12 @@
   const stale=healthStale(health);
   output.classList.add(unavailable?"demo-health-blocked":stale?"demo-health-stale":"demo-health-ready");
   const status=unavailable?"Rakentaja tauolla – uusia pyyntöjä voi lisätä":
-    stale?"Tarkistus vanhentunut – voit lisätä työn jonoon":"Rakennuspalvelu käytettävissä";
+    stale?"Avaimen tarkistus vanhentunut":"OpenRouter-avain toimii (mallikapasiteettia ei vahvistettu)";
   append(output,"strong","",status);
   const label=ERROR_LABELS[item.error_code]||"OpenRouterin avaimen tai ajastuksen toimivuus pitää tarkistaa.";
   append(output,"span","",unavailable?label+" Voit silti lisätä uuden demon jonoon, mutta rakentaja tarvitsee toimivan avaimen.":stale?
     "Edellinen avaintarkistus onnistui, mutta GitHubin automaattinen ajo on viivästynyt. Jonoon lisääminen on sallittu; työntekijä tarkistaa avaimen uudelleen ennen rakentamista. Uutta demoa ei näytetä valmiina ennen kaikkia QA- ja julkaisukokeita.":
-    "Ilmainen AI-avain on tarkistettu. Lopullinen demovalmius vaatii erillisen rakentamisen ja QA-tarkistuksen.");
+    "OpenRouterin API-avain on tarkistettu. Tämä ei varmista, että maksuton malli hyväksyy uuden pyynnön. Työ aloitetaan pilvessä, mutta ilmaiset AI-rajoitukset voivat siirtää sitä. Laadun ja julkaisun tarkistuksia ei ohiteta.");
   const checked=Date.parse(item.checked_at||"");
   if(Number.isFinite(checked))append(output,"small","","Tarkistettu "+new Date(checked).toLocaleString("fi-FI"));
   const log=validUrl(item.github_run_url,"qa");
