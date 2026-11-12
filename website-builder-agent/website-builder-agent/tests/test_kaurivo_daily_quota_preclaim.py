@@ -18,7 +18,7 @@ class DailyQuotaClaimGuards(unittest.TestCase):
         self.assertIn('remaining<=0',workflow)
         self.assertIn('free_quota_empty',workflow)
         self.assertLess(workflow.index('if [[ "${{ steps.keycheck.outputs.free_quota_empty }}" == "true" ]]'),
-                        workflow.index('--data \'{"action":"claim"}\''))
+                        workflow.index('--data "$CLAIM_BODY"'))
         self.assertIn('has_job=false',workflow)
         self.assertIn('RESEARCH_FALLBACK_MODELS',workflow)
         self.assertIn('BUILDER_FALLBACK_MODELS',workflow)
