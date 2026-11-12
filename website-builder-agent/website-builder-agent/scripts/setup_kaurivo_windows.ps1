@@ -24,28 +24,19 @@ if ($LASTEXITCODE -ne 0) { throw "Python-riippuvuuksien asennus epäonnistui." }
 & $python -m playwright install chromium
 if ($LASTEXITCODE -ne 0) { throw "Chromiumin asennus epäonnistui." }
 if ($Codex) {
-  if (!(Get-Command codex -ErrorAction SilentlyContinue)) {
-    throw "Asenna ensin Codex CLI. Ohje: https://developers.openai.com/codex/cli"
-  }
-  Write-Host "Kirjaudu Codexiin ChatGPT-tililläsi selaimessa."
-  & codex login
-  if ($LASTEXITCODE -ne 0) { throw "Codex-kirjautuminen epäonnistui." }
-  Write-Host "Tarkistetaan Codexin rakennusmalli ja kuvallinen laaduntarkistus."
-  & $python -m utils.codex_ai --verify
-  if ($LASTEXITCODE -ne 0) { throw "Codexin mallikoe epäonnistui. Rakentajaa ei käynnistetty." }
+  throw "Codex ei ole enää tuettu Kaurivon Windows-rakentajassa. Käytä paikallista Ollamaa."
+}
+if (!(Get-Command ollama -ErrorAction SilentlyContinue)) {
+  throw "Ollama puuttuu. Asenna ilmainen Ollama: https://ollama.com/download/windows"
+}
+$allow = Read-Host "Asennetaanko paikalliset tekoälymallit? (n. 9–12 GB levytilaa, kyllä/ei)"
+if ($allow -notin @("kyllä","k","yes","y")) {
+  Write-Host "Voit myöhemmin suorittaa: ollama pull qwen2.5-coder:7b ja ollama pull llava:7b"
 } else {
-  if (!(Get-Command ollama -ErrorAction SilentlyContinue)) {
-    throw "Ollama puuttuu. Asenna ilmainen Ollama: https://ollama.com/download/windows"
-  }
-  $allow = Read-Host "Asennetaanko paikalliset tekoälymallit? (n. 9–12 GB levytilaa, kyllä/ei)"
-  if ($allow -notin @("kyllä","k","yes","y")) {
-    Write-Host "Voit myöhemmin suorittaa: ollama pull qwen2.5-coder:7b ja ollama pull llava:7b"
-  } else {
-    & ollama pull qwen2.5-coder:7b
-    if ($LASTEXITCODE -ne 0) { throw "Koodimallin asennus epäonnistui." }
-    & ollama pull llava:7b
-    if ($LASTEXITCODE -ne 0) { throw "Kuvia ymmärtävän QA-mallin asennus epäonnistui." }
-  }
+  & ollama pull qwen2.5-coder:7b
+  if ($LASTEXITCODE -ne 0) { throw "Koodimallin asennus epäonnistui." }
+  & ollama pull llava:7b
+  if ($LASTEXITCODE -ne 0) { throw "Kuvia ymmärtävän QA-mallin asennus epäonnistui." }
 }
 
 $folder=Join-Path $env:LOCALAPPDATA "Kaurivo"
@@ -61,7 +52,7 @@ try {
 } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($plain) }
 $dest=Join-Path $folder "worker.token.dpapi"
 $secure | ConvertFrom-SecureString | Set-Content -Encoding ascii -Path $dest
-$backend = if ($Codex) { "codex" } else { "ollama" }
+$backend = "ollama"
 Set-Content -Encoding ascii -Path (Join-Path $folder "worker.backend") -Value $backend
 Write-Host "Avain tallennettiin nykyisen Windows-käyttäjän DPAPI-suojattuna."
 Write-Host "Huomio: GitHubin sisäisen demon julkaisu tarvitsee Git Credential Managerissa hyväksytyn sisäänkirjautumisen, jolla on Contents:write."
@@ -77,11 +68,6 @@ if ($auto -in @("k","kyllä","y","yes")) {
   } catch {
     Write-Warning "Ajastettua käynnistystä ei voitu tehdä. Voit käynnistää start_kaurivo_worker.ps1 käsin."
   }
-}
-if ($Codex) {
-  Write-Host "Asennus valmis. Codex-rakentaja käynnistyy tähän ikkunaan."
-  & (Join-Path $PSScriptRoot "start_kaurivo_worker.ps1")
-  exit $LASTEXITCODE
 }
 Write-Host "Asennus valmis. Avaa uusi PowerShell ja suorita:"
 Write-Host ('powershell -ExecutionPolicy Bypass -File "' + (Join-Path $PSScriptRoot "start_kaurivo_worker.ps1") + '"')
