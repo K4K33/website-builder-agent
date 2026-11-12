@@ -235,7 +235,7 @@ def main() -> int:
     model_names=models()
     file=singleton_lock()
     with file,requests.Session() as session:
-        print("Kaurivo Windows-rakentaja käynnissä. Painallus tarkistetaan noin sekunnissa.",
+        print("Kaurivo Windows-rakentaja käynnissä. Realtime-heräte käytössä; varatarkistus 90 s.",
               flush=True)
         worker_id=None
         ready_before=None
