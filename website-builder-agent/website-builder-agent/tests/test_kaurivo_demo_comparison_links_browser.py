@@ -140,6 +140,24 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_windows_qa_report_is_real_render_url_not_fake_github_run(self):
+        page=self.page()
+        try:
+            job=self.job()
+            job["runner_kind"]="local"
+            job["qa_url"]="https://kaurivo-auto-demos-2026.onrender.com/kaurivo-123/qa.html"
+            self.render(page,[job])
+            self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),1)
+            self.assertEqual(page.get_by_role("link",name="QA-raportti").count(),1)
+            self.assertIn("/qa.html",page.get_by_role("link",name="QA-raportti")
+                          .get_attribute("href"))
+            self.assertEqual(page.locator(".demo-comparison-link").count(),2)
+            job["qa_url"]="https://malicious.example/qa.html"
+            self.render(page,[job])
+            self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
+        finally:
+            page.close()
+
     def test_no_previous_website_has_explicit_empty_state_not_fake_url(self):
         page=self.page()
         try:

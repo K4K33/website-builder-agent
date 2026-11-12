@@ -14,7 +14,7 @@ const reply=(status:number,value:Record<string,unknown>)=>new Response(JSON.stri
  status,headers:{"content-type":"application/json;charset=utf-8","cache-control":"no-store",
   "x-content-type-options":"nosniff","vary":"Authorization"}
 });
-type Work={action?:string;job_id?:string;status?:string;progress?:string;
+type Work={action?:string;job_id?:string;ready?:boolean;status?:string;progress?:string;
  preview_url?:string;qa_url?:string;release_sha?:string;error_code?:string;key_http_status?:number};
 async function rpc(name:string,body:Record<string,unknown>){
  const resp=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{
@@ -60,7 +60,24 @@ Deno.serve(async request=>{
  if(!authorization.startsWith("Bearer ")||authorization.length>7200)
   return reply(401,{ok:false,error:"missing_oidc"});
  let run_id=0;
- try{
+ const local=authorization.startsWith("Bearer kvl_");
+ if(local){
+  // A separate, owner-enrolled device identity. No browser admin JWT,
+  // service-role key, password or GitHub OIDC key is stored on Windows.
+  const token=authorization.slice(7);
+  if(!/^kvl_[0-9a-f]{64}$/.test(token))
+   return reply(403,{ok:false,error:"invalid_local_worker"});
+  const digest=[...new Uint8Array(await crypto.subtle.digest(
+    "SHA-256",new TextEncoder().encode(token)))]
+   .map(v=>v.toString(16).padStart(2,"0")).join("");
+  try{
+   run_id=Number(await rpc("kaurivo_local_worker_validate",{
+     p_digest:digest,p_ready:null
+   }));
+   if(!Number.isSafeInteger(run_id)||run_id<2000000000000000)
+    return reply(403,{ok:false,error:"local_worker_not_enrolled"});
+  }catch(_){return reply(503,{ok:false,error:"local_worker_auth_unavailable"});}
+ }else try{
   const {payload,protectedHeader}=await jwtVerify(authorization.slice(7),JWKS,{
    issuer:"https://token.actions.githubusercontent.com",
    audience:AUDIENCE,algorithms:["RS256"],clockTolerance:"5s"
@@ -136,6 +153,21 @@ Deno.serve(async request=>{
   if(!data||typeof data!=="object"||Array.isArray(data))throw Error("format");
  }catch(_){return reply(400,{ok:false,error:"invalid_json"});}
  try{
+  if(data.action==="ping"&&local){
+   if(Object.keys(data).length!==2||typeof data.ready!=="boolean")
+     return reply(400,{ok:false,error:"ping_args"});
+   const token=authorization.slice(7);
+   const digest=[...new Uint8Array(await crypto.subtle.digest(
+    "SHA-256",new TextEncoder().encode(token)))]
+    .map(v=>v.toString(16).padStart(2,"0")).join("");
+   const result=await rpc("kaurivo_local_worker_validate",{
+    p_digest:digest,p_ready:data.ready
+   });
+   return reply(Number(result)===run_id?200:403,
+    {ok:Number(result)===run_id,run_id});
+  }
+  if(local&&data.action==="health")
+    return reply(400,{ok:false,error:"github_health_only"});
   if(data.action==="health"){
    if(Object.keys(data).length!==2||
       !Number.isSafeInteger(data.key_http_status)||
@@ -175,6 +207,13 @@ Deno.serve(async request=>{
       (data.job_id!==undefined &&
        (typeof data.job_id!=="string"||!UUID.test(data.job_id))))
       return reply(400,{ok:false,error:"claim_args"});
+   if(local){
+    if(Object.keys(data).length!==1)
+     return reply(400,{ok:false,error:"local_claim_args"});
+    const result=await rpc("kaurivo_local_worker_claim",{p_run_id:run_id});
+    const job=Array.isArray(result)?result[0]||null:null;
+    return reply(200,{ok:true,job,run_id});
+   }
    const run_url="https://github.com/"+REPOSITORY+"/actions/runs/"+run_id;
    // An explicitly clicked Rakenna demo job gets priority. Scheduled and
    // push backups still claim oldest eligible via the legacy RPC.
