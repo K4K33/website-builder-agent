@@ -321,6 +321,29 @@
   const checked=Date.parse(item.checked_at||"");
   return !Number.isFinite(checked)||Date.now()-checked>2*60*60*1000;
  }
+ let verifiedLocal=null, verifiedLocalAt=0, checkingLocal=false;
+ function localWorkerIndicator(db){
+  if(!db?.rpc)return;
+  const root=$("demo-health");if(!root)return;
+  const line=append(root,"span","demo-local-status",
+   verifiedLocal===true
+    ?"Paikallinen Ollama-rakentaja on vahvistetusti valmis vastaanottamaan työn."
+    :verifiedLocal===false
+     ?"Paikallinen Ollama ei ole vahvistetusti valmis. Pidä Windows-rakentaja käynnissä; jonossa oleva työ säilyy."
+     :"Tarkistetaan Windows-rakentajan todellista tilaa.");
+  if(checkingLocal||Date.now()-verifiedLocalAt<25000)return;
+  checkingLocal=true;
+  Promise.resolve().then(()=>db.rpc("kaurivo_local_worker_online")).then(({data,error})=>{
+   verifiedLocal=!error&&data===true;
+   verifiedLocalAt=Date.now();
+   if(line.isConnected)line.textContent=verifiedLocal
+    ?"Paikallinen Ollama-rakentaja on vahvistetusti valmis vastaanottamaan työn."
+    :"Paikallinen Ollama ei ole vahvistetusti valmis. Käynnistä Windows-rakentaja; pelkkä vanha Codex-yhteys ei riitä.";
+  }).catch(()=>{
+   verifiedLocal=false;verifiedLocalAt=Date.now();
+   if(line.isConnected)line.textContent="Windows-rakentajan valmiutta ei voitu vahvistaa.";
+  }).finally(()=>{checkingLocal=false;});
+ }
  function healthSummary(health){
   const item=getHealth(health);
   const output=$("demo-health");
@@ -416,6 +439,7 @@
  }
  function render(jobs,health,options={}){
   healthSummary(health);
+  localWorkerIndicator(options.db);
   windowsEnrollment(options);
   const all=Array.isArray(jobs)?jobs:[];
   const ready=all.filter(canShowPreview);
