@@ -197,7 +197,13 @@ def validate_free_api_key():
     daily=data.get("free_model_daily_requests")
     remaining=daily.get("remaining") if isinstance(daily,dict) else None
     if type(remaining) in (int,float) and remaining<=0:
-        raise HoldError("free_ai_capacity_unavailable")
+        from utils.cloudflare_free_ai import enabled
+        if enabled():
+            # Explicitly opt-in to verified Workers Free, *without* issuing
+            # an OpenRouter request that is already known to fail.
+            os.environ["KAURIVO_OPENROUTER_FREE_EXHAUSTED"] = "1"
+        else:
+            raise HoldError("free_ai_capacity_unavailable")
     return True
 
 
