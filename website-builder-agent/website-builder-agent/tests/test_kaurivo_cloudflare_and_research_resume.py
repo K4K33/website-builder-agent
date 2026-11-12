@@ -80,6 +80,41 @@ class CloudflareFreeTests(unittest.TestCase):
             cloud.assert_called_once()
             local.assert_not_called()
 
+    def test_known_empty_openrouter_free_daily_budget_uses_verified_cloud(self):
+        from scripts import run_kaurivo_demo_queue as runner
+        response=Mock(status_code=200)
+        response.json.return_value={"data":{"free_model_daily_requests":{"remaining":0}}}
+        with patch.dict(os.environ,{"OPENROUTER_API_KEY":"dummy",
+                                 "KAURIVO_OPENROUTER_FREE_EXHAUSTED":""}), \
+             patch("scripts.run_kaurivo_demo_queue.requests.get",
+                   return_value=response), \
+             patch("utils.cloudflare_free_ai.enabled",return_value=True):
+            runner.validate_free_api_key()
+            self.assertEqual(os.environ["KAURIVO_OPENROUTER_FREE_EXHAUSTED"],"1")
+        with patch.dict(os.environ,{"OPENROUTER_API_KEY":"dummy",
+                                 "KAURIVO_OPENROUTER_FREE_EXHAUSTED":""}), \
+             patch("scripts.run_kaurivo_demo_queue.requests.get",
+                   return_value=response), \
+             patch("utils.cloudflare_free_ai.enabled",return_value=False):
+            with self.assertRaisesRegex(runner.HoldError,"free_ai_capacity_unavailable"):
+                runner.validate_free_api_key()
+
+    def test_github_claim_uses_only_confirmed_free_cloud_when_openrouter_empty(self):
+        self.assertIn("cloudflare_ready=",FLOW)
+        self.assertIn("steps.keycheck.outputs.cloudflare_ready",FLOW)
+        self.assertIn("OpenRouter free quota known empty",FLOW)
+        self.assertIn('KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED:',FLOW)
+        from utils.claude_client import ask_claude
+        with patch.dict(os.environ,{**CONFIRMED,"AI_BACKEND":"openrouter",
+                     "RESEARCH_MODEL":"google/gemma-4-26b-a4b-it:free",
+                     "KAURIVO_OPENROUTER_FREE_EXHAUSTED":"1"},clear=True), \
+             patch("utils.cloudflare_free_ai.chat_cloudflare_free",
+                   return_value="verified") as cloud, \
+             patch("utils.claude_client._get_headers") as openrouter:
+            self.assertEqual(ask_claude("system","source",stage="research"),"verified")
+            cloud.assert_called_once()
+            openrouter.assert_not_called()
+
     def test_worker_vars_no_paid_automatic_fallback(self):
         self.assertIn("vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0'",FLOW)
         self.assertIn("secrets.KAURIVO_CLOUDFLARE_API_TOKEN",FLOW)
