@@ -34,6 +34,7 @@
   building_failed:"Konsepti tai sivustorakennus ei läpäissyt vaatimuksia",
   qa_failed:"Sivuston laatutarkistus ei läpäissyt vaatimuksia",
   quality_gate_not_approved:"Laadun hyväksyntää ei ole saavutettu",
+  design_handoff_incomplete:"Mestari-Promptin, lähdeaineiston tai yrityskohtaisen suunnitelman tarkistuksessa on puutteita",
   premium_interaction_blocked:"Interaktiivinen ominaisuus ei täytä uusimpia laatustandardeja",
   remote_image_rights_not_proven:"Ulkoisten kuvien oikeuksia ei ole vahvistettu",
   runner_stale_timeout:"Rakennustyö katkesi ja vaatii uuden tarkistuksen",
@@ -90,13 +91,36 @@
       {ok:true,local:false}:{ok:false,reason:data?.reason||"github_dispatch_unavailable"};
   }catch(_){return {ok:false,reason:"github_dispatch_unavailable"};}
  }
- function dispatchFeedback(result,toast){
+ // A dispatch acknowledgement is not proof that the selected company has
+ // actually been claimed. Query only this admin-protected row and bound waits.
+ async function verifyBuildStart(db,jobId){
+  if(!db?.from)return "unknown";
+  for(let attempt=0;attempt<5;attempt++){
+   try{
+    const {data,error}=await db.from("kaurivo_demo_build_jobs")
+      .select("status").eq("id",jobId).maybeSingle();
+    if(error||!data)return "unknown";
+    if(["researching","building","qa","publishing"].includes(data.status))return "running";
+    if(data.status==="internal_preview")return "ready";
+    if(["hold","failed"].includes(data.status))return "blocked";
+   }catch(_){return "unknown";}
+   if(attempt<4)await new Promise(resolve=>setTimeout(resolve,650));
+  }
+  return "queued";
+ }
+ function dispatchFeedback(result,toast,verified="unknown"){
   if(result.ok){
-   toast(result.local?
-     result.running?"Windows-rakentaja on jo aloittanut demon tutkimisen.":
-     result.waiting?"Windows on valmiina, mutta pikailmoitusta ei voitu vahvistaa. Varatarkistus jatkuu automaattisesti.":
-     "Windows-rakentajalle lähetettiin pikailmoitus. Todellinen aloitus vahvistuu Taustatutkimus-tilasta.":
-     "GitHub vastaanotti käynnistyspyynnön. Seuraa etenemistä Demot-näkymässä.","success");
+   if(verified==="running"){
+    toast("Windows- tai GitHub-rakentaja on aloittanut valitun yrityksen työn.","success");
+   }else if(verified==="ready"){
+    toast("Demo on jo valmistunut. Avaa uusi sivu Demot-näkymästä.","success");
+   }else if(verified==="blocked"){
+    toast("Rakennus pysähtyi. Katso Demot-näkymän tarkka virhesyy.","error");
+   }else{
+    toast(result.local?
+     "Windowsille lähetettiin heräte, mutta valitun yrityksen aloitusta ei vielä vahvistettu. Tarkista Ollaman valmius Demot-näkymästä.":
+     "GitHub vastaanotti pyynnön, mutta valitun yrityksen rakentaminen ei ole vahvistetusti alkanut.","error");
+   }
    return;
   }
   const explanation=DISPATCH_MESSAGES[result.reason]||"GitHubin käynnistystä ei voitu vahvistaa.";
@@ -277,8 +301,9 @@
      kick.disabled=true;
      try{
       const status=await dispatchNow(options.db,job.id);
+      const confirmed=status.ok?await verifyBuildStart(options.db,job.id):"unknown";
       if(options.reload)await options.reload();
-      dispatchFeedback(status,options.toast);
+      dispatchFeedback(status,options.toast,confirmed);
      }finally{kick.disabled=false;}
     });
    }
@@ -476,7 +501,8 @@
      toast("Työ on tallessa. Seuraava sallittu yritys näkyy Demot-näkymässä.","error");
     }else{
      const result=await dispatchNow(db,active.id);
-     dispatchFeedback(result,toast);
+     const confirmed=result.ok?await verifyBuildStart(db,active.id):"unknown";
+     dispatchFeedback(result,toast,confirmed);
     }
    }else{
     toast("Yrityksen rakennustyö on jo käynnissä. Seuraa Demot-näkymää.","success");
@@ -491,9 +517,10 @@
    // GitHub token in static HTML. Failed dispatch does NOT delete the job:
    // admin can retry or start GitHub manually.
    const dispatch=await dispatchNow(db,data);
+   const confirmed=dispatch.ok?await verifyBuildStart(db,data):"unknown";
    await reload();
    showTab("demos");
-   dispatchFeedback(dispatch,toast);
+   dispatchFeedback(dispatch,toast,confirmed);
   }catch(e){
    const message=String(e.message||"Tuntematon virhe");
    const human=message.includes("not authorized")?"Rakennuspyyntö vaatii Kaurivon ylläpitäjän kirjautumisen."
