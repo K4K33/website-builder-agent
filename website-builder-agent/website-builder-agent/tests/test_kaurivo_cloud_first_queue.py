@@ -55,7 +55,7 @@ class CloudFirstDemoTests(unittest.TestCase):
         self.assertIn("cloudRecovery",JS)
         self.assertIn("cloud_recovery_day",JS)
         self.assertIn('verifyBuildStart(options.db,job.id)',JS)
-        self.assertIn("demo-jobs.js?v=20261112-openrouter-status5",HTML)
+        self.assertIn("demo-jobs.js?v=20261112-cloudflare-codes6",HTML)
         self.assertNotIn("window.open(",JS)
         self.assertNotIn("service_role",JS)
 
