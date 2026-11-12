@@ -95,7 +95,7 @@
    toast(result.local?
      result.running?"Windows-rakentaja on jo aloittanut demon tutkimisen.":
      result.waiting?"Windows on valmiina, mutta pikailmoitusta ei voitu vahvistaa. Varatarkistus jatkuu automaattisesti.":
-     "Windows-rakentajalle lähetettiin pikailmoitus. Se aloittaa tämän demon suoraan.":
+     "Windows-rakentajalle lähetettiin pikailmoitus. Todellinen aloitus vahvistuu Taustatutkimus-tilasta.":
      "GitHub vastaanotti käynnistyspyynnön. Seuraa etenemistä Demot-näkymässä.","success");
    return;
   }
@@ -199,7 +199,7 @@
   append(main,"div","record-title",job.company_name||"Tuntematon yritys");
   const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
-  const localActive=job.runner_kind==="local"&&job.status!=="queued";
+  const localActive=job.runner_kind==="local"&&ACTIVE.has(job.status)&&job.status!=="queued";
   const awaitingDispatch=job.status==="queued"&&!deferred;
   const dispatchFailure=awaitingDispatch&&job.dispatch_error_code;
   const acceptedAt=Date.parse(job.dispatch_accepted_at||"");
