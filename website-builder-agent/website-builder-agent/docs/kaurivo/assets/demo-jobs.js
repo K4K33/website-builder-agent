@@ -200,10 +200,14 @@
   const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
   const localActive=job.runner_kind==="local"&&job.status!=="queued";
-  const dispatchFailure=job.status==="queued"&&job.dispatch_error_code;
-  const dispatchAccepted=job.status==="queued"&&!dispatchFailure&&!!job.dispatch_accepted_at;
-  const dispatchElapsed=dispatchAccepted?
-    Date.now()-Date.parse(job.dispatch_accepted_at||""):0;
+  const awaitingDispatch=job.status==="queued"&&!deferred;
+  const dispatchFailure=awaitingDispatch&&job.dispatch_error_code;
+  const acceptedAt=Date.parse(job.dispatch_accepted_at||"");
+  const startedAt=Date.parse(job.started_at||"");
+  // An old dispatch stays recorded when a claimed build returns to the queue.
+  const dispatchAccepted=awaitingDispatch&&!dispatchFailure&&Number.isFinite(acceptedAt)&&
+    (!Number.isFinite(startedAt)||acceptedAt>startedAt);
+  const dispatchElapsed=dispatchAccepted?Date.now()-acceptedAt:0;
   const dispatchStalled=dispatchAccepted&&Number.isFinite(dispatchElapsed)
     &&dispatchElapsed>120000;
   append(main,"div","record-sub",
