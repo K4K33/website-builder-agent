@@ -19,14 +19,16 @@ Tärkeää:
 import os
 import json
 from urllib.parse import urlsplit
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from functools import partial
 from uuid import uuid4
 
 from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
-from utils.screenshot import capture_website
+from utils.screenshot import capture_website, REFERENCE_VIEWPORTS
 from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
 from utils.source_fidelity import validate_source_plan, source_manifest
@@ -567,24 +569,31 @@ def _select_reference_candidates(references, facts, target_url):
     industry = str(facts.get("industry", "")).strip()
     if not industry:
         raise RuntimeError("Identify the target industry before reference discovery.")
-    candidates, domains = [], {urlsplit(canonical_url(target_url)).hostname}
+    urls, domains = [], {urlsplit(canonical_url(target_url)).hostname}
     for reference in references[:24]:
         url = canonical_url(reference.get("url"))
         domain = urlsplit(url).hostname
         if not domain or domain in domains:
             continue
         domains.add(domain)
+        urls.append(url)
+
+    def inspect_reference(url):
         try:
             site = (cached_analyze(url, analyze_url)
                     if config.free_only() else analyze_url(url))
-            if not isinstance(site, dict) or site.get("success") is not True:
-                continue
-            text = site.get("visible_text", "")[:6000]
-            if not text.strip():
-                continue
-            candidates.append({"url": url, "title": site.get("title", ""), "site_text": text})
+            if isinstance(site, dict) and site.get("success") is True:
+                text = site.get("visible_text", "")[:6000]
+                if text.strip():
+                    return {"url": url, "title": site.get("title", ""), "site_text": text}
         except Exception as error:
+            domain = urlsplit(url).hostname
             print(f"[Research] Candidate unavailable: {domain}: {type(error).__name__}")
+        return None
+
+    # Fetch different operators concurrently while retaining the ranked order.
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        candidates = [item for item in pool.map(inspect_reference, urls) if item is not None]
     if len(candidates) < 3:
         raise RuntimeError("Fewer than three inspectable operator candidates; cannot build.")
     result = ask_claude_json(
@@ -621,6 +630,7 @@ def _select_reference_candidates(references, facts, target_url):
 
 
 def _collect_reference_evidence(references, target_url):
+    capture_reference = partial(capture_website, viewports=REFERENCE_VIEWPORTS)
     evidence, domains = [], {urlsplit(canonical_url(target_url)).hostname}
     for reference in references[:5]:
         url = canonical_url(reference.get("url"))
@@ -630,10 +640,10 @@ def _collect_reference_evidence(references, target_url):
         domains.add(domain)
         try:
             shots = (capture_cached(
-                url, capture_website,
+                url, capture_reference,
                 cache_root=os.path.join(config.OUTPUT_DIR, "_reference_screenshot_cache"),
             ) if config.free_only()
-                     else capture_website(url, "reference-" + domain + "-" + uuid4().hex[:12]))
+                     else capture_reference(url, "reference-" + domain + "-" + uuid4().hex[:12]))
             if not isinstance(shots, dict) or not all(
                     isinstance(shots.get(view), str) and os.path.isfile(shots[view])
                     for view in ("desktop", "mobile")):

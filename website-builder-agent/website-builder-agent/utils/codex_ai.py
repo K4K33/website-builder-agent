@@ -1,6 +1,7 @@
 """Use the signed-in local Codex App Server for Kaurivo model calls."""
 from __future__ import annotations
 
+from collections import deque
 from contextlib import contextmanager
 import argparse
 import json
@@ -25,6 +26,7 @@ class AppServer:
         self.process = process
         self.deadline = deadline
         self.inbox = Queue()
+        self.turn_events = deque()
         self.request_id = 0
         threading.Thread(target=self.read, daemon=True).start()
 
@@ -51,7 +53,7 @@ class AppServer:
         try:
             message = self.inbox.get(timeout=max(0, self.deadline - time.monotonic()))
         except Empty as exc:
-            raise CodexError("Codex App Server timed out.") from exc
+            raise CodexError("CODEX_STAGE_TIMEOUT: Codex App Server timed out.") from exc
         if message is None:
             raise CodexError("Codex App Server stopped.")
         if "method" in message and "id" in message:
@@ -66,6 +68,8 @@ class AppServer:
         self.send({"id": request_id, "method": method, "params": params})
         while True:
             message = self.receive()
+            if message.get("method") in {"item/completed", "turn/completed"} and "id" not in message:
+                self.turn_events.append(message)
             if "method" in message or message.get("id") != request_id:
                 continue
             result = message.get("result")
@@ -151,7 +155,7 @@ def chat_codex(system, prompt, *, model, image_paths=None, json_mode=False, time
         turn = server.call("turn/start", threadId=thread, input=items)["turn"]["id"]
         answer = ""
         while True:
-            message = server.receive()
+            message = server.turn_events.popleft() if server.turn_events else server.receive()
             params = message.get("params") or {}
             if params.get("threadId") != thread:
                 continue

@@ -21,6 +21,7 @@ VIEWPORTS = (
     ("mobile", 390, 844),
     ("small_mobile", 320, 740),
 )
+REFERENCE_VIEWPORTS = tuple(view for view in VIEWPORTS if view[0] in {"desktop", "mobile"})
 
 
 def _safe_filename(name: str) -> str:
@@ -71,11 +72,9 @@ FIRST_VIEW_SCRIPT = """() => {
 }"""
 
 
-def capture_website(url: str, company_name: str) -> dict | None:
-    """Capture full-page source and DOM first-view metadata at four dimensions.
+def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS) -> dict | None:
+    """Capture full-page source and DOM first-view metadata at the requested sizes."""
 
-    The old desktop/mobile keys are retained for existing research/QA callers.
-    """
     if not _safe_remote_url(url):
         print("  [screenshot] Original capture refused: invalid or local URL.")
         return None
@@ -89,7 +88,7 @@ def capture_website(url: str, company_name: str) -> dict | None:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
             try:
-                for name, width, height in VIEWPORTS:
+                for name, width, height in viewports:
                     context = browser.new_context(
                         viewport={"width": width, "height": height},
                         device_scale_factor=1,
