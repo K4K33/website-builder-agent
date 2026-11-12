@@ -1,0 +1,66 @@
+name: Kaurivo Workers Free actual model smoke test
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/kaurivo-cloudflare-free-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  free-smoke:
+    if: github.repository == 'K4K33/website-builder-agent' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
+      ACCOUNT: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
+      TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Verify actual free-only Cloudflare Gemma model
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, re, urllib.request, urllib.error
+          if os.environ.get("FREE_CONFIRMED") != "1":
+              raise SystemExit("STOP: Workers Free not explicitly confirmed.")
+          account=os.environ.get("ACCOUNT","").strip()
+          token=os.environ.get("TOKEN","").strip()
+          if not re.fullmatch(r"[a-f0-9]{32}",account) or not re.fullmatch(r"[A-Za-z0-9_-]{25,250}",token):
+              raise SystemExit("STOP: required Workers Free credentials missing or invalid.")
+          # Exactly one small inference on a model Cloudflare lists on Workers Free.
+          # Never print the account ID, token, response text, or request metadata.
+          model="@cf/google/gemma-4-26b-a4b-it"
+          payload={"model":model, "stream":False, "max_tokens":180,
+              "messages":[
+                  {"role":"system","content":"Respond with one English word, READY."},
+                  {"role":"user","content":"State READY."}]}
+          url="https://api.cloudflare.com/client/v4/accounts/"+account+"/ai/v1/chat/completions"
+          req=urllib.request.Request(url,data=json.dumps(payload).encode("utf-8"),
+              method="POST",headers={"Authorization":"Bearer "+token,
+                                     "Content-Type":"application/json"})
+          try:
+              with urllib.request.urlopen(req,timeout=125) as res:
+                  status=res.status
+                  response=json.load(res)
+          except urllib.error.HTTPError as exc:
+              raise SystemExit("Cloudflare Free model HTTP "+str(exc.code)) from None
+          except Exception as exc:
+              raise SystemExit("Cloudflare Free connectivity failed: "+type(exc).__name__) from None
+          if status != 200 or not isinstance(response,dict):
+              raise SystemExit("Cloudflare model response invalid")
+          if response.get("model") not in (None,model):
+              raise SystemExit("Cloudflare returned an unapproved model")
+          choices=response.get("choices")
+          if not isinstance(choices,list) or not choices:
+              raise SystemExit("Cloudflare returned no model choices")
+          first=choices[0]
+          answer=first.get("message",{}).get("content","")
+          if first.get("finish_reason") != "stop" or not isinstance(answer,str) or not answer.strip():
+              raise SystemExit("Cloudflare output was empty or truncated")
+          print("CLOUDFLARE_WORKERS_FREE_LIVE_MODEL_VERIFIED=True")
+          print("Cloudflare Gemma returned a complete live text response; no paid model selected.")
+          PY
