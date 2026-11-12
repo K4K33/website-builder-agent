@@ -100,7 +100,7 @@ class LocalWindowsTests(TestCase):
         self.assertNotIn("SUPABASE_SERVICE_ROLE_KEY",DAEMON)
         self.assertNotIn("ghp_",PANEL)
         self.assertIn("KAURIVO_LOCAL_WORKER",RUNNER)
-        self.assertIn('AI_BACKEND":"ollama"',DAEMON)
+        self.assertIn('AI_BACKEND":backend',DAEMON)
 
     def test_real_qa_proof_and_immutable_preview_are_required(self):
         self.assertIn('qa_details=(company.get("qa") or {}) if LOCAL_WORKER else None',RUNNER)
@@ -113,10 +113,17 @@ class LocalWindowsTests(TestCase):
         self.assertIn("qa[.]html",PANEL)
         self.assertIn("noindex,nofollow,noarchive",RUNNER)
 
+    def test_codex_mode_discovers_subscription_models_without_ollama(self):
+        selected = {"research": "builder", "builder": "builder", "qa": "reviewer"}
+        with patch.dict(os.environ, {"KAURIVO_WINDOWS_BACKEND": "codex"}), \
+             patch("utils.codex_ai.discover_models", return_value=selected) as discover:
+            self.assertEqual(models(), selected)
+        discover.assert_called_once_with()
+
     def test_windows_works_even_with_cloud_quota_exhausted(self):
         self.assertIn("j.error_code='free_ai_capacity_unavailable'",SQL)
-        self.assertIn('RESEARCH_AI_BACKEND":"ollama"',DAEMON)
-        self.assertIn('QA_AI_BACKEND":"ollama"',DAEMON)
+        self.assertIn('RESEARCH_AI_BACKEND":backend',DAEMON)
+        self.assertIn('QA_AI_BACKEND":backend',DAEMON)
         self.assertIn('FREE_ONLY":"1"',DAEMON)
         self.assertIn('http://127.0.0.1:11434',DAEMON)
         self.assertIn("restore_private_checkpoint(",RUNNER)
