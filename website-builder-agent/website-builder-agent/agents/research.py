@@ -33,7 +33,8 @@ from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
-from utils.free_references import discover_free_references
+from utils.free_references import discover_free_references, preferred_benchmark_regions
+from utils.reference_quote_evidence import observed_quote_options, verified_evidence_quote
 from utils.free_tavily_cache import cached_free_search
 from utils.reference_screenshot_cache import capture_cached
 from utils.reference_site_cache import cached_analyze
@@ -488,7 +489,9 @@ def _search_tavily(
     ]
 
 
-def _search_industry_references(industry: str, target_url: str, search_query: str) -> list[dict]:
+def _search_industry_references(industry: str, target_url: str, search_query: str,
+                                *, facts: dict | None = None,
+                                original_text: str = "") -> list[dict]:
     """Use no-cost public OSM first; confirmed basic Tavily free tier for gaps.
 
     Never silently upgrade advanced searches or buy additional credits.
@@ -499,6 +502,7 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
         try:
             references = discover_free_references(
                 industry, target_url=target_url, max_results=20,
+                regions=preferred_benchmark_regions(facts, original_text),
             )
         except RuntimeError as error:
             print("[Research] Free OSM/verified sector pool insufficient: " + str(error)[:160])
@@ -671,7 +675,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     name = facts["name"]
     search_query = f"{industry} {str(facts['services'][0])[:80]} yritys palvelut verkkosivut"
     print("[Research] No verified company website: using reviewed factual profile.")
-    references = _search_industry_references(industry, "", search_query)
+    references = _search_industry_references(industry, "", search_query, facts=facts)
     selected = _select_reference_candidates(references, facts, "")
     evidence = _collect_reference_evidence(selected, "")
     images, labels = reference_image_inputs(evidence)
@@ -1013,7 +1017,9 @@ Raaka HTML:
 
     references = (
         progress["references"] if progress.get("milestone") == "references"
-        else _search_industry_references(industry, url, search_query)
+        else _search_industry_references(
+            industry, url, search_query, facts=company_facts,
+            original_text=str(site_data.get("visible_text") or "")[:10000])
     )
 
     # ---------------------------------------------------------
