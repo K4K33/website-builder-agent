@@ -1,4 +1,4 @@
-// Kaurivo admin-only manual PRH backup search; never a replacement for nightly nationwide ZIP.
+// Kaurivo bounded PRH search for admins and the authenticated morning fallback.
 // No AI credits, no generated business data, no outreach; only PRH registry facts.
 const SB_URL=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
@@ -97,20 +97,23 @@ function selectedCities(day:string,attempt:number):string[]{
  for(let i=0;i<MAX_REQUESTS;i++)picks.push(CITIES[(base+i*5)%CITIES.length]);
  return picks;
 }
-async function recordManualEvent(day:string,outcome:"success"|"failure",details:string,records:number){
+async function recordSearchEvent(day:string,outcome:"success"|"failure",details:string,records:number){
  await rest("kaurivo_pipeline_events",{method:"POST",
   headers:{"Prefer":"return=minimal"},
   body:JSON.stringify({event_day:day,component:"manual_search",outcome,details,records})
  }).catch(()=>null);
 }
-async function runSearch(day:string):Promise<Record<string,unknown>>{
- const result=await rest("rpc/kaurivo_claim_manual_scan",{method:"POST",
-  body:JSON.stringify({p_day:day})});
- if(!result.ok)throw Error("claim_failed");
- const claimed=await result.json();
- if(claimed!==true)return {ok:false,reason:"cooldown_or_daily_limit",run:await currentRun(day)};
- const current=await currentRun(day);
- const attempt=Number(current?.attempts)||1;
+async function runSearch(day:string,scheduledAttempt?:number):Promise<Record<string,unknown>>{
+ let attempt=scheduledAttempt;
+ if(attempt===undefined){
+  const result=await rest("rpc/kaurivo_claim_manual_scan",{method:"POST",
+   body:JSON.stringify({p_day:day})});
+  if(!result.ok)throw Error("claim_failed");
+  const claimed=await result.json();
+  if(claimed!==true)return {ok:false,reason:"cooldown_or_daily_limit",run:await currentRun(day)};
+  const current=await currentRun(day);
+  attempt=Number(current?.attempts)||1;
+ }
  let examined=0,added=0,requests=0,validQueries=0;
  try{
   const pool=new Map<string,ReturnType<typeof normalize>>();
@@ -176,19 +179,25 @@ async function runSearch(day:string):Promise<Record<string,unknown>>{
    const inserted=await insert.json();
    added=Array.isArray(inserted)?inserted.length:0;
   }
-  const done=await rest("kaurivo_manual_scan_runs?run_day=eq."+day,{
-   method:"PATCH",body:JSON.stringify({status:"succeeded",examined,added,updated_at:new Date().toISOString()})
-  });
-  if(!done.ok)throw Error("status_save_failed");
-  await recordManualEvent(day,"success","Rajattu PRH-varahaku valmis",added);
+  if(scheduledAttempt===undefined){
+   const done=await rest("kaurivo_manual_scan_runs?run_day=eq."+day,{
+    method:"PATCH",body:JSON.stringify({status:"succeeded",examined,added,updated_at:new Date().toISOString()})
+   });
+   if(!done.ok)throw Error("status_save_failed");
+  }
+  await recordSearchEvent(day,"success",scheduledAttempt===undefined
+   ?"Rajattu PRH-varahaku valmis":"Automaattinen PRH-aamuvarahaku valmis",added);
   return {ok:true,day,examined,added,requests,valid_queries:validQueries,
    ai_credits_used:0,marketing_emails_sent:0,
    note:"Varahaku kattaa kuusi aluehakua, ei koko valtakunnallista PRH-aineistoa."};
  }catch(_){
-  await rest("kaurivo_manual_scan_runs?run_day=eq."+day,{
-   method:"PATCH",body:JSON.stringify({status:"failed",examined,added,updated_at:new Date().toISOString()})
-  }).catch(()=>{});
-  await recordManualEvent(day,"failure","PRH-varahaun lähde tai tallennus epäonnistui",0);
+  if(scheduledAttempt===undefined){
+   await rest("kaurivo_manual_scan_runs?run_day=eq."+day,{
+    method:"PATCH",body:JSON.stringify({status:"failed",examined,added,updated_at:new Date().toISOString()})
+   }).catch(()=>{});
+  }
+  await recordSearchEvent(day,"failure",scheduledAttempt===undefined
+   ?"PRH-varahaun lähde tai tallennus epäonnistui":"Automaattinen PRH-aamuvarahaku epäonnistui",0);
   return {ok:false,reason:"provider_or_storage_failed",day,requests};
  }
 }
@@ -199,6 +208,19 @@ Deno.serve(async(req:Request)=>{
  if(!SB_URL||!SERVICE_KEY)return reply(503,{ok:false,reason:"server_config"});
  if(!["GET","POST"].includes(req.method))return reply(405,{ok:false,reason:"method"});
  try{
+  const schedulerToken=req.headers.get("X-Kaurivo-Scheduler-Token");
+  if(req.method==="POST"&&schedulerToken!==null){
+   if(!/^[a-f0-9]{64}$/.test(schedulerToken))return reply(401,{ok:false,reason:"scheduler_required"});
+   const gate=await rest("rpc/kaurivo_authorize_morning_prh",{method:"POST",
+    body:JSON.stringify({p_token:schedulerToken})});
+   if(!gate.ok)throw Error("scheduler_gate_unavailable");
+   const attempt=await gate.json();
+   if(attempt===-1)return reply(401,{ok:false,reason:"scheduler_required"});
+   if(attempt===0)return reply(200,{ok:true,skipped:true});
+   if(attempt!==1&&attempt!==2)throw Error("invalid_scheduler_gate");
+   const result=await runSearch(today(),attempt);
+   return reply(result.ok?200:503,result);
+  }
   if(!await checkAdmin(req))return reply(401,{ok:false,reason:"admin_required"});
   const day=today();
   if(req.method==="GET")return reply(200,{ok:true,day,run:await currentRun(day)});
