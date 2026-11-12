@@ -986,11 +986,22 @@ def main():
                     # Durable, quota-bounded retry on the SAME private job.
                     # Never erase existing verified research/build checkpoints.
                     # The DB enforces at most 3 actual claims per UTC day.
-                    update("queued",
-                           "Tilapäinen häiriö: "+error.code+
-                           ". Rakentaminen jatkuu automaattisesti "
-                           "seuraavassa sallitussa ajoikkunassa.",
-                           error_code=error.code)
+                    # The API key health check does not guarantee free
+                    # inference capacity; report actual backend and phase.
+                    interrupted_stage=stage
+                    cloud_limit=(not LOCAL_WORKER and error.code in {
+                        "free_ai_rate_limit","free_ai_capacity_unavailable"
+                    })
+                    if cloud_limit:
+                        message=("Pilven OpenRouterin maksuton AI rajoitti "
+                                 "pyyntöä vaiheessa "+interrupted_stage+
+                                 ". Codexia ei käytetä. Työ on tallessa; "
+                                 "jatko riippuu ilmaisesta AI-kapasiteetista.")
+                    else:
+                        message=("Tilapäinen häiriö: "+error.code+
+                                 ". Työ on tallessa ja sitä jatketaan "
+                                 "seuraavassa sallitussa ajoikkunassa.")
+                    update("queued",message,error_code=error.code)
                     print("Kaurivo demo queue: TRANSIENT FAILURE DEFERRED (no paid AI).")
                     return 0
                 except Exception:
