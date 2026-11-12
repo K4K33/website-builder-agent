@@ -15,6 +15,33 @@ from utils.site_architecture import validate_site_architecture
 from utils.source_fidelity import validate_source_plan
 from utils.source_identity import validate_brand_preservation_plan
 
+
+def safe_preflight_reason(error: BaseException) -> str:
+    """Classify a failed gate without storing scraped text or site URLs.
+
+    Full exception text may contain names or URLs from the original source.
+    Only these fixed, non-sensitive categories are sent to the job table.
+    """
+    message = str(error).lower()
+    for needle, code in (
+        ("master prompt", "master_prompt_version"),
+        ("benchmark", "reference_evidence"),
+        ("industry", "reference_evidence"),
+        ("creative", "creative_direction"),
+        ("concept", "creative_direction"),
+        ("brand", "original_brand"),
+        ("logo", "original_brand"),
+        ("source", "original_source"),
+        ("content", "original_source"),
+        ("site architecture", "sitemap"),
+        ("route", "sitemap"),
+        ("page plan", "sitemap"),
+        ("motion", "motion_accessibility"),
+    ):
+        if needle in message:
+            return code
+    return "design_contract"
+
 def verify_design_handoff(company: dict, *, selected: bool = False) -> dict:
     """Fail closed if a demo's research is not ready to become a real website.
 
