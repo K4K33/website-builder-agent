@@ -30,8 +30,9 @@ if ($Codex) {
   Write-Host "Kirjaudu Codexiin ChatGPT-tililläsi selaimessa."
   & codex login
   if ($LASTEXITCODE -ne 0) { throw "Codex-kirjautuminen epäonnistui." }
-  & $python -m utils.codex_ai
-  if ($LASTEXITCODE -ne 0) { throw "Codexin tilin tai mallien tarkistus epäonnistui." }
+  Write-Host "Tarkistetaan Codexin rakennusmalli ja kuvallinen laaduntarkistus."
+  & $python -m utils.codex_ai --verify
+  if ($LASTEXITCODE -ne 0) { throw "Codexin mallikoe epäonnistui. Rakentajaa ei käynnistetty." }
 } else {
   if (!(Get-Command ollama -ErrorAction SilentlyContinue)) {
     throw "Ollama puuttuu. Asenna ilmainen Ollama: https://ollama.com/download/windows"
@@ -76,6 +77,11 @@ if ($auto -in @("k","kyllä","y","yes")) {
   } catch {
     Write-Warning "Ajastettua käynnistystä ei voitu tehdä. Voit käynnistää start_kaurivo_worker.ps1 käsin."
   }
+}
+if ($Codex) {
+  Write-Host "Asennus valmis. Codex-rakentaja käynnistyy tähän ikkunaan."
+  & (Join-Path $PSScriptRoot "start_kaurivo_worker.ps1")
+  exit $LASTEXITCODE
 }
 Write-Host "Asennus valmis. Avaa uusi PowerShell ja suorita:"
 Write-Host ('powershell -ExecutionPolicy Bypass -File "' + (Join-Path $PSScriptRoot "start_kaurivo_worker.ps1") + '"')
