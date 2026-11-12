@@ -124,7 +124,7 @@ def free_model_configured():
         raise HoldError("paid_ai_disabled")
     if LOCAL_WORKER:
         backend=os.environ.get("AI_BACKEND")
-        if backend not in {"ollama","codex"}:
+        if backend!="ollama":  # No Codex or metered cloud worker is allowed.
             raise HoldError("local_models_required")
         from config import model_for_stage, backend_for_stage
         try:
@@ -907,6 +907,14 @@ def main():
                 update("researching","Tutkitaan alkuperäistä sivustoa ja kolmea suunnittelusuuntaa")
                 run_cli(["research",agent_slug],stage_log,ai_deadline)
                 save_private_checkpoint("researched",agent_slug)
+            # Professional agency-style handoff, before another AI call.
+            # This also rechecks restored checkpoints against the ACTIVE
+            # canonical Master Prompt, not the version used by an old job.
+            from utils.agency_preflight import verify_design_handoff, safe_preflight_reason
+            try:
+                verify_design_handoff(load_company(agent_slug),selected=False)
+            except (RuntimeError,ValueError,TypeError,KeyError) as exc:
+                raise HoldError("design_handoff_incomplete","research:"+safe_preflight_reason(exc)) from exc
             if done<1:
                 update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
                 run_cli(["concept-previews",agent_slug],stage_log,ai_deadline)
@@ -915,6 +923,13 @@ def main():
                 update("building","Arvioidaan kolme visuaalista konseptia")
                 run_cli(["choose-concept",agent_slug],stage_log,ai_deadline)
                 save_private_checkpoint("selected",agent_slug)
+            # Never promote a text-only or stale concept choice to Build.
+            # Require the brand/source blueprint, real benchmark evidence,
+            # selected art direction and a complete destination sitemap.
+            try:
+                verify_design_handoff(load_company(agent_slug),selected=True)
+            except (RuntimeError,ValueError,TypeError,KeyError) as exc:
+                raise HoldError("design_handoff_incomplete","selected_concept:"+safe_preflight_reason(exc)) from exc
             if done<3:
                 update("building","Rakennetaan valittu monisivuinen demo")
                 run_cli(["build",agent_slug],stage_log,ai_deadline)
