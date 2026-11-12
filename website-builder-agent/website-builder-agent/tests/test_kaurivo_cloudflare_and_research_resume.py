@@ -67,7 +67,10 @@ class CloudflareFreeTests(unittest.TestCase):
                      patch.object(cf.requests,"post",return_value=reply) as post:
                     with self.assertRaises(RuntimeError):
                         cf.chat_cloudflare_free("sys","source",stage="research",max_tokens=200)
-                    post.assert_called_once()
+                    # Only a truncated, otherwise valid response receives
+                    # ONE larger-budget request; no endless retries.
+                    self.assertEqual(post.call_count,2 if status==200 and
+                                     body.get("model")==cf.FREE_MODELS["research"] else 1)
 
     def test_real_openrouter_429_handler_invokes_free_cloud_not_ollama(self):
         from utils.claude_client import _local_free_quota_fallback
