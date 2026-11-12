@@ -144,7 +144,7 @@ def _extract_content(data: dict) -> str:
 def _local_free_quota_fallback(
     system: str, user_prompt: str, *, stage: str | None,
     max_tokens: int, image_paths: list[str] | None,
-    json_mode: bool,
+    json_mode: bool, capacity_code: str = "FREE_AI_CAPACITY_UNAVAILABLE",
 ) -> str:
     """Use installed local model when OpenRouter's free allowance ends.
 
@@ -152,7 +152,7 @@ def _local_free_quota_fallback(
     fails closed rather than pretending visual QA was independently checked.
     """
     if not config.free_only() or os.getenv("FREE_CLOUD_LOCAL_FALLBACK", "1") != "1":
-        raise RuntimeError("Free OpenRouter allowance exhausted; no paid fallback.")
+        raise RuntimeError(f"{capacity_code}: free OpenRouter capacity unavailable; no paid fallback.")
     name = (os.getenv(f"OLLAMA_{stage.upper()}_MODEL", "").strip()
             if stage else "")
     name = name or os.getenv("OLLAMA_MODEL", "").strip()
@@ -160,8 +160,8 @@ def _local_free_quota_fallback(
         # Distinct, non-sensitive error: the worker can defer this private job
         # without manufacturing a result or retrying a capped free API.
         raise RuntimeError(
-            "FREE_AI_CAPACITY_UNAVAILABLE: no local free fallback installed; "
-            "OpenRouter free request allowance/rate unavailable; no paid fallback."
+            f"{capacity_code}: OpenRouter free capacity unavailable; "
+            "no local model installed; no paid fallback."
         )
     from utils.local_ai import chat_local
     return chat_local(
@@ -283,9 +283,13 @@ def ask_claude(
             reserved = resource_manager.reserve("openrouter")
         if not reserved:
             if config.free_only():
+                capacity_code = ("FREE_AI_CAPACITY_UNAVAILABLE"
+                                 if resource_manager.openrouter_reservation_block_reason() == "daily"
+                                 else "FREE_AI_RATE_LIMIT")
                 return _local_free_quota_fallback(
                     system, user_prompt, stage=stage, max_tokens=max_tokens,
                     image_paths=image_paths, json_mode=json_mode,
+                    capacity_code=capacity_code,
                 )
             raise RuntimeError("OpenRouter request blocked by daily resource limit.")
 
@@ -300,8 +304,8 @@ def ask_claude(
             if response.status_code == 429:
                 if config.free_only():
                     # One bounded retry ONLY if OpenRouter itself proves the
-                    # minute window resets soon. A daily cap or unknown 429
-                    # still defers; never retry indefinitely or use paid AI.
+                    # minute window resets soon. Otherwise yield to the queue.
+                    # A bare 429 is not proof of exhausted daily allowance.
                     wait_seconds = (_verified_free_minute_wait_seconds(response)
                                     if not free_provider_minute_retried
                                     and attempt < max_retries else None)
@@ -312,6 +316,7 @@ def ask_claude(
                     return _local_free_quota_fallback(
                         system, user_prompt, stage=stage, max_tokens=max_tokens,
                         image_paths=image_paths, json_mode=json_mode,
+                        capacity_code="FREE_AI_RATE_LIMIT",
                     )
                 last_error = response.text
 
