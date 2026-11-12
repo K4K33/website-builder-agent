@@ -85,6 +85,44 @@ class KaurivoFreeModelFallbackTests(unittest.TestCase):
                 claude_client.ask_claude("system","text",stage="builder",max_tokens=8000)
             call.assert_called_once()
 
+    def test_short_provider_retry_after_waits_once_and_accepts_only_free_model(self):
+        limited=Mock(status_code=429,headers={"Retry-After":"2"},text="provider busy")
+        done=Mock(status_code=200,headers={})
+        done.json.return_value={"model":"google/primary:free",
+            "choices":[{"message":{"content":"Verified sourced research"},"finish_reason":"stop"}]}
+        env={"FREE_ONLY":"1","AI_BACKEND":"openrouter",
+             "RESEARCH_MODEL":"google/primary:free",
+             "RESEARCH_FALLBACK_MODELS":"google/backup:free",
+             "BUILDER_MODEL":"google/builder:free","QA_MODEL":"qwen/qa:free",
+             "OLLAMA_MODEL":""}
+        with patch.dict(os.environ,env,clear=True), \
+             patch.object(claude_client,"_get_headers",return_value={"Authorization":"mock"}), \
+             patch.object(resource_manager,"reserve",return_value=True) as reserve, \
+             patch.object(claude_client.requests,"post",side_effect=[limited,done]) as request, \
+             patch.object(claude_client.time,"sleep") as sleep:
+            answer=claude_client.ask_claude("system","text",stage="research")
+        self.assertEqual(answer,"Verified sourced research")
+        self.assertEqual(request.call_count,2)
+        self.assertEqual(reserve.call_count,2)
+        sleep.assert_called_once_with(4)
+
+    def test_untrusted_or_day_long_retry_after_does_not_retry_cloud(self):
+        for value in ("", "garbage", "-2", "1800", "86400", "inf"):
+            with self.subTest(value=value):
+                reply=Mock(status_code=429,headers={"Retry-After":value},text="rate limit")
+                env={"FREE_ONLY":"1","AI_BACKEND":"openrouter",
+                     "RESEARCH_MODEL":"google/primary:free","QA_MODEL":"qwen/qa:free",
+                     "OLLAMA_MODEL":""}
+                with patch.dict(os.environ,env,clear=True), \
+                     patch.object(claude_client,"_get_headers",return_value={"Authorization":"mock"}), \
+                     patch.object(resource_manager,"reserve",return_value=True), \
+                     patch.object(claude_client.requests,"post",return_value=reply) as request, \
+                     patch.object(claude_client.time,"sleep") as sleep:
+                    with self.assertRaisesRegex(RuntimeError,"FREE_AI_RATE_LIMIT"):
+                        claude_client.ask_claude("system","text",stage="research")
+                request.assert_called_once()
+                sleep.assert_not_called()
+
     def test_unverified_429_does_not_fan_out_more_cloud_requests(self):
         reply=Mock(status_code=429,headers={},text="provider limit")
         env={"FREE_ONLY":"1","AI_BACKEND":"openrouter",
