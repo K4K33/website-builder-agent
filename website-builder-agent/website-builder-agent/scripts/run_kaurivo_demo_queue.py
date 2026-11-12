@@ -42,10 +42,11 @@ PROJECT=Path(__file__).resolve().parents[1]
 # Support both `python -m scripts.run_kaurivo_demo_queue` and direct execution.
 if str(PROJECT) not in sys.path:
     sys.path.insert(0,str(PROJECT))
+LOCAL_WORKER=os.environ.get("KAURIVO_LOCAL_WORKER")=="1"
 RUN_ID=int(os.environ.get("GITHUB_RUN_ID","0"))
-RUN_URL=f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
-TIMEOUT_PER_STAGE=480
-AI_STAGE_BUDGET_SECONDS=2200
+RUN_URL="" if LOCAL_WORKER else f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
+TIMEOUT_PER_STAGE=1800 if LOCAL_WORKER else 480
+AI_STAGE_BUDGET_SECONDS=7200 if LOCAL_WORKER else 2200
 MAX_AUTO_REVISIONS=2
 # The exact same owner-requested demo remains recoverable across temporary
 # zero-cost provider and network outages. Daily attempts are bounded in SQL;
@@ -74,6 +75,11 @@ class HoldError(RuntimeError):
 
 
 def _oidc():
+    if LOCAL_WORKER:
+        secret=os.environ.get("KAURIVO_LOCAL_WORKER_TOKEN","")
+        if not re.fullmatch(r"kvl_[0-9a-f]{64}",secret):
+            raise HoldError("local_worker_auth_missing")
+        return secret
     url=os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL","")
     runner_token=os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN","")
     if not url or not runner_token:
@@ -116,6 +122,19 @@ def update(status,progress,**details):
 def free_model_configured():
     if os.environ.get("FREE_ONLY","1") not in {"1","true","yes"}:
         raise HoldError("paid_ai_disabled")
+    if LOCAL_WORKER:
+        if os.environ.get("AI_BACKEND")!="ollama":
+            raise HoldError("local_models_required")
+        from config import model_for_stage, backend_for_stage
+        try:
+            names={phase:model_for_stage(phase) for phase in ("research","builder","qa")}
+            if (any(backend_for_stage(phase)!="ollama"
+                    for phase in ("research","builder","qa")) or
+                    names["builder"]==names["qa"]):
+                raise RuntimeError("local independent QA model missing")
+        except RuntimeError as exc:
+            raise HoldError("local_models_required") from exc
+        return True
     if os.environ.get("AI_BACKEND","")!="openrouter":
         raise HoldError("free_model_not_configured")
     if not os.environ.get("OPENROUTER_API_KEY"):
@@ -574,7 +593,7 @@ def local_browser_smoke(site_root,routes):
         browser.close()
 
 
-def publish(site_root,job_id,slug,marker,expected_routes):
+def publish(site_root,job_id,slug,marker,expected_routes,qa_details=None):
     # Commit to a dedicated Render-auto-deployed branch. Never modify main
     # or previously verified preview URLs; every job gets a new immutable URL.
     suffix=job_id.split("-")[0]
@@ -590,6 +609,25 @@ def publish(site_root,job_id,slug,marker,expected_routes):
         snapshot_for_preview(site_root,directory,marker)
         routes=verify_static_site(directory,expected_routes)
         local_browser_smoke(directory,routes)
+        if LOCAL_WORKER:
+            # Publish a REAL, source-safe summary of the approved independent
+            # local QA, not a fake GitHub Actions URL. No source notes, model
+            # prompts, private CRM or draft customer data leave this worker.
+            import html
+            verdict=qa_details if isinstance(qa_details,dict) else {}
+            if verdict.get("overall_pass") is not True:
+                raise HoldError("quality_gate_not_approved")
+            score=verdict.get("overall_score")
+            score=str(score)[:18] if isinstance(score,(int,float,str)) else "Ei numeerista arviota"
+            report=('<!doctype html><html lang="fi"><head><meta charset="utf-8">'
+                '<meta name="robots" content="noindex,nofollow,noarchive">'
+                '<title>Kaurivo – sisäinen QA</title></head><body>'
+                '<main><h1>Kaurivo – sisäinen laadunvarmistus</h1>'
+                '<p>Tarkistettu sisäinen esikatselu. Ei vielä asiakkaalle hyväksytty.</p>'
+                '<p>Riippumaton QA: hyväksytty</p>'
+                '<p>Yhteisarvosana: '+html.escape(score)+'</p>'
+                '<p>Tunniste: '+html.escape(marker)+'</p></main></body></html>')
+            (directory/"qa.html").write_text(report,encoding="utf-8")
         subprocess.run(["git","add","--",str(PUBLISH_DIR/folder)],
                        cwd=publish_root,check=True,stdout=subprocess.DEVNULL)
         subprocess.run(["git","-c","user.name=Kaurivo Preview Bot",
@@ -899,11 +937,20 @@ def main():
             update("publishing","Julkaistaan sisäinen esikatselu versionumeroituna")
             expected_routes=(company.get("build") or {}).get("page_paths") or []
             url,sha,routes=publish(site_root,working_job["id"],agent_slug,
-                                   marker,expected_routes)
+                                   marker,expected_routes,
+                                   qa_details=(company.get("qa") or {}) if LOCAL_WORKER else None)
             update("publishing","Tarkistetaan julkinen osoite mobiililla ja tietokoneella")
             verify_public(url,marker,routes)
+            proof_url=RUN_URL
+            if LOCAL_WORKER:
+                proof_url=url.removesuffix("/index.html")+"/qa.html"
+                proof=requests.get(proof_url,timeout=15,allow_redirects=True)
+                if (proof.status_code!=200 or
+                        marker not in proof.text or
+                        "Riippumaton QA: hyväksytty" not in proof.text):
+                    raise HoldError("local_qa_public_proof_missing")
             update("internal_preview","Sisäinen teknisesti tarkistettu esikatselu on avattavissa",
-                   preview_url=url,qa_url=RUN_URL,release_sha=sha)
+                   preview_url=url,qa_url=proof_url,release_sha=sha)
             print("Kaurivo demo queue: exact-release internal preview verified.")
             return 0
         except HoldError as error:
