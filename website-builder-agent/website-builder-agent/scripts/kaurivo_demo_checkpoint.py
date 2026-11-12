@@ -18,7 +18,7 @@ from pathlib import Path, PurePosixPath
 MAX_ARCHIVE_BYTES = 30 * 1024 * 1024
 MAX_UNPACKED_BYTES = 105 * 1024 * 1024
 MAX_FILES = 420
-STAGES = ("researched", "concepts", "selected", "built", "revised_1", "revised_2")
+STAGES = ("research_partial", "researched", "concepts", "selected", "built", "revised_1", "revised_2")
 ALLOWED_SUFFIXES = frozenset((
     ".html", ".css", ".js", ".json", ".png", ".jpg", ".jpeg", ".webp",
     ".svg", ".ico", ".woff", ".woff2", ".webmanifest", ".pdf", ".md",
@@ -88,7 +88,24 @@ def _referenced_paths(project: Path, company: dict, slug: str) -> set[Path]:
 def _validate_phase(company: dict, slug: str, phase: str, project: Path) -> None:
     if not isinstance(company, dict) or company.get("slug") != slug:
         raise CheckpointError("company snapshot identity mismatch")
-    if not isinstance(company.get("research"), dict) or not company["research"]:
+    if phase == "research_partial":
+        progress = company.get("research_progress")
+        if (not isinstance(progress, dict) or progress.get("version") != 1 or
+                progress.get("source_url") != company.get("url") or
+                progress.get("milestone") not in ("source", "facts", "references") or
+                not isinstance(progress.get("site_data"), dict) or
+                not isinstance(progress.get("source_inventory"), dict) or
+                not isinstance(progress["source_inventory"].get("pages"), list) or
+                not progress["source_inventory"]["pages"]):
+            raise CheckpointError("incomplete or wrong-company partial research")
+        if (progress["milestone"] in ("facts", "references") and
+                not isinstance(progress.get("extracted"), dict)):
+            raise CheckpointError("partial company facts not evidenced")
+        if (progress["milestone"] == "references" and
+                (not isinstance(progress.get("reference_evidence"), list) or
+                 len(progress["reference_evidence"]) != 3)):
+            raise CheckpointError("partial reference evidence incomplete")
+    elif not isinstance(company.get("research"), dict) or not company["research"]:
         raise CheckpointError("research not complete")
     if STAGES.index(phase) >= STAGES.index("concepts"):
         if not isinstance(company.get("concept_previews"), dict) or not company["concept_previews"]:

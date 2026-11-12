@@ -146,11 +146,17 @@ def _local_free_quota_fallback(
     max_tokens: int, image_paths: list[str] | None,
     json_mode: bool, capacity_code: str = "FREE_AI_CAPACITY_UNAVAILABLE",
 ) -> str:
-    """Use installed local model when OpenRouter's free allowance ends.
+    """Try explicit Workers Free once, then existing no-cloud local fallback.
 
-    No cloud paid escalation or unlimited retries. Missing local inference
-    fails closed rather than pretending visual QA was independently checked.
+    This does NOT bypass either service's quota and is never enabled without
+    owner confirmation of the Workers FREE account and a server-side secret.
     """
+    if config.free_only():
+        from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
+        if enabled():
+            return chat_cloudflare_free(
+                system, user_prompt, stage=stage, max_tokens=max_tokens,
+                image_paths=image_paths, json_mode=json_mode)
     if not config.free_only() or os.getenv("FREE_CLOUD_LOCAL_FALLBACK", "1") != "1":
         raise RuntimeError(f"{capacity_code}: free OpenRouter capacity unavailable; no paid fallback.")
     name = (os.getenv(f"OLLAMA_{stage.upper()}_MODEL", "").strip()
@@ -237,6 +243,18 @@ def ask_claude(
             image_paths=image_paths, json_mode=json_mode,
             timeout=int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "600")),
         )
+
+    # When the no-inference key endpoint proves OpenRouter daily FREE quota
+    # already exhausted, do not burn a known-failed OpenRouter 429 merely
+    # to reach our confirmed independent Workers Free backup.
+    if (config.free_only() and
+            os.environ.get("KAURIVO_OPENROUTER_FREE_EXHAUSTED") == "1"):
+        from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
+        if not enabled():
+            raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: no verified free cloud capacity.")
+        return chat_cloudflare_free(
+            system, user_prompt, stage=stage, max_tokens=max_tokens,
+            image_paths=image_paths, json_mode=json_mode)
 
     # Validate again at the final paid-provider boundary. An unrelated
     # funded API key must never make a non-free model billable in FREE_ONLY.
