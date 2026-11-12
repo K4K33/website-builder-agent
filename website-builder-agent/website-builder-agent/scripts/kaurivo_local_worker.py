@@ -149,13 +149,19 @@ def main() -> int:
         ready_before=None
         keep_running=threading.Event()
         keep_running.set()
+        # The process lease is deliberately separate from the idle daemon.
+        # A crashed child must not be kept alive by the daemon's own heartbeat.
+        active_job={"id":None}
         # A local model may take more than 70 minutes. Keep a separate
         # Session and thread so the SQL lease stays fresh through inference.
         def safe_heartbeat():
             with requests.Session() as ping_session:
                 while keep_running.is_set():
-                    try:server(ping_session,token,"ping",
-                               ready=ollama_ready(ping_session,model_names))
+                    try:
+                        lease=active_job["id"]
+                        server(ping_session,token,"ping",
+                               ready=ollama_ready(ping_session,model_names),
+                               **({"job_id":lease} if lease else {}))
                     except (requests.RequestException,LocalWorkerError,ValueError):
                         pass
                     # Event.wait(true) would spin, so use shutdown-aware sleep.
@@ -180,11 +186,25 @@ def main() -> int:
                     job=data.get("job")
                     if job:
                         worker_id=int(data["run_id"])
+                        job_id=str(job.get("id") or "")
                         print("Kaurivo aloittaa valitun yrityksen rakennustyön.",flush=True)
-                        run_claim(job,worker_id,token,model_names)
+                        active_job["id"]=job_id
+                        try:
+                            run_claim(job,worker_id,token,model_names)
+                        finally:
+                            active_job["id"]=None
+                            # If the subprocess exited unexpectedly, requeue
+                            # its exact claimed job. A completed, QA-held or
+                            # failed job is explicitly NOT reopened by SQL.
+                            try:
+                                server(session,token,"release",job_id=job_id)
+                            except (requests.RequestException,LocalWorkerError,ValueError):
+                                print("Kaurivo: vapautus odottaa yhteyden palaamista; "
+                                      "vanhentunut työ palautuu automaattisesti.",flush=True)
                     else:
                         time.sleep(POLL_SECONDS)
-                except (requests.RequestException,LocalWorkerError,ValueError) as error:
+                except (requests.RequestException,LocalWorkerError,ValueError,
+                        OSError,subprocess.SubprocessError) as error:
                     print("Kaurivo: yhteys tilapäisesti poikki. Työ ja tarkistuspisteet säilyvät.",
                           flush=True)
                     time.sleep(5)
