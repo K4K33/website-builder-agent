@@ -267,7 +267,7 @@ def main() -> int:
                     try:
                         lease=active_job["id"]
                         server(ping_session,token,"ping",
-                               ready=ai_ready(ping_session),
+                               ready=ai_ready(ping_session),backend="ollama",
                                **({"job_id":lease} if lease else {}))
                     except (requests.RequestException,LocalWorkerError,ValueError):
                         pass
@@ -291,6 +291,13 @@ def main() -> int:
                     last_model_check=now
                 else:
                     ready=ready_before
+                if ready and ready_before is not True:
+                    # Attest the local Ollama runtime before the first claim;
+                    # a legacy Codex heartbeat is never accepted as evidence.
+                    try:
+                        server(session,token,"ping",ready=True,backend="ollama")
+                    except (requests.RequestException,LocalWorkerError,ValueError):
+                        ready=False
                 if ready!=ready_before:
                     print("Kaurivo local AI "+("valmis" if ready else "ei vielä valmis")+
                           " (paikallinen Ollama; erillinen kuvallinen QA-malli).",

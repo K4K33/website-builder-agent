@@ -95,7 +95,7 @@
    toast(result.local?
      result.running?"Windows-rakentaja on jo aloittanut demon tutkimisen.":
      result.waiting?"Windows on valmiina, mutta pikailmoitusta ei voitu vahvistaa. Varatarkistus jatkuu automaattisesti.":
-     "Windows-rakentajalle lähetettiin pikailmoitus. Se aloittaa tämän demon suoraan.":
+     "Windows-rakentajalle lähetettiin pikailmoitus. Todellinen aloitus vahvistuu Taustatutkimus-tilasta.":
      "GitHub vastaanotti käynnistyspyynnön. Seuraa etenemistä Demot-näkymässä.","success");
    return;
   }
@@ -199,7 +199,7 @@
   append(main,"div","record-title",job.company_name||"Tuntematon yritys");
   const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
-  const localActive=job.runner_kind==="local"&&job.status!=="queued";
+  const localActive=job.runner_kind==="local"&&ACTIVE.has(job.status)&&job.status!=="queued";
   const awaitingDispatch=job.status==="queued"&&!deferred;
   const dispatchFailure=awaitingDispatch&&job.dispatch_error_code;
   const acceptedAt=Date.parse(job.dispatch_accepted_at||"");
@@ -321,6 +321,29 @@
   const checked=Date.parse(item.checked_at||"");
   return !Number.isFinite(checked)||Date.now()-checked>2*60*60*1000;
  }
+ let verifiedLocal=null, verifiedLocalAt=0, checkingLocal=false;
+ function localWorkerIndicator(db){
+  if(!db?.rpc)return;
+  const root=$("demo-health");if(!root)return;
+  const line=append(root,"span","demo-local-status",
+   verifiedLocal===true
+    ?"Paikallinen Ollama-rakentaja on vahvistetusti valmis vastaanottamaan työn."
+    :verifiedLocal===false
+     ?"Paikallinen Ollama ei ole vahvistetusti valmis. Pidä Windows-rakentaja käynnissä; jonossa oleva työ säilyy."
+     :"Tarkistetaan Windows-rakentajan todellista tilaa.");
+  if(checkingLocal||Date.now()-verifiedLocalAt<25000)return;
+  checkingLocal=true;
+  Promise.resolve().then(()=>db.rpc("kaurivo_local_worker_online")).then(({data,error})=>{
+   verifiedLocal=!error&&data===true;
+   verifiedLocalAt=Date.now();
+   if(line.isConnected)line.textContent=verifiedLocal
+    ?"Paikallinen Ollama-rakentaja on vahvistetusti valmis vastaanottamaan työn."
+    :"Paikallinen Ollama ei ole vahvistetusti valmis. Käynnistä Windows-rakentaja; pelkkä vanha Codex-yhteys ei riitä.";
+  }).catch(()=>{
+   verifiedLocal=false;verifiedLocalAt=Date.now();
+   if(line.isConnected)line.textContent="Windows-rakentajan valmiutta ei voitu vahvistaa.";
+  }).finally(()=>{checkingLocal=false;});
+ }
  function healthSummary(health){
   const item=getHealth(health);
   const output=$("demo-health");
@@ -416,6 +439,7 @@
  }
  function render(jobs,health,options={}){
   healthSummary(health);
+  localWorkerIndicator(options.db);
   windowsEnrollment(options);
   const all=Array.isArray(jobs)?jobs:[];
   const ready=all.filter(canShowPreview);
@@ -442,7 +466,23 @@
   // The owner can ALWAYS submit a private build request. A failed provider
   // health observation slows processing, not registration of the intent.
   // No paid model is enabled here; the GitHub worker checks credentials.
-  if(active){showTab("demos");return;}
+  if(active){
+   // A repeated click must offer useful feedback and re-signal an eligible
+   // existing job instead of silently doing nothing or creating duplicates.
+   if(active.status==="queued"){
+    const retryAt=Date.parse(active.next_eligible_at||"");
+    if(Number.isFinite(retryAt)&&retryAt>Date.now()&&
+       !["free_ai_rate_limit","free_ai_capacity_unavailable"].includes(active.error_code)){
+     toast("Työ on tallessa. Seuraava sallittu yritys näkyy Demot-näkymässä.","error");
+    }else{
+     const result=await dispatchNow(db,active.id);
+     dispatchFeedback(result,toast);
+    }
+   }else{
+    toast("Yrityksen rakennustyö on jo käynnissä. Seuraa Demot-näkymää.","success");
+   }
+   showTab("demos");return;
+  }
   try{
    const {data,error}=await db.rpc("kaurivo_request_demo_build",{p_prospect_id:candidate.id});
    if(error)throw error;

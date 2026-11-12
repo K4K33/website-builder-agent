@@ -14,7 +14,7 @@ const reply=(status:number,value:Record<string,unknown>)=>new Response(JSON.stri
  status,headers:{"content-type":"application/json;charset=utf-8","cache-control":"no-store",
   "x-content-type-options":"nosniff","vary":"Authorization"}
 });
-type Work={action?:string;job_id?:string;ready?:boolean;status?:string;progress?:string;
+type Work={action?:string;job_id?:string;ready?:boolean;backend?:string;status?:string;progress?:string;
  preview_url?:string;qa_url?:string;release_sha?:string;error_code?:string;key_http_status?:number};
 async function rpc(name:string,body:Record<string,unknown>){
  const resp=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{
@@ -71,8 +71,8 @@ Deno.serve(async request=>{
     "SHA-256",new TextEncoder().encode(token)))]
    .map(v=>v.toString(16).padStart(2,"0")).join("");
   try{
-   run_id=Number(await rpc("kaurivo_local_worker_validate",{
-     p_digest:digest,p_ready:null
+   run_id=Number(await rpc("kaurivo_local_worker_validate_v2",{
+     p_digest:digest,p_ready:null,p_backend:null
    }));
    if(!Number.isSafeInteger(run_id)||run_id<2000000000000000)
     return reply(403,{ok:false,error:"local_worker_not_enrolled"});
@@ -155,9 +155,9 @@ Deno.serve(async request=>{
  try{
   if(data.action==="ping"&&local){
    const keys=Object.keys(data);
-   if((keys.length!==2&&keys.length!==3)
-      ||keys.some(key=>!["action","ready","job_id"].includes(key))
-      ||typeof data.ready!=="boolean"
+   if((keys.length!==3&&keys.length!==4)
+      ||keys.some(key=>!["action","ready","job_id","backend"].includes(key))
+      ||data.backend!=="ollama" ||typeof data.ready!=="boolean"
       ||(data.job_id!==undefined &&
          (typeof data.job_id!=="string"||!UUID.test(data.job_id))))
      return reply(400,{ok:false,error:"ping_args"});
@@ -165,8 +165,8 @@ Deno.serve(async request=>{
    const digest=[...new Uint8Array(await crypto.subtle.digest(
     "SHA-256",new TextEncoder().encode(token)))]
     .map(v=>v.toString(16).padStart(2,"0")).join("");
-   const result=await rpc("kaurivo_local_worker_validate",{
-    p_digest:digest,p_ready:data.ready
+   const result=await rpc("kaurivo_local_worker_validate_v2",{
+    p_digest:digest,p_ready:data.ready,p_backend:"ollama"
    });
    if(Number(result)!==run_id)
     return reply(403,{ok:false,error:"local_worker_not_enrolled"});

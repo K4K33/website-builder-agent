@@ -35,6 +35,7 @@ from utils.industry_workflow import create_industry_brief, validate_design_inten
 from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.brand_design_blueprint import derive_brand_site_blueprint
+from utils.agency_handoff import agency_handoff
 import json
 
 from utils.claude_client import ask_claude
@@ -1480,6 +1481,7 @@ def build_site(
     validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
+    agency_plan = agency_handoff(research)
     architecture = validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
@@ -1536,6 +1538,12 @@ VALITTU SELAIMESSA VERRATTU TODELLINEN PROTOTYYPPI (rakenna sama valittu ilme ko
 RELUMEN, WEBFLOW'N JA WIXIN KALTAISEN JÄSENNETYN SUUNNITTELUN INSPIROIMA
 YRITYSKOHTAINEN SIVUKARTTA → OSIOIDEN WIREFRAME → YHTEINEN BRÄNDITYYLIOHJE:
 {json.dumps(brand_blueprint, ensure_ascii=False)}
+
+TOIMISTOTASON YRITYSKOHTAINEN LUOVUTUSTARKISTUS (ei valmis sivupohja):
+{json.dumps(agency_plan, ensure_ascii=False)}
+Toteuta jokaisen reitin todellinen asiakastehtävä. Säilytä alkuperäisen
+median ja käyttöliittymän laadukkaat ominaisuudet; hyödynnä vain käyttöön
+sopivia testattavia komponentteja. Tämä ei ole laatuhyväksyntä.
 
 YRITYSKOHTAINEN VISUAALINEN SYVYYS- JA LIIKESUUNNITELMA:
 {json.dumps(visual_plan, ensure_ascii=False)}
@@ -1965,6 +1973,7 @@ def revise_site(
     validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
+    agency_plan = agency_handoff(research)
     visual_plan = visual_direction_plan(research, creative, architecture)
 
     company_facts = research.get(
@@ -1985,6 +1994,11 @@ def revise_site(
 JO SOVITTU YRITYSKOHTAINEN SIVUKARTTA, WIREFRAME JA BRÄNDITYYLIOHJE
 (käytä yhtenäisesti kaikilla alasivuilla; älä keksi uutta brändiä):
 {json.dumps(brand_blueprint, ensure_ascii=False)}
+
+TOIMISTOTASON YRITYSKOHTAINEN LUOVUTUSTARKISTUS (pakollinen myös korjauksissa):
+{json.dumps(agency_plan, ensure_ascii=False)}
+Älä korvaa sivukohtaisia tehtäviä tai alkuperäistä hyvää käyttöliittymää
+geneerisillä tekstikorteilla. Jokainen korjattu vuorovaikutus testataan.
 
 YRITYSKOHTAINEN VISUAALINEN SYVYYS- JA LIIKEBRIEFI KORJAUSKIERROKSELLE:
 {json.dumps(visual_plan, ensure_ascii=False)}

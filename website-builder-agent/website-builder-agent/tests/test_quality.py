@@ -9,6 +9,7 @@ import unittest
 from unittest.mock import patch, Mock
 
 import config
+from utils.service_quality import MASTER_PROMPT_SHA256
 from agents import scout, builder, qa, research
 from utils import claude_client, state
 from utils.quality import canonical_url, normalize_facts, qualify_lead
@@ -106,6 +107,7 @@ class QualityTests(unittest.TestCase):
                      for n,(key,dimension) in enumerate((("hero","first_view"),("services","service_hierarchy"),
                                                         ("contact","contact_path"),("mobile","mobile")))]
         return {
+            "master_prompt_sha256": MASTER_PROMPT_SHA256,
             "research_mode": "verified_no_website",
             "fact_sources": [{"url": "https://fixtures.example.org/qa",
                               "text": "Synthetic offline test company, not a real client"}],
