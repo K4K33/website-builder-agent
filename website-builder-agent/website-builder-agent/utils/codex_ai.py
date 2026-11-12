@@ -2,15 +2,18 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import argparse
 import json
 import os
 from pathlib import Path
 from queue import Empty, Queue
 import shutil
+import struct
 import subprocess
 import tempfile
 import threading
 import time
+import zlib
 
 
 class CodexError(RuntimeError):
@@ -167,8 +170,42 @@ def chat_codex(system, prompt, *, model, image_paths=None, json_mode=False, time
                 return answer.strip()
 
 
+def verify_models(models):
+    """Check actual subscription inference before enabling job claims."""
+    text = chat_codex("Reply with the requested word only.",
+                      "Write KAURIVO_READY.", model=models["builder"], timeout=90)
+    if text.strip() != "KAURIVO_READY":
+        raise CodexError("The Codex builder model did not pass the setup check.")
+
+    def chunk(tag, data):
+        return (struct.pack(">I", len(data)) + tag + data
+                + struct.pack(">I", zlib.crc32(tag + data)))
+
+    size = 32
+    rgb = bytes((255, 0, 0))
+    pixels = (bytes(1) + rgb * size) * size
+    image = (bytes.fromhex("89504e470d0a1a0a")
+             + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0))
+             + chunk(b"IDAT", zlib.compress(pixels))
+             + chunk(b"IEND", b""))
+    with tempfile.TemporaryDirectory(prefix="kaurivo-codex-vision-check-") as tmp:
+        path = Path(tmp) / "vision.png"
+        path.write_bytes(image)
+        color = chat_codex("Inspect the attached image. Reply with a single English color word.",
+                           "What is the dominant color?", model=models["qa"],
+                           image_paths=[path], timeout=90)
+    if color.strip().rstrip(".").casefold() != "red":
+        raise CodexError("The Codex visual QA model did not pass the setup check.")
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verify", action="store_true")
+    args = parser.parse_args()
     try:
-        print(json.dumps(discover_models(), ensure_ascii=True))
+        models = discover_models()
+        if args.verify:
+            verify_models(models)
+        print(json.dumps(models, ensure_ascii=True))
     except CodexError as exc:
         raise SystemExit(str(exc)) from None
