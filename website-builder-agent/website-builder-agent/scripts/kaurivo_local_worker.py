@@ -145,22 +145,12 @@ def main() -> int:
     with file,requests.Session() as session:
         print("Kaurivo Windows-rakentaja käynnissä. Painallus tarkistetaan noin sekunnissa.",
               flush=True)
-        last_ping=0.0
         worker_id=None
         ready_before=None
-        pending=None
         keep_running=threading.Event()
         keep_running.set()
-        # Do not leave a long local inference without a heartbeat: GitHub's
-        # stale-job sweeper may otherwise recycle the same claimed company.
-        def heartbeat():
-            while keep_running.is_set():
-                try:server(session,token,"ping",ready=ollama_ready(session,model_names))
-                except (requests.RequestException,LocalWorkerError,ValueError):
-                    pass
-                keep_running.wait(10)  # wake on shutdown, no busy-loop
-        # Avoid thread safety issues on requests.Session: heartbeat owns its
-        # own Session object. Caller reuses the main session.
+        # A local model may take more than 70 minutes. Keep a separate
+        # Session and thread so the SQL lease stays fresh through inference.
         def safe_heartbeat():
             with requests.Session() as ping_session:
                 while keep_running.is_set():
