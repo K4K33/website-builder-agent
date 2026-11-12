@@ -136,7 +136,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('GitHubin käynnistys',js)
         self.assertIn('getUser(auth.slice(7))',edge)
         self.assertIn('.from("kaurivo_demo_build_jobs")',edge)
-        self.assertIn('eq("status","queued")',edge)
+        self.assertIn('select("id,status,runner_kind")',edge)
+        self.assertIn('kaurivo_local_worker_wakeup',edge)
         self.assertIn('kaurivo_claim_demo_dispatch',edge)
         self.assertIn('KAURIVO_GITHUB_DISPATCH_TOKEN',edge)
         self.assertIn('x-client-info, x-region',edge)
@@ -147,7 +148,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("revoke all on function public.kaurivo_claim_demo_dispatch(uuid) from public,anon",sql)
         self.assertNotIn('sb_secret_',js)
         self.assertNotIn('ghp_',js)
-        self.assertIn('demo-jobs.js?v=20261112-local2',html)
+        self.assertIn('demo-jobs.js?v=20261112-local3',html)
 
     def test_dispatch_failures_have_private_persistent_reason_and_real_response_body(self):
         panel=DASHBOARD.read_text(encoding="utf-8")

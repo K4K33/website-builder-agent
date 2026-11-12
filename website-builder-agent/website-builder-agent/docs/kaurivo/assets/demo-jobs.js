@@ -81,8 +81,11 @@
     }catch(_){/* Non-JSON transport failure: no fabricated success. */}
     return {ok:false,reason:typeof reason==="string"?reason:"github_dispatch_unavailable"};
    }
-   if(data?.ok===true&&data.dispatch==="local_ready")
-    return {ok:true,local:true};
+   if(data?.ok===true&&["local_ready","local_waiting","local_running"].includes(
+       data.dispatch)){
+    return {ok:true,local:true,running:data.dispatch==="local_running",
+      waiting:data.dispatch==="local_waiting"};
+   }
    return data?.ok===true&&data.dispatch==="accepted"?
       {ok:true,local:false}:{ok:false,reason:data?.reason||"github_dispatch_unavailable"};
   }catch(_){return {ok:false,reason:"github_dispatch_unavailable"};}
@@ -90,7 +93,9 @@
  function dispatchFeedback(result,toast){
   if(result.ok){
    toast(result.local?
-     "Windows-rakentaja on valmiina ja ottaa tämän demon suoraan käsittelyyn.":
+     result.running?"Windows-rakentaja on jo aloittanut demon tutkimisen.":
+     result.waiting?"Windows on valmiina, mutta pikailmoitusta ei voitu vahvistaa. Varatarkistus jatkuu automaattisesti.":
+     "Windows-rakentajalle lähetettiin pikailmoitus. Se aloittaa tämän demon suoraan.":
      "GitHub vastaanotti käynnistyspyynnön. Seuraa etenemistä Demot-näkymässä.","success");
    return;
   }

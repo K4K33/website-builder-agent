@@ -48,17 +48,30 @@ Deno.serve(async req=>{
  if(authError||!user)return reply(401,{ok:false,reason:"auth_invalid"});
  // Authenticated user SELECT is protected by the existing ADMIN-ONLY RLS.
  const {data:job,error:dbError}=await userClient
-  .from("kaurivo_demo_build_jobs").select("id,status").eq("id",jobId)
-  .eq("status","queued").maybeSingle();
+  .from("kaurivo_demo_build_jobs").select("id,status,runner_kind")
+  .eq("id",jobId).maybeSingle();
  if(dbError)return reply(503,{ok:false,reason:"db_unavailable"});
  if(!job)return reply(403,{ok:false,reason:"admin_queued_job_required"});
- // When an enrolled Windows machine is actually heartbeating with verified
- // locally installed Ollama models, it claims the job directly (1s poll).
- // Never falsely claim 'running' until its private authenticated claim.
  const {data:localOnline,error:localError}=await userClient
   .rpc("kaurivo_local_worker_online");
- if(!localError&&localOnline===true)
-  return reply(202,{ok:true,dispatch:"local_ready"});
+ const localReady=!localError&&localOnline===true;
+ // Fast Realtime wakeup can claim the job BEFORE the browser's dispatch
+ // call returns. That is success, not an authorization or queue error.
+ if(job.status!=="queued"){
+  if(job.runner_kind==="local" &&
+     ["researching","building","qa","publishing","internal_preview"].includes(job.status)
+     &&localReady)
+   return reply(202,{ok:true,dispatch:"local_running"});
+  return reply(409,{ok:false,reason:"already_requested_or_not_queued"});
+ }
+ if(localReady){
+  // The insertion trigger already sent a signal; this admin-only RPC
+  // also wakes a previously queued job. Never send company data.
+  const {data:signalled,error:wakeError}=await userClient.rpc(
+    "kaurivo_local_worker_wakeup",{p_job_id:jobId});
+  return reply(202,{ok:true,dispatch:!wakeError&&signalled===true?
+    "local_ready":"local_waiting"});
+ }
  // The cloud workflow is retained only when no local worker is ready.
  // Persist only allowlisted operational reason codes, never credentials or
  // user data. The UI can then distinguish accepted dispatch from a failed one

@@ -8,7 +8,7 @@ from unittest import TestCase
 from unittest.mock import Mock,patch
 
 from scripts.kaurivo_local_worker import (
-    POLL_SECONDS,LocalWorkerError,models,ollama_ready,TOKEN_RE
+    FALLBACK_POLL_SECONDS,LocalWorkerError,models,ollama_ready,TOKEN_RE
 )
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -46,8 +46,10 @@ class LocalWindowsTests(TestCase):
         self.assertIn("local_worker_not_enrolled",BRIDGE)
 
     def test_exact_local_job_is_claimed_and_not_falsely_marked_ready(self):
-        self.assertIn('POLL_SECONDS=1.0',DAEMON)
-        self.assertEqual(POLL_SECONDS,1.0)
+        self.assertIn('FALLBACK_POLL_SECONDS=90.0',DAEMON)
+        self.assertEqual(FALLBACK_POLL_SECONDS,90.0)
+        self.assertIn('def realtime_wakeup(',DAEMON)
+        self.assertIn('wake.wait(timeout=FALLBACK_POLL_SECONDS)',DAEMON)
         self.assertIn('"claim"',DAEMON)
         self.assertIn('status=\'researching\'',SQL)
         self.assertIn("kaurivo_local_worker_claim",SQL)
@@ -55,8 +57,8 @@ class LocalWindowsTests(TestCase):
         self.assertIn("j.status='queued'",SQL)
         self.assertIn("runner_kind='local'",SQL)
         self.assertIn("kaurivo_local_worker_online",DISPATCH)
-        self.assertIn('dispatch:"local_ready"',DISPATCH)
-        self.assertIn("Windows-rakentaja on valmiina",PANEL)
+        self.assertIn('"local_ready":"local_waiting"',DISPATCH)
+        self.assertIn("Windows-rakentajalle lähetettiin pikailmoitus",PANEL)
         self.assertIn("status!==\"queued\"",PANEL)
         self.assertIn("Käynnistys lähetetty",PANEL)
         self.assertIn("local_qa_public_proof_missing",RUNNER)
