@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import config
+from utils.service_quality import MASTER_PROMPT_SHA256
 import main
 from agents import builder, qa
 from utils import publisher, state
@@ -43,6 +44,12 @@ def research_fixture(directory, industry):
         for i, name in enumerate(DIMENSIONS)
     ]
     return {
+        "master_prompt_sha256": MASTER_PROMPT_SHA256,
+        "site_architecture": {"pages": [{"path": "index.html",
+            "purpose": "Synthetic company service description",
+            "user_task": "Find the synthetic company details",
+            "section_ids": ["main"]}]},
+        "source_inventory": {"pages": []},
         "research_mode": "verified_no_website",
         "fact_sources": [{"url": "https://fixtures.example.org/offline-no-site",
                           "text": "Synthetic offline test company; no real customer claimed."}],
