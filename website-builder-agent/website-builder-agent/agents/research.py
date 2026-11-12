@@ -769,6 +769,10 @@ def run_research(
         # An absent website must never be faked or fetched as an empty URL.
         return _research_verified_no_website_company(slug, company)
 
+    from utils.kaurivo_research_progress import get_progress, save_progress
+    progress = get_progress(company, source_url=url,
+                            master_prompt_sha256=MASTER_PROMPT_SHA256)
+
     print()
     print("=== RESEARCH ===")
     print(
@@ -787,7 +791,7 @@ def run_research(
         "nykyinen verkkosivu..."
     )
 
-    site_data = analyze_url(
+    site_data = progress.get("site_data") or analyze_url(
         url
     )
 
@@ -819,7 +823,7 @@ def run_research(
 
     # The no-credit bounded crawl reuses the homepage fetch and audits
     # subpages, source assets and footer marks before paid AI/Tavily calls.
-    source_inventory = crawl_original_website(
+    source_inventory = progress.get("source_inventory") or crawl_original_website(
         normalize_url(url), analyze_url, first_page=site_data, max_pages=24
     )
     if not source_inventory["pages"]:
@@ -843,13 +847,19 @@ def run_research(
         )
     # Capture the CLIENT'S ORIGINAL actual desktop/mobile visual identity
     # before any redesign. Reference screenshots alone cannot prove fidelity.
-    original_screenshots = capture_website(
-        normalize_url(url), "original-client-" + slug
-    ) or {}
+    original_screenshots = (
+        progress.get("original_screenshots")
+        if isinstance(progress.get("original_screenshots"), dict)
+        else capture_website(normalize_url(url), "original-client-" + slug) or {}
+    )
     # Zero-paid-credit browser probe of every inventoried source route.
     # Failure is explicitly incomplete, never interpreted as an absence of
     # original video, animation, galleries or background character.
-    original_experience_profile = probe_original_site_experience(source_inventory)
+    original_experience_profile = (
+        progress.get("original_experience_profile")
+        if isinstance(progress.get("original_experience_profile"), dict)
+        else probe_original_site_experience(source_inventory)
+    )
     source_excerpts = [
         {"url": p["url"], "title": p["title"], "headings": p["headings"],
          "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
@@ -859,6 +869,23 @@ def run_research(
          "footer_assets": p["footer_assets"]}
         for p in source_inventory["pages"]
     ]
+
+    if not progress:
+        # Before the first metered free AI call, preserve the expensive
+        # 24-page source audit, original visuals and actual brand evidence.
+        # Never claim Research is complete at this partial stage.
+        progress = save_progress(
+            slug, company, milestone="source", source_url=url,
+            master_prompt_sha256=MASTER_PROMPT_SHA256,
+            site_data={
+                k: site_data.get(k) for k in
+                ("title", "meta_description", "visible_text", "has_viewport_meta",
+                 "status_code", "raw_html_length", "success")
+            },
+            source_inventory=source_inventory,
+            original_screenshots=original_screenshots,
+            original_experience_profile=original_experience_profile,
+        )
 
     # ---------------------------------------------------------
     # FACT EXTRACTION
@@ -904,11 +931,14 @@ Raaka HTML:
         "yrityksen faktat..."
     )
 
-    extracted = ask_claude_json(
-        FACT_EXTRACTION_PROMPT,
-        user_prompt,
-        max_tokens=3500,
-        stage="research",
+    extracted = (
+        progress["extracted"] if progress.get("milestone") in ("facts", "references")
+        else ask_claude_json(
+            FACT_EXTRACTION_PROMPT,
+            user_prompt,
+            max_tokens=3500,
+            stage="research",
+        )
     )
 
     if not isinstance(
@@ -965,6 +995,13 @@ Raaka HTML:
                 "website design"
             )
 
+    if progress.get("milestone") == "source":
+        progress = save_progress(
+            slug, company, milestone="facts", source_url=url,
+            master_prompt_sha256=MASTER_PROMPT_SHA256,
+            extracted=extracted,
+        )
+
     # ---------------------------------------------------------
     # TAVILY
     # ---------------------------------------------------------
@@ -974,14 +1011,29 @@ Raaka HTML:
         "design-referenssejä..."
     )
 
-    references = _search_industry_references(industry, url, search_query)
+    references = (
+        progress["references"] if progress.get("milestone") == "references"
+        else _search_industry_references(industry, url, search_query)
+    )
 
     # ---------------------------------------------------------
     # FINAL DESIGN BRIEF
     # ---------------------------------------------------------
 
-    selected = _select_reference_candidates(references, company_facts, url)
-    reference_evidence = _collect_reference_evidence(selected, url)
+    selected = (
+        progress["selected"] if progress.get("milestone") == "references"
+        else _select_reference_candidates(references, company_facts, url)
+    )
+    reference_evidence = (
+        progress["reference_evidence"] if progress.get("milestone") == "references"
+        else _collect_reference_evidence(selected, url)
+    )
+    if progress.get("milestone") != "references":
+        progress = save_progress(
+            slug, company, milestone="references", source_url=url,
+            master_prompt_sha256=MASTER_PROMPT_SHA256, references=references,
+            selected=selected, reference_evidence=reference_evidence,
+        )
     reference_images, image_labels = reference_image_inputs(reference_evidence)
 
     final_prompt = f"""
@@ -1149,6 +1201,8 @@ Tärkeää:
             ),
             "url": url,
             "research": research_data,
+            # A fully validated brief supersedes every partial scratch state.
+            "research_progress": None,
             "current_site_raw": {
                 "has_viewport_meta": site_data.get(
                     "has_viewport_meta",
