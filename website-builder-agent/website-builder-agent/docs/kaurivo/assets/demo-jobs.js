@@ -81,13 +81,17 @@
     }catch(_){/* Non-JSON transport failure: no fabricated success. */}
     return {ok:false,reason:typeof reason==="string"?reason:"github_dispatch_unavailable"};
    }
+   if(data?.ok===true&&data.dispatch==="local_ready")
+    return {ok:true,local:true};
    return data?.ok===true&&data.dispatch==="accepted"?
-      {ok:true}:{ok:false,reason:data?.reason||"github_dispatch_unavailable"};
+      {ok:true,local:false}:{ok:false,reason:data?.reason||"github_dispatch_unavailable"};
   }catch(_){return {ok:false,reason:"github_dispatch_unavailable"};}
  }
  function dispatchFeedback(result,toast){
   if(result.ok){
-   toast("GitHub vastaanotti käynnistyspyynnön. Seuraa rakennuksen etenemistä Demot-näkymässä.","success");
+   toast(result.local?
+     "Windows-rakentaja on valmiina ja ottaa tämän demon suoraan käsittelyyn.":
+     "GitHub vastaanotti käynnistyspyynnön. Seuraa etenemistä Demot-näkymässä.","success");
    return;
   }
   const explanation=DISPATCH_MESSAGES[result.reason]||"GitHubin käynnistystä ei voitu vahvistaa.";
@@ -110,8 +114,10 @@
    if(kind&&uri.protocol!=="https:")return null;
    if(kind==="preview"&&uri.hostname!=="k4k33.github.io"&&
       !/^[a-z0-9-]+[.]onrender[.]com$/i.test(uri.hostname))return null;
-   if(kind==="qa"&&!(uri.hostname==="github.com"&&
-      /^\/K4K33\/website-builder-agent\/actions\/runs\/[0-9]+$/.test(uri.pathname)))return null;
+   if(kind==="qa"&&!((uri.hostname==="github.com"&&
+      /^\/K4K33\/website-builder-agent\/actions\/runs\/[0-9]+$/.test(uri.pathname))||
+      (uri.hostname==="kaurivo-auto-demos-2026.onrender.com"&&
+       /^\/[a-z0-9-]+\/qa[.]html$/.test(uri.pathname))))return null;
    return uri.href;
   }catch(_){return null;}
  }
@@ -188,6 +194,7 @@
   append(main,"div","record-title",job.company_name||"Tuntematon yritys");
   const date=job.created_at?new Date(job.created_at).toLocaleString("fi-FI"):"";
   append(main,"div","record-sub",(job.business_id||"—")+" · "+date);
+  const localActive=job.runner_kind==="local"&&job.status!=="queued";
   const dispatchFailure=job.status==="queued"&&job.dispatch_error_code;
   const dispatchAccepted=job.status==="queued"&&!dispatchFailure&&!!job.dispatch_accepted_at;
   const dispatchElapsed=dispatchAccepted?
@@ -198,7 +205,9 @@
     dispatchFailure?"GitHub-käynnistys epäonnistui. Rakennus ei ole käynnissä.":
     dispatchStalled?"GitHubille lähetetty käynnistyspyyntö ei ole johtanut vahvistettuun rakennuksen aloitukseen.":
     dispatchAccepted?"Käynnistyspyyntö lähetetty GitHubille. Odotetaan rakennuksen aloitusta.":
-    job.progress||STATUS[job.status]||"Odottaa");
+    job.progress||STATUS[job.status]||"Odottaa"); 
+  if(localActive)append(main,"div","record-sub",
+    "Työ suoritetaan omalla Windows-rakentajalla ilman GitHubin suoritusjonoa.");
   if(dispatchStalled){
    append(main,"div","record-warning",
      "GitHubin käynnistyminen on viivästynyt. Painike lähetti pyynnön, mutta rakennustyö ei ole vielä alkanut. Tarkista GitHub Actionsin estot ja laskutusasetukset; toistuva klikkaaminen ei nopeuta sitä.");
@@ -331,8 +340,50 @@
     a.href=log;a.target="_blank";a.rel="noopener noreferrer";
   }
  }
+ async function enrollWindows(db,toast,host){
+  const {data,error}=await db.functions.invoke("kaurivo-local-enroll",{
+    body:{action:"enroll"}
+  });
+  if(error||!data?.ok||!/^kvl_[0-9a-f]{64}$/.test(data.token||"")){
+   toast("Windows-tunnuksen luominen ei onnistunut. Tarkista ylläpitäjän kirjautuminen.","error");
+   return;
+  }
+  const token=data.token;
+  host.replaceChildren();
+  append(host,"strong","","Windows-rakentajan avain luotiin");
+  append(host,"span","","Kopioi avain nyt Windowsin asennusohjelmaan. Tätä avainta ei näytetä uudelleen. Uuden avaimen luominen mitätöi vanhan.");
+  const input=append(host,"input","demo-local-token");
+  input.type="password";input.readOnly=true;input.value=token;
+  input.autocomplete="off";input.setAttribute("aria-label","Kertakäyttöinen Windows-rakentajan avain");
+  const copy=append(host,"button","small-action","Kopioi Windows-avain");
+  copy.type="button";
+  copy.addEventListener("click",()=>navigator.clipboard.writeText(token).then(
+    ()=>toast("Avain kopioitu. Liitä se Windowsin asennusohjelmaan.","success"),
+    ()=>toast("Kopiointi estyi. Valitse avain ja kopioi käsin.","error")));
+  const reveal=append(host,"button","small-action","Näytä tai piilota");
+  reveal.type="button";
+  reveal.addEventListener("click",()=>{input.type=input.type==="password"?"text":"password";});
+ }
+ function windowsEnrollment(options){
+  const health=$("demo-health");
+  if(!health||!options?.db)return;
+  const container=append(health,"div","demo-local-enroll");
+  const guide=append(container,"a","","Windows-rakentajan käyttöönotto-ohje");
+  guide.href="https://github.com/K4K33/website-builder-agent/blob/main/website-builder-agent/website-builder-agent/docs/kaurivo/LOCAL_WINDOWS_WORKER.md";
+  guide.target="_blank";guide.rel="noopener noreferrer";
+  const button=append(container,"button","small-action","Luo Windows-rakentajan avain");
+  button.type="button";
+  button.addEventListener("click",async()=>{
+   if(!window.confirm("Luo uusi Windows-avain? Aiemman koneen avain lakkaa toimimasta."))
+    return;
+   button.disabled=true;
+   try{await enrollWindows(options.db,options.toast||(()=>{}),container);}
+   finally{button.disabled=false;}
+  });
+ }
  function render(jobs,health,options={}){
   healthSummary(health);
+  windowsEnrollment(options);
   const all=Array.isArray(jobs)?jobs:[];
   const ready=all.filter(canShowPreview);
   const active=all.filter(isActive);
