@@ -124,7 +124,7 @@ def free_model_configured():
         raise HoldError("paid_ai_disabled")
     if LOCAL_WORKER:
         backend=os.environ.get("AI_BACKEND")
-        if backend not in {"ollama","codex"}:
+        if backend!="ollama":  # No Codex or metered cloud worker is allowed.
             raise HoldError("local_models_required")
         from config import model_for_stage, backend_for_stage
         try:
