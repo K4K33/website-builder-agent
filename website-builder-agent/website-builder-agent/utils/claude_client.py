@@ -247,8 +247,9 @@ def ask_claude(
     # When the no-inference key endpoint proves OpenRouter daily FREE quota
     # already exhausted, do not burn a known-failed OpenRouter 429 merely
     # to reach our confirmed independent Workers Free backup.
-    if (config.free_only() and
-            os.environ.get("KAURIVO_OPENROUTER_FREE_EXHAUSTED") == "1"):
+    if (config.free_only() and (
+            os.environ.get("KAURIVO_OPENROUTER_FREE_EXHAUSTED") == "1" or
+            os.environ.get("KAURIVO_PREFER_CLOUDFLARE") == "1")):
         from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
         if not enabled():
             raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: no verified free cloud capacity.")
@@ -350,6 +351,14 @@ def ask_claude(
                         free_provider_minute_retried = True
                         time.sleep(wait_seconds)
                         continue
+                    # A real OpenRouter 429 has no guaranteed usable
+                    # capacity. Once a verified Workers Free backup takes
+                    # over, avoid reissuing known-limited OpenRouter requests
+                    # for every remaining stage in this same job.
+                    if config.free_only():
+                        from utils.cloudflare_free_ai import enabled
+                        if enabled():
+                            os.environ["KAURIVO_PREFER_CLOUDFLARE"] = "1"
                     return _local_free_quota_fallback(
                         system, user_prompt, stage=stage, max_tokens=max_tokens,
                         image_paths=image_paths, json_mode=json_mode,
