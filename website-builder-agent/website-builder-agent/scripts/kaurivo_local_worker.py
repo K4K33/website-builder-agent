@@ -136,6 +136,28 @@ def run_claim(job:dict,run_id:int,token:str,model_names:dict[str,str]) -> None:
                   flush=True)
 
 
+def execute_claim(session:requests.Session,token:str,job:dict,run_id:int,
+                  model_names:dict[str,str],active_job:dict) -> None:
+    """Run one verified job and always release any unfinished subprocess lease.
+
+    Neither a successful quality HOLD nor a verified finished preview is
+    reopened by the server; only unexpectedly still-active jobs are requeued.
+    """
+    job_id=str(job.get("id") or "")
+    if not UUID_RE.fullmatch(job_id):
+        raise LocalWorkerError("Invalid claimed demo ID.")
+    active_job["id"]=job_id
+    try:
+        run_claim(job,run_id,token,model_names)
+    finally:
+        active_job["id"]=None
+        try:
+            server(session,token,"release",job_id=job_id)
+        except (requests.RequestException,LocalWorkerError,ValueError):
+            print("Kaurivo: vapautus odottaa yhteyden palaamista; "
+                  "vanhentunut työ palautuu automaattisesti.",flush=True)
+
+
 def main() -> int:
     token=os.environ.get("KAURIVO_LOCAL_WORKER_TOKEN","").strip()
     if not TOKEN_RE.fullmatch(token):
@@ -188,19 +210,8 @@ def main() -> int:
                         worker_id=int(data["run_id"])
                         job_id=str(job.get("id") or "")
                         print("Kaurivo aloittaa valitun yrityksen rakennustyön.",flush=True)
-                        active_job["id"]=job_id
-                        try:
-                            run_claim(job,worker_id,token,model_names)
-                        finally:
-                            active_job["id"]=None
-                            # If the subprocess exited unexpectedly, requeue
-                            # its exact claimed job. A completed, QA-held or
-                            # failed job is explicitly NOT reopened by SQL.
-                            try:
-                                server(session,token,"release",job_id=job_id)
-                            except (requests.RequestException,LocalWorkerError,ValueError):
-                                print("Kaurivo: vapautus odottaa yhteyden palaamista; "
-                                      "vanhentunut työ palautuu automaattisesti.",flush=True)
+                        execute_claim(session,token,job,worker_id,
+                                      model_names,active_job)
                     else:
                         time.sleep(POLL_SECONDS)
                 except (requests.RequestException,LocalWorkerError,ValueError,
