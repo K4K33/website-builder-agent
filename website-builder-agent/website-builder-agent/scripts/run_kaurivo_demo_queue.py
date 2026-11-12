@@ -897,7 +897,7 @@ def main():
             if not agent_slug or len(agent_slug)>120:
                 raise HoldError("company_name_invalid")
             resume=restore_private_checkpoint(agent_slug,company_name,source)
-            done=(-1 if resume is None else
+            done=(-1 if resume in (None, "research_partial") else
                   ("researched","concepts","selected","built",
                    "revised_1","revised_2").index(resume))
             if resume is None:
@@ -981,6 +981,21 @@ def main():
             print("Kaurivo demo queue: exact-release internal preview verified.")
             return 0
         except HoldError as error:
+            # The complete "researched" checkpoint exists only after the
+            # full design brief passes. Preserve ONLY private source/facts/
+            # references milestones before a failed research AI call.
+            if stage == "researching" and "agent_slug" in locals():
+                from utils.kaurivo_research_progress import get_progress
+                from utils.service_quality import MASTER_PROMPT_SHA256
+                company_snapshot = load_company(agent_slug)
+                partial = get_progress(company_snapshot, source_url=source,
+                                       master_prompt_sha256=MASTER_PROMPT_SHA256)
+                if partial:
+                    try:
+                        save_private_checkpoint("research_partial", agent_slug)
+                        print("Kaurivo demo queue: partial research checkpoint preserved.")
+                    except HoldError as checkpoint_error:
+                        error = checkpoint_error
             if error.code in TRANSIENT_RETRY_CODES:
                 try:
                     # Durable, quota-bounded retry on the SAME private job.
