@@ -24,7 +24,8 @@ INDUSTRY_ALIASES = {
     "kampaamo": "kampaamo", "parturi": "kampaamo", "hairdresser": "kampaamo",
     "kauneushoitola": "kauneushoitola", "beauty salon": "kauneushoitola",
     "ravintola": "ravintola", "restaurant": "ravintola",
-    "kahvila": "kahvila", "cafe": "kahvila",
+    "kahvila": "kahvila", "cafe": "kahvila", "coffee shop": "kahvila",
+    "cafeteria": "kahvila", "kahvilapalvelut": "kahvila",
     "autokorjaamo": "autokorjaamo", "car repair": "autokorjaamo",
     "hammaslääkäri": "hammaslääkäri", "dentist": "hammaslääkäri",
     "kuntosali": "kuntosali", "fitness centre": "kuntosali",
@@ -57,6 +58,17 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    # Real operators with independently discoverable primary websites.
+    # These are only candidate URLs: the live site, relevant services,
+    # source-exact evidence and two actual screenshots remain mandatory.
+    # Especially valuable when public Overpass has few website-tagged cafés.
+    "kahvila": (
+        ("Cafe Engel", "https://www.cafeengel.fi/"),
+        ("Hima & Sali", "https://www.himasali.com/kahvila/"),
+        ("Kahvila Makiata", "https://www.makiata.fi/haaga/"),
+        ("Cafe Cardemumma", "https://www.cafecardemumma.fi/"),
+        ("Art Cafe Taideterassi", "https://artcafetaideterassi.fi/menu/"),
+    ),
     "teollisuusautomaatio": (
         ("Insinööritoimisto Antero", "https://www.plcantero.com/automaatiopalvelut/"),
         ("Insecon", "https://www.insecon.fi/palvelut/automaatioprojektit-ja-suunnittelu/"),
@@ -67,8 +79,41 @@ CURATED_REFERENCE_CANDIDATES = {
     ),
 }
 
-DEFAULT_REGIONS = ("Tampere", "Turku", "Helsinki", "Oulu")
+DEFAULT_REGIONS = ("Helsinki", "Tampere", "Turku", "Oulu")
+# Only recognized municipality names may be interpolated into public OSM
+# queries. The original site's location is a search hint, not evidence that
+# any potential reference is a comparable business.
+BENCHMARK_REGIONS = (
+    "Helsinki", "Espoo", "Vantaa", "Tampere", "Turku", "Oulu",
+    "Jyväskylä", "Lahti", "Kuopio", "Pori", "Joensuu", "Vaasa",
+    "Rovaniemi", "Lappeenranta", "Hämeenlinna", "Seinäjoki",
+    "Kotka", "Mikkeli", "Porvoo", "Salo", "Rauma", "Kajaani",
+)
+OSM_CATEGORIES = {
+    "kampaamo", "kauneushoitola", "ravintola", "kahvila",
+    "autokorjaamo", "hammaslääkäri", "kuntosali", "hotelli",
+    "sähköasentaja", "putkimies", "kukkakauppa", "pyöräliike",
+    "suutari", "leipomo", "asianajotoimisto",
+}
 MAX_PUBLIC_REGIONS_PER_LOOKUP = 2
+
+
+def preferred_benchmark_regions(facts: dict | None = None, original_text: str = "") -> tuple[str, ...]:
+    """Prefer a municipality visibly associated with the target company.
+
+    Location only ranks candidate lookups. It does not prove the benchmark,
+    supply any client facts, or relax the three source-backed operator gate.
+    """
+    facts = facts if isinstance(facts, dict) else {}
+    hints = " ".join(str(facts.get(k) or "") for k in
+                     ("city", "municipality", "location", "address", "street_address"))
+    # A structured city explicitly supplied by the source takes priority.
+    search_sources = (hints, str(original_text or "")[:10000])
+    for raw in search_sources:
+        for city in BENCHMARK_REGIONS:
+            if re.search(r"(?<!\w)" + re.escape(city) + r"(?!\w)", raw, re.I):
+                return (city,) + tuple(region for region in DEFAULT_REGIONS if region != city)
+    return DEFAULT_REGIONS
 
 
 def normalize_industry(raw: str) -> str:
@@ -163,7 +208,7 @@ def discover_free_references(
     source quote and business category before selecting its three references.
     """
     category = normalize_industry(industry)
-    mapped_to_osm = bool(category) and category not in CURATED_REFERENCE_CANDIDATES
+    mapped_to_osm = category in OSM_CATEGORIES
     category = category or " ".join(str(industry or "").casefold().split())
     if not category:
         raise RuntimeError("Industry required for free reference research.")
