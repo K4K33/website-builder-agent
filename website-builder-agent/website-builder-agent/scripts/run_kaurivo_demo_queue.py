@@ -1014,7 +1014,16 @@ def main():
                         save_private_checkpoint("research_partial", agent_slug)
                         print("Kaurivo demo queue: partial research checkpoint preserved.")
                     except HoldError as checkpoint_error:
-                        error = checkpoint_error
+                        # A previously downloaded research_partial archive has
+                        # already passed exact job/source/SHA256 validation.
+                        # If persisting an UNCHANGED replacement fails, retain
+                        # the original AI failure and the verified old archive.
+                        # Never overwrite a genuine provider diagnostic with
+                        # a redundant Storage duplicate-upload error.
+                        if "resume" in locals() and resume == "research_partial":
+                            print("Kaurivo demo queue: prior verified private research checkpoint retained.")
+                        else:
+                            error = checkpoint_error
             if error.code in TRANSIENT_RETRY_CODES:
                 try:
                     # Durable, quota-bounded retry on the SAME private job.

@@ -116,13 +116,27 @@ Deno.serve(async request=>{
       await shaHex(data)!==checksum)
     return reply(422,{ok:false,error:"checkpoint_integrity"});
    const path=job+"/"+checksum+".zip";
-   const stored=await fetch(objectUrl(path),{
-    method:"POST",headers:{...storageHeaders(),"content-type":"application/zip",
-                             "x-upsert":"false"},body:data});
-   if(!stored.ok){
-    // An identical content-addressed archive can already exist when an
-    // earlier Storage upload succeeded but its DB acknowledgement failed.
-    if(stored.status!==409)return reply(503,{ok:false,error:"checkpoint_store"});
+   // Re-saving a restored, identical private research snapshot is not a new
+   // object. Skip the duplicate Storage POST, but independently verify the
+   // existing object's bytes before returning success for this claimed run.
+   let reuseExisting=Boolean(previous&&previous.stage===phase&&
+     previous.object_path===path&&previous.checksum===checksum&&
+     previous.byte_count===length);
+   if(!reuseExisting){
+    const stored=await fetch(objectUrl(path),{
+     method:"POST",headers:{...storageHeaders(),"content-type":"application/zip",
+                              "x-upsert":"false"},body:data});
+    if(!stored.ok){
+     // Supabase Storage returns HTTP 400 (UniqueViolation) for an existing
+     // content-addressed blob on some versions, not only HTTP 409.
+     // Never accept an arbitrary 400: require an exact independent GET +
+     // byte length and SHA-256 match before recording the checkpoint.
+     if(stored.status!==400&&stored.status!==409)
+      return reply(503,{ok:false,error:"checkpoint_store"});
+     reuseExisting=true;
+    }
+   }
+   if(reuseExisting){
     const existing=await fetch(SUPABASE_URL+"/storage/v1/object/authenticated/"+
       CHECKPOINT_BUCKET+"/"+path,{headers:storageHeaders()});
     if(!existing.ok)return reply(503,{ok:false,error:"checkpoint_store"});
