@@ -2,7 +2,7 @@
 
 Tämä on **oikea paikallinen työntekijä**, ei pelkkä Githubin työjonon laukaisin.
 Kun ohjelma on käynnissä, se tarkistaa Kaurivon suojatun Supabase-jonon
-noin kerran sekunnissa ja aloittaa vapaan työn heti. Selainta ei tarvitse pitää
+Realtime-pikailmoituksella ja aloittaa vapaan työn heti, kun viesti saapuu. Selainta ei tarvitse pitää
 auki. Työ ei läpäise laatutarkistuksia ilman oikeaa QA:ta.
 
 ## Ennen asentamista
@@ -50,6 +50,8 @@ auki. Työ ei läpäise laatutarkistuksia ilman oikeaa QA:ta.
   olevansa käytettävissä Supabasessa. Demopainike ei silloin lähetä työtä
   GitHub Actionsin suorittajajonoon. Itse työn aloittamisen vahvistaa
   tietokannan `researching`-tila.
+- Realtime-ilmoitus ei sisällä yrityksen nimeä, linkkiä tai mitään CRM-tietoja. Turvallinen laitekohtainen kanava herättää työntekijän, mutta Supabase-tietokannan rakennustyön lukitus edellyttää edelleen koneesi tunnusta.
+- Verkkokatkon tai kadonneen Realtime-ilmoituksen varalta työntekijä tarkistaa jonon myös 90 sekunnin välein. Tätä varaa ei yleensä tarvita normaalissa suorakäynnistyksessä.
 - Kun kone on suljettu, nukkuu tai mallit eivät ole valmiina, käytetään
   nykyistä GitHub-varareittiä; tällöin sekuntitavoitetta ei voida taata.
 - Paikallisen työtekijän valmisteluaika riippuu koneen tehosta. Noin yhden
@@ -89,7 +91,8 @@ säilyvät pakollisina.
   automaatio merkitsee työn korjattavaksi. Se ei julkaise keksittyjä tietoja
   eikä kierrä virheitä rajattomasti.
 - Windows Task Scheduler käynnistää työntekijän käyttäjän sisäänkirjautuessa.
-  Koneen pitää olla päällä, hereillä ja verkkoyhteydessä.
+  Koneen pitää olla päällä, hereillä ja verkkoyhteydessä. Windowsin asetuksista kohdasta Virta ja akku / Lepotila kannattaa estää verkkovirtaan kytketyn koneen nukahtaminen ja tarvittaessa tarkistaa kannen sulkemisen toiminta.
+- Realtime-herätys vähentää pilvikutsujen määrää. 20 sekunnin turvayhteyden tarkistus ja 90 sekunnin varahaku käyttävät noin 158 400 Edge-kutsua 30 päivässä **ennen muuta Kaurivo-käyttöä**. Maksuttoman Supabasen kokonaiskiintiö on 500 000 kutsua kuukaudessa. Tarkista myös muut projektin kulutukset Supabasen Usage-näkymästä.
 
 ## Vianetsintä
 
