@@ -39,8 +39,8 @@ def free_only():
 
 def ai_backend():
     mode = os.getenv("AI_BACKEND", "ollama").strip().lower()
-    if mode not in {"openrouter", "ollama"}:
-        raise RuntimeError("AI_BACKEND must be 'openrouter' or 'ollama'.")
+    if mode not in {"openrouter", "ollama", "codex"}:
+        raise RuntimeError("AI_BACKEND must be 'openrouter', 'ollama' or 'codex'.")
     return mode
 
 
@@ -49,8 +49,8 @@ def backend_for_stage(stage=None):
     default = ai_backend()
     key = f"{stage.upper()}_AI_BACKEND" if stage else ""
     mode = os.getenv(key, default).strip().lower() if key else default
-    if mode not in {"openrouter", "ollama"}:
-        raise RuntimeError("Stage AI backend must be 'openrouter' or 'ollama'.")
+    if mode not in {"openrouter", "ollama", "codex"}:
+        raise RuntimeError("Stage AI backend must be 'openrouter', 'ollama' or 'codex'.")
     return mode
 
 
@@ -78,7 +78,14 @@ def tavily_free_plan_confirmed(*, scheduled: bool = False) -> bool:
 # funded key is already present. Builder and visual QA still require exact
 # model IDs so an unpredictable free router cannot silently weaken quality.
 def model_for_stage(stage=None):
-    if backend_for_stage(stage) == "ollama":
+    backend = backend_for_stage(stage)
+    if backend == "codex":
+        key = f"KAURIVO_CODEX_{stage.upper()}_MODEL" if stage else "KAURIVO_CODEX_BUILDER_MODEL"
+        model = os.getenv(key, "").strip()
+        if os.getenv("KAURIVO_LOCAL_WORKER") != "1" or not model:
+            raise RuntimeError("Codex requires an enrolled local Kaurivo worker and a model.")
+        return model
+    if backend == "ollama":
         stage_key = f"OLLAMA_{stage.upper()}_MODEL" if stage else ""
         model = (os.getenv(stage_key, "").strip() if stage_key else "")
         model = model or os.getenv("OLLAMA_MODEL", "").strip()
