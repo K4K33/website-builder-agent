@@ -28,7 +28,7 @@ async function rpc(name:string,body:Record<string,unknown>){
 }
 const CHECKPOINT_BUCKET="kaurivo-demo-checkpoints";
 const CHECKPOINT_MAX_BYTES=31457280;
-const CHECKPOINT_STAGES=new Set(["researched","concepts","selected","built","revised_1","revised_2"]);
+const CHECKPOINT_STAGES=new Set(["research_partial","researched","concepts","selected","built","revised_1","revised_2"]);
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SHA=/^[0-9a-f]{64}$/;
 type Checkpoint={stage:string;checksum:string;object_path:string;byte_count:number};
