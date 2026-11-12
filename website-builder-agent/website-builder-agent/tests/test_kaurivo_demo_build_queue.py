@@ -48,7 +48,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('Uusi sivu valmistuu laatutarkistuksen jälkeen',panel)
         self.assertIn('Ei aiempaa verkkosivua',panel)
         self.assertIn('demo-comparison',CSS.read_text(encoding="utf-8"))
-        self.assertIn('crm.css?v=20261111-freeqa3',html)
+        self.assertIn('crm.css?v=20261112-local1',html)
         self.assertIn('qa_url',panel)
         self.assertIn('release_sha',panel)
         self.assertIn('onrender',panel)
