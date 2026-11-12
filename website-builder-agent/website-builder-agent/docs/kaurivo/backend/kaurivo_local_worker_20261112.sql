@@ -54,11 +54,18 @@ as $$
 declare result_id bigint;
 begin
  if p_digest !~ '^[0-9a-f]{64}$' then return null; end if;
- update kaurivo_internal.local_worker_devices
- set last_seen_at=now(),ai_ready=coalesce(p_ready,ai_ready),updated_at=now()
- where token_hash=p_digest and expires_at>now()
- returning run_id into result_id;
+ select run_id into result_id from kaurivo_internal.local_worker_devices
+ where token_hash=p_digest and expires_at>now();
  if result_id is not null then
+   -- A 1-second local queue poll must not produce 86,400 unnecessary
+   -- database writes per day. Heartbeat at most once every 8 seconds
+   -- unless the actual model availability changed.
+   update kaurivo_internal.local_worker_devices
+   set last_seen_at=now(),ai_ready=coalesce(p_ready,ai_ready),updated_at=now()
+   where token_hash=p_digest and expires_at>now()
+     and (last_seen_at is null
+          or last_seen_at<now()-interval '8 seconds'
+          or (p_ready is not null and ai_ready is distinct from p_ready));
    -- An active Ollama model may legitimately take longer than 70 minutes.
    -- A live worker with a still valid claim must not be marked dead.
    update public.kaurivo_demo_build_jobs
