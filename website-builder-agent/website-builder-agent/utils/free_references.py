@@ -18,8 +18,7 @@ from urllib.parse import urlsplit
 from utils.quality import canonical_url
 
 CACHE_DAYS = 14
-# Explicit categories map to existing verified OSM tag query types.
-# Anything unrecognized fails closed until real operator references are supplied.
+# Categories use existing OSM tags or curated operator candidates.
 INDUSTRY_ALIASES = {
     "kukkakauppa": "kukkakauppa", "florist": "kukkakauppa",
     "kampaamo": "kampaamo", "parturi": "kampaamo", "hairdresser": "kampaamo",
@@ -45,6 +44,27 @@ INDUSTRY_ALIASES = {
     "law firm": "asianajotoimisto",
     "legal services": "asianajotoimisto",
     "attorney": "asianajotoimisto",
+    "teollisuusautomaatio": "teollisuusautomaatio",
+    "teollisuuden automaatio": "teollisuusautomaatio",
+    "automaatiosuunnittelu": "teollisuusautomaatio",
+    "automaatio-ohjelmointi": "teollisuusautomaatio",
+    "plc-ohjelmointi": "teollisuusautomaatio",
+    "plc ohjelmointi": "teollisuusautomaatio",
+    "industrial automation": "teollisuusautomaatio",
+    "plc programming": "teollisuusautomaatio",
+}
+
+# Primary-source operator pages. These are candidates, not benchmark proof.
+# Research still checks matching services, quotes and desktop/mobile evidence.
+CURATED_REFERENCE_CANDIDATES = {
+    "teollisuusautomaatio": (
+        ("Insinööritoimisto Antero", "https://www.plcantero.com/automaatiopalvelut/"),
+        ("Insecon", "https://www.insecon.fi/palvelut/automaatioprojektit-ja-suunnittelu/"),
+        ("Prodec Automation", "https://prodec.fi/"),
+        ("PR-VISION", "https://www.prvision.fi/"),
+        ("Automates", "https://www.automates.fi/"),
+        ("CoE Group", "https://coegroup.fi/palvelut/sahko-ja-automaatiosuunnittelu/tuotantoautomaatio/"),
+    ),
 }
 
 DEFAULT_REGIONS = ("Tampere", "Turku", "Helsinki", "Oulu")
@@ -143,7 +163,7 @@ def discover_free_references(
     source quote and business category before selecting its three references.
     """
     category = normalize_industry(industry)
-    mapped_to_osm = bool(category)
+    mapped_to_osm = bool(category) and category not in CURATED_REFERENCE_CANDIDATES
     category = category or " ".join(str(industry or "").casefold().split())
     if not category:
         raise RuntimeError("Industry required for free reference research.")
@@ -163,7 +183,9 @@ def discover_free_references(
     current = stored.get(category) or {}
     observed_at = _timestamp(current.get("updated_at") or "") if isinstance(current, dict) else None
     saved = (current.get("results") or []) if isinstance(current, dict) else []
-    saved = _candidates(list(saved) + list(historic_lookup(category) or []),
+    curated = [{"title": name, "url": url}
+               for name, url in CURATED_REFERENCE_CANDIDATES.get(category, ())]
+    saved = _candidates(list(saved) + list(historic_lookup(category) or []) + curated,
                         target_url=target_url, limit=50)
     if observed_at and timedelta(0) <= now - observed_at <= timedelta(days=CACHE_DAYS):
         results = _candidates(saved, target_url=target_url, limit=max_results)
@@ -209,7 +231,7 @@ def discover_free_references(
     saved_current = dict(stored)
     saved_current[category] = {
         "updated_at": now.isoformat(),
-        "source": "openstreetmap_overpass_and_prior_verified_benchmarks",
+        "source": "openstreetmap_prior_verified_benchmarks_and_curated_candidates",
         "results": results,
     }
     path.write_text(json.dumps(saved_current, ensure_ascii=False, indent=2),
