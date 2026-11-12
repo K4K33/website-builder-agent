@@ -1,4 +1,4 @@
-# Start Kaurivo's private, free-only Windows worker under the CURRENT user.
+﻿# Start Kaurivo's private, free-only Windows worker under the CURRENT user.
 # The secret is stored only as a Windows DPAPI user-protected blob.
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
