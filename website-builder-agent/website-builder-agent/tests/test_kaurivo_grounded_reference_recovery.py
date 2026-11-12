@@ -84,7 +84,8 @@ class SourceAndMunicipalityTests(unittest.TestCase):
 
 class VerifiedSelectionTests(unittest.TestCase):
     def _candidate(self,url):
-        index=OPERATORS.index(url)
+        from utils.quality import canonical_url
+        index=[canonical_url(value) for value in OPERATORS].index(canonical_url(url))
         return {"success":True,"title":"Operator "+str(index),
                 "visible_text":SOURCES[index]}
 
