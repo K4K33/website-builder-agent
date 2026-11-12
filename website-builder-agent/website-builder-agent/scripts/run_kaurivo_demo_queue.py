@@ -256,6 +256,10 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "free_ai_rate_limit"
     if "codex_stage_timeout" in terminal:
         return "stage_timeout"
+    # Restart a local worker after an actual temporary Ollama transport
+    # outage; never mislabel missing/bad visual QA as a transient success.
+    if "local ollama is not available" in terminal:
+        return "research_network_unavailable" if stage_name=="researching" else "network_unavailable"
     provider=any(x in terminal for x in (
         "openrouter rejected request",
         "openrouter-kutsu epäonnistui",

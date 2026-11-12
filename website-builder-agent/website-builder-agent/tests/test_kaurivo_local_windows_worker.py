@@ -113,12 +113,12 @@ class LocalWindowsTests(TestCase):
         self.assertIn("qa[.]html",PANEL)
         self.assertIn("noindex,nofollow,noarchive",RUNNER)
 
-    def test_codex_mode_discovers_subscription_models_without_ollama(self):
-        selected = {"research": "builder", "builder": "builder", "qa": "reviewer"}
+    def test_windows_worker_refuses_codex_even_if_old_setup_requested_it(self):
         with patch.dict(os.environ, {"KAURIVO_WINDOWS_BACKEND": "codex"}), \
-             patch("utils.codex_ai.discover_models", return_value=selected) as discover:
-            self.assertEqual(models(), selected)
-        discover.assert_called_once_with()
+             patch("utils.codex_ai.discover_models") as discover:
+            with self.assertRaisesRegex(LocalWorkerError, "Codex is not allowed"):
+                models()
+        discover.assert_not_called()
 
     def test_windows_works_even_with_cloud_quota_exhausted(self):
         self.assertIn("j.error_code='free_ai_capacity_unavailable'",SQL)

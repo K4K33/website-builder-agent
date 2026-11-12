@@ -1,8 +1,8 @@
 """Owner-enrolled, free-only Windows demo builder.
 
-Polls the authenticated Kaurivo private queue once per second while ready.
-No GitHub Actions, service-role token, browser session, paid AI or webhook
-needed to *start*. Uses exactly the existing source/brand/QA pipeline.
+Uses Supabase Realtime wakeups with a 90-second safety poll.
+No Codex, GitHub Actions, service-role token or paid AI is used for inference.
+The existing brand, source-fidelity and independent QA pipeline stays intact.
 """
 from __future__ import annotations
 
@@ -36,9 +36,8 @@ class LocalWorkerError(RuntimeError):
 
 
 def models() -> dict[str,str]:
-    if os.environ.get("KAURIVO_WINDOWS_BACKEND")=="codex":
-        from utils.codex_ai import discover_models
-        return discover_models()
+    if os.environ.get("KAURIVO_WINDOWS_BACKEND","ollama").strip().lower()!="ollama":
+        raise LocalWorkerError("Codex is not allowed in the Kaurivo Windows worker; use local Ollama.")
     result={
         "research":os.environ.get("OLLAMA_RESEARCH_MODEL","qwen2.5-coder:7b").strip(),
         "builder":os.environ.get("OLLAMA_BUILDER_MODEL","qwen2.5-coder:7b").strip(),
@@ -182,8 +181,12 @@ def run_claim(job:dict,run_id:int,token:str,model_names:dict[str,str]) -> None:
     with tempfile.TemporaryDirectory(prefix="kaurivo-local-") as tmp:
         claim=Path(tmp)/"claim.json"
         claim.write_text(json.dumps({"job":job},ensure_ascii=False),encoding="utf-8")
-        backend=os.environ.get("KAURIVO_WINDOWS_BACKEND","ollama")
+        backend="ollama"  # No Codex or metered cloud fallback, even if env was altered.
         env=os.environ.copy()
+        # Do not pass metered provider credentials to the offline child.
+        for secret in ("OPENAI_API_KEY", "OPENROUTER_API_KEY",
+                       "ANTHROPIC_API_KEY", "CODEX_HOME"):
+            env.pop(secret, None)
         env.update({
            "KAURIVO_LOCAL_WORKER":"1",
            "KAURIVO_LOCAL_WORKER_TOKEN":token,
@@ -193,9 +196,6 @@ def run_claim(job:dict,run_id:int,token:str,model_names:dict[str,str]) -> None:
            "RESEARCH_AI_BACKEND":backend,
            "BUILDER_AI_BACKEND":backend,
            "QA_AI_BACKEND":backend,
-           "KAURIVO_CODEX_RESEARCH_MODEL":model_names["research"],
-           "KAURIVO_CODEX_BUILDER_MODEL":model_names["builder"],
-           "KAURIVO_CODEX_QA_MODEL":model_names["qa"],
            "KAURIVO_BROWSER_SOURCE_FALLBACK":"1",
            "FREE_CLOUD_LOCAL_FALLBACK":"1",
            "OLLAMA_RESEARCH_MODEL":model_names["research"],
@@ -239,13 +239,11 @@ def main() -> int:
     token=os.environ.get("KAURIVO_LOCAL_WORKER_TOKEN","").strip()
     if not TOKEN_RE.fullmatch(token):
         raise LocalWorkerError("Windows setup token missing or invalid.")
-    codex_mode=os.environ.get("KAURIVO_WINDOWS_BACKEND")=="codex"
     model_names=models()
 
     def ai_ready(session):
-        # Discover Codex account/models at startup. Each turn checks account
-        # authentication again. Idle heartbeats must not launch model requests.
-        return codex_mode or ollama_ready(session,model_names)
+        # Check only locally installed models; no Codex usage or cloud credits.
+        return ollama_ready(session,model_names)
 
     file=singleton_lock()
     with file,requests.Session() as session:
@@ -295,8 +293,7 @@ def main() -> int:
                     ready=ready_before
                 if ready!=ready_before:
                     print("Kaurivo local AI "+("valmis" if ready else "ei vielä valmis")+
-                          (" (Codex / ChatGPT)." if codex_mode else
-                           " (kaikki mallit oltava asennettuna; QA-mallilla näkökyky)."),
+                          " (paikallinen Ollama; erillinen kuvallinen QA-malli).",
                           flush=True)
                     ready_before=ready
                 if not ready:
