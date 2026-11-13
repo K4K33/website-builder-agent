@@ -214,7 +214,8 @@ jobs:
             python -m playwright install-deps chromium
             python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'
           fi
-      - name: Research, create concepts, build, QA, publish and browser-verify
+      - id: demo_builder
+        name: Research, create concepts, build, QA, publish and browser-verify
         if: steps.claim.outputs.has_job == 'true'
         env:
           KAURIVO_CLAIMED_JOB_FILE: ${{ runner.temp }}/claimed-demo.json
@@ -244,6 +245,13 @@ jobs:
         env:
           EDGE: https://xhsfbcwpwbgdbatrcyuk.supabase.co/functions/v1/kaurivo-demo-worker
         run: |
+          # The builder may intentionally return non-zero after it has safely
+          # persisted QUEUED/HOLD. Do not overwrite that status with a fake
+          # runner_setup_failed (and never report an unfinished demo as green).
+          if [[ -f "$RUNNER_TEMP/kaurivo-worker-state-persisted" ]]; then
+            echo "Builder stopped without a completed preview; private terminal state already saved."
+            exit 0
+          fi
           python3 - <<'PY'
           import json,os,urllib.request
           from urllib.parse import urlencode
