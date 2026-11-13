@@ -157,6 +157,34 @@ def normalize_industry(raw: str) -> str:
     return ""
 
 
+def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
+    """Conservatively resolve an unfamiliar legal industry label via the
+    ORIGINAL company's observed service descriptions.
+
+    Sector references remain mere CANDIDATES, not accepted same-industry
+    businesses. Never infer a category from a brand name or from other
+    operators' marketing text.
+    """
+    known=normalize_industry(industry)
+    if known:
+        return known
+    text=str(original_text or "").casefold()[:10000]
+    if not text:
+        return industry
+    # Two independent, industry-specific service descriptions required.
+    # E.g. Prismarit describes BOTH building surveys and 3D laser scans,
+    # while its registration may say "other building technical services".
+    survey_signals=(
+        "laserkeilaus", "rakennusmittaus", "maastomittaus",
+        "teollisuusmittaus", "maanmittaus",
+    )
+    observed=sum(1 for word in survey_signals if word in text)
+    if observed>=2 and any(x in text for x in
+            ("mittauspalvel", "mittaustyöt", "mittaukset", "mittauksia")):
+        return "mittauspalvelut"
+    return industry
+
+
 def _timestamp(value: str) -> datetime | None:
     try:
         dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
