@@ -11,6 +11,11 @@ on:
       - "website-builder-agent/website-builder-agent/agents/research.py"
       - "website-builder-agent/website-builder-agent/utils/industry_workflow.py"
       - "website-builder-agent/website-builder-agent/utils/claude_client.py"
+      - "website-builder-agent/website-builder-agent/utils/cloudflare_free_ai.py"
+      - "website-builder-agent/website-builder-agent/utils/kaurivo_ai_source_packet.py"
+      - "website-builder-agent/website-builder-agent/utils/kaurivo_cloud_vision_packet.py"
+      - "website-builder-agent/website-builder-agent/utils/free_references.py"
+      - "website-builder-agent/website-builder-agent/utils/reference_quote_evidence.py"
       # A reviewed cloud queue migration also wakes the scheduled cloud
       # builder once on merge; normal UTC-day and account limits still apply.
       - "website-builder-agent/website-builder-agent/docs/kaurivo/backend/kaurivo_cloud_first_recovery_20261112.sql"
@@ -55,6 +60,20 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: website-builder-agent/website-builder-agent/requirements.txt
+      - name: Reject stale source code before consuming private job claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Re-running an old GitHub Actions job reuses its OLD GITHUB_SHA;
+          # actions/checkout does not silently update it to latest main.
+          # Fail BEFORE taking a cloud queue claim or spending free AI credits.
+          git fetch --quiet origin refs/heads/main
+          CURRENT_MAIN_SHA="$(git rev-parse FETCH_HEAD)"
+          if [[ "$GITHUB_SHA" != "$CURRENT_MAIN_SHA" ]]; then
+            echo "::error::Stale Kaurivo builder revision. Start a FRESH workflow run on main, not Rerun on an old run."
+            exit 1
+          fi
+          echo "Kaurivo builder exact latest-main source revision verified."
       - id: keycheck
         name: Free model configuration check, without AI calls
         env:
