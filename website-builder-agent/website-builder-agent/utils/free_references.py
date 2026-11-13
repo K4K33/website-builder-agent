@@ -97,6 +97,8 @@ CURATED_REFERENCE_CANDIDATES = {
         ("MittausGroup Oy", "https://www.mittausgroup.fi/palvelut/rakennusmittaukset/"),
         ("Geo-Control Oy", "https://geo-control.fi/palvelut/"),
         ("Neotri", "https://www.neotri.fi/"),
+        ("Aake Vision Ltd Oy", "https://aake.fi/palvelut/"),
+        ("Uudenmaan Pohjatutkimus", "https://uudenmaanpohjatutkimus.fi/mittaukset/"),
     ),
     "teollisuusautomaatio": (
         ("Insinööritoimisto Antero", "https://www.plcantero.com/automaatiopalvelut/"),
