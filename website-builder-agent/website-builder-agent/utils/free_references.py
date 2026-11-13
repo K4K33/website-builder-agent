@@ -175,8 +175,8 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
     # E.g. Prismarit describes BOTH building surveys and 3D laser scans,
     # while its registration may say "other building technical services".
     survey_signals=(
-        "laserkeilaus", "rakennusmittaus", "maastomittaus",
-        "teollisuusmittaus", "maanmittaus",
+        "laserkeilau", "rakennusmittau", "maastomittau",
+        "teollisuusmittau", "maanmittau",
     )
     observed=sum(1 for word in survey_signals if word in text)
     if observed>=2 and any(x in text for x in
