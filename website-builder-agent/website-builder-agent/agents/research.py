@@ -27,7 +27,10 @@ from uuid import uuid4
 from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
-from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
+from utils.design_benchmark import (
+    reference_image_inputs, resolve_observation_indices, validate_benchmark,
+    validate_design_plan,
+)
 from utils.screenshot import capture_website, REFERENCE_VIEWPORTS
 from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
@@ -225,7 +228,7 @@ Palauta VAIN validi JSON tässä muodossa:
   ],
   "design_decisions": [
     {"id": "hero-photo", "dimension": "first_view", "reference_url": "exact observed URL",
-     "observation": "exact entry from reference_comparison.observations",
+     "observation_index": 1,
      "adaptation": "concrete original solution using only target facts and permitted assets",
      "section_id": "hero", "acceptance_check": "what must be visibly true in the rendered result"}
   ],
@@ -276,6 +279,7 @@ Sääntöjä:
 - Referenssien URL-osoitteet kuuluvat vain reference_comparison- ja design_decisions-kenttiin.
 - design_decisions käyttää JOKAISTA valittua referenssiä ja kattaa ulottuvuudet first_view, service_hierarchy, contact_path ja mobile.
 - Jokainen päätös yhdistää tarkan havainnon, yrityskohtaisen sovelluksen, HTML-osion tunnuksen ja näkyvän hyväksymiskriteerin.
+- Merkitse observation_index saman reference_url-osoitteen observations-listan havaintona (ensimmäinen on 1). Älä kirjoita havaintoa uudelleen.
 - source_content_map sisältää JOKAISEN alkuperäisestä lähdesivustosta
   kerätyn URL:n ja sen kaikki h2/h3-otsikot. Kunkin kohdan target on
   toimiva uuden sivuston section_plan-id. Älä keksi alkuperäisiä osioita.
@@ -802,6 +806,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     reset_generated_review_claims(research_data)
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
+    resolve_observation_indices(research_data)
     validate_design_plan(research_data, "")
     validate_creative_directions(research_data)
     validate_site_architecture(research_data, no_site=True)
@@ -1264,6 +1269,7 @@ Tärkeää:
     reset_generated_review_claims(research_data)
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
+    resolve_observation_indices(research_data)
     validate_design_plan(research_data, url)
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
