@@ -268,7 +268,9 @@ def ask_claude(
     )
 
     payload = {
-        "model": model,
+        # The explicit, audited first free candidate is primary on the wire.
+        # In the opt-in cloud reliability mode it may replace throttled Gemma.
+        "model": models[0],
         "messages": [
             {
                 "role": "system",

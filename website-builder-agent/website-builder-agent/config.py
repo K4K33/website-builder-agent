@@ -140,6 +140,23 @@ def stage_model_candidates(stage=None):
             raise RuntimeError("FREE_ONLY requires exact :free fallback IDs; no paid fallback.")
         if candidate not in models:
             models.append(candidate)
+    # Two legacy Gemma free variants repeatedly produced provider-side 429 in
+    # the Nov 13 real builder. For *this* cloud worker, explicitly opt in to a
+    # separately verified $0, vision+JSON-capable endpoint with live provider
+    # availability. The original exact free candidates remain fallbacks.
+    # Neither the arbitrary free router nor a paid model can be selected.
+    if (
+        stage in {"research", "builder"}
+        and free_only()
+        and os.getenv("KAURIVO_PREFER_VERIFIED_FREE_ALTERNATE") == "1"
+        and primary in {
+            "google/gemma-4-26b-a4b-it:free",
+            "google/gemma-4-31b-it:free",
+        }
+    ):
+        dependable = "dots-studio/dots-3-note-preview:free"
+        models = [dependable] + [name for name in models if name != dependable]
+        models = models[:3]
     if stage in {"builder", "qa"}:
         # Independent reviewer must never be the same underlying model as any
         # builder fallback, not merely a distinct primary name.
