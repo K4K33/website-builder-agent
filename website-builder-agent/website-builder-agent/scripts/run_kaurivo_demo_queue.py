@@ -112,12 +112,29 @@ def call_worker(action, **fields):
     return result
 
 
+def _persist_terminal_status_marker():
+    """Prevent GitHub's setup fail-safe from overwriting a handled worker state.
+
+    The marker is written only AFTER Supabase confirms the terminal update.
+    It contains no customer, model, API, or job data.
+    """
+    if LOCAL_WORKER:
+        return
+    temp = os.environ.get("RUNNER_TEMP", "")
+    if temp:
+        Path(temp, "kaurivo-worker-state-persisted").write_text(
+            "state confirmed\\n", encoding="utf-8"
+        )
+
+
 def update(status,progress,**details):
     global stage
     stage=status
     if working_job is not None:
         call_worker("update",job_id=working_job["id"],status=status,
                     progress=progress[:300],**details)
+        if status in {"queued", "hold", "failed", "internal_preview"}:
+            _persist_terminal_status_marker()
 
 
 def free_model_configured():
@@ -1053,7 +1070,7 @@ def main():
                                  "seuraavassa sallitussa ajoikkunassa.")
                     update("queued",message,error_code=error.code)
                     print("Kaurivo demo queue: TRANSIENT FAILURE DEFERRED (no paid AI).")
-                    return 0
+                    return 0 if LOCAL_WORKER else 2
                 except Exception:
                     print("Kaurivo demo queue: retry deferral persistence failed.",
                           file=sys.stderr)
@@ -1066,7 +1083,7 @@ def main():
             except Exception:
                 print("Kaurivo demo queue: unable to persist HOLD status.",file=sys.stderr)
             print("Kaurivo demo queue: HOLD / "+error.code)
-            return 0
+            return 0 if LOCAL_WORKER else 2
         except Exception as exc:
             # Never print str(exc): it may contain private CRM, source material,
             # API URLs or auth headers. Keep exact worker file line/type only.
