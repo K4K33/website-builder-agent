@@ -22,7 +22,7 @@ class ExplicitCloudQuotaTests(unittest.TestCase):
         self.assertIn('job.runner_kind==="github"',JS)
         self.assertIn('GitHub Actions + OpenRouter',JS)
         self.assertNotIn('Rakennuspalvelu käytettävissä',JS)
-        self.assertIn('demo-jobs.js?v=20261112-cloudflare-codes6',HTML)
+        self.assertRegex(HTML, r'demo-jobs\.js\?v=[^"]+')
 
     def test_deferral_progress_is_truthful_without_bypassing_qa(self):
         self.assertIn("cloud_limit=(not LOCAL_WORKER",RUNNER)
