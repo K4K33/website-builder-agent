@@ -8,6 +8,27 @@ MIN_REFERENCES = 3
 DESIGN_DIMENSIONS = {"first_view", "service_hierarchy", "contact_path", "mobile"}
 
 
+def resolve_observation_indices(research):
+    """Use only an existing observation from the decision's own reference."""
+    decisions = research.get("design_decisions")
+    if not isinstance(decisions, list):
+        return
+    observations_by_url = {
+        canonical_url(record["url"]): record.get("observations")
+        for record in research["design_benchmark"]
+    }
+    for decision in decisions:
+        if not isinstance(decision, dict) or "observation_index" not in decision:
+            continue
+        index = decision.pop("observation_index")
+        url = canonical_url(decision.get("reference_url"))
+        observations = observations_by_url.get(url)
+        if (type(index) is not int or not isinstance(observations, list)
+                or not 1 <= index <= len(observations)):
+            raise RuntimeError("Invalid design observation index for its reference.")
+        decision["observation"] = observations[index - 1]
+
+
 def validate_benchmark(research, target_url=""):
     records = research.get("design_benchmark", []) if isinstance(research, dict) else []
     facts = research.get("company_facts") or {}
