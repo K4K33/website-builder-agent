@@ -30,8 +30,12 @@ jobs:
           python-version: "3.11"
       - name: Install only public browser QA dependencies
         run: |
-          python -m pip install --disable-pip-version-check "requests>=2.32,<3" "playwright==1.55.0"
-          python -m playwright install --with-deps chromium
+          python -m pip install --disable-pip-version-check "requests>=2.32,<3" "playwright>=1.58,<2"
+          python -m playwright install chromium
+          if ! python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'; then
+            python -m playwright install-deps chromium
+            python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'
+          fi
       - name: Prove exact six-page public Render release at desktop, tablet and mobile sizes
         run: |
           python website-builder-agent/website-builder-agent/tests/verify_sahko247_render_live.py
