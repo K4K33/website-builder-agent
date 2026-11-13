@@ -309,7 +309,12 @@ def audit_source_reviews(rendered_pages: dict[str, str], research: dict) -> dict
 
 
 def extract_price_faq_evidence(html: str) -> dict:
-    """Inventory explicit source price table rows and FAQ disclosure questions."""
+    """Inventory source price rows, surrounding charge terms, and FAQ headings.
+
+    A quoted hourly price is incomplete if VAT, travel, minimum charges,
+    time limits or the source's surcharge conditions disappear. Only factual
+    clauses actually observed on the old website become source obligations.
+    """
     soup = BeautifulSoup(html, "html.parser")
     rows = []
     for tr in soup.find_all("tr"):
@@ -331,13 +336,36 @@ def extract_price_faq_evidence(html: str) -> dict:
             value = " ".join(summary.get_text(" ", strip=True).split())[:300]
             if len(value) >= 7 and value not in questions:
                 questions.append(value)
-    return {"price_rows": rows[:120], "faq_questions": questions[:80]}
+    # These are SOURCE excerpts, never inferred business policy. Extract only
+    # leaf price-policy paragraphs/list items, not huge parent sections or
+    # unrelated company marketing copy. Include non-numeric minimum-charge
+    # wording; amounts elsewhere in a table do not preserve the condition.
+    charge_hints = (
+        "minimiveloitu", "minimilaskutu", "matkakulu", "matkakustann",
+        "kilometrikorv", "kilometriveloitu", "huoltoautomaks",
+        "hälytyslis", "päivystyslis", "toimituskulu", "toimitusmaks",
+        "peruutusmaks", "arvonlisäver", "sisältää alv", "sis. alv",
+        "alv ", "veroton", "sisältyy hintaan", "veloitetaan erikseen",
+        "lisäveloit", "km asti", "km jälkeen", "km ylitt",
+    )
+    terms = []
+    for node in soup.select("p, li"):
+        if node.find(["p", "li"]) is not None:
+            continue
+        text = " ".join(node.get_text(" ", strip=True).split())
+        folded = text.casefold()
+        if not 9 <= len(text) <= 480:
+            continue
+        if any(hint in folded for hint in charge_hints) and text not in terms:
+            terms.append(text)
+    return {"price_rows": rows[:120], "faq_questions": questions[:80],
+            "price_terms": terms[:80]}
 
 
 def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict) -> dict:
     """Compare high-value facts in each source table row, not unrelated tokens."""
     source = (research.get("source_inventory") or {}).get("pages") or []
-    rows, questions = [], []
+    rows, questions, terms = [], [], []
     for page in source:
         if isinstance(page, dict):
             evidence = page.get("price_faq_evidence") or {}
@@ -345,6 +373,9 @@ def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict)
                         if isinstance(row, dict))
             questions.extend((page.get("url", ""), question)
                              for question in evidence.get("faq_questions") or [])
+            terms.extend((page.get("url", ""), term)
+                         for term in evidence.get("price_terms") or []
+                         if isinstance(term, str) and term.strip())
     soup = BeautifulSoup("<html><body>" + "\n".join(rendered_pages.values()) +
                          "</body></html>", "html.parser")
     units = []
@@ -363,5 +394,44 @@ def audit_price_faq_preservation(rendered_pages: dict[str, str], research: dict)
         if plain(question) not in visible:
             missing.append({"kind": "lost_source_faq_question", "source_url": url,
                             "question": question})
+    # Never treat a correct amount alone as proof that all source terms
+    # survived; unit/tax/charge caveats have their own exact source witnesses.
+    for url, term in terms:
+        if plain(term) not in visible:
+            missing.append({"kind": "lost_source_price_term", "source_url": url,
+                            "term": term[:240]})
+    # The reverse direction matters too: a true old hourly rate cannot be
+    # recycled as a made-up vehicle fee. Inspect new explicit pricing rows.
+    # Existing source tables can have legitimate different layouts, so the
+    # combined source text can also prove the complete label+amount pair.
+    source_texts = [plain(page.get("text") or "") for page in source
+                    if isinstance(page, dict)]
+    if rows or any(source_texts):
+        for route, html in rendered_pages.items():
+            page_soup = BeautifulSoup(html, "html.parser")
+            for tr in page_soup.find_all("tr"):
+                cells = [" ".join(cell.get_text(" ", strip=True).split())
+                         for cell in tr.find_all(["td", "th"], recursive=False)]
+                if len(cells) < 2 or len(cells[0]) < 3:
+                    continue
+                prices = [cell for cell in cells[1:]
+                          if "€" in cell or " eur" in cell.casefold()]
+                if not prices:
+                    continue
+                label, price = plain(cells[0]), plain(prices[-1])
+                known = any(
+                    (label in plain(old.get("label")) or
+                     plain(old.get("label")) in label)
+                    and price == plain(old.get("price"))
+                    for _, old in rows
+                    if old.get("label") and old.get("price")
+                )
+                known = known or any(label in text and price in text
+                                     for text in source_texts)
+                if not known:
+                    missing.append({"kind": "unverified_new_price_row",
+                                    "route": route, "label": cells[0][:160],
+                                    "price": prices[-1][:100]})
     return {"pass": not missing, "missing": missing,
-            "price_rows_checked": len(rows), "faq_questions_checked": len(questions)}
+            "price_rows_checked": len(rows), "faq_questions_checked": len(questions),
+            "price_terms_checked": len(terms)}
