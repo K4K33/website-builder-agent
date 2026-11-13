@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import os
 import re
+import time
+from collections.abc import Mapping
 from threading import Lock
 
 import requests
@@ -52,6 +54,25 @@ def _reserve() -> bool:
         return True
 
 
+def _short_retry_after_seconds(response) -> float | None:
+    """Retry a proved short provider throttle, not a daily/account quota.
+
+    No blind retry on HTTP 429 and no unbounded or date-form Retry-After.
+    The existing per-run free-call guard still applies to the second call.
+    """
+    headers = getattr(response, "headers", None)
+    if not isinstance(headers, Mapping):
+        return None
+    raw = headers.get("Retry-After", headers.get("retry-after"))
+    try:
+        seconds = float(str(raw).strip())
+    except (TypeError, ValueError):
+        return None
+    if 1 <= seconds <= 30:
+        return seconds
+    return None
+
+
 def chat_cloudflare_free(
     system: str,
     user_prompt: str,
@@ -61,6 +82,7 @@ def chat_cloudflare_free(
     image_paths: list[str] | None = None,
     json_mode: bool = False,
     _allow_length_retry: bool = True,
+    _allow_rate_retry: bool = True,
 ) -> str:
     """Perform a bounded allowlisted Workers Free request. Never use a paid model.
 
@@ -107,6 +129,17 @@ def chat_cloudflare_free(
     # HTTP 4xx/5xx and truncated model responses were incorrectly deferred
     # to the next day as free_ai_capacity_unavailable. Never log HTTP bodies.
     if resp.status_code == 429:
+        wait = _short_retry_after_seconds(resp) if _allow_rate_retry else None
+        if wait is not None:
+            # Exactly one evidenced short delay; _reserve() checks the free
+            # safety limit again. Never infer more capacity from a bare 429.
+            time.sleep(wait)
+            return chat_cloudflare_free(
+                system, user_prompt, stage=stage, max_tokens=max_tokens,
+                image_paths=image_paths, json_mode=json_mode,
+                _allow_length_retry=_allow_length_retry,
+                _allow_rate_retry=False,
+            )
         raise RuntimeError("FREE_AI_RATE_LIMIT: Cloudflare Workers Free HTTP 429.")
     if resp.status_code in (502, 503, 504):
         raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare temporarily unavailable.")
@@ -163,7 +196,8 @@ def chat_cloudflare_free(
                     system, user_prompt, stage=stage,
                     max_tokens=min(10000, max_tokens * 2),
                     image_paths=image_paths, json_mode=json_mode,
-                    _allow_length_retry=False)
+                    _allow_length_retry=False,
+                    _allow_rate_retry=_allow_rate_retry)
             raise RuntimeError("FREE_AI_RESPONSE_TRUNCATED: Cloudflare model exhausted output tokens.")
         if first.get("finish_reason") not in ("stop",):
             raise ValueError("incomplete response")
