@@ -200,6 +200,22 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
         return known
     if not text:
         return industry
+    # Company registration can call this sector "electrical and automation
+    # services". The ORIGINAL verified site (not a scraped competitor) must
+    # explicitly prove actual installation/repair work before mapping it to
+    # electricians. This handles e.g. Sähkö247's observed home page while
+    # preserving the different industrial automation sector above.
+    electrical_installation = any(stem in text for stem in (
+        "sähköasennus", "sähköasennuksi", "sähkötyöt",
+        "sähköurakoin", "sähköautojen latausasemi",
+    ))
+    electrical_service = any(stem in text for stem in (
+        "sähkö- ja automaatio", "sähköasennus- ja automaatio",
+        "sähkötyöt", "sähköurakoin", "sähköautojen lataus",
+        "sähkövian", "sähkötöitä",
+    ))
+    if electrical_installation and electrical_service:
+        return "sähköasentaja"
     # Two independent, industry-specific service descriptions required.
     # E.g. Prismarit describes BOTH building surveys and 3D laser scans,
     # while its registration may say "other building technical services".

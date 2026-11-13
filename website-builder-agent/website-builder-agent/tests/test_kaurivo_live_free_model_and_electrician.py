@@ -42,6 +42,23 @@ class NewCompanyReferences(TestCase):
             verified_sector_search_hint("Sähköurakointi", "asennukset ja huolto"),
             "sähköasentaja",
         )
+        # Real observed target wording; its registered industry can be broader.
+        self.assertEqual(
+            verified_sector_search_hint(
+                "Sähkö- ja automaatiopalvelut",
+                "Tarjoamme sähköasennus- ja automaatiopalveluita Kouvolassa "
+                "20 vuoden kokemuksella. Pienet sähkötyöt ja latausasemien asennus.",
+            ),
+            "sähköasentaja",
+        )
+        # Industrial-only PLC provider cannot become a household electrician.
+        self.assertNotEqual(
+            verified_sector_search_hint(
+                "Teollisuuden tekniset palvelut",
+                "Teollisuuden PLC-automaation ohjelmointia.",
+            ),
+            "sähköasentaja",
+        )
 
     def test_operator_urls_are_unverified_candidates_only(self):
         with TemporaryDirectory() as tmp:
