@@ -62,6 +62,28 @@ class ResearchPayloadTests(unittest.TestCase):
         self.assertEqual(original,json.dumps(full,ensure_ascii=False))
         self.assertGreater(len(original),len(json.dumps(compact,ensure_ascii=False))*2)
 
+    def test_actual_source_crawler_dict_h1_h2_h3_never_breaks_research(self):
+        real={
+            "url":"https://cafe.example.fi/",
+            "title":"Cafe",
+            "headings":{"h1":["Café Java"],"h2":["Menu","Opening hours"],
+                        "h3":["Allergens","Reservation"]},
+            "text":"We serve coffee and verified menu items.",
+            "header_assets":[],"footer_assets":[],
+        }
+        packet=pack_research_source_excerpts([real])
+        self.assertEqual(packet[0]["headings"],
+                         ["Café Java","Menu","Opening hours","Allergens","Reservation"])
+        self.assertEqual(packet[0]["url"],real["url"])
+        self.assertEqual(real["headings"]["h2"],["Menu","Opening hours"])
+
+    def test_malformed_heading_shape_never_crashes_source_packet(self):
+        packet=pack_research_source_excerpts([
+            {"url":"https://cafe.example.fi/", "headings":{"h1":None,
+                "h2":"A real primary heading","h3":123}, "text":"Actual source text"}
+        ])
+        self.assertEqual(packet[0]["headings"],["A real primary heading"])
+
     def test_reference_view_evidence_still_has_exact_three_live_operators(self):
         full=[{"url":f"https://real-operator-{i}.example.org","title":f"Cafe {i}",
                "site_text":"coffee and espresso service "*700,
