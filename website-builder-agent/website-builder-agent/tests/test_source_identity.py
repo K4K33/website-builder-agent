@@ -171,6 +171,62 @@ class SourceIdentityTests(unittest.TestCase):
         new = "<main><article>Labradoodle mini/medium — 93–120 €</article></main>"
         self.assertTrue(audit_price_faq_preservation({"index.html": new}, research)["pass"])
 
+    def test_original_price_travel_and_minimum_charge_terms_are_not_discarded(self):
+        from utils.source_identity import extract_price_faq_evidence, audit_price_faq_preservation
+        original = """<main><table>
+          <tr><td>Työ arkipäivänä</td><td>60,24 €/h</td></tr>
+          </table>
+          <p>Tuntihinta sisältää matkakulut 50 km asti. Sen ylittävältä
+             matkalta veloitetaan 0,63 €/km.</p>
+          <p>Minimiveloitus on yksi tunti.</p>
+          <p>Kaikki hinnat sisältävät ALV 25,5 %.</p>
+        </main>"""
+        source = extract_price_faq_evidence(original)
+        self.assertEqual(len(source["price_terms"]), 3)
+        research = {"source_inventory": {"pages": [{
+            "url": SOURCE_URL, "text": "Työ arkipäivänä 60,24 €/h",
+            "price_faq_evidence": source,
+        }]}}
+        prices = "<main><table><tr><td>Työ arkipäivänä</td><td>60,24 €/h</td></tr></table></main>"
+        incomplete = audit_price_faq_preservation({"hinnasto.html": prices}, research)
+        self.assertFalse(incomplete["pass"])
+        self.assertEqual({issue["kind"] for issue in incomplete["missing"]},
+                         {"lost_source_price_term"})
+        full = prices.replace("</main>", "".join(
+            "<p>" + term + "</p>" for term in source["price_terms"]) + "</main>"
+        )
+        self.assertTrue(audit_price_faq_preservation({"hinnasto.html": full}, research)["pass"])
+
+    def test_fake_vehicle_fee_with_true_source_price_is_rejected(self):
+        from utils.source_identity import extract_price_faq_evidence, audit_price_faq_preservation
+        source = """<main><table><tr><td>Työ arkipäivänä</td>
+                    <td>60,24 €/h</td></tr></table></main>"""
+        research = {"source_inventory": {"pages": [{
+            "url": SOURCE_URL, "text": "Työ arkipäivänä 60,24 €/h",
+            "price_faq_evidence": extract_price_faq_evidence(source),
+        }]}}
+        new = ("""<main><table><tr><td>Työ arkipäivänä</td><td>60,24 €/h</td></tr>
+                  <tr><td>Huoltoautomaksu</td><td>60,24 €/työ</td></tr>
+                  </table></main>""")
+        report = audit_price_faq_preservation({"hinnasto.html": new}, research)
+        self.assertFalse(report["pass"])
+        self.assertEqual([i["kind"] for i in report["missing"]],
+                         ["unverified_new_price_row"])
+        global_gate = audit_universal_standards(
+            new, research, rendered_pages={"hinnasto.html": new}
+        )
+        self.assertIn("content_parity", global_gate["blocking_problems"])
+
+    def test_original_source_verified_extra_fee_can_be_carried_over(self):
+        from utils.source_identity import extract_price_faq_evidence, audit_price_faq_preservation
+        original = """<table><tr><td>Työ arkipäivänä</td><td>60,24 €/h</td></tr>
+                       <tr><td>Huoltoautomaksu</td><td>60,24 €/työ</td></tr></table>"""
+        research = {"source_inventory": {"pages": [{
+            "url": SOURCE_URL, "price_faq_evidence": extract_price_faq_evidence(original),
+        }]}}
+        self.assertTrue(audit_price_faq_preservation({"hinnasto.html":original},
+                                                     research)["pass"])
+
     def test_review_evidence_alters_source_approval_hash(self):
         research = self.source_research()
         inventory = research["source_inventory"]
