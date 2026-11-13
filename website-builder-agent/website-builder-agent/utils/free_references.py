@@ -27,6 +27,11 @@ INDUSTRY_ALIASES = {
     "kahvila": "kahvila", "cafe": "kahvila", "coffee shop": "kahvila",
     "cafeteria": "kahvila", "kahvilapalvelut": "kahvila",
     "autokorjaamo": "autokorjaamo", "car repair": "autokorjaamo",
+    "itsepalveluautopesu": "itsepalveluautopesu",
+    "itsepalvelu autopesu": "itsepalveluautopesu",
+    "itsepalvelupesula": "itsepalveluautopesu",
+    "itsepalvelupesu": "itsepalveluautopesu",
+    "self-service car wash": "itsepalveluautopesu",
     "hammaslääkäri": "hammaslääkäri", "dentist": "hammaslääkäri",
     "kuntosali": "kuntosali", "fitness centre": "kuntosali",
     "hotelli": "hotelli", "hotel": "hotelli",
@@ -78,6 +83,13 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    "itsepalveluautopesu": (
+        ("Autopesu Kuopio", "https://www.autopesukuopio.fi/"),
+        ("Kulkupeli", "https://kulkupeli.fi/itsepalveluautopesu/"),
+        ("Pesukamu", "https://pesukamu.fi/palvelut/itsepalvelupesula/"),
+        ("ABC CarWash", "https://www.abcasemat.fi/asemat/abc-carwash-itsepalvelu-prisma-kaleva-tampere-1130334/autopesu"),
+        ("Selander", "https://www.selanderoy.fi/auton-pesuhalli/"),
+    ),
     # Real operators with independently discoverable primary websites.
     # These are only candidate URLs: the live site, relevant services,
     # source-exact evidence and two actual screenshots remain mandatory.
@@ -165,10 +177,13 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
     businesses. Never infer a category from a brand name or from other
     operators' marketing text.
     """
+    text=str(original_text or "").casefold()[:10000]
+    if (any(word in text for word in ("itsepalvelupesul", "itsepalveluautopes", "itsepalvelupesu"))
+            and any(word in text for word in ("autojen", "auton", "ajoneuvo", "pesuohjelm"))):
+        return "itsepalveluautopesu"
     known=normalize_industry(industry)
     if known:
         return known
-    text=str(original_text or "").casefold()[:10000]
     if not text:
         return industry
     # Two independent, industry-specific service descriptions required.
