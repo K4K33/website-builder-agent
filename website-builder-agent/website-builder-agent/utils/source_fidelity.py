@@ -113,6 +113,33 @@ def _is_exact_human_approval(approval: object, *, source_sha: str,
         and (not build_sha or approval.get("build_sha256") == build_sha)
     )
 
+def source_map_gaps(research: dict, manifest: dict) -> list[tuple[dict, list[str]]]:
+    """Identify missing preservation targets for both validation and repair."""
+    plan = research.get("source_content_map")
+    rows = plan.get("pages") if isinstance(plan, dict) else None
+    entries = {row.get("source_url"): row for row in (rows if isinstance(rows, list) else [])
+               if isinstance(row, dict) and isinstance(row.get("source_url"), str)}
+    gaps = []
+    for page in manifest["pages"]:
+        row = entries.get(page["source_url"], {})
+        if row.get("status") not in ("retain", "merge"):
+            gaps.append((page, ["source page not mapped for preservation"]))
+            continue
+        issues = []
+        target = row.get("target")
+        if not isinstance(target, str) or not target.strip() or target.startswith(("http:", "https:")):
+            issues.append("missing local destination")
+        raw_sections = row.get("sections")
+        sections = {_s(section.get("source_heading"))
+                    for section in (raw_sections if isinstance(raw_sections, list) else [])
+                    if isinstance(section, dict) and isinstance(section.get("target"), str)
+                    and section["target"].strip()}
+        issues.extend("unmapped source section " + heading for heading in page["headings"]
+                      if _s(heading) not in sections)
+        if issues:
+            gaps.append((page, issues))
+    return gaps
+
 def validate_source_plan(research: dict, *, source_url: str = "") -> dict:
     """Fail BEFORE a Builder API request if source pages/topics have no map.
 
@@ -127,29 +154,12 @@ def validate_source_plan(research: dict, *, source_url: str = "") -> dict:
         if source_url and research.get("research_mode")!="verified_no_website":
             raise RuntimeError("Missing original-site inventory before Builder.")
         return {"pages":0,"topics":0}
-    plan=research.get("source_content_map") or {}
-    entries={str(item.get("source_url") or ""):item for item in plan.get("pages") or []
-             if isinstance(item,dict)}
-    problems=[]
-    topics=0
-    for page in manifest["pages"]:
-        record=entries.get(page["source_url"])
-        if not record or record.get("status") not in ("retain","merge"):
-            problems.append(page["source_url"]+": source page not mapped for preservation")
-            continue
-        dest=str(record.get("target") or "")
-        if not dest or dest.startswith(("http:","https:")):
-            problems.append(page["source_url"]+": missing local destination")
-        mapped={_s(x.get("source_heading")) for x in record.get("sections") or []
-                if isinstance(x,dict) and x.get("target")}
-        for heading in page["headings"]:
-            topics+=1
-            if _s(heading) not in mapped:
-                problems.append(page["source_url"]+": unmapped source section "+heading)
+    problems = [page["source_url"] + ": " + issue
+                for page, issues in source_map_gaps(research, manifest) for issue in issues]
     if problems:
         raise RuntimeError("Original-site preservation plan incomplete before paid Builder: "+
                            "; ".join(problems[:12]))
-    return {"pages":len(manifest["pages"]),"topics":topics,
+    return {"pages":len(manifest["pages"]),"topics":sum(len(page["headings"]) for page in manifest["pages"]),
             "source_sha256":manifest["source_sha256"]}
 
 

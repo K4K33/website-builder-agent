@@ -77,7 +77,8 @@ class SectorReferenceTests(unittest.TestCase):
         self.assertIn('_validate_research_design(research_data, url, reference_images)',SOURCE)
         self.assertIn('validate_design_plan(research, target_url)',SOURCE)
         self.assertIn('validate_benchmark(research, target_url)',SOURCE)
-        self.assertIn('validate_source_plan(research_data, source_url=url)',SOURCE)
+        self.assertIn('_repair_source_map(research_data, url)',SOURCE)
+        self.assertIn('validate_source_plan(research, source_url=source_url)',SOURCE)
         self.assertIn('validate_brand_preservation_plan(research_data)',SOURCE)
 
 
