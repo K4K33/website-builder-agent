@@ -82,6 +82,29 @@ def _selected_site_text(source_text: object, cap: int) -> str:
             + "\n".join(sections) + "\n" + tail)[:cap]
 
 
+def _observed_headings(value: object) -> list[str]:
+    """Original crawler stores h1/h2/h3 in a dict; fixtures may use lists.
+
+    Never invent a heading or rewrite it. The full source manifest is still
+    the authoritative section coverage evidence used for published QA.
+    """
+    if isinstance(value, dict):
+        items = []
+        for level in ("h1", "h2", "h3", "h4"):
+            observed = value.get(level) or []
+            if isinstance(observed, list):
+                items.extend(observed)
+            elif isinstance(observed, str):
+                items.append(observed)
+    elif isinstance(value, list):
+        items = value
+    elif isinstance(value, str):
+        items = [value]
+    else:
+        items = []
+    return [_short(x, 180) for x in items[:45] if isinstance(x, (str, int))]
+
+
 def pack_research_source_excerpts(excerpts: list[dict], *,
                                    max_chars: int = MAX_RESEARCH_PACKET_CHARS
                                    ) -> list[dict]:
@@ -107,7 +130,7 @@ def pack_research_source_excerpts(excerpts: list[dict], *,
                 "title": _short(source.get("title"), 250),
                 # All original headings are retained exactly in the
                 # separate mandatory source_manifest, not pruned here.
-                "headings": [_short(h, 180) for h in (source.get("headings") or [])[:45]],
+                "headings": _observed_headings(source.get("headings")),
                 "text_excerpts": _selected_site_text(source.get("text"), per_cap),
                 "source_identity_observations": _evidence_fields(source.get("source_identity"), char_limit=900),
                 "price_faq_observations": _evidence_fields(source.get("price_faq_evidence"), char_limit=500),
