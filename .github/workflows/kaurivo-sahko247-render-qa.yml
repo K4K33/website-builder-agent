@@ -1,0 +1,48 @@
+name: Sähkö247 public demo live browser QA
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/kaurivo-sahko247-render-qa.yml"
+      - "website-builder-agent/website-builder-agent/tests/verify_sahko247_render_live.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/kaurivo-sahko247-render-qa.yml"
+      - "website-builder-agent/website-builder-agent/tests/verify_sahko247_render_live.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kaurivo-sahko247-live-browser-qa
+  cancel-in-progress: true
+
+jobs:
+  public-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install only public browser QA dependencies
+        run: |
+          python -m pip install --disable-pip-version-check "requests>=2.32,<3" "playwright>=1.58,<2"
+          python -m playwright install chromium
+          if ! python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'; then
+            python -m playwright install-deps chromium
+            python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'
+          fi
+      - name: Prove exact six-page public Render release at desktop, tablet and mobile sizes
+        run: |
+          python website-builder-agent/website-builder-agent/tests/verify_sahko247_render_live.py
+      - name: Record only verified public preview
+        if: success()
+        run: |
+          echo "### Sähkö247 public demo verified" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Six routes plus shared assets, responsive layout, contact form, navigation and browser runtime checked on live Render." >> "$GITHUB_STEP_SUMMARY"
+          echo "https://kaurivo-auto-demos-2026.onrender.com/sahko247-premium-20261113/index.html" >> "$GITHUB_STEP_SUMMARY"
