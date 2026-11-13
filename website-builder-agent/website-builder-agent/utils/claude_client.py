@@ -467,6 +467,17 @@ def ask_claude(
         except requests.RequestException as e:
             last_error = e
 
+            if config.free_only():
+                from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
+                if enabled():
+                    return chat_cloudflare_free(
+                        system, user_prompt, stage=stage, max_tokens=max_tokens,
+                        image_paths=image_paths, json_mode=json_mode)
+                if attempt == max_retries:
+                    raise RuntimeError(
+                        "NETWORK_UNAVAILABLE: OpenRouter request transport failed."
+                    ) from e
+
             print(
                 f"  [OpenRouter] Verkkovirhe "
                 f"(yritys {attempt}/{max_retries}): {e}"
