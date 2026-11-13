@@ -38,6 +38,7 @@ from utils.reference_quote_evidence import observed_quote_options, verified_evid
 from utils.free_tavily_cache import cached_free_search
 from utils.reference_screenshot_cache import capture_cached
 from utils.reference_site_cache import cached_analyze
+from utils.kaurivo_ai_source_packet import pack_research_source_excerpts, compact_reference_for_prompt
 from utils.premium_quality_gate import discover_source_journeys
 from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.creative_directions import validate_creative_directions
@@ -937,6 +938,9 @@ def run_research(
          "footer_assets": p["footer_assets"]}
         for p in source_inventory["pages"]
     ]
+    # Compact only the AI observation packet, never the preserved full source,
+    # screenshots, menu, brand assets, media or section-level QA manifest.
+    source_excerpts = pack_research_source_excerpts(source_excerpts)
 
     if not progress:
         # Before the first metered free AI call, preserve the expensive
@@ -1117,7 +1121,7 @@ SOURCE-LED INDUSTRY CUSTOMER TASKS (not a layout template):
 
 OBSERVED INDUSTRY REFERENCES (not facts about the target):
 Image order: {json.dumps(image_labels, ensure_ascii=False)}
-{json.dumps(reference_evidence, ensure_ascii=False)}
+{json.dumps(compact_reference_for_prompt(reference_evidence), ensure_ascii=False)}
 Compare the actual customer journey, typography, layout, imagery and factual detail.
 Record concrete observations and target-specific adaptations in reference_comparison.
 Never copy competitors' text, assets, certifications or service promises.

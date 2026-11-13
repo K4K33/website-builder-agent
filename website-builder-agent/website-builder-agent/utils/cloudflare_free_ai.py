@@ -75,7 +75,11 @@ def chat_cloudflare_free(
         raise RuntimeError("FREE_AI_RATE_LIMIT: Cloudflare per-run safety cap reached.")
     if not isinstance(max_tokens, int) or not 1 <= max_tokens <= 10000:
         raise ValueError("Cloudflare output token budget out of range.")
-    from utils.claude_client import _build_user_content
+    from utils.kaurivo_cloud_vision_packet import compact_vision_user_content
+    # Screenshots are resized for inference ONLY. The unchanged original
+    # files still govern browser, visual, brand and source fidelity checks.
+    content = (compact_vision_user_content(user_prompt, image_paths)
+               if image_paths else user_prompt)
     account = os.getenv("CLOUDFLARE_ACCOUNT_ID", "").strip()
     token = os.getenv("CLOUDFLARE_API_TOKEN", "").strip()
     model = FREE_MODELS[stage]
@@ -83,7 +87,7 @@ def chat_cloudflare_free(
         "model": model,
         "messages": [
             {"role": "system", "content": system},
-            {"role": "user", "content": _build_user_content(user_prompt, image_paths)},
+            {"role": "user", "content": content},
         ],
         "max_tokens": max_tokens,
         "stream": False,
@@ -113,7 +117,34 @@ def chat_cloudflare_free(
     if resp.status_code == 404:
         raise RuntimeError("FREE_MODEL_UNAVAILABLE: Cloudflare exact model unavailable.")
     if resp.status_code != 200:
-        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare HTTP "+str(resp.status_code)+".")
+        # No raw provider error/body: it may echo customer HTML or instructions.
+        # Keep only numeric diagnostic fields and safe request dimensions.
+        code = None
+        reason_class = "other"
+        try:
+            error_body = resp.json()
+            entries = error_body.get("errors") if isinstance(error_body, dict) else None
+            item = entries[0] if isinstance(entries, list) and entries else {}
+            if isinstance(item, dict) and type(item.get("code")) is int:
+                code = item["code"]
+            detail = str(item.get("message") or "")[:300].lower()
+            if any(t in detail for t in ("context length", "context window",
+                                         "token limit", "too many tokens")):
+                reason_class = "context"
+            elif any(t in detail for t in ("image", "base64", "payload too large")):
+                reason_class = "image"
+            elif "max_tokens" in detail or "max_completion_tokens" in detail:
+                reason_class = "output_budget"
+        except (TypeError, KeyError, IndexError, ValueError, AttributeError):
+            pass
+        print("[Cloudflare] safe rejection:", "stage="+str(stage),
+              "http="+str(resp.status_code),
+              "provider_code="+str(code),
+              "reason_class="+reason_class,
+              "user_prompt_chars="+str(len(user_prompt)),
+              "image_count="+str(len(image_paths or [])))
+        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare HTTP "+
+                           str(resp.status_code)+" ("+reason_class+").")
     try:
         data = resp.json()
         if not isinstance(data, dict) or (
