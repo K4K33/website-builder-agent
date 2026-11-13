@@ -33,7 +33,7 @@ from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
 from utils.source_fidelity import validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
-from utils.free_references import discover_free_references, preferred_benchmark_regions
+from utils.free_references import discover_free_references, preferred_benchmark_regions, verified_sector_search_hint
 from utils.reference_quote_evidence import observed_quote_options, verified_evidence_quote
 from utils.free_tavily_cache import cached_free_search
 from utils.reference_screenshot_cache import capture_cached
@@ -502,7 +502,8 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
         references = []
         try:
             references = discover_free_references(
-                industry, target_url=target_url, max_results=20,
+                verified_sector_search_hint(industry, original_text),
+                target_url=target_url, max_results=20,
                 regions=preferred_benchmark_regions(facts, original_text),
             )
         except RuntimeError as error:
@@ -929,15 +930,13 @@ def run_research(
         if isinstance(progress.get("original_experience_profile"), dict)
         else probe_original_site_experience(source_inventory)
     )
-    source_excerpts = [
-        {"url": p["url"], "title": p["title"], "headings": p["headings"],
-         "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
-         "price_faq_evidence": p.get("price_faq_evidence") or {},
-         "source_block_samples": (p.get("source_content_blocks") or {}).get("blocks", [])[:12],
-         "header_assets": p["header_assets"],
-         "footer_assets": p["footer_assets"]}
-        for p in source_inventory["pages"]
-    ]
+    # Keep the entire source inventory untouched and QA-authoritative.
+    # Crawler observations may be dicts, lists, None or HTML-derived text;
+    # normalize only the compact AI observation packet, never fabricate data
+    # or treat missing media/content as observed. This also preserves true
+    # source URLs for each page in the LLM input.
+    from utils.kaurivo_ai_source_packet import observed_source_excerpts
+    source_excerpts = observed_source_excerpts(source_inventory["pages"])
     # Compact only the AI observation packet, never the preserved full source,
     # screenshots, menu, brand assets, media or section-level QA manifest.
     source_excerpts = pack_research_source_excerpts(source_excerpts)
