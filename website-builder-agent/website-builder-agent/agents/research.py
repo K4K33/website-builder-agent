@@ -733,6 +733,39 @@ def _collect_reference_evidence(references, target_url):
     return evidence
 
 
+def _validate_research_design(research, target_url, reference_images):
+    validate_benchmark(research, target_url)
+    try:
+        resolve_observation_indices(research)
+        validate_design_plan(research, target_url)
+    except RuntimeError:
+        # Repair only the links between design decisions and existing evidence.
+        # The original facts, observed screenshots and comparisons stay intact.
+        evidence = [
+            {"url": record["url"], "observations": record["observations"]}
+            for record in research["design_benchmark"]
+        ]
+        repaired = ask_claude_json(
+            "Return only a JSON object with design_decisions. Use every supplied "
+            "reference URL exactly and cover first_view, service_hierarchy, "
+            "contact_path and mobile. Each item requires id, dimension, "
+            "reference_url, observation_index (1-based in that URL's list), "
+            "adaptation, section_id and acceptance_check. Use unique IDs. "
+            "Use only the supplied evidence and keep target-specific design intent.",
+            json.dumps({"references": evidence,
+                        "design_decisions": research.get("design_decisions"),
+                        "target": research.get("company_facts"),
+                        "design": research.get("design_recommendations")},
+                       ensure_ascii=False),
+            max_tokens=2400, stage="research", image_paths=reference_images,
+        )
+        research["design_decisions"] = (
+            repaired.get("design_decisions") if isinstance(repaired, dict) else None
+        )
+        resolve_observation_indices(research)
+        validate_design_plan(research, target_url)
+
+
 def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     """Design research from a verified external fact profile, NOT an imaginary site.
 
@@ -806,8 +839,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     reset_generated_review_claims(research_data)
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
-    resolve_observation_indices(research_data)
-    validate_design_plan(research_data, "")
+    _validate_research_design(research_data, "", images)
     validate_creative_directions(research_data)
     validate_site_architecture(research_data, no_site=True)
     updated = upsert_company(slug, {"research": research_data})
@@ -1269,8 +1301,7 @@ Tärkeää:
     reset_generated_review_claims(research_data)
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
-    resolve_observation_indices(research_data)
-    validate_design_plan(research_data, url)
+    _validate_research_design(research_data, url, reference_images)
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
     validate_source_plan(research_data, source_url=url)
