@@ -49,7 +49,7 @@ TIMEOUT_PER_STAGE=1800 if LOCAL_WORKER else 480
 RESEARCH_TIMEOUT=TIMEOUT_PER_STAGE if LOCAL_WORKER else 720
 # Finish as many real stages as possible in a single 55-minute Actions job.
 # Keep time for actual publication and public browser QA before the runner ends.
-AI_STAGE_BUDGET_SECONDS=7200 if LOCAL_WORKER else 2700
+AI_STAGE_BUDGET_SECONDS=7200 if LOCAL_WORKER else 2400
 MAX_AUTO_REVISIONS=2
 # The exact same owner-requested demo remains recoverable across temporary
 # zero-cost provider and network outages. Daily attempts are bounded in SQL;
