@@ -29,7 +29,10 @@ FREE_MODELS = {
 _CF_ACCOUNT = re.compile(r"^[a-f0-9]{32}$")
 _CF_TOKEN = re.compile(r"^[A-Za-z0-9_-]{25,250}$")
 _CF_URL = "https://api.cloudflare.com/client/v4/accounts/{account}/ai/v1/chat/completions"
-_MAX_CALLS_PER_RUN = 14
+# Permit the 3 concepts, final multi-page build, independent QA and bounded
+# repair within one worker claim; this never changes the Workers FREE model,
+# requires verified free-account opt-in; the provider still enforces its actual free quota.
+_MAX_CALLS_PER_RUN = 20
 _LOCK = Lock()
 _ATTEMPTS = 0
 
