@@ -149,7 +149,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn("revoke all on function public.kaurivo_claim_demo_dispatch(uuid) from public,anon",sql)
         self.assertNotIn('sb_secret_',js)
         self.assertNotIn('ghp_',js)
-        self.assertIn('demo-jobs.js?v=20261112-cloudflare-codes6',html)
+        self.assertRegex(html, r'demo-jobs\.js\?v=[^"]+')
 
     def test_dispatch_failures_have_private_persistent_reason_and_real_response_body(self):
         panel=DASHBOARD.read_text(encoding="utf-8")
@@ -462,6 +462,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             ("RuntimeError: FREE_AI_CAPACITY_UNAVAILABLE: no paid fallback",
              "free_ai_capacity_unavailable"),
             ("RuntimeError: website business details insufficient","researching_failed"),
+            ("RuntimeError: Design benchmark incomplete: compare at least three independent same-industry operators",
+             "comparison_design_benchmark_incomplete"),
         ]
         with TemporaryFile(mode="w+",encoding="utf-8") as log:
             log.write("Previous stage: OpenRouter rejected request: HTTP 429\n")

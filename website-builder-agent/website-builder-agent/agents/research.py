@@ -1102,15 +1102,17 @@ Raaka HTML:
         else _collect_reference_evidence(selected, url)
     )
     if (progress.get("milestone") != "references" and
-            isinstance(selected, list) and len(selected) == 3 and
+            isinstance(selected, list) and len(selected) >= 3 and
             isinstance(reference_evidence, list) and len(reference_evidence) == 3):
         # Only three complete observed references can be a durable milestone.
         # A deficient set still flows into the ORIGINAL validation below,
         # which will reject it, without fabricating a positive checkpoint.
+        captured_urls = {record["url"] for record in reference_evidence}
         progress = save_progress(
             slug, company, milestone="references", source_url=url,
             master_prompt_sha256=MASTER_PROMPT_SHA256, references=references,
-            selected=selected, reference_evidence=reference_evidence,
+            selected=[record for record in selected if record["url"] in captured_urls],
+            reference_evidence=reference_evidence,
         )
     reference_images, image_labels = reference_image_inputs(reference_evidence)
 

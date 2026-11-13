@@ -13,6 +13,7 @@
   source_dns_not_public:"Alkuperäinen osoite ei ole turvallisesti saavutettavissa",
   research_failed:"Lähdesivun tutkimus ei läpäissyt vaatimuksia",
   researching_failed:"Tutkimus ei läpäissyt vaatimuksia – tarkista yrityksen lähdesivun sisältö",
+  comparison_design_benchmark_incomplete:"Kolmen saman alan yrityksen vertailusta puuttuu hyväksyttävää lähde- tai kuvanäyttöä tai suunnitteluhavaintoja.",
   source_research_incomplete:"Lähdesivun palvelu- ja brändiaineisto on puutteellinen",
   source_http_access_blocked:"Yrityksen alkuperäinen sivusto esti automaattisen lukemisen (401/403). Tarvitaan erillinen lähdeaineiston tarkistus.",
   source_http_rate_limited:"Alkuperäinen sivusto rajoitti automaattista hakua. Vältä jatkuvia uudelleenyrityksiä.",
