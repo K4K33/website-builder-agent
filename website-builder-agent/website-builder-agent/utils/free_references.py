@@ -45,6 +45,26 @@ INDUSTRY_ALIASES = {
     "law firm": "asianajotoimisto",
     "legal services": "asianajotoimisto",
     "attorney": "asianajotoimisto",
+    # Building/industrial surveyors and laser-scanning specialists use varied
+    # Finnish industry labels, but their customer task is the same measured
+    # survey / point-cloud / construction-layout service. Candidate websites
+    # still require live exact-source and image QA.
+    "mittauspalvelut": "mittauspalvelut",
+    "mittauspalvelu": "mittauspalvelut",
+    "maanmittaus": "mittauspalvelut",
+    "maanmittauspalvelut": "mittauspalvelut",
+    "rakennusmittaus": "mittauspalvelut",
+    "rakennusmittaukset": "mittauspalvelut",
+    "teollisuusmittaus": "mittauspalvelut",
+    "teollisuuden mittaukset": "mittauspalvelut",
+    "laserkeilaus": "mittauspalvelut",
+    "3d-laserkeilaus": "mittauspalvelut",
+    "mittaustyöt": "mittauspalvelut",
+    "mittausalan": "mittauspalvelut",
+    "surveying": "mittauspalvelut",
+    "land surveying": "mittauspalvelut",
+    "construction surveying": "mittauspalvelut",
+    "industrial surveying": "mittauspalvelut",
     "teollisuusautomaatio": "teollisuusautomaatio",
     "teollisuuden automaatio": "teollisuusautomaatio",
     "automaatiosuunnittelu": "teollisuusautomaatio",
@@ -68,6 +88,15 @@ CURATED_REFERENCE_CANDIDATES = {
         ("Kahvila Makiata", "https://www.makiata.fi/haaga/"),
         ("Cafe Cardemumma", "https://www.cafecardemumma.fi/"),
         ("Art Cafe Taideterassi", "https://artcafetaideterassi.fi/menu/"),
+    ),
+    "mittauspalvelut": (
+        # Official source pages independently located on 13 Nov 2026.
+        # They are candidates only, not pre-approved company references.
+        ("Suomen GPS-Mittaus", "https://sgm.fi/palvelut/mittaustyot/laserkeilaus/"),
+        ("Mitta Oy", "https://mitta.fi/palvelut/mittaus/laserkeilaus/"),
+        ("MittausGroup Oy", "https://www.mittausgroup.fi/palvelut/rakennusmittaukset/"),
+        ("Geo-Control Oy", "https://geo-control.fi/palvelut/"),
+        ("Neotri", "https://www.neotri.fi/"),
     ),
     "teollisuusautomaatio": (
         ("Insinööritoimisto Antero", "https://www.plcantero.com/automaatiopalvelut/"),
