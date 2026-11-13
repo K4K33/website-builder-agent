@@ -929,15 +929,13 @@ def run_research(
         if isinstance(progress.get("original_experience_profile"), dict)
         else probe_original_site_experience(source_inventory)
     )
-    source_excerpts = [
-        {"url": p["url"], "title": p["title"], "headings": p["headings"],
-         "text": p["text"][:5500], "source_identity": p.get("source_identity") or {},
-         "price_faq_evidence": p.get("price_faq_evidence") or {},
-         "source_block_samples": (p.get("source_content_blocks") or {}).get("blocks", [])[:12],
-         "header_assets": p["header_assets"],
-         "footer_assets": p["footer_assets"]}
-        for p in source_inventory["pages"]
-    ]
+    # Keep the entire source inventory untouched and QA-authoritative.
+    # Crawler observations may be dicts, lists, None or HTML-derived text;
+    # normalize only the compact AI observation packet, never fabricate data
+    # or treat missing media/content as observed. This also preserves true
+    # source URLs for each page in the LLM input.
+    from utils.kaurivo_ai_source_packet import observed_source_excerpts
+    source_excerpts = observed_source_excerpts(source_inventory["pages"])
     # Compact only the AI observation packet, never the preserved full source,
     # screenshots, menu, brand assets, media or section-level QA manifest.
     source_excerpts = pack_research_source_excerpts(source_excerpts)
