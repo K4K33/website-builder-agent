@@ -531,29 +531,17 @@ def ask_claude_json(
         json_mode=True,
     )
 
-    cleaned = raw.strip()
-
-    if cleaned.startswith("```"):
-        lines = cleaned.splitlines()
-
-        if lines and lines[0].strip().lower() in (
-            "```",
-            "```json",
-        ):
-            lines = lines[1:]
-
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-
-        cleaned = "\n".join(lines).strip()
-
+    from utils.kaurivo_free_json_envelope import (
+        parse_complete_model_json, InvalidModelJSON,
+    )
     try:
-        return json.loads(cleaned)
-
-    except json.JSONDecodeError as e:
+        return parse_complete_model_json(raw)
+    except InvalidModelJSON as exc:
+        # The previous implementation wrote the first 3,000 characters of
+        # untrusted customer/AI response into stage logs and misclassified
+        # malformed JSON as generic researching_failed. Never leak text,
+        # fabricate source facts, or count an invalid response as success.
         raise RuntimeError(
-            "OpenRouter ei palauttanut validia JSONia: "
-            f"{e}\n"
-            "---Raaka vastaus---\n"
-            f"{raw[:3000]}"
-        )
+            "AI ei palauttanut validia JSONia: "
+            + str(exc)
+        ) from None
