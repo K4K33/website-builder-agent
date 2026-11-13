@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 from utils.free_references import (
     normalize_industry, CURATED_REFERENCE_CANDIDATES,
-    discover_free_references,
+    discover_free_references, verified_sector_search_hint,
 )
 from utils.kaurivo_ai_source_packet import (
     observed_source_excerpts, pack_research_source_excerpts,
@@ -33,6 +33,22 @@ class SectorReferenceTests(unittest.TestCase):
         ):
             with self.subTest(industry=industry):
                 self.assertEqual(normalize_industry(industry),"mittauspalvelut")
+
+    def test_unknown_registration_sector_needs_two_original_service_signals(self):
+        self.assertEqual(verified_sector_search_hint(
+            "Muu rakennustekninen palvelu",
+            "Teemme laserkeilausta ja rakennusmittauksia. Mittauspalvelut "
+            "teollisuuteen ja infrakohteisiin."), "mittauspalvelut")
+        self.assertEqual(verified_sector_search_hint(
+            "Rakennustekninen suunnittelu",
+            "We design architecture and also mention laserkeilaus once."),
+            "Rakennustekninen suunnittelu")
+        self.assertEqual(verified_sector_search_hint(
+            "Asianajotoimisto", "Rakennusmittaus laserkeilaus mittauspalvelut"),
+            "asianajotoimisto")
+        self.assertEqual(verified_sector_search_hint(
+            "Muu rakennustekninen palvelu", ""),
+            "Muu rakennustekninen palvelu")
 
     def test_seven_real_sector_candidate_urls_never_count_as_proved_sources(self):
         pool=CURATED_REFERENCE_CANDIDATES["mittauspalvelut"]
