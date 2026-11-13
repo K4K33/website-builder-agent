@@ -122,6 +122,7 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
     localized_groups = _localized_page_groups(pages)
     image_mentions = 0
     repeated_heading_routes: dict[str, set[str]] = defaultdict(set)
+    repeated_decorated_hero_routes: dict[str, set[str]] = defaultdict(set)
     text_hero_routes = set()
     routes = []
     for route, raw in pages.items():
@@ -157,6 +158,15 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
             if (h1 and not first.find(["img", "video", "picture"])
                     and len(h1.get_text(" ", strip=True).split()) <= 9):
                 text_hero_routes.add(editorial_group)
+                classes = " ".join(sorted(str(x).lower()
+                                          for x in (first.get("class") or [])))
+                italic_title = bool(h1.find(["em", "i"]) or
+                                    h1.select_one(".serif, .italic, [class*=italic]"))
+                kicker = bool(first.select_one(".eyebrow, .overline, .kicker"))
+                # This is a narrowly identifiable repeated agency template,
+                # not an opinion about whether italic headings are beautiful.
+                if classes and italic_title and kicker:
+                    repeated_decorated_hero_routes[classes].add(editorial_group)
         unique_headings = set()
         for header in main.select("h2,h3"):
             heading = _normalize(header.get_text(" ", strip=True))
@@ -205,6 +215,21 @@ def audit_cross_route_editorial_risks(pages: dict[str, str],
             "unique_photos": unique_count,
             "total_image_placements": image_mentions,
         })
+    # The exact failure from repeated dark title screens can happen even for
+    # a site with zero authentic photos. Three distinct route types sharing
+    # identical kicker + italic short-title hero structure is not customized
+    # route art direction. Do NOT reject one or two pages or FI/SV translations.
+    for class_name, where in repeated_decorated_hero_routes.items():
+        if len(where) >= 3:
+            pending.append({
+                "category": "repeated_decorated_headline_hero",
+                "issue": "Three or more different pages start with the same "
+                         "classed text-only kicker + italic-title hero. "
+                         "Give each visitor task an original first-fold "
+                         "layout and real information hierarchy.",
+                "template_classes": class_name,
+                "routes": sorted(where),
+            })
     if _photo_rich_original(research) and len(text_hero_routes) >= 3:
         pending.append({
             "category": "repeated_text_only_subpage_openings",

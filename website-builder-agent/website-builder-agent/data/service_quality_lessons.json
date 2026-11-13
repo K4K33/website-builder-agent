@@ -97,5 +97,47 @@
     "regression_test": "tests/test_premium_experience_gate.py",
     "status": "implemented_static_gate_waiting_ci",
     "real_new_company_validation": "pending_independent_review_of_new_distinct_client"
+  },
+  {
+    "id": "2026-11-13-source-pricing-complete-ledger",
+    "scope": "service",
+    "origin": "Owner's independent review of an unrelated electrical-service site: technical tests passed despite omitted pricing conditions and invented fee",
+    "root_cause": "Preservation only matched table label+price; source price caveats (travel, minimum, VAT, supplementary fees) were not separately retained, and an authentic numeric value could be reused for a different invented fee",
+    "implementation": [
+      "docs/KAURIVO_MESTARI_PROMPT.md",
+      "utils/source_identity.py",
+      "utils/universal_quality.py"
+    ],
+    "regression_test": "tests/test_source_identity.py",
+    "status": "implemented_static_gate_waiting_independent_validation",
+    "real_new_company_validation": "pending_unseen_industry_and_live_visual_review"
+  },
+  {
+    "id": "2026-11-13-task-first-nonrepeated-route-art-direction",
+    "scope": "service",
+    "origin": "Owner's review found repetitive dark decorative page heroes and pricing hidden behind giant headers",
+    "root_cause": "Generic text-only hero formula was repeated across unrelated routes even when the original had no photos, and a price page could hide available prices behind a decorative title",
+    "implementation": [
+      "docs/KAURIVO_MESTARI_PROMPT.md",
+      "utils/cross_route_editorial_risks.py",
+      "utils/route_experience_contract.py"
+    ],
+    "regression_test": "tests/test_route_experience_contract.py",
+    "status": "implemented_static_gate_waiting_independent_validation",
+    "real_new_company_validation": "pending_unseen_industry_and_live_visual_review"
+  },
+  {
+    "id": "2026-11-13-no-false-premium-ready-on-manual-publish",
+    "scope": "service",
+    "origin": "Owner's review of a hand-authored six-page demo published and browser-tested but not independently approved",
+    "root_cause": "A live host, six browser smoke passes, original logo displayed as tiny token and generic CSS motion were mistaken for full brand/source/commercial/independent 9.5 approval",
+    "implementation": [
+      "docs/KAURIVO_MESTARI_PROMPT.md",
+      "utils/service_quality.py",
+      "utils/demo_origin_gate.py"
+    ],
+    "regression_test": "tests/test_kaurivo_nov13_universal_feedback.py",
+    "status": "active_runtime_contract_waiting_live_end_to_end_validation",
+    "real_new_company_validation": "pending_unseen_industry_independent_visual_review"
   }
 ]

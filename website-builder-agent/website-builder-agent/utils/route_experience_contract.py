@@ -19,6 +19,7 @@ ROLE_PATTERNS = (
     ("collection", re.compile(r"valikoima|tuotte|product|mallisto|catalog|galler|gallery|referens|portfolio|ty[oö]t|projektit|collection|stock", re.I)),
     ("people", re.compile(r"meist[aä]|about us|tiimi|team|henkil[oö]st|tekij[aä]t|employees|our people", re.I)),
     ("booking", re.compile(r"ajanvara|booking|varaa aika|appointment", re.I)),
+    ("pricing", re.compile(r"hinnasto|hinnoittel|pricing|price.?list|tariff|price.?table|priser|prislista", re.I)),
     ("service", re.compile(r"palvelu|huolto|myyntitili|myy vaatte|consign|repair|service|korja|asenn|tilaa", re.I)),
 )
 EXPECTATIONS = {
@@ -27,6 +28,7 @@ EXPECTATIONS = {
     "contact": "Present verified address/contact details in the first content section.",
     "people": "Lead with real staff or workshop identity if sourced.",
     "booking": "Show the real booking action early.",
+    "pricing": "Show source-verified real prices and conditions immediately, not after a giant ornamental hero.",
     "service": "Explain the specific service and its actual next step.",
     "general": "Explain this route's visitor task, without a reused agency hero.",
 }
@@ -304,6 +306,28 @@ def audit_route_experience(pages: dict[str, str], research: dict) -> dict:
                              "without merchandise evidence. A huge title and a "
                              "photo several sections later are not equivalent.",
                 })
+        if row["role"] == "pricing":
+            real_prices = [
+                entry for page in (research.get("source_inventory") or {}).get("pages") or []
+                if isinstance(page, dict)
+                for entry in (page.get("price_faq_evidence") or {}).get("price_rows") or []
+                if isinstance(entry, dict) and entry.get("price")
+            ]
+            first_text = first.get_text(" ", strip=True)
+            # A headline containing "Hinnasto" is NOT visible pricing.
+            # Only apply when old site genuinely published explicit prices.
+            if real_prices and not re.search(r"(?:€|(?:\d[\d,. ]*)\s*eur\b)", first_text, re.I):
+                issue = "original_pricing_hidden_behind_decorative_hero:" + route
+                if not _signed_exception(research,pages,contract["source_sha256"],issue):
+                    blocking.append({
+                        "kind": "pricing_page_hides_real_prices_first_fold",
+                        "issue": issue, "route": route,
+                        "detail": "Original company has verified price rows, "
+                                  "but the new pricing page first content "
+                                  "section has no actual prices. Show verified "
+                                  "pricing promptly; an independently measured "
+                                  "first-viewport exception may be signed.",
+                    })
         if row["contact_details_required"]:
             if _source_has_contact_facts(research) and not _contact_evidence(first, research):
                 issue = "real_contact_missing_first_section:" + route
@@ -326,7 +350,8 @@ def audit_route_experience(pages: dict[str, str], research: dict) -> dict:
         # Product-photo and text-only penalties remain conditional on real
         # source photography so that no-site leads needn't fabricate images.
         should_block = (
-            kind=="repeated_full_width_call_to_action_copy" and len(pages)>=3
+            kind in {"repeated_full_width_call_to_action_copy",
+                     "repeated_decorated_headline_hero"} and len(pages)>=3
             or kind in hard and contract["photo_rich_source"] and len(pages)>=3
         )
         if (should_block

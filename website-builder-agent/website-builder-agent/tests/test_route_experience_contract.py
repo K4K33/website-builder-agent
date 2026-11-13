@@ -252,6 +252,65 @@ class PurposeFirstRouteTests(TestCase):
         self.assertTrue(audit_route_experience(pages,data)["blocking"],
                         "An unrelated build cannot recycle exact-build approval")
 
+    def test_price_page_must_show_verified_prices_before_giant_hero(self):
+        data = research(photo_count=0)
+        data["site_architecture"]["pages"].append({
+            "path": "prices/index.html",
+            "purpose": "Pricing for real repairs",
+            "user_task": "See costs of repair work",
+        })
+        data["source_inventory"]["pages"][0]["price_faq_evidence"] = {
+            "price_rows": [{"label": "Service hour", "price": "60 €"}]
+        }
+        pages = good_pages()
+        pages["prices/index.html"] = page("Transparent pricing",
+             body="<p>The rates are provided below.</p>")
+        result = audit_route_experience(pages, data)
+        self.assertIn("pricing_page_hides_real_prices_first_fold",
+                      {issue["kind"] for issue in result["blocking"]})
+        pages["prices/index.html"] = page("Repair prices",
+             body="<p>Source verified service hour 60 €</p>")
+        result = audit_route_experience(pages, data)
+        self.assertNotIn("pricing_page_hides_real_prices_first_fold",
+                         {issue["kind"] for issue in result["blocking"]})
+
+    def test_price_page_without_public_source_price_is_not_forced_to_invent_one(self):
+        data = research(photo_count=0)
+        data["site_architecture"]["pages"].append({
+            "path": "prices/index.html",
+            "purpose": "Pricing",
+            "user_task": "Request quote",
+        })
+        result = audit_route_experience({
+            **good_pages(), "prices/index.html": page("Request a quotation")
+        }, data)
+        self.assertNotIn("pricing_page_hides_real_prices_first_fold",
+                         {issue["kind"] for issue in result["blocking"]})
+
+    def test_three_recycled_italic_hero_bands_are_blocked_for_any_industry(self):
+        data = research(photo_count=0)
+        pages = good_pages()
+        for route, title in (
+            ("index.html", "The workshop"),
+            ("services/index.html", "Our services"),
+            ("rental/index.html", "Our rental"),
+        ):
+            pages[route] = (
+                '<html><body><main><section class="page-top">'
+                '<span class="eyebrow">Our workshop</span>'
+                '<h1>' + title + ' <em>special</em></h1>'
+                '</section><section><p>Real different information.</p></section>'
+                '</main></body></html>'
+            )
+        result = audit_route_experience(pages, data)
+        self.assertIn("repeated_decorated_headline_hero",
+                      {issue["kind"] for issue in result["blocking"]})
+        pages["services/index.html"] = page("Service details",
+                                            body="<p>Real service actions</p>")
+        result = audit_route_experience(pages, data)
+        self.assertNotIn("repeated_decorated_headline_hero",
+                         {issue["kind"] for issue in result["blocking"]})
+
     def test_existing_real_penny_lane_v1_cannot_pass_new_rules(self):
         root=Path(__file__).resolve().parents[1]
         demo=root/"docs"/"kaurivo"/"demos"/"penny-lane-vintage-v1"
