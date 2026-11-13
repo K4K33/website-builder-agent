@@ -105,6 +105,46 @@ def _observed_headings(value: object) -> list[str]:
     return [_short(x, 180) for x in items[:45] if isinstance(x, (str, int))]
 
 
+def observed_source_excerpts(pages: list[dict]) -> list[dict]:
+    """Build an AI-only observation packet from mixed real crawler shapes.
+
+    Some live sites expose an HTML block as a list, a dict with blocks, or
+    a missing optional value. Those differences must not throw TypeError
+    before the real source-completeness and visual-QA gates run. The entire
+    original inventory remains unchanged and independently checked.
+    """
+    if not isinstance(pages, list) or not pages:
+        raise ValueError("original source pages missing")
+    result = []
+    for page in pages:
+        if not isinstance(page, dict) or not page.get("url"):
+            raise ValueError("original source page missing URL")
+        content_blocks = page.get("source_content_blocks")
+        if isinstance(content_blocks, dict):
+            blocks = content_blocks.get("blocks") or []
+        elif isinstance(content_blocks, list):
+            blocks = content_blocks
+        else:
+            blocks = []
+        if not isinstance(blocks, list):
+            blocks = []
+        text_value = page.get("text")
+        if not isinstance(text_value, str):
+            text_value = ""
+        result.append({
+            "url": page["url"],
+            "title": page.get("title"),
+            "headings": page.get("headings"),
+            "text": text_value[:5500],
+            "source_identity": page.get("source_identity") or {},
+            "price_faq_evidence": page.get("price_faq_evidence") or {},
+            "source_block_samples": blocks[:12],
+            "header_assets": page.get("header_assets") or {},
+            "footer_assets": page.get("footer_assets") or {},
+        })
+    return result
+
+
 def pack_research_source_excerpts(excerpts: list[dict], *,
                                    max_chars: int = MAX_RESEARCH_PACKET_CHARS
                                    ) -> list[dict]:
