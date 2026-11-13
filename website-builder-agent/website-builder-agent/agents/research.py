@@ -1275,7 +1275,8 @@ Tärkeää:
     final_prompt += "\nDETERMINISTIC SOURCE TASK MANIFEST (copy task ids exactly):\n" + json.dumps(
         service_brief({"source_inventory": source_inventory, "company_facts": company_facts}),
         ensure_ascii=False)
-    brief = ask_claude_json(
+    saved_brief = progress.get("validated_design_brief")
+    brief = saved_brief if isinstance(saved_brief, dict) else ask_claude_json(
         FINAL_RESEARCH_PROMPT,
         final_prompt,
         max_tokens=6000,
@@ -1341,12 +1342,20 @@ Tärkeää:
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     _validate_research_design(research_data, url, reference_images)
+    validate_creative_directions(research_data)
+    validate_brand_preservation_plan(research_data)
+    if progress.get("milestone") == "references":
+        # Save the verified design separately from the content-map repair.
+        # A failed repair or transport retry must not regenerate the design.
+        save_progress(
+            slug, company, milestone="references", source_url=url,
+            master_prompt_sha256=MASTER_PROMPT_SHA256,
+            validated_design_brief={**brief, "design_decisions": research_data["design_decisions"]},
+        )
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
     _repair_source_map(research_data, url)
-    validate_creative_directions(research_data)
     validate_site_architecture(research_data)
-    validate_brand_preservation_plan(research_data)
 
     updated_company = upsert_company(
         slug,

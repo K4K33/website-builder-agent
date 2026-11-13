@@ -416,7 +416,8 @@ def run_cli(args,log_handle,deadline=None):
     remaining=(deadline-time.monotonic()) if deadline is not None else stage_timeout
     duration=int(min(stage_timeout,remaining))
     if duration<30:
-        raise HoldError("worker_time_budget_exhausted")
+        # The next worker can continue from the last private stage checkpoint.
+        raise HoldError("stage_timeout", "worker_time_budget_exhausted")
     child_env=os.environ.copy()
     # On Windows, redirected Python output otherwise uses the ANSI code page.
     child_env["PYTHONIOENCODING"]="utf-8"
