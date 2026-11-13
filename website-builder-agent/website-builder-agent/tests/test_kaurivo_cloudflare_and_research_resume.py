@@ -175,6 +175,38 @@ class PartialResearchTests(unittest.TestCase):
                          data["research_progress"]["source_inventory"])
         update.assert_called_once()
 
+    def test_validated_design_survives_partial_archive_without_becoming_researched(self):
+        data = snapshot()
+        references = [{"url": f"https://peer{i}.fi"} for i in range(3)]
+        data["research_progress"].update(
+            milestone="references", extracted={}, selected=references,
+            references=references, reference_evidence=references,
+            validated_design_brief={"design_decisions": [{"id": "home"}]},
+        )
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = make_archive(root, "sample", JOB, "research_partial", data)
+            restored = unpack_archive(
+                root, "sample", JOB, "research_partial", raw,
+                hashlib.sha256(raw).hexdigest(), expected_name="Sample",
+                expected_source="https://sample.fi",
+            )
+            progress = get_progress(restored, source_url="https://sample.fi",
+                                    master_prompt_sha256="f"*64)
+            self.assertEqual(progress["validated_design_brief"],
+                             data["research_progress"]["validated_design_brief"])
+            self.assertNotIn("research", restored)
+
+    def test_exhausted_worker_deadline_requeues_before_starting_next_stage(self):
+        from scripts import run_kaurivo_demo_queue as worker
+        with TemporaryDirectory() as tmp, (Path(tmp) / "worker.log").open("w+") as log:
+            with patch.object(worker.time, "monotonic", return_value=100), \
+                 patch.object(worker.subprocess, "run") as launch:
+                with self.assertRaises(worker.HoldError) as exc:
+                    worker.run_cli(["build", "sample"], log, deadline=120)
+                self.assertIn(exc.exception.code, worker.TRANSIENT_RETRY_CODES)
+                launch.assert_not_called()
+
     def test_runner_saves_partial_only_for_private_research(self):
         self.assertIn('save_private_checkpoint("research_partial", agent_slug)',RUNNER)
         self.assertIn('done=(-1 if resume in (None, "research_partial")',RUNNER)
