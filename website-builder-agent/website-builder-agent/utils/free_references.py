@@ -36,6 +36,10 @@ INDUSTRY_ALIASES = {
     "kuntosali": "kuntosali", "fitness centre": "kuntosali",
     "hotelli": "hotelli", "hotel": "hotelli",
     "sähköasentaja": "sähköasentaja", "electrician": "sähköasentaja",
+    "sähköasennus": "sähköasentaja", "sähköasennukset": "sähköasentaja",
+    "sähköasennustyöt": "sähköasentaja", "sähköurakointi": "sähköasentaja",
+    "sähköurakoitsija": "sähköasentaja", "sähkötyöt": "sähköasentaja",
+    "sähköpalvelut": "sähköasentaja", "electrical installation": "sähköasentaja",
     "putkimies": "putkimies", "plumber": "putkimies",
     "pyörähuolto": "pyöräliike", "pyöräliike": "pyöräliike",
     "bicycle shop": "pyöräliike", "bike repair": "pyöräliike",
@@ -83,6 +87,16 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    # Independent electrical installation providers' OWN sites. URLs only:
+    # every source must still be live-checked for exact service evidence and
+    # desktop/mobile visuals before a reference can count as verified.
+    "sähköasentaja": (
+        ("Sähkötiimi", "https://www.sahkotiimi.fi/palvelut/sahkoasennukset"),
+        ("SSKT", "https://www.sskt.fi/sahkoasennukset/"),
+        ("NJS-A", "https://www.njsa.fi/"),
+        ("DT-Sähköurakointi", "https://www.dt-sahkourakointi.fi/"),
+        ("Sähköpalvelu Vehkanen", "https://www.vehkanen.fi/"),
+    ),
     "itsepalveluautopesu": (
         ("Autopesu Kuopio", "https://www.autopesukuopio.fi/"),
         ("Kulkupeli", "https://kulkupeli.fi/itsepalveluautopesu/"),
