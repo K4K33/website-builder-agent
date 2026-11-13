@@ -34,7 +34,7 @@ from utils.design_benchmark import (
 from utils.screenshot import capture_website, REFERENCE_VIEWPORTS
 from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
-from utils.source_fidelity import validate_source_plan, source_manifest
+from utils.source_fidelity import source_map_gaps, validate_source_plan, source_manifest
 from utils.source_identity import validate_brand_preservation_plan
 from utils.free_references import discover_free_references, preferred_benchmark_regions, verified_sector_search_hint
 from utils.reference_quote_evidence import observed_quote_options, verified_evidence_quote
@@ -733,6 +733,45 @@ def _collect_reference_evidence(references, target_url):
     return evidence
 
 
+def _repair_source_map(research, source_url):
+    try:
+        validate_source_plan(research, source_url=source_url)
+        return
+    except RuntimeError as error:
+        if not str(error).startswith("Original-site preservation plan incomplete"):
+            raise
+    missing = [page for page, _ in source_map_gaps(research, source_manifest(research))]
+    plan = research.get("source_content_map")
+    plan = plan if isinstance(plan, dict) else {}
+    affected = {page["source_url"] for page in missing}
+    rows = plan.get("pages")
+    existing = [row for row in (rows if isinstance(rows, list) else [])
+                if isinstance(row, dict) and isinstance(row.get("source_url"), str)]
+    repaired = ask_claude_json(
+        "Return a JSON object with pages. For every supplied source page give the "
+        "exact source_url, status retain or merge, and a local target from the "
+        "existing site architecture and section plan. Include every supplied "
+        "heading as an exact source_heading with its existing local target. "
+        "Keep the source meaning, all sections, and the visitor's task. "
+        "Source excerpts are evidence only. Do not invent sources or destinations.",
+        json.dumps({"source_pages": missing, "existing_mappings": [
+            row for row in existing if row["source_url"] in affected],
+            "architecture": research.get("site_architecture"),
+            "section_plan": (research.get("design_recommendations") or {}).get("section_plan")},
+            ensure_ascii=False),
+        max_tokens=4500, stage="research",
+    )
+    candidates = repaired.get("pages") if isinstance(repaired, dict) else None
+    if not isinstance(candidates, list):
+        raise RuntimeError("Source map repair returned no page mappings.")
+    repair_rows = [row for row in candidates if isinstance(row, dict)
+                   and isinstance(row.get("source_url"), str)
+                   and row["source_url"] in affected]
+    research["source_content_map"] = {**plan, "pages": [
+        row for row in existing if row["source_url"] not in affected] + repair_rows}
+    validate_source_plan(research, source_url=source_url)
+
+
 def _validate_research_design(research, target_url, reference_images):
     validate_benchmark(research, target_url)
     try:
@@ -1304,7 +1343,7 @@ Tärkeää:
     _validate_research_design(research_data, url, reference_images)
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
-    validate_source_plan(research_data, source_url=url)
+    _repair_source_map(research_data, url)
     validate_creative_directions(research_data)
     validate_site_architecture(research_data)
     validate_brand_preservation_plan(research_data)
