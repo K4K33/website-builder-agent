@@ -1,7 +1,8 @@
 -- Kaurivo cloud-first recovery while the owner cannot run local Ollama.
 -- Reuse the existing exact-job OIDC gate; retain strict, bounded retries and
 -- never trust an unverified/old Codex heartbeat as a ready local builder.
--- A local Codex-quota failure may migrate to cloud ONE TIME that UTC day.
+-- A local Codex-quota failure or an operator-verified research fix may
+-- receive one recovery claim that UTC day. Provider limits still apply.
 -- The old job, identity, research and private checkpoints are preserved.
 alter table public.kaurivo_demo_build_jobs
   add column if not exists cloud_recovery_day date;
@@ -37,6 +38,15 @@ begin
      ((j.next_eligible_at is null or j.next_eligible_at<=now())
         and (j.retry_day is distinct from utc_today or j.retry_claims_today<3))
      or
+     (j.runner_kind='github'
+      and j.error_code='research_fix_deployed'
+      and j.next_eligible_at<=now()
+      and j.retry_day=utc_today and j.retry_claims_today=3
+      and j.cloud_recovery_day is distinct from utc_today
+      and exists (
+        select 1 from public.kaurivo_demo_checkpoints c
+        where c.job_id=j.id and c.stage='research_partial'))
+     or
      (j.runner_kind='local'
       and j.error_code in ('free_ai_rate_limit','free_ai_capacity_unavailable')
       and j.retry_day=utc_today and j.retry_claims_today>=3
@@ -62,6 +72,8 @@ begin
  set status='researching',
      progress='Pilvirakentaja aloitti yrityksen tutkimuksen; nykyinen Mestari-Prompt voimassa',
      cloud_recovery_day=case
+       when j.runner_kind='github' and j.error_code='research_fix_deployed'
+       then utc_today
        when j.runner_kind='local'
         and j.error_code in ('free_ai_rate_limit','free_ai_capacity_unavailable')
         and j.retry_day=utc_today and j.retry_claims_today>=3

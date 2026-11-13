@@ -47,6 +47,13 @@ class CloudFirstDemoTests(unittest.TestCase):
         self.assertNotIn("to authenticated;", SQL)
         self.assertIn('inputs:{job_id:jobId}',(SITE/"backend/demo_immediate_dispatch_edge.ts").read_text(encoding="utf-8"))
 
+    def test_deployed_research_fix_recovery_requires_same_job_checkpoint(self):
+        self.assertIn("j.error_code='research_fix_deployed'", SQL)
+        self.assertIn("j.retry_claims_today=3", SQL)
+        self.assertIn("c.job_id=j.id and c.stage='research_partial'", SQL)
+        self.assertIn("j.cloud_recovery_day is distinct from utc_today", SQL)
+        self.assertIn("when j.runner_kind='github' and j.error_code='research_fix_deployed'\n       then utc_today", SQL)
+
     def test_ui_is_cloud_first_without_installing_local_ai(self):
         self.assertIn("const CLOUD_FIRST=true;",JS)
         self.assertIn("if(!CLOUD_FIRST)",JS)
