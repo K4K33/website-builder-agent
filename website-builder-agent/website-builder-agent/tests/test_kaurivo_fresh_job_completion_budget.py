@@ -23,7 +23,7 @@ class FreshDemoBudgetTests(TestCase):
     def test_cloud_runner_reserves_time_for_release(self):
         self.assertEqual(worker.TIMEOUT_PER_STAGE, 480)
         self.assertEqual(worker.RESEARCH_TIMEOUT, 720)
-        self.assertEqual(worker.AI_STAGE_BUDGET_SECONDS, 2700)
+        self.assertEqual(worker.AI_STAGE_BUDGET_SECONDS, 2400)
         self.assertLess(worker.AI_STAGE_BUDGET_SECONDS, 55 * 60 - 300)
 
     def test_twenty_free_calls_then_fail_closed(self):
