@@ -48,7 +48,7 @@ class FreeStructuredJSONTests(unittest.TestCase):
 
     def test_truncated_or_ambiguous_outputs_fail_closed(self):
         invalids=[
-            '{"company_facts":{"name":"Missing",
+            '{"company_facts":{"name":"Missing"',
             '{"selected":',
             '{"fact":"first"}\n{"fact":"second"}',
             '{"fact":"first"}\n[{"fact":"second"}]',
