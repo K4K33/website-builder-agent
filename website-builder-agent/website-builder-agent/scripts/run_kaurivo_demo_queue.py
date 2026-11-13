@@ -46,6 +46,7 @@ LOCAL_WORKER=os.environ.get("KAURIVO_LOCAL_WORKER")=="1"
 RUN_ID=int(os.environ.get("GITHUB_RUN_ID","0"))
 RUN_URL="" if LOCAL_WORKER else f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
 TIMEOUT_PER_STAGE=1800 if LOCAL_WORKER else 480
+RESEARCH_TIMEOUT=TIMEOUT_PER_STAGE if LOCAL_WORKER else 720
 AI_STAGE_BUDGET_SECONDS=7200 if LOCAL_WORKER else 2200
 MAX_AUTO_REVISIONS=2
 # The exact same owner-requested demo remains recoverable across temporary
@@ -334,6 +335,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "comparison_free_sources_insufficient"
     if "three same-industry references with both desktop/mobile views" in terminal:
         return "comparison_visual_evidence_missing"
+    if "design benchmark incomplete:" in terminal:
+        return "comparison_design_benchmark_incomplete"
     if "ai ei palauttanut" in terminal and "json" in terminal:
         return "research_ai_invalid_json"
     if "modulenotfounderror:" in terminal:
@@ -409,8 +412,9 @@ def private_stage_error_location(handle,start_position=0):
 def run_cli(args,log_handle,deadline=None):
     log_handle.seek(0,os.SEEK_END)
     stage_start=log_handle.tell()
-    remaining=(deadline-time.monotonic()) if deadline is not None else TIMEOUT_PER_STAGE
-    duration=int(min(TIMEOUT_PER_STAGE,remaining))
+    stage_timeout=RESEARCH_TIMEOUT if args[0]=="research" else TIMEOUT_PER_STAGE
+    remaining=(deadline-time.monotonic()) if deadline is not None else stage_timeout
+    duration=int(min(stage_timeout,remaining))
     if duration<30:
         raise HoldError("worker_time_budget_exhausted")
     child_env=os.environ.copy()
