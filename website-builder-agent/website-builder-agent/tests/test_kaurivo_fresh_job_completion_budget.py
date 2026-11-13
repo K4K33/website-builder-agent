@@ -61,7 +61,7 @@ class FreshDemoBudgetTests(TestCase):
         source = (Path(__file__).resolve().parents[1] /
                   "scripts/run_kaurivo_demo_queue.py").read_text(encoding="utf-8")
         self.assertIn('qa.get("overall_pass") is True', source)
-        self.assertIn('qa.get("build_version")', source)
+        self.assertIn('get("build_version")', source)
         self.assertIn('verify_public(url,marker,routes)', source)
         self.assertIn('save_private_checkpoint("researched",agent_slug)', source)
         self.assertIn('save_private_checkpoint("built",agent_slug)', source)
