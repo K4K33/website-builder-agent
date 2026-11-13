@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import Mock, patch
+import requests
 from utils import cloudflare_free_ai as cf
 from utils.kaurivo_research_progress import get_progress, save_progress
 from scripts.kaurivo_demo_checkpoint import make_archive, unpack_archive, STAGES, CheckpointError
@@ -122,6 +123,19 @@ class CloudflareFreeTests(unittest.TestCase):
         self.assertIn("vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0'",FLOW)
         self.assertIn("secrets.KAURIVO_CLOUDFLARE_API_TOKEN",FLOW)
         self.assertIn('FREE_ONLY: "1"',FLOW)
+
+    def test_openrouter_transport_failure_uses_confirmed_free_cloud(self):
+        from utils.claude_client import ask_claude
+        with patch.dict(os.environ,{**CONFIRMED,"AI_BACKEND":"openrouter",
+                     "RESEARCH_MODEL":"google/gemma-4-26b-a4b-it:free"},clear=True), \
+             patch("utils.claude_client._get_headers",return_value={}), \
+             patch("utils.claude_client.resource_manager.reserve",return_value=True), \
+             patch("utils.claude_client.requests.post",side_effect=requests.ReadTimeout) as post, \
+             patch("utils.cloudflare_free_ai.chat_cloudflare_free",return_value="verified") as cloud:
+            self.assertEqual(ask_claude("system","source",stage="research",json_mode=True),"verified")
+            post.assert_called_once()
+            cloud.assert_called_once_with(
+                "system","source",stage="research",max_tokens=4000,image_paths=None,json_mode=True)
 
 
 class PartialResearchTests(unittest.TestCase):
