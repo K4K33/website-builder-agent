@@ -988,7 +988,7 @@ def run_research(
         normalize_url(url), analyze_url, first_page=site_data, max_pages=24
     )
     if not source_inventory["pages"]:
-        raise RuntimeError("No source-backed pages found.")
+        raise RuntimeError("Original-site root inventory empty after successful fetch.")
     # A bounded 24-page crawl preserves more of complex source websites.
     # Only essential pages can block the expensive AI build. Login pages
     # are ignored, but optional inaccessible routes remain recorded in
