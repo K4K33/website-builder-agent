@@ -850,7 +850,8 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     brief = ensure_creative_directions(
         brief, company_facts=facts,
         source_anchors=[
-            {"fact_source": item} for item in verified["fact_sources"][:3]
+            {"fact_kind": key, "verified_urls": urls}
+            for key, urls in list(verified["fact_sources"].items())[:6]
         ] + [
             {"url": item.get("url"), "observations": item.get("observations")}
             for item in evidence[:3]
