@@ -190,35 +190,33 @@ def _permitted_affiliations(research: dict, *, digest: str,
 
 
 def _css_header_logo_urls(css: str, header) -> set[str]:
-    """Inspect declared CSS company-logo surfaces, not arbitrary hero artwork.
+    """Extract company-logo CSS backgrounds without confusing hero photography.
 
-    CSS background images cannot prove that the logo is large or legible.
-    Their claimed URL must still match a sourced or approved identity asset.
-    This covers an actual previous failure: an original logo shrunk into a
-    brand badge drawn only through background-image CSS.
+    The logo's URI is only source identity evidence. Actual on-screen size,
+    contrast, legibility and licensing must still be reviewed in real browsers.
     """
     urls: set[str] = set()
-    for rule in re.finditer(r"([^{}]+)\\{([^{}]+)\\}", css or "", re.S):
+    pattern = r"url\(\s*['\"]?([^'\"\)]+)"
+    for rule in re.finditer(r"([^{}]+)\{([^{}]+)\}", css or "", re.S):
         selectors, declarations = rule.group(1), rule.group(2)
-        if (not BRAND_HINT.search(selectors)
-                or not re.search(r"\\bbackground(?:-image)?\\s*:", declarations, re.I)):
+        if not BRAND_HINT.search(selectors):
             continue
-        for match in re.finditer(r"url\\(\\s*['\\\"]?([^'\\\")]+)", declarations, re.I):
-            url = match.group(1).strip()
-            if url:
-                urls.add(url)
+        if not re.search(r"\bbackground(?:-image)?\s*:", declarations, re.I):
+            continue
+        urls.update(match.group(1).strip() for match in
+                    re.finditer(pattern, declarations, re.I)
+                    if match.group(1).strip())
     if header:
         for node in header.find_all(True):
             marker = (" ".join(node.get("class") or []) + " " +
                       _text(node.get("id")) + " " + _text(node.get("aria-label")))
             style = _text(node.get("style"))
             if BRAND_HINT.search(marker) and re.search(
-                r"\\bbackground(?:-image)?\\s*:", style, re.I
+                r"\bbackground(?:-image)?\s*:", style, re.I
             ):
-                for match in re.finditer(r"url\\(\\s*['\\\"]?([^'\\\")]+)", style, re.I):
-                    url = match.group(1).strip()
-                    if url:
-                        urls.add(url)
+                urls.update(match.group(1).strip() for match in
+                            re.finditer(pattern, style, re.I)
+                            if match.group(1).strip())
     return urls
 
 
@@ -262,9 +260,9 @@ def audit_brand_lock(rendered_pages: dict[str, str],
         # A CSS-only company logo still needs original-source identity and a
         # real screenshot review. Replacing the DOM image with an untracked
         # background image must not evade the source/rights gate.
-        style_nodes = "\\n".join(el.get_text(" ", strip=True)
+        style_nodes = "\n".join(el.get_text(" ", strip=True)
                                   for el in soup.find_all("style"))
-        css_urls = _css_header_logo_urls(style_nodes + "\\n" + css_text, header)
+        css_urls = _css_header_logo_urls(style_nodes + "\n" + css_text, header)
         for logo_url in sorted(css_urls):
             if logo_url not in allowed and not allowed_new:
                 blocked.append({
