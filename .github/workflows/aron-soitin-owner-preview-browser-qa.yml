@@ -63,6 +63,10 @@ jobs:
               cards=page.locator("[data-product]:visible")
               assert cards.count()==12,("product count",cards.count())
               page.locator("#product-search").fill("beyerdynamic")
+              page.wait_for_timeout(250)
+              print("DEBUG_SHOP_JS",page.request.get(root+"assets/site.js").status,
+                    "page_errors",errors,
+                    "cards",page.evaluate("() => Array.from(document.querySelectorAll(\'[data-product]\')).map(x=>({hidden:x.hidden,display:getComputedStyle(x).display})).slice(0,5)"))
               assert cards.count()==1,("search filter",cards.count())
               page.locator("#product-search").fill("")
               page.locator('[data-product-filter="puhaltimet"]').click()
