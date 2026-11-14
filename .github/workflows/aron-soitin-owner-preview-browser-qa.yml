@@ -1,0 +1,83 @@
+name: Aron Soitin owner demo real browser QA
+on:
+  push:
+    branches: ["auto/kaurivo-demos"]
+    paths:
+      - ".github/workflows/aron-soitin-owner-preview-browser-qa.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browse-public-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --disable-pip-version-check playwright
+      - run: python -m playwright install --with-deps chromium
+      - name: Assert actual live HTTPS pages, visuals, links and mobile functionality
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          root="https://kaurivo-auto-demos-2026.onrender.com/aronsoitin-premium-20261114/"
+          routes=["index.html","verkkokauppa.html","huoltopalvelut.html","tilat.html","meista.html","yhteystiedot.html"]
+          output=Path("/tmp/aron_screens")
+          output.mkdir(exist_ok=True)
+          with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True,args=["--no-sandbox"])
+            for width,height in [(1440,900),(390,844)]:
+              page=browser.new_page(viewport={"width":width,"height":height},device_scale_factor=1)
+              errors=[]
+              page.on("pageerror",lambda e:errors.append(str(e)))
+              for route in routes:
+                resp=page.goto(root+route,wait_until="domcontentloaded",timeout=60000)
+                assert resp and resp.status==200,(route,"HTTP",resp.status if resp else None)
+                page.locator("img").first.wait_for(state="visible",timeout=15000)
+                page.wait_for_timeout(1600)
+                css=page.evaluate("() => ({width: document.documentElement.scrollWidth, client: document.documentElement.clientWidth})")
+                assert css["width"]<=css["client"]+3,(route,width,"overflow",css)
+                assert page.locator('main#content').count()==1,(route,"main")
+                assert page.locator('.primary-nav a').count()==6,(route,"nav")
+                assert page.locator('.site-footer').count()==1,(route,"footer")
+                assert "Aron Soitin" in page.title(),(route,"title")
+                fail=page.locator('img').evaluate_all("(images) => images.filter(img => img.complete && img.naturalWidth===0 && img.getBoundingClientRect().width>0).map(img=>img.getAttribute('src'))")
+                assert not fail,(route,"broken_images",fail[:7])
+                page.screenshot(path=str(output/(route+"-"+str(width)+".png")),full_page=True,animations="disabled")
+                print("PUBLIC_PAGE_PASS",route,width,resp.status,len(page.locator("img").all()))
+              assert not errors,("browser_errors",errors[:6])
+              if width==390:
+                page.goto(root+"index.html",wait_until="domcontentloaded")
+                toggle=page.locator(".menu-toggle")
+                assert toggle.is_visible()
+                toggle.click()
+                assert page.locator(".primary-nav").is_visible(),"mobile menu failed"
+                toggle.click()
+                assert not page.locator(".primary-nav").is_visible(),"mobile menu close failed"
+                print("MOBILE_MENU_PASS")
+              page.goto(root+"verkkokauppa.html",wait_until="domcontentloaded")
+              cards=page.locator("[data-product]:visible")
+              assert cards.count()==12,("product count",cards.count())
+              page.locator("#product-search").fill("beyerdynamic")
+              assert cards.count()==1,("search filter",cards.count())
+              page.locator("#product-search").fill("")
+              page.locator('[data-product-filter="puhaltimet"]').click()
+              assert cards.count()==1,("category filter",cards.count())
+              page.locator('[data-product-filter="all"]').click()
+              page.locator("#product-sort").select_option("price-asc")
+              assert float(cards.first.get_attribute("data-price"))==120,"sorting failed"
+              assert cards.first.locator('a[href^="https://www.aronsoitin.com/products/"]').count()>=1
+              print("CATALOG_SEARCH_FILTER_SORT_REAL_SHOP_HANDOFF_PASS",width)
+              page.close()
+            browser.close()
+          PY
+      - name: Keep all route screenshots for independent review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aron-soitin-real-desktop-mobile-pages
+          path: /tmp/aron_screens/*.png
+          retention-days: 2
