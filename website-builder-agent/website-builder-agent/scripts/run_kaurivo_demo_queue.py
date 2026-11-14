@@ -58,6 +58,9 @@ TRANSIENT_RETRY_CODES=frozenset({
     "free_ai_capacity_unavailable","free_ai_rate_limit",
     "research_network_unavailable","network_unavailable",
     "source_http_rate_limited","stage_timeout","runner_stale_timeout",
+    # A source-backed but structurally invalid design can be repaired on the
+    # same private job from its draft; daily claims remain strictly capped.
+    "research_creative_plan_needs_repair",
 })
 # Publish only site documents and expected static assets. Never copy JSON/TXT
 # scratch files, notes, evidence, build manifests or private company data.
@@ -356,6 +359,15 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "comparison_visual_evidence_missing"
     if "design benchmark incomplete:" in terminal:
         return "comparison_design_benchmark_incomplete"
+    if any(phrase in terminal for phrase in (
+        "creative preflight repair did not pass strict validation",
+        "creative preflight needs a repair",
+        "creative preflight: provide exactly three",
+        "creative direction #",
+        "creative directions differ mostly",
+        "creative selection needs a justified choice",
+    )):
+        return "research_creative_plan_needs_repair"
     if "ai ei palauttanut" in terminal and "json" in terminal:
         return "research_ai_invalid_json"
     if "modulenotfounderror:" in terminal:
