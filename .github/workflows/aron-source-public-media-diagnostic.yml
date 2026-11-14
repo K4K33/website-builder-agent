@@ -1,0 +1,45 @@
+name: Owner-demo authentic public media inspection
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/aron-source-public-media-diagnostic.yml"
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4
+      - name: Inspect only public images and logo of original website
+        run: |
+          python - <<'PY'
+          from urllib.parse import urljoin,urlsplit
+          from bs4 import BeautifulSoup
+          import requests, json
+          root='https://www.aronsoitin.com/'
+          r=requests.get(root,timeout=22,headers={'User-Agent':'Mozilla/5.0'},allow_redirects=True)
+          print("SOURCE_STATUS",r.status_code)
+          print("SOURCE_FINAL",r.url)
+          soup=BeautifulSoup(r.text,'html.parser')
+          found=set()
+          for i,img in enumerate(soup.select('img,source')):
+            if i>=180: break
+            alt=img.get('alt') or img.get('aria-label') or ''
+            raw=img.get('src') or img.get('data-src') or ''
+            if not raw: continue
+            url=urljoin(r.url,raw)
+            host=urlsplit(url).hostname or ''
+            if not host.endswith(('shopify.com','shopifycdn.com','aronsoitin.com','aronsoitin.fi')):continue
+            key=(urlsplit(url).path,alt)
+            if key in found:continue
+            found.add(key)
+            print('MEDIA', json.dumps({'alt':alt[:90],'url':url[:330]},ensure_ascii=False))
+            if len(found)>=45:break
+          for logo in soup.select('.header__heading-logo,.site-header__logo img,img[alt*=Aron],img[alt*=aron],link[rel*=icon]'):
+            print('BRAND',str(logo)[:500])
+          PY
