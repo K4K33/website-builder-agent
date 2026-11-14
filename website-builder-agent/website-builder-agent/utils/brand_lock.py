@@ -188,8 +188,41 @@ def _permitted_affiliations(research: dict, *, digest: str,
     return allowed
 
 
+
+def _css_header_logo_urls(css: str, header) -> set[str]:
+    """Extract company-logo CSS backgrounds without confusing hero photography.
+
+    The logo's URI is only source identity evidence. Actual on-screen size,
+    contrast, legibility and licensing must still be reviewed in real browsers.
+    """
+    urls: set[str] = set()
+    pattern = r"url\(\s*['\"]?([^'\"\)]+)"
+    for rule in re.finditer(r"([^{}]+)\{([^{}]+)\}", css or "", re.S):
+        selectors, declarations = rule.group(1), rule.group(2)
+        if not BRAND_HINT.search(selectors):
+            continue
+        if not re.search(r"\bbackground(?:-image)?\s*:", declarations, re.I):
+            continue
+        urls.update(match.group(1).strip() for match in
+                    re.finditer(pattern, declarations, re.I)
+                    if match.group(1).strip())
+    if header:
+        for node in header.find_all(True):
+            marker = (" ".join(node.get("class") or []) + " " +
+                      _text(node.get("id")) + " " + _text(node.get("aria-label")))
+            style = _text(node.get("style"))
+            if BRAND_HINT.search(marker) and re.search(
+                r"\bbackground(?:-image)?\s*:", style, re.I
+            ):
+                urls.update(match.group(1).strip() for match in
+                            re.finditer(pattern, style, re.I)
+                            if match.group(1).strip())
+    return urls
+
+
 def audit_brand_lock(rendered_pages: dict[str, str],
-                     research: dict | None = None) -> dict:
+                     research: dict | None = None,
+                     *, css_text: str = "") -> dict:
     """Detect invented brand marks, silent logo swaps and favicon mismatch.
 
     Original source logo observations do not prove a licence. Source logos
@@ -224,6 +257,28 @@ def audit_brand_lock(rendered_pages: dict[str, str],
         header = soup.find("header") or soup.find(attrs={"role": "banner"})
         marks = _mark_elements(header)
         approved_found = False
+        # A CSS-only company logo still needs original-source identity and a
+        # real screenshot review. Replacing the DOM image with an untracked
+        # background image must not evade the source/rights gate.
+        style_nodes = "\n".join(el.get_text(" ", strip=True)
+                                  for el in soup.find_all("style"))
+        css_urls = _css_header_logo_urls(style_nodes + "\n" + css_text, header)
+        for logo_url in sorted(css_urls):
+            if logo_url not in allowed and not allowed_new:
+                blocked.append({
+                    "category": "unsourced_css_header_logo",
+                    "route": route, "src": logo_url[:200],
+                    "issue": "CSS-based company mark has no matching observed original "
+                             "logo or exact-client-approved replacement.",
+                })
+            else:
+                pending.append({
+                    "category": "css_logo_visual_review",
+                    "route": route, "src": logo_url[:200],
+                    "issue": "CSS background logo requires screenshot proof of real "
+                             "visibility, scale, contrast and source identity. "
+                             "An external logo URL may also disappear.",
+                })
         for element, kind in marks:
             if kind == "image":
                 src = _text(element.get("src") or element.get("data-src"))
