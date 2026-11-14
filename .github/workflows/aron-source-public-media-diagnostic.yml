@@ -40,6 +40,16 @@ jobs:
             found.add(key)
             print('MEDIA', json.dumps({'alt':alt[:90],'url':url[:330]},ensure_ascii=False))
             if len(found)>=45:break
+          product_links=set()
+          for anchor in soup.select('a[href*="/products/"]'):
+            href=urljoin(r.url,anchor.get('href') or '')
+            if href in product_links:continue
+            product_links.add(href)
+            title=anchor.get_text(' ',strip=True)[:95]
+            img=anchor.find('img')
+            image=(img.get('src') if img else '') or ''
+            print('PRODUCT',json.dumps({'url':href[:260], 'label':title, 'alt':(img.get('alt') if img else '') or ''},ensure_ascii=False))
+            if len(product_links)>=25:break
           for logo in soup.select('.header__heading-logo,.site-header__logo img,img[alt*=Aron],img[alt*=aron],link[rel*=icon]'):
             print('BRAND',str(logo)[:500])
           PY
