@@ -78,7 +78,7 @@ class IndustryWorkflowTests(unittest.TestCase):
                           "links":[]}
                 with self.assertRaisesRegex(
                     RuntimeError,"canonical redirect unverified"
-                ), self.subTest():
+                ):
                     crawl_original_website(
                         original,lambda _: self.fail("Unsafe fetch"),
                         first_page=homepage,max_pages=2)
