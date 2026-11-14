@@ -4,6 +4,7 @@ on:
     branches: ["auto/kaurivo-demos"]
     paths:
       - ".github/workflows/aron-soitin-owner-preview-browser-qa.yml"
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/auto-previews/aronsoitin-premium-20261114/**"
   workflow_dispatch:
 permissions:
   contents: read
