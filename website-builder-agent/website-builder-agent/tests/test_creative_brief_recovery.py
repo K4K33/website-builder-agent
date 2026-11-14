@@ -108,21 +108,21 @@ class BoundedCreativeRepairTests(TestCase):
         with patch.object(research_agent,"validate_verified_profile",
                           return_value={"facts":facts,
                                         "fact_sources":fact_sources,
-                                        "verified_at":"2026-11-14"}), \\
+                                        "verified_at":"2026-11-14"}), \
              patch.object(research_agent,"_search_industry_references",
-                          return_value=peers), \\
+                          return_value=peers), \
              patch.object(research_agent,"_select_reference_candidates",
-                          return_value=peers), \\
+                          return_value=peers), \
              patch.object(research_agent,"_collect_reference_evidence",
-                          return_value=peers), \\
+                          return_value=peers), \
              patch.object(research_agent,"reference_image_inputs",
-                          return_value=([],[])), \\
-             patch.object(research_agent,"ask_claude_json",responses), \\
-             patch.object(research_agent,"_validate_research_design"), \\
-             patch.object(research_agent,"validate_site_architecture"), \\
+                          return_value=([],[])), \
+             patch.object(research_agent,"ask_claude_json",responses), \
+             patch.object(research_agent,"_validate_research_design"), \
+             patch.object(research_agent,"validate_site_architecture"), \
              patch.object(research_agent,"upsert_company",
                           side_effect=lambda slug,changes:
-                          written.append(changes) or changes), \\
+                          written.append(changes) or changes), \
              patch.object(research_agent,"set_status"):
             result=research_agent._research_verified_no_website_company(
                 "example-forest",company)
