@@ -45,6 +45,7 @@ from utils.kaurivo_ai_source_packet import pack_research_source_excerpts, compac
 from utils.premium_quality_gate import discover_source_journeys
 from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.creative_directions import validate_creative_directions
+from utils.creative_brief_recovery import ensure_creative_directions
 from utils.site_architecture import validate_site_architecture
 
 import requests
@@ -843,6 +844,20 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     )
     if not isinstance(brief, dict):
         raise RuntimeError("Verified no-site design brief was not a JSON object")
+    # All companies, including independently verified no-website businesses,
+    # get one strictly validated, source-backed repair opportunity without
+    # repeating comparisons or watering down the three-concept requirement.
+    brief = ensure_creative_directions(
+        brief, company_facts=facts,
+        source_anchors=[
+            {"fact_kind": key, "verified_urls": urls}
+            for key, urls in list(verified["fact_sources"].items())[:6]
+        ] + [
+            {"url": item.get("url"), "observations": item.get("observations")}
+            for item in evidence[:3]
+        ],
+        repair_json=ask_claude_json,
+    )
     comparison = {
         canonical_url(item.get("url")): item
         for item in brief.get("reference_comparison", [])
@@ -1275,7 +1290,12 @@ Tärkeää:
     final_prompt += "\nDETERMINISTIC SOURCE TASK MANIFEST (copy task ids exactly):\n" + json.dumps(
         service_brief({"source_inventory": source_inventory, "company_facts": company_facts}),
         ensure_ascii=False)
-    saved_brief = progress.get("validated_design_brief")
+    # A complete source observation and three verified peer screenshots are
+    # already saved in the private references milestone. Keep the model's raw
+    # draft separately so a small invalid creative plan does not force another
+    # 6k-token Research call on the next free-capacity window.
+    saved_brief = (progress.get("validated_design_brief")
+                   or progress.get("draft_design_brief"))
     brief = saved_brief if isinstance(saved_brief, dict) else ask_claude_json(
         FINAL_RESEARCH_PROMPT,
         final_prompt,
@@ -1294,6 +1314,37 @@ Tärkeää:
             "lopullista Research-briefiä "
             "JSON-objektina."
         )
+
+    # Persist the ORIGINAL model draft BEFORE design validation. This is
+    # private, unapproved draft research, never a completed Research stage.
+    # If a provider returns invalid creative concepts or runs out of free
+    # calls, next run repairs this draft instead of repeating the crawl/LLM.
+    if progress.get("milestone") == "references" and not isinstance(saved_brief, dict):
+        progress = save_progress(
+            slug, company, milestone="references", source_url=url,
+            master_prompt_sha256=MASTER_PROMPT_SHA256,
+            draft_design_brief=brief,
+        )
+    repaired_brief = ensure_creative_directions(
+        brief, company_facts=company_facts,
+        source_anchors=[
+            {"url": item.get("url"),
+             "observations": item.get("observations")}
+            for item in reference_evidence[:3]
+        ] + [
+            {"source_excerpt": str(item)[:900]}
+            for item in source_excerpts[:2]
+        ],
+        repair_json=ask_claude_json,
+    )
+    if repaired_brief is not brief:
+        brief = repaired_brief
+        if progress.get("milestone") == "references":
+            progress = save_progress(
+                slug, company, milestone="references", source_url=url,
+                master_prompt_sha256=MASTER_PROMPT_SHA256,
+                draft_design_brief=brief,
+            )
 
     # ---------------------------------------------------------
     # SAVE
