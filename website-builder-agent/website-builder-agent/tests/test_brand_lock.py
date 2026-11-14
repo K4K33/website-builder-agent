@@ -190,6 +190,43 @@ class BrandLockTests(unittest.TestCase):
         self.assertIn("unsourced_affiliation_mark",
                       [x["category"] for x in result["blocking"]])
 
+    def test_css_logo_background_must_be_source_matched_and_reviewed(self):
+        pages = {"index.html": page(
+            '<a class="brand" href="/"><span class="brand-original"></span>'
+            '<strong>Synthetic Example Workshop</strong></a>'
+        )}
+        css = ('.brand-original { background-image: '
+               'url("https://synthetic.example.org/assets/logo.svg"); '
+               'width: 28px; height: 24px; }')
+        report = audit_brand_lock(pages, evidence(), css_text=css)
+        self.assertFalse(report["blocking"], report)
+        self.assertIn("css_logo_visual_review",
+                      {item["category"] for item in report["pending"]})
+        self.assertFalse(report["pass"],
+                         "A tiny CSS original logo is not a proven usable brand.")
+
+    def test_unsourced_css_logo_background_is_blocked(self):
+        pages = {"index.html": page(
+            '<div class="brand"><span class="brand-original"></span>'
+            '<strong>Synthetic Example Workshop</strong></div>'
+        )}
+        bad = '.brand-original{background:url("/assets/invented-logo.svg") center/contain;}'
+        report = audit_brand_lock(pages, evidence(), css_text=bad)
+        self.assertIn("unsourced_css_header_logo",
+                      {item["category"] for item in report["blocking"]})
+
+    def test_inline_css_brand_logo_and_ordinary_hero_photos_are_distinguished(self):
+        html = page(
+            '<div class="brand"><span class="site-logo"'
+            ' style="background-image:url(/fake-mark.svg)"></span></div>'
+        ) + '<style>.hero{background:url("/images/real-work.jpg")}</style>'
+        report = audit_brand_lock({"index.html": html}, evidence())
+        self.assertEqual(
+            [item["src"] for item in report["blocking"]
+             if item["category"] == "unsourced_css_header_logo"],
+            ["/fake-mark.svg"]
+        )
+
     def test_original_affiliation_logo_and_source_identity_are_preserved(self):
         research = evidence()
         research["source_inventory"]["pages"][0]["footer_assets"] = [{
