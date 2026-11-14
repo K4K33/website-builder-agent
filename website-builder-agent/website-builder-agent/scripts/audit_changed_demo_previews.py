@@ -20,10 +20,19 @@ from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.demo_origin_gate import verify_demo_concept_evidence
 from utils.premium_experience_gate import audit_premium_experience
 from bs4 import BeautifulSoup
-DEMOS=ROOT/"docs"/"kaurivo"/"demos"
-PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/demos/"
+# The production auto-preview branch used to bypass the demos/ provenance
+# gate. Validate every preview there with exactly the same universal rules.
+SCOPE=os.environ.get("KAURIVO_DEMO_QA_SCOPE","demos")
+if SCOPE not in ("demos","auto-previews"):
+    raise RuntimeError("Unknown demo quality scope")
+DEMOS=ROOT/"docs"/"kaurivo"/SCOPE
+PREFIX="website-builder-agent/website-builder-agent/docs/kaurivo/"+SCOPE+"/"
 
 def changed_slugs(base,head):
+    if os.environ.get("KAURIVO_DEMO_QA_AUDIT_ALL") == "1":
+        # Required on the deployed auto-preview branch: audit even the prior
+        # live preview, not only changed files. No silent grandfathering.
+        return sorted(p.name for p in DEMOS.iterdir() if p.is_dir()) if DEMOS.is_dir() else []
     changed=subprocess.check_output(["git","diff","--name-only",base,head],cwd=ROOT,text=True).splitlines()
     slugs={p[len(PREFIX):].split("/",1)[0] for p in changed
            if p.startswith(PREFIX) and "/" in p[len(PREFIX):]
@@ -125,7 +134,7 @@ def verified_source_evidence(slug):
 
 def main():
     base,head=os.environ.get("BASE_SHA",""),os.environ.get("HEAD_SHA","")
-    if not base or not head:
+    if (not base or not head) and os.environ.get("KAURIVO_DEMO_QA_AUDIT_ALL") != "1":
         print("BLOCK: missing commit range for universal demo audit")
         return 2
     failed=False
@@ -133,8 +142,12 @@ def main():
         folder=DEMOS/slug
         if not folder.is_dir():
             continue
+        # A public top-level multi-page demo has palvelut.html, hinnasto.html
+        # etc. Auditing only index.html was an accidental quality bypass.
+        html_files = (folder.rglob("*.html") if SCOPE == "auto-previews"
+                      else folder.rglob("index.html"))
         pages={str(p.relative_to(folder)):p.read_text(encoding="utf-8")
-               for p in folder.rglob("index.html")}
+               for p in html_files if "_concept_evidence" not in p.parts}
         if "index.html" not in pages:
             print("BLOCK",slug,"missing index.html")
             failed=True
