@@ -1,0 +1,53 @@
+name: Kaurivo public-source fetch diagnostics (no AI)
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/kaurivo-public-source-fetch-diagnostic.yml"
+      - "website-builder-agent/website-builder-agent/agents/research.py"
+      - "website-builder-agent/website-builder-agent/utils/industry_workflow.py"
+      - "website-builder-agent/website-builder-agent/tests/test_industry_workflow.py"
+      - "website-builder-agent/website-builder-agent/utils/fetch.py"
+permissions:
+  contents: read
+jobs:
+  inspect-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Report only public source canonical and crawl status (no secrets)
+        env:
+          KAURIVO_BROWSER_SOURCE_FALLBACK: "0"
+        run: |
+          python - <<'PY'
+          from urllib.parse import urlsplit
+          from utils.fetch import analyze_url
+          from utils.industry_workflow import crawl_original_website
+          # This is a *public* diagnostic of a current failing source;
+          # never perform a paid AI call or submit any business form.
+          root="https://www.aronsoitin.fi"
+          result=analyze_url(root)
+          print("SOURCE_ROOT_HOST:", urlsplit(root).netloc)
+          print("FETCH_SUCCESS:",result.get("success"))
+          print("FETCH_HTTP:",result.get("status_code"))
+          print("FETCH_FINAL_HOST:",urlsplit(str(result.get("final_url") or "")).netloc)
+          print("FETCH_FINAL_PATH:",urlsplit(str(result.get("final_url") or "")).path[:100])
+          print("FETCH_TEXT_LENGTH:",len(str(result.get("visible_text") or "")))
+          print("FETCH_LINK_COUNT:",len(result.get("links") or []))
+          if not result.get("success"):
+             raise SystemExit("Public source fetch failed; do not guess why")
+          inv=crawl_original_website(root,lambda _: (_ for _ in ()).throw(
+                AssertionError("Unexpected additional fetch on root-only probe")),
+                first_page=result,max_pages=1)
+          print("INVENTORY_PAGE_COUNT:",len(inv["pages"]))
+          print("INVENTORY_FAILED_COUNT:",len(inv["failed_urls"]))
+          print("PRIORITY_LINK_COUNT:",len(inv["priority_unvisited_urls"]))
+          if not inv["pages"]: print("ROOT_CAUSE: verified source lost during canonical-host matching")
+          PY
