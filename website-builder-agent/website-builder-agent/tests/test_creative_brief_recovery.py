@@ -75,6 +75,20 @@ class BoundedCreativeRepairTests(TestCase):
         validate_creative_directions(result)
         self.assertEqual(model.call_count,2)
 
+    def test_any_company_creative_failure_classifies_as_bounded_retry(self):
+        from io import StringIO
+        from scripts import run_kaurivo_demo_queue as runner
+        for reason in (
+            "Creative preflight repair did not pass strict validation: incomplete",
+            "Creative directions differ mostly by surface details.",
+            "Creative direction #2 incomplete: mobile_behavior",
+        ):
+            with self.subTest(reason=reason):
+                log=StringIO("Traceback: source safe\\nRuntimeError: "+reason+"\\n")
+                category=runner.classify_stage_failure(log, "researching")
+                self.assertEqual(category, "research_creative_plan_needs_repair")
+                self.assertIn(category,runner.TRANSIENT_RETRY_CODES)
+
     def test_research_draft_remains_private_and_not_completed_after_ai_error(self):
         slug="example-woodwork"
         data={"name":"Example Forest Workshop","url":"https://example.invalid/",
