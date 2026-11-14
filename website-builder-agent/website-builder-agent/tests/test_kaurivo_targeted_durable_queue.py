@@ -73,7 +73,7 @@ class KaurivoDurableQueueSafetyTests(unittest.TestCase):
             "free_ai_capacity_unavailable","free_ai_rate_limit",
             "research_network_unavailable","network_unavailable",
             "source_http_rate_limited","stage_timeout",
-            "runner_stale_timeout",
+            "runner_stale_timeout","research_creative_plan_needs_repair",
         }
         self.assertEqual(TRANSIENT_RETRY_CODES,accepted)
         for bad in ("quality_gate_not_approved","source_research_incomplete",
@@ -90,6 +90,8 @@ class KaurivoDurableQueueSafetyTests(unittest.TestCase):
         self.assertIn('"free_ai_rate_limit"',bridge)
         self.assertIn('"source_http_rate_limited"',bridge)
         self.assertIn('"stage_timeout"',bridge)
+        self.assertIn('"research_creative_plan_needs_repair"',bridge)
+        self.assertIn("'research_creative_plan_needs_repair'",sql)
         self.assertIn('invalid_defer_code',bridge)
 
     def test_private_admin_and_no_billable_models(self):
