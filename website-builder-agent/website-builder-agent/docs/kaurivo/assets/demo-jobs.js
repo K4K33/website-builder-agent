@@ -15,6 +15,8 @@
   researching_failed:"Tutkimus ei läpäissyt vaatimuksia – tarkista yrityksen lähdesivun sisältö",
   comparison_design_benchmark_incomplete:"Kolmen saman alan yrityksen vertailusta puuttuu hyväksyttävää lähde- tai kuvanäyttöä tai suunnitteluhavaintoja.",
   source_research_incomplete:"Lähdesivun palvelu- ja brändiaineisto on puutteellinen",
+  source_canonical_redirect_unverified:"Lähdesivun osoite ohjaa eri verkkotunnukseen, jonka yritysyhteyttä ei voitu vahvistaa. Tarvitaan lähteen tarkistus.",
+  source_root_inventory_empty:"Alkuperäinen sivusto vastasi, mutta sitä ei voitu liittää turvallisesti tutkimusaineistoon. Tutkimusosoitteiden käsittely vaatii korjauksen.",
   source_http_access_blocked:"Yrityksen alkuperäinen sivusto esti automaattisen lukemisen (401/403). Tarvitaan erillinen lähdeaineiston tarkistus.",
   source_http_rate_limited:"Alkuperäinen sivusto rajoitti automaattista hakua. Vältä jatkuvia uudelleenyrityksiä.",
   source_website_unreachable:"Alkuperäinen sivu ei vastannut rakennusagentin tutkimuspyyntöön.",
