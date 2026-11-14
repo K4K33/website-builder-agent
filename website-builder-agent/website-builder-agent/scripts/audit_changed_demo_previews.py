@@ -19,6 +19,7 @@ from utils.visual_direction import audit_visual_motion
 from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.demo_origin_gate import verify_demo_concept_evidence
 from utils.premium_experience_gate import audit_premium_experience
+from utils.brand_lock import audit_brand_lock
 from bs4 import BeautifulSoup
 # The production auto-preview branch used to bypass the demos/ provenance
 # gate. Validate every preview there with exactly the same universal rules.
@@ -182,6 +183,17 @@ def main():
             manifest=json.loads((ROOT / "data" / "demo_provenance" / (slug + ".json")).read_text(encoding="utf-8"))
             concepts=verify_demo_concept_evidence(slug, folder, manifest)
             print("RENDERED_CONCEPT_GATE_PASS", slug, concepts["screenshots"], "original rendered screenshots")
+            # The original logo may be used through CSS background-image.
+            # Source identity, logo permissions and actual rendered size are
+            # independent from a green six-route HTTP/browser test.
+            brand=audit_brand_lock(pages, evidence, css_text=css)
+            for item in brand["blocking"]:
+                print("BLOCK", slug, "source_brand_css", item.get("category"),
+                      str(item.get("route")), str(item.get("src",""))[:130])
+                failed=True
+            if brand["pending"]:
+                print("BRAND_VISUAL_APPROVAL_PENDING", slug,
+                      "; ".join(item["category"] for item in brand["pending"][:5]))
             # Source-approved and hand-authored demos share the same premium
             # anti-filler, original-form and original-signature rules. No
             # bypass by omitting a model-generated research protocol field.
