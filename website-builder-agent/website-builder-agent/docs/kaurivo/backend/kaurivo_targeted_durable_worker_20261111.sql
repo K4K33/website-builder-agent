@@ -96,7 +96,7 @@ begin
    if p_error_code not in
       ('free_ai_capacity_unavailable','free_ai_rate_limit',
        'research_network_unavailable','network_unavailable',
-       'source_http_rate_limited','stage_timeout','runner_stale_timeout,'research_creative_plan_needs_repair'')
+       'source_http_rate_limited','stage_timeout','runner_stale_timeout','research_creative_plan_needs_repair')
       then return false; end if;
    if p_error_code='free_ai_capacity_unavailable' or current_day_claims>=3 then
      next_attempt:=(date_trunc('day',now() at time zone 'UTC')
