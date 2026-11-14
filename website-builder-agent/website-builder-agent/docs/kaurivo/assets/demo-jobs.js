@@ -14,6 +14,7 @@
   research_failed:"Lähdesivun tutkimus ei läpäissyt vaatimuksia",
   researching_failed:"Tutkimus ei läpäissyt vaatimuksia – tarkista yrityksen lähdesivun sisältö",
   comparison_design_benchmark_incomplete:"Kolmen saman alan yrityksen vertailusta puuttuu hyväksyttävää lähde- tai kuvanäyttöä tai suunnitteluhavaintoja.",
+  comparison_free_sources_insufficient:"Ilmainen toimialahaku ei löytänyt kolmea todellista vertailuyrityksen sivustoehdokasta. Rakentajan toimialatunnistus tai lähdehaku vaatii parannuksen.",
   source_research_incomplete:"Lähdesivun palvelu- ja brändiaineisto on puutteellinen",
   source_canonical_redirect_unverified:"Lähdesivun osoite ohjaa eri verkkotunnukseen, jonka yritysyhteyttä ei voitu vahvistaa. Tarvitaan lähteen tarkistus.",
   source_root_inventory_empty:"Alkuperäinen sivusto vastasi, mutta sitä ei voitu liittää turvallisesti tutkimusaineistoon. Tutkimusosoitteiden käsittely vaatii korjauksen.",
