@@ -27,6 +27,72 @@ class IndustryWorkflowTests(unittest.TestCase):
                 self.assertNotIn("<section", str(guidance))
         self.assertEqual(sector_guidance("unknown domain")["sector"], "other")
 
+    def test_original_same_brand_cross_tld_https_redirect_keeps_real_pages(self):
+        # Entirely synthetic: .fi -> .com redirect by the target's verified
+        # ORIGINAL homepage fetch; all source pages thereafter belong to .com.
+        original="https://www.examplemusic.fi"
+        canonical="https://www.examplemusic.com/"
+        contact="https://www.examplemusic.com/contact"
+        homepage={
+            "success": True, "status_code": 200, "final_url":canonical,
+            "title": "Actual instrument shop", "visible_text": "Shop and service",
+            "links":[{"href":"/contact","text":"Contact"},
+                     {"href":"https://wrongbrand.com/palvelut","text":"Other company"}],
+        }
+        called=[]
+        def fetch(url):
+            called.append(url)
+            if url==contact:
+                return {"success":True,"status_code":200,"final_url":contact,
+                        "visible_text":"Verified source contact page",
+                        "links":[]}
+            raise AssertionError("Crawler must not revisit redirected .fi root")
+        inventory=crawl_original_website(
+            original,fetch,first_page=homepage,max_pages=24)
+        self.assertEqual([p["url"] for p in inventory["pages"]],
+                         [canonical,contact])
+        self.assertEqual(called,[contact])
+        self.assertEqual(inventory["root_url"],canonical)
+        self.assertEqual(inventory["requested_root_url"],
+                         "https://www.examplemusic.fi/")
+        self.assertEqual(inventory["observed_canonical_redirect"]["to"],
+                         canonical)
+        self.assertEqual(inventory["failed_urls"],[])
+        self.assertFalse(inventory["priority_unvisited_urls"])
+
+    def test_unrelated_or_ambiguous_original_redirect_stays_fail_closed(self):
+        original="https://www.examplemusic.fi"
+        for final in (
+            "https://unrelatedmusic.com/",
+            "https://www.examplemusics.com/",
+            "http://www.examplemusic.com/",
+            "https://www.examplemusic.com.evil.net/",
+            "https://examplemusic.co.uk/",
+            "https://examplemusic.com:8443/",
+            "https://sub.examplemusic.com/",
+            "https://127.0.0.1/",
+        ):
+            with self.subTest(final=final):
+                homepage={"success":True,"status_code":200,
+                          "final_url":final,"visible_text":"Public data",
+                          "links":[]}
+                with self.assertRaisesRegex(
+                    RuntimeError,"canonical redirect unverified"
+                ), self.subTest():
+                    crawl_original_website(
+                        original,lambda _: self.fail("Unsafe fetch"),
+                        first_page=homepage,max_pages=2)
+
+    def test_same_domain_www_and_https_canonical_still_work(self):
+        requested="https://www.exampleshop.fi/"
+        data={"success":True,"final_url":"https://exampleshop.fi/",
+              "visible_text":"True observed company site","links":[]}
+        inventory=crawl_original_website(
+            requested,lambda _:self.fail("Do not re-fetch"),
+            first_page=data,max_pages=1)
+        self.assertEqual(len(inventory["pages"]),1)
+        self.assertIsNone(inventory["observed_canonical_redirect"])
+
     def test_bounded_source_crawl_reuses_homepage_and_keeps_important_pages(self):
         root = "https://shop.example.org/"
         records = {
