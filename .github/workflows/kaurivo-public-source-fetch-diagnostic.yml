@@ -49,5 +49,8 @@ jobs:
           print("INVENTORY_PAGE_COUNT:",len(inv["pages"]))
           print("INVENTORY_FAILED_COUNT:",len(inv["failed_urls"]))
           print("PRIORITY_LINK_COUNT:",len(inv["priority_unvisited_urls"]))
-          if not inv["pages"]: print("ROOT_CAUSE: verified source lost during canonical-host matching")
+          if not inv["pages"]: raise SystemExit("Canonical original-site source recovery still broken")
+          if not inv["observed_canonical_redirect"]:
+             raise SystemExit("Missing explicitly observed company-domain redirect evidence")
+          print("CANONICAL_SOURCE_RECOVERY_PASS:",len(inv["pages"])==1)
           PY
