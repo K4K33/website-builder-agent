@@ -6,6 +6,8 @@ on:
       - "website-builder-agent/website-builder-agent/agents/**"
       - "website-builder-agent/website-builder-agent/utils/creative_brief_recovery.py"
       - "website-builder-agent/website-builder-agent/tests/test_creative_brief_recovery.py"
+      - "website-builder-agent/website-builder-agent/utils/free_references.py"
+      - "website-builder-agent/website-builder-agent/tests/test_kaurivo_music_shop_reference_recovery.py"
       - "website-builder-agent/website-builder-agent/utils/creative_directions.py"
       - "website-builder-agent/website-builder-agent/utils/site_architecture.py"
       - "website-builder-agent/website-builder-agent/utils/site_build_pipeline.py"
@@ -38,6 +40,8 @@ on:
     paths:
       - "website-builder-agent/website-builder-agent/utils/creative_brief_recovery.py"
       - "website-builder-agent/website-builder-agent/tests/test_creative_brief_recovery.py"
+      - "website-builder-agent/website-builder-agent/utils/free_references.py"
+      - "website-builder-agent/website-builder-agent/tests/test_kaurivo_music_shop_reference_recovery.py"
       - "website-builder-agent/website-builder-agent/utils/creative_directions.py"
       - "website-builder-agent/website-builder-agent/utils/site_architecture.py"
       - "website-builder-agent/website-builder-agent/utils/site_build_pipeline.py"
@@ -87,5 +91,7 @@ jobs:
         run: python -m unittest tests.test_creative_multipage_originality tests.test_site_bundle_integrity tests.test_blind_trials tests.test_brand_design_blueprint tests.test_brand_lock tests.test_sector_presence tests.test_cross_client_voice tests.test_universal_quality tests.test_trust_claims -v
       - name: Generic creative-brief repair, source preservation and private resume regressions
         run: python -m unittest tests.test_creative_brief_recovery -v
+      - name: Same-sector instrument-retail free reference candidates and safe OSM taxonomy
+        run: python -m unittest tests.test_kaurivo_music_shop_reference_recovery -v
       - name: Existing content parity, source migration and visual media gates
         run: python -m unittest tests.test_source_fidelity tests.test_content_parity tests.test_visual_media_gate -v
