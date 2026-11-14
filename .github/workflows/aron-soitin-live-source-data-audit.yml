@@ -1,0 +1,57 @@
+name: Aron live product truth and contact audit
+on:
+  push:
+    branches: ["auto/kaurivo-demos"]
+    paths:
+      - ".github/workflows/aron-soitin-live-source-data-audit.yml"
+permissions:
+  contents: read
+jobs:
+  source-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip -q install requests beautifulsoup4
+      - name: Verify genuine source products, price and business contact (no AI)
+        run: |
+          python - <<'PY'
+          import requests,re,time
+          from bs4 import BeautifulSoup
+          root="https://www.aronsoitin.com"
+          headers={"User-Agent":"Mozilla/5.0 (compatible; SourceAccuracyVerification/1.0)"}
+          live=requests.get(root,headers=headers,timeout=25)
+          assert live.status_code==200,live.status_code
+          soup=BeautifulSoup(live.text,"html.parser")
+          paths=[]
+          for link in soup.select('a[href*="/products/"]'):
+            h=(link.get("href") or "").split("/products/",1)[-1].split("?",1)[0].split("#",1)[0].strip("/")
+            if h and h not in paths:paths.append(h)
+            if len(paths)>=12: break
+          print("SOURCE_PRODUCT_COUNT",len(paths))
+          for slug in paths:
+            try:
+              resp=requests.get(root+"/products/"+slug+".js",headers=headers,timeout=14)
+              try: product=resp.json()
+              except ValueError: product={}
+              if resp.status_code==200 and "variants" in product:
+                 vars=product["variants"]
+                 price=(vars[0].get("price") if vars else None)
+                 available=(any(v.get("available") for v in vars))
+                 print("LIVE_PRODUCT",slug,"HTTP",resp.status_code,"PRICE_CENTS",price,"AVAILABLE",available,"TITLE",str(product.get("title",""))[:85])
+              else:print("LIVE_PRODUCT",slug,"HTTP",resp.status_code,"JSON_KEYS",list(product)[:7])
+            except requests.RequestException as e:
+              print("SOURCE_PRODUCT_ERROR",slug,type(e).__name__)
+            time.sleep(.25)
+          contact=requests.get(root+"/pages/contact-us-1",headers=headers,timeout=20)
+          print("LIVE_CONTACT_HTTP",contact.status_code)
+          text=BeautifulSoup(contact.text,"html.parser").get_text(" ",strip=True)
+          # Only public company contact numbers, never contact form submissions.
+          for number in sorted(set(re.findall(r"(?:\+358|0)[\d\s-]{8,18}",text))):
+            print("PUBLIC_PHONE",number.strip()[:22])
+          for phrase in ("Sahaajankatu","pakettipalvelut","Myymälämme on auki","PostNord","Aron Soitin Oy"):
+            pos=text.casefold().find(phrase.casefold())
+            if pos>=0: print("CONTACT_TEXT_CONTEXT",phrase,repr(text[max(0,pos-40):pos+220]))
+          PY
