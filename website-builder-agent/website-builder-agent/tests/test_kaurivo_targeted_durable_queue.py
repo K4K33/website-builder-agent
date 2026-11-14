@@ -91,7 +91,8 @@ class KaurivoDurableQueueSafetyTests(unittest.TestCase):
         self.assertIn('"source_http_rate_limited"',bridge)
         self.assertIn('"stage_timeout"',bridge)
         self.assertIn('"research_creative_plan_needs_repair"',bridge)
-        self.assertIn("'research_creative_plan_needs_repair'",sql)
+        self.assertIn("'research_creative_plan_needs_repair'",
+                      DURABLE.read_text(encoding="utf-8"))
         self.assertIn('invalid_defer_code',bridge)
 
     def test_private_admin_and_no_billable_models(self):
