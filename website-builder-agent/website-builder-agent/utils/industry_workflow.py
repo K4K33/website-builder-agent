@@ -144,6 +144,53 @@ def _priority(url: str) -> tuple[int, int, str]:
     return score, path.count("/"), path
 
 
+
+# A business can legitimately point its country domain to its same-named
+# .com/.eu/.shop canonical website. Do not confuse this verified HTTP
+# redirect with an off-company external link or silently discard all source
+# evidence. A cross-company destination still requires owner review.
+_CANONICAL_TLDS = frozenset((
+    "fi", "com", "net", "org", "eu", "se", "no", "dk", "de", "shop", "store"
+))
+
+
+def _verified_same_brand_canonical(requested: str, final_url: str) -> str:
+    """Use a successful homepage HTTP redirect only for strict same-brand HTTPS.
+
+    Origin is established by the actual source fetcher, not by a link in HTML
+    or user-supplied canonical tag. This helper never makes a network request.
+    Only simple two-label brands are admitted cross-TLD; complex co.uk,
+    lookalikes, arbitrary new subdomains, private IPs and downgrade redirects
+    require an explicit independent site verification instead of guessing.
+    """
+    start, end = urlsplit(requested), urlsplit(final_url)
+    if (start.scheme != "https" or end.scheme != "https"
+            or start.username or start.password or end.username or end.password
+            or start.port not in (None, 443) or end.port not in (None, 443)
+            or not _safe_hostname(start.hostname) or not _safe_hostname(end.hostname)):
+        return ""
+    if _safe_hostname(start.hostname) == _safe_hostname(end.hostname):
+        return _same_site_url(final_url, final_url)
+    if start.path not in ("", "/") or start.query or start.fragment:
+        return ""
+    def brand_domain(host):
+        stripped = (host or "").casefold().removeprefix("www.")
+        pieces = stripped.split(".")
+        if len(pieces) != 2:
+            return ()
+        name, tld = pieces
+        if (not 4 <= len(name) <= 63 or not name.isascii()
+                or not name.replace("-", "").isalnum()
+                or name.startswith("-") or name.endswith("-")
+                or name.startswith("xn--") or tld not in _CANONICAL_TLDS):
+            return ()
+        return (name, tld)
+    before, after = brand_domain(start.hostname), brand_domain(end.hostname)
+    if not before or not after or before[0] != after[0]:
+        return ""
+    return _same_site_url(final_url, final_url)
+
+
 def crawl_original_website(
     url: str, fetch_page, *, first_page: dict | None = None, max_pages: int = 12
 ) -> dict:
@@ -152,11 +199,28 @@ def crawl_original_website(
     fetch_page defaults to existing analyze_url in Research, but is injected
     for unlimited offline tests. Never submits a form or invokes Tavily/AI.
     """
-    start = _same_site_url(url, url)
-    if not start:
+    requested_start = _same_site_url(url, url)
+    if not requested_start:
         raise ValueError("Only public-looking http(s) site hostnames can be researched.")
     if not 1 <= max_pages <= 24:
         raise ValueError("Crawl cap must be 1..24")
+    start = requested_start
+    redirected = False
+    if isinstance(first_page, dict) and first_page.get("success") is True:
+        # Only the ORIGINAL website's fetched final HTTP destination proves
+        # this cross-TLD redirect. Never accept external navigation link or
+        # an unverified <link rel=canonical> as source authority.
+        observed_final = str(first_page.get("final_url") or requested_start)
+        if not _same_site_url(requested_start, observed_final):
+            canonical = _verified_same_brand_canonical(
+                requested_start, observed_final
+            )
+            if not canonical:
+                raise RuntimeError(
+                    "Original-site canonical redirect unverified; "
+                    "requires source-owner review, not invented site content."
+                )
+            start, redirected = canonical, True
     queue = [start]
     visited, pages, failed = set(), [], []
     confirmed_removed = []
@@ -225,6 +289,12 @@ def crawl_original_website(
     return {
         "mode": "multi_page_snapshot",
         "root_url": start,
+        "requested_root_url": requested_start,
+        "observed_canonical_redirect": (
+            {"from": requested_start, "to": start,
+             "evidence": "original_homepage_http_final_url"}
+            if redirected else None
+        ),
         "pages": pages,
         "failed_urls": failed,
         "confirmed_removed_urls": confirmed_removed,
