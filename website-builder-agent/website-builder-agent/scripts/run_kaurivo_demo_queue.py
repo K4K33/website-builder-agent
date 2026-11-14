@@ -345,6 +345,10 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         if any(x in terminal for x in ("response truncated","token-rajaan",
                                        "length finish reason")):
             return "free_ai_response_truncated"
+    if "original-site canonical redirect unverified" in terminal:
+        return "source_canonical_redirect_unverified"
+    if "original-site root inventory empty" in terminal:
+        return "source_root_inventory_empty"
     if "original-site content research incomplete" in terminal or (
        "important source pages not researched" in terminal
     ):
