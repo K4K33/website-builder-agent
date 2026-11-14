@@ -89,6 +89,49 @@ class BoundedCreativeRepairTests(TestCase):
                 self.assertEqual(category, "research_creative_plan_needs_repair")
                 self.assertIn(category,runner.TRANSIENT_RETRY_CODES)
 
+    def test_verified_no_website_industry_uses_source_dict_and_repairs(self):
+        from agents import research as research_agent
+        facts = {"name":"Example Forest Workshop", "industry":"Carpentry",
+                 "services":["Verified wooden furniture repair"]}
+        fact_sources = {
+            "name":["https://registry.example.invalid/profile"],
+            "industry":["https://registry.example.invalid/industry"],
+            "services":["https://supplier.example.invalid/services"],
+        }
+        company={"name":facts["name"],"url":"",
+                 "company_profile":{"verified_by_human":True}}
+        peers=[{"url":"https://peer.example.invalid/"+str(i),
+                "observations":["Original verified craft work"]} for i in range(3)]
+        invalid={"creative_directions":[],"creative_selection":{}}
+        responses=Mock(side_effect=[invalid, deepcopy(GOOD)])
+        written=[]
+        with patch.object(research_agent,"validate_verified_profile",
+                          return_value={"facts":facts,
+                                        "fact_sources":fact_sources,
+                                        "verified_at":"2026-11-14"}), \\
+             patch.object(research_agent,"_search_industry_references",
+                          return_value=peers), \\
+             patch.object(research_agent,"_select_reference_candidates",
+                          return_value=peers), \\
+             patch.object(research_agent,"_collect_reference_evidence",
+                          return_value=peers), \\
+             patch.object(research_agent,"reference_image_inputs",
+                          return_value=([],[])), \\
+             patch.object(research_agent,"ask_claude_json",responses), \\
+             patch.object(research_agent,"_validate_research_design"), \\
+             patch.object(research_agent,"validate_site_architecture"), \\
+             patch.object(research_agent,"upsert_company",
+                          side_effect=lambda slug,changes:
+                          written.append(changes) or changes), \\
+             patch.object(research_agent,"set_status"):
+            result=research_agent._research_verified_no_website_company(
+                "example-forest",company)
+        self.assertEqual(responses.call_count,2)
+        self.assertEqual(result["research"]["fact_sources"],fact_sources)
+        validate_creative_directions(result["research"])
+        payload=responses.call_args.args[1]
+        self.assertIn("registry.example.invalid",payload)
+
     def test_research_draft_remains_private_and_not_completed_after_ai_error(self):
         slug="example-woodwork"
         data={"name":"Example Forest Workshop","url":"https://example.invalid/",
