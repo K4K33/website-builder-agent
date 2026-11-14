@@ -272,7 +272,7 @@ Deno.serve(async request=>{
    if(data.status==="queued"&&![
       "free_ai_capacity_unavailable","free_ai_rate_limit",
       "research_network_unavailable","network_unavailable",
-      "source_http_rate_limited","stage_timeout","runner_stale_timeout,"research_creative_plan_needs_repair""
+      "source_http_rate_limited","stage_timeout","runner_stale_timeout","research_creative_plan_needs_repair"
      ].includes(code))return reply(400,{ok:false,error:"invalid_defer_code"});
    const updated=await rpc("kaurivo_worker_update_demo",{
     p_id:data.job_id,p_run_id:run_id,p_status:data.status,
