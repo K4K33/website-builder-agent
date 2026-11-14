@@ -54,6 +54,19 @@ INDUSTRY_ALIASES = {
     "law firm": "asianajotoimisto",
     "legal services": "asianajotoimisto",
     "attorney": "asianajotoimisto",
+    # Instrument retailers are not the same OSM shop type as record stores
+    # (shop=music). E-commerce, repair and second-hand inventory remain
+    # distinct customer tasks after discovery.
+    "musiikkiliike": "musiikkiliike",
+    "musiikkikauppa": "musiikkiliike",
+    "musiikkitarvikekauppa": "musiikkiliike",
+    "soitinkauppa": "musiikkiliike",
+    "soitinliike": "musiikkiliike",
+    "soitinten vähittäiskauppa": "musiikkiliike",
+    "soitin- ja musiikkitarvikekauppa": "musiikkiliike",
+    "musical instrument store": "musiikkiliike",
+    "musical instrument shop": "musiikkiliike",
+    "instrument retail": "musiikkiliike",
     # Building/industrial surveyors and laser-scanning specialists use varied
     # Finnish industry labels, but their customer task is the same measured
     # survey / point-cloud / construction-layout service. Candidate websites
@@ -87,6 +100,16 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    "musiikkiliike": (
+        # Publicly located, existing official websites. These are only
+        # candidates: Research must still verify exact matching industry,
+        # distinct operators, live source quotes and desktop/mobile images.
+        ("F-Musiikki", "https://f-musiikki.fi/"),
+        ("DLX Deluxe Music", "https://www.dlxmusic.fi/"),
+        ("Musamaailma", "https://www.musamaailma.fi/fi/about"),
+        ("Soitin Laine", "https://www.soitinlaine.fi/page/54/soittimet-ja-tarvikkeet-suomalaisesta-soitinkaupasta"),
+        ("Levytukku", "https://www.levytukku.fi/info"),
+    ),
     # Independent electrical installation providers' OWN sites. URLs only:
     # every source must still be live-checked for exact service evidence and
     # desktop/mobile visuals before a reference can count as verified.
@@ -150,7 +173,7 @@ OSM_CATEGORIES = {
     "kampaamo", "kauneushoitola", "ravintola", "kahvila",
     "autokorjaamo", "hammaslääkäri", "kuntosali", "hotelli",
     "sähköasentaja", "putkimies", "kukkakauppa", "pyöräliike",
-    "suutari", "leipomo", "asianajotoimisto",
+    "suutari", "leipomo", "asianajotoimisto", "musiikkiliike",
 }
 MAX_PUBLIC_REGIONS_PER_LOOKUP = 2
 
@@ -216,6 +239,26 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
     ))
     if electrical_installation and electrical_service:
         return "sähköasentaja"
+    # Unknown registration labels (e.g. "retail of miscellaneous goods")
+    # can be resolved only from ORIGINAL evidence of at least two different
+    # instrumental product groups plus a genuine retail/customer-sales signal.
+    # A live-music restaurant or a musical instrument repairer alone must not
+    # be silently classified as an instrument shop.
+    groups=(
+        ("sähkökitar", "akustiset kitar", "kitarat", "kitaravahvistim"),
+        ("rumpuset", "rumpukalv", "rumpukapul", "rummut", "symbaal"),
+        ("bassokitar", "bassovahvistim", "bassot"),
+        ("kosketinsoitt", "digitaalipian", "syntetisaattor", "keyboard"),
+        ("puhallinsoitt", "saksofon", "trumpet"),
+        ("viulut", "jousisoitt", "sellot"),
+    )
+    categories=sum(1 for variants in groups if any(stem in text for stem in variants))
+    sales=any(stem in text for stem in (
+        "verkkokaupp", "ostoskori", "myymälä", "tuotteet",
+        "varastossa", "hintaan", "valikoima", "myynnissä",
+    ))
+    if categories>=2 and sales:
+        return "musiikkiliike"
     # Two independent, industry-specific service descriptions required.
     # E.g. Prismarit describes BOTH building surveys and 3D laser scans,
     # while its registration may say "other building technical services".
