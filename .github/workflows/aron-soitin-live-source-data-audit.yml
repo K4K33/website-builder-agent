@@ -29,7 +29,7 @@ jobs:
           for link in soup.select('a[href*="/products/"]'):
             h=(link.get("href") or "").split("/products/",1)[-1].split("?",1)[0].split("#",1)[0].strip("/")
             if h and h not in paths:paths.append(h)
-            if len(paths)>=12: break
+            if len(paths)>=20: break
           print("SOURCE_PRODUCT_COUNT",len(paths))
           for slug in paths:
             try:
