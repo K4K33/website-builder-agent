@@ -58,28 +58,35 @@ def validate_benchmark(research, target_url="", *, require_comparison=True):
     industry = str(facts.get("industry", "")).strip().casefold()
     target = urlsplit(canonical_url(target_url)).hostname
     domains, accepted = set(), []
+    blockers = set()
     for record in records:
         if not isinstance(record, dict):
+            blockers.add("reference_record")
             continue
         url = canonical_url(record.get("url"))
         domain = urlsplit(url).hostname
         if not domain or domain == target or domain in domains:
+            blockers.add("reference_domain")
             continue
-        if require_comparison and not all(_text_list(record.get(key)) for key in COMPARISON_FIELDS):
+        if require_comparison and missing_comparison_fields(record):
+            blockers.update(missing_comparison_fields(record))
             continue
-        match = record.get("industry_match") or {}
-        if (not industry or match.get("same_industry") is not True
+        match = record.get("industry_match")
+        if (not isinstance(match, dict) or not industry or match.get("same_industry") is not True
                 or str(match.get("target_industry", "")).strip().casefold() != industry
                 or not isinstance(match.get("reason"), str) or not match["reason"].strip()):
+            blockers.add("industry_match")
             continue
         quote, source = match.get("evidence_quote"), record.get("site_text")
         if not isinstance(quote, str) or not quote.strip() or not isinstance(source, str) or quote not in source:
+            blockers.add("source_quote")
             continue
         shots = record.get("screenshots") or {}
         if not isinstance(shots, dict) or not all(
             isinstance(shots.get(view), str) and Path(shots[view]).is_file()
             for view in ("desktop", "mobile")
         ):
+            blockers.add("screenshots")
             continue
         domains.add(domain)
         accepted.append(record)
@@ -87,7 +94,8 @@ def validate_benchmark(research, target_url="", *, require_comparison=True):
         raise RuntimeError(
             "Design benchmark incomplete: compare at least three independent same-industry "
             "operators with desktop/mobile screenshots, source-backed industry matches, "
-            "observations, adaptations and exclusions. Research again before building."
+            "observations, adaptations and exclusions. "
+            "Missing checks: " + ",".join(sorted(blockers or {"reference_count"}))
         )
     return accepted
 
