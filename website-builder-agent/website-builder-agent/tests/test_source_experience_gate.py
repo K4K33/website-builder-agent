@@ -47,6 +47,31 @@ class ExperienceContinuityTests(unittest.TestCase):
         result = audit_experience_continuity({"index.html": "<main>Hi</main>"}, r)
         self.assertTrue(any("did not cover every source page" in m for m in result["pending"]))
 
+    def test_resumed_probe_visits_routes_beyond_old_twelve_page_limit(self):
+        from unittest.mock import MagicMock, patch
+
+        from utils.original_experience_probe import probe_original_site_experience
+
+        urls = [f"https://example.org/page/{n}" for n in range(14)]
+        inventory = {"pages": [{"url": url} for url in urls]}
+        previous = {
+            "capture_method": "browser",
+            "source_sha256": source_inventory_sha256(inventory),
+            "raw_observations": {url: {"photo_count": 1} for url in urls[:12]},
+        }
+        browser_api = MagicMock()
+        context = browser_api.return_value.__enter__.return_value.chromium.launch.return_value.new_context.return_value
+        page = context.new_page.return_value
+        page.evaluate.return_value = {"video_count": 1}
+
+        with patch("playwright.sync_api.sync_playwright", browser_api):
+            profile = probe_original_site_experience(inventory, previous=previous)
+
+        self.assertTrue(profile["complete"])
+        self.assertEqual(set(profile["inspected_urls"]), set(urls))
+        self.assertEqual([call.args[0] for call in page.goto.call_args_list], urls[12:])
+        self.assertEqual(profile["features"]["video"]["source_url"], urls[12])
+
     def test_original_video_removed_without_script_blocks(self):
         r = audit_experience_continuity(
             {"index.html": "<main><h1>Craft shop</h1></main>"},

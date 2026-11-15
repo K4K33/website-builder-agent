@@ -90,12 +90,19 @@ def aggregate_source_experience(inventory: dict, observations: dict, failed: lis
 
 
 def probe_original_site_experience(inventory: dict, *, timeout_ms: int = 12000,
-                                   max_pages: int = 12) -> dict:
+                                   max_pages: int = 24, previous: dict | None = None) -> dict:
     """Bounded real browser crawl; no AI, search API or billable third party key."""
     source_urls = [p.get("url") for p in inventory.get("pages") or []
                    if isinstance(p, dict) and p.get("url")]
-    selected = source_urls[:max_pages]
-    observations, failed = {}, [u for u in source_urls[max_pages:]]
+    saved = {}
+    if (isinstance(previous, dict) and previous.get("capture_method") == "browser"
+            and previous.get("source_sha256") == source_inventory_sha256(inventory)
+            and isinstance(previous.get("raw_observations"), dict)):
+        saved = previous["raw_observations"]
+    observations = {url: saved[url] for url in source_urls[:max_pages]
+                    if isinstance(saved.get(url), dict) and saved[url]}
+    selected = [url for url in source_urls[:max_pages] if url not in observations]
+    failed = source_urls[max_pages:]
     if not selected:
         return aggregate_source_experience(inventory, observations, failed)
     try:
@@ -126,5 +133,5 @@ def probe_original_site_experience(inventory: dict, *, timeout_ms: int = 12000,
             finally:
                 browser.close()
     except Exception:
-        failed.extend(url for url in selected if url not in failed)
+        failed.extend(url for url in selected if url not in failed and url not in observations)
     return aggregate_source_experience(inventory, observations, failed)
