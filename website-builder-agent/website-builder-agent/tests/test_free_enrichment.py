@@ -69,8 +69,8 @@ class FreeEnrichmentTests(unittest.TestCase):
             missing["avoid"] = []
             draft = {"company_facts": {"industry": "restaurant"}, "design_benchmark": records}
             response = {"reference_comparison": [{
-                "url": missing["url"] + "/",
-                "avoid": ["Keep the target's original typography"],
+                "reference_id": "ref_1",
+                "avoid": "Keep the target's original typography",
                 "observations": ["Unrequested replacement"],
             }]}
             persist = Mock()
@@ -80,7 +80,7 @@ class FreeEnrichmentTests(unittest.TestCase):
             model.assert_called_once()
             self.assertEqual(model.call_args.kwargs["image_paths"], [screenshot.name] * 2)
             updated = draft["design_benchmark"][0]
-            self.assertEqual(updated["avoid"], response["reference_comparison"][0]["avoid"])
+            self.assertEqual(updated["avoid"], [response["reference_comparison"][0]["avoid"]])
             self.assertEqual(updated["observations"], missing["observations"])
             self.assertEqual(updated["industry_match"], missing["industry_match"])
             persist.assert_called_once_with(draft["design_benchmark"])

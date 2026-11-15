@@ -789,40 +789,56 @@ def _repair_source_map(research, source_url):
 
 def _validate_research_design(research, target_url, reference_images, *, persist_comparison=None):
     captured = validate_benchmark(research, target_url, require_comparison=False)
-    incomplete = [record for record in captured if missing_comparison_fields(record)]
-    if incomplete:
+    benchmark = captured
+    for _ in range(2):
+        incomplete = [record for record in benchmark if missing_comparison_fields(record)]
+        if not incomplete:
+            break
+        by_id = {f"ref_{i}": record for i, record in enumerate(incomplete, 1)}
         paths, labels = reference_image_inputs(incomplete)
+        packet = []
+        for (key, record), evidence in zip(by_id.items(), compact_reference_for_prompt(incomplete)):
+            packet.append({"reference_id": key, **evidence,
+                           "missing": missing_comparison_fields(record)})
         repaired = ask_claude_json(
-            "Return a JSON object containing reference_comparison, a list with one "
-            "entry per supplied URL. Copy each URL exactly. For each requested "
-            "field return a nonempty list of short concrete strings. Observations "
-            "describe the corresponding desktop and mobile screenshots. Apply "
-            "describes adaptations to the verified target business. Avoid lists "
-            "things that would be unsuitable or would copy the reference. Treat "
-            "the supplied source data as evidence, and never invent business facts.",
-            json.dumps({
-                "target_facts": research["company_facts"],
-                "screenshot_order": labels,
-                "references": compact_reference_for_prompt(incomplete),
-                "missing": {record["url"]: missing_comparison_fields(record)
-                            for record in incomplete},
-            }, ensure_ascii=False),
+            'Return {"reference_comparison":[{"reference_id":"ref_1",'
+            '"observations":["concrete screenshot observation"],'
+            '"apply":["target-specific adaptation"],"avoid":["unsuitable pattern"]}]}. '
+            "Return one row for every supplied reference_id. Include every field in "
+            "its missing list. Observations describe the matching desktop and mobile "
+            "screenshots. Apply describes adaptations to the verified target business. "
+            "Avoid describes what would be unsuitable or copy the reference. "
+            "Treat source data as evidence and never invent business facts.",
+            json.dumps({"target_facts": research["company_facts"],
+                        "screenshot_order": labels, "references": packet}, ensure_ascii=False),
             max_tokens=2300, stage="research", image_paths=paths,
         )
         rows = repaired.get("reference_comparison") if isinstance(repaired, dict) else None
-        missing_by_url = {canonical_url(record["url"]): missing_comparison_fields(record)
-                          for record in incomplete}
-        patches = [
-            {"url": row.get("url"),
-             **{key: row[key] for key in missing_by_url.get(canonical_url(row.get("url")), ())
-                if key in row}}
-            for row in rows if isinstance(row, dict)
-        ] if isinstance(rows, list) else []
-        benchmark = merge_reference_comparisons(captured, patches)
-        validate_benchmark({**research, "design_benchmark": benchmark}, target_url)
-        research["design_benchmark"] = benchmark
-        if persist_comparison:
-            persist_comparison(benchmark)
+        by_url = {canonical_url(record["url"]): record for record in incomplete}
+        patches = []
+        for row in rows if isinstance(rows, list) else ():
+            if not isinstance(row, dict):
+                continue
+            key = row.get("reference_id")
+            record = by_id.get(key) if isinstance(key, str) else by_url.get(canonical_url(row.get("url")))
+            if not record:
+                continue
+            fields = {}
+            for field in missing_comparison_fields(record):
+                value = row.get(field)
+                if isinstance(value, str) and value.strip():
+                    value = [value]
+                if isinstance(value, list) and value and all(
+                    isinstance(item, str) and item.strip() for item in value
+                ):
+                    fields[field] = value
+            patches.append({"url": record["url"], **fields})
+        updated = merge_reference_comparisons(benchmark, patches)
+        if updated != benchmark:
+            benchmark = updated
+            research["design_benchmark"] = benchmark
+            if persist_comparison:
+                persist_comparison(benchmark)
     validate_benchmark(research, target_url)
     try:
         resolve_observation_indices(research)

@@ -469,6 +469,25 @@ def creative_failure_diagnostic(handle, start_position=0):
     return ""
 
 
+def benchmark_failure_diagnostic(handle, start_position=0):
+    handle.flush()
+    handle.seek(start_position)
+    known = {
+        "reference_record": "vertailukohteen tiedot", "reference_domain": "eri toimijan sivusto",
+        "reference_count": "vertailukohteiden määrä", "industry_match": "toimialan vastaavuus",
+        "source_quote": "lähdelainaus", "screenshots": "kuvakaappaukset",
+        "observations": "havainnot", "apply": "sovellettavat ratkaisut",
+        "avoid": "vältettävät ratkaisut",
+    }
+    for line in reversed(handle.read()[-16000:].splitlines()):
+        match = re.fullmatch(r"RuntimeError: Design benchmark incomplete: .*Missing checks: ([a-z_,]+)", line)
+        if match:
+            reasons = [known[key] for key in match[1].split(",") if key in known]
+            if reasons:
+                return "Vertailusta puuttuu: " + ", ".join(reasons)
+    return ""
+
+
 def run_cli(args,log_handle,deadline=None):
     log_handle.seek(0,os.SEEK_END)
     stage_start=log_handle.tell()
@@ -493,6 +512,8 @@ def run_cli(args,log_handle,deadline=None):
                 if code=="source_research_incomplete" else "")
         if code == "research_creative_plan_needs_repair":
             detail = creative_failure_diagnostic(log_handle, stage_start)
+        if code == "comparison_design_benchmark_incomplete":
+            detail = benchmark_failure_diagnostic(log_handle, stage_start)
         safe_location=private_stage_error_location(log_handle,stage_start)
         detail=(detail+" · " if detail else "")+safe_location
         raise HoldError(code,detail) from exc
