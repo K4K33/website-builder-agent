@@ -69,6 +69,31 @@ class SectorReferenceTests(unittest.TestCase):
         self.assertTrue(all("url" in row and "same_industry" not in row
                             for row in rows))
 
+    def test_parallel_reference_capture_retains_ranking_and_only_needed_fallback(self):
+        from tempfile import NamedTemporaryFile
+        from threading import Barrier
+        from unittest.mock import patch
+
+        from agents import research
+
+        candidates = [{"url": f"https://ref{n}.example"} for n in range(5)]
+        rendezvous = Barrier(3)
+        with NamedTemporaryFile() as screenshot:
+            def capture(url, *_args, **_kwargs):
+                if url in {candidate["url"] for candidate in candidates[:3]}:
+                    rendezvous.wait(timeout=3)
+                if url == candidates[1]["url"]:
+                    return None
+                return {"desktop": screenshot.name, "mobile": screenshot.name}
+
+            with patch.object(research.config, "free_only", return_value=False), \
+                 patch.object(research, "capture_website", side_effect=capture) as browser:
+                evidence = research._collect_reference_evidence(candidates, "https://target.example")
+
+        self.assertEqual([item["url"] for item in evidence],
+                         [candidates[index]["url"] for index in (0, 2, 3)])
+        self.assertEqual(browser.call_count, 4)
+
     def test_research_does_not_skip_final_exact_source_gates(self):
         self.assertIn('if len(candidates) < 3:',SOURCE)
         self.assertIn('verified_evidence_quote(source, match)',SOURCE)
