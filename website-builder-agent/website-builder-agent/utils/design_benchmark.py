@@ -29,7 +29,30 @@ def resolve_observation_indices(research):
         decision["observation"] = observations[index - 1]
 
 
-def validate_benchmark(research, target_url=""):
+COMPARISON_FIELDS = ("observations", "apply", "avoid")
+
+
+def _text_list(value):
+    return isinstance(value, list) and bool(value) and all(
+        isinstance(item, str) and item.strip() for item in value
+    )
+
+
+def merge_reference_comparisons(evidence, rows):
+    """Take comparison notes only, matching each row to a captured URL."""
+    by_url = {canonical_url(row.get("url")): row for row in rows
+              if isinstance(row, dict)} if isinstance(rows, list) else {}
+    return [
+        {
+            **record,
+            **{key: by_url.get(canonical_url(record["url"]), {}).get(key, record.get(key, []))
+               for key in COMPARISON_FIELDS},
+        }
+        for record in evidence
+    ]
+
+
+def validate_benchmark(research, target_url="", *, require_comparison=True):
     records = research.get("design_benchmark", []) if isinstance(research, dict) else []
     facts = research.get("company_facts") or {}
     industry = str(facts.get("industry", "")).strip().casefold()
@@ -42,9 +65,7 @@ def validate_benchmark(research, target_url=""):
         domain = urlsplit(url).hostname
         if not domain or domain == target or domain in domains:
             continue
-        if not all(isinstance(record.get(key), list) and record[key]
-                   and all(isinstance(item, str) and item.strip() for item in record[key])
-                   for key in ("observations", "apply", "avoid")):
+        if require_comparison and not all(_text_list(record.get(key)) for key in COMPARISON_FIELDS):
             continue
         match = record.get("industry_match") or {}
         if (not industry or match.get("same_industry") is not True
@@ -69,6 +90,10 @@ def validate_benchmark(research, target_url=""):
             "observations, adaptations and exclusions. Research again before building."
         )
     return accepted
+
+
+def missing_comparison_fields(record):
+    return [key for key in COMPARISON_FIELDS if not _text_list(record.get(key))]
 
 
 def validate_design_plan(research, target_url=""):

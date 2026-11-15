@@ -28,8 +28,8 @@ from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brie
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import (
-    reference_image_inputs, resolve_observation_indices, validate_benchmark,
-    validate_design_plan,
+    COMPARISON_FIELDS, merge_reference_comparisons, missing_comparison_fields, reference_image_inputs,
+    resolve_observation_indices, validate_benchmark, validate_design_plan,
 )
 from utils.screenshot import capture_website, REFERENCE_VIEWPORTS
 from utils.original_experience_probe import probe_original_site_experience
@@ -773,7 +773,42 @@ def _repair_source_map(research, source_url):
     validate_source_plan(research, source_url=source_url)
 
 
-def _validate_research_design(research, target_url, reference_images):
+def _validate_research_design(research, target_url, reference_images, *, persist_comparison=None):
+    captured = validate_benchmark(research, target_url, require_comparison=False)
+    incomplete = [record for record in captured if missing_comparison_fields(record)]
+    if incomplete:
+        paths, labels = reference_image_inputs(incomplete)
+        repaired = ask_claude_json(
+            "Return a JSON object containing reference_comparison, a list with one "
+            "entry per supplied URL. Copy each URL exactly. For each requested "
+            "field return a nonempty list of short concrete strings. Observations "
+            "describe the corresponding desktop and mobile screenshots. Apply "
+            "describes adaptations to the verified target business. Avoid lists "
+            "things that would be unsuitable or would copy the reference. Treat "
+            "the supplied source data as evidence, and never invent business facts.",
+            json.dumps({
+                "target_facts": research["company_facts"],
+                "screenshot_order": labels,
+                "references": compact_reference_for_prompt(incomplete),
+                "missing": {record["url"]: missing_comparison_fields(record)
+                            for record in incomplete},
+            }, ensure_ascii=False),
+            max_tokens=2300, stage="research", image_paths=paths,
+        )
+        rows = repaired.get("reference_comparison") if isinstance(repaired, dict) else None
+        missing_by_url = {canonical_url(record["url"]): missing_comparison_fields(record)
+                          for record in incomplete}
+        patches = [
+            {"url": row.get("url"),
+             **{key: row[key] for key in missing_by_url.get(canonical_url(row.get("url")), ())
+                if key in row}}
+            for row in rows if isinstance(row, dict)
+        ] if isinstance(rows, list) else []
+        benchmark = merge_reference_comparisons(captured, patches)
+        validate_benchmark({**research, "design_benchmark": benchmark}, target_url)
+        research["design_benchmark"] = benchmark
+        if persist_comparison:
+            persist_comparison(benchmark)
     validate_benchmark(research, target_url)
     try:
         resolve_observation_indices(research)
@@ -858,17 +893,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
         ],
         repair_json=ask_claude_json,
     )
-    comparison = {
-        canonical_url(item.get("url")): item
-        for item in brief.get("reference_comparison", [])
-        if isinstance(item, dict)
-    }
-    benchmark = [
-        {**record,
-         **{key: comparison.get(canonical_url(record["url"]), {}).get(key, [])
-            for key in ("observations", "apply", "avoid")}}
-        for record in evidence
-    ]
+    benchmark = merge_reference_comparisons(evidence, brief.get("reference_comparison"))
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
@@ -1350,12 +1375,7 @@ Tärkeää:
     # SAVE
     # ---------------------------------------------------------
 
-    comparison = {canonical_url(item.get("url")): item for item in brief.get("reference_comparison", [])
-                  if isinstance(item, dict)}
-    benchmark = [{**record,
-                  **{key: comparison.get(record["url"], {}).get(key, [])
-                     for key in ("observations", "apply", "avoid")}}
-                 for record in reference_evidence]
+    benchmark = merge_reference_comparisons(reference_evidence, brief.get("reference_comparison"))
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
@@ -1392,7 +1412,20 @@ Tärkeää:
     reset_generated_review_claims(research_data)
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
-    _validate_research_design(research_data, url, reference_images)
+    def persist_comparison(records):
+        brief["reference_comparison"] = [
+            {"url": record["url"], **{key: record[key] for key in COMPARISON_FIELDS}}
+            for record in records
+        ]
+        if progress.get("milestone") == "references":
+            save_progress(
+                slug, company, milestone="references", source_url=url,
+                master_prompt_sha256=MASTER_PROMPT_SHA256, draft_design_brief=brief,
+            )
+
+    _validate_research_design(
+        research_data, url, reference_images, persist_comparison=persist_comparison,
+    )
     validate_creative_directions(research_data)
     validate_brand_preservation_plan(research_data)
     if progress.get("milestone") == "references":

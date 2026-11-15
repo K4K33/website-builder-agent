@@ -48,6 +48,44 @@ def prh_periods():
 
 
 class FreeEnrichmentTests(unittest.TestCase):
+    def test_benchmark_repairs_only_missing_notes_from_captured_reference(self):
+        from agents import research
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as screenshot:
+            records = [{
+                "url": f"https://operator-{index}.example",
+                "site_text": "Genuine restaurant service",
+                "industry_match": {
+                    "same_industry": True, "target_industry": "restaurant",
+                    "reason": "Verified restaurant", "evidence_quote": "restaurant service",
+                },
+                "screenshots": {"desktop": screenshot.name, "mobile": screenshot.name},
+                "observations": ["Visible menu in first view"],
+                "apply": ["Use the target's source-confirmed menu"],
+                "avoid": ["Avoid copying competitors' photos"],
+            } for index in range(3)]
+            missing = records[0]
+            missing["avoid"] = []
+            draft = {"company_facts": {"industry": "restaurant"}, "design_benchmark": records}
+            response = {"reference_comparison": [{
+                "url": missing["url"] + "/",
+                "avoid": ["Keep the target's original typography"],
+                "observations": ["Unrequested replacement"],
+            }]}
+            persist = Mock()
+            with patch.object(research, "ask_claude_json", return_value=response) as model, \
+                 patch.object(research, "validate_design_plan"):
+                research._validate_research_design(draft, "", [], persist_comparison=persist)
+            model.assert_called_once()
+            self.assertEqual(model.call_args.kwargs["image_paths"], [screenshot.name] * 2)
+            updated = draft["design_benchmark"][0]
+            self.assertEqual(updated["avoid"], response["reference_comparison"][0]["avoid"])
+            self.assertEqual(updated["observations"], missing["observations"])
+            self.assertEqual(updated["industry_match"], missing["industry_match"])
+            persist.assert_called_once_with(draft["design_benchmark"])
+
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
