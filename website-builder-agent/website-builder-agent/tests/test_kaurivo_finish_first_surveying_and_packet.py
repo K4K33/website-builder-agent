@@ -74,7 +74,11 @@ class SectorReferenceTests(unittest.TestCase):
         self.assertIn('verified_evidence_quote(source, match)',SOURCE)
         self.assertIn('if len(selected) < 3:',SOURCE)
         self.assertIn('len(reference_evidence) == 3',SOURCE)
-        self.assertIn('_validate_research_design(research_data, url, reference_images)',SOURCE)
+        self.assertRegex(
+            SOURCE,
+            r'_validate_research_design\s*\(\s*research_data, url, reference_images,\s*'
+            r'persist_comparison=persist_comparison,\s*\)',
+        )
         self.assertIn('validate_design_plan(research, target_url)',SOURCE)
         self.assertIn('validate_benchmark(research, target_url)',SOURCE)
         self.assertIn('_repair_source_map(research_data, url)',SOURCE)
