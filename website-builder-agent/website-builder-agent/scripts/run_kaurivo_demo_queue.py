@@ -45,11 +45,9 @@ if str(PROJECT) not in sys.path:
 LOCAL_WORKER=os.environ.get("KAURIVO_LOCAL_WORKER")=="1"
 RUN_ID=int(os.environ.get("GITHUB_RUN_ID","0"))
 RUN_URL="" if LOCAL_WORKER else f"https://github.com/{REPO}/actions/runs/{RUN_ID}"
-TIMEOUT_PER_STAGE=1800 if LOCAL_WORKER else 480
-RESEARCH_TIMEOUT=TIMEOUT_PER_STAGE if LOCAL_WORKER else 720
-# Finish as many real stages as possible in a single 55-minute Actions job.
-# Keep time for actual publication and public browser QA before the runner ends.
-AI_STAGE_BUDGET_SECONDS=7200 if LOCAL_WORKER else 2400
+# Hosted runs reserve time for checkpoint upload and publication before the
+# runner shuts down. Local builds have no wall-clock deadline.
+AI_STAGE_BUDGET_SECONDS=2400
 MAX_AUTO_REVISIONS=2
 # The exact same owner-requested demo remains recoverable across temporary
 # zero-cost provider and network outages. Daily attempts are bounded in SQL;
@@ -444,14 +442,38 @@ def private_stage_error_location(handle,start_position=0):
     return (kind+suffix)[:105]
 
 
+def creative_failure_diagnostic(handle, start_position=0):
+    """Translate recognized validation errors without copying model output."""
+    handle.flush()
+    handle.seek(start_position)
+    terminal = next((line for line in reversed(handle.read()[-16000:].splitlines())
+                     if line.startswith("RuntimeError: ")), "")
+    from utils.creative_directions import FIELDS
+    for index in range(1, 4):
+        marker = f"Creative direction #{index} incomplete: "
+        if marker in terminal:
+            parts = terminal.split(marker, 1)[1].split(", ")
+            fields = ", ".join(field for field in parts if field in FIELDS)
+            if fields:
+                return f"Konseptista {index} puuttuu kenttiä: {fields}"[:200]
+    for reason, detail in (
+        ("provide exactly three", "Briefistä puuttuu kolme kelvollista konseptia"),
+        ("duplicated identifiers", "Konseptien tunnisteet toistuvat"),
+        ("customer/business reason", "Asiakkaan tarpeen perustelu puuttuu"),
+        ("differ mostly by surface details", "Konseptien rakenne on liian samanlainen"),
+        ("needs a justified choice", "Konseptivalinta tai sen vertailuperustelu puuttuu"),
+        ("requires comparative reasoning", "Konseptivalinnan perustelu toistaa konseptin tekstin"),
+    ):
+        if reason in terminal:
+            return detail
+    return ""
+
+
 def run_cli(args,log_handle,deadline=None):
     log_handle.seek(0,os.SEEK_END)
     stage_start=log_handle.tell()
-    stage_timeout=RESEARCH_TIMEOUT if args[0]=="research" else TIMEOUT_PER_STAGE
-    remaining=(deadline-time.monotonic()) if deadline is not None else stage_timeout
-    duration=int(min(stage_timeout,remaining))
-    if duration<30:
-        # The next worker can continue from the last private stage checkpoint.
+    duration = None if deadline is None else int(deadline - time.monotonic())
+    if duration is not None and duration < 30:
         raise HoldError("stage_timeout", "worker_time_budget_exhausted")
     child_env=os.environ.copy()
     # On Windows, redirected Python output otherwise uses the ANSI code page.
@@ -469,6 +491,8 @@ def run_cli(args,log_handle,deadline=None):
         code=classify_stage_failure(log_handle,stage,stage_start)
         detail=(source_failure_diagnostic(log_handle,stage_start)
                 if code=="source_research_incomplete" else "")
+        if code == "research_creative_plan_needs_repair":
+            detail = creative_failure_diagnostic(log_handle, stage_start)
         safe_location=private_stage_error_location(log_handle,stage_start)
         detail=(detail+" · " if detail else "")+safe_location
         raise HoldError(code,detail) from exc
@@ -948,7 +972,7 @@ def main():
     with tempfile.TemporaryFile(mode="w+",encoding="utf-8",errors="replace") as stage_log:
         try:
             free_model_configured()
-            ai_deadline=time.monotonic()+AI_STAGE_BUDGET_SECONDS
+            ai_deadline = None if LOCAL_WORKER else time.monotonic() + AI_STAGE_BUDGET_SECONDS
             source=safe_company_url(str(claimed.get("original_url") or ""))
             from utils.state import make_slug, upsert_company
             company_name=str(claimed["company_name"])[:160]
@@ -1086,6 +1110,8 @@ def main():
                         message=("Tilapäinen häiriö: "+error.code+
                                  ". Työ on tallessa ja sitä jatketaan "
                                  "seuraavassa sallitussa ajoikkunassa.")
+                    if error.code == "research_creative_plan_needs_repair" and error.detail:
+                        message += " " + error.detail
                     update("queued",message,error_code=error.code)
                     print("Kaurivo demo queue: TRANSIENT FAILURE DEFERRED (no paid AI).")
                     return 0 if LOCAL_WORKER else 2

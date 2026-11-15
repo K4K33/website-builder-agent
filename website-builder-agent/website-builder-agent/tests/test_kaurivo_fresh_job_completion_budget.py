@@ -21,10 +21,31 @@ FREE_ENV = {
 
 class FreshDemoBudgetTests(TestCase):
     def test_cloud_runner_reserves_time_for_release(self):
-        self.assertEqual(worker.TIMEOUT_PER_STAGE, 480)
-        self.assertEqual(worker.RESEARCH_TIMEOUT, 720)
         self.assertEqual(worker.AI_STAGE_BUDGET_SECONDS, 2400)
         self.assertLess(worker.AI_STAGE_BUDGET_SECONDS, 55 * 60 - 300)
+
+    def test_local_stage_has_no_deadline_and_cloud_uses_remaining_run_time(self):
+        import tempfile
+
+        with tempfile.TemporaryFile(mode="w+") as log, \
+             patch.object(worker.subprocess, "run") as child, \
+             patch.object(worker.time, "monotonic", return_value=500):
+            worker.run_cli(["research", "example"], log)
+            self.assertIsNone(child.call_args.kwargs["timeout"])
+            worker.run_cli(["build", "example"], log, deadline=2400)
+            self.assertEqual(child.call_args.kwargs["timeout"], 1900)
+
+    def test_creative_diagnostic_copies_only_known_fields(self):
+        from io import StringIO
+
+        log = StringIO(
+            "RuntimeError: Creative preflight repair did not pass strict validation: "
+            "Creative direction #2 incomplete: mobile_behavior, private-note@example.invalid"
+        )
+        self.assertEqual(
+            worker.creative_failure_diagnostic(log),
+            "Konseptista 2 puuttuu kenttiä: mobile_behavior",
+        )
 
     def test_twenty_free_calls_then_fail_closed(self):
         response = Mock(status_code=200)
