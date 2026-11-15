@@ -362,6 +362,14 @@ def classify_stage_failure(handle,stage_name,start_position=0):
     if "design benchmark incomplete:" in terminal:
         return "comparison_design_benchmark_incomplete"
     if any(phrase in terminal for phrase in (
+        "design plan must use every reference",
+        "design decisions must trace to observed references",
+        "incomplete design decision:",
+        "invalid design observation index",
+        "a reference-informed design plan is required",
+    )):
+        return "research_design_coverage_incomplete"
+    if any(phrase in terminal for phrase in (
         "creative preflight repair did not pass strict validation",
         "creative preflight needs a repair",
         "creative preflight: provide exactly three",
@@ -514,6 +522,8 @@ def run_cli(args,log_handle,deadline=None):
             detail = creative_failure_diagnostic(log_handle, stage_start)
         if code == "comparison_design_benchmark_incomplete":
             detail = benchmark_failure_diagnostic(log_handle, stage_start)
+        if code == "research_design_coverage_incomplete":
+            detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
         safe_location=private_stage_error_location(log_handle,stage_start)
         detail=(detail+" · " if detail else "")+safe_location
         raise HoldError(code,detail) from exc
