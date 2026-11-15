@@ -188,13 +188,7 @@ def extract_source_identity(html: str, source_url: str = "") -> dict:
 
 
 
-def validate_brand_preservation_plan(research: dict) -> dict:
-    """Require an evidence-linked brand plan before spending Builder credits.
-
-    The source is authoritative; a new visual style is allowed, but ignoring
-    original colors/logos is not. Human media rights approval is separate.
-    Offline test fixtures without observable source identity remain unchanged.
-    """
+def _brand_source_pages(research):
     observed = []
     for page in (research.get("source_inventory") or {}).get("pages") or []:
         if not isinstance(page, dict):
@@ -205,6 +199,39 @@ def validate_brand_preservation_plan(research: dict) -> dict:
         if (identity.get("theme_color") or identity.get("original_logo_candidates")
                 or identity.get("original_content_photos")):
             observed.append((str(page.get("url") or ""), identity))
+    return observed
+
+
+def bind_brand_plan_sources(research):
+    """Keep proposed treatments and bind factual fields to original site observations."""
+    plan = research.get("brand_preservation_plan")
+    if not isinstance(plan, dict):
+        return
+    observed = _brand_source_pages(research)
+    if not observed:
+        return
+    research["brand_preservation_plan"] = {
+        **plan,
+        "source_urls": list(dict.fromkeys(url for url, _ in observed if url)),
+        "original_logo_candidates": list(dict.fromkeys(
+            logo for _, identity in observed
+            for logo in identity.get("original_logo_candidates") or []
+            if isinstance(logo, str) and logo.strip()
+        )),
+        "original_theme_colors": list(dict.fromkeys(
+            str(identity["theme_color"]) for _, identity in observed if identity.get("theme_color")
+        )),
+    }
+
+
+def validate_brand_preservation_plan(research: dict) -> dict:
+    """Require an evidence-linked brand plan before spending Builder credits.
+
+    The source is authoritative; a new visual style is allowed, but ignoring
+    original colors/logos is not. Human media rights approval is separate.
+    Offline test fixtures without observable source identity remain unchanged.
+    """
+    observed = _brand_source_pages(research)
     if not observed:
         return {"required": False, "source_pages": 0}
     plan = research.get("brand_preservation_plan")
