@@ -1050,16 +1050,29 @@ def run_research(
     original_screenshots = progress.get("original_screenshots")
     original_experience_profile = progress.get("original_experience_profile")
     needs_screenshots = not isinstance(original_screenshots, dict)
-    needs_experience = not isinstance(original_experience_profile, dict)
+    needs_experience = (
+        not isinstance(original_experience_profile, dict)
+        or original_experience_profile.get("complete") is not True
+    )
     if needs_screenshots and needs_experience:
         with ThreadPoolExecutor(max_workers=2) as pool:
             screenshots = pool.submit(capture_website, normalize_url(url), "original-client-" + slug)
-            original_experience_profile = probe_original_site_experience(source_inventory)
+            original_experience_profile = probe_original_site_experience(
+                source_inventory, previous=original_experience_profile,
+            )
             original_screenshots = screenshots.result() or {}
     elif needs_screenshots:
         original_screenshots = capture_website(normalize_url(url), "original-client-" + slug) or {}
     elif needs_experience:
-        original_experience_profile = probe_original_site_experience(source_inventory)
+        original_experience_profile = probe_original_site_experience(
+            source_inventory, previous=original_experience_profile,
+        )
+    if progress and needs_experience:
+        progress = save_progress(
+            slug, company, milestone=progress["milestone"], source_url=url,
+            master_prompt_sha256=MASTER_PROMPT_SHA256,
+            original_experience_profile=original_experience_profile,
+        )
 
     # Keep the entire source inventory untouched and QA-authoritative.
     # Crawler observations may be dicts, lists, None or HTML-derived text;
