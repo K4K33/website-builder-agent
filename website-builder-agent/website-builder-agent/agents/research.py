@@ -706,13 +706,17 @@ def _select_reference_candidates(references, facts, target_url):
 
 def _collect_reference_evidence(references, target_url):
     capture_reference = partial(capture_website, viewports=REFERENCE_VIEWPORTS)
-    evidence, domains = [], {urlsplit(canonical_url(target_url)).hostname}
+    candidates, domains = [], {urlsplit(canonical_url(target_url)).hostname}
     for reference in references[:5]:
         url = canonical_url(reference.get("url"))
         domain = urlsplit(url).hostname
         if not domain or domain in domains:
             continue
         domains.add(domain)
+        candidates.append((reference, url, domain))
+
+    def capture_candidate(candidate):
+        reference, url, domain = candidate
         try:
             shots = (capture_cached(
                 url, capture_reference,
@@ -722,13 +726,23 @@ def _collect_reference_evidence(references, target_url):
             if not isinstance(shots, dict) or not all(
                     isinstance(shots.get(view), str) and os.path.isfile(shots[view])
                     for view in ("desktop", "mobile")):
-                continue
-            evidence.append({**reference, "url": url, "screenshots": shots,
-                             "observed_at": datetime.now(timezone.utc).isoformat()})
+                return None
+            return {**reference, "url": url, "screenshots": shots,
+                    "observed_at": datetime.now(timezone.utc).isoformat()}
         except Exception as error:
             print(f"[Research] Reference unavailable: {domain}: {type(error).__name__}")
-        if len(evidence) == 3:
-            break
+            return None
+
+    # The first three independent sites can be captured together. Preserve the
+    # source ranking and only open fallback sites for genuinely failed captures.
+    evidence = []
+    cursor = 0
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        while cursor < len(candidates) and len(evidence) < 3:
+            needed = 3 - len(evidence)
+            batch = candidates[cursor:cursor + needed]
+            evidence.extend(item for item in pool.map(capture_candidate, batch) if item is not None)
+            cursor += len(batch)
     if len(evidence) < 3:
         raise RuntimeError("Three same-industry references with both desktop/mobile views are required.")
     return evidence
@@ -1031,21 +1045,22 @@ def run_research(
             "Original-site content research incomplete; review these pages: "
             + ", ".join(source_gaps[:8])
         )
-    # Capture the CLIENT'S ORIGINAL actual desktop/mobile visual identity
-    # before any redesign. Reference screenshots alone cannot prove fidelity.
-    original_screenshots = (
-        progress.get("original_screenshots")
-        if isinstance(progress.get("original_screenshots"), dict)
-        else capture_website(normalize_url(url), "original-client-" + slug) or {}
-    )
-    # Zero-paid-credit browser probe of every inventoried source route.
-    # Failure is explicitly incomplete, never interpreted as an absence of
-    # original video, animation, galleries or background character.
-    original_experience_profile = (
-        progress.get("original_experience_profile")
-        if isinstance(progress.get("original_experience_profile"), dict)
-        else probe_original_site_experience(source_inventory)
-    )
+    # Both measurements read the same original site independently. Run them
+    # together when neither has been captured, and keep any valid saved proof.
+    original_screenshots = progress.get("original_screenshots")
+    original_experience_profile = progress.get("original_experience_profile")
+    needs_screenshots = not isinstance(original_screenshots, dict)
+    needs_experience = not isinstance(original_experience_profile, dict)
+    if needs_screenshots and needs_experience:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            screenshots = pool.submit(capture_website, normalize_url(url), "original-client-" + slug)
+            original_experience_profile = probe_original_site_experience(source_inventory)
+            original_screenshots = screenshots.result() or {}
+    elif needs_screenshots:
+        original_screenshots = capture_website(normalize_url(url), "original-client-" + slug) or {}
+    elif needs_experience:
+        original_experience_profile = probe_original_site_experience(source_inventory)
+
     # Keep the entire source inventory untouched and QA-authoritative.
     # Crawler observations may be dicts, lists, None or HTML-derived text;
     # normalize only the compact AI observation packet, never fabricate data
