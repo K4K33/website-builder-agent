@@ -39,22 +39,24 @@ def validate_creative_directions(research: dict) -> dict:
             raise RuntimeError("Creative directions have duplicated identifiers.")
         ids.add(identifier)
         if not any(word in _normalized(direction.get("business_reason")) for word in
-                   ("yrity", "customer", "client", "asiakka", "palvel", "service",
-                    "tuot", "product", "toimial", "business", "käyttäj")):
+                   ("yrity", "customer", "client", "asiaka", "osto", "ostaja",
+                    "kävij", "palvel", "service", "tuot", "product", "toimial",
+                    "business", "käyttäj", "kund", "besökar", "köpar", "tjänst")):
             raise RuntimeError("Creative direction must explain a customer/business reason, not a style trend.")
     # Similar descriptions across the important structural axes are rejected.
     # Three palette/font variants are not three creative proposals.
     for i in range(3):
         for j in range(i+1,3):
             left,right=raw[i],raw[j]
-            different=sum(
-                SequenceMatcher(None,_normalized(left[key]),_normalized(right[key]),autojunk=False).ratio()<.70
-                for key in CREATIVE_AXES
-            )
-            if different<3:
+            similar = [
+                key for key in CREATIVE_AXES
+                if SequenceMatcher(None, _normalized(left[key]), _normalized(right[key]),
+                                   autojunk=False).ratio() >= .70
+            ]
+            if len(similar) >= 2:
                 raise RuntimeError(
-                    "Creative directions differ mostly by surface details. "
-                    "Change first-view composition, navigation and real information architecture."
+                    f"Creative directions differ mostly by surface details. "
+                    f"Directions #{i+1} and #{j+1} share {', '.join(similar)}."
                 )
     choice = research.get("creative_selection")
     selection_error = "Creative selection needs a justified choice and explicit rejection of both alternatives."

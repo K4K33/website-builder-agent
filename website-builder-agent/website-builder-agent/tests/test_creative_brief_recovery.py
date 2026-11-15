@@ -49,19 +49,41 @@ class BoundedCreativeRepairTests(TestCase):
                           if key not in GOOD})
         self.assertEqual(source,before,"Source draft cannot be mutated by repair")
 
-    def test_model_must_not_rewrite_source_facts_or_relax_3_concepts(self):
-        invalid=deepcopy(GOOD)
-        invalid["creative_directions"]=[]
-        model=Mock(side_effect=[
-            {**GOOD,"company_facts":{"name":"Invented brand"}},
-            {"creative_directions":GOOD["creative_directions"][:2],
-             "creative_selection":GOOD["creative_selection"]},
-        ])
-        with self.assertRaisesRegex(RuntimeError,
-                                    "strict validation|Creative preflight"):
-            ensure_creative_directions(invalid,company_facts=FACTS,
-                source_anchors=ANCHORS,repair_json=model,max_repairs=2)
-        self.assertEqual(model.call_count,2)
+    def test_unrequested_fields_in_model_reply_cannot_rewrite_source(self):
+        original = {"creative_directions": [], "company_facts": FACTS}
+        model = Mock(return_value={**deepcopy(GOOD), "company_facts": {"name": "Invented"}})
+        result = ensure_creative_directions(
+            original, company_facts=FACTS, source_anchors=ANCHORS, repair_json=model,
+        )
+        self.assertEqual(result["company_facts"], FACTS)
+        validate_creative_directions(result)
+        self.assertEqual(model.call_count, 1)
+
+    def test_saved_verifiable_choice_needs_no_extra_model_call(self):
+        draft = deepcopy(GOOD)
+        chosen = draft["creative_selection"]["selected_id"]
+        draft["creative_selection"].pop("rejected_ids")
+        draft["creative_directions"][0]["business_reason"] = "Asiakas löytää sopivan ajan nopeasti."
+        model = Mock()
+        result = ensure_creative_directions(
+            draft, company_facts=FACTS, source_anchors=ANCHORS, repair_json=model,
+        )
+        self.assertEqual(
+            set(result["creative_selection"]["rejected_ids"]),
+            {direction["id"] for direction in result["creative_directions"]} - {chosen},
+        )
+        validate_creative_directions(result)
+        model.assert_not_called()
+
+    def test_missing_concepts_remain_rejected(self):
+        model = Mock(return_value={
+            **GOOD, "creative_directions": GOOD["creative_directions"][:2],
+        })
+        with self.assertRaisesRegex(RuntimeError, "strict validation"):
+            ensure_creative_directions(
+                {}, company_facts=FACTS, source_anchors=ANCHORS, repair_json=model,
+            )
+        self.assertEqual(model.call_count, 2)
 
     def test_default_repair_uses_latest_validation_feedback(self):
         original = {"creative_directions": [], "creative_selection": {}}

@@ -17,6 +17,30 @@ from typing import Callable
 from utils.creative_directions import validate_creative_directions
 
 
+def _with_consistent_choice(brief: dict) -> dict:
+    """Derive the identifiers of the alternatives from the expressed choice."""
+    directions = brief.get("creative_directions")
+    choice = brief.get("creative_selection")
+    if not isinstance(directions, list) or len(directions) != 3 or not isinstance(choice, dict):
+        return brief
+    identifiers = [item.get("id") if isinstance(item, dict) else None for item in directions]
+    if not all(isinstance(identifier, str) and identifier.strip() for identifier in identifiers):
+        return brief
+    normalized = {identifier.strip().casefold(): identifier for identifier in identifiers}
+    selected = choice.get("selected_id")
+    if not isinstance(selected, str) or len(normalized) != 3:
+        return brief
+    selected_id = selected.strip().casefold()
+    if selected_id not in normalized:
+        return brief
+    fixed_choice = {
+        **choice,
+        "selected_id": normalized[selected_id],
+        "rejected_ids": [identifier for key, identifier in normalized.items() if key != selected_id],
+    }
+    return {**brief, "creative_selection": fixed_choice}
+
+
 def ensure_creative_directions(
     brief: dict,
     *,
@@ -32,6 +56,14 @@ def ensure_creative_directions(
         return brief
     except RuntimeError as first_error:
         error = str(first_error)[:250]
+    normalized = _with_consistent_choice(brief)
+    if normalized is not brief:
+        try:
+            validate_creative_directions(normalized)
+        except RuntimeError as exc:
+            error = str(exc)[:250]
+        else:
+            return normalized
     if max_repairs < 1:
         raise RuntimeError("Creative preflight needs a repair: " + error)
 
@@ -42,7 +74,7 @@ def ensure_creative_directions(
         "verified_company_facts": company_facts,
         "verified_source_anchors": source_anchors[:6],
         "previous_creative_directions": brief.get("creative_directions"),
-        "previous_selection": brief.get("creative_selection"),
+        "previous_selection": normalized.get("creative_selection"),
         "validation_error": error,
     }
     system = (
@@ -63,7 +95,9 @@ def ensure_creative_directions(
         "differ materially in at least three of first_view, "
         "information_architecture, navigation and image_strategy, not merely "
         "font and color. The business_reason must describe actual customer "
-        "or company needs. creative_selection requires a selected_id, "
+        "or company needs. Name the audience explicitly, for example customer, "
+        "asiakas, or kund, and explain their verified task. "
+        "creative_selection requires a selected_id, "
         "a genuinely comparative business_reason at least 35 characters, "
         "and rejected_ids naming the two alternatives. "
         "Treat the original brand as locked, not permission to rebrand."
@@ -79,17 +113,17 @@ def ensure_creative_directions(
         if not isinstance(answer, dict):
             error = "Repair model did not return a JSON object."
             continue
-        if set(answer) != {"creative_directions", "creative_selection"}:
-            error = "Repair model modified fields outside creative direction."
-            continue
-        candidate = dict(brief)
-        candidate.update(answer)
+        creative_fields = ("creative_directions", "creative_selection")
+        candidate = _with_consistent_choice({
+            **brief,
+            **{key: answer[key] for key in creative_fields if key in answer},
+        })
         try:
             validate_creative_directions(candidate)
         except RuntimeError as exc:
             error = str(exc)[:250]
-            packet["previous_creative_directions"] = answer["creative_directions"]
-            packet["previous_selection"] = answer["creative_selection"]
+            packet["previous_creative_directions"] = candidate.get("creative_directions")
+            packet["previous_selection"] = candidate.get("creative_selection")
             continue
         return candidate
     raise RuntimeError("Creative preflight repair did not pass strict validation: " + error)
