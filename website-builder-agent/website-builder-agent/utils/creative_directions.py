@@ -27,10 +27,11 @@ def validate_creative_directions(research: dict) -> dict:
     for index, direction in enumerate(raw,1):
         if not isinstance(direction,dict):
             raise RuntimeError(f"Creative direction #{index} is not structured.")
-        missing=[name for name in FIELDS if len(str(direction.get(name) or "").strip())<12
-                 and name!="id"]
-        if not str(direction.get("id") or "").strip():
-            missing.append("id")
+        missing = [
+            name for name in FIELDS
+            if not isinstance(direction.get(name), str)
+            or len(direction[name].strip()) < (1 if name == "id" else 12)
+        ]
         if missing:
             raise RuntimeError(f"Creative direction #{index} incomplete: {', '.join(missing)}")
         identifier=_normalized(direction["id"])
@@ -55,13 +56,23 @@ def validate_creative_directions(research: dict) -> dict:
                     "Creative directions differ mostly by surface details. "
                     "Change first-view composition, navigation and real information architecture."
                 )
-    choice=research.get("creative_selection") or {}
-    selected=_normalized(choice.get("selected_id"))
-    reason=str(choice.get("business_reason") or "").strip()
-    rejected=choice.get("rejected_ids")
-    if selected not in ids or len(reason)<35 or not isinstance(rejected,list) or set(map(_normalized,rejected))!=ids-{selected}:
-        raise RuntimeError("Creative selection needs a justified choice and explicit rejection of both alternatives.")
-    selection=[d for d in raw if _normalized(d["id"])==selected][0]
+    choice = research.get("creative_selection")
+    selection_error = "Creative selection needs a justified choice and explicit rejection of both alternatives."
+    if not isinstance(choice, dict):
+        raise RuntimeError(selection_error)
+    selected = choice.get("selected_id")
+    reason = choice.get("business_reason")
+    rejected = choice.get("rejected_ids")
+    if (
+        not isinstance(selected, str) or _normalized(selected) not in ids
+        or not isinstance(reason, str) or len(reason.strip()) < 35
+        or not isinstance(rejected, list) or len(rejected) != 2
+        or any(not isinstance(identifier, str) for identifier in rejected)
+        or set(map(_normalized, rejected)) != ids - {_normalized(selected)}
+    ):
+        raise RuntimeError(selection_error)
+    selection = next(direction for direction in raw
+                     if _normalized(direction["id"]) == _normalized(selected))
     if _normalized(reason)==_normalized(selection.get("business_reason")):
         raise RuntimeError("Creative selection requires comparative reasoning, not copied promotional text.")
     return {"selected":selection,"alternatives":raw,"choice":choice,

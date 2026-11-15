@@ -1,6 +1,7 @@
 """Generic, offline new-firm Research recovery — no public APIs or real clients."""
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -62,18 +63,20 @@ class BoundedCreativeRepairTests(TestCase):
                 source_anchors=ANCHORS,repair_json=model,max_repairs=2)
         self.assertEqual(model.call_count,2)
 
-    def test_a_poor_first_repair_uses_one_more_bounded_try(self):
-        original={"creative_directions":[],"creative_selection":{}}
-        model=Mock(side_effect=[
-            {"creative_directions":GOOD["creative_directions"][:2],
-             "creative_selection":GOOD["creative_selection"]},
-            deepcopy(GOOD),
-        ])
-        result=ensure_creative_directions(
-            original,company_facts=FACTS,source_anchors=ANCHORS,
-            repair_json=model,max_repairs=2)
+    def test_default_repair_uses_latest_validation_feedback(self):
+        original = {"creative_directions": [], "creative_selection": {}}
+        malformed = {**deepcopy(GOOD), "creative_selection": ["invalid"]}
+        model = Mock(side_effect=[malformed, deepcopy(GOOD)])
+
+        result = ensure_creative_directions(
+            original, company_facts=FACTS, source_anchors=ANCHORS, repair_json=model,
+        )
+
         validate_creative_directions(result)
-        self.assertEqual(model.call_count,2)
+        self.assertEqual(model.call_count, 2)
+        second_packet = json.loads(model.call_args.args[1])
+        self.assertIn("Creative selection needs", second_packet["validation_error"])
+        self.assertEqual(second_packet["previous_selection"], ["invalid"])
 
     def test_any_company_creative_failure_classifies_as_bounded_retry(self):
         from io import StringIO

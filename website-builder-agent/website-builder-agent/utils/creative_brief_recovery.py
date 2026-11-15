@@ -23,7 +23,7 @@ def ensure_creative_directions(
     company_facts: dict,
     source_anchors: list,
     repair_json: Callable,
-    max_repairs: int = 1,
+    max_repairs: int = 2,
 ) -> dict:
     if not isinstance(brief, dict):
         raise RuntimeError("Research brief is not a structured object.")
@@ -55,7 +55,11 @@ def ensure_creative_directions(
         "id, concept, business_reason, source_anchor, first_view, "
         "information_architecture, navigation, image_strategy, typography, "
         "brand_continuity, non_goals, mobile_behavior. Each field except id "
-        "must contain at least 12 real characters. All three designs must "
+        "must be a string of at least 12 characters. Use one or two concrete "
+        "sentences per field and short ids. Write each concept around a "
+        "distinct verified customer task or a different way of completing it. "
+        "Use visibly different opening compositions, page structures and "
+        "navigation patterns. All three designs must "
         "differ materially in at least three of first_view, "
         "information_architecture, navigation and image_strategy, not merely "
         "font and color. The business_reason must describe actual customer "
@@ -65,6 +69,9 @@ def ensure_creative_directions(
         "Treat the original brand as locked, not permission to rebrand."
     )
     for _ in range(max_repairs):
+        # Feed the most recent validation failure back into the next call.
+        # A new queue run would otherwise only see the original stale draft.
+        packet["validation_error"] = error
         answer = repair_json(
             system, json.dumps(packet, ensure_ascii=False, default=str),
             max_tokens=4500, stage="research",
@@ -83,7 +90,6 @@ def ensure_creative_directions(
             error = str(exc)[:250]
             packet["previous_creative_directions"] = answer["creative_directions"]
             packet["previous_selection"] = answer["creative_selection"]
-            packet["validation_error"] = error
             continue
         return candidate
     raise RuntimeError("Creative preflight repair did not pass strict validation: " + error)
