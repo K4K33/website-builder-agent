@@ -35,7 +35,7 @@ from utils.screenshot import capture_website, REFERENCE_VIEWPORTS
 from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
 from utils.source_fidelity import source_map_gaps, validate_source_plan, source_manifest
-from utils.source_identity import validate_brand_preservation_plan
+from utils.source_identity import bind_brand_plan_sources, validate_brand_preservation_plan
 from utils.free_references import discover_free_references, preferred_benchmark_regions, verified_sector_search_hint
 from utils.reference_quote_evidence import observed_quote_options, verified_evidence_quote
 from utils.free_tavily_cache import cached_free_search
@@ -1488,14 +1488,27 @@ Tärkeää:
         research_data, url, reference_images, persist_comparison=persist_comparison,
     )
     validate_creative_directions(research_data)
-    validate_brand_preservation_plan(research_data)
+    bind_brand_plan_sources(research_data)
     if progress.get("milestone") == "references":
-        # Save the verified design separately from the content-map repair.
-        # A failed repair or transport retry must not regenerate the design.
+        # Preserve the actual repaired decisions and source bindings even if a
+        # treatment or content-map check still needs work.
         save_progress(
             slug, company, milestone="references", source_url=url,
             master_prompt_sha256=MASTER_PROMPT_SHA256,
-            validated_design_brief={**brief, "design_decisions": research_data["design_decisions"]},
+            draft_design_brief={
+                **brief, "design_decisions": research_data["design_decisions"],
+                "brand_preservation_plan": research_data.get("brand_preservation_plan"),
+            },
+        )
+    validate_brand_preservation_plan(research_data)
+    if progress.get("milestone") == "references":
+        save_progress(
+            slug, company, milestone="references", source_url=url,
+            master_prompt_sha256=MASTER_PROMPT_SHA256,
+            validated_design_brief={
+                **brief, "design_decisions": research_data["design_decisions"],
+                "brand_preservation_plan": research_data.get("brand_preservation_plan"),
+            },
         )
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.

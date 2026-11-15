@@ -112,6 +112,20 @@ class SourceIdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "logo"):
             validate_brand_preservation_plan(research)
 
+        from utils.source_identity import bind_brand_plan_sources
+
+        other = SOURCE_URL + "services"
+        research["source_inventory"]["pages"].append({"url": other, "source_identity": identity})
+        plan["source_urls"] = ["https://invented.example/"]
+        treatment = plan["logo_treatment"]
+        bind_brand_plan_sources(research)
+        bound = research["brand_preservation_plan"]
+        self.assertEqual(bound["source_urls"], [SOURCE_URL, other])
+        self.assertEqual(bound["original_logo_candidates"], identity["original_logo_candidates"])
+        self.assertEqual(bound["logo_treatment"], treatment)
+        self.assertEqual(validate_brand_preservation_plan(research)["source_pages"], 2)
+
+
     def test_original_staff_or_work_photos_require_manual_rights_mapping(self):
         source = SOURCE_HTML.replace(
             "<main><h1>",
