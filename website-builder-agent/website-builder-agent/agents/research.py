@@ -844,29 +844,46 @@ def _validate_research_design(research, target_url, reference_images, *, persist
         resolve_observation_indices(research)
         validate_design_plan(research, target_url)
     except RuntimeError:
-        # Repair only the links between design decisions and existing evidence.
-        # The original facts, observed screenshots and comparisons stay intact.
-        evidence = [
-            {"url": record["url"], "observations": record["observations"]}
-            for record in research["design_benchmark"]
-        ]
+        # Bind coverage to the captured references and fixed dimensions in code.
+        # The model writes the design rationale for each explicit slot.
+        dimensions = ("first_view", "service_hierarchy", "contact_path", "mobile")
+        records = research["design_benchmark"]
+        slots = {}
+        for index in range(max(len(records), len(dimensions))):
+            record = records[index % len(records)]
+            slots[f"decision_{index + 1}"] = {
+                "dimension": dimensions[index % len(dimensions)],
+                "reference_url": record["url"],
+                "observations": record["observations"],
+            }
         repaired = ask_claude_json(
-            "Return only a JSON object with design_decisions. Use every supplied "
-            "reference URL exactly and cover first_view, service_hierarchy, "
-            "contact_path and mobile. Each item requires id, dimension, "
-            "reference_url, observation_index (1-based in that URL's list), "
-            "adaptation, section_id and acceptance_check. Use unique IDs. "
-            "Use only the supplied evidence and keep target-specific design intent.",
-            json.dumps({"references": evidence,
-                        "design_decisions": research.get("design_decisions"),
-                        "target": research.get("company_facts"),
-                        "design": research.get("design_recommendations")},
-                       ensure_ascii=False),
+            'Return {"design_decisions": {"decision_1": {"observation_index": 1, '
+            '"adaptation": "concrete target-specific design", "section_id": "existing section", '
+            '"acceptance_check": "visible acceptance condition"}}}. '
+            "Return one row keyed by EVERY supplied slot ID. The slot already has "
+            "its dimension and reference URL. Choose an actual 1-based observation "
+            "index from THAT slot and an existing section from the site architecture. "
+            "Use verified facts and retained content.",
+            json.dumps({"slots": slots, "target": research.get("company_facts"),
+                        "design": research.get("design_recommendations"),
+                        "site_architecture": research.get("site_architecture")}, ensure_ascii=False),
             max_tokens=2400, stage="research", image_paths=reference_images,
         )
-        research["design_decisions"] = (
-            repaired.get("design_decisions") if isinstance(repaired, dict) else None
-        )
+        rows = repaired.get("design_decisions") if isinstance(repaired, dict) else None
+        if isinstance(rows, dict):
+            research["design_decisions"] = [
+                {
+                    "id": key, "dimension": slot["dimension"],
+                    "reference_url": slot["reference_url"],
+                    **{field: rows[key].get(field) for field in
+                       ("observation_index", "adaptation", "section_id", "acceptance_check")},
+                }
+                for key, slot in slots.items() if isinstance(rows.get(key), dict)
+            ]
+        else:
+            # Preserve compatibility with models returning the original list
+            # schema. The strict checks below still verify every dimension.
+            research["design_decisions"] = rows
         resolve_observation_indices(research)
         validate_design_plan(research, target_url)
 

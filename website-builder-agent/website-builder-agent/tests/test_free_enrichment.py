@@ -85,6 +85,29 @@ class FreeEnrichmentTests(unittest.TestCase):
             self.assertEqual(updated["industry_match"], missing["industry_match"])
             persist.assert_called_once_with(draft["design_benchmark"])
 
+            draft["design_recommendations"] = {"motion_plan": {
+                "purpose": "Support finding the menu", "implementation": "Highlight active section",
+                "reduced_motion": "Static highlight", "verification": "Check in a browser",
+            }}
+
+            def repair_coverage(_prompt, packet, **_kwargs):
+                slots = json.loads(packet)["slots"]
+                return {"design_decisions": {key: {
+                    "observation_index": 1, "adaptation": "Show the target's verified opening hours",
+                    "section_id": "main", "acceptance_check": "Opening hours appear within the section",
+                } for key in slots}}
+
+            with patch.object(research, "ask_claude_json", side_effect=repair_coverage) as model:
+                research._validate_research_design(draft, "", [])
+            model.assert_called_once()
+            decisions = draft["design_decisions"]
+            self.assertEqual({decision["reference_url"] for decision in decisions},
+                             {record["url"] for record in records})
+            self.assertEqual({decision["dimension"] for decision in decisions},
+                             {"first_view", "service_hierarchy", "contact_path", "mobile"})
+            self.assertEqual(len(decisions), 4)
+
+
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
