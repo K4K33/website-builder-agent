@@ -71,6 +71,90 @@ class ConceptWorkflowTests(unittest.TestCase):
             self.assertEqual(result['status'], 'ready_for_comparison')
             self.assertEqual(model.call_count, 6)
 
+
+    def test_revises_only_browser_rejected_concept_route_and_renders_again(self):
+        research, data = fixture()
+        company = {'research': research}
+        pages = [page for concept in data['concepts'].values()
+                 for page in concept['pages'].values()]
+        calls = []
+
+        def respond(system, prompt, **kwargs):
+            if 'observed_browser_failures' in prompt:
+                self.assertIn('Fix measurable WCAG AA text/background contrast', prompt)
+                calls.append('revision')
+                return {'html': pages[0]}
+            index = len(calls)
+            self.assertLess(index, 6)
+            calls.append('initial')
+            html = pages[index]
+            if index == 0:
+                html = html.replace('</style>', '/* needs-browser-revision */</style>')
+            return {'html': html}
+
+        def review_browser(file, **kwargs):
+            report = fake_renderer(file, **kwargs)
+            if 'needs-browser-revision' in Path(file).read_text(encoding='utf-8'):
+                report['issues'] = ['desktop: measurable WCAG AA text contrast failures']
+                report['pass'] = False
+            return report
+
+        with TemporaryDirectory() as folder, \
+             patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'browser-job'}), \
+             patch('utils.concept_workflow.get_company',
+                   return_value=('studio', company)), \
+             patch('utils.concept_workflow.upsert_company'), \
+             patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \
+             patch('utils.concept_workflow.config.model_for_stage',
+                   return_value='fixture-model'), \
+             patch('utils.browser_qa.inspect_site', side_effect=review_browser), \
+             patch('utils.claude_client.ask_claude_json', side_effect=respond):
+            result = generate_concepts('studio')
+            self.assertEqual(result['status'], 'ready_for_comparison')
+            self.assertEqual(calls, ['initial'] * 6 + ['revision'])
+            self.assertFalse(result['repair_targets'])
+
+    def test_unrepaired_browser_issue_cannot_be_marked_ready(self):
+        research, data = fixture()
+        company = {'research': research}
+        pages = [page for concept in data['concepts'].values()
+                 for page in concept['pages'].values()]
+        calls = []
+
+        def respond(system, prompt, **kwargs):
+            if 'observed_browser_failures' in prompt:
+                calls.append('revision')
+                return {'html': pages[0].replace('</style>',
+                                                 '/* needs-browser-revision */</style>')}
+            index = len(calls)
+            calls.append('initial')
+            html = pages[index]
+            if index == 0:
+                html = html.replace('</style>', '/* needs-browser-revision */</style>')
+            return {'html': html}
+
+        def browser(file, **kwargs):
+            report = fake_renderer(file, **kwargs)
+            if 'needs-browser-revision' in Path(file).read_text(encoding='utf-8'):
+                report['issues'] = ['mobile: horizontal overflow']
+                report['pass'] = False
+            return report
+
+        with TemporaryDirectory() as folder, \
+             patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'browser-bad'}), \
+             patch('utils.concept_workflow.get_company',
+                   return_value=('studio', company)), \
+             patch('utils.concept_workflow.upsert_company'), \
+             patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \
+             patch('utils.concept_workflow.config.model_for_stage',
+                   return_value='fixture-model'), \
+             patch('utils.browser_qa.inspect_site', side_effect=browser), \
+             patch('utils.claude_client.ask_claude_json', side_effect=respond), \
+             self.assertRaisesRegex(RuntimeError,
+                 'CONCEPT_BROWSER_VALIDATION_BLOCKED'):
+            generate_concepts('studio')
+        self.assertEqual(calls, ['initial'] * 6 + ['revision'] * 2)
+
     def test_queue_repairs_unverified_contact_before_rendering(self):
         research, data = fixture()
         company = {'research': research}
