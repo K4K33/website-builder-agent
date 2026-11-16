@@ -75,6 +75,36 @@ def _layout_signature(pages):
     return digest(result)
 
 
+def validate_concept_page(route, body, required_routes):
+    route_path(route)
+    if not isinstance(body, str) or not body.lstrip().lower().startswith('<!doctype html'):
+        raise RuntimeError('Every concept page must contain complete HTML')
+    soup = BeautifulSoup(body, 'html.parser')
+    if not soup.find('main') or len(soup.select('main h1')) != 1 or not soup.find('style'):
+        raise RuntimeError('Concept pages need a real main, one h1 and responsive styles')
+    # These are visual prototypes. Never run authored code or collect data.
+    if soup.find(['script', 'form', 'iframe', 'object', 'embed', 'base', 'link', 'svg', 'math', 'video', 'audio', 'source']):
+        raise RuntimeError('Concepts must be self-contained presentation HTML; no scripts/forms/embeds')
+    if soup.select('meta[http-equiv]'):
+        raise RuntimeError('Concept pages cannot redirect or load an external document')
+    for element in soup.find_all(True):
+        if 'srcset' in element.attrs or (element.name != 'img' and 'src' in element.attrs):
+            raise RuntimeError('Only explicitly staged img sources may load in a concept')
+        if any(str(key).lower().startswith('on') for key in element.attrs):
+            raise RuntimeError('Event handlers are forbidden in concepts')
+    for a in soup.select('a[href]'):
+        href = a['href']
+        if href.startswith(('#', 'https://', 'mailto:', 'tel:')):
+            continue
+        from urllib.parse import urljoin, urlsplit
+        parsed = urlsplit(href)
+        if parsed.scheme or parsed.netloc:
+            raise RuntimeError('Concept navigation cannot execute code or use an unapproved external scheme')
+        dest = urlsplit(urljoin('https://preview.invalid/' + route, href)).path.lstrip('/')
+        if dest not in required_routes:
+            raise RuntimeError('Concept navigation leaves its two actual prototype pages')
+
+
 def parse_concepts(raw, research):
     choices = validate_creative_directions(research)
     expected = {d['id'] for d in choices['alternatives']}
@@ -94,33 +124,7 @@ def parse_concepts(raw, research):
         if not isinstance(pages, dict) or set(pages) != required_routes:
             raise RuntimeError('Each concept requires a home and the same key content route')
         for route, body in pages.items():
-            route_path(route)
-            if not isinstance(body, str) or not body.lstrip().lower().startswith('<!doctype html'):
-                raise RuntimeError('Every concept page must contain complete HTML')
-            soup = BeautifulSoup(body, 'html.parser')
-            if not soup.find('main') or len(soup.select('main h1')) != 1 or not soup.find('style'):
-                raise RuntimeError('Concept pages need a real main, one h1 and responsive styles')
-            # These are visual prototypes. Never run authored code or collect data.
-            if soup.find(['script', 'form', 'iframe', 'object', 'embed', 'base', 'link', 'svg', 'math', 'video', 'audio', 'source']):
-                raise RuntimeError('Concepts must be self-contained presentation HTML; no scripts/forms/embeds')
-            if soup.select('meta[http-equiv]'):
-                raise RuntimeError('Concept pages cannot redirect or load an external document')
-            for element in soup.find_all(True):
-                if 'srcset' in element.attrs or (element.name != 'img' and 'src' in element.attrs):
-                    raise RuntimeError('Only explicitly staged img sources may load in a concept')
-                if any(str(key).lower().startswith('on') for key in element.attrs):
-                    raise RuntimeError('Event handlers are forbidden in concepts')
-            for a in soup.select('a[href]'):
-                href = a['href']
-                if href.startswith(('#', 'https://', 'mailto:', 'tel:')):
-                    continue
-                from urllib.parse import urljoin, urlsplit
-                parsed = urlsplit(href)
-                if parsed.scheme or parsed.netloc:
-                    raise RuntimeError('Concept navigation cannot execute code or use an unapproved external scheme')
-                dest = urlsplit(urljoin('https://preview.invalid/' + route, href)).path.lstrip('/')
-                if dest not in required_routes:
-                    raise RuntimeError('Concept navigation leaves its two actual prototype pages')
+            validate_concept_page(route, body, required_routes)
         output[identifier] = pages
     if len({_layout_signature(pages) for pages in output.values()}) != 3:
         raise RuntimeError('Three copies with changed colour or prose are not distinct concept prototypes')

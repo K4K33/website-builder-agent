@@ -283,6 +283,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "free_ai_rate_limit"
     if "free_ai_response_truncated" in terminal:
         return "free_ai_response_truncated"
+    if "concept_page_needs_repair" in terminal:
+        return "concept_page_needs_repair"
     if "free_model_request_rejected" in terminal:
         return "free_model_request_rejected"
     if "free_ai_access_rejected" in terminal:

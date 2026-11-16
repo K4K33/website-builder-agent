@@ -6,6 +6,33 @@ from utils.demo_page_drafts import draft_pages, _page_from_response
 
 
 class DemoPageDraftTests(unittest.TestCase):
+    def test_invalid_cached_concept_repairs_only_its_own_route(self):
+        from utils.concept_previews import validate_concept_page
+
+        valid = ('<!doctype html><html><head><style>main{display:block}</style></head>'
+                 '<body><main><h1>Verified service</h1></main></body></html>')
+        invalid = valid.replace('<h1>', '<h2>').replace('</h1>', '</h2>')
+        routes = ['index.html', 'services.html']
+        with TemporaryDirectory() as root:
+            args = dict(root=root, job_id='demo', phase='concept-one', routes=routes,
+                        system='design', prompt_for=lambda route: route)
+            draft_pages(**args, request=lambda system, prompt: json.dumps({
+                'html': invalid if 'services.html' in system else valid}))
+
+            calls = []
+
+            def repair(system, prompt):
+                calls.append(system)
+                self.assertIn('services.html', system)
+                self.assertIn('one h1', system)
+                self.assertIn(invalid, prompt)
+                return json.dumps({'html': valid})
+
+            args['validate_page'] = lambda route, body: validate_concept_page(route, body, routes)
+            self.assertEqual(draft_pages(**args, request=repair), dict.fromkeys(routes, valid))
+            self.assertEqual(draft_pages(**args, request=repair), dict.fromkeys(routes, valid))
+            self.assertEqual(len(calls), 1)
+
     def test_truncation_switches_to_sections_and_resume_reuses_finished_parts(self):
         shell = ('<!doctype html><html><body><main>'
                  '<div data-kaurivo-section-slot="hero"></div>'
