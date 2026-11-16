@@ -59,7 +59,6 @@ TRANSIENT_RETRY_CODES=frozenset({
     # A source-backed but structurally invalid design can be repaired on the
     # same private job from its draft; daily claims remain strictly capped.
     "research_creative_plan_needs_repair",
-    "concept_page_needs_repair",
 })
 # Publish only site documents and expected static assets. Never copy JSON/TXT
 # scratch files, notes, evidence, build manifests or private company data.
