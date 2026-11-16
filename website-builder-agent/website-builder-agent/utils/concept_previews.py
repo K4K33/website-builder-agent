@@ -106,7 +106,7 @@ def validate_concept_page(route, body, required_routes):
 
 
 def prepare_concept_page(route, html, required_routes):
-    """Repair semantic wrappers and headings without writing client content."""
+    """Repair prototype HTML and navigation without writing client content."""
     try:
         validate_concept_page(route, html, required_routes)
         return html
@@ -139,6 +139,29 @@ def prepare_concept_page(route, html, required_routes):
         stylesheet = document.new_tag('style')
         stylesheet.string = 'img{max-width:100%;height:auto} main{min-width:0;overflow-wrap:anywhere}'
         document.head.append(stylesheet)
+    # A prototype only renders two routes. Preserve the planned navigation
+    # labels, but remove interaction for routes that will exist only in Build.
+    from posixpath import dirname, relpath
+    from urllib.parse import urljoin, urlsplit, urlunsplit
+    for anchor in document.select('a[href]'):
+        href = anchor['href']
+        if href.startswith(('#', 'https://', 'mailto:', 'tel:')):
+            continue
+        parsed = urlsplit(href)
+        if parsed.scheme or parsed.netloc:
+            continue  # The unchanged validator rejects unexpected schemes.
+        path = urlsplit(urljoin('https://preview.invalid/' + route, href)).path.lstrip('/')
+        if path in required_routes:
+            continue
+        aliases = (path.rstrip('/') + '.html', path.rstrip('/') + '/index.html') if path else ('index.html',)
+        target = next((candidate for candidate in aliases if candidate in required_routes), None)
+        if target:
+            anchor['href'] = urlunsplit(('', '', relpath(target, dirname(route) or '.'),
+                                         parsed.query, parsed.fragment))
+        else:
+            del anchor['href']
+            anchor['aria-disabled'] = 'true'
+            anchor.attrs.pop('tabindex', None)
     result = str(document)
     validate_concept_page(route, result, required_routes)
     return result

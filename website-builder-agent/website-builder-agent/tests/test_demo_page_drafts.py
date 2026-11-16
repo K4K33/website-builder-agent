@@ -60,6 +60,28 @@ class DemoPageDraftTests(unittest.TestCase):
             self.assertIn('<style>', result)
             self.assertEqual(draft_pages(**args, request=lambda *_: self.fail('Cache bypassed'))[route], result)
 
+    def test_prototype_navigation_rewrites_aliases_and_disables_unbuilt_routes(self):
+        from bs4 import BeautifulSoup
+        from utils.concept_previews import prepare_concept_page
+
+        page = ('<!doctype html><html><head><style>main{display:block}</style></head><body>'
+                '<nav><a href="/">Home</a><a href="/services/">Services</a>'
+                '<a href="/gallery.html" class="nav-link" tabindex="0">Gallery</a></nav>'
+                '<main><h1>Verified service</h1></main></body></html>')
+        routes = ['index.html', 'services/index.html']
+        result = prepare_concept_page(routes[1], page, routes)
+        links = BeautifulSoup(result, 'html.parser').select('nav a')
+        self.assertEqual(links[0]['href'], '../index.html')
+        self.assertEqual(links[1]['href'], 'index.html')
+        self.assertEqual(links[2].get_text(), 'Gallery')
+        self.assertEqual(links[2]['class'], ['nav-link'])
+        self.assertEqual(links[2]['aria-disabled'], 'true')
+        self.assertNotIn('href', links[2].attrs)
+        self.assertNotIn('tabindex', links[2].attrs)
+        unsafe = page.replace('/gallery.html', 'javascript:alert(1)')
+        with self.assertRaisesRegex(RuntimeError, 'unapproved external scheme'):
+            prepare_concept_page(routes[1], unsafe, routes)
+
     def test_truncation_switches_to_sections_and_resume_reuses_finished_parts(self):
         shell = ('<!doctype html><html><body><main>'
                  '<div data-kaurivo-section-slot="hero"></div>'
