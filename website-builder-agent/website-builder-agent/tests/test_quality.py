@@ -214,6 +214,15 @@ class QualityTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             builder._validate_generated_content('<p>Liikennettä vuodesta 1923</p>',{})
 
+    def test_verified_source_copy_can_supply_numbers_missing_from_fact_summary(self):
+        inventory = {'root_url': 'https://company.example', 'pages': [
+            {'url': 'https://www.company.example/about', 'text': 'Yli 40 vuoden kokemus alalta'},
+            {'url': 'https://competitor.example', 'text': 'Yli 90 vuoden kokemus alalta'},
+        ]}
+        builder._validate_generated_content('<h1>Yli <b>40</b> vuoden kokemus</h1>', {}, source_inventory=inventory)
+        with self.assertRaisesRegex(RuntimeError, '90 vuoden kokemus'):
+            builder._validate_generated_content('<h1>Yli 90 vuoden kokemus</h1>', {}, source_inventory=inventory)
+
     def test_url_deduplication(self):
         self.assertEqual(canonical_url('http://www.testi.fi/?utm=a'), 'https://testi.fi')
         for url in ('javascript:alert(1)', 'https://facebook.com/testi', 'https://x:secret@testi.fi'):

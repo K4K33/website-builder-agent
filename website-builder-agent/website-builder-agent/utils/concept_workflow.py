@@ -75,6 +75,10 @@ def generate_concepts(name, *, response_path=None, producer=''):
     root = Path(config.OUTPUT_DIR) / slug
     media = stage_local_media(company.get('media_intake'), intake_root=config.MEDIA_INTAKE_DIR,
                               output_dir=root)
+
+    def validate_content(document, facts):
+        _validate_generated_content(document, facts, source_inventory=research.get('source_inventory'))
+
     if response_path:
         if not producer.strip(): raise RuntimeError('External concept producer must be explicit')
         raw = Path(response_path).read_text(encoding='utf-8')
@@ -88,7 +92,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
 
         def prepare_page(route, body):
             page = prepare_concept_page(route, body, routes)
-            _validate_generated_content(page, facts)
+            validate_content(page, facts)
             validate_concept_media(route, page, allowed_media)
             return page
 
@@ -134,7 +138,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
         producer = config.backend_for_stage('builder') + ':' + config.model_for_stage('builder')
     result = write_concepts(raw, research, output_parent=root / '_concept_previews',
         producer=producer, renderer=inspect_site, media_items=company.get('media_intake'),
-        intake_root=config.MEDIA_INTAKE_DIR, content_validator=_validate_generated_content)
+        intake_root=config.MEDIA_INTAKE_DIR, content_validator=validate_content)
     upsert_company(slug, {'concept_previews': result})
     return result
 
