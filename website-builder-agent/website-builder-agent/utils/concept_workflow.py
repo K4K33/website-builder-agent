@@ -7,9 +7,12 @@ from utils.concept_previews import (preview_routes, write_concepts, load_verifie
 from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
 
-CONCEPT_PROMPT = '''Create THREE ACTUAL RESPONSIVE HTML CONCEPTS, not prose alternatives.
-Return JSON {"concepts": {direction_id: {"pages": {route: "<!doctype html>..."}}}}.
-Each concept has exactly the supplied two routes: home and one key content page.
+CONCEPT_PROMPT = '''Create ONE ACTUAL RESPONSIVE HTML CONCEPT for the one supplied
+direction, not a prose alternative. Return JSON
+{"concepts": {exact_direction_id: {"pages": {route: "<!doctype html>..."}}}}.
+Return only that exact direction id. It has exactly the supplied two routes:
+home and one key content page. Three separately validated calls form the required
+three-concept comparison; do not output the other directions in this call.
 Use only the verified facts, original brand and explicitly supplied local media.
 Do not invent logos, products, testimonials, staff or a capability. Do not use
 stock/generative imagery as client work. Use exact intake src filenames; nested
@@ -75,12 +78,21 @@ def generate_concepts(name, *, response_path=None, producer=''):
         if not producer.strip(): raise RuntimeError('External concept producer must be explicit')
         raw = Path(response_path).read_text(encoding='utf-8')
     else:
-        authored = ask_claude_json(CONCEPT_PROMPT, json.dumps({
-            'facts': research.get('company_facts'), 'directions': research['creative_directions'],
-            'required_routes': preview_routes(research), 'media': media,
-            'brand_plan': research.get('brand_preservation_plan'),
-            'site_architecture': research.get('site_architecture')}, ensure_ascii=False),
-            max_tokens=config.BUILDER_MAX_TOKENS, stage='builder')
+        directions = validate_creative_directions(research)['alternatives']
+        authored = {'concepts': {}}
+        for direction in directions:
+            response = ask_claude_json(CONCEPT_PROMPT, json.dumps({
+                'facts': research.get('company_facts'), 'direction': direction,
+                'exact_direction_id': direction['id'],
+                'required_routes': preview_routes(research), 'media': media,
+                'brand_plan': research.get('brand_preservation_plan'),
+                'site_architecture': research.get('site_architecture')}, ensure_ascii=False),
+                max_tokens=min(config.BUILDER_MAX_TOKENS, 12000), stage='builder')
+            concepts = response.get('concepts') if isinstance(response, dict) else None
+            concept = concepts.get(direction['id']) if isinstance(concepts, dict) else None
+            if not isinstance(concept, dict) or set(concepts) != {direction['id']}:
+                raise RuntimeError('Single concept response must contain only its exact direction id.')
+            authored['concepts'][direction['id']] = concept
         raw = json.dumps(authored, ensure_ascii=False)
         producer = config.backend_for_stage('builder') + ':' + config.model_for_stage('builder')
     result = write_concepts(raw, research, output_parent=root / '_concept_previews',
