@@ -193,6 +193,21 @@ def parse_concepts(raw, research):
     return output
 
 
+def validate_concept_media(route, body, allowed):
+    soup = BeautifulSoup(body, 'html.parser')
+    css = ' '.join(s.get_text() for s in soup.find_all('style')) + ' ' + ' '.join(str(s.get('style')) for s in soup.select('[style]'))
+    if re.search(r'@import', css, re.I):
+        raise RuntimeError('Concept CSS cannot import other stylesheets')
+    sources = [image['src'] for image in soup.select('img[src]')]
+    sources += [match.strip().strip('\"\'') for match in re.findall(r'url\(\s*([^)]*)\)', css, re.I)]
+    for src in sources:
+        from urllib.parse import urljoin, urlsplit
+        # Actual intake assets only. No invented pictures or old-host dependencies.
+        resolved = urlsplit(urljoin('https://preview.invalid/' + route, src)).path.lstrip('/')
+        if urlsplit(src).scheme or urlsplit(src).netloc or resolved not in allowed:
+            raise RuntimeError('Concept image must refer to an explicitly staged intake asset: ' + src[:100])
+
+
 def write_concepts(raw, research, *, output_parent, producer, renderer,
                    media_items=None, intake_root=None, content_validator=None):
     """Write a new immutable review set; never overwrite a prior selection."""
@@ -209,22 +224,11 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
         folder = root / ('variant-' + str(position)); folder.mkdir()
         media = stage_local_media(media_items, intake_root=intake_root or folder,
                                   output_dir=folder)
-        if content_validator:
-            for body in pages.values(): content_validator(body, research.get('company_facts') or {})
         allowed = {item['src'] for item in media}
         for route, body in pages.items():
-            soup = BeautifulSoup(body, 'html.parser')
-            css = ' '.join(s.get_text() for s in soup.find_all('style')) + ' ' + ' '.join(str(s.get('style')) for s in soup.select('[style]'))
-            if re.search(r'@import', css, re.I):
-                raise RuntimeError('Concept CSS cannot import other stylesheets')
-            sources = [image['src'] for image in soup.select('img[src]')]
-            sources += [match.strip().strip('\"\'') for match in re.findall(r'url\(\s*([^)]*)\)', css, re.I)]
-            for src in sources:
-                from urllib.parse import urljoin, urlsplit
-                # Actual intake assets only. No invented pictures or old-host dependencies.
-                resolved = urlsplit(urljoin('https://preview.invalid/' + route, src)).path.lstrip('/')
-                if urlsplit(src).scheme or urlsplit(src).netloc or resolved not in allowed:
-                    raise RuntimeError('Concept image must refer to an explicitly staged intake asset: ' + src[:100])
+            if content_validator:
+                content_validator(body, research.get('company_facts') or {})
+            validate_concept_media(route, body, allowed)
             file = folder / route; file.parent.mkdir(parents=True, exist_ok=True)
             file.write_text(body, encoding='utf-8')
         entry = {'id': identifier, 'folder': folder.relative_to(root).as_posix(),

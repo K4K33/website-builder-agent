@@ -1,6 +1,7 @@
 """Pipeline/import/approval wiring without API calls or paid model configuration."""
 import json
 from pathlib import Path
+import re
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
@@ -10,6 +11,35 @@ from utils.concept_workflow import generate_concepts, choose_concept
 
 
 class ConceptWorkflowTests(unittest.TestCase):
+    def test_queue_repairs_unverified_contact_before_rendering(self):
+        research, data = fixture()
+        company = {'research': research}
+        pages = [page for concept in data['concepts'].values() for page in concept['pages'].values()]
+        calls = []
+
+        def respond(system, prompt, **kwargs):
+            if 'Required correction:' in system:
+                self.assertIn('Unverified email link', system)
+                return {'html': pages[0]}
+            attempt = len(calls)
+            calls.append(re.search(r'This call only authors ([^ ]+)\.', system)[1])
+            draft = pages[attempt]
+            if attempt == 0:
+                draft = draft.replace('</main>', '<a href="mailto:unknown@example.org">Email</a></main>')
+            return {'html': draft}
+
+        with TemporaryDirectory() as folder, \
+             patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'fixture-job'}), \
+             patch('utils.concept_workflow.get_company', return_value=('studio', company)), \
+             patch('utils.concept_workflow.upsert_company'), \
+             patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \
+             patch('utils.concept_workflow.config.model_for_stage', return_value='fixture-model'), \
+             patch('utils.browser_qa.inspect_site', side_effect=fake_renderer), \
+             patch('utils.claude_client.ask_claude_json', side_effect=respond) as model:
+            result = generate_concepts('studio')
+            self.assertEqual(result['status'], 'ready_for_comparison')
+            self.assertEqual(model.call_count, 7)
+
     def test_model_workflow_uses_json_generation_and_all_twelve_real_images(self):
         research, data = fixture()
         company = {'research':research}
