@@ -42,6 +42,7 @@ on:
 # Controlled re-run 2026-11-11 after merged local-minute quota correction; one eligible private job.
 # Verified wake after PR #205: replay only eligible saved jobs with safe concept media handling.
 # Verified wake after PR #206: restore safely revalidated source-bound concept copy.
+# Verified wake after PR #208: resume blocked visual concepts with source evidence intact.
 
 permissions:
   contents: write
