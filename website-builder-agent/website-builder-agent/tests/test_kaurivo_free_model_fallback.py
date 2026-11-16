@@ -11,6 +11,34 @@ from utils import claude_client, resource_manager
 
 
 class KaurivoFreeModelFallbackTests(unittest.TestCase):
+    def test_queued_page_rotates_free_model_after_truncation_at_same_limit(self):
+        primary = "dots-studio/dots-3-note-preview:free"
+        backup = "google/gemma-4-26b-a4b-it:free"
+        sent = []
+
+        def provider(*_, json, **kwargs):
+            sent.append((json["model"], dict(json["reasoning"])))
+            reply = Mock(status_code=200)
+            reply.json.return_value = {"model": json["model"], "choices": [{
+                "finish_reason": "length" if len(sent) == 1 else "stop",
+                "message": {"content": "complete page"},
+            }]}
+            return reply
+
+        env = {"FREE_ONLY": "1", "AI_BACKEND": "openrouter",
+               "KAURIVO_QUEUED_DEMO_ID": "test-job",
+               "BUILDER_MODEL": primary, "BUILDER_FALLBACK_MODELS": backup,
+               "QA_MODEL": "qwen/qa:free"}
+        with patch.dict(os.environ, env, clear=True), \
+             patch.object(claude_client, "_get_headers", return_value={}), \
+             patch.object(resource_manager, "reserve", return_value=True), \
+             patch.object(claude_client.requests, "post", side_effect=provider), \
+             patch.object(config, "AI_MAX_OUTPUT_TOKENS", 8000):
+            result = claude_client.ask_claude("system", "route", stage="builder",
+                                              max_tokens=8000, json_mode=True)
+        self.assertEqual(result, "complete page")
+        self.assertEqual(sent, [(primary, {"effort": "none"}), (backup, {"effort": "none"})])
+
     def test_single_request_falls_back_between_exact_free_models(self):
         reply=Mock(status_code=200)
         reply.json.return_value={"model":"google/backup:free","choices":[{
