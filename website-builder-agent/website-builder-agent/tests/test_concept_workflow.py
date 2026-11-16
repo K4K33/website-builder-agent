@@ -17,7 +17,8 @@ class ConceptWorkflowTests(unittest.TestCase):
             def save(slug, changes):company.update(changes);return company
             def respond(system, user, **kwargs):
                 if kwargs['stage'] == 'builder':
-                    return data
+                    requested=json.loads(user)['exact_direction_id']
+                    return {'concepts':{requested:data['concepts'][requested]}}
                 self.assertEqual(len(kwargs['image_paths']),12)
                 self.assertTrue(all(Path(p).is_file() for p in kwargs['image_paths']))
                 self.assertNotIn('creative_selection',user)
@@ -33,7 +34,26 @@ class ConceptWorkflowTests(unittest.TestCase):
                  patch('utils.claude_client.ask_claude_json',side_effect=respond) as model:
                 generate_concepts('studio')
                 choose_concept('studio')
-                self.assertEqual(model.call_count,2)
+                self.assertEqual(model.call_count,4)
+
+    def test_each_concept_is_requested_separately_to_prevent_truncation(self):
+        research, data = fixture(); company={'research': research}; calls=[]
+        with TemporaryDirectory() as folder:
+            def respond(system,user,**kwargs):
+                packet=json.loads(user); calls.append(packet['exact_direction_id'])
+                identifier=packet['exact_direction_id']
+                return {'concepts': {identifier: data['concepts'][identifier]}}
+            with patch('utils.concept_workflow.get_company',return_value=('studio',company)), \
+                 patch('utils.concept_workflow.upsert_company',side_effect=lambda s,c:company.update(c) or company), \
+                 patch('utils.concept_workflow.config.OUTPUT_DIR',folder), \
+                 patch('utils.concept_workflow.config.backend_for_stage',return_value='openrouter'), \
+                 patch('utils.concept_workflow.config.model_for_stage',return_value='fixture-model'), \
+                 patch('utils.browser_qa.inspect_site',side_effect=fake_renderer), \
+                 patch('agents.builder._validate_generated_content'), \
+                 patch('utils.claude_client.ask_claude_json',side_effect=respond):
+                generate_concepts('studio')
+        from utils.creative_directions import validate_creative_directions
+        self.assertEqual(calls, [x['id'] for x in validate_creative_directions(research)['alternatives']])
 
     def test_external_authoring_and_selection_work_without_model_calls(self):
         research, data=fixture()
