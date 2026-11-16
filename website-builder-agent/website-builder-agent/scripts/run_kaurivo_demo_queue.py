@@ -1022,6 +1022,23 @@ def restore_private_checkpoint(agent_slug, company_name, source):
         raise HoldError("checkpoint_restore_failed") from exc
 
 
+def completed_stage_index(resumed, restored_company=None):
+    """Reuse valid checkpoints, but never replay a blocked concept as approved."""
+    if resumed in (None, "research_partial"):
+        return -1
+    stages = ("researched", "concepts", "selected", "built",
+              "revised_1", "revised_2")
+    position = stages.index(resumed)
+    if resumed == "concepts":
+        preview = ((restored_company or {}).get("concept_previews") or {})
+        if preview.get("status") != "ready_for_comparison":
+            # Research is already inside the authenticated concept archive.
+            # Regenerate failed concepts on this source; the browser gates
+            # remain mandatory and no previous pass is manufactured.
+            return 0
+    return position
+
+
 def main():
     global working_job
     if RUN_ID<=0:raise HoldError("not_github_actions")
@@ -1056,9 +1073,8 @@ def main():
                 raise HoldError("company_name_invalid")
             resume=restore_private_checkpoint(agent_slug,company_name,source)
             last_checkpoint = resume
-            done=(-1 if resume in (None, "research_partial") else
-                  ("researched","concepts","selected","built",
-                   "revised_1","revised_2").index(resume))
+            done = completed_stage_index(
+                resume, load_company(agent_slug) if resume == "concepts" else None)
             if resume is None:
                 upsert_company(agent_slug,{"name":company_name,
                                           "url":source,"status":"found"})
