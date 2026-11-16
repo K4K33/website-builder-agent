@@ -6,6 +6,7 @@ import config
 from utils.concept_previews import (preview_routes, write_concepts, load_verified_set,
                                     blind_order, record_selection, prepare_concept_page,
                                     validate_concept_media)
+from utils.concept_fact_recovery import prepare_verified_concept_copy
 from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
 
@@ -92,7 +93,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
 
         def prepare_page(route, body):
             page = prepare_concept_page(route, body, routes, allowed_media)
-            validate_content(page, facts)
+            page = prepare_verified_concept_copy(page, facts, validate_content)
             validate_concept_media(route, page, allowed_media)
             return page
 
