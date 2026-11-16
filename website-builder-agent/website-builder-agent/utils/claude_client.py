@@ -114,10 +114,7 @@ def _extract_content(data: dict) -> str:
     choices = data.get("choices", [])
 
     if not choices:
-        raise RuntimeError(
-            "OpenRouter ei palauttanut choices-dataa: "
-            f"{data}"
-        )
+        raise RuntimeError("OpenRouter response has no choices.")
 
     message = choices[0].get("message", {})
 
@@ -362,7 +359,27 @@ def ask_claude(
                 timeout=180,
             )
 
-            if response.status_code == 429:
+            status = response.status_code
+            data = None
+            if 200 <= status < 300:
+                data = response.json()
+                error = data.get("error") if isinstance(data, dict) else None
+                if isinstance(error, dict):
+                    code = str(error.get("code", ""))
+                    if code.isascii() and code.isdecimal() and len(code) == 3:
+                        status = int(code)
+                    if not 400 <= status < 600:
+                        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: OpenRouter error envelope.")
+                elif config.free_only() and (not isinstance(data, dict) or not data.get("choices")):
+                    if attempt < max_retries:
+                        continue
+                    return _local_free_quota_fallback(
+                        system, user_prompt, stage=stage, max_tokens=max_tokens,
+                        image_paths=image_paths, json_mode=json_mode,
+                        capacity_code="FREE_AI_CAPACITY_UNAVAILABLE",
+                    )
+
+            if status == 429:
                 if config.free_only():
                     # One bounded retry ONLY if OpenRouter itself proves the
                     # minute window resets soon. Otherwise yield to the queue.
@@ -407,17 +424,22 @@ def ask_claude(
                 time.sleep(wait)
                 continue
 
-            if 400 <= response.status_code < 500:
-                raise RuntimeError(f"OpenRouter rejected request: HTTP {response.status_code}")
+            if 400 <= status < 500:
+                raise RuntimeError(f"OpenRouter rejected request: HTTP {status}")
 
-            if response.status_code >= 400:
-                last_error = response.text
+            if status >= 400:
+                if config.free_only() and status in {500, 502, 503, 504} and attempt == max_retries:
+                    return _local_free_quota_fallback(
+                        system, user_prompt, stage=stage, max_tokens=max_tokens,
+                        image_paths=image_paths, json_mode=json_mode,
+                        capacity_code="FREE_AI_CAPACITY_UNAVAILABLE",
+                    )
+                last_error = f"HTTP {status}"
 
                 print(
                     f"  [OpenRouter] API-virhe "
                     f"(yritys {attempt}/{max_retries}): "
-                    f"{response.status_code} "
-                    f"{response.text[:1000]}"
+                    f"{status}"
                 )
 
                 time.sleep(
@@ -430,7 +452,6 @@ def ask_claude(
 
                 continue
 
-            data = response.json()
             # A successful fallback must still use a free model from the
             # explicit allowlist. Never trust a paid model ID from a provider.
             if len(models) > 1:
