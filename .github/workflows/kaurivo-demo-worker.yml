@@ -13,6 +13,7 @@ on:
       - "website-builder-agent/website-builder-agent/utils/creative_brief_recovery.py"
       - "website-builder-agent/website-builder-agent/utils/creative_directions.py"
       - "website-builder-agent/website-builder-agent/utils/concept_workflow.py"
+      - "website-builder-agent/website-builder-agent/utils/concept_previews.py"
       - "website-builder-agent/website-builder-agent/utils/demo_page_drafts.py"
       - "website-builder-agent/website-builder-agent/utils/demo_sections.py"
       - "website-builder-agent/website-builder-agent/utils/industry_workflow.py"
