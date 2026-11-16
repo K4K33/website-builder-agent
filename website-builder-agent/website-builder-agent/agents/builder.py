@@ -12,6 +12,7 @@ import os
 import re
 import webbrowser
 from pathlib import Path
+from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 
 from utils.concept_previews import validate_selected_concept
@@ -1341,6 +1342,8 @@ def _validate_all_universal_rules(html: str, research: dict, company: dict) -> N
 def _validate_generated_content(
     html: str,
     company_facts: dict,
+    *,
+    source_inventory: dict | None = None,
 ) -> None:
     """
     Paikallinen turvatarkistus.
@@ -1454,19 +1457,29 @@ def _validate_generated_content(
 
     # Tyypillisiä keksittyjä yritysfaktoja.
     fabricated_patterns = [
-        r"\b\d+\s+vuoden kokem",
-        r"perustettu\s+\d{4}",
-        r"vuodesta\s+\d{4}",
-        r"yli\s+\d+\s+(?:asiakka|ammattila)",
+        r"\b(?:yli\s+)?\d+\s+vuoden kokem\w*\b",
+        r"\bperustettu\s+\d{4}\b",
+        r"\bvuodesta\s+\d{4}\b",
+        r"\byli\s+\d+\s+(?:asiakka|ammattila)\w*\b",
     ]
 
-    verified_text = json.dumps(company_facts, ensure_ascii=False).lower()
+    inventory = source_inventory or {}
+    source_pages = inventory.get("pages") or []
+    source_host = urlsplit(inventory.get("root_url") or "").hostname
+    source_host = (source_host or "").removeprefix("www.")
+    verified_texts = [json.dumps(company_facts, ensure_ascii=False).lower()]
+    if source_host:
+        for page in source_pages:
+            host = urlsplit(page.get("url") or "").hostname
+            if (host or "").removeprefix("www.") == source_host:
+                verified_texts.append(" ".join(str(page.get("text") or "").lower().split()))
     for pattern in fabricated_patterns:
-        if any(match.group(0) not in verified_text for match in re.finditer(pattern, text)):
-            raise RuntimeError(
-                "Builderin tuottamassa sivussa havaittiin "
-                "mahdollisesti keksitty yritysfakta."
-            )
+        verified_claims = {match.group(0) for verified_text in verified_texts
+                           for match in re.finditer(pattern, verified_text)}
+        for match in re.finditer(pattern, text):
+            if match.group(0) not in verified_claims:
+                raise RuntimeError("Builderin tuottamassa sivussa havaittiin mahdollisesti "
+                                   "keksitty yritysfakta: " + match.group(0))
 
     # Jos toimiala puuttuu, AI ei saa esitellä keksittyä toimialaa.
     # Emme käytä yleistä sanalistaa, koska se voisi aiheuttaa
