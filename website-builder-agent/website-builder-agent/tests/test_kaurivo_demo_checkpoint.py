@@ -67,6 +67,30 @@ def fixture(project, stage):
 
 
 class PrivateCheckpointTests(unittest.TestCase):
+    def test_blocked_concept_checkpoint_regenerates_from_stored_research(self):
+        from scripts.run_kaurivo_demo_queue import completed_stage_index
+        self.assertEqual(completed_stage_index(None), -1)
+        self.assertEqual(completed_stage_index("research_partial"), -1)
+        self.assertEqual(completed_stage_index("researched"), 0)
+        self.assertEqual(completed_stage_index("concepts", {
+            "concept_previews": {"status": "blocked"}}), 0)
+        self.assertEqual(completed_stage_index("concepts", {
+            "concept_previews": {"status": "ready_for_comparison"}}), 1)
+        self.assertEqual(completed_stage_index("selected"), 2)
+        self.assertEqual(completed_stage_index("built"), 3)
+
+    def test_concept_replay_requires_server_issued_marker_and_checkpoint(self):
+        directory = (Path(__file__).resolve().parents[1] / "docs" /
+                     "kaurivo" / "backend")
+        sql = (directory / "kaurivo_replay_verified_browser_fix_20261116.sql"
+               ).read_text(encoding="utf-8")
+        self.assertIn("research_fix_deployed", (
+            directory / "kaurivo_replay_verified_concept_fix_20261116.sql"
+        ).read_text(encoding="utf-8"))
+        self.assertIn("c.stage in ('research_partial','researched','concepts')", sql)
+        self.assertIn("server-only", sql)
+        self.assertIn("has_function_privilege('authenticated'", sql)
+
     def test_research_roundtrip_to_a_new_runner_without_other_company_or_secrets(self):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
             old, new = Path(a), Path(b)
