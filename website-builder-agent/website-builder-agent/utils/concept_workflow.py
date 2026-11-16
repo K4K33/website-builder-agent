@@ -137,10 +137,73 @@ def generate_concepts(name, *, response_path=None, producer=''):
             authored['concepts'][direction['id']] = concept
         raw = json.dumps(authored, ensure_ascii=False)
         producer = config.backend_for_stage('builder') + ':' + config.model_for_stage('builder')
-    result = write_concepts(raw, research, output_parent=root / '_concept_previews',
-        producer=producer, renderer=inspect_site, media_items=company.get('media_intake'),
-        intake_root=config.MEDIA_INTAKE_DIR, content_validator=validate_content)
+    def render_three_concepts(bundle):
+        return write_concepts(bundle, research, output_parent=root / '_concept_previews',
+            producer=producer, renderer=inspect_site, media_items=company.get('media_intake'),
+            intake_root=config.MEDIA_INTAKE_DIR, content_validator=validate_content)
+
+    result = render_three_concepts(raw)
+    if not response_path and os.getenv("KAURIVO_QUEUED_DEMO_ID"):
+        # A first browser failure is actionable design feedback, not a final
+        # job outcome. Change only the rejected route; keep all passing pages.
+        # An unchanged, full browser/visual/independent-review gate runs again.
+        from utils.demo_page_drafts import draft_pages
+        directions = {item["id"]: item for item in
+                      validate_creative_directions(research)["alternatives"]}
+        for revision in range(1, 3):
+            if result["status"] == "ready_for_comparison":
+                break
+            targets = result.get("repair_targets") or {}
+            if not targets:
+                break
+            for identifier, routes_to_repair in targets.items():
+                if identifier not in directions:
+                    raise RuntimeError("Concept browser review returned an unknown design")
+                for route, problems in routes_to_repair.items():
+                    original = authored["concepts"][identifier]["pages"][route]
+                    packet = json.dumps({
+                        "verified_facts": research.get("company_facts"),
+                        "source_brand": research.get("brand_preservation_plan"),
+                        "direction": directions[identifier],
+                        "allowed_media": media,
+                        "route": route,
+                        "required_routes": routes,
+                        "observed_browser_failures": problems,
+                        "previous_html": original,
+                    }, ensure_ascii=False)
+                    repair_system = (
+                        "Revise ONLY this rejected private concept route and "
+                        "return one complete HTML page. Fix the specified actual "
+                        "browser failures while retaining all verified company "
+                        "claims, genuine branding, composition and navigation. "
+                        "Do not invent photos or rely on external resources. "
+                        + CONCEPT_PAGE_RULES
+                    )
+                    pages = draft_pages(
+                        root=root, job_id=os.environ["KAURIVO_QUEUED_DEMO_ID"],
+                        phase="concept-browser-revision-" + str(revision) + "-" + identifier,
+                        routes=[route], system=repair_system,
+                        prompt_for=lambda route, packet=packet: packet,
+                        concept_id=identifier,
+                        request=lambda instructions, prompt: json.dumps(
+                            ask_claude_json(instructions, prompt, max_tokens=5500,
+                                            stage="builder"), ensure_ascii=False),
+                        section_request=lambda instructions, prompt: json.dumps(
+                            ask_claude_json(instructions, prompt, max_tokens=3200,
+                                            stage="builder"), ensure_ascii=False),
+                        prepare_page=prepare_page,
+                    )
+                    authored["concepts"][identifier]["pages"][route] = pages[route]
+            raw = json.dumps(authored, ensure_ascii=False)
+            result = render_three_concepts(raw)
     upsert_company(slug, {'concept_previews': result})
+    if (not response_path and os.getenv("KAURIVO_QUEUED_DEMO_ID")
+            and result["status"] != "ready_for_comparison"):
+        targets = result.get("repair_targets") or {}
+        labels = sorted({str(problem) for routes_to_repair in targets.values()
+                         for problems in routes_to_repair.values() for problem in problems})
+        raise RuntimeError("CONCEPT_BROWSER_VALIDATION_BLOCKED: " +
+                           "; ".join(labels[:4]))
     return result
 
 

@@ -277,6 +277,35 @@ def validate_concept_media(route, body, allowed):
             raise RuntimeError('Concept image must refer to an explicitly staged intake asset: ' + src[:100])
 
 
+def browser_issue_repair_hints(issues):
+    """Return bounded instructional categories, never private page data."""
+    labels = (
+        ("horizontal overflow", "Eliminate horizontal overflow on every mobile viewport."),
+        ("undersized controls", "Make visible controls large enough for touch."),
+        ("broken images", "Use only intact staged images; no external or invented URLs."),
+        ("low resolution", "Do not enlarge a source image beyond safe visual quality."),
+        ("contrast failures", "Fix measurable WCAG AA text/background contrast."),
+        ("contrast NOT VERIFIABLE", "Use readable opaque text surfaces over complex gradients and photos."),
+        ("below readable", "Ensure essential copy has legible typography."),
+        ("vertical scrolling blocked", "Restore native vertical page scrolling."),
+        ("empty main content", "Render real source-backed meaningful main content."),
+        ("excessive page height", "Make the content scannable without excessive page height."),
+        ("disclosure", "Make menus and disclosure controls accessible or use ordinary safe links."),
+        ("JavaScript error", "Remove script-dependent controls and runtime errors."),
+        ("browser", "Ensure all page resources, layout and screenshot capture work offline."),
+        ("missing actual", "Ensure the page renders stable screenshots on desktop and mobile."),
+        ("screenshot is not", "Ensure valid rendered screenshots are captured."),
+        ("visual interaction", "Fix interaction behavior and honor reduced-motion settings."),
+    )
+    found = []
+    for detail in issues:
+        item = str(detail)
+        for marker, guidance in labels:
+            if marker.casefold() in item.casefold() and guidance not in found:
+                found.append(guidance)
+    return found[:8] or ["Pass actual offline browser rendering at desktop and mobile."]
+
+
 def write_concepts(raw, research, *, output_parent, producer, renderer,
                    media_items=None, intake_root=None, content_validator=None):
     """Write a new immutable review set; never overwrite a prior selection."""
@@ -285,6 +314,7 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     pages_by_id = parse_concepts(raw, research)
     parent = Path(output_parent).resolve(); parent.mkdir(parents=True, exist_ok=True)
     root = Path(mkdtemp(prefix='set-', dir=parent))
+    repair_targets = {}
     manifest = {'protocol': PROTOCOL, 'context_sha256': context_digest(research),
                 'producer': producer, 'status': 'blocked', 'entries': [],
                 'intake_sha256': intake_fingerprint(media_items, intake_root or root),
@@ -306,6 +336,7 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
             entry['files'].append({'path': file.relative_to(root).as_posix(), 'sha256': file_hash(file)})
         entry['site_sha256'] = site_sha256(folder, list(pages))
         for route in pages:
+            issue_count_before = len(entry['issues'])
             report = renderer(folder / route, allowed_file_root=folder)
             entry['issues'].extend(str(i) for i in report.get('issues') or [])
             if report.get('pass') is not True:
@@ -326,6 +357,9 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
                 entry['views'].append({'id': digest([identifier, route, viewport])[:20],
                     'route': route, 'viewport': viewport, 'path': file.relative_to(root).as_posix(),
                     'sha256': file_hash(file)})
+            if len(entry['issues']) > issue_count_before:
+                repair_targets.setdefault(identifier, {})[route] = browser_issue_repair_hints(
+                    entry['issues'][issue_count_before:])
         manifest['entries'].append(entry)
     if all(not e['issues'] and len(e['views']) == 4 for e in manifest['entries']):
         manifest['status'] = 'ready_for_comparison'
@@ -333,7 +367,8 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     file = root / 'manifest.json'; file.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
     _write_comparison(root, manifest)
     return {'manifest_path': str(file), 'set_sha256': manifest['set_sha256'],
-            'comparison_path': str(root / 'comparison.html'), 'status': manifest['status']}
+            'comparison_path': str(root / 'comparison.html'), 'status': manifest['status'],
+            'repair_targets': repair_targets}
 
 
 def load_verified_set(reference, research, *, allowed_root):
