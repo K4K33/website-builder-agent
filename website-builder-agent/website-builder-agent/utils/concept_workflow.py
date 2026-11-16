@@ -1,6 +1,7 @@
 """Explicit model/import entry points for source-bound visible concept choice."""
 from pathlib import Path
 import json
+import os
 import config
 from utils.concept_previews import (preview_routes, write_concepts, load_verified_set,
                                     blind_order, record_selection)
@@ -77,6 +78,33 @@ def generate_concepts(name, *, response_path=None, producer=''):
     if response_path:
         if not producer.strip(): raise RuntimeError('External concept producer must be explicit')
         raw = Path(response_path).read_text(encoding='utf-8')
+    elif os.getenv("KAURIVO_QUEUED_DEMO_ID"):
+        from utils.demo_page_drafts import draft_pages
+        routes = preview_routes(research)
+        authored = {"concepts": {}}
+        system = CONCEPT_PROMPT + """
+Queued worker protocol overrides the output envelope above. Return a pages
+JSON object with exactly ONE complete requested route. The two prototype
+routes exist for navigation; only produce the requested one.
+Keep the prototype focussed on its task and use concise inline CSS.
+"""
+        for direction in validate_creative_directions(research)["alternatives"]:
+            packet = json.dumps({
+                "facts": research.get("company_facts"), "direction": direction,
+                "prototype_routes": routes, "media": media,
+                "brand_plan": research.get("brand_preservation_plan"),
+            }, ensure_ascii=False)
+            pages = draft_pages(
+                root=root, job_id=os.environ["KAURIVO_QUEUED_DEMO_ID"],
+                phase="concept-" + direction["id"], routes=routes, system=system,
+                prompt_for=lambda route: packet + "\nRequested route: " + route,
+                request=lambda instructions, prompt: json.dumps(
+                    ask_claude_json(instructions, prompt, max_tokens=5500, stage="builder"),
+                    ensure_ascii=False),
+            )
+            authored["concepts"][direction["id"]] = {"pages": pages}
+        raw = json.dumps(authored, ensure_ascii=False)
+        producer = config.backend_for_stage("builder") + ":" + config.model_for_stage("builder")
     else:
         directions = validate_creative_directions(research)['alternatives']
         authored = {'concepts': {}}

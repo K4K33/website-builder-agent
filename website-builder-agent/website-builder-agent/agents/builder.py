@@ -1151,6 +1151,31 @@ def _clean_html(html: str) -> str:
     return cleaned
 
 
+def _request_site_pages(system, prompt, *, slug, architecture, image_paths, current_pages=None):
+    job_id = os.getenv("KAURIVO_QUEUED_DEMO_ID")
+    if not job_id:
+        return ask_claude(system, prompt, use_web_search=False, max_tokens=config.BUILDER_MAX_TOKENS,
+                          stage="builder", image_paths=image_paths)
+    from utils.demo_page_drafts import draft_pages
+
+    def prompt_for(route):
+        if current_pages is None:
+            return prompt
+        return prompt + "\nCURRENT PAGE TO REVISE:\n" + current_pages[route]
+
+    pages = draft_pages(
+        root=_output_dir(slug), job_id=job_id,
+        phase="revision" if current_pages is not None else "build",
+        routes=architecture["page_paths"], system=system, prompt_for=prompt_for,
+        image_paths=image_paths or [],
+        request=lambda instructions, page_prompt: _clean_html(ask_claude(
+            instructions, page_prompt, stage="builder", json_mode=True,
+            max_tokens=min(config.BUILDER_MAX_TOKENS, 9000), image_paths=image_paths,
+        )),
+    )
+    return json.dumps({"pages": pages}, ensure_ascii=False)
+
+
 def _write_html(slug: str, html: str) -> str:
     if not html:
         raise RuntimeError(
@@ -1803,12 +1828,10 @@ Palauta vain validi JSON ilman markdownia.
         "  [Builder] Generoidaan verkkosivua..."
     )
 
-    html = ask_claude(
+    html = _request_site_pages(
         BUILD_SYSTEM_PROMPT,
         user_prompt,
-        use_web_search=False,
-        max_tokens=config.BUILDER_MAX_TOKENS,
-        stage="builder",
+        slug=slug, architecture=architecture,
         image_paths=reference_images + [path for path in (company.get("screenshots") or {}).values()
                      if isinstance(path, str) and os.path.isfile(path)] or None,
     )
@@ -1963,7 +1986,11 @@ def revise_site(
         if not current_path.is_file():
             raise RuntimeError("Revision cannot find previously approved page "+route)
         current_pages[route] = current_path.read_text(encoding="utf-8")
-    current_html = json.dumps({"pages":current_pages},ensure_ascii=False)
+    current_html = (
+        "The one current HTML page to revise is supplied at the end."
+        if os.getenv("KAURIVO_QUEUED_DEMO_ID")
+        else json.dumps({"pages":current_pages},ensure_ascii=False)
+    )
 
     research = company.get(
         "research",
@@ -2158,12 +2185,10 @@ sama tapa kuin ensimmäisessä rakentamisessa. Älä palauta vain index.html.
         "  [Builder] Muokataan verkkosivua..."
     )
 
-    new_html = ask_claude(
+    new_html = _request_site_pages(
         REVISE_SYSTEM_PROMPT,
         user_prompt,
-        use_web_search=False,
-        max_tokens=config.BUILDER_MAX_TOKENS,
-        stage="builder",
+        slug=slug, architecture=architecture, current_pages=current_pages,
         image_paths=reference_images + [path for path in (company.get("qa") or {}).get("browser", {}).get("screenshots", {}).values()
                      if isinstance(path, str) and os.path.isfile(path)] or None,
     )
