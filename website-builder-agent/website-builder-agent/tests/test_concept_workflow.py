@@ -11,6 +11,66 @@ from utils.concept_workflow import generate_concepts, choose_concept
 
 
 class ConceptWorkflowTests(unittest.TestCase):
+
+    def test_unsourced_numeric_claim_is_removed_without_affecting_verified_copy(self):
+        from bs4 import BeautifulSoup
+        from agents.builder import _validate_generated_content
+        from utils.concept_fact_recovery import prepare_verified_concept_copy
+
+        page = ('<!doctype html><html><body><main>'
+                '<h1>Yritysesittely yli <strong>88</strong> vuoden kokemuksella</h1>'
+                '<p>Vahvistettu esittely säilyy.</p></main></body></html>')
+        result = prepare_verified_concept_copy(
+            page, {'name': 'Vahvistettu Oy'}, _validate_generated_content)
+        dom = BeautifulSoup(result, 'html.parser')
+        self.assertEqual(dom.select_one('h1').get_text(' ', strip=True), 'Yritysesittely')
+        self.assertIn('Vahvistettu esittely säilyy.', result)
+        self.assertNotIn('88', result)
+        _validate_generated_content(result, {'name': 'Vahvistettu Oy'})
+
+    def test_verified_claim_is_unchanged_and_other_false_content_still_fails(self):
+        from agents.builder import _validate_generated_content
+        from utils.concept_fact_recovery import prepare_verified_concept_copy
+
+        verified = '<main><h1>Yli 35 vuoden kokemus</h1></main>'
+        inventory = {'root_url': 'https://source.example', 'pages': [
+            {'url': 'https://source.example/about', 'text': 'Yli 35 vuoden kokemus'}
+        ]}
+        def validate(page, facts):
+            _validate_generated_content(page, facts, source_inventory=inventory)
+        self.assertEqual(prepare_verified_concept_copy(verified, {}, validate), verified)
+        with self.assertRaisesRegex(RuntimeError, 'keksineen palvelusisältöä'):
+            prepare_verified_concept_copy(
+                '<main><h1>Tarjoamme palveluita</h1></main>', {}, validate)
+
+    def test_queued_concept_cleans_fake_numeric_claim_without_second_model_call(self):
+        research, data = fixture()
+        company = {'research': research}
+        pages = [page for concept in data['concepts'].values() for page in concept['pages'].values()]
+        calls = []
+
+        def respond(system, prompt, **kwargs):
+            self.assertNotIn('Required correction:', system)
+            index = len(calls)
+            calls.append(index)
+            html = pages[index]
+            if index == 0:
+                html = html.replace('</main>',
+                    '<p>Yli 88 vuoden kokemus</p></main>')
+            return {'html': html}
+
+        with TemporaryDirectory() as folder, \\
+             patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'numeric-job'}), \\
+             patch('utils.concept_workflow.get_company', return_value=('studio', company)), \\
+             patch('utils.concept_workflow.upsert_company'), \\
+             patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \\
+             patch('utils.concept_workflow.config.model_for_stage', return_value='fixture-model'), \\
+             patch('utils.browser_qa.inspect_site', side_effect=fake_renderer), \\
+             patch('utils.claude_client.ask_claude_json', side_effect=respond) as model:
+            result = generate_concepts('studio')
+            self.assertEqual(result['status'], 'ready_for_comparison')
+            self.assertEqual(model.call_count, 6)
+
     def test_queue_repairs_unverified_contact_before_rendering(self):
         research, data = fixture()
         company = {'research': research}
