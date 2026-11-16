@@ -444,7 +444,7 @@ def private_stage_error_location(handle,start_position=0):
     )
     kind=classes[-1].split(".")[-1] if classes else "UnknownError"
     locations=re.findall(
-        r'File "[^"\n]+/(agents/research\.py|utils/[a-z_]+\.py)", line ([0-9]{1,5})',
+        r'File "[^"\n]+/(agents/(?:research|builder|qa)\.py|utils/[a-z_]+\.py)", line ([0-9]{1,5})',
         tail,
     )
     location=locations[-1] if locations else None
@@ -538,6 +538,13 @@ def run_cli(args,log_handle,deadline=None):
                 ("Only explicitly staged img", "Konseptisivulla on kielletty kuvalähde"),
                 ("Event handlers are forbidden", "Konseptisivulla on kielletty tapahtumakäsittelijä"),
                 ("Concept navigation", "Konseptisivun linkki poistuu sallituilta reiteiltä"),
+                ("Unverified email link", "Konseptin sähköpostilinkki poikkeaa vahvistetusta"),
+                ("Unverified telephone link", "Konseptin puhelinlinkki poikkeaa vahvistetusta"),
+                ("keksineen palvelusisältöä", "Konseptissa on vahvistamaton palveluväite"),
+                ("yhteydenottokehotuksen ilman", "Konseptin yhteydenottokehotukselta puuttuu vahvistettu yhteystieto"),
+                ("keksitty yritysfakta", "Konseptissa on vahvistamaton yritysväite"),
+                ("explicitly staged intake asset", "Konseptissa on vahvistamaton kuvatiedosto"),
+                ("CSS cannot import", "Konsepti viittaa ulkopuoliseen tyylitiedostoon"),
             ):
                 if "CONCEPT_PAGE_NEEDS_REPAIR: " in last_error and marker in last_error.split(
                         "CONCEPT_PAGE_NEEDS_REPAIR: ")[-1]:

@@ -4,7 +4,8 @@ import json
 import os
 import config
 from utils.concept_previews import (preview_routes, write_concepts, load_verified_set,
-                                    blind_order, record_selection, prepare_concept_page)
+                                    blind_order, record_selection, prepare_concept_page,
+                                    validate_concept_media)
 from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
 
@@ -82,6 +83,15 @@ def generate_concepts(name, *, response_path=None, producer=''):
         routes = preview_routes(research)
         authored = {"concepts": {}}
         system = "Author the requested responsive concept page." + CONCEPT_PAGE_RULES
+        facts = research.get("company_facts") or {}
+        allowed_media = {item["src"] for item in media}
+
+        def prepare_page(route, body):
+            page = prepare_concept_page(route, body, routes)
+            _validate_generated_content(page, facts)
+            validate_concept_media(route, page, allowed_media)
+            return page
+
         for direction in validate_creative_directions(research)["alternatives"]:
             packet = json.dumps({
                 "facts": research.get("company_facts"), "direction": direction,
@@ -99,7 +109,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
                 section_request=lambda instructions, prompt: json.dumps(
                     ask_claude_json(instructions, prompt, max_tokens=3200, stage="builder"),
                     ensure_ascii=False),
-                prepare_page=lambda route, body: prepare_concept_page(route, body, routes),
+                prepare_page=prepare_page,
             )
             authored["concepts"][direction["id"]] = {"pages": pages}
         raw = json.dumps(authored, ensure_ascii=False)
