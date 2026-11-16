@@ -59,6 +59,7 @@ TRANSIENT_RETRY_CODES=frozenset({
     # A source-backed but structurally invalid design can be repaired on the
     # same private job from its draft; daily claims remain strictly capped.
     "research_creative_plan_needs_repair",
+    "concept_page_needs_repair",
 })
 # Publish only site documents and expected static assets. Never copy JSON/TXT
 # scratch files, notes, evidence, build manifests or private company data.
@@ -283,6 +284,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "free_ai_rate_limit"
     if "free_ai_response_truncated" in terminal:
         return "free_ai_response_truncated"
+    if "concept_page_needs_repair" in terminal:
+        return "concept_page_needs_repair"
     if "free_model_request_rejected" in terminal:
         return "free_model_request_rejected"
     if "free_ai_access_rejected" in terminal:
