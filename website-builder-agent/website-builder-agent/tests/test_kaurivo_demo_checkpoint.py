@@ -68,7 +68,7 @@ def fixture(project, stage):
 
 class PrivateCheckpointTests(unittest.TestCase):
     def test_blocked_concept_checkpoint_regenerates_from_stored_research(self):
-        from scripts.run_kaurivo_demo_queue import completed_stage_index
+        from utils.kaurivo_checkpoint_stage_recovery import completed_stage_index
         self.assertEqual(completed_stage_index(None), -1)
         self.assertEqual(completed_stage_index("research_partial"), -1)
         self.assertEqual(completed_stage_index("researched"), 0)
