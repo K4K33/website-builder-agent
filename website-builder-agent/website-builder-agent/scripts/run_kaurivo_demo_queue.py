@@ -65,7 +65,7 @@ TRANSIENT_RETRY_CODES=frozenset({
 ALLOWED_EXTENSIONS={".html",".css",".js",".png",".jpg",".jpeg",".webp",
                     ".svg",".ico",".woff",".woff2",".ttf",".webmanifest",".pdf"}
 SKIP_FOLDERS={"_concept_previews","_review_material","_visual_reports",
-              "_concept_evidence","__pycache__","node_modules"}
+              "_concept_evidence","_demo_page_drafts","__pycache__","node_modules"}
 working_job=None
 stage="queue"
 
@@ -505,6 +505,8 @@ def run_cli(args,log_handle,deadline=None):
     child_env=os.environ.copy()
     # On Windows, redirected Python output otherwise uses the ANSI code page.
     child_env["PYTHONIOENCODING"]="utf-8"
+    if working_job:
+        child_env["KAURIVO_QUEUED_DEMO_ID"]=working_job["id"]
     try:
         subprocess.run(
             [sys.executable,"main.py",*args],cwd=PROJECT,
@@ -1014,6 +1016,7 @@ def main():
     # Keeping detailed vendor/model output only in ephemeral runner temporary
     # storage avoids exposing private prospect data in GitHub public logs.
     with tempfile.TemporaryFile(mode="w+",encoding="utf-8",errors="replace") as stage_log:
+        last_checkpoint = None
         try:
             free_model_configured()
             ai_deadline = None if LOCAL_WORKER else time.monotonic() + AI_STAGE_BUDGET_SECONDS
@@ -1024,6 +1027,7 @@ def main():
             if not agent_slug or len(agent_slug)>120:
                 raise HoldError("company_name_invalid")
             resume=restore_private_checkpoint(agent_slug,company_name,source)
+            last_checkpoint = resume
             done=(-1 if resume in (None, "research_partial") else
                   ("researched","concepts","selected","built",
                    "revised_1","revised_2").index(resume))
@@ -1034,6 +1038,7 @@ def main():
                 update("researching","Tutkitaan alkuperäistä sivustoa ja kolmea suunnittelusuuntaa")
                 run_cli(["research",agent_slug],stage_log,ai_deadline)
                 save_private_checkpoint("researched",agent_slug)
+                last_checkpoint = "researched"
             # Professional agency-style handoff, before another AI call.
             # This also rechecks restored checkpoints against the ACTIVE
             # canonical Master Prompt, not the version used by an old job.
@@ -1046,10 +1051,12 @@ def main():
                 update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
                 run_cli(["concept-previews",agent_slug],stage_log,ai_deadline)
                 save_private_checkpoint("concepts",agent_slug)
+                last_checkpoint = "concepts"
             if done<2:
                 update("building","Arvioidaan kolme visuaalista konseptia")
                 run_cli(["choose-concept",agent_slug],stage_log,ai_deadline)
                 save_private_checkpoint("selected",agent_slug)
+                last_checkpoint = "selected"
             # Never promote a text-only or stale concept choice to Build.
             # Require the brand/source blueprint, real benchmark evidence,
             # selected art direction and a complete destination sitemap.
@@ -1061,6 +1068,7 @@ def main():
                 update("building","Rakennetaan valittu monisivuinen demo")
                 run_cli(["build",agent_slug],stage_log,ai_deadline)
                 save_private_checkpoint("built",agent_slug)
+                last_checkpoint = "built"
             # A rejected build is automatically diagnosed and repaired, but
             # never labelled ready on the strength of an attempted revision.
             # Bounded iterations protect free quotas and the runner deadline.
@@ -1081,6 +1089,7 @@ def main():
                 run_cli(["revise",agent_slug,qa_repair_feedback(qa)],
                         stage_log,ai_deadline)
                 save_private_checkpoint("revised_"+str(revision+1),agent_slug)
+                last_checkpoint = "revised_"+str(revision+1)
             # The QA report must correspond to the LAST real built version.
             company=load_company(agent_slug)
             if ((company.get("qa") or {}).get("overall_pass") is not True or
@@ -1108,6 +1117,12 @@ def main():
             print("Kaurivo demo queue: exact-release internal preview verified.")
             return 0
         except HoldError as error:
+            if (stage == "building" and last_checkpoint and
+                    (PROJECT / "output" / agent_slug / "_demo_page_drafts").is_dir()):
+                try:
+                    save_private_checkpoint(last_checkpoint, agent_slug)
+                except HoldError:
+                    print("Kaurivo demo queue: previous verified checkpoint retained.")
             # The complete "researched" checkpoint exists only after the
             # full design brief passes. Preserve ONLY private source/facts/
             # references milestones before a failed research AI call.
