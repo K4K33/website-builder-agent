@@ -59,13 +59,13 @@ class ConceptWorkflowTests(unittest.TestCase):
                     '<p>Yli 88 vuoden kokemus</p></main>')
             return {'html': html}
 
-        with TemporaryDirectory() as folder, \\
-             patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'numeric-job'}), \\
-             patch('utils.concept_workflow.get_company', return_value=('studio', company)), \\
-             patch('utils.concept_workflow.upsert_company'), \\
-             patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \\
-             patch('utils.concept_workflow.config.model_for_stage', return_value='fixture-model'), \\
-             patch('utils.browser_qa.inspect_site', side_effect=fake_renderer), \\
+        with TemporaryDirectory() as folder, \
+             patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'numeric-job'}), \
+             patch('utils.concept_workflow.get_company', return_value=('studio', company)), \
+             patch('utils.concept_workflow.upsert_company'), \
+             patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \
+             patch('utils.concept_workflow.config.model_for_stage', return_value='fixture-model'), \
+             patch('utils.browser_qa.inspect_site', side_effect=fake_renderer), \
              patch('utils.claude_client.ask_claude_json', side_effect=respond) as model:
             result = generate_concepts('studio')
             self.assertEqual(result['status'], 'ready_for_comparison')
