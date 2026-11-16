@@ -30,6 +30,7 @@ import traceback
 import time
 from urllib.parse import urlsplit, urljoin, unquote
 import requests
+from utils.kaurivo_checkpoint_stage_recovery import completed_stage_index
 
 REPO="K4K33/website-builder-agent"
 SB="https://xhsfbcwpwbgdbatrcyuk.supabase.co"
@@ -1056,9 +1057,8 @@ def main():
                 raise HoldError("company_name_invalid")
             resume=restore_private_checkpoint(agent_slug,company_name,source)
             last_checkpoint = resume
-            done=(-1 if resume in (None, "research_partial") else
-                  ("researched","concepts","selected","built",
-                   "revised_1","revised_2").index(resume))
+            done = completed_stage_index(
+                resume, load_company(agent_slug) if resume == "concepts" else None)
             if resume is None:
                 upsert_company(agent_slug,{"name":company_name,
                                           "url":source,"status":"found"})
