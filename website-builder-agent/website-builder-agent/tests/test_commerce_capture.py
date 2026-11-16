@@ -58,5 +58,27 @@ class CommerceCaptureTests(unittest.TestCase):
         self.assertEqual(result["page_paths"], ["index.html", "palvelut.html"])
         self.assertEqual(r["site_architecture"]["pages"][1]["section_ids"], ["huolto", "palvelut"])
 
+    def test_source_map_repair_is_deterministic_without_ai(self):
+        from agents.research import _repair_source_map
+        r = {"source_inventory": {"pages": [{
+                "url": "https://example.fi/huolto", "title": "Huolto",
+                "headings": {"h2": ["Kitarahuolto"], "h3": ["Hinnasto"]},
+                "text": "Kitarahuolto Hinnasto", "links": [], "images": []}]},
+             "source_content_map": {"pages": []},
+             "site_architecture": {"pages": [{"path": "index.html",
+                 "purpose": "Yrityksen etusivu ja tärkeimmät tiedot",
+                 "user_task": "Asiakas löytää yrityksen tärkeimmät palvelut",
+                 "section_ids": ["hero"]}, {"path": "huolto.html",
+                 "purpose": "Soitinten huollon palvelut ja hinnat",
+                 "user_task": "Asiakas tutkii huoltopalvelut ja hinnaston",
+                 "section_ids": ["huolto"]}]}}
+        _repair_source_map(r, "https://example.fi")
+        row = r["source_content_map"]["pages"][0]
+        self.assertEqual(row["target"], "huolto.html")
+        self.assertEqual([x["source_heading"] for x in row["sections"]],
+                         ["Kitarahuolto", "Hinnasto"])
+        self.assertTrue(all(x["target"].startswith("huolto.html#source-")
+                            for x in row["sections"]))
+
 
 if __name__ == "__main__": unittest.main()
