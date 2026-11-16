@@ -11,6 +11,20 @@ from utils import claude_client, resource_manager
 
 
 class KaurivoFreeModelFallbackTests(unittest.TestCase):
+    def test_http_200_error_envelope_uses_free_capacity_handling(self):
+        reply = Mock(status_code=200, headers={})
+        reply.json.return_value = {"error": {"code": 429, "message": "private upstream detail"}}
+        env = {"FREE_ONLY": "1", "AI_BACKEND": "openrouter",
+               "RESEARCH_MODEL": "google/primary:free"}
+        with patch.dict(os.environ, env, clear=True), \
+             patch.object(claude_client, "_get_headers", return_value={}), \
+             patch.object(resource_manager, "reserve", return_value=True), \
+             patch.object(claude_client.requests, "post", return_value=reply), \
+             patch.object(claude_client, "_local_free_quota_fallback", return_value="fallback") as fallback:
+            result = claude_client.ask_claude("system", "research", stage="research")
+        self.assertEqual(result, "fallback")
+        self.assertEqual(fallback.call_args.kwargs["capacity_code"], "FREE_AI_RATE_LIMIT")
+
     def test_queued_page_rotates_free_model_after_truncation_at_same_limit(self):
         primary = "dots-studio/dots-3-note-preview:free"
         backup = "google/gemma-4-26b-a4b-it:free"
