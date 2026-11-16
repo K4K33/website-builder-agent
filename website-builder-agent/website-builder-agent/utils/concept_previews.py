@@ -153,18 +153,18 @@ def prepare_approved_concept_media(route, body, allowed):
             element.replace_with(placeholder)
 
     def safe_css(match):
-        source = match.group(1).strip().strip('"\\'')
+        source = match.group(1).strip().strip(chr(34) + chr(39))
         resolved = local_source(source)
         return 'url("' + resolved + '")' if resolved else 'none'
 
     for style in document.find_all('style'):
         css = style.get_text()
-        rewritten = re.sub(r'url\\(\\s*([^)]*)\\)', safe_css, css, flags=re.I)
+        rewritten = re.sub(r'url\(\s*([^)]*)\)', safe_css, css, flags=re.I)
         if rewritten != css:
             style.string = rewritten
     for element in document.select('[style]'):
         css = str(element['style'])
-        element['style'] = re.sub(r'url\\(\\s*([^)]*)\\)', safe_css, css, flags=re.I)
+        element['style'] = re.sub(r'url\(\s*([^)]*)\)', safe_css, css, flags=re.I)
 
     return str(document)
 
@@ -263,7 +263,7 @@ def parse_concepts(raw, research):
 def validate_concept_media(route, body, allowed):
     soup = BeautifulSoup(body, 'html.parser')
     css = ' '.join(s.get_text() for s in soup.find_all('style')) + ' ' + ' '.join(str(s.get('style')) for s in soup.select('[style]'))
-    if re.search(r'@import|(?:-webkit-)?image-set\\s*\\(', css, re.I):
+    if re.search(r'@import|(?:-webkit-)?image-set\s*\(', css, re.I):
         raise RuntimeError('Concept CSS cannot load external stylesheets or image-set sources')
     # Every remaining url() must resolve to an approved on-disk intake asset.
 
