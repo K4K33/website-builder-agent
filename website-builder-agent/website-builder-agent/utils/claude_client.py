@@ -289,6 +289,19 @@ def ask_claude(
         payload["models"] = models
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
+    queued_page = (
+        config.free_only() and stage == "builder" and json_mode
+        and bool(os.getenv("KAURIVO_QUEUED_DEMO_ID"))
+    )
+    # This stage implements an already-reviewed design. These exact free
+    # endpoints permit disabling optional reasoning, which otherwise can
+    # consume the same output allowance as the HTML document.
+    page_models_without_reasoning = {
+        "dots-studio/dots-3-note-preview:free",
+        "google/gemma-4-26b-a4b-it:free",
+        "google/gemma-4-31b-it:free",
+    }
+    model_offset = 0
 
     retry_token_limits = [
         max_tokens,
@@ -300,6 +313,14 @@ def ask_claude(
     free_provider_minute_retried = False
 
     for attempt in range(1, max_retries + 1):
+
+        if queued_page:
+            ordered = models[model_offset:] + models[:model_offset]
+            payload["model"] = ordered[0]
+            if len(ordered) > 1:
+                payload["models"] = ordered
+            if all(candidate in page_models_without_reasoning for candidate in ordered):
+                payload["reasoning"] = {"effort": "none"}
 
         current_max_tokens = retry_token_limits[
             min(
@@ -440,6 +461,13 @@ def ask_claude(
                 next_limit = min(config.AI_MAX_OUTPUT_TOKENS,
                                  retry_token_limits[min(
                                      attempt,len(retry_token_limits)-1)])
+                if queued_page and len(models) > 1 and attempt < max_retries:
+                    # A model fallback list handles HTTP failures, but does
+                    # not automatically recover a HTTP 200 length stop.
+                    returned = data.get("model") or payload["model"]
+                    model_offset = (models.index(returned) + 1) % len(models)
+                    print("  [OpenRouter] Queued page length stop; trying the next zero-cost model.")
+                    continue
                 # Never spend another counted free request asking for exactly
                 # the same already-capped output length.
                 if attempt < max_retries and next_limit > current_max_tokens:
