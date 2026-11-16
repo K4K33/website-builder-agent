@@ -47,6 +47,8 @@ from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.creative_directions import validate_creative_directions
 from utils.creative_brief_recovery import ensure_creative_directions
 from utils.site_architecture import validate_site_architecture
+from utils.commerce_capture import capture_shop_catalogues
+from utils.commerce_catalogue import bind_commerce_architecture
 
 import requests
 import config
@@ -1078,6 +1080,15 @@ def run_research(
             "Original-site content research incomplete; review these pages: "
             + ", ".join(source_gaps[:8])
         )
+    commerce_inventory = progress.get("commerce_inventory")
+    if not isinstance(commerce_inventory, list):
+        commerce_inventory = capture_shop_catalogues({"source_inventory": source_inventory})
+        if progress:
+            progress = save_progress(
+                slug, company, milestone=progress["milestone"], source_url=url,
+                master_prompt_sha256=MASTER_PROMPT_SHA256,
+                commerce_inventory=commerce_inventory,
+            )
     # Both measurements read the same original site independently. Run them
     # together when neither has been captured, and keep any valid saved proof.
     original_screenshots = progress.get("original_screenshots")
@@ -1131,6 +1142,7 @@ def run_research(
                  "status_code", "raw_html_length", "success")
             },
             source_inventory=source_inventory,
+            commerce_inventory=commerce_inventory,
             original_screenshots=original_screenshots,
             original_experience_profile=original_experience_profile,
         )
@@ -1450,6 +1462,7 @@ Tärkeää:
         # The design pass must not rewrite or invent extracted company facts.
         "company_facts": company_facts,
         "source_inventory": source_inventory,
+        "commerce_inventory": commerce_inventory,
         "original_screenshots": original_screenshots,
         "original_experience_profile": original_experience_profile,
         "fact_sources": [{"url": url, "title": site_data.get("title", ""),
@@ -1512,6 +1525,7 @@ Tärkeää:
         )
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
+    bind_commerce_architecture(research_data)
     _repair_source_map(research_data, url)
     validate_site_architecture(research_data)
 

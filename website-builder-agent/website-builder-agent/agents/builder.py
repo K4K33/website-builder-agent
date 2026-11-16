@@ -22,6 +22,7 @@ from utils.visual_media_gate import audit_visual_media
 from utils.creative_directions import validate_creative_directions
 from utils.visual_direction import visual_direction_plan
 from utils.site_architecture import validate_site_architecture
+from utils.commerce_catalogue import commerce_builder_brief
 from utils.site_build_pipeline import build_pages_from_response
 from utils.local_media_intake import stage_local_media
 from utils.content_parity import audit_content_parity
@@ -1685,6 +1686,10 @@ kuvarikkaalta lähdesivustolta tai kolme samaa pitkää CTA-otsikkoa.
 
 KOKO UUDEN VERKKOSIVUSTON PAKOLLINEN RAKENNE:
 {json.dumps(architecture, ensure_ascii=False)}
+PAIKALLISEKSI SIVUTETTAVA TARKISTETTU KAUPPALUETTELO:
+{json.dumps(commerce_builder_brief(research), ensure_ascii=False)}
+Pidä verkkokauppareitti navigaatiossa. Älä yritä tulostaa tuhansia tuotteita
+HTML-vastaukseen: tarkistettu hakemisto liitetään siihen automaattisesti.
 Tee kaikki sivut ja sisällöt täsmälleen sovittuihin reitteihin.
 Toteuta suunnitelman section_id-tunnukset ja hyväksymiskriteerit. Älä lisää täyteosioita.
 VERTAILUKUVAT ENSIN, tässä järjestyksessä; kohdeyrityksen kuvat niiden jälkeen:
