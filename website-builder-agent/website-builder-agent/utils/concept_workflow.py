@@ -96,6 +96,9 @@ def generate_concepts(name, *, response_path=None, producer=''):
                 request=lambda instructions, prompt: json.dumps(
                     ask_claude_json(instructions, prompt, max_tokens=5500, stage="builder"),
                     ensure_ascii=False),
+                section_request=lambda instructions, prompt: json.dumps(
+                    ask_claude_json(instructions, prompt, max_tokens=3200, stage="builder"),
+                    ensure_ascii=False),
             )
             authored["concepts"][direction["id"]] = {"pages": pages}
         raw = json.dumps(authored, ensure_ascii=False)

@@ -1172,6 +1172,10 @@ def _request_site_pages(system, prompt, *, slug, architecture, image_paths, curr
             instructions, page_prompt, stage="builder", json_mode=True,
             max_tokens=min(config.BUILDER_MAX_TOKENS, 9000), image_paths=image_paths,
         )),
+        section_request=lambda instructions, page_prompt: _clean_html(ask_claude(
+            instructions, page_prompt, stage="builder", json_mode=True,
+            max_tokens=min(config.BUILDER_MAX_TOKENS, 4500), image_paths=image_paths,
+        )),
     )
     return json.dumps({"pages": pages}, ensure_ascii=False)
 
