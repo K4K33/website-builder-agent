@@ -285,6 +285,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "free_ai_response_truncated"
     if "concept_page_needs_repair" in terminal:
         return "concept_page_needs_repair"
+    if "concept_browser_validation_blocked" in terminal:
+        return "concept_browser_validation_blocked"
     if "free_model_request_rejected" in terminal:
         return "free_model_request_rejected"
     if "free_ai_access_rejected" in terminal:
@@ -528,6 +530,8 @@ def run_cli(args,log_handle,deadline=None):
             detail = benchmark_failure_diagnostic(log_handle, stage_start)
         if code == "research_design_coverage_incomplete":
             detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
+        if code == "concept_browser_validation_blocked":
+            detail = "Konseptisivut eivät läpäisseet selaintarkistusta rajattujen korjausyritysten jälkeenkään"
         if code == "concept_page_needs_repair":
             log_handle.seek(stage_start)
             last_error = log_handle.read()[-3000:]
