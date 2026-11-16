@@ -22,6 +22,7 @@ from utils.universal_quality import audit_universal_standards
 from utils.route_experience_contract import audit_route_experience
 from utils.source_fidelity import audit_source_fidelity
 from utils.client_handover import client_design_brief, validate_locked_copy
+from utils.commerce_catalogue import attach_commerce_catalogue, write_commerce_artifacts
 
 def build_pages_from_response(raw: str, *, slug: str,
                               company: dict, output_root: str | Path) -> dict:
@@ -35,6 +36,7 @@ def build_pages_from_response(raw: str, *, slug: str,
     )
     direction=visual_direction_plan(research, creative, architecture)
     pages=parse_generated_site(raw, architecture)
+    pages, commerce_artifacts = attach_commerce_catalogue(pages, research)
     # The creative preflight is now an explicit implementation contract,
     # not just a generic inspiration paragraph.
     if not direction.get("source_anchor") or not direction.get("depth_direction"):
@@ -116,6 +118,7 @@ def build_pages_from_response(raw: str, *, slug: str,
                 staging.append((Path(tmp.name),destination))
         for temporary,destination in staging:
             os.replace(temporary,destination)
+        write_commerce_artifacts(root, commerce_artifacts)
     finally:
         for temporary,_ in staging:
             temporary.unlink(missing_ok=True)

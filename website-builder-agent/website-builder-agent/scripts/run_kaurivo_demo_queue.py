@@ -873,6 +873,12 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
                               return !document.getElementById(name)&&!document.getElementsByName(name).length;
                             }).length,
                             links:[...document.querySelectorAll('a[href]')].map(a=>a.getAttribute('href'))
+                            ,catalogue:(()=>{const c=document.querySelector('[data-shop-catalogue]');
+                              if(!c)return null;const expected=Number(c.dataset.productCount||0);
+                              const rows=Array.isArray(window.KAURIVO_CATALOGUE_PRODUCTS)?window.KAURIVO_CATALOGUE_PRODUCTS:[];
+                              return {expected,loaded:rows.length,valid:rows.every(p=>p&&p.url&&p.name&&p.price_text),
+                                ready:window.KAURIVO_CATALOGUE_READY===true,cards:c.querySelectorAll('[data-product-source] a[href]').length,
+                                controls:!!c.querySelector('[data-catalog-search]')};})()
                           };
                         }""")
                         if result["release"]!=marker:
@@ -886,6 +892,13 @@ def verify_public(preview_url,marker,routes,deadline_seconds=420):
                             raise HoldError("public_script_error")
                         if result["missingAnchors"]:
                             raise HoldError("broken_inpage_navigation")
+                        catalogue=result.get("catalogue")
+                        if catalogue and (catalogue["expected"] < 1 or
+                                catalogue["loaded"] != catalogue["expected"] or
+                                not catalogue["valid"] or
+                                not catalogue["ready"] or catalogue["cards"] < 1 or
+                                not catalogue["controls"]):
+                            raise HoldError("public_catalogue_incomplete")
                         if len(result["links"])>250:
                             raise HoldError("too_many_site_links")
                         for raw in result["links"]:
