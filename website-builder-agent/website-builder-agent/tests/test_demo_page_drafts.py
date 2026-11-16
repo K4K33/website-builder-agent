@@ -6,6 +6,43 @@ from utils.demo_page_drafts import draft_pages, _page_from_response
 
 
 class DemoPageDraftTests(unittest.TestCase):
+    def test_truncation_switches_to_sections_and_resume_reuses_finished_parts(self):
+        shell = ('<!doctype html><html><body><main>'
+                 '<div data-kaurivo-section-slot="hero"></div>'
+                 '<div data-kaurivo-section-slot="services"></div>'
+                 '</main></body></html>')
+        calls = []
+
+        def full(*_):
+            calls.append("full")
+            raise RuntimeError("OpenRouter response truncated; output rejected.")
+
+        def small(system, prompt):
+            if "HTML shell" in system:
+                calls.append("shell")
+                return json.dumps({"shell": shell})
+            part = "hero" if "section hero" in system else "services"
+            calls.append(part)
+            if part == "services" and calls.count(part) == 1:
+                raise RuntimeError("temporary provider failure")
+            return json.dumps({"section": f'<section id="{part}"><h2>{part}</h2></section>'})
+
+        with TemporaryDirectory() as root:
+            args = dict(root=root, job_id="demo", phase="build", routes=["index.html"],
+                        system="design", prompt_for=lambda route: route,
+                        request=full, section_request=small)
+            with self.assertRaisesRegex(RuntimeError, "temporary"):
+                draft_pages(**args)
+            page = draft_pages(**args)["index.html"]
+            self.assertLess(page.index('id="hero"'), page.index('id="services"'))
+            self.assertNotIn("data-kaurivo-section-slot", page)
+            self.assertEqual(calls, ["full", "shell", "hero", "services", "services"])
+
+    def test_wrong_section_id_cannot_be_assembled(self):
+        from utils.demo_sections import _section
+        with self.assertRaisesRegex(RuntimeError, "mismatched"):
+            _section('<section id="wrong"><h2>Wrong</h2></section>', "hero")
+
     def test_reuses_only_complete_pages_from_same_job_and_prompt(self):
         with TemporaryDirectory() as root:
             calls = []

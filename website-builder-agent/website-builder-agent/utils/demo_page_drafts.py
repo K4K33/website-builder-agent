@@ -36,7 +36,7 @@ def _page_from_response(raw, route, concept_id):
 
 
 def draft_pages(*, root, job_id, phase, routes, system, prompt_for, request, image_paths=(),
-                concept_id=None):
+                concept_id=None, section_request=None):
     """Generate and validate one complete response per route and reuse matching drafts."""
     directory = Path(root) / DRAFT_DIR
     directory.mkdir(parents=True, exist_ok=True)
@@ -57,7 +57,21 @@ def draft_pages(*, root, job_id, phase, routes, system, prompt_for, request, ima
         scope = ("This call only authors " + route + ". Return JSON with one key "
                  '`html` holding the complete document from <!doctype html> through </html>. '
                  "Keep all other routes as navigation targets only. Use compact CSS.")
-        raw = request(scope + "\n\n" + system, scope + "\n\n" + prompt + "\n\n" + scope)
+        sectioned = cache.with_suffix(".sectioned.json")
+        if section_request and sectioned.is_file():
+            from utils.demo_sections import assemble_sections
+            raw = assemble_sections(cache, route, system, prompt, section_request)
+        else:
+            try:
+                raw = request(scope + "\n\n" + system,
+                              scope + "\n\n" + prompt + "\n\n" + scope)
+            except RuntimeError as exc:
+                if not section_request or not any(marker in str(exc).lower() for marker in (
+                        "response truncated", "free_ai_response_truncated")):
+                    raise
+                sectioned.write_text("true", encoding="utf-8")
+                from utils.demo_sections import assemble_sections
+                raw = assemble_sections(cache, route, system, prompt, section_request)
         canonical, parsed = _page_from_response(raw, route, concept_id)
         pages.update(parsed)
         temporary = cache.with_suffix(".tmp")
