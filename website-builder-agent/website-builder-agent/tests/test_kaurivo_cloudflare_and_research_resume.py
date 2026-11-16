@@ -209,7 +209,15 @@ class PartialResearchTests(unittest.TestCase):
 
     def test_runner_saves_partial_only_for_private_research(self):
         self.assertIn('save_private_checkpoint("research_partial", agent_slug)',RUNNER)
-        self.assertIn('done=(-1 if resume in (None, "research_partial")',RUNNER)
+        self.assertIn('done = completed_stage_index(', RUNNER)
+        self.assertIn('resume, load_company(agent_slug) if resume == "concepts" else None', RUNNER)
+        from utils.kaurivo_checkpoint_stage_recovery import completed_stage_index
+        self.assertEqual(completed_stage_index("research_partial"), -1)
+        self.assertEqual(completed_stage_index("researched"), 0)
+        self.assertEqual(completed_stage_index(
+            "concepts", {"concept_previews": {"status": "blocked"}}), 0)
+        self.assertEqual(completed_stage_index(
+            "concepts", {"concept_previews": {"status": "ready_for_comparison"}}), 1)
         self.assertIn("verify_design_handoff(load_company(agent_slug),selected=False)",RUNNER)
         self.assertIn("quality_gate_not_approved",RUNNER)
         self.assertIn("verify_public(url,marker,routes)",RUNNER)
