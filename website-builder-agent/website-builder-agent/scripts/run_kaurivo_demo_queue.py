@@ -528,6 +528,21 @@ def run_cli(args,log_handle,deadline=None):
             detail = benchmark_failure_diagnostic(log_handle, stage_start)
         if code == "research_design_coverage_incomplete":
             detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
+        if code == "concept_page_needs_repair":
+            log_handle.seek(stage_start)
+            last_error = log_handle.read()[-3000:]
+            for marker, label in (
+                ("real main, one h1", "Sivun päärakenne, pääotsikko tai tyylit puuttuvat"),
+                ("no scripts/forms/embeds", "Konseptisivulla on kielletty upotus tai lomake"),
+                ("cannot redirect", "Konseptisivu yrittää uudelleenohjausta"),
+                ("Only explicitly staged img", "Konseptisivulla on kielletty kuvalähde"),
+                ("Event handlers are forbidden", "Konseptisivulla on kielletty tapahtumakäsittelijä"),
+                ("Concept navigation", "Konseptisivun linkki poistuu sallituilta reiteiltä"),
+            ):
+                if "CONCEPT_PAGE_NEEDS_REPAIR: " in last_error and marker in last_error.split(
+                        "CONCEPT_PAGE_NEEDS_REPAIR: ")[-1]:
+                    detail = label
+                    break
         safe_location=private_stage_error_location(log_handle,stage_start)
         detail=(detail+" · " if detail else "")+safe_location
         raise HoldError(code,detail) from exc

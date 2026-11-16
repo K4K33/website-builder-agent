@@ -105,6 +105,45 @@ def validate_concept_page(route, body, required_routes):
             raise RuntimeError('Concept navigation leaves its two actual prototype pages')
 
 
+def prepare_concept_page(route, html, required_routes):
+    """Repair semantic wrappers and headings without writing client content."""
+    try:
+        validate_concept_page(route, html, required_routes)
+        return html
+    except RuntimeError:
+        pass
+
+    document = BeautifulSoup(html, 'html.parser')
+    main = document.find('main')
+    if main is None and document.body:
+        content = [tag for tag in document.body.find_all(recursive=False)
+                   if tag.name not in ('nav', 'footer', 'style')
+                   and (tag.name != 'header' or tag.find(['h1', 'h2']))]
+        if content:
+            main = document.new_tag('main')
+            content[0].insert_before(main)
+            for tag in content:
+                main.append(tag.extract())
+    if main:
+        headings = main.find_all('h1')
+        if headings:
+            for extra in headings[1:]:
+                extra.name = 'h2'
+        else:
+            heading = main.find('h2')
+            if heading:
+                heading.name = 'h1'
+    # Preserve authored inline styles. Add viewport containment only when
+    # styling already exists and the model omitted the required style block.
+    if document.head and not document.find('style') and document.select_one('[style]'):
+        stylesheet = document.new_tag('style')
+        stylesheet.string = 'img{max-width:100%;height:auto} main{min-width:0;overflow-wrap:anywhere}'
+        document.head.append(stylesheet)
+    result = str(document)
+    validate_concept_page(route, result, required_routes)
+    return result
+
+
 def parse_concepts(raw, research):
     choices = validate_creative_directions(research)
     expected = {d['id'] for d in choices['alternatives']}

@@ -36,7 +36,7 @@ def _page_from_response(raw, route, concept_id):
 
 
 def draft_pages(*, root, job_id, phase, routes, system, prompt_for, request, image_paths=(),
-                concept_id=None, section_request=None, validate_page=None):
+                concept_id=None, section_request=None, prepare_page=None):
     """Generate and validate one complete response per route and reuse matching drafts."""
     directory = Path(root) / DRAFT_DIR
     directory.mkdir(parents=True, exist_ok=True)
@@ -57,7 +57,7 @@ def draft_pages(*, root, job_id, phase, routes, system, prompt_for, request, ima
         scope = ("This call only authors " + route + ". Return JSON with one key "
                  '`html` holding the complete document from <!doctype html> through </html>. '
                  "Keep all other routes as navigation targets only. Use compact CSS.")
-        if validate_page:
+        if prepare_page:
             scope += " Place exactly one h1 inside main and put responsive CSS in a style element."
         sectioned = cache.with_suffix(".sectioned.json")
         if cached is not None:
@@ -78,9 +78,10 @@ def draft_pages(*, root, job_id, phase, routes, system, prompt_for, request, ima
                 raw = assemble_sections(cache, route, system, prompt, section_request)
         if cached is None:
             canonical, parsed = _page_from_response(raw, route, concept_id)
-        if validate_page:
+        if prepare_page:
+            original = parsed[route]
             try:
-                validate_page(route, parsed[route])
+                prepared = prepare_page(route, original)
             except RuntimeError as error:
                 repair = (scope + "\nRepair the prototype structure. Preserve all verified "
                           "content, brand, route and art direction. The previous draft is "
@@ -89,9 +90,11 @@ def draft_pages(*, root, job_id, phase, routes, system, prompt_for, request, ima
                               prompt + "\n\n" + repair + "\n\n" + parsed[route])
                 canonical, parsed = _page_from_response(raw, route, concept_id)
                 try:
-                    validate_page(route, parsed[route])
+                    prepared = prepare_page(route, parsed[route])
                 except RuntimeError as repair_error:
-                    raise RuntimeError("CONCEPT_PAGE_NEEDS_REPAIR") from repair_error
+                    raise RuntimeError("CONCEPT_PAGE_NEEDS_REPAIR: " + str(repair_error)) from repair_error
+            if prepared != parsed[route]:
+                canonical, parsed = _page_from_response(prepared, route, concept_id)
         pages.update(parsed)
         if canonical is None:
             continue

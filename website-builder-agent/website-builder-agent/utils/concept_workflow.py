@@ -4,7 +4,7 @@ import json
 import os
 import config
 from utils.concept_previews import (preview_routes, write_concepts, load_verified_set,
-                                    blind_order, record_selection, validate_concept_page)
+                                    blind_order, record_selection, prepare_concept_page)
 from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
 
@@ -99,7 +99,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
                 section_request=lambda instructions, prompt: json.dumps(
                     ask_claude_json(instructions, prompt, max_tokens=3200, stage="builder"),
                     ensure_ascii=False),
-                validate_page=lambda route, body: validate_concept_page(route, body, routes),
+                prepare_page=lambda route, body: prepare_concept_page(route, body, routes),
             )
             authored["concepts"][direction["id"]] = {"pages": pages}
         raw = json.dumps(authored, ensure_ascii=False)

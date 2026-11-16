@@ -28,10 +28,37 @@ class DemoPageDraftTests(unittest.TestCase):
                 self.assertIn(invalid, prompt)
                 return json.dumps({'html': valid})
 
-            args['validate_page'] = lambda route, body: validate_concept_page(route, body, routes)
+            def validate(route, body):
+                validate_concept_page(route, body, routes)
+                return body
+
+            args['prepare_page'] = validate
             self.assertEqual(draft_pages(**args, request=repair), dict.fromkeys(routes, valid))
             self.assertEqual(draft_pages(**args, request=repair), dict.fromkeys(routes, valid))
             self.assertEqual(len(calls), 1)
+
+    def test_concept_structure_is_fixed_without_a_second_model_call(self):
+        from utils.concept_previews import prepare_concept_page
+
+        draft = ('<!doctype html><html><head><title>Verified service</title></head><body>'
+                 '<nav><a href="index.html">Home</a></nav>'
+                 '<section style="color:#203040"><h2>Verified service</h2><p>Verified fact.</p></section>'
+                 '<footer>Verified footer</footer></body></html>')
+        route = 'index.html'
+        with TemporaryDirectory() as root:
+            args = dict(root=root, job_id='demo', phase='concept-one', routes=[route],
+                        system='design', prompt_for=lambda route: route,
+                        prepare_page=lambda route, body: prepare_concept_page(route, body, [route]))
+            def generate(system, prompt):
+                self.assertNotIn('Repair the prototype', system)
+                return json.dumps({'html': draft})
+            result = draft_pages(**args, request=generate)[route]
+            self.assertIn('<main>', result)
+            self.assertIn('<h1>Verified service</h1>', result)
+            self.assertIn('color:#203040', result)
+            self.assertIn('Verified fact.', result)
+            self.assertIn('<style>', result)
+            self.assertEqual(draft_pages(**args, request=lambda *_: self.fail('Cache bypassed'))[route], result)
 
     def test_truncation_switches_to_sections_and_resume_reuses_finished_parts(self):
         shell = ('<!doctype html><html><body><main>'
