@@ -46,7 +46,7 @@ from utils.premium_quality_gate import discover_source_journeys
 from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.creative_directions import validate_creative_directions
 from utils.creative_brief_recovery import ensure_creative_directions
-from utils.site_architecture import validate_site_architecture
+from utils.site_architecture import bind_source_routes, validate_site_architecture
 from utils.commerce_capture import capture_shop_catalogues
 from utils.commerce_catalogue import bind_commerce_architecture
 
@@ -1527,6 +1527,7 @@ Tärkeää:
     # preserve each originally observed content page and topic.
     bind_commerce_architecture(research_data)
     _repair_source_map(research_data, url)
+    bind_source_routes(research_data)
     validate_site_architecture(research_data)
 
     updated_company = upsert_company(
