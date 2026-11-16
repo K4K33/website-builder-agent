@@ -45,6 +45,11 @@ INDUSTRY_ALIASES = {
     "bicycle shop": "pyöräliike", "bike repair": "pyöräliike",
     "suutari": "suutari", "shoemaker": "suutari",
     "leipomo": "leipomo", "bakery": "leipomo",
+    "parkettityöt": "parkettityöt", "parkettitöitä": "parkettityöt",
+    "parkettiasennus": "parkettityöt", "parkettilattiatyöt": "parkettityöt",
+    "parketin asennus": "parkettityöt", "parketin hionta": "parkettityöt",
+    "parketin kunnostus": "parkettityöt", "parquet installation": "parkettityöt",
+    "hardwood floor refinishing": "parkettityöt",
     "asianajotoimisto": "asianajotoimisto",
     "asianajopalvelut": "asianajotoimisto",
     "asianajaja": "asianajotoimisto",
@@ -100,6 +105,14 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    "parkettityöt": (
+        ("Parkettityö Ahtinen", "https://www.parkettityoahtinen.fi/"),
+        ("Eemelin Parketti", "https://eemelinparketti.fi/"),
+        ("Parketit kuntoon", "https://www.parketitkuntoon.fi/hinnasto/"),
+        ("Parketti Kemppainen", "https://www.parketti-kemppainen.com/tyot/hinnasto/"),
+        ("Pirkan Lattia", "https://pirkanlattia.com/"),
+        ("Floor Factory", "https://floorfactory.fi/asennushinnasto/"),
+    ),
     "musiikkiliike": (
         # Publicly located, existing official websites. These are only
         # candidates: Research must still verify exact matching industry,
@@ -223,6 +236,11 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
         return known
     if not text:
         return industry
+    # Generic building-industry labels are common. An observed parquet
+    # service and a second matching work description identify this sector.
+    if (re.search(r"parket(?:in|tien)\s+(?:hion|asennu|kunnost|korjau)", text)
+            and re.search(r"lakka|hiomme|parkettityö|parkettitö", text)):
+        return "parkettityöt"
     # Company registration can call this sector "electrical and automation
     # services". The ORIGINAL verified site (not a scraped competitor) must
     # explicitly prove actual installation/repair work before mapping it to
