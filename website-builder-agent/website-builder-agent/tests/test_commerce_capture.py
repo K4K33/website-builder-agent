@@ -4,6 +4,7 @@ from unittest.mock import patch
 from utils.commerce_capture import _capture_shopify
 from utils.commerce_catalogue import bind_commerce_architecture, attach_commerce_catalogue
 from utils.commerce_parity import commerce_problems
+from utils.site_architecture import bind_source_routes, validate_site_architecture
 
 
 class Reply:
@@ -42,6 +43,20 @@ class CommerceCaptureTests(unittest.TestCase):
         bind_commerce_architecture(r)
         self.assertEqual(r["commerce_inventory"][0]["target"], "shop.html")
         self.assertIn("kauppa-valikoima", r["site_architecture"]["pages"][1]["section_ids"])
+
+    def test_source_map_destinations_become_real_routes_and_sections(self):
+        r = {"source_inventory": {"pages": [{"url": "https://example.fi/palvelut", "text": "sana " * 700}]},
+             "source_content_map": {"pages": [{"source_url": "https://example.fi/palvelut",
+                 "status": "retain", "target": "palvelut.html#palvelut",
+                 "sections": [{"source_heading": "Huolto", "target": "palvelut.html#huolto"}]}]},
+             "site_architecture": {"pages": [{"path": "index.html",
+                 "purpose": "Yrityksen etusivu ja tärkeimmät tiedot",
+                 "user_task": "Asiakas löytää yrityksen pääpalvelut etusivulta",
+                 "section_ids": ["hero"]}]}}
+        bind_source_routes(r)
+        result = validate_site_architecture(r)
+        self.assertEqual(result["page_paths"], ["index.html", "palvelut.html"])
+        self.assertEqual(r["site_architecture"]["pages"][1]["section_ids"], ["huolto", "palvelut"])
 
 
 if __name__ == "__main__": unittest.main()

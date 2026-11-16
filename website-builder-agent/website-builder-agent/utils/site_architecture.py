@@ -26,6 +26,53 @@ def route_path(value: str) -> str:
 def _target_route(value: str) -> str:
     return route_path(str(value or "").split("#", 1)[0])
 
+
+def bind_source_routes(research: dict) -> None:
+    """Make every approved source-map destination a real planned route.
+
+    The source map is already source-grounded and validated. This step only
+    reconciles its local destinations with the generated architecture; it
+    never removes, merges or redirects original content.
+    """
+    plan = research.get("site_architecture")
+    pages = plan.get("pages") if isinstance(plan, dict) else None
+    if not isinstance(pages, list):
+        return
+    by_route = {str(page.get("path") or ""): page for page in pages
+                if isinstance(page, dict)}
+    sources = {str(item.get("source_url") or ""): item
+               for item in (research.get("source_content_map") or {}).get("pages") or []
+               if isinstance(item, dict)}
+    for source_url, item in sources.items():
+        values = [item.get("target")]
+        values.extend(section.get("target") for section in item.get("sections") or []
+                      if isinstance(section, dict))
+        grouped: dict[str, set[str]] = {}
+        for value in values:
+            route = _target_route(value)
+            fragment = str(value or "").partition("#")[2]
+            grouped.setdefault(route, set())
+            if re.fullmatch(r"[a-z][a-z0-9_-]*", fragment):
+                grouped[route].add(fragment)
+        for route, fragments in grouped.items():
+            page = by_route.get(route)
+            if page is None:
+                if len(pages) >= MAX_PAGES:
+                    raise RuntimeError("Source content needs more than 14 real routes.")
+                label = source_url.rstrip("/").rsplit("/", 1)[-1] or "etusivu"
+                page = {
+                    "path": route,
+                    "purpose": "Säilyttää alkuperäisen lähdesivun sisältö ja asiakastehtävä",
+                    "user_task": f"Asiakas löytää lähdesivun {label} sisällön reitiltä {route}",
+                    "section_ids": [],
+                }
+                pages.append(page)
+                by_route[route] = page
+            sections = page.setdefault("section_ids", [])
+            for fragment in sorted(fragments or {"source-content"}):
+                if fragment not in sections:
+                    sections.append(fragment)
+
 def validate_site_architecture(research: dict, *, no_site: bool = False) -> dict:
     plan = research.get("site_architecture")
     if not isinstance(plan, dict) or not isinstance(plan.get("pages"), list):
