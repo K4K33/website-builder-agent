@@ -2,7 +2,7 @@ import json
 from tempfile import TemporaryDirectory
 import unittest
 
-from utils.demo_page_drafts import draft_pages
+from utils.demo_page_drafts import draft_pages, _page_from_response
 
 
 class DemoPageDraftTests(unittest.TestCase):
@@ -11,7 +11,7 @@ class DemoPageDraftTests(unittest.TestCase):
             calls = []
 
             def request(system, prompt):
-                route = prompt.splitlines()[0]
+                route = prompt.splitlines()[2]
                 calls.append(route)
                 if route == "services.html" and len(calls) == 2:
                     raise RuntimeError("free provider interrupted")
@@ -28,7 +28,7 @@ class DemoPageDraftTests(unittest.TestCase):
             draft_pages(**{**args, "job_id": "different"})
             self.assertEqual(calls[-2:], ["index.html", "services.html"])
 
-    def test_rejects_extra_or_wrong_pages(self):
+    def test_rejects_wrong_pages(self):
         with TemporaryDirectory() as root:
             with self.assertRaisesRegex(RuntimeError, "differ"):
                 draft_pages(
@@ -36,3 +36,16 @@ class DemoPageDraftTests(unittest.TestCase):
                     system="design", prompt_for=lambda route: route,
                     request=lambda *_: '{"pages":{"wrong.html":"<!doctype html><html></html>"}}',
                 )
+
+    def test_reads_single_html_or_exact_legacy_concept_route(self):
+        route = "services.html"
+        html = "<!doctype html><html><body><main>Verified service</main></body></html>"
+        values = [
+            {"html": html},
+            {"concepts": {"chosen": {"pages": {route: html}}}},
+        ]
+        for response in values:
+            self.assertEqual(_page_from_response(json.dumps(response), route, "chosen")[1],
+                             {route: html})
+        with self.assertRaisesRegex(RuntimeError, "incomplete"):
+            _page_from_response(json.dumps({"html": html[:-7]}), route, "chosen")

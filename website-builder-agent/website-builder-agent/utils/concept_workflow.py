@@ -8,12 +8,7 @@ from utils.concept_previews import (preview_routes, write_concepts, load_verifie
 from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
 
-CONCEPT_PROMPT = '''Create ONE ACTUAL RESPONSIVE HTML CONCEPT for the one supplied
-direction, not a prose alternative. Return JSON
-{"concepts": {exact_direction_id: {"pages": {route: "<!doctype html>..."}}}}.
-Return only that exact direction id. It has exactly the supplied two routes:
-home and one key content page. Three separately validated calls form the required
-three-concept comparison; do not output the other directions in this call.
+CONCEPT_PAGE_RULES = '''
 Use only the verified facts, original brand and explicitly supplied local media.
 Do not invent logos, products, testimonials, staff or a capability. Do not use
 stock/generative imagery as client work. Use exact intake src filenames; nested
@@ -25,6 +20,10 @@ not just colour, font, heading wording or decoration. Each home has its first
 view and one meaningful content section; the other page serves its visitor task.
 These are PRIVATE PROTOTYPES, never a completed client website or checkout.
 '''
+CONCEPT_PROMPT = '''Create ONE ACTUAL RESPONSIVE HTML CONCEPT for the supplied direction.
+Return JSON {"concepts": {exact_direction_id: {"pages": {route: "<!doctype html>..."}}}}.
+Return the one exact direction id and both supplied routes.
+''' + CONCEPT_PAGE_RULES
 
 
 def source_visual_evidence(research):
@@ -82,12 +81,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
         from utils.demo_page_drafts import draft_pages
         routes = preview_routes(research)
         authored = {"concepts": {}}
-        system = CONCEPT_PROMPT + """
-Queued worker protocol overrides the output envelope above. Return a pages
-JSON object with exactly ONE complete requested route. The two prototype
-routes exist for navigation; only produce the requested one.
-Keep the prototype focussed on its task and use concise inline CSS.
-"""
+        system = "Author the requested responsive concept page." + CONCEPT_PAGE_RULES
         for direction in validate_creative_directions(research)["alternatives"]:
             packet = json.dumps({
                 "facts": research.get("company_facts"), "direction": direction,
@@ -98,6 +92,7 @@ Keep the prototype focussed on its task and use concise inline CSS.
                 root=root, job_id=os.environ["KAURIVO_QUEUED_DEMO_ID"],
                 phase="concept-" + direction["id"], routes=routes, system=system,
                 prompt_for=lambda route: packet + "\nRequested route: " + route,
+                concept_id=direction["id"],
                 request=lambda instructions, prompt: json.dumps(
                     ask_claude_json(instructions, prompt, max_tokens=5500, stage="builder"),
                     ensure_ascii=False),
