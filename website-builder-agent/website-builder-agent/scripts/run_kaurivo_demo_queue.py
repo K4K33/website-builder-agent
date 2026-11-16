@@ -30,6 +30,7 @@ import traceback
 import time
 from urllib.parse import urlsplit, urljoin, unquote
 import requests
+from utils.kaurivo_checkpoint_stage_recovery import completed_stage_index
 
 REPO="K4K33/website-builder-agent"
 SB="https://xhsfbcwpwbgdbatrcyuk.supabase.co"
@@ -1020,23 +1021,6 @@ def restore_private_checkpoint(agent_slug, company_name, source):
         return phase
     except (requests.RequestException,ValueError,CheckpointError) as exc:
         raise HoldError("checkpoint_restore_failed") from exc
-
-
-def completed_stage_index(resumed, restored_company=None):
-    """Reuse valid checkpoints, but never replay a blocked concept as approved."""
-    if resumed in (None, "research_partial"):
-        return -1
-    stages = ("researched", "concepts", "selected", "built",
-              "revised_1", "revised_2")
-    position = stages.index(resumed)
-    if resumed == "concepts":
-        preview = ((restored_company or {}).get("concept_previews") or {})
-        if preview.get("status") != "ready_for_comparison":
-            # Research is already inside the authenticated concept archive.
-            # Regenerate failed concepts on this source; the browser gates
-            # remain mandatory and no previous pass is manufactured.
-            return 0
-    return position
 
 
 def main():
