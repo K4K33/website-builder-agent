@@ -82,6 +82,55 @@ class DemoPageDraftTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'unapproved external scheme'):
             prepare_concept_page(routes[1], unsafe, routes)
 
+
+    def test_approved_media_is_retained_and_normalized_for_nested_preview_routes(self):
+        from bs4 import BeautifulSoup
+        from utils.concept_previews import prepare_concept_page, validate_concept_media
+
+        route = 'services/index.html'
+        allowed = {'assets/brand-abcdef.png'}
+        html = ('<!doctype html><html><head>'
+                '<style>main{background:url("assets/brand-abcdef.png")}</style></head>'
+                '<body><main><h1>Verified heading</h1>'
+                '<img src="/assets/brand-abcdef.png" srcset="https://untrusted.invalid/a.png 2x">'
+                '</main></body></html>')
+        cleaned = prepare_concept_page(route, html, [route], allowed)
+        self.assertIn('../assets/brand-abcdef.png', cleaned)
+        self.assertNotIn('untrusted.invalid', cleaned)
+        self.assertEqual(
+            BeautifulSoup(cleaned, 'html.parser').select_one('img')['src'],
+            '../assets/brand-abcdef.png')
+        validate_concept_media(route, cleaned, allowed)
+
+    def test_unapproved_images_and_css_urls_cannot_block_queued_concept(self):
+        from bs4 import BeautifulSoup
+        from utils.concept_previews import prepare_concept_page, validate_concept_media
+
+        html = ('<!doctype html><html><head><style>'
+                'main{background:url("https://unknown.invalid/hero.webp")}'
+                '</style></head><body><main><h1>Verified heading</h1>'
+                '<img src="assets/unverified-photo.webp" alt="Unverified">'
+                '<div style="mask-image:url(data:image/svg+xml;base64,AAAA)">Content</div>'
+                '</main></body></html>')
+        cleaned = prepare_concept_page('index.html', html, ['index.html'], set())
+        soup = BeautifulSoup(cleaned, 'html.parser')
+        self.assertFalse(soup.select('img[src]'))
+        self.assertIsNotNone(soup.select_one('[data-kaurivo-media-pending]'))
+        self.assertNotIn('unknown.invalid', cleaned)
+        self.assertNotIn('data:image/', cleaned)
+        self.assertIn('background:none', cleaned)
+        self.assertIn('mask-image:none', cleaned)
+        validate_concept_media('index.html', cleaned, set())
+
+    def test_concept_media_still_rejects_unchecked_image_set_and_imports(self):
+        from utils.concept_previews import validate_concept_media
+        for css in ('@import "https://unknown.invalid/style.css";',
+                    'main{background:image-set("https://unknown.invalid/a.png" 1x)}'):
+            page = ('<!doctype html><html><head><style>' + css +
+                    '</style></head><body><main><h1>Verified</h1></main></body></html>')
+            with self.assertRaisesRegex(RuntimeError, 'external stylesheets or image-set'):
+                validate_concept_media('index.html', page, set())
+
     def test_truncation_switches_to_sections_and_resume_reuses_finished_parts(self):
         shell = ('<!doctype html><html><body><main>'
                  '<div data-kaurivo-section-slot="hero"></div>'

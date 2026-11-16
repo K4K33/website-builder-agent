@@ -105,11 +105,76 @@ def validate_concept_page(route, body, required_routes):
             raise RuntimeError('Concept navigation leaves its two actual prototype pages')
 
 
-def prepare_concept_page(route, html, required_routes):
+def prepare_approved_concept_media(route, body, allowed):
+    """Keep only staged intake media in private concept drafts.
+
+    A free model can hallucinate image URLs even when given an empty media
+    inventory. Never fetch those URLs, invent replacement client assets, or
+    weaken the later page/browser/rights checks. Preserve each verified image
+    and neutralize only unverified references before a second model request.
+    """
+    from posixpath import dirname, relpath
+    from urllib.parse import urljoin, urlsplit
+
+    approved = set(allowed)
+    base = dirname(route) or '.'
+
+    def local_source(value):
+        if not isinstance(value, str) or not value.strip():
+            return None
+        value = value.strip()
+        parsed = urlsplit(value)
+        if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment:
+            return None
+        resolved = urlsplit(urljoin('https://preview.invalid/' + route, value)).path.lstrip('/')
+        # The staged manifest is authoritative, including for a model that
+        # mistakenly uses root-relative assets/ on a nested HTML route.
+        target = resolved if resolved in approved else value.lstrip('/')
+        if target not in approved:
+            return None
+        return relpath(target, base)
+
+    document = BeautifulSoup(body, 'html.parser')
+    for element in document.select('img'):
+        safe = local_source(element.get('src'))
+        if safe:
+            element['src'] = safe
+            element.attrs.pop('srcset', None)
+        else:
+            # Private visual layout cue, not a licensed photo or fabricated
+            # client logo. The full source-preservation review remains active.
+            placeholder = document.new_tag('div')
+            placeholder['data-kaurivo-media-pending'] = 'true'
+            placeholder['role'] = 'img'
+            placeholder['aria-label'] = 'Vahvistettu kuvamateriaali puuttuu'
+            placeholder['style'] = ('display:block;width:100%;min-height:6rem;'
+                'background:linear-gradient(135deg,#ecece8,#d9ddd9);'
+                'border-radius:inherit')
+            element.replace_with(placeholder)
+
+    def safe_css(match):
+        source = match.group(1).strip().strip(chr(34) + chr(39))
+        resolved = local_source(source)
+        return 'url("' + resolved + '")' if resolved else 'none'
+
+    for style in document.find_all('style'):
+        css = style.get_text()
+        rewritten = re.sub(r'url\(\s*([^)]*)\)', safe_css, css, flags=re.I)
+        if rewritten != css:
+            style.string = rewritten
+    for element in document.select('[style]'):
+        css = str(element['style'])
+        element['style'] = re.sub(r'url\(\s*([^)]*)\)', safe_css, css, flags=re.I)
+
+    return str(document)
+
+
+def prepare_concept_page(route, html, required_routes, allowed_media=None):
     """Repair prototype HTML and navigation without writing client content."""
     try:
         validate_concept_page(route, html, required_routes)
-        return html
+        if allowed_media is None:
+            return html
     except RuntimeError:
         pass
 
@@ -163,6 +228,8 @@ def prepare_concept_page(route, html, required_routes):
             anchor['aria-disabled'] = 'true'
             anchor.attrs.pop('tabindex', None)
     result = str(document)
+    if allowed_media is not None:
+        result = prepare_approved_concept_media(route, result, allowed_media)
     validate_concept_page(route, result, required_routes)
     return result
 
@@ -196,8 +263,10 @@ def parse_concepts(raw, research):
 def validate_concept_media(route, body, allowed):
     soup = BeautifulSoup(body, 'html.parser')
     css = ' '.join(s.get_text() for s in soup.find_all('style')) + ' ' + ' '.join(str(s.get('style')) for s in soup.select('[style]'))
-    if re.search(r'@import', css, re.I):
-        raise RuntimeError('Concept CSS cannot import other stylesheets')
+    if re.search(r'@import|(?:-webkit-)?image-set\s*\(', css, re.I):
+        raise RuntimeError('Concept CSS cannot load external stylesheets or image-set sources')
+    # Every remaining url() must resolve to an approved on-disk intake asset.
+
     sources = [image['src'] for image in soup.select('img[src]')]
     sources += [match.strip().strip('\"\'') for match in re.findall(r'url\(\s*([^)]*)\)', css, re.I)]
     for src in sources:

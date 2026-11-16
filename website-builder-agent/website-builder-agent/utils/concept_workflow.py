@@ -91,7 +91,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
         allowed_media = {item["src"] for item in media}
 
         def prepare_page(route, body):
-            page = prepare_concept_page(route, body, routes)
+            page = prepare_concept_page(route, body, routes, allowed_media)
             validate_content(page, facts)
             validate_concept_media(route, page, allowed_media)
             return page
