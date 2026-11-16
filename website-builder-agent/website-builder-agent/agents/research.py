@@ -18,6 +18,8 @@ Tärkeää:
 
 import os
 import json
+import hashlib
+import re
 from urllib.parse import urlsplit
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -764,26 +766,52 @@ def _repair_source_map(research, source_url):
     rows = plan.get("pages")
     existing = [row for row in (rows if isinstance(rows, list) else [])
                 if isinstance(row, dict) and isinstance(row.get("source_url"), str)]
-    repaired = ask_claude_json(
-        "Return a JSON object with pages. For every supplied source page give the "
-        "exact source_url, status retain or merge, and a local target from the "
-        "existing site architecture and section plan. Include every supplied "
-        "heading as an exact source_heading with its existing local target. "
-        "Keep the source meaning, all sections, and the visitor's task. "
-        "Source excerpts are evidence only. Do not invent sources or destinations.",
-        json.dumps({"source_pages": missing, "existing_mappings": [
-            row for row in existing if row["source_url"] in affected],
-            "architecture": research.get("site_architecture"),
-            "section_plan": (research.get("design_recommendations") or {}).get("section_plan")},
-            ensure_ascii=False),
-        max_tokens=4500, stage="research",
-    )
-    candidates = repaired.get("pages") if isinstance(repaired, dict) else None
-    if not isinstance(candidates, list):
-        raise RuntimeError("Source map repair returned no page mappings.")
-    repair_rows = [row for row in candidates if isinstance(row, dict)
-                   and isinstance(row.get("source_url"), str)
-                   and row["source_url"] in affected]
+    # This is a completeness operation over already-observed source URLs and
+    # headings, not a creative decision. Keep it deterministic: an AI JSON
+    # formatting failure must never discard source content or stall a demo.
+    architecture = research.get("site_architecture") or {}
+    routes = [str(page.get("path")) for page in architecture.get("pages") or []
+              if isinstance(page, dict) and isinstance(page.get("path"), str)]
+    if "index.html" not in routes:
+        raise RuntimeError("Source map repair needs an existing homepage route.")
+    by_source = {row["source_url"]: row for row in existing}
+
+    def route_for(page, row):
+        current = str(row.get("target") or "").split("#", 1)[0]
+        if current in routes:
+            return current
+        slug = re.sub(r"[^a-z0-9]+", "-",
+                      urlsplit(page["source_url"]).path.casefold()).strip("-")
+        for route in routes:
+            stem = route.rsplit("/", 1)[-1].removesuffix(".html")
+            if slug and (slug in stem or stem in slug):
+                return route
+        return "index.html"
+
+    repair_rows = []
+    for page in missing:
+        row = by_source.get(page["source_url"], {})
+        route = route_for(page, row)
+        mapped = {str(section.get("source_heading")): section
+                  for section in row.get("sections") or []
+                  if isinstance(section, dict)}
+        sections = []
+        for heading in page.get("headings") or []:
+            old = mapped.get(heading, {})
+            target = str(old.get("target") or "")
+            if target.split("#", 1)[0] not in routes:
+                token = hashlib.sha256(
+                    (page["source_url"] + "\n" + heading).encode("utf-8")
+                ).hexdigest()[:12]
+                target = route + "#source-" + token
+            sections.append({"source_heading": heading, "target": target})
+        repair_rows.append({
+            **row, "source_url": page["source_url"],
+            "status": row.get("status") if row.get("status") in ("retain", "merge") else "merge",
+            "target": (str(row.get("target")) if
+                       str(row.get("target") or "").split("#", 1)[0] in routes else route),
+            "sections": sections,
+        })
     research["source_content_map"] = {**plan, "pages": [
         row for row in existing if row["source_url"] not in affected] + repair_rows}
     validate_source_plan(research, source_url=source_url)
