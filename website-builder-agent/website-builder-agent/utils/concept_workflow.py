@@ -258,8 +258,24 @@ def choose_concept(name, *, review_path=None, reviewer=''):
         if not reviewer.strip(): raise RuntimeError('External visual reviewer must be explicit')
         report = json.loads(Path(review_path).read_text(encoding='utf-8'))
     else:
-        # Fresh context, shuffled aliases; no Builder self-praise or preferred winner.
-        report = ask_claude_json(
+        # Cloudflare Workers Free times out on the giant 7-panel/14-view
+        # multimodal request (observed HTTP 408 code 3046). Rather than
+        # abandoning any real source screenshot, evaluate each direction's
+        # four genuine views together with both original screenshots, then
+        # rank only the three verified reviews independently.
+        from utils.cloudflare_free_ai import enabled as cloudflare_free_enabled
+        if (os.getenv("KAURIVO_QUEUED_DEMO_ID")
+                and config.free_only() and cloudflare_free_enabled()):
+            from utils.kaurivo_staged_visual_review import staged_concept_review
+            report = staged_concept_review(
+                research=research, order=order, views=views, sources=sources,
+                root=path.parent,
+                ask=lambda system, prompt, *, image_paths, max_tokens:
+                    ask_claude_json(system, prompt, image_paths=image_paths,
+                                    max_tokens=max_tokens, stage="qa"))
+        else:
+            # Original path remains available without confirmed free backup.
+            report = ask_claude_json(
             'Compare all twelve real concept screenshots (three concepts x two routes x '
             'desktop/mobile) with the verified client tasks and ORIGINAL company screens. '
             'Do not prefer the first choice automatically. Return selected_alias A/B/C, '
