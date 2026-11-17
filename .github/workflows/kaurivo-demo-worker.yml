@@ -45,6 +45,7 @@ on:
 # Verified wake after PR #208: resume blocked visual concepts with source evidence intact.
 # Single inspected wake after #210: classify actual browser failures before further changes.
 # Single verified replay after #211-#212: precise browser repairs, conservative WCAG gradient check.
+# One supervised verified replay after #213: source-preserving WCAG overlay contrast evidence.
 
 permissions:
   contents: write
