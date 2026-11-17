@@ -46,6 +46,7 @@ on:
 # Single inspected wake after #210: classify actual browser failures before further changes.
 # Single verified replay after #211-#212: precise browser repairs, conservative WCAG gradient check.
 # One supervised verified replay after #213: source-preserving WCAG overlay contrast evidence.
+# One supervised regression replay after #215: exact DOM contrast remediation and unchanged quality gates.
 
 permissions:
   contents: write
