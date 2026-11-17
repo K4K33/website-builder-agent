@@ -123,6 +123,38 @@ class CloudflareFreeTests(unittest.TestCase):
             self.assertEqual(len(post.call_args.kwargs["json"]["messages"][1]["content"]), 8)
             self.assertEqual(post.call_count, 1)
 
+
+    def test_mistral_receives_all_six_individual_real_images_in_original_order(self):
+        response = Mock(status_code=200)
+        response.json.return_value = {
+            "model": cf.FREE_MODELS["qa"],
+            "choices": [{"finish_reason": "stop",
+                         "message": {"content": '{"view_assessments":{}}'}}],
+        }
+        paths = ["concept-desktop-1.png", "concept-mobile-1.png",
+                 "concept-desktop-2.png", "concept-mobile-2.png",
+                 "original-desktop.png", "original-mobile.png"]
+        content = [{"type": "text", "text": "Individual complete source evidence"},
+                   *[{"type": "image_url",
+                      "image_url": {"url": "data:image/jpeg;base64,AA=="}}
+                     for _ in paths]]
+        with patch.dict(os.environ, CONFIRMED, clear=True), \
+             patch.object(cf, "_ATTEMPTS", 0), \
+             patch("utils.kaurivo_cloud_vision_packet.compact_concept_review_user_content") as paired, \
+             patch("utils.kaurivo_cloud_vision_packet.compact_vision_user_content",
+                   return_value=content) as individual, \
+             patch.object(cf.requests, "post", return_value=response) as post:
+            result = cf.chat_cloudflare_free(
+                "Independent source reviewer", "Genuine 4+2 images",
+                stage="qa", max_tokens=1500, json_mode=True, image_paths=paths)
+            self.assertEqual(result, '{"view_assessments":{}}')
+            paired.assert_not_called()
+            self.assertEqual(individual.call_args.args[1], paths)
+            self.assertIn("ORIGINAL company website", individual.call_args.args[0])
+            self.assertIn("desktop first and mobile second", individual.call_args.args[0])
+            self.assertEqual(len(post.call_args.kwargs["json"]["messages"][1]["content"]), 7)
+            self.assertEqual(post.call_count, 1)
+
     def test_qa_router_404_retries_once_at_documented_same_vision_model_rest_endpoint(self):
         router = Mock(status_code=404)
         official = Mock(status_code=200)
