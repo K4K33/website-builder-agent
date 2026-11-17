@@ -192,7 +192,26 @@ def chat_cloudflare_free(
     # images. Pair the 12/14 real views with visible order labels; never
     # silently omit a screenshot, trust generated scores, or change the
     # original QA captures.
-    if image_paths and stage == "qa" and len(image_paths) in (4, 6, 12, 14):
+    if (image_paths and stage == "qa" and len(image_paths) in (4, 6)
+            and FREE_MODELS["qa"] == "@cf/mistralai/mistral-small-3.1-24b-instruct"):
+        # A three-pair contact sheet hid the original company's brand too
+        # deeply for the model to attest actual source comparison. Mistral's
+        # vision endpoint accepts individual base64 screenshots. Give it all
+        # four real route/viewport captures plus the two authentic originals
+        # separately, without cropping, discarding or inventing evidence.
+        content = compact_vision_user_content(
+            user_prompt + (
+                "\n\nIMAGE ORDER: The FIRST FOUR individual images are the "
+                "four actual new-concept view IDs in required_view_ids_in_order. "
+                "The LAST TWO individual images (when provided) show the "
+                "ORIGINAL company website, desktop first and mobile second. "
+                "Compare original brand and visual composition to the concept "
+                "using the actual original image pixels. Do not mark "
+                "source_reference_reviewed=true unless you visibly inspected "
+                "both original images."
+            ),
+            image_paths)
+    elif image_paths and stage == "qa" and len(image_paths) in (4, 6, 12, 14):
         content = compact_concept_review_user_content(user_prompt, image_paths)
     else:
         content = (compact_vision_user_content(user_prompt, image_paths)
