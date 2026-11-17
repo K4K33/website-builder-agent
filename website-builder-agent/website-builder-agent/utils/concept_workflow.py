@@ -266,13 +266,32 @@ def choose_concept(name, *, review_path=None, reviewer=''):
         from utils.cloudflare_free_ai import enabled as cloudflare_free_enabled
         if (os.getenv("KAURIVO_QUEUED_DEMO_ID")
                 and config.free_only() and cloudflare_free_enabled()):
-            from utils.kaurivo_staged_visual_review import staged_concept_review
-            report = staged_concept_review(
-                research=research, order=order, views=views, sources=sources,
-                root=path.parent,
-                ask=lambda system, prompt, *, image_paths, max_tokens:
-                    ask_claude_json(system, prompt, image_paths=image_paths,
-                                    max_tokens=max_tokens, stage="qa"))
+            from utils.kaurivo_staged_visual_review import (
+                staged_concept_review, VisualReviewRevisionRequired)
+            from utils.kaurivo_visual_review_recovery import revise_one_rejected_direction
+
+            def review_current_set():
+                return staged_concept_review(
+                    research=research, order=order, views=views, sources=sources,
+                    root=path.parent,
+                    ask=lambda system, prompt, *, image_paths, max_tokens:
+                        ask_claude_json(system, prompt, image_paths=image_paths,
+                                        max_tokens=max_tokens, stage="qa"))
+            try:
+                report = review_current_set()
+            except VisualReviewRevisionRequired as rejection:
+                # One source-preserving revision of the highest-potential
+                # independently REJECTED direction, followed by entirely new
+                # Chromium/browser evidence and a fresh independent review.
+                # Never accept or copy old reviewer verdicts into the new set.
+                reference, path, manifest = revise_one_rejected_direction(
+                    slug=slug, company=company, reference=reference,
+                    research=research, manifest=manifest, order=order,
+                    critique=rejection, root=root)
+                order = blind_order(manifest)
+                views = [{'alias': alias, **view}
+                         for alias, entry in order.items() for view in entry['views']]
+                report = review_current_set()
         else:
             # Original path remains available without confirmed free backup.
             report = ask_claude_json(
