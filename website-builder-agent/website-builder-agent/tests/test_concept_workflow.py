@@ -125,6 +125,60 @@ class ConceptWorkflowTests(unittest.TestCase):
             self.assertNotIn('private_repair_evidence', saved_payload)
 
 
+    def test_queued_concept_recovers_measured_contrast_after_two_unsuccessful_model_edits(self):
+        research, data = fixture()
+        company = {'research': research}
+        originals = [page for concept in data['concepts'].values()
+                     for page in concept['pages'].values()]
+        bad = originals[0].replace(
+            '<p>Workshop</p>',
+            '<p data-private-contrast="true" style="color:#fff">Workshop</p>')
+        calls = []
+
+        def respond(system, prompt, **kwargs):
+            if 'observed_browser_failures' in prompt:
+                calls.append('model-repair')
+                return {'html': bad}
+            index = len(calls)
+            calls.append('initial')
+            return {'html': bad if index == 0 else originals[index]}
+
+        def browser(file, **kwargs):
+            report = fake_renderer(file, **kwargs)
+            html = Path(file).read_text(encoding='utf-8')
+            if 'data-private-contrast=' in html and 'background-color:#101c2b' not in html:
+                observation = [{
+                    'selector': 'body > main:nth-of-type(1) > section:nth-of-type(1) > p:nth-of-type(1)',
+                    'tag': 'P', 'text': 'Workshop',
+                    'reason': 'image/gradient/translucent layer; requires visual proof'
+                }]
+                report['pass'] = False
+                report['issues'] = [
+                    'desktop: text/background contrast NOT VERIFIABLE; use a legible opaque '
+                    'text panel or independently review the real rendered image: '
+                    + json.dumps(observation)
+                ]
+            return report
+
+        with TemporaryDirectory() as folder, \
+             patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'local-contrast-job'}), \
+             patch('utils.concept_workflow.get_company',
+                   return_value=('studio', company)), \
+             patch('utils.concept_workflow.upsert_company') as saved, \
+             patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \
+             patch('utils.concept_workflow.config.model_for_stage',
+                   return_value='fixture-model'), \
+             patch('utils.browser_qa.inspect_site', side_effect=browser), \
+             patch('utils.claude_client.ask_claude_json', side_effect=respond):
+            result = generate_concepts('studio')
+            self.assertEqual(result['status'], 'ready_for_comparison')
+            self.assertEqual(calls, ['initial'] * 6 + ['model-repair'] * 2)
+            self.assertNotIn('private_contrast_issues', result)
+            self.assertNotIn('private_repair_evidence', result)
+            stored = saved.call_args.args[1]['concept_previews']
+            self.assertNotIn('private_contrast_issues', stored)
+            self.assertNotIn('private_repair_evidence', stored)
+
     def test_generic_browser_failure_is_not_falsely_called_offline_outage(self):
         from utils.concept_previews import browser_issue_repair_hints
         result = browser_issue_repair_hints([
