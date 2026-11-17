@@ -274,10 +274,10 @@ def free_provider_rejection_diagnostic(handle, start_position=0):
     observed = re.findall(
         r"RuntimeError:\s*FREE_MODEL_REQUEST_REJECTED:\s*Cloudflare HTTP "
         r"(400|404|405|408|409|410|413|415|422|425|500|501|502|503|504) "
-        r"\((context|image|output_budget|other)\)",
+        r"\((context|image|output_budget|other)(?:;code=([1-9][0-9]{0,5}))?\)",
         tail, flags=re.I)
     if observed:
-        status, kind = observed[-1]
+        status, kind, provider_code = observed[-1]
         labels = {
             "context": "syötteen pituus",
             "image": "kuvamateriaalin muoto tai määrä",
@@ -285,7 +285,8 @@ def free_provider_rejection_diagnostic(handle, start_position=0):
             "other": "muu API-pyyntömuoto",
         }
         return ("Maksuton kuvallinen arviointi: Cloudflare HTTP " + status +
-                ", hylkäysluokka " + labels[kind.lower()])
+                ", hylkäysluokka " + labels[kind.lower()] +
+                (", palvelukoodi " + provider_code if provider_code else ""))
     direct = re.findall(
         r"RuntimeError:\s*FREE_MODEL_REQUEST_REJECTED:\s*"
         r"Cloudflare direct REST HTTP (400|405|408|409|410|413|415|422|425|500|501)",
