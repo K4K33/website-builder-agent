@@ -7,6 +7,7 @@ from utils.concept_previews import (preview_routes, write_concepts, load_verifie
                                     blind_order, record_selection, prepare_concept_page,
                                     validate_concept_media)
 from utils.concept_fact_recovery import prepare_verified_concept_copy
+from utils.concept_contrast_recovery import repair_browser_contrast
 from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
 
@@ -210,11 +211,29 @@ def generate_concepts(name, *, response_path=None, producer=''):
                     authored["concepts"][identifier]["pages"][route] = pages[route]
             raw = json.dumps(authored, ensure_ascii=False)
             result = render_three_concepts(raw)
+        if result["status"] != "ready_for_comparison":
+            # Last-resort, CSS-only deterministic repair for specific measured
+            # contrast failures. Do NOT change copy, brand photos or routes.
+            # It runs after model repairs so the author can first preserve the
+            # intended visual composition. The exact same real browser suite,
+            # source/content gates and independent reviewer still run next.
+            contrast = result.get("private_contrast_issues") or {}
+            changed = False
+            for identifier, pages_to_repair in contrast.items():
+                for route, findings in pages_to_repair.items():
+                    previous = authored["concepts"][identifier]["pages"][route]
+                    candidate = repair_browser_contrast(previous, findings)
+                    if candidate != previous:
+                        candidate = prepare_page(route, candidate)
+                        authored["concepts"][identifier]["pages"][route] = candidate
+                        changed = True
+            if changed:
+                result = render_three_concepts(json.dumps(authored, ensure_ascii=False))
     # Raw browser measurements can include source copy and local paths.
     # Use them only in the private repair model request; persist and return
     # only allowlisted issue categories and the immutable manifest reference.
     result = {key: value for key, value in result.items()
-              if key != "private_repair_evidence"}
+              if key not in {"private_repair_evidence", "private_contrast_issues"}}
     upsert_company(slug, {'concept_previews': result})
     if (not response_path and os.getenv("KAURIVO_QUEUED_DEMO_ID")
             and result["status"] != "ready_for_comparison"):
