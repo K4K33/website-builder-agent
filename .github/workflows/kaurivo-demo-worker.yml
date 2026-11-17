@@ -47,6 +47,7 @@ on:
 # Single verified replay after #211-#212: precise browser repairs, conservative WCAG gradient check.
 # One supervised verified replay after #213: source-preserving WCAG overlay contrast evidence.
 # One supervised regression replay after #215: exact DOM contrast remediation and unchanged quality gates.
+# One inspected replay after #216: slim active concept checkpoint and safe failure categories.
 
 permissions:
   contents: write
