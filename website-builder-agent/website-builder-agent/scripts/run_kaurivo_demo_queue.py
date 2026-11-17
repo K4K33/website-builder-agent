@@ -262,6 +262,39 @@ def safe_company_url(url):
         raise HoldError("source_dns_check_failed")
 
 
+def free_provider_rejection_diagnostic(handle, start_position=0):
+    """Only publish fixed, numeric/allowlisted Cloudflare diagnostics.
+
+    Model/provider bodies may echo customer HTML or private screenshots. Do not
+    include raw provider messages, prompts, URLs, source paths or headers.
+    """
+    handle.flush()
+    handle.seek(start_position)
+    tail = handle.read()[-12000:]
+    observed = re.findall(
+        r"RuntimeError:\s*FREE_MODEL_REQUEST_REJECTED:\s*Cloudflare HTTP "
+        r"(400|404|405|408|409|410|413|415|422|425|500|501|502|503|504) "
+        r"\((context|image|output_budget|other)\)",
+        tail, flags=re.I)
+    if observed:
+        status, kind = observed[-1]
+        labels = {
+            "context": "syötteen pituus",
+            "image": "kuvamateriaalin muoto tai määrä",
+            "output_budget": "vastauksen tokenraja",
+            "other": "muu API-pyyntömuoto",
+        }
+        return ("Maksuton kuvallinen arviointi: Cloudflare HTTP " + status +
+                ", hylkäysluokka " + labels[kind.lower()])
+    direct = re.findall(
+        r"RuntimeError:\s*FREE_MODEL_REQUEST_REJECTED:\s*"
+        r"Cloudflare direct REST HTTP (400|405|408|409|410|413|415|422|425|500|501)",
+        tail, flags=re.I)
+    if direct:
+        return "Maksuton kuvallinen arviointi: Cloudflare REST HTTP " + direct[-1]
+    return "Maksuton kuvallinen arviointi: palvelupyyntö hylätty"
+
+
 def classify_stage_failure(handle,stage_name,start_position=0):
     """Classify the LAST terminal exception, not arbitrary log fragments.
 
@@ -531,6 +564,8 @@ def run_cli(args,log_handle,deadline=None):
             detail = benchmark_failure_diagnostic(log_handle, stage_start)
         if code == "research_design_coverage_incomplete":
             detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
+        if code == "free_model_request_rejected":
+            detail = free_provider_rejection_diagnostic(log_handle,stage_start)
         if code == "concept_browser_validation_blocked":
             # The worker emits bounded repair hints; never copy raw HTML,
             # private company facts or arbitrary exceptions into job progress.
