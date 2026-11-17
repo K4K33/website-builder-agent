@@ -147,6 +147,85 @@ class StagedVisualReviewTests(unittest.TestCase):
         self.assertIsNone(error)
         self.assertEqual(set(result["view_assessments"]), set(ids))
 
+
+    def test_rejects_all_defective_directions_without_requesting_fake_ranking(self):
+        from utils.kaurivo_staged_visual_review import VisualReviewRevisionRequired
+        views, sources = sample_reviews()
+        calls = []
+
+        def assess(system, prompt, *, image_paths, max_tokens):
+            calls.append(image_paths)
+            alias = "ABC"[len(calls)-1]
+            ids = [f"{alias.lower()}-{j}" for j in range(4)]
+            return {
+                "observation": "The original visual language is mostly retained "
+                               "but the fourth mobile viewport has weak hierarchy.",
+                "critical_issues": [],
+                "source_reference_reviewed": True,
+                "source_comparison": "The original site uses a strong logo "
+                    "and textured photos on desktop and mobile; those are "
+                    "visible but the design currently needs alignment repairs.",
+                "view_assessments": {
+                    view: {
+                        "verdict": "needs_revision" if j == 3 else "pass",
+                        "brand_evidence": "Authentic source brand colors appear in the layout.",
+                        "composition_evidence": "Responsive layout still needs a mobile correction.",
+                        "media_evidence": "Provided source photos remain in the content.",
+                    } for j, view in enumerate(ids)
+                }
+            }
+        with self.assertRaises(VisualReviewRevisionRequired) as caught:
+            staged_concept_review(
+                research={}, order={"A": {}, "B": {}, "C": {}},
+                views=views, sources=sources,
+                root=__import__("pathlib").Path("/private"), ask=assess)
+        self.assertEqual(len(calls), 3)
+        self.assertTrue(all(len(paths) == 6 for paths in calls))
+        self.assertEqual(set(caught.exception.reports), {"A", "B", "C"})
+        self.assertEqual(len(caught.exception.assessments), 12)
+
+    def test_independent_ranking_must_choose_an_eligible_candidate(self):
+        views, sources = sample_reviews()
+        ranking = []
+        def ask(system, prompt, *, image_paths, max_tokens):
+            if image_paths is not None:
+                alias = "ABC"[len([x for x in ranking if x == "view"])]
+                ranking.append("view")
+                return {
+                    "observation": "The evaluated direction preserves the "
+                                   "original company source while staying legible.",
+                    "critical_issues": ["Visible layout error"] if alias == "A" else [],
+                    "source_reference_reviewed": True,
+                    "source_comparison": "The actual original desktop and mobile "
+                        "site uses dark brand typography and a photographic hero, "
+                        "both faithfully reflected in the new visual direction.",
+                    "view_assessments": {
+                        f"{alias.lower()}-{i}": {
+                            "verdict": "pass" if alias != "C" else "needs_revision",
+                            "brand_evidence": "The existing company logo is preserved.",
+                            "composition_evidence": "Spacing and responsive hierarchy are clear.",
+                            "media_evidence": "Authentic source pictures appear without repetition.",
+                        } for i in range(4)
+                    }
+                }
+            ranking.append("rank")
+            supplied = json.loads(prompt)
+            self.assertEqual(supplied["eligible_aliases"], ["B"])
+            return {
+                "selected_alias": "A" if ranking.count("rank") == 1 else "B",
+                "cross_comparison": "B is the only verified defect-free "
+                    "concept across the four tested viewports and is stronger "
+                    "than both A and C in source brand preservation."
+            }
+        report = staged_concept_review(
+            research={}, order={"A": {}, "B": {}, "C": {}},
+            views=views, sources=sources,
+            root=__import__("pathlib").Path("/private"), ask=ask)
+        self.assertEqual(report["selected_alias"], "B")
+        self.assertEqual(ranking.count("rank"), 2)
+        self.assertEqual(set(report["reviewed_view_ids"]),
+                         {item["id"] for item in views})
+
     def test_no_source_images_block_premium_review_but_allow_proved_no_website(self):
         views, _ = sample_reviews()
         with self.assertRaisesRegex(RuntimeError, "original-site"):
