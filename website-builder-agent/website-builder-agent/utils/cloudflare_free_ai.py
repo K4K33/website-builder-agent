@@ -29,6 +29,10 @@ FREE_MODELS = {
 _CF_ACCOUNT = re.compile(r"^[a-f0-9]{32}$")
 _CF_TOKEN = re.compile(r"^[A-Za-z0-9_-]{25,250}$")
 _CF_URL = "https://api.cloudflare.com/client/v4/accounts/{account}/ai/v1/chat/completions"
+# Cloudflare documents the model-specific endpoint independently of the
+# OpenAI-compatible router. It is a same-model, same-account alternative ONLY
+# for a genuine router HTTP 404; never a quota/billing bypass.
+_CF_MODEL_RUN_URL = "https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{model}"
 # Permit the 3 concepts, final multi-page build, independent QA and bounded
 # repair within one worker claim; this never changes the Workers FREE model,
 # requires verified free-account opt-in; the provider still enforces its actual free quota.
@@ -74,6 +78,83 @@ def _short_retry_after_seconds(response) -> float | None:
     if 1 <= seconds <= 30:
         return seconds
     return None
+
+
+
+def _run_same_model_rest_after_router_404(
+    *, account: str, token: str, model: str, payload: dict,
+    json_mode: bool,
+) -> str:
+    """Try Cloudflare's official direct REST route once for the SAME model.
+
+    This consumes a separate Workers Free request reservation and returns only
+    a final complete response. No switching to Builder as visual QA, no paid
+    model, no undocumented provider endpoint and no 429 repetition.
+    """
+    if not _reserve():
+        raise RuntimeError("FREE_AI_RATE_LIMIT: Cloudflare per-run safety cap reached.")
+    from urllib.parse import quote
+    direct_url = _CF_MODEL_RUN_URL.format(
+        account=account, model=quote(model, safe="/@-_."))
+    direct_payload = {key: value for key, value in payload.items()
+                      if key != "model"}
+    try:
+        resp = requests.post(
+            direct_url,
+            headers={"Authorization": "Bearer " + token,
+                     "Content-Type": "application/json"},
+            json=direct_payload, timeout=170, allow_redirects=False)
+    except requests.RequestException as exc:
+        raise RuntimeError("NETWORK_UNAVAILABLE: Cloudflare direct REST transport failed.") from exc
+    if resp.status_code == 404:
+        raise RuntimeError("FREE_MODEL_UNAVAILABLE: same verified Cloudflare model unavailable via REST.")
+    if resp.status_code == 429:
+        raise RuntimeError("FREE_AI_RATE_LIMIT: Cloudflare direct REST HTTP 429.")
+    if resp.status_code in (401, 403):
+        raise RuntimeError("FREE_AI_ACCESS_REJECTED: Cloudflare direct REST denied.")
+    if resp.status_code == 402:
+        raise RuntimeError("FREE_AI_ACCOUNT_BLOCKED: Cloudflare free billing boundary.")
+    if resp.status_code in (502, 503, 504):
+        raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: Cloudflare direct REST temporarily unavailable.")
+    if resp.status_code != 200:
+        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare direct REST HTTP " +
+                           str(resp.status_code) + ".")
+    try:
+        envelope = resp.json()
+        if not isinstance(envelope, dict) or envelope.get("success") is not True:
+            raise ValueError("invalid REST success envelope")
+        result = envelope.get("result")
+        if not isinstance(result, dict):
+            raise ValueError("invalid REST result")
+        if result.get("model") is not None and result["model"] != model:
+            raise ValueError("unapproved REST model")
+        if isinstance(result.get("choices"), list):
+            choices = result["choices"]
+            if not choices or not isinstance(choices[0], dict):
+                raise ValueError("missing REST choices")
+            first = choices[0]
+            if first.get("finish_reason") != "stop":
+                raise ValueError("incomplete REST model output")
+            item = first.get("message") or {}
+            content = item.get("content") if isinstance(item, dict) else None
+        else:
+            content = result.get("response")
+            # A direct REST response with no finish reason must be valid,
+            # complete JSON for the strict QA/Builder JSON contracts.
+            if not json_mode:
+                raise ValueError("unverifiable REST plain-text completion")
+        if isinstance(content, list):
+            content = "\n".join(str(part.get("text", "")) for part in content
+                                 if isinstance(part, dict) and part.get("type") == "text")
+        if not isinstance(content, str) or not content.strip():
+            raise ValueError("empty REST output")
+        if json_mode:
+            import json
+            if not isinstance(json.loads(content.strip()), dict):
+                raise ValueError("REST JSON must be an object")
+        return content.strip()
+    except (ValueError, KeyError, IndexError, TypeError) as exc:
+        raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare direct REST incomplete response.") from exc
 
 
 def chat_cloudflare_free(
@@ -151,7 +232,12 @@ def chat_cloudflare_free(
     if resp.status_code == 402:
         raise RuntimeError("FREE_AI_ACCOUNT_BLOCKED: Cloudflare Free billing boundary.")
     if resp.status_code == 404:
-        raise RuntimeError("FREE_MODEL_UNAVAILABLE: Cloudflare exact model unavailable.")
+        # A 404 from the optional OpenAI-compatible router does not prove the
+        # documented model-specific REST endpoint is absent. One independent,
+        # free-only same-model request is permitted (with its own reservation).
+        return _run_same_model_rest_after_router_404(
+            account=account, token=token, model=model, payload=payload,
+            json_mode=json_mode)
     if resp.status_code != 200:
         # No raw provider error/body: it may echo customer HTML or instructions.
         # Keep only numeric diagnostic fields and safe request dimensions.
