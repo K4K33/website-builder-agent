@@ -324,6 +324,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "concept_browser_validation_blocked"
     if "visual_qa_incomplete" in terminal:
         return "visual_qa_incomplete"
+    if "visual_qa_revision_blocked" in terminal:
+        return "visual_qa_revision_blocked"
     if "free_model_request_rejected" in terminal:
         return "free_model_request_rejected"
     if "free_ai_access_rejected" in terminal:
@@ -569,6 +571,9 @@ def run_cli(args,log_handle,deadline=None):
             detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
         if code == "free_model_request_rejected":
             detail = free_provider_rejection_diagnostic(log_handle,stage_start)
+        if code == "visual_qa_revision_blocked":
+            detail = ("Riippumattoman arvioinnin perusteella korjatun konseptin "
+                      "selainlaatu ei läpäissyt rajattuja automaattisia korjauksia")
         if code == "visual_qa_incomplete":
             # Do not expose actual screenshot evidence or model responses.
             log_handle.seek(stage_start)
