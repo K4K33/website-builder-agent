@@ -125,6 +125,12 @@ class PrivateCheckpointTests(unittest.TestCase):
             (active / "comparison.html").write_text("<!doctype html><html></html>")
             (active / "variant-1").mkdir()
             (active / "variant-1" / "index.html").write_text("<!doctype html>")
+            raw_qa = active / "variant-1" / "qa" / "desktop.png"
+            raw_qa.parent.mkdir()
+            raw_qa.write_bytes(b"transient-browser-capture")
+            proof = active / "variant-1" / "_captures" / "a1" / "desktop.png"
+            proof.parent.mkdir(parents=True)
+            proof.write_bytes(b"hashed-manifest-proof")
             company["concept_previews"] = {
                 "status": "ready_for_comparison",
                 "manifest_path": str(active / "manifest.json"),
@@ -146,6 +152,8 @@ class PrivateCheckpointTests(unittest.TestCase):
                 self.assertTrue(any("set-current/manifest.json" in n for n in names))
                 self.assertFalse(any("set-old" in n for n in names))
                 self.assertFalse(any("_demo_page_drafts" in n for n in names))
+                self.assertFalse(any("/qa/desktop.png" in n for n in names))
+                self.assertTrue(any("/_captures/a1/desktop.png" in n for n in names))
             restored = unpack_archive(
                 new, SLUG, JOB, "concepts", archive,
                 hashlib.sha256(archive).hexdigest(),
