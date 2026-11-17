@@ -322,6 +322,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "concept_page_needs_repair"
     if "concept_browser_validation_blocked" in terminal:
         return "concept_browser_validation_blocked"
+    if "visual_qa_incomplete" in terminal:
+        return "visual_qa_incomplete"
     if "free_model_request_rejected" in terminal:
         return "free_model_request_rejected"
     if "free_ai_access_rejected" in terminal:
@@ -567,6 +569,24 @@ def run_cli(args,log_handle,deadline=None):
             detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
         if code == "free_model_request_rejected":
             detail = free_provider_rejection_diagnostic(log_handle,stage_start)
+        if code == "visual_qa_incomplete":
+            # Do not expose actual screenshot evidence or model responses.
+            log_handle.seek(stage_start)
+            tail=log_handle.read()[-3000:].lower()
+            names=(
+                ("view_ids","näkymätunnukset"),
+                ("original_source_review","alkuperäisen sivuston vertailu"),
+                ("grounded_view_evidence","yksittäisten näkymien perustelut"),
+                ("individual_verdict","näkymäkohtainen hyväksyntä"),
+                ("critical_issues","kriittisten puutteiden luettelo"),
+                ("observation","havainnon kattavuus"),
+                ("cross-concept ranking","konseptien keskinäinen vertailu"),
+            )
+            missing=next((label for marker,label in names
+                          if "visual_qa_incomplete: "+marker in tail),None)
+            detail=("Riippumaton visuaalinen arvio jäi puutteelliseksi"
+                    + (": "+missing if missing else
+                       " (todisteellinen tarkistus estää julkaisun)"))
         if code == "concept_browser_validation_blocked":
             # The worker emits bounded repair hints; never copy raw HTML,
             # private company facts or arbitrary exceptions into job progress.
