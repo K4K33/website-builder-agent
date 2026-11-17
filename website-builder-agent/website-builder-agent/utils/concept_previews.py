@@ -315,6 +315,9 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     parent = Path(output_parent).resolve(); parent.mkdir(parents=True, exist_ok=True)
     root = Path(mkdtemp(prefix='set-', dir=parent))
     repair_targets = {}
+    # Detailed browser evidence exists only in this process return and is
+    # never written to manifest or persisted with the company record.
+    private_repair_evidence = {}
     manifest = {'protocol': PROTOCOL, 'context_sha256': context_digest(research),
                 'producer': producer, 'status': 'blocked', 'entries': [],
                 'intake_sha256': intake_fingerprint(media_items, intake_root or root),
@@ -358,8 +361,16 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
                     'route': route, 'viewport': viewport, 'path': file.relative_to(root).as_posix(),
                     'sha256': file_hash(file)})
             if len(entry['issues']) > issue_count_before:
+                failures = entry['issues'][issue_count_before:]
                 repair_targets.setdefault(identifier, {})[route] = browser_issue_repair_hints(
-                    entry['issues'][issue_count_before:])
+                    failures)
+                # Concrete viewport/element/contrast measurements allow the
+                # author to repair the *actual* failing content, not blindly
+                # repeat generic advice. The previous HTML already belongs
+                # to the same trusted private authoring context. Bound input.
+                private_repair_evidence.setdefault(identifier, {})[route] = [
+                    str(issue).strip()[:450] for issue in failures[:8]
+                ]
         manifest['entries'].append(entry)
     if all(not e['issues'] and len(e['views']) == 4 for e in manifest['entries']):
         manifest['status'] = 'ready_for_comparison'
@@ -368,7 +379,8 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     _write_comparison(root, manifest)
     return {'manifest_path': str(file), 'set_sha256': manifest['set_sha256'],
             'comparison_path': str(root / 'comparison.html'), 'status': manifest['status'],
-            'repair_targets': repair_targets}
+            'repair_targets': repair_targets,
+            'private_repair_evidence': private_repair_evidence}
 
 
 def load_verified_set(reference, research, *, allowed_root):
