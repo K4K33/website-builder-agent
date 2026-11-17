@@ -123,6 +123,28 @@ class CloudflareFailureCodes(unittest.TestCase):
                 self.assertNotIn("do-not-leak", diagnostic)
                 self.assertNotIn("PRIVATE CLIENT", diagnostic)
 
+
+    def test_provider_numeric_code_is_the_only_extra_cloudflare_error_detail(self):
+        response = Mock(status_code=400)
+        response.json.return_value = {"errors": [{
+            "code": 3030, "message": "image model rejected sensitive client URL"
+        }]}
+        with patch.dict(os.environ, VALID, clear=True), \
+             patch.object(cf, "_ATTEMPTS", 0), \
+             patch.object(cf.requests, "post", return_value=response):
+            with self.assertRaises(RuntimeError) as caught:
+                cf.chat_cloudflare_free(
+                    "sys", "private client data", stage="qa",
+                    max_tokens=500, json_mode=True)
+        exception = str(caught.exception)
+        self.assertIn("Cloudflare HTTP 400 (image;code=3030)", exception)
+        self.assertNotIn("sensitive", exception)
+        self.assertNotIn("client URL", exception)
+        diagnostic = free_provider_rejection_diagnostic(
+            io.StringIO("RuntimeError: " + exception))
+        self.assertIn("palvelukoodi 3030", diagnostic)
+        self.assertNotIn("client URL", diagnostic)
+
     def test_unknown_provider_details_never_leave_private_stage_log(self):
         cases = [
             "RuntimeError: FREE_MODEL_REQUEST_REJECTED: Cloudflare HTTP 444 (secret).",
