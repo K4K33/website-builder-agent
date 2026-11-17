@@ -1168,7 +1168,8 @@ def main():
             resume=restore_private_checkpoint(agent_slug,company_name,source)
             last_checkpoint = resume
             done = completed_stage_index(
-                resume, load_company(agent_slug) if resume == "concepts" else None)
+                resume, load_company(agent_slug) if resume == "concepts" else None,
+                concept_root=PROJECT / "output" / agent_slug)
             if resume is None:
                 upsert_company(agent_slug,{"name":company_name,
                                           "url":source,"status":"found"})

@@ -204,3 +204,13 @@ Implementation is documented in
 `docs/KAURIVO_GLOBAL_DESIGN_QA_CHECKLIST.md`,
 `docs/KAURIVO_DESIGN_STANDARD_V4.md` and the V7 builder/QA prompts.
 This file logs lessons; it is not evidence that old demos are now fixed.
+
+## 17.11.2026 — Konseptin uudelleentarkistus ja tallennetun työn jatko
+
+Mallin selainvirheen korjaus voi aiheuttaa uuden kontrastivirheen. Mittaa ja
+korjaa se täsmälleen siitä versiosta, joka menee riippumattomaan arviointiin.
+Tarkista uudella renderöinnillä kaikki kolme konseptia ennen arviointia.
+
+Tallennetun konseptin tarkistussumma sisältää aktiivisen palvelusopimuksen.
+Jos sopimus päivittyi tallennuksen jälkeen, käytä tallennettua tutkimusta
+konseptien uudelleenrakentamiseen. Konseptin eheysvirhe estää etenemisen.
