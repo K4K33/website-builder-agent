@@ -54,6 +54,7 @@ on:
 # One supervised verification after #221: independent free Mistral vision QA and unchanged 14-source proof gates.
 # One inspected verified replay after #222: exact visual QA output structure and bounded evidence repair.
 # Inspected single rerun after #223: separate original screenshots with concrete source comparisons.
+# One inspected verification after #224: independently rejected concepts receive targeted revision and new 12-view QA.
 
 permissions:
   contents: write
