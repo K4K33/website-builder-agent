@@ -51,6 +51,7 @@ on:
 # Verified one-shot replay after #217-#218: same QA model REST route and complete vision panels.
 # Single supervised diagnostic run after #219: classify free visual QA HTTP rejection without exposing private inputs.
 # One verified end-to-end replay after #220: independent complete-source visual review in bounded batches.
+# One supervised verification after #221: independent free Mistral vision QA and unchanged 14-source proof gates.
 
 permissions:
   contents: write
