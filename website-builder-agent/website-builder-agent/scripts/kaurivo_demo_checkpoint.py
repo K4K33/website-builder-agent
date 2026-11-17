@@ -160,10 +160,15 @@ def make_archive(project: Path, slug: str, job_id: str,
             and previews.get("status") == "ready_for_comparison"
             and active_concept_root is None):
         raise CheckpointError("active concept manifest missing")
-    # Draft caches save credits if model generation fails during research or
-    # an incomplete concept round. Once the entire concept is validated,
-    # future stages use immutable rendered assets, not old model drafts.
+    # Keep completed route drafts when the full-site Builder runs after
+    # concept selection. A free-model quota interruption can occur halfway
+    # through a multi-page build; the resumed runner must not regenerate
+    # already validated pages and consume the same scarce credits again.
+    # Per-route caches are bound by job, phase, exact prompt and image hashes;
+    # draft_pages revalidates every cache before reuse. Completed concepts
+    # remain immutable, and finished builds/revisions never retain drafts.
     keep_draft_cache = (STAGES.index(phase) < STAGES.index("concepts")
+                        or phase == "selected"
                         or (phase == "concepts"
                             and previews.get("status") != "ready_for_comparison"))
     if own.is_dir():

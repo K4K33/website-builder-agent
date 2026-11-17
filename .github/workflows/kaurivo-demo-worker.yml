@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/kaurivo-demo-worker.yml"
       - "website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py"
+      - "website-builder-agent/website-builder-agent/scripts/kaurivo_demo_checkpoint.py"
       # When a source/research/model bug is repaired, resume eligible owner
       # demos with the NEW code rather than re-running a stale old workflow.
       - "website-builder-agent/website-builder-agent/agents/research.py"
