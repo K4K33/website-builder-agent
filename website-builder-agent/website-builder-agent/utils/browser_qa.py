@@ -255,6 +255,40 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                             };
                             const ratio = (a,b) => (Math.max(lum(a),lum(b))+0.05) /
                                                     (Math.min(lum(a),lum(b))+0.05);
+                            // A simple *fully opaque* linear gradient can be
+                            // verified conservatively without deleting premium
+                            // visual design or pretending image/photo contrast
+                            // is measurable. Every possible RGB component value
+                            // lies between these per-channel bounds. Checking
+                            // both extremes on one side of foreground luminance
+                            // proves a lower bound for every gradient stop.
+                            const provenGradientContrast = (background, fg, required, el) => {
+                                const value = String(background || '').trim();
+                                if (!/^linear-gradient\\(/i.test(value) ||
+                                    (value.match(/gradient\\s*\\(/gi)||[]).length !== 1 ||
+                                    /url\\s*\\(|image-set\\s*\\(|color-mix\\s*\\(|\\bin\\s+(?:oklab|oklch|lab|lch|hsl|hwb|srgb-linear|xyz)/i.test(value))
+                                    return false;
+                                const tokens=value.match(/rgba?\\([^)]*\\)/gi)||[];
+                                const allTokens=value.match(/(?:rgb|rgba)\\s*\\(/gi)||[];
+                                if (tokens.length<2 || tokens.length!==allTokens.length)
+                                    return false;
+                                const colors=tokens.map(parse);
+                                if(colors.some(color=>!color)) return false;
+                                for (let ancestor=el; ancestor; ancestor=ancestor.parentElement) {
+                                    const s=getComputedStyle(ancestor);
+                                    if(s.opacity!=='1' || s.filter!=='none' ||
+                                       s.mixBlendMode!=='normal' ||
+                                       s.backgroundBlendMode!=='normal') return false;
+                                }
+                                const low=[0,1,2].map(i=>Math.min(...colors.map(rgb=>rgb[i])));
+                                const high=[0,1,2].map(i=>Math.max(...colors.map(rgb=>rgb[i])));
+                                const foregroundLum=lum(fg);
+                                // A gradient straddling the text luminance can
+                                // have invisible intermediate colors.
+                                if(foregroundLum>lum(low) && foregroundLum<lum(high))
+                                    return false;
+                                return Math.min(ratio(fg,low),ratio(fg,high))>=required+0.03;
+                            };
                             const visible = e => !!e.getClientRects().length
                                 && getComputedStyle(e).visibility !== 'hidden';
                             let checked=0, skipped=0, poor=[], ambiguous=[], tinyText=[];
@@ -274,10 +308,18 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                                    fontSize:Math.round(size*10)/10});
                                 }
                                 if (!foreground) {skipped++;continue;}
+                                const weight=parseFloat(style.fontWeight)||400;
+                                const large=size >= 24 || (size>=18.66 && weight>=700);
+                                const required=large?3:4.5;
                                 let bg=null, uncertain=false, current=el, complexLayer=false;
+                                let opaqueGradientProved=false;
                                 while(current && current.nodeType===1) {
                                     const st=getComputedStyle(current);
                                     if(st.backgroundImage!=='none' || st.opacity!=='1') {
+                                        if(st.opacity==='1' && provenGradientContrast(
+                                            st.backgroundImage, foreground, required, current)) {
+                                            opaqueGradientProved=true;break;
+                                        }
                                         uncertain=true;complexLayer=true;break;
                                     }
                                     const candidate=parse(st.backgroundColor);
@@ -288,6 +330,10 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                     }
                                     current=current.parentElement;
                                 }
+                                if (opaqueGradientProved) {
+                                    checked++;
+                                    continue;
+                                }
                                 if (uncertain) {
                                     skipped++;
                                     if(complexLayer && ambiguous.length<12)
@@ -296,9 +342,7 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                     continue;
                                 }
                                 if (!bg) bg=[255,255,255];
-                                const weight=parseFloat(style.fontWeight)||400;
-                                const large=size >= 24 || (size>=18.66 && weight>=700);
-                                const required=large?3:4.5, value=ratio(foreground,bg);
+                                const value=ratio(foreground,bg);
                                 checked++;
                                 if (value+0.02<required && poor.length<8)
                                     poor.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
