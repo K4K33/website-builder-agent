@@ -372,9 +372,19 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                 if (!bg) bg=[255,255,255];
                                 const value=ratio(foreground,bg);
                                 checked++;
-                                if (value+0.02<required && poor.length<8)
+                                if (value+0.02<required && poor.length<8) {
+                                    // A fully opaque background has a safe
+                                    // black-or-white text color. Report a
+                                    // concrete CSS correction to the private
+                                    // repair model instead of saying only
+                                    // "fix contrast" and wasting two rounds.
+                                    const black=ratio([0,0,0],bg);
+                                    const white=ratio([255,255,255],bg);
                                     poor.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
-                                               ratio:Math.round(value*100)/100, required});
+                                               ratio:Math.round(value*100)/100, required,
+                                               observedBackground:'rgb('+bg.join(',')+')',
+                                               suggestedTextColor:black>=white?'#000000':'#ffffff'});
+                                }
                             }
                             const root=getComputedStyle(document.documentElement);
                             const body=getComputedStyle(document.body);
