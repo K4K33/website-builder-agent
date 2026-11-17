@@ -26,11 +26,19 @@ def _prove_complex_text_background(page, candidate):
             style.webkitTextFillColor !== style.color ||
             style.backgroundClip === 'text' ||
             style.webkitBackgroundClip === 'text') return null;
-        for (let parent=el;parent;parent=parent.parentElement) {
-            if (parent.querySelector('video,canvas')) return null;
-            if (parent.getAnimations().some(a => a.playState === 'running')) return null;
-        }
         const rect = el.getBoundingClientRect();
+        for (let parent=el;parent;parent=parent.parentElement) {
+            if (parent.getAnimations().some(a => a.playState === 'running')) return null;
+            // A video elsewhere on the page is irrelevant: only moving
+            // media overlapping these actual text pixels is unsafe.
+            for (const media of parent.querySelectorAll('video,canvas')) {
+                const other=media.getBoundingClientRect();
+                if (other.width>0 && other.height>0 &&
+                    other.left<rect.right && other.right>rect.left &&
+                    other.top<rect.bottom && other.bottom>rect.top)
+                    return null;
+            }
+        }
         if (rect.width < 2 || rect.height < 2 ||
             rect.width * rect.height > 2500000) return null;
         return {
@@ -489,6 +497,7 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                             page.evaluate("""() => document.querySelectorAll(
                                 '[data-kaurivo-contrast-id]').forEach(el =>
                                     el.removeAttribute('data-kaurivo-contrast-id'))""")
+                            page.evaluate("window.scrollTo(0, 0)")
                         if color_review["scrollBlocked"]:
                             issues.append(f"{name}: native vertical scrolling blocked")
                         for key, message in (("overflow", "horizontal overflow"),
