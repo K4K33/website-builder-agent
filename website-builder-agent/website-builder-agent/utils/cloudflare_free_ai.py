@@ -277,8 +277,12 @@ def chat_cloudflare_free(
               "reason_class="+reason_class,
               "user_prompt_chars="+str(len(user_prompt)),
               "image_count="+str(len(image_paths or [])))
+        # A numeric provider error code (not its body/message) is useful for
+        # fixing rejected free vision requests without logging client data.
+        numeric_code = (str(code) if type(code) is int and 1 <= code <= 999999 else "")
+        safe_suffix = ";code=" + numeric_code if numeric_code else ""
         raise RuntimeError("FREE_MODEL_REQUEST_REJECTED: Cloudflare HTTP "+
-                           str(resp.status_code)+" ("+reason_class+").")
+                           str(resp.status_code)+" ("+reason_class+safe_suffix+").")
     try:
         data = resp.json()
         if not isinstance(data, dict) or (
