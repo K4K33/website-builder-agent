@@ -100,6 +100,48 @@ class ReadabilityBrowserTests(unittest.TestCase):
             self.assertTrue(any("NOT VERIFIABLE" in issue
                                 for issue in result["issues"]), result["issues"])
 
+
+    def test_radial_photo_like_dark_background_is_proved_from_actual_browser_pixels(self):
+        html=doc('.hero{background:radial-gradient(circle,#071421,#182b31);'
+                 'padding:60px}', '<section class="hero">'
+                 '<p style="color:#fff">Genuinely readable photographed hero</p></section>')
+        with TemporaryDirectory() as tmp:
+            page=Path(tmp)/"index.html"
+            page.write_text(html, encoding="utf-8")
+            result=inspect_site(page)
+            self.assertTrue(result["pass"], result["issues"])
+            self.assertFalse(any("NOT VERIFIABLE" in issue for issue in result["issues"]))
+
+    def test_actual_background_photo_dark_pixels_pass_but_bright_photo_fails(self):
+        from PIL import Image
+        with TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            original=doc('.hero{background:url(hero.png);padding:60px}',
+                         '<section class="hero"><p style="color:#fff">'
+                         'Text over original photo</p></section>')
+            page=root/"index.html"
+            page.write_text(original,encoding="utf-8")
+            image=root/"hero.png"
+            Image.new("RGB",(80,80),(9,25,32)).save(image)
+            positive=inspect_site(page)
+            self.assertTrue(positive["pass"], positive["issues"])
+            Image.new("RGB",(80,80),(243,245,246)).save(image)
+            negative=inspect_site(page)
+            self.assertFalse(negative["pass"])
+            self.assertTrue(any("NOT VERIFIABLE" in issue
+                                for issue in negative["issues"]),negative["issues"])
+
+    def test_gradient_with_bright_and_dark_pixels_cannot_pass_visual_proof(self):
+        html=doc('.hero{background:radial-gradient(circle,#fff,#101010);'
+                 'padding:60px}', '<section class="hero">'
+                 '<p style="color:#fff">Inconsistent actual contrast</p></section>')
+        with TemporaryDirectory() as tmp:
+            path=Path(tmp)/"index.html"
+            path.write_text(html,encoding="utf-8")
+            result=inspect_site(path)
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("NOT VERIFIABLE" in issue for issue in result["issues"]))
+
     def test_tiny_primary_business_text_is_rejected(self):
         html=doc('p{font-size:10px;color:#222}',
                  '<p>Small important pricing and terms are not acceptable</p>')
