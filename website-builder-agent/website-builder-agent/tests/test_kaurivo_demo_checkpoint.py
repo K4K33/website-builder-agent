@@ -113,6 +113,82 @@ class PrivateCheckpointTests(unittest.TestCase):
             self.assertTrue(str(capture).startswith(str(new)))
             self.assertFalse((new / ".env").exists())
 
+
+    def test_checkpoint_keeps_active_concept_and_excludes_obsolete_sets_and_drafts(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            old, new = Path(a), Path(b)
+            company = fixture(old, "concepts")
+            root = old / "output" / SLUG
+            active = root / "_concept_previews" / "set-current"
+            active.mkdir(parents=True)
+            (active / "manifest.json").write_text('{"status":"ready_for_comparison"}')
+            (active / "comparison.html").write_text("<!doctype html><html></html>")
+            (active / "variant-1").mkdir()
+            (active / "variant-1" / "index.html").write_text("<!doctype html>")
+            raw_qa = active / "variant-1" / "qa" / "desktop.png"
+            raw_qa.parent.mkdir()
+            raw_qa.write_bytes(b"transient-browser-capture")
+            proof = active / "variant-1" / "_captures" / "a1" / "desktop.png"
+            proof.parent.mkdir(parents=True)
+            proof.write_bytes(b"hashed-manifest-proof")
+            company["concept_previews"] = {
+                "status": "ready_for_comparison",
+                "manifest_path": str(active / "manifest.json"),
+                "comparison_path": str(active / "comparison.html"),
+            }
+            # Each old immutable browser render creates many PNG captures.
+            # Hundreds of stale captures used to exceed MAX_FILES even
+            # though only the latest set was referenced by company state.
+            stale = root / "_concept_previews" / "set-old"
+            stale.mkdir()
+            for n in range(450):
+                (stale / f"discarded-{n}.png").write_bytes(b"stale")
+            drafts = root / "_demo_page_drafts"
+            drafts.mkdir()
+            (drafts / "finished-page.json").write_text('{"html":"cached"}')
+            archive = make_archive(old, SLUG, JOB, "concepts", company)
+            with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+                names = bundle.namelist()
+                self.assertTrue(any("set-current/manifest.json" in n for n in names))
+                self.assertFalse(any("set-old" in n for n in names))
+                self.assertFalse(any("_demo_page_drafts" in n for n in names))
+                self.assertFalse(any("/qa/desktop.png" in n for n in names))
+                self.assertTrue(any("/_captures/a1/desktop.png" in n for n in names))
+            restored = unpack_archive(
+                new, SLUG, JOB, "concepts", archive,
+                hashlib.sha256(archive).hexdigest(),
+                expected_name="Test Company",
+                expected_source="https://example.org/",
+            )
+            self.assertTrue(Path(restored["concept_previews"]["manifest_path"]).is_file())
+            self.assertTrue((new / "output" / SLUG / "concept.png").is_file())
+            self.assertFalse((new / "output" / SLUG / "_concept_previews" /
+                              "set-old").exists())
+
+    def test_partial_concept_failure_retains_model_drafts_for_credit_saving_resume(self):
+        with tempfile.TemporaryDirectory() as old:
+            project = Path(old)
+            company = fixture(project, "researched")
+            draft = project / "output" / SLUG / "_demo_page_drafts" / "partial.json"
+            draft.parent.mkdir()
+            draft.write_text('{"html":"already verified draft"}')
+            archive = make_archive(project, SLUG, JOB, "researched", company)
+            with zipfile.ZipFile(io.BytesIO(archive)) as zf:
+                self.assertIn(f"output/{SLUG}/_demo_page_drafts/partial.json",
+                              zf.namelist())
+
+    def test_completed_concept_must_have_real_active_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            company = fixture(project, "concepts")
+            company["concept_previews"] = {
+                "status": "ready_for_comparison",
+                "manifest_path": str(project / "output" / SLUG /
+                                     "_concept_previews" / "set-missing" / "manifest.json"),
+            }
+            with self.assertRaisesRegex(CheckpointError, "active concept manifest missing"):
+                make_archive(project, SLUG, JOB, "concepts", company)
+
     def test_full_build_and_revisions_require_exact_saved_routes(self):
         for stage in ("built", "revised_1", "revised_2"):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory() as a, \
@@ -186,6 +262,19 @@ class PrivateCheckpointTests(unittest.TestCase):
             (root / "output" / SLUG / "link.txt").symlink_to(root / ".env")
             with self.assertRaisesRegex(CheckpointError, "symlink"):
                 make_archive(root, SLUG, JOB, "researched", company)
+
+    def test_checkpoint_failure_categories_are_bounded_and_not_raw_storage_responses(self):
+        worker = (Path(__file__).resolve().parents[1] /
+                  "scripts" / "run_kaurivo_demo_queue.py").read_text()
+        checkpoint = worker.split("def save_private_checkpoint(", 1)[1].split(
+            "def restore_private_checkpoint(", 1)[0]
+        for safe in ("local_file_count", "local_uncompressed_budget",
+                     "local_compressed_budget", "local_active_manifest_missing",
+                     "edge_timeout", "edge_http_", "edge_ack_not_ok"):
+            self.assertIn(safe, checkpoint)
+        self.assertNotIn("reply.text", checkpoint)
+        self.assertNotIn("response.text", checkpoint)
+        self.assertNotIn("str(exc)", checkpoint.split("raise HoldError", 1)[0])
 
     def test_stage_is_not_a_claim_of_qa_approval(self):
         worker = (Path(__file__).resolve().parents[1] /

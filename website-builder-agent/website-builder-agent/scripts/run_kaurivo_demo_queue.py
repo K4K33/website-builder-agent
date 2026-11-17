@@ -999,10 +999,30 @@ def save_private_checkpoint(phase, agent_slug):
         reply=requests.post(EDGE+"?"+query,headers={
             "Authorization":"Bearer "+_oidc(),
             "Content-Type":"application/zip"},data=bundle,timeout=95)
-        if reply.status_code!=200 or reply.json().get("ok") is not True:
-            raise HoldError("checkpoint_write_failed")
-    except (requests.RequestException,ValueError,CheckpointError) as exc:
-        raise HoldError("checkpoint_write_failed") from exc
+        if reply.status_code != 200:
+            # Only a fixed HTTP code may reach admin diagnostics, never
+            # Supabase response bodies, object keys or client material.
+            code = reply.status_code if reply.status_code in {
+                400, 403, 409, 413, 422, 429, 500, 502, 503, 504} else 0
+            raise HoldError("checkpoint_write_failed",
+                            "edge_http_" + str(code))
+        if reply.json().get("ok") is not True:
+            raise HoldError("checkpoint_write_failed", "edge_ack_not_ok")
+    except CheckpointError as exc:
+        safe = {
+            "too many checkpoint files": "local_file_count",
+            "checkpoint exceeds uncompressed budget": "local_uncompressed_budget",
+            "checkpoint exceeds private storage limit": "local_compressed_budget",
+            "oversized checkpoint file": "local_single_file_budget",
+            "symlink in demo output": "local_symlink",
+            "active concept manifest missing": "local_active_manifest_missing",
+        }.get(str(exc), "local_archive_validation")
+        raise HoldError("checkpoint_write_failed", safe) from exc
+    except requests.Timeout as exc:
+        raise HoldError("checkpoint_write_failed", "edge_timeout") from exc
+    except (requests.RequestException, ValueError) as exc:
+        raise HoldError("checkpoint_write_failed",
+                        "edge_transport_or_invalid_ack") from exc
 
 
 def restore_private_checkpoint(agent_slug, company_name, source):
