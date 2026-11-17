@@ -532,7 +532,34 @@ def run_cli(args,log_handle,deadline=None):
         if code == "research_design_coverage_incomplete":
             detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
         if code == "concept_browser_validation_blocked":
-            detail = "Konseptisivut eivät läpäisseet selaintarkistusta rajattujen korjausyritysten jälkeenkään"
+            # The worker emits bounded repair hints; never copy raw HTML,
+            # private company facts or arbitrary exceptions into job progress.
+            log_handle.seek(stage_start)
+            browser_tail = log_handle.read()[-6000:]
+            marker = "CONCEPT_BROWSER_VALIDATION_BLOCKED:"
+            browser_hints = browser_tail.rsplit(marker, 1)[-1] if marker in browser_tail else ""
+            safe_hints = (
+                ("horizontal overflow", "mobiilin vaakasuuntainen ylivuoto"),
+                ("touch", "kosketuskohteiden koko"),
+                ("staged images", "kuvien eheys"),
+                ("visual quality", "kuvien tarkkuus"),
+                ("WCAG AA", "tekstin kontrasti"),
+                ("opaque text", "tekstin luettavuus kuvien päällä"),
+                ("legible typography", "tekstin luettavuus"),
+                ("vertical page scrolling", "sivun pystysuuntainen vieritys"),
+                ("main content", "pääsisällön renderöinti"),
+                ("excessive page height", "sivun liiallinen korkeus"),
+                ("disclosure", "valikkojen saavutettavuus"),
+                ("runtime errors", "JavaScript-virheet"),
+                ("offline", "resurssien offline-renderöinti"),
+                ("screenshots", "kuvakaappausten renderöinti"),
+                ("reduced-motion", "animaatioiden saavutettavuus"),
+            )
+            categories = [label for hint, label in safe_hints
+                          if hint.casefold() in browser_hints.casefold()]
+            detail = ("Konseptien selaintarkistus estää julkaisun"
+                      + (": " + ", ".join(categories[:4]) if categories else
+                         " (tarkka syy yksityisessä manifestissa)"))
         if code == "concept_page_needs_repair":
             log_handle.seek(stage_start)
             last_error = log_handle.read()[-3000:]
