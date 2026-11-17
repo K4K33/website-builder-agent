@@ -181,11 +181,19 @@ def chat_cloudflare_free(
         raise RuntimeError("FREE_AI_RATE_LIMIT: Cloudflare per-run safety cap reached.")
     if not isinstance(max_tokens, int) or not 1 <= max_tokens <= 10000:
         raise ValueError("Cloudflare output token budget out of range.")
-    from utils.kaurivo_cloud_vision_packet import compact_vision_user_content
-    # Screenshots are resized for inference ONLY. The unchanged original
-    # files still govern browser, visual, brand and source fidelity checks.
-    content = (compact_vision_user_content(user_prompt, image_paths)
-               if image_paths else user_prompt)
+    from utils.kaurivo_cloud_vision_packet import (
+        compact_vision_user_content, compact_concept_review_user_content)
+    # All twelve authentic concept viewport screenshots and the two original
+    # company screenshots MUST remain in the independent QA comparison.
+    # Cloudflare's bounded preview packet allows at most eight attached
+    # images. Pair the 12/14 real views with visible order labels; never
+    # silently omit a screenshot, trust generated scores, or change the
+    # original QA captures.
+    if image_paths and stage == "qa" and len(image_paths) in (12, 14):
+        content = compact_concept_review_user_content(user_prompt, image_paths)
+    else:
+        content = (compact_vision_user_content(user_prompt, image_paths)
+                   if image_paths else user_prompt)
     account = os.getenv("CLOUDFLARE_ACCOUNT_ID", "").strip()
     token = os.getenv("CLOUDFLARE_API_TOKEN", "").strip()
     model = FREE_MODELS[stage]

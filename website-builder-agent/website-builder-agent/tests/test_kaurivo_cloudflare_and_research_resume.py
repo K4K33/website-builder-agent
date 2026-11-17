@@ -74,6 +74,36 @@ class CloudflareFreeTests(unittest.TestCase):
                                      body.get("model")==cf.FREE_MODELS["research"] else 1)
 
 
+
+    def test_fourteen_concept_and_original_views_are_never_dropped_by_free_qa(self):
+        from utils.cloudflare_free_ai import chat_cloudflare_free
+        message = [
+            {"type": "text", "text": "All 14 original view panels"},
+            *[{"type": "image_url",
+               "image_url": {"url": "data:image/jpeg;base64,AA=="}} for _ in range(7)]
+        ]
+        response = Mock(status_code=200)
+        response.json.return_value = {
+            "model": cf.FREE_MODELS["qa"],
+            "choices": [{"finish_reason": "stop",
+                         "message": {"content": '{"selected_alias":"A"}'}}],
+        }
+        paths = ["private-verified-view-" + str(i) for i in range(14)]
+        with patch.dict(os.environ, CONFIRMED, clear=True), \
+             patch.object(cf, "_ATTEMPTS", 0), \
+             patch("utils.kaurivo_cloud_vision_packet.compact_concept_review_user_content",
+                   return_value=message) as paired, \
+             patch("utils.kaurivo_cloud_vision_packet.compact_vision_user_content") as old, \
+             patch.object(cf.requests, "post", return_value=response) as post:
+            self.assertEqual(chat_cloudflare_free(
+                "independent review", "must inspect fourteen views", stage="qa",
+                max_tokens=1200, json_mode=True, image_paths=paths),
+                '{"selected_alias":"A"}')
+            paired.assert_called_once_with("must inspect fourteen views", paths)
+            old.assert_not_called()
+            self.assertEqual(len(post.call_args.kwargs["json"]["messages"][1]["content"]), 8)
+            self.assertEqual(post.call_count, 1)
+
     def test_qa_router_404_retries_once_at_documented_same_vision_model_rest_endpoint(self):
         router = Mock(status_code=404)
         official = Mock(status_code=200)
