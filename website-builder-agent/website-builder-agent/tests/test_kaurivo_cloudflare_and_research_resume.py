@@ -150,7 +150,7 @@ class CloudflareFreeTests(unittest.TestCase):
             self.assertEqual(cf._ATTEMPTS, 2)
             second = post.call_args_list[1]
             self.assertIn(
-                "/ai/run/@cf/qwen/qwen3.8-27b", second.args[0])
+                "/ai/run/" + cf.FREE_MODELS["qa"], second.args[0])
             self.assertNotIn("model", second.kwargs["json"])
             self.assertEqual(second.kwargs["json"]["messages"][1]["content"][1]["type"],
                              "image_url")
