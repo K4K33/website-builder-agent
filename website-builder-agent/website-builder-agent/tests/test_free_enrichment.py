@@ -279,6 +279,10 @@ class FreeEnrichmentTests(unittest.TestCase):
         del bad["fact_sources"]["services"]
         with self.assertRaisesRegex(RuntimeError, "source"):
             validate_verified_profile(good, bad)
+        registry_only = profile()
+        registry_only["fact_sources"]["services"] = ["https://virre.prh.fi/"]
+        with self.assertRaisesRegex(RuntimeError, "registry scope alone"):
+            validate_verified_profile(good, registry_only)
         altered = profile()
         altered["company_facts"]["name"] = "Other Oy"
         with self.assertRaisesRegex(RuntimeError, "Name"):

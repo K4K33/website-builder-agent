@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections import Counter
 from urllib.parse import urljoin, urlsplit
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -20,6 +21,13 @@ TASK_PATTERNS = (
     ('application', r'ilmoittaudu|hae mukaan|anmäl|register|apply now'),
 )
 POLICY = '''SERVICE QUALITY CONTRACT — ALL CLIENTS:
+The first screen states the verified primary offer and the visitor's next step.
+Every service route must earn its place with a distinct visitor question and
+source-backed answers, examples, or practical details. Combine thin routes
+when evidence is sparse. Put company register details after the contact path.
+Use evidence of actual work where available. Never turn a registry's business
+scope into a service list. Give the primary action a clear destination and avoid
+repeating a vague link through consecutive sections on the same page.
 Plan actual visitor tasks before layout. Preserve every distinct original
 booking, shopping, quotation and application destination, including external
 platforms and forms. A mailto draft is not equivalent to a delivered form.
@@ -62,6 +70,57 @@ def _hash(value):
 
 def _normal(text):
     return ' '.join(str(text or '').split())
+
+
+def is_registry_source(url):
+    host = (urlsplit(url).hostname or '').lower().rstrip('.')
+    return any(host == domain or host.endswith('.' + domain)
+               for domain in ('prh.fi', 'ytj.fi', 'virre.fi'))
+
+
+_REGISTRY_SCOPE = re.compile(
+    r'kaupparekisteri|päätoimiala|yhtiön toimialana on|kaikki laillinen liiketoiminta|'
+    r'handelsregistret|huvudbransch|registered business scope', re.I
+)
+
+
+def validate_primary_offering(evidence, pages):
+    """Bind one concrete offer to an exact excerpt from the observed site."""
+    if isinstance(evidence, dict):
+        url = evidence.get('source_url')
+        label = _normal(evidence.get('label'))
+        quote = _normal(evidence.get('quote'))
+        if (isinstance(url, str) and label and len(quote.split()) >= 3
+                and label.casefold() in quote.casefold()
+                and not _REGISTRY_SCOPE.search(quote)
+                and any(p.get('url') == url and quote in _normal(p.get('text'))
+                        for p in pages)
+                and not is_registry_source(url)):
+            return {'label': label, 'quote': quote, 'source_url': url}
+    raise RuntimeError("Original-site primary offering unverified; "
+                       "confirm a current product or service with a customer-facing source.")
+
+
+_GENERIC_ACTIONS = {
+    'lähetä tiedustelu', 'ota yhteyttä', 'lue lisää', 'tutustu', 'tutustu lisää',
+    'skicka en förfrågan', 'kontakta oss', 'läs mer',
+    'send an inquiry', 'send an enquiry', 'get in touch', 'contact us', 'learn more',
+}
+
+
+def repeated_generic_actions(soup):
+    main = soup.find('main')
+    if not main:
+        return []
+    counts = Counter()
+    for link in main.select('a[href]'):
+        if link.find_parent(['header', 'footer', 'nav']):
+            continue
+        label = _normal(link.get_text(' ', strip=True)).casefold()
+        if label in _GENERIC_ACTIONS:
+            counts[label, link['href'].strip()] += 1
+    return [{'label': label, 'destination': destination, 'count': count}
+            for (label, destination), count in counts.items() if count >= 3]
 
 
 def source_tasks(research):
@@ -118,6 +177,8 @@ def service_brief(research):
                'creative_selection': research.get('creative_selection'),
                'review_evidence_protocol': research.get('review_evidence_protocol'),
                'company_facts': research.get('company_facts') or {}}
+    if 'primary_offering_evidence' in research:
+        payload['primary_offering_evidence'] = research['primary_offering_evidence']
     return {**payload, 'contract_sha256': _hash(payload), 'policy': POLICY}
 
 
@@ -134,6 +195,9 @@ def validate_service_plan(research):
     Legacy research is still audited on output; newly researched projects use
     v1 and must map every discovered business task before spending on a build.
     """
+    if 'primary_offering_evidence' in research:
+        validate_primary_offering(research['primary_offering_evidence'],
+                                  (research.get('source_inventory') or {}).get('pages', []))
     tasks = source_tasks(research)
     plans = research.get('business_task_plan')
     if plans is None and research.get('service_quality_protocol') != 'v1':
@@ -175,6 +239,9 @@ def audit_service_quality(pages, research, *, artifact_digest=None, review_bundl
     except RuntimeError as error:
         blocking.append({'kind': 'invalid_business_task_plan', 'reason': str(error)})
     soups = {route: BeautifulSoup(raw, 'html.parser') for route, raw in pages.items()}
+    for route, soup in soups.items():
+        for action in repeated_generic_actions(soup):
+            blocking.append({'kind': 'repeated_generic_action', 'route': route, **action})
     task_ids = {t['id'] for t in brief['tasks']}
     plans = research.get('business_task_plan') or []
     plans = plans if isinstance(plans, list) else []

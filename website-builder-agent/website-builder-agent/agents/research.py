@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from functools import partial
 from uuid import uuid4
 
-from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256
+from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256, validate_primary_offering
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import (
@@ -95,6 +95,12 @@ Tavoitteet:
 4. Luo lyhyt hakulause, jolla voidaan etsiä moderneja
    referenssisivustoja samalta toimialalta.
 
+Anna primary_offering_evidence vain, jos yrityksen oma sivusto osoittaa, mitä
+asiakas voi oikeasti ostaa, varata tai tilata. Kopioi source_url alisivujen
+lähdepaketista, quote kokonaisena sellaisenaan ja label täsmälleen lainauksesta.
+Lainauksen on yksilöitävä varsinainen tuote tai palvelu. Pelkkä yrityksen nimi,
+iskulause, toimialaluokka tai kaupparekisterin kuvaus ei riitä. Jos näyttöä
+ei löydy, palauta primary_offering_evidence arvolla null.
 Älä keksi yhteystietoja.
 
 Jos tietoa ei löydy, käytä tyhjää merkkijonoa.
@@ -116,6 +122,7 @@ Palauta VAIN validi JSON:
     "tagline_or_value_prop": "",
     "target_audience": ""
   },
+  "primary_offering_evidence": {"source_url": "", "quote": "", "label": ""},
   "current_site_weaknesses": [],
   "reference_search_query": ""
 }
@@ -1219,9 +1226,9 @@ Raaka HTML:
         "yrityksen faktat..."
     )
 
+    saved_extraction = progress.get("extracted")
     extracted = (
-        progress["extracted"] if progress.get("milestone") in ("facts", "references")
-        else ask_claude_json(
+        saved_extraction if isinstance(saved_extraction, dict) else ask_claude_json(
             FACT_EXTRACTION_PROMPT,
             user_prompt,
             max_tokens=3500,
@@ -1253,6 +1260,11 @@ Raaka HTML:
         company_facts = {}
 
     company_facts = normalize_facts(company_facts)
+    primary_offering = None
+    if not isinstance(saved_extraction, dict) or "primary_offering_evidence" in extracted:
+        primary_offering = validate_primary_offering(
+            extracted.get("primary_offering_evidence"), source_inventory["pages"]
+        )
 
     industry = str(
         company_facts.get(
@@ -1413,6 +1425,8 @@ Tärkeää:
         "design brief..."
     )
 
+    if primary_offering:
+        final_prompt += "\nVERIFIED PRIMARY OFFERING:\n" + json.dumps(primary_offering, ensure_ascii=False)
     final_prompt += "\nDETERMINISTIC SOURCE TASK MANIFEST (copy task ids exactly):\n" + json.dumps(
         service_brief({"source_inventory": source_inventory, "company_facts": company_facts}),
         ensure_ascii=False)
@@ -1511,6 +1525,10 @@ Tärkeää:
         "reference_search_query": search_query,
     }
 
+    # Use only evidence checked against the source inventory. Old saved jobs retain their brief.
+    research_data.pop("primary_offering_evidence", None)
+    if primary_offering:
+        research_data["primary_offering_evidence"] = primary_offering
     reset_generated_review_claims(research_data)
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)

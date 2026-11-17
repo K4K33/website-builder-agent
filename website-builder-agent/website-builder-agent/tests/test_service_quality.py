@@ -2,7 +2,7 @@
 import copy
 import unittest
 from utils.service_quality import (audit_service_quality, service_brief, source_tasks,
-                                   validate_service_plan)
+                                   validate_primary_offering, validate_service_plan)
 from utils.global_feedback import record_owner_feedback
 from utils.visual_originality import audit_design_originality
 
@@ -51,6 +51,38 @@ def reviews(research, pages, digest='a'*64):
 
 
 class ServiceQualityTests(unittest.TestCase):
+    def test_primary_offering_requires_exact_customer_facing_source(self):
+        source_url = "https://repair.example/"
+        quote = "We repair brass instruments in our workshop."
+        evidence = {"source_url": source_url, "quote": quote, "label": "repair brass instruments"}
+        self.assertEqual(validate_primary_offering(
+            evidence, [{"url": source_url, "text": quote}]
+        ), evidence)
+        for url, text, claim in (
+            ("https://virre.prh.fi/", quote, evidence | {"source_url": "https://virre.prh.fi/"}),
+            (source_url, "Welcome to Brass Repair.", evidence),
+            (source_url, "Yhtiön toimialana on korjauspalvelut ja kaikki laillinen liiketoiminta.",
+             evidence | {"quote": "Yhtiön toimialana on korjauspalvelut", "label": "korjauspalvelut"}),
+        ):
+            with self.subTest(url=url, text=text):
+                with self.assertRaisesRegex(RuntimeError, "primary offering unverified"):
+                    validate_primary_offering(claim, [{"url": url, "text": text}])
+        with self.assertRaisesRegex(RuntimeError, "primary offering unverified"):
+            validate_primary_offering(None, [])
+
+    def test_generic_actions_repeated_inside_one_page_require_revision(self):
+        research, pages = fixture()
+        link = '<a href="/yhteys/">Lähetä tiedustelu</a>'
+        pages['palvelut/index.html'] = '<main>' + link * 3 + '</main>'
+        result = audit_service_quality(pages, research)
+        self.assertIn({'kind': 'repeated_generic_action', 'route': 'palvelut/index.html',
+                       'label': 'lähetä tiedustelu', 'destination': '/yhteys/', 'count': 3},
+                      result['blocking'])
+        pages['palvelut/index.html'] = '<main><nav>' + link + '</nav>' + link * 2 + '</main>'
+        pages['toinen/index.html'] = '<main>' + link + '</main>'
+        self.assertNotIn('repeated_generic_action',
+                         [x['kind'] for x in audit_service_quality(pages, research)['blocking']])
+
     def test_new_protocol_blocks_unmapped_tasks_before_builder(self):
         r, p = fixture(); r['service_quality_protocol'] = 'v1'
         validate_service_plan(r)

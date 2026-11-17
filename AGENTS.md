@@ -6,6 +6,8 @@ Before designing, building, revising or sharing any Kaurivo customer website or 
 
 - Verify the company, original site, actual business tasks, service information, contact paths, planned site languages, visual identity and available source media. Record the source and any material gaps.
 - Stop at research if the known material cannot support a useful, truthful site. Registry facts and a decorative image are insufficient when users still cannot tell what the company offers or how to reach it. Do not invent specifics or stretch sparse facts into filler pages. Report what must be confirmed before proceeding.
+- Record the main offer in the company's own words with a source URL and exact excerpt. A business classification, legal scope or contact details do not substantiate an offer. Use a current company profile or owner confirmation when the original site has too little information.
+- Give each service page a customer question to answer and enough verified material to answer it. Combine thin pages. During concept comparison, inspect one full service journey as well as the homepage. Verify that service routes use relevant examples and images where available, the contact path is prominent and generic calls to action do not repeat through consecutive sections.
 - Render and compare the three source-grounded concepts required by the master prompt. Record the selection and actual mobile and desktop evidence before building the full site.
 
 ## Before opening access
