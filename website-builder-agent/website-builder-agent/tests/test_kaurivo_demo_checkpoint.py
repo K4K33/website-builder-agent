@@ -165,6 +165,76 @@ class PrivateCheckpointTests(unittest.TestCase):
             self.assertFalse((new / "output" / SLUG / "_concept_previews" /
                               "set-old").exists())
 
+    def test_selected_checkpoint_resumes_completed_routes_after_free_quota(self):
+        # Realistic failure: the first full-site page is valid, while the
+        # second provider request exhausts free credits. A fresh runner
+        # must reuse the first page rather than pay that cost again.
+        from utils.demo_page_drafts import draft_pages
+
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            old, new = Path(a), Path(b)
+            company = fixture(old, "selected")
+            calls = []
+
+            def first_attempt(system, prompt):
+                calls.append(prompt)
+                if len(calls) == 2:
+                    raise RuntimeError("free quota exhausted")
+                return json.dumps({"html":
+                    "<!doctype html><html><body>verified first page</body></html>"})
+
+            options = dict(
+                job_id=JOB, phase="build",
+                routes=["index.html", "palvelut/index.html"],
+                system="same verified design contract",
+                prompt_for=lambda route: route,
+            )
+            with self.assertRaisesRegex(RuntimeError, "free quota exhausted"):
+                draft_pages(root=old / "output" / SLUG,
+                            request=first_attempt, **options)
+            self.assertEqual(len(calls), 2)
+
+            archive = make_archive(old, SLUG, JOB, "selected", company)
+            with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+                self.assertEqual(len([
+                    path for path in bundle.namelist()
+                    if "/_demo_page_drafts/" in path and path.endswith(".json")
+                ]), 1)
+
+            restored = unpack_archive(
+                new, SLUG, JOB, "selected", archive,
+                hashlib.sha256(archive).hexdigest(),
+                expected_name="Test Company",
+                expected_source="https://example.org/",
+            )
+            self.assertEqual(restored["slug"], SLUG)
+            resumed_calls = []
+
+            def next_attempt(system, prompt):
+                resumed_calls.append(prompt)
+                return json.dumps({"html":
+                    "<!doctype html><html><body>verified second page</body></html>"})
+
+            pages = draft_pages(root=new / "output" / SLUG,
+                                request=next_attempt, **options)
+            self.assertEqual(len(resumed_calls), 1)
+            self.assertIn("verified first page", pages["index.html"])
+            self.assertIn("verified second page", pages["palvelut/index.html"])
+            self.assertFalse((new / ".env").exists())
+            self.assertFalse((new / "output" / "other-company").exists())
+
+    def test_finished_build_does_not_store_transient_model_drafts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            company = fixture(project, "built")
+            cache = project / "output" / SLUG / "_demo_page_drafts" / "old.json"
+            cache.parent.mkdir()
+            cache.write_text('{"html":"unneeded after successful build"}')
+            archive = make_archive(project, SLUG, JOB, "built", company)
+            with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+                self.assertFalse(any("_demo_page_drafts" in x
+                                     for x in bundle.namelist()))
+
     def test_partial_concept_failure_retains_model_drafts_for_credit_saving_resume(self):
         with tempfile.TemporaryDirectory() as old:
             project = Path(old)
