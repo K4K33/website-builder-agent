@@ -81,7 +81,10 @@ class ConceptWorkflowTests(unittest.TestCase):
 
         def respond(system, prompt, **kwargs):
             if 'observed_browser_failures' in prompt:
-                packet = json.loads(prompt)
+                # The page drafter wraps the JSON request in an explicit
+                # route-scoping instruction before and after the payload.
+                packet, _ = json.JSONDecoder().raw_decode(
+                    prompt[prompt.index('{"verified_facts"'):])
                 self.assertIn('Fix measurable WCAG AA text/background contrast', prompt)
                 self.assertIn('desktop: measurable WCAG AA text contrast failures',
                               packet['browser_measurements'][0])
