@@ -176,6 +176,15 @@ def make_archive(project: Path, slug: str, job_id: str,
                     if (active_concept_root is None or
                             not path.resolve().is_relative_to(active_concept_root)):
                         continue
+                    # The browser also leaves all four raw viewport captures
+                    # beside the HTML in qa/. Only integrity-hashed _captures/
+                    # files referenced by the active manifest need archiving.
+                    # Preserve every real proof image; omit only duplicated
+                    # inspection scratch, not client media or final QA.
+                    if (path.parent.name == "qa" and path.name in {
+                            "desktop.png", "tablet.png",
+                            "mobile.png", "small_mobile.png"}):
+                        continue
                 if (local_parts and local_parts[0] == "_demo_page_drafts"
                         and not keep_draft_cache):
                     continue
