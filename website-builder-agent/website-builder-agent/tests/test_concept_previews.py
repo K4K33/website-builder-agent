@@ -46,6 +46,22 @@ def selection_report(manifest):
 
 
 class ConceptPreviewTests(unittest.TestCase):
+    def test_ready_concept_from_an_old_contract_is_rebuilt_from_research(self):
+        from utils.kaurivo_checkpoint_stage_recovery import completed_stage_index
+
+        research, authored = fixture()
+        with TemporaryDirectory() as folder:
+            reference = write_concepts(
+                json.dumps(authored), research, output_parent=folder,
+                producer="test", renderer=fake_renderer)
+            company = {"concept_previews": reference, "research": research}
+            self.assertEqual(completed_stage_index("concepts", company, concept_root=folder), 1)
+            company["research"] = {**research, "company_voice_brief": {"tone": "updated"}}
+            self.assertEqual(completed_stage_index("concepts", company, concept_root=folder), 0)
+            company["concept_previews"] = {**reference, "set_sha256": "tampered"}
+            with self.assertRaisesRegex(RuntimeError, "manifest changed"):
+                completed_stage_index("concepts", company, concept_root=folder)
+
     def write(self, folder, research=None, data=None, renderer=fake_renderer):
         r, value = fixture(); r = research or r; value = data or value
         return r, write_concepts(json.dumps(value), r, output_parent=folder,

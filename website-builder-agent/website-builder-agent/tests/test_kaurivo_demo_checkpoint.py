@@ -79,24 +79,6 @@ class PrivateCheckpointTests(unittest.TestCase):
         self.assertEqual(completed_stage_index("selected"), 2)
         self.assertEqual(completed_stage_index("built"), 3)
 
-    def test_ready_concept_from_an_old_contract_is_rebuilt_from_research(self):
-        from tests.test_concept_previews import fake_renderer, fixture
-        from utils.concept_previews import write_concepts
-        from utils.kaurivo_checkpoint_stage_recovery import completed_stage_index
-
-        research, authored = fixture()
-        with tempfile.TemporaryDirectory() as folder:
-            reference = write_concepts(
-                json.dumps(authored), research, output_parent=folder,
-                producer="test", renderer=fake_renderer)
-            company = {"concept_previews": reference, "research": research}
-            self.assertEqual(completed_stage_index("concepts", company, concept_root=folder), 1)
-            company["research"] = {**research, "company_voice_brief": {"tone": "updated"}}
-            self.assertEqual(completed_stage_index("concepts", company, concept_root=folder), 0)
-            company["concept_previews"] = {**reference, "set_sha256": "tampered"}
-            with self.assertRaisesRegex(RuntimeError, "manifest changed"):
-                completed_stage_index("concepts", company, concept_root=folder)
-
     def test_concept_replay_requires_server_issued_marker_and_checkpoint(self):
         directory = (Path(__file__).resolve().parents[1] / "docs" /
                      "kaurivo" / "backend")
