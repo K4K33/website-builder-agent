@@ -142,11 +142,43 @@ def make_archive(project: Path, slug: str, job_id: str,
     _validate_phase(company, slug, phase, project)
     targets: set[Path] = set()
     own = project / "output" / slug
+    # The browser writes a fresh immutable set for every concept revision.
+    # Only the current referenced set belongs in a resumable checkpoint:
+    # archived rejected sets contain stale screenshots and multiply a small
+    # logical job into hundreds of files / tens of MB. Do not delete them
+    # from the workspace; simply exclude unreferenced obsolete sets.
+    previews = company.get("concept_previews") or {}
+    active_concept_root = None
+    manifest_value = previews.get("manifest_path")
+    if isinstance(manifest_value, str) and manifest_value:
+        candidate = Path(manifest_value)
+        candidate = (candidate if candidate.is_absolute() else project / candidate).resolve()
+        if (candidate.name == "manifest.json" and candidate.is_file()
+                and candidate.is_relative_to((own / "_concept_previews").resolve())):
+            active_concept_root = candidate.parent
+    if (STAGES.index(phase) >= STAGES.index("concepts")
+            and previews.get("status") == "ready_for_comparison"
+            and active_concept_root is None):
+        raise CheckpointError("active concept manifest missing")
+    # Draft caches save credits if model generation fails during research or
+    # an incomplete concept round. Once the entire concept is validated,
+    # future stages use immutable rendered assets, not old model drafts.
+    keep_draft_cache = (STAGES.index(phase) < STAGES.index("concepts")
+                        or (phase == "concepts"
+                            and previews.get("status") != "ready_for_comparison"))
     if own.is_dir():
         for path in own.rglob("*"):
             if path.is_symlink():
                 raise CheckpointError("symlink in demo output")
             if path.is_file():
+                local_parts = path.relative_to(own).parts
+                if local_parts and local_parts[0] == "_concept_previews":
+                    if (active_concept_root is None or
+                            not path.resolve().is_relative_to(active_concept_root)):
+                        continue
+                if (local_parts and local_parts[0] == "_demo_page_drafts"
+                        and not keep_draft_cache):
+                    continue
                 relative = PurePosixPath(path.relative_to(project).as_posix())
                 # Scratch logs, dotfiles and generated temp data are never
                 # required build artifacts; skip rather than leaking them or
