@@ -264,8 +264,8 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                             // proves a lower bound for every gradient stop.
                             const provenGradientContrast = (background, fg, required, el) => {
                                 const value = String(background || '').trim();
-                                if (!/^linear-gradient\(/i.test(value) ||
-                                    /color-mix\s*\(|\bin\s+(?:oklab|oklch|lab|lch|hsl|hwb|srgb-linear|xyz)/i.test(value))
+                                if (!/^linear-gradient\\(/i.test(value) ||
+                                    /color-mix\\s*\\(|\\bin\\s+(?:oklab|oklch|lab|lch|hsl|hwb|srgb-linear|xyz)/i.test(value))
                                     return false;
                                 // Inspect only the topmost gradient layer.
                                 // Underlying images and additional gradients are
@@ -275,15 +275,15 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                     if(value[i]==='(') depth++;
                                     else if(value[i]===')' && --depth===0) {end=i;break;}
                                 }
-                                if(end<0 || !/^\s*(?:,|$)/.test(value.slice(end+1)))
+                                if(end<0 || !/^\\s*(?:,|$)/.test(value.slice(end+1)))
                                     return false;
                                 const top=value.slice(0,end+1);
-                                const tokens=top.match(/rgba?\([^)]*\)/gi)||[];
-                                const allTokens=top.match(/(?:rgb|rgba)\s*\(/gi)||[];
+                                const tokens=top.match(/rgba?\\([^)]*\\)/gi)||[];
+                                const allTokens=top.match(/(?:rgb|rgba)\\s*\\(/gi)||[];
                                 if(tokens.length<2 || tokens.length!==allTokens.length)
                                     return false;
                                 const parseStop = color => {
-                                    const m=/^rgba?\(\s*([\d.]+)[, ]+\s*([\d.]+)[, ]+\s*([\d.]+)(?:[, /]+([\d.]+))?\s*\)$/i.exec(color);
+                                    const m=/^rgba?\\(\\s*([\\d.]+)[, ]+\\s*([\\d.]+)[, ]+\\s*([\\d.]+)(?:[, /]+([\\d.]+))?\\s*\\)$/i.exec(color);
                                     if(!m) return null;
                                     const channels=[Number(m[1]),Number(m[2]),Number(m[3])];
                                     const alpha=m[4]===undefined?1:Number(m[4]);
@@ -298,7 +298,7 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                     const s=getComputedStyle(ancestor);
                                     if(s.opacity!=='1' || s.filter!=='none' ||
                                        s.mixBlendMode!=='normal' ||
-                                       !/^normal(?:,\s*normal)*$/.test(s.backgroundBlendMode))
+                                       !/^normal(?:,\\s*normal)*$/.test(s.backgroundBlendMode))
                                         return false;
                                 }
                                 // Every top gradient pixel has alpha >= amin.
