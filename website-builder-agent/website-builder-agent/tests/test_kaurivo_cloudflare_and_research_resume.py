@@ -73,6 +73,88 @@ class CloudflareFreeTests(unittest.TestCase):
                     self.assertEqual(post.call_count,2 if status==200 and
                                      body.get("model")==cf.FREE_MODELS["research"] else 1)
 
+
+    def test_qa_router_404_retries_once_at_documented_same_vision_model_rest_endpoint(self):
+        router = Mock(status_code=404)
+        official = Mock(status_code=200)
+        official.json.return_value = {
+            "success": True,
+            "result": {"model": cf.FREE_MODELS["qa"], "choices": [
+                {"finish_reason": "stop",
+                 "message": {"content": '{"selected_alias":"A"}'}}
+            ]},
+        }
+        with patch.dict(os.environ, CONFIRMED, clear=True), \
+             patch.object(cf, "_ATTEMPTS", 0), \
+             patch("utils.kaurivo_cloud_vision_packet.compact_vision_user_content",
+                   return_value=[
+                       {"type": "text", "text": "source-backed screenshots"},
+                       {"type": "image_url", "image_url": {"url": "data:image/png;base64,AA=="}}
+                   ]), \
+             patch.object(cf.requests, "post",
+                          side_effect=[router, official]) as post:
+            result = cf.chat_cloudflare_free(
+                "independent reviewer", "private image review", stage="qa",
+                max_tokens=1400, image_paths=["private screenshot"], json_mode=True)
+            self.assertEqual(result, '{"selected_alias":"A"}')
+            self.assertEqual(post.call_count, 2)
+            self.assertEqual(cf._ATTEMPTS, 2)
+            second = post.call_args_list[1]
+            self.assertIn(
+                "/ai/run/@cf/qwen/qwen3.8-27b", second.args[0])
+            self.assertNotIn("model", second.kwargs["json"])
+            self.assertEqual(second.kwargs["json"]["messages"][1]["content"][1]["type"],
+                             "image_url")
+            self.assertFalse(second.kwargs["allow_redirects"])
+            self.assertNotIn("gemma", second.args[0])
+
+    def test_cloudflare_qa_404_then_rest_404_stays_blocked_without_other_models(self):
+        with patch.dict(os.environ, CONFIRMED, clear=True), \
+             patch.object(cf, "_ATTEMPTS", 0), \
+             patch.object(cf.requests, "post",
+                          side_effect=[Mock(status_code=404),
+                                       Mock(status_code=404)]) as post:
+            with self.assertRaisesRegex(RuntimeError, "FREE_MODEL_UNAVAILABLE"):
+                cf.chat_cloudflare_free(
+                    "independent", "review", stage="qa", max_tokens=180,
+                    json_mode=True)
+            self.assertEqual(post.call_count, 2)
+            self.assertEqual(cf._ATTEMPTS, 2)
+
+    def test_qa_free_rate_limit_never_triggers_unverified_rest_fallback(self):
+        with patch.dict(os.environ, CONFIRMED, clear=True), \
+             patch.object(cf, "_ATTEMPTS", 0), \
+             patch.object(cf.requests, "post",
+                          return_value=Mock(status_code=429, headers={})) as post:
+            with self.assertRaisesRegex(RuntimeError, "FREE_AI_RATE_LIMIT"):
+                cf.chat_cloudflare_free("sys", "review", stage="qa",
+                                        max_tokens=160, json_mode=True)
+            post.assert_called_once()
+
+    def test_rest_unexpected_model_and_incomplete_result_are_never_approved(self):
+        cases = [
+            {"success": True, "result": {
+                "model": cf.FREE_MODELS["builder"],
+                "choices": [{"finish_reason":"stop",
+                             "message":{"content":'{"selected_alias":"B"}'}}]}},
+            {"success": True, "result": {"model": cf.FREE_MODELS["qa"],
+                                        "choices":[{"finish_reason":"length",
+                                                    "message":{"content":'{"selected_alias":"A"}'}}]}},
+            {"success": True, "result": {"response": '{"selected_alias"'}},
+        ]
+        for result in cases:
+            with self.subTest(case=result), \
+                 patch.dict(os.environ, CONFIRMED, clear=True), \
+                 patch.object(cf, "_ATTEMPTS", 0), \
+                 patch.object(cf.requests, "post",
+                              side_effect=[Mock(status_code=404),
+                                           Mock(status_code=200, json=Mock(
+                                               return_value=result))]) as post:
+                with self.assertRaisesRegex(RuntimeError, "FREE_MODEL_REQUEST_REJECTED"):
+                    cf.chat_cloudflare_free("sys", "review", stage="qa",
+                                            max_tokens=160, json_mode=True)
+                self.assertEqual(post.call_count, 2)
+
     def test_real_openrouter_429_handler_invokes_free_cloud_not_ollama(self):
         from utils.claude_client import _local_free_quota_fallback
         with patch.dict(os.environ,CONFIRMED,clear=True), \
