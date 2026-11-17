@@ -318,6 +318,9 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     # Detailed browser evidence exists only in this process return and is
     # never written to manifest or persisted with the company record.
     private_repair_evidence = {}
+    # Full structured contrast observations are only passed to the private
+    # local CSS fixer. Never persist these, log source text or ship to clients.
+    private_contrast_issues = {}
     manifest = {'protocol': PROTOCOL, 'context_sha256': context_digest(research),
                 'producer': producer, 'status': 'blocked', 'entries': [],
                 'intake_sha256': intake_fingerprint(media_items, intake_root or root),
@@ -371,6 +374,13 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
                 private_repair_evidence.setdefault(identifier, {})[route] = [
                     str(issue).strip()[:450] for issue in failures[:8]
                 ]
+                relevant = [
+                    str(issue)[:12000] for issue in failures
+                    if ('text/background contrast NOT VERIFIABLE' in str(issue)
+                        or 'measurable WCAG AA text contrast failures' in str(issue))
+                ]
+                if relevant:
+                    private_contrast_issues.setdefault(identifier, {})[route] = relevant[:8]
         manifest['entries'].append(entry)
     if all(not e['issues'] and len(e['views']) == 4 for e in manifest['entries']):
         manifest['status'] = 'ready_for_comparison'
@@ -380,7 +390,8 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     return {'manifest_path': str(file), 'set_sha256': manifest['set_sha256'],
             'comparison_path': str(root / 'comparison.html'), 'status': manifest['status'],
             'repair_targets': repair_targets,
-            'private_repair_evidence': private_repair_evidence}
+            'private_repair_evidence': private_repair_evidence,
+            'private_contrast_issues': private_contrast_issues}
 
 
 def load_verified_set(reference, research, *, allowed_root):
