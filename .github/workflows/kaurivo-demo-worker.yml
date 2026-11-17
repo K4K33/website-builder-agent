@@ -55,6 +55,7 @@ on:
 # One inspected verified replay after #222: exact visual QA output structure and bounded evidence repair.
 # Inspected single rerun after #223: separate original screenshots with concrete source comparisons.
 # One inspected verification after #224: independently rejected concepts receive targeted revision and new 12-view QA.
+# Single inspected recovery after #225: strict browser repairs after independent visual revision.
 
 permissions:
   contents: write
