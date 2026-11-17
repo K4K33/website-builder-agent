@@ -84,14 +84,43 @@ class VisualReviewRecoveryTests(unittest.TestCase):
             self.assertNotIn("premium_approval", refreshed)
 
 
-    def test_independent_revision_repairs_real_browser_overflow_before_new_review(self):
+    def test_repairs_new_contrast_after_model_fixes_browser_overflow(self):
+        def renderer(file, **kwargs):
+            from bs4 import BeautifulSoup
+
+            report = fake_renderer(file, **kwargs)
+            html = file.read_text(encoding="utf-8")
+            if "min-width:1200px" in html:
+                report["issues"] = ["mobile: horizontal overflow"]
+            elif 'style="color:#bbb;background-color:#fff"' in html:
+                node = BeautifulSoup(html, "html.parser").find("h1")
+                selector = [node.parent.name + ":nth-of-type(1)", "h1:nth-of-type(1)"]
+                report["issues"] = ["mobile: measurable WCAG AA text contrast failures: "
+                    + json.dumps([{"selector": "body > main:nth-of-type(1) > " + " > ".join(selector),
+                                   "tag": "H1", "text": "Instrument Studio",
+                                   "suggestedTextColor": "#000000"}])]
+            report["pass"] = not report["issues"]
+            return report
+
+        self._assert_new_contrast_repaired(renderer)
+
+    def test_repairs_new_measured_contrast_with_chromium(self):
+        from utils.browser_qa import inspect_site
+
+        self._assert_new_contrast_repaired(inspect_site)
+
+    def _assert_new_contrast_repaired(self, renderer):
         research, original = fixture()
         with TemporaryDirectory() as temp:
             root = Path(temp)
             ref = write_concepts(
                 json.dumps(original), research,
                 output_parent=root / "_concept_previews",
-                producer="external-fixture-builder", renderer=fake_renderer)
+                producer="external-fixture-builder", renderer=renderer)
+            if any("Browser QA unavailable" in item
+                   for by_route in ref["private_repair_evidence"].values()
+                   for failures in by_route.values() for item in failures):
+                self.skipTest("Chromium is not available in this environment.")
             _, manifest = load_verified_set(ref, research, allowed_root=root)
             order = blind_order(manifest)
             entry = order["A"]
@@ -122,24 +151,15 @@ class VisualReviewRecoveryTests(unittest.TestCase):
                 page = packet["current_html"]
                 if "independent-browser" in phase:
                     self.assertIn("horizontal overflow", str(packet["verified_browser_failures"]))
-                    return {target_route: page.replace(
-                        "/* needs-browser-recovery */", "/* fixed-browser-overflow */")}
-                return {target_route: page.replace(
-                    "</style>", "/* needs-browser-recovery */</style>")}
-
-            def measured_browser(file, **kwargs):
-                result = fake_renderer(file, **kwargs)
-                if "needs-browser-recovery" in Path(file).read_text(encoding="utf-8"):
-                    result["issues"] = ["mobile: horizontal overflow"]
-                    result["pass"] = False
-                return result
+                    return {target_route: page.replace("main{min-width:1200px}", "")
+                            .replace("<h1>", '<h1 style="color:#bbb;background-color:#fff">')}
+                return {target_route: page.replace("</style>", "main{min-width:1200px}</style>")}
 
             with patch.dict("os.environ",
                             {"KAURIVO_QUEUED_DEMO_ID": "review-browser-job"}), \
                  patch("utils.demo_page_drafts.draft_pages",
                        side_effect=fake_draft), \
-                 patch("utils.browser_qa.inspect_site",
-                       side_effect=measured_browser), \
+                 patch("utils.browser_qa.inspect_site", side_effect=renderer), \
                  patch("utils.kaurivo_visual_review_recovery.upsert_company") as saved, \
                  patch("utils.kaurivo_visual_review_recovery.config.MEDIA_INTAKE_DIR",
                        root):
@@ -154,7 +174,17 @@ class VisualReviewRecoveryTests(unittest.TestCase):
             self.assertEqual(len(built["entries"]), 3)
             self.assertEqual(sum(len(e["views"]) for e in built["entries"]), 12)
             saved.assert_called_once()
-            self.assertTrue(path.is_file())
+            corrected = next(item for item in built["entries"] if item["id"] == entry["id"])
+            html = (path.parent / corrected["folder"] / target_route).read_text(encoding="utf-8")
+            self.assertIn("color:#000000 !important", html)
+            self.assertIn("Instrument Studio</h1>", html)
+            self.assertNotIn("min-width:1200px", html)
+            self.assertEqual(
+                {item["id"]: item["site_sha256"] for item in manifest["entries"]
+                 if item["id"] != entry["id"]},
+                {item["id"]: item["site_sha256"] for item in built["entries"]
+                 if item["id"] != entry["id"]},
+            )
 
     def test_repair_requires_a_live_private_queue_context(self):
         research, _ = fixture()

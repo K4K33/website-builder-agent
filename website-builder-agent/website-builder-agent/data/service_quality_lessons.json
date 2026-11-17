@@ -139,5 +139,18 @@
     "regression_test": "tests/test_kaurivo_nov13_universal_feedback.py",
     "status": "active_runtime_contract_waiting_live_end_to_end_validation",
     "real_new_company_validation": "pending_unseen_industry_independent_visual_review"
+  },
+  {
+    "id": "recheck-contrast-after-concept-browser-repair",
+    "scope": "service",
+    "origin": "Independent concept repair and browser recovery test",
+    "root_cause": "The last model edit could introduce a new contrast defect after the only deterministic repair had already run.",
+    "implementation": [
+      "utils/kaurivo_visual_review_recovery.py",
+      "scripts/run_kaurivo_demo_queue.py"
+    ],
+    "regression_test": "tests/test_kaurivo_visual_review_recovery.py",
+    "status": "implemented",
+    "real_new_company_validation": "pending"
   }
 ]

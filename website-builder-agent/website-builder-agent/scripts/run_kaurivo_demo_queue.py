@@ -592,13 +592,14 @@ def run_cli(args,log_handle,deadline=None):
             detail=("Riippumaton visuaalinen arvio jäi puutteelliseksi"
                     + (": "+missing if missing else
                        " (todisteellinen tarkistus estää julkaisun)"))
-        if code == "concept_browser_validation_blocked":
+        if code in ("concept_browser_validation_blocked", "visual_qa_revision_blocked"):
             # The worker emits bounded repair hints; never copy raw HTML,
             # private company facts or arbitrary exceptions into job progress.
             log_handle.seek(stage_start)
             browser_tail = log_handle.read()[-6000:]
-            marker = "CONCEPT_BROWSER_VALIDATION_BLOCKED:"
-            browser_hints = browser_tail.rsplit(marker, 1)[-1] if marker in browser_tail else ""
+            marker = code.upper() + ":"
+            browser_hints = (browser_tail.rsplit(marker, 1)[1].partition("\n")[0]
+                             if marker in browser_tail else "")
             safe_hints = (
                 ("horizontal overflow", "mobiilin vaakasuuntainen ylivuoto"),
                 ("touch", "kosketuskohteiden koko"),
@@ -618,9 +619,10 @@ def run_cli(args,log_handle,deadline=None):
             )
             categories = [label for hint, label in safe_hints
                           if hint.casefold() in browser_hints.casefold()]
-            detail = ("Konseptien selaintarkistus estää julkaisun"
-                      + (": " + ", ".join(categories[:4]) if categories else
-                         " (tarkka syy yksityisessä manifestissa)"))
+            if code == "concept_browser_validation_blocked":
+                detail = "Konseptien selaintarkistus estää julkaisun"
+            if categories:
+                detail += ": " + ", ".join(categories[:4])
         if code == "concept_page_needs_repair":
             log_handle.seek(stage_start)
             last_error = log_handle.read()[-3000:]
