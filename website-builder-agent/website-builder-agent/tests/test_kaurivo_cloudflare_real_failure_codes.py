@@ -11,7 +11,8 @@ from unittest.mock import Mock, patch
 
 from utils import cloudflare_free_ai as cf
 from utils.claude_client import ask_claude
-from scripts.run_kaurivo_demo_queue import classify_stage_failure
+from scripts.run_kaurivo_demo_queue import (classify_stage_failure,
+    free_provider_rejection_diagnostic)
 
 VALID={
     "FREE_ONLY":"1",
@@ -102,6 +103,43 @@ class CloudflareFailureCodes(unittest.TestCase):
             with self.subTest(code=code):
                 handle=io.StringIO("RuntimeError: "+code+": safe generic reason.\n")
                 self.assertEqual(classify_stage_failure(handle,"researching"),expected)
+
+
+    def test_private_admin_can_diagnose_only_allowlisted_free_cloud_qa_rejection(self):
+        cases = [
+            (400, "image", "kuvamateriaalin muoto tai määrä"),
+            (400, "context", "syötteen pituus"),
+            (400, "output_budget", "vastauksen tokenraja"),
+            (413, "other", "muu API-pyyntömuoto"),
+        ]
+        for status, kind, expected in cases:
+            with self.subTest(status=status, kind=kind):
+                private = ("\nPRIVATE CLIENT CONTENT: do-not-leak.example\n"
+                           + "RuntimeError: FREE_MODEL_REQUEST_REJECTED: "
+                           + f"Cloudflare HTTP {status} ({kind}).\n")
+                diagnostic = free_provider_rejection_diagnostic(io.StringIO(private))
+                self.assertIn(f"Cloudflare HTTP {status}", diagnostic)
+                self.assertIn(expected, diagnostic)
+                self.assertNotIn("do-not-leak", diagnostic)
+                self.assertNotIn("PRIVATE CLIENT", diagnostic)
+
+    def test_unknown_provider_details_never_leave_private_stage_log(self):
+        cases = [
+            "RuntimeError: FREE_MODEL_REQUEST_REJECTED: Cloudflare HTTP 444 (secret).",
+            "RuntimeError: FREE_MODEL_REQUEST_REJECTED: Cloudflare HTTP 400 (API_KEY).",
+            "RuntimeError: FREE_MODEL_REQUEST_REJECTED: unsafe hidden data.",
+        ]
+        for raw in cases:
+            diagnostic = free_provider_rejection_diagnostic(
+                io.StringIO("CLIENT: sensitive!\n" + raw))
+            self.assertEqual(
+                diagnostic, "Maksuton kuvallinen arviointi: palvelupyyntö hylätty")
+            self.assertNotIn("sensitive", diagnostic)
+        direct = free_provider_rejection_diagnostic(io.StringIO(
+            "RuntimeError: FREE_MODEL_REQUEST_REJECTED: "
+            "Cloudflare direct REST HTTP 422 (raw-internal-error)."))
+        self.assertEqual(direct,
+                         "Maksuton kuvallinen arviointi: Cloudflare REST HTTP 422")
 
     def test_real_openrouter_429_switches_remaining_stages_to_free_cloud(self):
         openrouter_429=Mock(status_code=429,headers={})
