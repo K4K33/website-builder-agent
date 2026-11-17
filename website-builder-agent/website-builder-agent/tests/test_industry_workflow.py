@@ -315,5 +315,40 @@ class IndustryWorkflowTests(unittest.TestCase):
         self.assertEqual(result["footer_assets"][0]["href"], "https://example.org/")
         self.assertIn("unverified", result["footer_assets"][0]["role"])
 
+class QueuedSectionPlanRecoveryTests(unittest.TestCase):
+    def test_repairs_invalid_section_details_without_changing_verified_ids_or_facts(self):
+        from unittest.mock import Mock, patch
+        from agents.builder import _recover_queued_section_plan
+
+        research = {
+            "company_facts": {"name": "Workshop"},
+            "design_recommendations": {
+                "visual_concept": "Show the verified material choices in a calm composition",
+                "typography_scale": "Readable type with a clear heading hierarchy",
+                "spacing_and_layout": "Use full-width sections with measured spacing",
+                "mobile_plan": "Show the main tasks in one column on mobile",
+                "section_plan": [{"id": "intro", "purpose": "x", "layout": "x",
+                                  "fact_fields": ["name"]}],
+            },
+            "design_decisions": [{"section_id": "work"}],
+        }
+        reply = {"section_plan": [
+            {"id": "intro", "purpose": "Identify the original workshop",
+             "layout": "Place source photography after the heading", "fact_fields": ["invented"]},
+            {"id": "work", "purpose": "Show visitors verified services",
+             "layout": "Stack service details in a single column on mobile"},
+        ]}
+        request = Mock(return_value=reply)
+        with patch.dict("os.environ", {"KAURIVO_QUEUED_DEMO_ID": "private-job"}):
+            revised = _recover_queued_section_plan(research, request)
+            self.assertIs(_recover_queued_section_plan(revised, request), revised)
+            request.assert_called_once()
+            self.assertEqual(revised["company_facts"], research["company_facts"])
+            self.assertEqual(revised["design_recommendations"]["section_plan"][0]["fact_fields"], ["name"])
+            reply["section_plan"][1]["id"] = "invented"
+            with self.assertRaisesRegex(RuntimeError, "preserve the section identifiers"):
+                _recover_queued_section_plan(research, request)
+
+
 if __name__ == "__main__":
     unittest.main()
