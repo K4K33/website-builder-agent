@@ -317,6 +317,23 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                     return false;
                                 return Math.min(ratio(fg,low),ratio(fg,high))>=required+0.03;
                             };
+                            // Stable DOM location for private, targeted contrast
+                            // recovery. Avoid IDs/classes authored by the model
+                            // and never use raw browser suggestions as selectors.
+                            const elementPath = el => {
+                                const parts=[];
+                                for(let node=el;node && node.nodeType===1;node=node.parentElement) {
+                                    if(node===document.body) {parts.unshift('body');break;}
+                                    const parent=node.parentElement;
+                                    if(!parent) return '';
+                                    const same=[...parent.children].filter(e=>e.tagName===node.tagName);
+                                    const nth=same.indexOf(node)+1;
+                                    if(nth<=0) return '';
+                                    parts.unshift(node.tagName.toLowerCase()+':nth-of-type('+nth+')');
+                                    if(parts.length>16) return '';
+                                }
+                                return parts[0]==='body'?parts.join(' > '):'';
+                            };
                             const visible = e => !!e.getClientRects().length
                                 && getComputedStyle(e).visibility !== 'hidden';
                             let checked=0, skipped=0, poor=[], ambiguous=[], tinyText=[];
@@ -366,6 +383,7 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                     skipped++;
                                     if(complexLayer && ambiguous.length<12)
                                         ambiguous.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
+                                            selector:elementPath(el),
                                             reason:'image/gradient/translucent layer; requires visual proof'});
                                     continue;
                                 }
@@ -381,6 +399,7 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                     const black=ratio([0,0,0],bg);
                                     const white=ratio([255,255,255],bg);
                                     poor.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
+                                               selector:elementPath(el),
                                                ratio:Math.round(value*100)/100, required,
                                                observedBackground:'rgb('+bg.join(',')+')',
                                                suggestedTextColor:black>=white?'#000000':'#ffffff'});
