@@ -143,13 +143,11 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
             content_validator=validate_content,
         )
 
-    new_set = render_current_concepts()
-    if new_set["status"] != "ready_for_comparison":
-        # Independent reviewer repairs are not automatically browser-safe.
-        # Apply the same source-preserving, measured CSS contrast recovery
-        # as the initial builder: never erase text or bypass browser QA.
+    def repair_measured_contrast(result):
+        if result["status"] == "ready_for_comparison":
+            return result
         changed = False
-        remaining = (new_set.get("private_contrast_issues") or {}).get(candidate_id, {})
+        remaining = (result.get("private_contrast_issues") or {}).get(candidate_id, {})
         for route, measured in remaining.items():
             if route not in reject or route not in source_pages:
                 continue
@@ -158,8 +156,9 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
             if corrected_css != prior:
                 source_pages[route] = prepare_page(route, corrected_css)
                 changed = True
-        if changed:
-            new_set = render_current_concepts()
+        return render_current_concepts() if changed else result
+
+    new_set = repair_measured_contrast(render_current_concepts())
     if new_set["status"] != "ready_for_comparison":
         # One bounded second chance for ACTUAL failing browser elements only.
         # The independent QA never approves these pages itself; every route
@@ -205,10 +204,17 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
                 prepare_page=prepare_page,
             )
             source_pages.update(corrected_pages)
-            new_set = render_current_concepts()
+            # The second author edit can introduce a new contrast regression.
+            # Use fresh measurements against this exact revision, then render
+            # all three concepts again before the independent reviewer sees it.
+            new_set = repair_measured_contrast(render_current_concepts())
     if new_set["status"] != "ready_for_comparison":
-        raise RuntimeError(
-            "VISUAL_QA_REVISION_BLOCKED: reviewed page still fails live browser checks")
+        hints = sorted({
+            hint for pages in new_set.get("repair_targets", {}).values()
+            for problems in pages.values() for hint in problems
+        })
+        # The hints are fixed strings from browser_issue_repair_hints.
+        raise RuntimeError("VISUAL_QA_REVISION_BLOCKED: " + "; ".join(hints[:8]))
     verified_ref = {key: value for key, value in new_set.items()
                     if key in ("manifest_path", "set_sha256",
                                "comparison_path", "status")}
