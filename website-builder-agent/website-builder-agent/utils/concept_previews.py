@@ -292,7 +292,7 @@ def browser_issue_repair_hints(issues):
         ("excessive page height", "Make the content scannable without excessive page height."),
         ("disclosure", "Make menus and disclosure controls accessible or use ordinary safe links."),
         ("JavaScript error", "Remove script-dependent controls and runtime errors."),
-        ("browser", "Ensure all page resources, layout and screenshot capture work offline."),
+        ("Browser QA unavailable or failed", "Ensure the real Chromium browser starts and screenshots can be captured offline."),
         ("missing actual", "Ensure the page renders stable screenshots on desktop and mobile."),
         ("screenshot is not", "Ensure valid rendered screenshots are captured."),
         ("visual interaction", "Fix interaction behavior and honor reduced-motion settings."),

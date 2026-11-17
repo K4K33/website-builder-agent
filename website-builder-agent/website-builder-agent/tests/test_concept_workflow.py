@@ -125,6 +125,20 @@ class ConceptWorkflowTests(unittest.TestCase):
             self.assertNotIn('private_repair_evidence', saved_payload)
 
 
+    def test_generic_browser_failure_is_not_falsely_called_offline_outage(self):
+        from utils.concept_previews import browser_issue_repair_hints
+        result = browser_issue_repair_hints([
+            "index.html: browser checks did not pass",
+            "desktop: measurable WCAG AA text contrast failures",
+        ])
+        self.assertTrue(any("WCAG AA" in hint for hint in result))
+        self.assertFalse(any("Chromium browser starts" in hint for hint in result))
+        real_failure = browser_issue_repair_hints([
+            "Browser QA unavailable or failed: Chromium launch failure"
+        ])
+        self.assertTrue(any("Chromium browser starts" in hint
+                            for hint in real_failure))
+
     def test_browser_diagnostic_is_bounded_and_never_approved_by_itself(self):
         from utils.concept_previews import write_concepts
         research, data = fixture()
