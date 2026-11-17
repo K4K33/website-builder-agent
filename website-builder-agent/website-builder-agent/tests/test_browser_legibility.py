@@ -61,10 +61,10 @@ class ReadabilityBrowserTests(unittest.TestCase):
             self.assertTrue(any("NOT VERIFIABLE" in issue
                                 for issue in result["issues"]),result["issues"])
 
-    def test_weak_top_layer_over_other_gradient_remains_unverified(self):
+    def test_weak_overlay_over_bright_gradient_remains_unverified(self):
         html=doc('.premium-hero{background-image:'
                  'linear-gradient(rgba(8,24,32,.12),rgba(36,58,68,.12)),'
-                 'linear-gradient(#091720,#182b39);padding:60px}',
+                 'linear-gradient(#eeeeee,#ffffff);padding:60px}',
                  '<section class="premium-hero">'
                  '<p style="color:#fff">Layered brand hero</p></section>')
         with TemporaryDirectory() as tmp:
