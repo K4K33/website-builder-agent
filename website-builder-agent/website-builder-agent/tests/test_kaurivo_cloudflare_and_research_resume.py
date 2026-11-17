@@ -41,7 +41,7 @@ class CloudflareFreeTests(unittest.TestCase):
 
     def test_one_allowlisted_request_with_separate_visual_qa(self):
         self.assertNotEqual(cf.FREE_MODELS["builder"],cf.FREE_MODELS["qa"])
-        self.assertEqual(cf.FREE_MODELS["qa"],"@cf/qwen/qwen3.8-27b")
+        self.assertEqual(cf.FREE_MODELS["qa"],"@cf/mistralai/mistral-small-3.1-24b-instruct")
         resp=Mock(status_code=200)
         resp.json.return_value={"model":cf.FREE_MODELS["research"],
           "choices":[{"finish_reason":"stop","message":{"content":"Verified facts"}}]}
@@ -54,6 +54,25 @@ class CloudflareFreeTests(unittest.TestCase):
             self.assertFalse(post.call_args.kwargs["allow_redirects"])
             self.assertEqual(post.call_args.kwargs["json"]["model"],cf.FREE_MODELS["research"])
             self.assertIn("/"+ACCOUNT+"/ai/v1/chat/completions",post.call_args.args[0])
+
+
+    def test_independent_qa_uses_only_documented_free_model_with_exact_allowlist(self):
+        expected = "@cf/mistralai/mistral-small-3.1-24b-instruct"
+        reply = Mock(status_code=200)
+        reply.json.return_value = {
+            "model": expected, "choices": [{
+                "finish_reason": "stop",
+                "message": {"content": '{"source_reference_reviewed":true}'}
+            }]}
+        with patch.dict(os.environ, CONFIRMED, clear=True), \
+             patch.object(cf, "_ATTEMPTS", 0), \
+             patch.object(cf.requests, "post", return_value=reply) as post:
+            result = cf.chat_cloudflare_free(
+                "Independently compare source designs", "verified assets",
+                stage="qa", max_tokens=500, json_mode=True)
+            self.assertIn("source_reference_reviewed", result)
+            self.assertEqual(post.call_args.kwargs["json"]["model"], expected)
+            self.assertEqual(post.call_count, 1)
 
     def test_no_paid_model_or_incomplete_content_accepted(self):
         for status,body in [(429,{}),(403,{}),(200,{"model":"@cf/moonshotai/kimi-k2.7-code",
