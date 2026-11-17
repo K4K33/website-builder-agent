@@ -4,6 +4,79 @@ import json
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from utils.browser_motion_proof import audit_declared_interactions
+from utils.rendered_contrast_proof import rendered_background_contrast
+
+
+def _prove_complex_text_background(page, candidate):
+    """Certify a static visible text element from actual Chromium background pixels.
+
+    Hiding only the glyph paint (not the element, its CSS background or its
+    layout) allows a screenshot of all pixels directly beneath its text box.
+    A changing animation, video, unsupported text paint, or any failed capture
+    remains unverified. Always restore the original author CSS before QA shots.
+    """
+    selector = '[data-kaurivo-contrast-id="' + str(candidate.get("sampleId", "")) + '"]'
+    element = page.locator(selector)
+    if element.count() != 1:
+        return None
+    old = element.evaluate("""el => {
+        const style = getComputedStyle(el);
+        if (style.visibility !== 'visible' ||
+            style.display === 'none' ||
+            style.webkitTextFillColor !== style.color ||
+            style.backgroundClip === 'text' ||
+            style.webkitBackgroundClip === 'text') return null;
+        const rect = el.getBoundingClientRect();
+        for (let parent=el;parent;parent=parent.parentElement) {
+            const style=getComputedStyle(parent);
+            // Unsupported color-space interpolation can vary by rendering
+            // environment. A single screenshot is not proof across clients.
+            if (/\\bin\\s+(?:oklab|oklch|lab|lch|hsl|hwb|srgb-linear|xyz)/i
+                    .test(style.backgroundImage)) return null;
+            if (parent.getAnimations().some(a => a.playState === 'running')) return null;
+            // A video elsewhere on the page is irrelevant: only moving
+            // media overlapping these actual text pixels is unsafe.
+            for (const media of parent.querySelectorAll('video,canvas')) {
+                const other=media.getBoundingClientRect();
+                if (other.width>0 && other.height>0 &&
+                    other.left<rect.right && other.right>rect.left &&
+                    other.top<rect.bottom && other.bottom>rect.top)
+                    return null;
+            }
+        }
+        if (rect.width < 2 || rect.height < 2 ||
+            rect.width * rect.height > 2500000) return null;
+        return {
+            color: el.style.getPropertyValue('color'),
+            colorPriority: el.style.getPropertyPriority('color'),
+            shadow: el.style.getPropertyValue('text-shadow'),
+            shadowPriority: el.style.getPropertyPriority('text-shadow')
+        };
+    }""")
+    if old is None:
+        return None
+    try:
+        element.evaluate("""el => {
+            el.style.setProperty('color','transparent','important');
+            el.style.setProperty('text-shadow','none','important');
+        }""")
+        # The element screenshot scrolls its own complete rectangle into view.
+        # No network is allowed in the browser context; screenshots never
+        # escape this private QA process.
+        png = element.screenshot(timeout=5000, animations="disabled")
+        return rendered_background_contrast(
+            png, candidate.get("foreground"), candidate.get("required"))
+    except Exception:
+        return None
+    finally:
+        element.evaluate("""(el, old) => {
+            for (const [property, value, priority] of [
+                ['color',old.color,old.colorPriority],
+                ['text-shadow',old.shadow,old.shadowPriority]]) {
+                if (value) el.style.setProperty(property,value,priority);
+                else el.style.removeProperty(property);
+            }
+        }""", old)
 
 
 def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_file_root=None):
@@ -364,9 +437,13 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                 }
                                 if (uncertain) {
                                     skipped++;
-                                    if(complexLayer && ambiguous.length<12)
+                                    if(complexLayer && ambiguous.length<12) {
+                                        const sampleId=ambiguous.length;
+                                        el.setAttribute('data-kaurivo-contrast-id',String(sampleId));
                                         ambiguous.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
-                                            reason:'image/gradient/translucent layer; requires visual proof'});
+                                            reason:'image/gradient/translucent layer; requires visual proof',
+                                            sampleId, foreground, required});
+                                    }
                                     continue;
                                 }
                                 if (!bg) bg=[255,255,255];
@@ -403,10 +480,29 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                         # Do not quietly count it as a pass; demand an actual
                         # screenshot check or make the text panel solid.
                         if color_review["ambiguous"]:
-                            issues.append(f"{name}: text/background contrast NOT VERIFIABLE; "
-                                          "use a legible opaque text panel or independently "
-                                          "review the real rendered image: "
-                                          + json.dumps(color_review["ambiguous"], ensure_ascii=False))
+                            pending = []
+                            for candidate in color_review["ambiguous"]:
+                                proof = _prove_complex_text_background(page, candidate)
+                                if proof is None:
+                                    pending.append({
+                                        "tag": candidate["tag"],
+                                        "text": candidate["text"],
+                                        "reason": candidate["reason"],
+                                        "viewport": name,
+                                        "required": candidate["required"],
+                                    })
+                            # No approximate color guessing or approval based
+                            # on a few sampled pixels: each proven element used
+                            # every pixel in a real Chromium screenshot.
+                            if pending:
+                                issues.append(f"{name}: text/background contrast NOT VERIFIABLE; "
+                                              "use a legible opaque text panel or independently "
+                                              "review the real rendered image: "
+                                              + json.dumps(pending, ensure_ascii=False))
+                            page.evaluate("""() => document.querySelectorAll(
+                                '[data-kaurivo-contrast-id]').forEach(el =>
+                                    el.removeAttribute('data-kaurivo-contrast-id'))""")
+                            page.evaluate("window.scrollTo(0, 0)")
                         if color_review["scrollBlocked"]:
                             issues.append(f"{name}: native vertical scrolling blocked")
                         for key, message in (("overflow", "horizontal overflow"),
