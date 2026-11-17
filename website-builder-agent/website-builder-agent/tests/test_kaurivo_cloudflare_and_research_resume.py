@@ -263,5 +263,12 @@ class PartialResearchTests(unittest.TestCase):
         self.assertIn('milestone="facts"',SOURCE)
         self.assertIn('milestone="references"',SOURCE)
 
+    def test_browser_failure_progress_does_not_leak_raw_browser_text(self):
+        # A bounded diagnostic must not copy private HTML or URLs to job progress.
+        self.assertIn('safe_hints = (', RUNNER)
+        self.assertIn('browser_tail.rsplit(marker, 1)', RUNNER)
+        self.assertIn('categories[:4]', RUNNER)
+        self.assertNotIn('detail = browser_hints', RUNNER)
+
 if __name__=="__main__":
     unittest.main()
