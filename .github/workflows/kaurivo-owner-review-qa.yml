@@ -1,0 +1,29 @@
+name: Kaurivo three owner-review staging safety
+on:
+  push:
+    paths:
+      - "website-builder-agent/website-builder-agent/scripts/install_unapproved_owner_review_batch.py"
+      - "website-builder-agent/website-builder-agent/tests/test_owner_review_batch.py"
+      - "website-builder-agent/website-builder-agent/data/manual_owner_reviews/20261117_three_local_concepts.tar.xz.b64"
+      - ".github/workflows/static.yml"
+      - ".github/workflows/kaurivo-owner-review-qa.yml"
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/scripts/install_unapproved_owner_review_batch.py"
+      - "website-builder-agent/website-builder-agent/tests/test_owner_review_batch.py"
+      - "website-builder-agent/website-builder-agent/data/manual_owner_reviews/20261117_three_local_concepts.tar.xz.b64"
+      - ".github/workflows/static.yml"
+      - ".github/workflows/kaurivo-owner-review-qa.yml"
+jobs:
+  review-only:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate 3 complete reviewed drafts and malicious/incomplete archive guards
+        run: python -m unittest discover -s tests -p 'test_owner_review_batch.py' -v
