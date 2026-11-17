@@ -83,6 +83,79 @@ class VisualReviewRecoveryTests(unittest.TestCase):
             self.assertNotIn("selection_sha256", refreshed)
             self.assertNotIn("premium_approval", refreshed)
 
+
+    def test_independent_revision_repairs_real_browser_overflow_before_new_review(self):
+        research, original = fixture()
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            ref = write_concepts(
+                json.dumps(original), research,
+                output_parent=root / "_concept_previews",
+                producer="external-fixture-builder", renderer=fake_renderer)
+            _, manifest = load_verified_set(ref, research, allowed_root=root)
+            order = blind_order(manifest)
+            entry = order["A"]
+            target_route = entry["views"][0]["route"]
+            assessments = {}
+            for alias, value in order.items():
+                for idx, view in enumerate(value["views"]):
+                    assessments[view["id"]] = {
+                        "verdict": "needs_revision" if alias != "A" or idx == 0 else "pass",
+                        "brand_evidence": "Actual company logo and colors preserved.",
+                        "composition_evidence": "One mobile layout remains visually inconsistent.",
+                        "media_evidence": "Original company photography remains unchanged.",
+                    }
+            critique = VisualReviewRevisionRequired(
+                {alias: {"passing_views": 3 if alias == "A" else 1,
+                         "critical_issues": [],
+                         "source_comparison": "The original desktop and mobile "
+                             "show the recognizable official brand header and "
+                             "photography; these remain in the concept."}
+                 for alias in order}, assessments)
+            phases = []
+
+            def fake_draft(**kwargs):
+                phase = kwargs["phase"]
+                phases.append(phase)
+                self.assertEqual(kwargs["routes"], [target_route])
+                packet = json.loads(kwargs["prompt_for"](target_route))
+                page = packet["current_html"]
+                if "independent-browser" in phase:
+                    self.assertIn("horizontal overflow", str(packet["verified_browser_failures"]))
+                    return {target_route: page.replace(
+                        "/* needs-browser-recovery */", "/* fixed-browser-overflow */")}
+                return {target_route: page.replace(
+                    "</style>", "/* needs-browser-recovery */</style>")}
+
+            def measured_browser(file, **kwargs):
+                result = fake_renderer(file, **kwargs)
+                if "needs-browser-recovery" in Path(file).read_text(encoding="utf-8"):
+                    result["issues"] = ["mobile: horizontal overflow"]
+                    result["pass"] = False
+                return result
+
+            with patch.dict("os.environ",
+                            {"KAURIVO_QUEUED_DEMO_ID": "review-browser-job"}), \
+                 patch("utils.demo_page_drafts.draft_pages",
+                       side_effect=fake_draft), \
+                 patch("utils.browser_qa.inspect_site",
+                       side_effect=measured_browser), \
+                 patch("utils.kaurivo_visual_review_recovery.upsert_company") as saved, \
+                 patch("utils.kaurivo_visual_review_recovery.config.MEDIA_INTAKE_DIR",
+                       root):
+                refreshed, path, built = revise_one_rejected_direction(
+                    slug="studio", company={"media_intake": None},
+                    reference=ref, research=research, manifest=manifest,
+                    order=order, critique=critique, root=root)
+            self.assertEqual(refreshed["status"], "ready_for_comparison")
+            self.assertEqual(len(phases), 2)
+            self.assertIn("independent-visual", phases[0])
+            self.assertIn("independent-browser", phases[1])
+            self.assertEqual(len(built["entries"]), 3)
+            self.assertEqual(sum(len(e["views"]) for e in built["entries"]), 12)
+            saved.assert_called_once()
+            self.assertTrue(path.is_file())
+
     def test_repair_requires_a_live_private_queue_context(self):
         research, _ = fixture()
         with patch.dict("os.environ", {"KAURIVO_QUEUED_DEMO_ID": ""}):
