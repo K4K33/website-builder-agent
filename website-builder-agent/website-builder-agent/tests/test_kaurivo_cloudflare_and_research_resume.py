@@ -138,6 +138,43 @@ class CloudflareFreeTests(unittest.TestCase):
                 "system","source",stage="research",max_tokens=4000,image_paths=None,json_mode=True)
 
 
+    def test_two_transient_free_transport_failures_retry_primary_within_bounded_cap(self):
+        from utils.claude_client import ask_claude
+        response = Mock(status_code=200)
+        response.json.return_value = {
+            "choices": [{"message": {"content": "verified"}, "finish_reason": "stop"}],
+            "model": "google/gemma-4-26b-a4b-it:free",
+        }
+        with patch.dict(os.environ, {**CONFIRMED, "AI_BACKEND": "openrouter",
+                     "RESEARCH_MODEL": "google/gemma-4-26b-a4b-it:free"}, clear=True), \
+             patch("utils.claude_client._get_headers", return_value={}), \
+             patch("utils.claude_client.resource_manager.reserve", return_value=True), \
+             patch("utils.claude_client.requests.post",
+                   side_effect=[requests.ReadTimeout(), response]) as primary, \
+             patch("utils.cloudflare_free_ai.chat_cloudflare_free",
+                   side_effect=RuntimeError("NETWORK_UNAVAILABLE: backup transport")) as alternate, \
+             patch("utils.claude_client.time.sleep") as pause:
+            self.assertEqual(ask_claude("system", "source", stage="research",
+                                        json_mode=True, max_retries=2), "verified")
+            self.assertEqual(primary.call_count, 2)
+            alternate.assert_called_once()
+            self.assertEqual(pause.call_count, 1)
+
+    def test_nontransport_cloudflare_rejection_never_retries_free_provider(self):
+        from utils.claude_client import ask_claude
+        with patch.dict(os.environ, {**CONFIRMED, "AI_BACKEND": "openrouter",
+                     "RESEARCH_MODEL": "google/gemma-4-26b-a4b-it:free"}, clear=True), \
+             patch("utils.claude_client._get_headers", return_value={}), \
+             patch("utils.claude_client.resource_manager.reserve", return_value=True), \
+             patch("utils.claude_client.requests.post",
+                   side_effect=requests.ReadTimeout()) as primary, \
+             patch("utils.cloudflare_free_ai.chat_cloudflare_free",
+                   side_effect=RuntimeError("FREE_AI_RATE_LIMIT: reached")):
+            with self.assertRaisesRegex(RuntimeError, "FREE_AI_RATE_LIMIT"):
+                ask_claude("system", "source", stage="research", max_retries=3)
+            primary.assert_called_once()
+
+
 class PartialResearchTests(unittest.TestCase):
     def test_private_partial_archive_cannot_count_as_researched(self):
         self.assertEqual(STAGES[0],"research_partial")

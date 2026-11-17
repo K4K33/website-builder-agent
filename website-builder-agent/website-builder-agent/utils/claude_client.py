@@ -521,9 +521,28 @@ def ask_claude(
             if config.free_only():
                 from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
                 if enabled():
-                    return chat_cloudflare_free(
-                        system, user_prompt, stage=stage, max_tokens=max_tokens,
-                        image_paths=image_paths, json_mode=json_mode)
+                    try:
+                        return chat_cloudflare_free(
+                            system, user_prompt, stage=stage, max_tokens=max_tokens,
+                            image_paths=image_paths, json_mode=json_mode)
+                    except RuntimeError as alternate_error:
+                        # A transient transport failure at BOTH free providers
+                        # must not turn the first request into a terminal HOLD.
+                        # Retry the primary once within the existing bounded
+                        # request count. Never retry a verified free quota,
+                        # access, model, or safety rejection.
+                        if "NETWORK_UNAVAILABLE" not in str(alternate_error):
+                            raise
+                        if attempt == max_retries:
+                            raise RuntimeError(
+                                "NETWORK_UNAVAILABLE: both verified free cloud "
+                                "transports unavailable."
+                            ) from alternate_error
+                        print("  [Kaurivo] Both free cloud transports unavailable; "
+                              "bounded primary retry before deferring private job.")
+                        time.sleep(min(3, max(1, float(
+                            getattr(config, "REQUEST_DELAY", 2)))))
+                        continue
                 if attempt == max_retries:
                     raise RuntimeError(
                         "NETWORK_UNAVAILABLE: OpenRouter request transport failed."
