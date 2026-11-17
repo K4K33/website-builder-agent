@@ -81,7 +81,11 @@ class ConceptWorkflowTests(unittest.TestCase):
 
         def respond(system, prompt, **kwargs):
             if 'observed_browser_failures' in prompt:
+                packet = json.loads(prompt)
                 self.assertIn('Fix measurable WCAG AA text/background contrast', prompt)
+                self.assertIn('desktop: measurable WCAG AA text contrast failures',
+                              packet['browser_measurements'][0])
+                self.assertIn('needs-browser-revision', packet['previous_html'])
                 calls.append('revision')
                 return {'html': pages[0]}
             index = len(calls)
@@ -103,7 +107,7 @@ class ConceptWorkflowTests(unittest.TestCase):
              patch.dict('os.environ', {'KAURIVO_QUEUED_DEMO_ID': 'browser-job'}), \
              patch('utils.concept_workflow.get_company',
                    return_value=('studio', company)), \
-             patch('utils.concept_workflow.upsert_company'), \
+             patch('utils.concept_workflow.upsert_company') as saved, \
              patch('utils.concept_workflow.config.OUTPUT_DIR', folder), \
              patch('utils.concept_workflow.config.model_for_stage',
                    return_value='fixture-model'), \
@@ -113,6 +117,36 @@ class ConceptWorkflowTests(unittest.TestCase):
             self.assertEqual(result['status'], 'ready_for_comparison')
             self.assertEqual(calls, ['initial'] * 6 + ['revision'])
             self.assertFalse(result['repair_targets'])
+            self.assertNotIn('private_repair_evidence', result)
+            saved_payload = saved.call_args.args[1]['concept_previews']
+            self.assertNotIn('private_repair_evidence', saved_payload)
+
+
+    def test_browser_diagnostic_is_bounded_and_never_approved_by_itself(self):
+        from utils.concept_previews import write_concepts
+        research, data = fixture()
+        raw = json.dumps(data)
+        def noisy_browser(file, **kwargs):
+            report = fake_renderer(file, **kwargs)
+            report['pass'] = False
+            report['issues'] = ['mobile: measurable WCAG AA text contrast failures: ' +
+                                ('technical-context-' * 150)]
+            return report
+        with TemporaryDirectory() as folder:
+            result = write_concepts(
+                raw, research, output_parent=folder,
+                producer='test-renderer', renderer=noisy_browser)
+            self.assertEqual(result['status'], 'blocked')
+            for routes in result['private_repair_evidence'].values():
+                for measurements in routes.values():
+                    self.assertTrue(measurements)
+                    self.assertLessEqual(max(map(len, measurements)), 450)
+            # Raw browser measurements must never enter the published
+            # integrity manifest or be interpreted as a QA pass.
+            path = Path(result['manifest_path'])
+            manifest = json.loads(path.read_text(encoding='utf-8'))
+            self.assertNotIn('private_repair_evidence', manifest)
+            self.assertEqual(manifest['status'], 'blocked')
 
     def test_unrepaired_browser_issue_cannot_be_marked_ready(self):
         research, data = fixture()
