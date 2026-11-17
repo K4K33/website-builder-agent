@@ -36,6 +36,10 @@ def _normalize_verified_variant(report, ids, has_source):
         return None, "critical_issues"
     if has_source and normalized.get("source_reference_reviewed") is not True:
         return None, "original_source_review"
+    if has_source:
+        source_proof = normalized.get("source_comparison")
+        if not isinstance(source_proof, str) or len(source_proof.strip()) < 65:
+            return None, "source_comparison"
     for assessment in assessments.values():
         if not isinstance(assessment, dict) or assessment.get("verdict") not in (
                 "pass", "needs_revision"):
@@ -54,6 +58,9 @@ def staged_concept_review(*, research, order, views, sources, ask, root):
         raise RuntimeError("VISUAL_QA_INCOMPLETE: required real concept/source view count")
     if research.get("research_mode") != "verified_no_website" and len(sources) != 2:
         raise RuntimeError("VISUAL_QA_INCOMPLETE: original-site screenshot evidence missing")
+    if sources and [source.get("viewport") for source in sources] != [
+            "desktop", "mobile"]:
+        raise RuntimeError("VISUAL_QA_INCOMPLETE: original screenshot order must be desktop/mobile")
     seen = set()
     reports = {}
     all_assessments = {}
@@ -70,14 +77,18 @@ def staged_concept_review(*, research, order, views, sources, ask, root):
         image_paths.extend(s["path"] for s in sources)
         system = (
             "You are an independent expert website design reviewer, not the site "
-            "author. Inspect all FOUR attached real viewport screenshots for "
-            "this single direction and BOTH original-company source screenshots "
-            "where available. In the paired images, the first two panels are "
-            "concept views 01/02, the next two are concept views 03/04, and "
-            "the last two are original-site desktop/mobile, not concept views. "
+            "author. Inspect all FOUR attached individual viewport screenshots "
+            "for this single direction and BOTH ORIGINAL-company screenshots "
+            "where available. The first FOUR attached images are new concept "
+            "viewports. Image FIVE is the ORIGINAL company's desktop page. "
+            "Image SIX is the ORIGINAL company's mobile page. Keep their "
+            "visual evidence separate from concept-generated marketing copy. "
             "Do not fabricate inspection or mark uncertain evidence as pass. "
             "Return JSON object with observation (at least 35 characters), "
             "critical_issues (array), source_reference_reviewed (boolean), "
+            "source_comparison (at least 65 characters describing concrete "
+            "original desktop/mobile brand patterns and what this version "
+            "keeps or loses; do not claim visual inspection if unavailable), "
             "and view_assessments (object indexed by EVERY provided view ID). "
             "Each view assessment must have verdict 'pass' or 'needs_revision', "
             "brand_evidence, composition_evidence and media_evidence (each at "
@@ -98,6 +109,11 @@ def staged_concept_review(*, research, order, views, sources, ask, root):
                 "observation": "At least 35 characters of concrete visual assessment",
                 "critical_issues": ["Only actual visible critical problems, otherwise []"],
                 "source_reference_reviewed": True if sources else False,
+                "source_comparison": (
+                    "Describe observable ORIGINAL DESKTOP AND MOBILE brand assets, "
+                    "imagery, layout and what the redesign demonstrably preserves. "
+                    "If original screenshot unavailable say it is unavailable."
+                ) if sources else "No company website was verified.",
                 "view_assessments": {
                     view_id: {
                         "verdict": "pass OR needs_revision",
@@ -135,6 +151,7 @@ def staged_concept_review(*, research, order, views, sources, ask, root):
         reports[alias] = {
             "observation": observation.strip(),
             "critical_issues": issues,
+            "source_comparison": report.get("source_comparison", ""),
             "passing_views": sum(v["verdict"] == "pass" for v in assessments.values()),
         }
         all_assessments.update(assessments)
