@@ -47,7 +47,9 @@ class UniversalLessonsContractTests(unittest.TestCase):
         for prompt in (research.FINAL_RESEARCH_PROMPT, builder.BUILD_SYSTEM_PROMPT,
                        builder.REVISE_SYSTEM_PROMPT, qa.SERVICE_QUALITY_POLICY):
             for requirement in ("PRIMARY OFFER:", "SERVICE ROUTE:", "CALL TO ACTION:",
-                                "CONTACT:", "even two copies", "regardless of the overall score"):
+                                "CONTACT:", "even two copies", "regardless of the overall score",
+                                "SOURCE IMAGES FIRST", "COMPLETE CUSTOMER ANSWERS",
+                                "ART DIRECTION ACROSS THE SITE", "CHECK COMPLIANCE ON THE RESULT"):
                 with self.subTest(requirement=requirement):
                     self.assertIn(requirement, prompt)
 

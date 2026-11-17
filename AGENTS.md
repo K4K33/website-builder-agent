@@ -2,6 +2,13 @@
 
 Before designing, building, revising or sharing any Kaurivo customer website or demo, read and follow [the current Kaurivo master prompt](website-builder-agent/website-builder-agent/docs/KAURIVO_MESTARI_PROMPT.md). This applies to automated builds, manual work, Sites and previews hosted outside this repository. A conversation, tool choice or hosting change does not replace the project rules.
 
+## Source imagery and site-wide design
+
+- Inspect and prefer the company's existing photos and videos before generating illustrations. Match the design to suitable source images. Record rejected source-image candidates and the actual gap for each replacement.
+- Put essential source service information, product details and genuine customer proof into the redesigned customer journey. Use old-site links for supplementary information and preserve real external transaction platforms.
+- Compare rendered homepage, substantive service page and product/contact page with real source assets and content before extending the design. Review the complete page rhythm, hierarchy and useful interaction.
+- Run the existing source-content, route-experience, media, provenance and release checks on manual and external builds too. Repair available-source omissions before handing the draft to review. Follow the current Master Prompt for approval and report actual evidence and unresolved work.
+
 ## Before building
 
 - Verify the company, original site, actual business tasks, service information, contact paths, planned site languages, visual identity and available source media. Record the source and any material gaps.

@@ -177,6 +177,8 @@ def service_brief(research):
                'creative_selection': research.get('creative_selection'),
                'review_evidence_protocol': research.get('review_evidence_protocol'),
                'company_facts': research.get('company_facts') or {}}
+    if research.get('media_selection_protocol'):
+        payload['media_selection_protocol'] = research['media_selection_protocol']
     if 'primary_offering_evidence' in research:
         payload['primary_offering_evidence'] = research['primary_offering_evidence']
     return {**payload, 'contract_sha256': _hash(payload), 'policy': POLICY}
@@ -189,12 +191,52 @@ def reset_generated_review_claims(research):
     return research
 
 
+def validate_media_selection(research):
+    """Check source-image choices before Builder and again during output QA.
+
+    This verifies traceability and required reasoning. A visual reviewer must
+    still assess image subjects, quality, rights and the actual composition.
+    """
+    if research.get('media_selection_protocol') != 'source_first_v1':
+        return
+    observed = set()
+    for page in (research.get('source_inventory') or {}).get('pages', []):
+        images = (page.get('source_identity') or {}).get('original_content_photos') or []
+        images = [*images, *(page.get('images') or [])]
+        observed.update(image['src'] for image in images
+                        if isinstance(image, dict) and image.get('src'))
+    selections = research.get('media_purpose_plan') or []
+    if not isinstance(selections, list):
+        raise RuntimeError('Source-first media plan must be a list before Builder')
+    for choice in selections:
+        if not isinstance(choice, dict):
+            raise RuntimeError('Source-first media choice must be a record before Builder')
+        origin = choice.get('image_origin')
+        if origin not in ('original', 'client_supplied', 'licensed_stock', 'generated'):
+            raise RuntimeError('Source-first media choice needs image_origin before Builder')
+        if origin == 'original':
+            if (choice.get('source_src') or choice.get('src')) not in observed:
+                raise RuntimeError('Source-first image must match an observed source before Builder')
+        if origin in ('licensed_stock', 'generated'):
+            candidates = choice.get('source_candidates')
+            if (not isinstance(candidates, list) or (observed and not candidates)
+                    or not _normal(choice.get('gap_reason'))):
+                raise RuntimeError('Source-first replacement needs rejected source candidates and gap_reason before Builder')
+            for candidate in candidates:
+                if (not isinstance(candidate, dict) or candidate.get('source_src') not in observed
+                        or not _normal(candidate.get('reason'))):
+                    raise RuntimeError('Source-first replacement candidate must cite an observed image and reason before Builder')
+                if candidate.get('usable_for_task') is not False:
+                    raise RuntimeError('Source-first replacement requires an assessed unusable source candidate before Builder')
+
+
 def validate_service_plan(research):
     """Reject incomplete or invented task plans before a new Builder request.
 
     Legacy research is still audited on output; newly researched projects use
     v1 and must map every discovered business task before spending on a build.
     """
+    validate_media_selection(research)
     if 'primary_offering_evidence' in research:
         validate_primary_offering(research['primary_offering_evidence'],
                                   (research.get('source_inventory') or {}).get('pages', []))

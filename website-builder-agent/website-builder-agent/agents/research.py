@@ -356,7 +356,12 @@ Return these structured planning fields as part of the brief:
   completion_mode (existing_platform, local_flow or form_submission), and the
   browser test needed to verify completion. Do not invent task ids or services.
 - media_purpose_plan: route, src (rendered image), source_src (observed original),
-  observed_subject, visitor_task, rationale. If you have not visually inspected
+  observed_subject, visitor_task, rationale, image_origin (original,
+  client_supplied, licensed_stock, generated). Prefer the company source images.
+  For licensed_stock or generated media, add source_candidates (source_src, usable_for_task=false and
+  concrete reason for each rejected existing source image) and gap_reason.
+  An unavailable rights confirmation requires follow-up, never automatic AI.
+  If you have not visually inspected
   the subject, leave it unknown. Original ownership or alt text is not proof.
 - company_voice_brief: tone, company_specific_facts, source_excerpts (exact text
   and source_url). Unknown voice remains pending; use plain verified facts.
@@ -981,6 +986,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
+        "media_selection_protocol": "source_first_v1",
         "quality_contract_version": 6,
         "master_prompt_sha256": MASTER_PROMPT_SHA256,
         "visual_concepts_protocol": "v1",
@@ -1494,6 +1500,7 @@ Tärkeää:
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
+        "media_selection_protocol": "source_first_v1",
         "quality_contract_version": 6,
         "master_prompt_sha256": MASTER_PROMPT_SHA256,
         "visual_concepts_protocol": "v1",

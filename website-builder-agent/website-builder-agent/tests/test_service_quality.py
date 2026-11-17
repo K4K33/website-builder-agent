@@ -51,6 +51,45 @@ def reviews(research, pages, digest='a'*64):
 
 
 class ServiceQualityTests(unittest.TestCase):
+    def test_source_first_media_preflight_and_output_audit(self):
+        research, pages = fixture()
+        research['media_selection_protocol'] = 'source_first_v1'
+        original = research['media_purpose_plan'][0]
+        original['image_origin'] = 'original'
+        validate_service_plan(research)
+        original['source_src'] = 'https://invented.example/photo.jpg'
+        with self.assertRaisesRegex(RuntimeError, 'observed source'):
+            validate_service_plan(research)
+        original.pop('source_src')
+        original['image_origin'] = 'generated'
+        with self.assertRaisesRegex(RuntimeError, 'rejected source candidates'):
+            validate_service_plan(research)
+        self.assertTrue(any('Source-first replacement' in issue.get('reason', '')
+                            for issue in audit_service_quality(pages, research)['blocking']))
+        original.update(source_candidates=[{'source_src': original['src'],
+                                            'reason': 'Observed photo shows a different task',
+                                            'usable_for_task': False}],
+                        gap_reason='No observed photo shows the intended scene')
+        validate_service_plan(research)
+        original['source_candidates'][0]['usable_for_task'] = True
+        with self.assertRaisesRegex(RuntimeError, 'assessed unusable'):
+            validate_service_plan(research)
+        original['source_candidates'][0]['usable_for_task'] = False
+        original['source_candidates'][0]['source_src'] = 'https://invented.example/photo.jpg'
+        with self.assertRaisesRegex(RuntimeError, 'observed image'):
+            validate_service_plan(research)
+
+    def test_no_source_photos_need_an_explicit_gap_for_generated_media(self):
+        research, _ = fixture()
+        research['media_selection_protocol'] = 'source_first_v1'
+        research['source_inventory']['pages'][0]['source_identity'] = {}
+        choice = research['media_purpose_plan'][0]
+        choice.update(image_origin='generated', source_candidates=[])
+        with self.assertRaisesRegex(RuntimeError, 'gap_reason'):
+            validate_service_plan(research)
+        choice['gap_reason'] = 'Observed original site contains no content photography'
+        validate_service_plan(research)
+
     def test_primary_offering_requires_exact_customer_facing_source(self):
         source_url = "https://repair.example/"
         quote = "We repair brass instruments in our workshop."
