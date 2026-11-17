@@ -19,6 +19,8 @@ class ContrastAndScrollTests(unittest.TestCase):
                 self.skipTest("Chromium is not available in this environment.")
             self.assertTrue(any("contrast failures" in issue for issue in result["issues"]),
                             result["issues"])
+            self.assertTrue(any('"suggestedTextColor": "#000000"' in issue
+                                for issue in result["issues"]),result["issues"])
             self.assertFalse(result["pass"])
 
     def test_browser_does_not_invent_failures_for_clear_dark_text(self):

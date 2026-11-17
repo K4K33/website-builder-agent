@@ -265,26 +265,54 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                             const provenGradientContrast = (background, fg, required, el) => {
                                 const value = String(background || '').trim();
                                 if (!/^linear-gradient\\(/i.test(value) ||
-                                    (value.match(/gradient\\s*\\(/gi)||[]).length !== 1 ||
-                                    /url\\s*\\(|image-set\\s*\\(|color-mix\\s*\\(|\\bin\\s+(?:oklab|oklch|lab|lch|hsl|hwb|srgb-linear|xyz)/i.test(value))
+                                    /color-mix\\s*\\(|\\bin\\s+(?:oklab|oklch|lab|lch|hsl|hwb|srgb-linear|xyz)/i.test(value))
                                     return false;
-                                const tokens=value.match(/rgba?\\([^)]*\\)/gi)||[];
-                                const allTokens=value.match(/(?:rgb|rgba)\\s*\\(/gi)||[];
-                                if (tokens.length<2 || tokens.length!==allTokens.length)
+                                // Inspect only the topmost gradient layer.
+                                // Underlying images and additional gradients are
+                                // modeled as any RGB pixel, never trusted.
+                                let depth=0, end=-1;
+                                for(let i=value.indexOf('(');i<value.length;i++) {
+                                    if(value[i]==='(') depth++;
+                                    else if(value[i]===')' && --depth===0) {end=i;break;}
+                                }
+                                if(end<0 || !/^\\s*(?:,|$)/.test(value.slice(end+1)))
                                     return false;
-                                const colors=tokens.map(parse);
+                                const top=value.slice(0,end+1);
+                                const tokens=top.match(/rgba?\\([^)]*\\)/gi)||[];
+                                const allTokens=top.match(/(?:rgb|rgba)\\s*\\(/gi)||[];
+                                if(tokens.length<2 || tokens.length!==allTokens.length)
+                                    return false;
+                                const parseStop = color => {
+                                    const m=/^rgba?\\(\\s*([\\d.]+)[, ]+\\s*([\\d.]+)[, ]+\\s*([\\d.]+)(?:[, /]+([\\d.]+))?\\s*\\)$/i.exec(color);
+                                    if(!m) return null;
+                                    const channels=[Number(m[1]),Number(m[2]),Number(m[3])];
+                                    const alpha=m[4]===undefined?1:Number(m[4]);
+                                    if(channels.some(ch=>!Number.isFinite(ch)||ch<0||ch>255) ||
+                                       !Number.isFinite(alpha)||alpha<0||alpha>1)
+                                        return null;
+                                    return [...channels,alpha];
+                                };
+                                const colors=tokens.map(parseStop);
                                 if(colors.some(color=>!color)) return false;
-                                for (let ancestor=el; ancestor; ancestor=ancestor.parentElement) {
+                                for(let ancestor=el;ancestor;ancestor=ancestor.parentElement) {
                                     const s=getComputedStyle(ancestor);
                                     if(s.opacity!=='1' || s.filter!=='none' ||
                                        s.mixBlendMode!=='normal' ||
-                                       s.backgroundBlendMode!=='normal') return false;
+                                       !/^normal(?:,\\s*normal)*$/.test(s.backgroundBlendMode))
+                                        return false;
                                 }
-                                const low=[0,1,2].map(i=>Math.min(...colors.map(rgb=>rgb[i])));
-                                const high=[0,1,2].map(i=>Math.max(...colors.map(rgb=>rgb[i])));
+                                // Every top gradient pixel has alpha >= amin.
+                                // For *any* unknown photo/background beneath:
+                                // minChannel >= amin * min(stopChannel)
+                                // maxChannel <= 255 - amin * (255 - max(stopChannel)).
+                                // These bounds remain conservative for blended
+                                // RGB stops and make no assumption about a photo.
+                                const amin=Math.min(...colors.map(c=>c[3]));
+                                const low=[0,1,2].map(i=>
+                                    amin*Math.min(...colors.map(c=>c[i])));
+                                const high=[0,1,2].map(i=>
+                                    255-amin*(255-Math.max(...colors.map(c=>c[i]))));
                                 const foregroundLum=lum(fg);
-                                // A gradient straddling the text luminance can
-                                // have invisible intermediate colors.
                                 if(foregroundLum>lum(low) && foregroundLum<lum(high))
                                     return false;
                                 return Math.min(ratio(fg,low),ratio(fg,high))>=required+0.03;
@@ -344,9 +372,19 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                 if (!bg) bg=[255,255,255];
                                 const value=ratio(foreground,bg);
                                 checked++;
-                                if (value+0.02<required && poor.length<8)
+                                if (value+0.02<required && poor.length<8) {
+                                    // A fully opaque background has a safe
+                                    // black-or-white text color. Report a
+                                    // concrete CSS correction to the private
+                                    // repair model instead of saying only
+                                    // "fix contrast" and wasting two rounds.
+                                    const black=ratio([0,0,0],bg);
+                                    const white=ratio([255,255,255],bg);
                                     poor.push({tag:el.tagName,text:el.textContent.trim().slice(0,70),
-                                               ratio:Math.round(value*100)/100, required});
+                                               ratio:Math.round(value*100)/100, required,
+                                               observedBackground:'rgb('+bg.join(',')+')',
+                                               suggestedTextColor:black>=white?'#000000':'#ffffff'});
+                                }
                             }
                             const root=getComputedStyle(document.documentElement);
                             const body=getComputedStyle(document.body);

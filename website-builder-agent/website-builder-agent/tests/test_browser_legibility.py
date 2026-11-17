@@ -48,9 +48,9 @@ class ReadabilityBrowserTests(unittest.TestCase):
             self.assertFalse(any("NOT VERIFIABLE" in issue
                                  for issue in result["issues"]))
 
-    def test_translucent_gradient_is_still_unverified_even_with_white_text(self):
+    def test_weak_translucent_gradient_still_requires_visual_proof(self):
         html=doc('.premium-hero{background:linear-gradient(90deg,'
-                 'rgba(8,24,32,.7),rgba(36,58,68,.7));'
+                 'rgba(8,24,32,.2),rgba(36,58,68,.2));'
                  'padding:60px}', '<section class="premium-hero">'
                  '<p style="color:#fff">Photo-layer contrast unknown</p></section>')
         with TemporaryDirectory() as tmp:
@@ -61,9 +61,9 @@ class ReadabilityBrowserTests(unittest.TestCase):
             self.assertTrue(any("NOT VERIFIABLE" in issue
                                 for issue in result["issues"]),result["issues"])
 
-    def test_layered_gradients_remain_unverified_without_real_visual_proof(self):
+    def test_weak_top_layer_over_other_gradient_remains_unverified(self):
         html=doc('.premium-hero{background-image:'
-                 'linear-gradient(#081820,#243a44),'
+                 'linear-gradient(rgba(8,24,32,.12),rgba(36,58,68,.12)),'
                  'linear-gradient(#091720,#182b39);padding:60px}',
                  '<section class="premium-hero">'
                  '<p style="color:#fff">Layered brand hero</p></section>')
@@ -74,6 +74,31 @@ class ReadabilityBrowserTests(unittest.TestCase):
             self.assertFalse(result["pass"])
             self.assertTrue(any("NOT VERIFIABLE" in issue
                                 for issue in result["issues"]),result["issues"])
+
+    def test_strong_translucent_overlay_proves_contrast_over_any_background(self):
+        html=doc('.premium-hero{background-image:'
+                 'linear-gradient(90deg,rgba(0,0,0,.82),rgba(15,20,25,.82)),'
+                 'linear-gradient(90deg,#fff,#ddd);padding:60px}',
+                 '<section class="premium-hero">'
+                 '<p style="color:#fff">Source-backed text over layered photo</p></section>')
+        with TemporaryDirectory() as tmp:
+            path=Path(tmp)/"index.html"
+            path.write_text(html,encoding="utf-8")
+            result=inspect_site(path)
+            self.assertTrue(result["pass"],result["issues"])
+
+    def test_non_srgb_interpolated_gradient_needs_independent_visual_proof(self):
+        html=doc('.premium-hero{background-image:'
+                 'linear-gradient(in oklab,#080808,#111111);padding:60px}',
+                 '<section class="premium-hero">'
+                 '<p style="color:#fff">Complex interpolation</p></section>')
+        with TemporaryDirectory() as tmp:
+            path=Path(tmp)/"index.html"
+            path.write_text(html,encoding="utf-8")
+            result=inspect_site(path)
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("NOT VERIFIABLE" in issue
+                                for issue in result["issues"]), result["issues"])
 
     def test_tiny_primary_business_text_is_rejected(self):
         html=doc('p{font-size:10px;color:#222}',
