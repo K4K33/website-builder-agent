@@ -76,11 +76,43 @@ class StagedVisualReviewTests(unittest.TestCase):
                                    "cannot establish brand fidelity on its own.",
                     "critical_issues": [], "source_reference_reviewed": True,
                     "view_assessments": {}}
-        with self.assertRaisesRegex(RuntimeError, "variant report invalid"):
+        with self.assertRaisesRegex(RuntimeError, "VISUAL_QA_INCOMPLETE: view_ids"):
             staged_concept_review(research={}, order={"A":{},"B":{},"C":{}},
                                   views=views, sources=sources,
                                   root=__import__("pathlib").Path("/private"), ask=ask)
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(calls), 2)
+
+    def test_explicit_list_view_ids_are_normalized_without_inventing_reviews(self):
+        from utils.kaurivo_staged_visual_review import _normalize_verified_variant
+        ids = ["alpha", "bravo", "charlie", "delta"]
+        report = {
+            "observation": "Genuine image composition visibly preserves the "
+                           "original website's distinct high-contrast branding.",
+            "critical_issues": [],
+            "source_reference_reviewed": True,
+            "view_assessments": [{
+                "view_id": view_id,
+                "verdict": "pass",
+                "brand_evidence": "Actual verified brand colors and intact customer logo.",
+                "composition_evidence": "Balanced above-the-fold layout with responsive grid.",
+                "media_evidence": "Authentic company photography preserved without repeats.",
+            } for view_id in ids],
+        }
+        result, issue = _normalize_verified_variant(report, ids, True)
+        self.assertIsNone(issue)
+        self.assertEqual(set(result["view_assessments"]), set(ids))
+        report["view_assessments"][0]["view_id"] = "invented-id"
+        result, issue = _normalize_verified_variant(report, ids, True)
+        self.assertIsNone(result)
+        self.assertEqual(issue, "view_ids")
+        report["source_reference_reviewed"] = False
+        result, issue = _normalize_verified_variant(
+            {**report, "view_assessments": {item: {
+                "verdict":"pass", "brand_evidence":"Visible official logo and colors from source.",
+                "composition_evidence":"Measurable responsive spacing and good hierarchy.",
+                "media_evidence":"Original photography and other source visual details."
+            } for item in ids}}, ids, True)
+        self.assertEqual(issue, "original_source_review")
 
     def test_no_source_images_block_premium_review_but_allow_proved_no_website(self):
         views, _ = sample_reviews()

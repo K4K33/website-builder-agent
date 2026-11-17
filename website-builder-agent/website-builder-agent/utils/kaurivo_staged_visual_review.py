@@ -8,6 +8,45 @@ or treated as a passing browser/visual review.
 import json
 
 
+def _normalize_verified_variant(report, ids, has_source):
+    """Normalize only explicit reviewed facts, never insert missing QA evidence."""
+    if not isinstance(report, dict):
+        return None, "missing_json"
+    normalized = dict(report)
+    assessments = normalized.get("view_assessments")
+    if isinstance(assessments, list):
+        # Some multimodal models return a list with explicit view_id fields.
+        # Re-key only if the claimed exact IDs are unique and complete.
+        if all(isinstance(item, dict) and isinstance(item.get("view_id"), str)
+               for item in assessments):
+            names = [item["view_id"] for item in assessments]
+            if len(names) == len(set(names)) == 4:
+                assessments = {item["view_id"]: {
+                    key: value for key, value in item.items() if key != "view_id"}
+                    for item in assessments}
+                normalized["view_assessments"] = assessments
+    if not isinstance(assessments, dict) or set(assessments) != set(ids):
+        return None, "view_ids"
+    observation = normalized.get("observation")
+    if not isinstance(observation, str) or len(observation.strip()) < 35:
+        return None, "observation"
+    issues = normalized.get("critical_issues")
+    if (not isinstance(issues, list) or any(
+            not isinstance(value, str) or not value.strip() for value in issues)):
+        return None, "critical_issues"
+    if has_source and normalized.get("source_reference_reviewed") is not True:
+        return None, "original_source_review"
+    for assessment in assessments.values():
+        if not isinstance(assessment, dict) or assessment.get("verdict") not in (
+                "pass", "needs_revision"):
+            return None, "individual_verdict"
+        for dimension in ("brand_evidence", "composition_evidence", "media_evidence"):
+            value = assessment.get(dimension)
+            if not isinstance(value, str) or len(value.strip()) < 35:
+                return None, "grounded_view_evidence"
+    return normalized, None
+
+
 def staged_concept_review(*, research, order, views, sources, ask, root):
     if set(order) != {"A", "B", "C"}:
         raise RuntimeError("VISUAL_QA_INCOMPLETE: expected three independent concept directions")
@@ -55,28 +94,44 @@ def staged_concept_review(*, research, order, views, sources, ask, root):
             "source_reference_views": [
                 {"viewport": s.get("viewport"), "sha256": s.get("sha256")}
                 for s in sources],
+            "required_output_json_keys": {
+                "observation": "At least 35 characters of concrete visual assessment",
+                "critical_issues": ["Only actual visible critical problems, otherwise []"],
+                "source_reference_reviewed": True if sources else False,
+                "view_assessments": {
+                    view_id: {
+                        "verdict": "pass OR needs_revision",
+                        "brand_evidence": "At least 35 visual evidence characters",
+                        "composition_evidence": "At least 35 visual evidence characters",
+                        "media_evidence": "At least 35 visual evidence characters",
+                    } for view_id in ids
+                },
+            },
         }
-        report = ask(system, json.dumps(packet, ensure_ascii=False),
-                     image_paths=image_paths, max_tokens=2800)
-        if not isinstance(report, dict):
-            raise RuntimeError("VISUAL_QA_INCOMPLETE: independent image assessment missing")
-        assessments = report.get("view_assessments")
-        observation = report.get("observation")
-        issues = report.get("critical_issues")
-        if (not isinstance(assessments, dict) or set(assessments) != set(ids)
-            or not isinstance(observation, str) or len(observation.strip()) < 35
-            or not isinstance(issues, list)
-            or any(not isinstance(issue, str) or not issue.strip() for issue in issues)
-            or (sources and report.get("source_reference_reviewed") is not True)):
-            raise RuntimeError("VISUAL_QA_INCOMPLETE: source-backed variant report invalid")
-        for view_id, assessment in assessments.items():
-            if (not isinstance(assessment, dict) or
-                assessment.get("verdict") not in ("pass", "needs_revision")):
-                raise RuntimeError("VISUAL_QA_INCOMPLETE: individual visual verdict missing")
-            for dimension in ("brand_evidence", "composition_evidence", "media_evidence"):
-                value = assessment.get(dimension)
-                if not isinstance(value, str) or len(value.strip()) < 35:
-                    raise RuntimeError("VISUAL_QA_INCOMPLETE: specific visual evidence missing")
+        report = None
+        issue_code = None
+        for attempt in range(2):
+            instructions = system
+            if attempt:
+                instructions += (
+                    " The prior response missed REQUIRED JSON contract fields: "
+                    + str(issue_code) +
+                    ". Return one complete, self-contained assessment of the "
+                    "same attached genuine screenshots, with EXACT view ID keys. "
+                    "This is the only bounded correction attempt. Do not "
+                    "invent any missing evidence or silently approve defects."
+                )
+            candidate = ask(instructions, json.dumps(packet, ensure_ascii=False),
+                            image_paths=image_paths, max_tokens=2800)
+            report, issue_code = _normalize_verified_variant(
+                candidate, ids, bool(sources))
+            if issue_code is None:
+                break
+        if issue_code is not None:
+            raise RuntimeError("VISUAL_QA_INCOMPLETE: " + issue_code)
+        assessments = report["view_assessments"]
+        observation = report["observation"]
+        issues = report["critical_issues"]
         reports[alias] = {
             "observation": observation.strip(),
             "critical_issues": issues,

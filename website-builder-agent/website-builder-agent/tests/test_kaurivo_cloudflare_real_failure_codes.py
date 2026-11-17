@@ -97,6 +97,7 @@ class CloudflareFailureCodes(unittest.TestCase):
             "FREE_AI_ACCOUNT_BLOCKED":"free_ai_account_blocked",
             "FREE_MODEL_UNAVAILABLE":"free_model_unavailable",
             "FREE_AI_RESPONSE_TRUNCATED":"free_ai_response_truncated",
+            "VISUAL_QA_INCOMPLETE":"visual_qa_incomplete",
             "NETWORK_UNAVAILABLE":"research_network_unavailable",
         }
         for code,expected in cases.items():
