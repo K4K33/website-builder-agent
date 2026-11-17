@@ -61,21 +61,35 @@ def compact_concept_review_user_content(
     from PIL import ImageDraw, ImageFont
     if not isinstance(prompt, str) or not prompt.strip():
         raise ValueError("AI review prompt must be nonempty")
-    if not isinstance(image_paths, list) or len(image_paths) not in (12, 14):
-        raise RuntimeError("FREE_AI_MEDIA_TOO_LARGE: concept visual review needs all 12 or 14 views")
+    if not isinstance(image_paths, list) or len(image_paths) not in (4, 6, 12, 14):
+        raise RuntimeError("FREE_AI_MEDIA_TOO_LARGE: concept visual review needs 4/6 or 12/14 views")
     sheets = len(image_paths) // 2
-    header = (
-        "\n\nINDEPENDENT VISUAL EVIDENCE: Each attached JPEG contains TWO "
-        "separately labeled full-page screenshot overviews, side-by-side. "
-        "LEFT panel VIEW 01 and RIGHT panel VIEW 02 are the first two "
-        "views_in_image_order entries; subsequent sheets contain VIEW 03/04, "
-        "05/06, etc. VIEW 01 through VIEW 12 map to all 12 required "
-        "concept viewport IDs. When present, VIEW 13 and VIEW 14 are the "
-        "unaltered source-company desktop/mobile screenshots in "
-        "original_source_images_after_concept_images. Inspect every individual "
-        "panel and report all required view IDs, not merely the combined images. "
-        "Overview packing is not a pass or replacement for full-resolution QA."
-    )
+    if len(image_paths) in (4, 6):
+        header = (
+            "\n\nINDEPENDENT VISUAL EVIDENCE FOR ONE DIRECTION: "
+            "Every attached JPEG has TWO separately labeled screenshots. "
+            "The first two images contain concept VIEW 01/02 and 03/04 "
+            "in their original supplied order. When present, the third "
+            "paired image contains the original company's desktop/mobile "
+            "reference screenshots, NOT extra concept views. "
+            "Assess all FOUR real concept view IDs in the user prompt and "
+            "visually compare their preservation of genuine source branding. "
+            "Never claim to have reviewed source screenshots if absent. "
+            "Full-resolution browser QA and genuine image files remain mandatory."
+        )
+    else:
+        header = (
+            "\n\nINDEPENDENT VISUAL EVIDENCE: Each attached JPEG contains TWO "
+            "separately labeled full-page screenshot overviews, side-by-side. "
+            "LEFT panel VIEW 01 and RIGHT panel VIEW 02 are the first two "
+            "views_in_image_order entries; subsequent sheets contain VIEW 03/04, "
+            "05/06, etc. VIEW 01 through VIEW 12 map to all 12 required "
+            "concept viewport IDs. When present, VIEW 13 and VIEW 14 are the "
+            "unaltered source-company desktop/mobile screenshots in "
+            "original_source_images_after_concept_images. Inspect every individual "
+            "panel and report all required view IDs, not merely the combined images. "
+            "Overview packing is not a pass or replacement for full-resolution QA."
+        )
     message = [{"type": "text", "text": prompt + header}]
     total_inline = 0
     for idx in range(0, len(image_paths), 2):
