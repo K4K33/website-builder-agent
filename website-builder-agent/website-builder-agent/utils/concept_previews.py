@@ -394,6 +394,10 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
             'private_contrast_issues': private_contrast_issues}
 
 
+class ConceptContextChanged(RuntimeError):
+    """A verified concept was rendered under a different design contract."""
+
+
 def load_verified_set(reference, research, *, allowed_root):
     path = Path(reference.get('manifest_path') or '').resolve()
     base = Path(allowed_root).resolve()
@@ -405,7 +409,7 @@ def load_verified_set(reference, research, *, allowed_root):
     if claimed != digest(payload) or claimed != reference.get('set_sha256'):
         raise RuntimeError('Concept manifest changed after capture')
     if manifest.get('protocol') != PROTOCOL or manifest.get('context_sha256') != context_digest(research):
-        raise RuntimeError('Concept source, voice, task or design plan changed; render again')
+        raise ConceptContextChanged('Concept source, voice, task or design plan changed; render again')
     if manifest.get('status') != 'ready_for_comparison':
         raise RuntimeError('Concepts have not passed actual rendering checks')
     expected = {d['id'] for d in validate_creative_directions(research)['alternatives']}
