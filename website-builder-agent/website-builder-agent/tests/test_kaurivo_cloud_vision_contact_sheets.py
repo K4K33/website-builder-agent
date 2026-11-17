@@ -47,6 +47,21 @@ class AllConceptVisionTests(unittest.TestCase):
             self.assertLess(sum(len(p["image_url"]["url"]) for p in message[1:]),
                             4_000_000)
 
+    def test_bounded_individual_direction_keeps_all_four_and_two_source_images(self):
+        with TemporaryDirectory() as tmp:
+            paths = self.build_images(Path(tmp), 6)
+            originals = [Path(p).read_bytes() for p in paths]
+            packet = compact_concept_review_user_content(
+                '{"required_view_ids_in_order":["a","b","c","d"]}', paths)
+            self.assertEqual(len(packet), 4)
+            self.assertIn("FOUR real concept", packet[0]["text"])
+            self.assertIn("original company", packet[0]["text"].lower())
+            for image in packet[1:]:
+                with Image.open(BytesIO(base64.b64decode(
+                        image["image_url"]["url"].split(",", 1)[1]))) as result:
+                    self.assertEqual(result.size, (1940, 2160))
+            self.assertEqual(originals, [Path(p).read_bytes() for p in paths])
+
     def test_source_absent_still_reviews_all_twelve_concept_viewports(self):
         with TemporaryDirectory() as tmp:
             paths = self.build_images(Path(tmp), 12)
@@ -56,7 +71,7 @@ class AllConceptVisionTests(unittest.TestCase):
     def test_never_silently_drop_a_concept_screenshot_to_fit_free_limits(self):
         with TemporaryDirectory() as tmp:
             paths = self.build_images(Path(tmp), 11)
-            with self.assertRaisesRegex(RuntimeError, "all 12 or 14"):
+            with self.assertRaisesRegex(RuntimeError, "4/6 or 12/14"):
                 compact_concept_review_user_content("private", paths)
             with self.assertRaisesRegex(RuntimeError, "image count"):
                 compact_vision_user_content("private", paths)
