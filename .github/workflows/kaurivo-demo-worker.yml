@@ -43,6 +43,7 @@ on:
 # Verified wake after PR #205: replay only eligible saved jobs with safe concept media handling.
 # Verified wake after PR #206: restore safely revalidated source-bound concept copy.
 # Verified wake after PR #208: resume blocked visual concepts with source evidence intact.
+# Single inspected wake after #210: classify actual browser failures before further changes.
 
 permissions:
   contents: write
