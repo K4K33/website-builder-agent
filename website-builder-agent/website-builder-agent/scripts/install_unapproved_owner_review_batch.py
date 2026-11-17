@@ -36,7 +36,7 @@ def validate_and_install(archive:Path,dest:Path)->dict:
     encoded=archive.read_text(encoding="ascii").strip()
     if len(encoded)>100_000 or not re.fullmatch(r"[A-Za-z0-9+/=]+",encoded):
         raise ValueError("Review archive invalid or oversized")
-    raw=lzma.decompress(base64.b64decode(encoded,validate=True),memlimit=32*1024*1024)
+    raw=lzma.decompress(base64.b64decode(encoded,validate=True),memlimit=128*1024*1024)
     if len(raw)>MAX_ARCHIVE:raise ValueError("Review archive too large after unpack")
     payload={}
     with tarfile.open(fileobj=io.BytesIO(raw),mode="r:") as tar:
