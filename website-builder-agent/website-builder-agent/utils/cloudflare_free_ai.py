@@ -6,7 +6,7 @@ Nothing is billed or called merely by importing this module.
 
 Cloudflare official model documentation (2026-11):
   @cf/google/gemma-4-26b-a4b-it (text+vision, zero data retention)
-  @cf/qwen/qwen3.8-27b (text+vision, zero data retention)
+  @cf/mistralai/mistral-small-3.1-24b-instruct (independent text+vision, zero data retention)
 
 The primary Builder and separate independent QA remain subject to all the
 original source fidelity, Master Prompt, screenshot and browser QA checks.
@@ -24,7 +24,10 @@ import requests
 FREE_MODELS = {
     "research": "@cf/google/gemma-4-26b-a4b-it",
     "builder": "@cf/google/gemma-4-26b-a4b-it",
-    "qa": "@cf/qwen/qwen3.8-27b",
+    # Qwen 3.8 repeatedly hit Workers AI 408/3046 even with 3 paired
+    # screenshots; use a distinct officially documented free-eligible vision
+    # model instead. Paid-model 403/5035 still fails closed.
+    "qa": "@cf/mistralai/mistral-small-3.1-24b-instruct",
 }
 _CF_ACCOUNT = re.compile(r"^[a-f0-9]{32}$")
 _CF_TOKEN = re.compile(r"^[A-Za-z0-9_-]{25,250}$")
