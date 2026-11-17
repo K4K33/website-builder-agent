@@ -45,7 +45,9 @@ def validate_and_install(archive:Path,dest:Path)->dict:
         for m in members:
             if not m.isfile() or m.issym() or m.islnk():raise ValueError("Unexpected archive object")
             p=Path(m.name)
-            if p.name in ("SOURCE_AND_QA_NOTES.json", "STATIC_QA.json") and len(p.parts)==1:\n                continue  # Private research notes are not a public page.\n            if p.is_absolute() or ".." in p.parts or len(p.parts)<2 or p.parts[0] not in SITES:
+            if p.name in ("SOURCE_AND_QA_NOTES.json", "STATIC_QA.json") and len(p.parts)==1:
+                continue  # Private research notes are not a public page.
+            if p.is_absolute() or ".." in p.parts or len(p.parts)<2 or p.parts[0] not in SITES:
                 raise ValueError("Unsafe or unexpected preview path")
             if p.suffix not in (".html",".css",".js"):
                 raise ValueError("Unexpected archive file type")
