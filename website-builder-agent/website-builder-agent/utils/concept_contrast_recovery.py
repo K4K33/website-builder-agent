@@ -39,9 +39,9 @@ def _observations(issues):
 def _same_copy(node, expected):
     if not isinstance(expected, str) or not expected.strip():
         return False
-    # Playwright uses JS textContent; BeautifulSoup's concatenation is closer
-    # with separator="" than separator=" " around inline formatted spans.
-    actual = " ".join(node.get_text("", strip=True).split())
+    # Match textContent by joining the original text nodes before collapsing
+    # whitespace. Leading/trailing spaces between inline nodes are meaningful.
+    actual = " ".join(node.get_text().split())
     evidence = " ".join(expected.split())
     return actual.startswith(evidence)
 
@@ -78,20 +78,23 @@ def repair_browser_contrast(html, issues, *, max_targets=_MAX_TARGETS):
             color = finding.get("suggestedTextColor")
             if color not in ("#000000", "#ffffff"):
                 continue
-            new_style = style + ";color:" + color + " !important"
+            correction = "color:" + color + " !important"
         else:
             # For genuinely unprovable photo/gradient text, create a small
             # opaque readable surface on this text element ONLY. Keep the
             # original hero image, animation, page structure and all copy.
             # Independent visual QA can still reject the appearance.
-            new_style = (style + ";color:#ffffff !important;"
-                         "background-color:#101c2b !important;"
-                         "background-image:none !important;"
-                         "padding:.14em .28em;"
-                         "border-radius:.2em;"
-                         "box-decoration-break:clone;"
-                         "-webkit-box-decoration-break:clone")
-        element["style"] = new_style.lstrip(";")
+            correction = ("color:#ffffff !important;"
+                          "background-color:#101c2b !important;"
+                          "background-image:none !important;"
+                          "opacity:1 !important;"
+                          "padding:.14em .28em;"
+                          "border-radius:.2em;"
+                          "box-decoration-break:clone;"
+                          "-webkit-box-decoration-break:clone")
         seen.add(selector)
+        if style == correction or style.endswith(";" + correction):
+            continue
+        element["style"] = ";".join(part for part in (style, correction) if part)
         changed = True
     return str(soup) if changed else html
