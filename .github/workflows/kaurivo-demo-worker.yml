@@ -48,6 +48,7 @@ on:
 # One supervised verified replay after #213: source-preserving WCAG overlay contrast evidence.
 # One supervised regression replay after #215: exact DOM contrast remediation and unchanged quality gates.
 # One inspected replay after #216: slim active concept checkpoint and safe failure categories.
+# Verified one-shot replay after #217-#218: same QA model REST route and complete vision panels.
 
 permissions:
   contents: write
