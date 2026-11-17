@@ -142,6 +142,18 @@ class ReadabilityBrowserTests(unittest.TestCase):
             self.assertFalse(result["pass"])
             self.assertTrue(any("NOT VERIFIABLE" in issue for issue in result["issues"]))
 
+    def test_weak_overlay_on_genuinely_dark_underlayer_passes_real_pixel_proof(self):
+        html=doc('.premium-hero{background-image:'
+                 'linear-gradient(rgba(8,24,32,.12),rgba(36,58,68,.12)),'
+                 'linear-gradient(#091720,#182b39);padding:60px}',
+                 '<section class="premium-hero">'
+                 '<p style="color:#fff">Readable layered design</p></section>')
+        with TemporaryDirectory() as tmp:
+            path=Path(tmp)/"index.html"
+            path.write_text(html,encoding="utf-8")
+            result=inspect_site(path)
+            self.assertTrue(result["pass"],result["issues"])
+
     def test_tiny_primary_business_text_is_rejected(self):
         html=doc('p{font-size:10px;color:#222}',
                  '<p>Small important pricing and terms are not acceptable</p>')
