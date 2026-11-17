@@ -28,6 +28,11 @@ def _prove_complex_text_background(page, candidate):
             style.webkitBackgroundClip === 'text') return null;
         const rect = el.getBoundingClientRect();
         for (let parent=el;parent;parent=parent.parentElement) {
+            const style=getComputedStyle(parent);
+            // Unsupported color-space interpolation can vary by rendering
+            // environment. A single screenshot is not proof across clients.
+            if (/\\bin\\s+(?:oklab|oklch|lab|lch|hsl|hwb|srgb-linear|xyz)/i
+                    .test(style.backgroundImage)) return null;
             if (parent.getAnimations().some(a => a.playState === 'running')) return null;
             // A video elsewhere on the page is irrelevant: only moving
             // media overlapping these actual text pixels is unsafe.
