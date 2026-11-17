@@ -1,5 +1,5 @@
 # Kaurivon Mestari-Prompti
-Versio 6, tarkennettu 13.11.2026 · Koskee Researchia, Builderia, korjauksia, QA:ta ja käsin/Sitesissä tehtyjä sivuja.
+Versio 6, tarkennettu 17.11.2026 · Koskee Researchia, Builderia, korjauksia, QA:ta ja käsin/Sitesissä tehtyjä sivuja.
 
 ## Aktiivinen yhteinen laatukäsky (Research → Builder → Revision → QA)
 <!-- ACTIVE_RUNTIME_CONTRACT_START -->
@@ -24,6 +24,12 @@ Lock original company brand at concept stage: full original mark, palette roles 
 EVERY different page type needs different task-first FIRST FOLD and layout: price pages show actual prices promptly, services show actual customer tasks, contacts show verified working channels and forms, shops expose real products/cart, galleries show truthful examples. Compare homepage, prices, services and contact side-by-side at desktop/mobile; the same dark giant-italic hero, circle ornament, eyebrow-band and card rhythm with swapped text is a REPETITION FAILURE. Evaluate originality against THREE recent unrelated Kaurivo clients, not just three industry benchmarks; restructure visual hierarchy, image subjects, information density and typography instead of recoloring.
 Purposeful motion/3D must express a real product, material or process with physically convincing output and an accessible performant fallback. A tilted CSS plate, line grid, fake 3D circuit diagram or animated concentric rings are NOT premium 3D and must be rejected when used as filler; premium stillness is legitimate. Preserve a richer source site's video, actual before/after drag, genuine materials and gallery interaction. Require phone/desktop real-browser source-versus-new comparison, reduced-motion, touch and smooth native scrolling. Independently assess every route against the overall 9.5/10 target; an automated browser pass is TECHNICAL evidence, not visual or commercial approval.
 HARD STOP: Hand-authored, chat-created, cloud-published and automated outputs use the SAME current-master SHA, three source-grounded rendered A/B/C concepts, verified source-claim and brand comparison, all-route technical/content/media/business-flow QA, independent exact-release design review, source rights and exact public HTTPS browser/release-marker proof. A provider LIVE badge or successful 6-page smoke test cannot prove the Master Prompt was followed. If any mandatory proof is missing, show TECHNICAL_PREVIEW_ONLY / QUALITY_PENDING / HOLD next to the URL and NEVER label it completed, 9.5/10, client-approved or ready to send. Do not loosen this because AI is rate-limited or the manual preview was quicker.
+2026-11-17 CUSTOMER-JOURNEY ACCEPTANCE (every build method): Require independent review of the exact rendered demo on phone and desktop. Each applicable check below needs direct evidence to pass; a known defect or missing evidence prevents approval regardless of the overall score.
+- PRIMARY OFFER: Before seeing the brief or original, the reviewer looks at the first mobile viewport and describes what the company offers and what a customer can do next. Check the answer against an exact excerpt from a current customer-facing source or documented owner confirmation. Registry scope alone does not establish a live offer.
+- SERVICE ROUTE: On each service or offer route, identify the customer question, point to the source-backed answer and inspect the rendered hierarchy and assets. If two routes still make sense after swapping only their titles, give each a specific purpose and rewrite or combine them. Use relevant authentic examples where verified.
+- CALL TO ACTION: Follow the homepage-to-offer-to-next-action journey. Labels must predict the real destination and action. The duplicate-link threshold is a detector; even two copies of a vague action require revision when the repeat adds no value and interrupts the journey. Keep purposeful re-entry points where they help.
+- CONTACT: On both viewports, find and usability-test a current company contact channel. Keep registry details below the primary actionable contact content. Exercise any promised form or transaction with permitted test facilities, following the applicable task-specific delivery requirements.
+Record route, viewport, observation, evidence and pass/fail for each check. Send failures to Revision with an exact correction target and repeat the affected check on the revised release. For a genuinely inapplicable check, document why. Keep the first attempt unchanged for validation on an unseen company. Keep one overall score and the existing 9.5/10 approval threshold.
 <!-- ACTIVE_RUNTIME_CONTRACT_END -->
 
 
@@ -137,6 +143,19 @@ Samat tarkistukset koskevat pääagenttia, tuontikoodia, manuaalista työtä ja 
 3. Erottele “ei automaattisesti havaittua virhettä”, “visuaalinen arvio avoinna”, “julkaistu demo tarkistettu” ja “asiakasluovutus hyväksytty”. Älä esitä ensimmäistä viimeisenä.
 4. Sido riippumaton arvio tarkkaan lähde-, suunnitelma-, prompti- ja julkaisuversioon sekä todellisiin desktop-/mobiilihavaintoihin. Muutokset mitätöivät vanhan hyväksynnän. Tarkistaja näkee myös tunnetut puutteet ja vanhan/uuden vertailun.
 5. Tunnettu virhe estää hyväksynnän. Puuttuva näyttö estää sitä koskevan hyväksynnän. Keskiarvo ei kumoa kumpaakaan.
+
+### Päätuotteen, palvelusivujen ja yhteydenoton hyväksyntä
+
+Riippumaton tarkistaja arvioi julkaisuun ehdotetun version puhelimella ja tietokoneella. Tarkista soveltuvat kohdat yksitellen.
+
+| Kohta | Miten hyväksyntä osoitetaan |
+| --- | --- |
+| Päätuote tai palvelu | Avaa mobiilietusivu ennen kuin luet lähteet tai suunnitelman. Kerro omin sanoin, mitä yritys tarjoaa ja mikä on asiakkaan seuraava askel. Vertaa vastausta sen jälkeen asiakkaalle suunnattuun alkuperäislähteeseen tai dokumentoituun yrittäjän vahvistukseen. Kirjaa lähde ja tarkka lainaus tai vahvistus. |
+| Palvelu- ja tuotesivut | Nimeä jokaisen sivun asiakaskysymys ja osoita renderöidyltä sivulta konkreettinen vastaus, esimerkiksi sisältö, soveltuvuus tai todennettu työnäyte. Jos kahden sivun otsikot voisi vaihtaa keskenään ja sisältö silti sopisi, yksilöi sivut tai yhdistä ne. Tarkista, että kuvien aihe ja sommittelu tukevat kyseistä vastausta. |
+| Toimintakehotukset | Kulje etusivulta tarjontaan ja siitä eteenpäin. Vertaa painikkeen lupausta todelliseen kohteeseen ja toimintaan. Korjaa jo kaksi peräkkäistä geneeristä kehotusta, jos jälkimmäinen keskeyttää sisällön tuomatta asiakkaalle hyötyä. |
+| Yhteydenotto | Löydä yrityksen käyttämä yhteydenottokanava molemmissa näkymissä ja varmista oikea kohde sekä toiminta. Aseta rekisteritiedot varsinaisten yhteydenottotapojen jälkeen. Jos sivu lupaa lomakkeen, käytä luvallista testivastaanottajaa ja varmista toimitus kuittiin asti. |
+
+Kirjaa sivun osoite, näyttökoko, havainto, näyttölinkki ja tulos jokaisesta kohdasta. Kirjaa perustelu aidosti soveltumattomalle kohdalle. Jos havainto puuttuu, hyväksyntä jää avoimeksi. Jos tarkistus hylätään, kirjaa korjattava kohta ja tarkista sama kohta korjatulta versiolta. Sama hyväksyntä koskee käsin ja automaattisesti rakennettuja demoja. Säilytä uuden yrityksen ensiversion tulokset ja anna sivustolle yksi kokonaisarvosana.
 
 ## Vakioarvio ja oppiminen
 Käytä yhdeksää yhtä painavaa kohtaa: brändiuskollisuus; yrityskohtaisuus; kuvat; sommittelu; sisällön säilyminen; myynnillisyys; navigointi/tekniikka; 3D/animaatiot/skrollaus; asiakasluovutuksen valmius. Laske tarkka summa / 9 ja pyöristä vasta esitys. Puuttuvaa tarkastusta ei merkitä nollaksi tai hyväksytyksi eikä sitä piiloteta vaihtamalla jakajaa. Historialliset kahdeksan kohdan arviot säilyvät historiallisina; niitä ei hyväksytä uudella asteikolla ilman uutta arviota.

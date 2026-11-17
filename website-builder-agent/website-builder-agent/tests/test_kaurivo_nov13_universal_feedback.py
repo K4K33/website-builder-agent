@@ -41,6 +41,16 @@ class UniversalLessonsContractTests(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, active)
 
+    def test_customer_journey_acceptance_is_in_the_shared_active_contract(self):
+        from agents import builder, qa, research
+
+        for prompt in (research.FINAL_RESEARCH_PROMPT, builder.BUILD_SYSTEM_PROMPT,
+                       builder.REVISE_SYSTEM_PROMPT, qa.SERVICE_QUALITY_POLICY):
+            for requirement in ("PRIMARY OFFER:", "SERVICE ROUTE:", "CALL TO ACTION:",
+                                "CONTACT:", "even two copies", "regardless of the overall score"):
+                with self.subTest(requirement=requirement):
+                    self.assertIn(requirement, prompt)
+
     def test_manual_and_automatic_preview_share_proof_gate(self):
         # This is not a source screenshot: the gate MUST fail for a bare HTML
         # publication with zero concepts, even if an HTTP status test is green.
