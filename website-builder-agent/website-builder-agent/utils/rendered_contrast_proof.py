@@ -7,8 +7,6 @@ and every unknown/animated/failed capture is rejected.
 """
 from io import BytesIO
 
-from PIL import Image, UnidentifiedImageError
-
 
 def _luminance(rgb):
     def linear(channel):
@@ -31,6 +29,12 @@ def rendered_background_contrast(png_bytes, foreground, required, *, max_pixels=
             not isinstance(foreground, (tuple, list)) or len(foreground) != 3 or
             any(not isinstance(c, (int, float)) or c < 0 or c > 255 for c in foreground) or
             not isinstance(required, (int, float)) or required < 3 or required > 7):
+        return None
+    try:
+        from PIL import Image, UnidentifiedImageError
+    except ImportError:
+        # Minimal audit environments may omit Pillow. Never turn a missing
+        # verifier into a positive QA verdict.
         return None
     try:
         with Image.open(BytesIO(png_bytes)) as image:
