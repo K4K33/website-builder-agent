@@ -40,6 +40,9 @@ class StagedVisualReviewTests(unittest.TestCase):
                                "all reviewed routes and both responsive viewports.",
                 "critical_issues": [],
                 "source_reference_reviewed": True,
+                "source_comparison": "Original desktop and mobile screens show "
+                    "the official logo, palette and textured service photos; "
+                    "this concept retains those identifiable original assets.",
                 "view_assessments": {
                     f"{alias.lower()}-{j}": {
                         "verdict": "pass",
@@ -90,6 +93,9 @@ class StagedVisualReviewTests(unittest.TestCase):
                            "original website's distinct high-contrast branding.",
             "critical_issues": [],
             "source_reference_reviewed": True,
+            "source_comparison": "The genuine original desktop and mobile pages "
+                "use consistent logo and bold hero typography; the redesign "
+                "visibly preserves those specific authentic details.",
             "view_assessments": [{
                 "view_id": view_id,
                 "verdict": "pass",
@@ -113,6 +119,33 @@ class StagedVisualReviewTests(unittest.TestCase):
                 "media_evidence":"Original photography and other source visual details."
             } for item in ids}}, ids, True)
         self.assertEqual(issue, "original_source_review")
+
+    def test_inadequate_original_comparison_never_produces_false_pass(self):
+        from utils.kaurivo_staged_visual_review import _normalize_verified_variant
+        ids = ["a", "b", "c", "d"]
+        report = {
+            "observation": "Four different responsive screenshots include "
+                           "real site navigation and preserved contact details.",
+            "critical_issues": [], "source_reference_reviewed": True,
+            "source_comparison": "Brand matches.",
+            "view_assessments": {view: {
+                "verdict": "pass",
+                "brand_evidence": "Real original company logo appears on this viewport.",
+                "composition_evidence": "Full responsive composition with legible hierarchy.",
+                "media_evidence": "Authentic company images are presented without repeats.",
+            } for view in ids}
+        }
+        result, error = _normalize_verified_variant(report, ids, True)
+        self.assertIsNone(result)
+        self.assertEqual(error, "source_comparison")
+        report["source_comparison"] = (
+            "Compared actual original desktop and mobile pictures with this "
+            "new design: the brand logo, authentic red palette and source "
+            "service imagery remain recognizable at both responsive widths."
+        )
+        result, error = _normalize_verified_variant(report, ids, True)
+        self.assertIsNone(error)
+        self.assertEqual(set(result["view_assessments"]), set(ids))
 
     def test_no_source_images_block_premium_review_but_allow_proved_no_website(self):
         views, _ = sample_reviews()
