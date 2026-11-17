@@ -144,19 +144,25 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
         )
 
     def repair_measured_contrast(result):
-        if result["status"] == "ready_for_comparison":
-            return result
-        changed = False
-        remaining = (result.get("private_contrast_issues") or {}).get(candidate_id, {})
-        for route, measured in remaining.items():
-            if route not in reject or route not in source_pages:
-                continue
-            prior = source_pages[route]
-            corrected_css = repair_browser_contrast(prior, measured)
-            if corrected_css != prior:
-                source_pages[route] = prepare_page(route, corrected_css)
-                changed = True
-        return render_current_concepts() if changed else result
+        # Chromium reports a bounded sample per viewport. Its next render
+        # can expose unreadable copy beyond the first batch of measurements.
+        for _ in range(3):
+            if result["status"] == "ready_for_comparison":
+                break
+            changed = False
+            remaining = (result.get("private_contrast_issues") or {}).get(candidate_id, {})
+            for route, measured in remaining.items():
+                if route not in reject or route not in source_pages:
+                    continue
+                prior = source_pages[route]
+                corrected_css = repair_browser_contrast(prior, measured)
+                if corrected_css != prior:
+                    source_pages[route] = prepare_page(route, corrected_css)
+                    changed = True
+            if not changed:
+                break
+            result = render_current_concepts()
+        return result
 
     new_set = repair_measured_contrast(render_current_concepts())
     if new_set["status"] != "ready_for_comparison":

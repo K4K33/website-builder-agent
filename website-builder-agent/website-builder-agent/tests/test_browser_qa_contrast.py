@@ -83,6 +83,44 @@ class ContrastAndScrollTests(unittest.TestCase):
             second = inspect_site(path)
             self.assertTrue(second["pass"], second["issues"])
 
+    def test_contrast_recovery_matches_inline_spacing_and_is_idempotent(self):
+        import json
+        from utils.concept_contrast_recovery import repair_browser_contrast
+
+        html = "<html><body><main><a>Verified <i aria-hidden='true'></i>copy</a></main></body></html>"
+        marker = "mobile: text/background contrast NOT VERIFIABLE; review the real rendered image: "
+        evidence = marker + json.dumps([{
+            "selector": "body > main:nth-of-type(1) > a:nth-of-type(1)",
+            "tag": "A", "text": "Verified copy",
+        }])
+        repaired = repair_browser_contrast(html, [evidence])
+        self.assertIn("opacity:1 !important", repaired)
+        self.assertIn('Verified <i aria-hidden="true"></i>copy', repaired)
+        self.assertEqual(repair_browser_contrast(repaired, [evidence]), repaired)
+
+    def test_translucent_text_on_a_gradient_gets_a_readable_surface(self):
+        from utils.concept_contrast_recovery import repair_browser_contrast
+
+        html = """<!doctype html><html><head><meta name="viewport"
+            content="width=device-width,initial-scale=1"><title>Test</title>
+            <style>body{font:16px Arial;color:#111;background:#fff}
+            main{padding:40px;background-image:linear-gradient(#888,#fff)}
+            h1{color:#fff;opacity:.65}</style></head>
+            <body><main><h1>Verified <i aria-hidden="true"></i>copy</h1></main></body></html>"""
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "index.html"
+            path.write_text(html, encoding="utf-8")
+            first = inspect_site(path)
+            if any("Browser QA unavailable" in item for item in first["issues"]):
+                self.skipTest("Chromium unavailable")
+            self.assertFalse(first["pass"])
+            self.assertTrue(any("NOT VERIFIABLE" in item for item in first["issues"]), first)
+            repaired = repair_browser_contrast(html, first["issues"])
+            self.assertIn("background-image:linear-gradient(#888,#fff)", repaired)
+            path.write_text(repaired, encoding="utf-8")
+            second = inspect_site(path)
+            self.assertTrue(second["pass"], second["issues"])
+
     def test_unverified_or_mismatched_browser_evidence_never_changes_copy(self):
         from utils.concept_contrast_recovery import repair_browser_contrast
         import json
