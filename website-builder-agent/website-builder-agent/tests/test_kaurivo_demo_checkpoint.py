@@ -263,6 +263,19 @@ class PrivateCheckpointTests(unittest.TestCase):
             with self.assertRaisesRegex(CheckpointError, "symlink"):
                 make_archive(root, SLUG, JOB, "researched", company)
 
+    def test_checkpoint_failure_categories_are_bounded_and_not_raw_storage_responses(self):
+        worker = (Path(__file__).resolve().parents[1] /
+                  "scripts" / "run_kaurivo_demo_queue.py").read_text()
+        checkpoint = worker.split("def save_private_checkpoint(", 1)[1].split(
+            "def restore_private_checkpoint(", 1)[0]
+        for safe in ("local_file_count", "local_uncompressed_budget",
+                     "local_compressed_budget", "local_active_manifest_missing",
+                     "edge_timeout", "edge_http_", "edge_ack_not_ok"):
+            self.assertIn(safe, checkpoint)
+        self.assertNotIn("reply.text", checkpoint)
+        self.assertNotIn("response.text", checkpoint)
+        self.assertNotIn("str(exc)", checkpoint.split("raise HoldError", 1)[0])
+
     def test_stage_is_not_a_claim_of_qa_approval(self):
         worker = (Path(__file__).resolve().parents[1] /
                   "scripts" / "run_kaurivo_demo_queue.py").read_text()
