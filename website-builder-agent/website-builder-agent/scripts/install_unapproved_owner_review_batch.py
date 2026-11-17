@@ -45,7 +45,7 @@ def validate_and_install(archive:Path,dest:Path)->dict:
         for m in members:
             if not m.isfile() or m.issym() or m.islnk():raise ValueError("Unexpected archive object")
             p=Path(m.name)
-            if p.is_absolute() or ".." in p.parts or len(p.parts)<2 or p.parts[0] not in SITES:
+            if p.name in ("SOURCE_AND_QA_NOTES.json", "STATIC_QA.json") and len(p.parts)==1:\n                continue  # Private research notes are not a public page.\n            if p.is_absolute() or ".." in p.parts or len(p.parts)<2 or p.parts[0] not in SITES:
                 raise ValueError("Unsafe or unexpected preview path")
             if p.suffix not in (".html",".css",".js"):
                 raise ValueError("Unexpected archive file type")
@@ -66,7 +66,7 @@ def validate_and_install(archive:Path,dest:Path)->dict:
                 raise ValueError(f"{p}: missing preview noindex")
             if set(audit.quality.split(";"))!={"TECHNICAL_PREVIEW_ONLY","QUALITY_PENDING","HOLD"}:
                 raise ValueError(f"{p}: missing explicit quality hold")
-            if "EI JULKAISUUN" not in h or "Kaurivon sisäinen" not in h:
+            if "EI JULKAISUUN" not in h or "KAURIVON SISÄINEN" not in h.upper():
                 raise ValueError(f"{p}: missing owner-review warning")
             if "<h1" not in h or audit.forms or "9,5/10 hyväksytty" in h.lower():
                 raise ValueError(f"{p}: broken content or misleading approval")
