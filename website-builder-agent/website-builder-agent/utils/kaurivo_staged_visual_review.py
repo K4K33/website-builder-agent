@@ -8,6 +8,18 @@ or treated as a passing browser/visual review.
 import json
 
 
+class VisualReviewRevisionRequired(RuntimeError):
+    """A complete, authentic independent review found no defect-free candidate.
+
+    Detailed critique is kept in process memory for a bounded author-only
+    revision, never interpolated into public logs or SQL progress.
+    """
+    def __init__(self, reports, assessments):
+        super().__init__("VISUAL_QA_REVISION_REQUIRED: no verified defect-free concept")
+        self.reports = reports
+        self.assessments = assessments
+
+
 def _normalize_verified_variant(report, ids, has_source):
     """Normalize only explicit reviewed facts, never insert missing QA evidence."""
     if not isinstance(report, dict):
@@ -157,25 +169,49 @@ def staged_concept_review(*, research, order, views, sources, ask, root):
         all_assessments.update(assessments)
     if len(seen) != 12 or len(all_assessments) != 12:
         raise RuntimeError("VISUAL_QA_INCOMPLETE: incomplete real screenshot evaluation")
+    eligible = [alias for alias in ("A", "B", "C")
+                if reports[alias]["passing_views"] == 4
+                and not reports[alias]["critical_issues"]]
+    if not eligible:
+        # Neither ranking nor a claimed high-level score may approve
+        # a concept that the independent reviewer actually rejected.
+        raise VisualReviewRevisionRequired(reports, all_assessments)
+
     ranking = ask(
         "Independently compare THREE source-grounded visual reviews from a "
-        "separate verified reviewer. Choose the strongest concept, not the "
-        "first or the most enthusiastic. Never ignore reported critical issues "
-        "or deficient viewports. Return JSON with selected_alias A/B/C and "
-        "cross_comparison (at least 35 characters, comparing all three). "
-        "If no complete candidate passes, return selected_alias null.",
-        json.dumps({"visual_evidence_review": reports}, ensure_ascii=False),
+        "separate verified reviewer. Choose the strongest ALREADY-PASSING "
+        "concept only from eligible_aliases. All other concept candidates "
+        "are disqualified by actual independent evidence and may NOT win. "
+        "Return JSON with selected_alias A/B/C and cross_comparison "
+        "(at least 35 characters, comparing all three). "
+        "If no eligible candidate deserves selection, return null.",
+        json.dumps({"visual_evidence_review": reports,
+                    "eligible_aliases": eligible}, ensure_ascii=False),
         image_paths=None, max_tokens=700)
     if not isinstance(ranking, dict) or not isinstance(
             ranking.get("cross_comparison"), str) or len(
             ranking["cross_comparison"].strip()) < 35:
         raise RuntimeError("VISUAL_QA_INCOMPLETE: cross-concept ranking missing")
     selected = ranking.get("selected_alias")
-    if selected not in reports:
-        raise RuntimeError("VISUAL_QA_INCOMPLETE: no acceptable concept selected")
-    if (reports[selected]["critical_issues"] or
-        reports[selected]["passing_views"] != 4):
-        raise RuntimeError("VISUAL_QA_INCOMPLETE: selected concept has unresolved visual defects")
+    if selected not in eligible:
+        # One narrow independent correction for choosing a disqualified
+        # direction. Do not accept a fabricated winner or self-reviewed score.
+        ranking = ask(
+            "Your chosen concept was NOT among the verified defect-free "
+            "eligible_aliases. Re-rank the SAME reviewed evidence and select "
+            "only an eligible candidate, or null if none genuinely qualifies. "
+            "Return selected_alias and a concrete cross_comparison with at "
+            "least 35 characters. Do not modify the evidence or issue lists.",
+            json.dumps({"visual_evidence_review": reports,
+                        "eligible_aliases": eligible}, ensure_ascii=False),
+            image_paths=None, max_tokens=700)
+        if not isinstance(ranking, dict) or not isinstance(
+                ranking.get("cross_comparison"), str) or len(
+                ranking["cross_comparison"].strip()) < 35:
+            raise RuntimeError("VISUAL_QA_INCOMPLETE: second ranking missing")
+        selected = ranking.get("selected_alias")
+        if selected not in eligible:
+            raise RuntimeError("VISUAL_QA_INCOMPLETE: reviewer refused defect-free candidate")
     return {
         "selected_alias": selected,
         "observations": {alias: item["observation"] for alias, item in reports.items()},
