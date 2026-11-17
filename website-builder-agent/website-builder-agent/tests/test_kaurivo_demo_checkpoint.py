@@ -79,6 +79,15 @@ class PrivateCheckpointTests(unittest.TestCase):
         self.assertEqual(completed_stage_index("selected"), 2)
         self.assertEqual(completed_stage_index("built"), 3)
 
+    def test_checkpoint_change_wakes_live_worker_without_weakening_claims(self):
+        workflow = (Path(__file__).resolve().parents[3] / ".github" /
+                    "workflows" / "kaurivo-demo-worker.yml").read_text(encoding="utf-8")
+        self.assertIn(
+            '"website-builder-agent/website-builder-agent/scripts/kaurivo_demo_checkpoint.py"',
+            workflow)
+        self.assertIn("Securely claim one queued job", workflow)
+        self.assertIn("cancel-in-progress: false", workflow)
+
     def test_concept_replay_requires_server_issued_marker_and_checkpoint(self):
         directory = (Path(__file__).resolve().parents[1] / "docs" /
                      "kaurivo" / "backend")
