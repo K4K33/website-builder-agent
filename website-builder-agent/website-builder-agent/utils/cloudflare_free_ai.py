@@ -232,9 +232,13 @@ def chat_cloudflare_free(
     if resp.status_code == 402:
         raise RuntimeError("FREE_AI_ACCOUNT_BLOCKED: Cloudflare Free billing boundary.")
     if resp.status_code == 404:
-        # A 404 from the optional OpenAI-compatible router does not prove the
-        # documented model-specific REST endpoint is absent. One independent,
-        # free-only same-model request is permitted (with its own reservation).
+        # Only the independent vision QA has a documented production
+        # recovery need. Do NOT increase requests for Builder/Research 404s;
+        # those stages remain fail-closed on their verified endpoint.
+        if stage != "qa":
+            raise RuntimeError("FREE_MODEL_UNAVAILABLE: Cloudflare exact model unavailable.")
+        # A QA router 404 does not prove Cloudflare's documented same-model
+        # REST endpoint is absent. One bounded Workers Free try is allowed.
         return _run_same_model_rest_after_router_404(
             account=account, token=token, model=model, payload=payload,
             json_mode=json_mode)
