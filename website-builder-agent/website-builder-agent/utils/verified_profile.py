@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 
 from utils.lead_intelligence import site_signal, finnish_business_id
 from utils.quality import normalize_facts
+from utils.service_quality import is_registry_source
 
 
 def validate_verified_profile(company, profile=None, today=None):
@@ -43,6 +44,8 @@ def validate_verified_profile(company, profile=None, today=None):
         if not all(isinstance(url, str) and urlsplit(url).scheme == "https"
                    and urlsplit(url).hostname for url in urls):
             raise RuntimeError("Invalid HTTPS evidence URL for " + field)
+    if all(is_registry_source(url) for url in sources["services"]):
+        raise RuntimeError("Original-site primary offering unverified; registry scope alone cannot verify services")
     for key in ("contact_phone", "contact_email", "contact_address", "opening_hours"):
         value = facts.get(key)
         if value and key not in sources:

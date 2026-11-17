@@ -390,6 +390,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "source_canonical_redirect_unverified"
     if "original-site root inventory empty" in terminal:
         return "source_root_inventory_empty"
+    if "original-site primary offering unverified" in terminal:
+        return "source_research_incomplete"
     if "original-site content research incomplete" in terminal or (
        "important source pages not researched" in terminal
     ):
@@ -449,6 +451,8 @@ def source_failure_diagnostic(handle,start_position=0):
     if not terminals:
         return ""
     terminal=terminals[-1]
+    if "Original-site primary offering unverified" in terminal:
+        return "Vahvista nykyinen päätuote tai palvelu yrityksen asiakkaille suunnatusta lähteestä."
     marker="Original-site content research incomplete; review these pages:"
     if marker not in terminal:
         return ""

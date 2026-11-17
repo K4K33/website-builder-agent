@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections import Counter
 from urllib.parse import urljoin, urlsplit
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -20,6 +21,13 @@ TASK_PATTERNS = (
     ('application', r'ilmoittaudu|hae mukaan|anmäl|register|apply now'),
 )
 POLICY = '''SERVICE QUALITY CONTRACT — ALL CLIENTS:
+The first screen states the verified primary offer and the visitor's next step.
+Every service route must earn its place with a distinct visitor question and
+source-backed answers, examples, or practical details. Combine thin routes
+when evidence is sparse. Put company register details after the contact path.
+Use evidence of actual work where available. Never turn a registry's business
+scope into a service list. Give the primary action a clear destination and avoid
+repeating a vague link through consecutive sections on the same page.
 Plan actual visitor tasks before layout. Preserve every distinct original
 booking, shopping, quotation and application destination, including external
 platforms and forms. A mailto draft is not equivalent to a delivered form.
@@ -62,6 +70,57 @@ def _hash(value):
 
 def _normal(text):
     return ' '.join(str(text or '').split())
+
+
+def is_registry_source(url):
+    host = (urlsplit(url).hostname or '').lower().rstrip('.')
+    return any(host == domain or host.endswith('.' + domain)
+               for domain in ('prh.fi', 'ytj.fi', 'virre.fi'))
+
+
+_REGISTRY_SCOPE = re.compile(
+    r'kaupparekisteri|päätoimiala|yhtiön toimialana on|kaikki laillinen liiketoiminta|'
+    r'handelsregistret|huvudbransch|registered business scope', re.I
+)
+
+
+def validate_primary_offering(evidence, pages):
+    """Bind one concrete offer to an exact excerpt from the observed site."""
+    if isinstance(evidence, dict):
+        url = evidence.get('source_url')
+        label = _normal(evidence.get('label'))
+        quote = _normal(evidence.get('quote'))
+        if (isinstance(url, str) and label and len(quote.split()) >= 3
+                and label.casefold() in quote.casefold()
+                and not _REGISTRY_SCOPE.search(quote)
+                and any(p.get('url') == url and quote in _normal(p.get('text'))
+                        for p in pages)
+                and not is_registry_source(url)):
+            return {'label': label, 'quote': quote, 'source_url': url}
+    raise RuntimeError("Original-site primary offering unverified; "
+                       "confirm a current product or service with a customer-facing source.")
+
+
+_GENERIC_ACTIONS = {
+    'lähetä tiedustelu', 'ota yhteyttä', 'lue lisää', 'tutustu', 'tutustu lisää',
+    'skicka en förfrågan', 'kontakta oss', 'läs mer',
+    'send an inquiry', 'send an enquiry', 'get in touch', 'contact us', 'learn more',
+}
+
+
+def repeated_generic_actions(soup):
+    main = soup.find('main')
+    if not main:
+        return []
+    counts = Counter()
+    for link in main.select('a[href]'):
+        if link.find_parent(['header', 'footer', 'nav']):
+            continue
+        label = _normal(link.get_text(' ', strip=True)).casefold()
+        if label in _GENERIC_ACTIONS:
+            counts[label, link['href'].strip()] += 1
+    return [{'label': label, 'destination': destination, 'count': count}
+            for (label, destination), count in counts.items() if count >= 3]
 
 
 def source_tasks(research):
@@ -118,6 +177,10 @@ def service_brief(research):
                'creative_selection': research.get('creative_selection'),
                'review_evidence_protocol': research.get('review_evidence_protocol'),
                'company_facts': research.get('company_facts') or {}}
+    if research.get('media_selection_protocol'):
+        payload['media_selection_protocol'] = research['media_selection_protocol']
+    if 'primary_offering_evidence' in research:
+        payload['primary_offering_evidence'] = research['primary_offering_evidence']
     return {**payload, 'contract_sha256': _hash(payload), 'policy': POLICY}
 
 
@@ -128,12 +191,55 @@ def reset_generated_review_claims(research):
     return research
 
 
+def validate_media_selection(research):
+    """Check source-image choices before Builder and again during output QA.
+
+    This verifies traceability and required reasoning. A visual reviewer must
+    still assess image subjects, quality, rights and the actual composition.
+    """
+    if research.get('media_selection_protocol') != 'source_first_v1':
+        return
+    observed = set()
+    for page in (research.get('source_inventory') or {}).get('pages', []):
+        images = (page.get('source_identity') or {}).get('original_content_photos') or []
+        images = [*images, *(page.get('images') or [])]
+        observed.update(image['src'] for image in images
+                        if isinstance(image, dict) and image.get('src'))
+    selections = research.get('media_purpose_plan') or []
+    if not isinstance(selections, list):
+        raise RuntimeError('Source-first media plan must be a list before Builder')
+    for choice in selections:
+        if not isinstance(choice, dict):
+            raise RuntimeError('Source-first media choice must be a record before Builder')
+        origin = choice.get('image_origin')
+        if origin not in ('original', 'client_supplied', 'licensed_stock', 'generated'):
+            raise RuntimeError('Source-first media choice needs image_origin before Builder')
+        if origin == 'original':
+            if (choice.get('source_src') or choice.get('src')) not in observed:
+                raise RuntimeError('Source-first image must match an observed source before Builder')
+        if origin in ('licensed_stock', 'generated'):
+            candidates = choice.get('source_candidates')
+            if (not isinstance(candidates, list) or (observed and not candidates)
+                    or not _normal(choice.get('gap_reason'))):
+                raise RuntimeError('Source-first replacement needs rejected source candidates and gap_reason before Builder')
+            for candidate in candidates:
+                if (not isinstance(candidate, dict) or candidate.get('source_src') not in observed
+                        or not _normal(candidate.get('reason'))):
+                    raise RuntimeError('Source-first replacement candidate must cite an observed image and reason before Builder')
+                if candidate.get('usable_for_task') is not False:
+                    raise RuntimeError('Source-first replacement requires an assessed unusable source candidate before Builder')
+
+
 def validate_service_plan(research):
     """Reject incomplete or invented task plans before a new Builder request.
 
     Legacy research is still audited on output; newly researched projects use
     v1 and must map every discovered business task before spending on a build.
     """
+    validate_media_selection(research)
+    if 'primary_offering_evidence' in research:
+        validate_primary_offering(research['primary_offering_evidence'],
+                                  (research.get('source_inventory') or {}).get('pages', []))
     tasks = source_tasks(research)
     plans = research.get('business_task_plan')
     if plans is None and research.get('service_quality_protocol') != 'v1':
@@ -175,6 +281,9 @@ def audit_service_quality(pages, research, *, artifact_digest=None, review_bundl
     except RuntimeError as error:
         blocking.append({'kind': 'invalid_business_task_plan', 'reason': str(error)})
     soups = {route: BeautifulSoup(raw, 'html.parser') for route, raw in pages.items()}
+    for route, soup in soups.items():
+        for action in repeated_generic_actions(soup):
+            blocking.append({'kind': 'repeated_generic_action', 'route': route, **action})
     task_ids = {t['id'] for t in brief['tasks']}
     plans = research.get('business_task_plan') or []
     plans = plans if isinstance(plans, list) else []

@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from functools import partial
 from uuid import uuid4
 
-from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256
+from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256, validate_primary_offering
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import (
@@ -95,6 +95,12 @@ Tavoitteet:
 4. Luo lyhyt hakulause, jolla voidaan etsiä moderneja
    referenssisivustoja samalta toimialalta.
 
+Anna primary_offering_evidence vain, jos yrityksen oma sivusto osoittaa, mitä
+asiakas voi oikeasti ostaa, varata tai tilata. Kopioi source_url alisivujen
+lähdepaketista, quote kokonaisena sellaisenaan ja label täsmälleen lainauksesta.
+Lainauksen on yksilöitävä varsinainen tuote tai palvelu. Pelkkä yrityksen nimi,
+iskulause, toimialaluokka tai kaupparekisterin kuvaus ei riitä. Jos näyttöä
+ei löydy, palauta primary_offering_evidence arvolla null.
 Älä keksi yhteystietoja.
 
 Jos tietoa ei löydy, käytä tyhjää merkkijonoa.
@@ -116,6 +122,7 @@ Palauta VAIN validi JSON:
     "tagline_or_value_prop": "",
     "target_audience": ""
   },
+  "primary_offering_evidence": {"source_url": "", "quote": "", "label": ""},
   "current_site_weaknesses": [],
   "reference_search_query": ""
 }
@@ -349,7 +356,12 @@ Return these structured planning fields as part of the brief:
   completion_mode (existing_platform, local_flow or form_submission), and the
   browser test needed to verify completion. Do not invent task ids or services.
 - media_purpose_plan: route, src (rendered image), source_src (observed original),
-  observed_subject, visitor_task, rationale. If you have not visually inspected
+  observed_subject, visitor_task, rationale, image_origin (original,
+  client_supplied, licensed_stock, generated). Prefer the company source images.
+  For licensed_stock or generated media, add source_candidates (source_src, usable_for_task=false and
+  concrete reason for each rejected existing source image) and gap_reason.
+  An unavailable rights confirmation requires follow-up, never automatic AI.
+  If you have not visually inspected
   the subject, leave it unknown. Original ownership or alt text is not proof.
 - company_voice_brief: tone, company_specific_facts, source_excerpts (exact text
   and source_url). Unknown voice remains pending; use plain verified facts.
@@ -974,6 +986,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
+        "media_selection_protocol": "source_first_v1",
         "quality_contract_version": 6,
         "master_prompt_sha256": MASTER_PROMPT_SHA256,
         "visual_concepts_protocol": "v1",
@@ -1219,9 +1232,9 @@ Raaka HTML:
         "yrityksen faktat..."
     )
 
+    saved_extraction = progress.get("extracted")
     extracted = (
-        progress["extracted"] if progress.get("milestone") in ("facts", "references")
-        else ask_claude_json(
+        saved_extraction if isinstance(saved_extraction, dict) else ask_claude_json(
             FACT_EXTRACTION_PROMPT,
             user_prompt,
             max_tokens=3500,
@@ -1253,6 +1266,11 @@ Raaka HTML:
         company_facts = {}
 
     company_facts = normalize_facts(company_facts)
+    primary_offering = None
+    if not isinstance(saved_extraction, dict) or "primary_offering_evidence" in extracted:
+        primary_offering = validate_primary_offering(
+            extracted.get("primary_offering_evidence"), source_inventory["pages"]
+        )
 
     industry = str(
         company_facts.get(
@@ -1413,6 +1431,8 @@ Tärkeää:
         "design brief..."
     )
 
+    if primary_offering:
+        final_prompt += "\nVERIFIED PRIMARY OFFERING:\n" + json.dumps(primary_offering, ensure_ascii=False)
     final_prompt += "\nDETERMINISTIC SOURCE TASK MANIFEST (copy task ids exactly):\n" + json.dumps(
         service_brief({"source_inventory": source_inventory, "company_facts": company_facts}),
         ensure_ascii=False)
@@ -1480,6 +1500,7 @@ Tärkeää:
     research_data = {
         **brief,
         "service_quality_protocol": "v1",
+        "media_selection_protocol": "source_first_v1",
         "quality_contract_version": 6,
         "master_prompt_sha256": MASTER_PROMPT_SHA256,
         "visual_concepts_protocol": "v1",
@@ -1511,6 +1532,10 @@ Tärkeää:
         "reference_search_query": search_query,
     }
 
+    # Use only evidence checked against the source inventory. Old saved jobs retain their brief.
+    research_data.pop("primary_offering_evidence", None)
+    if primary_offering:
+        research_data["primary_offering_evidence"] = primary_offering
     reset_generated_review_claims(research_data)
     research_data["brand_signature_plan"] = derive_brand_signature_plan(research_data)
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
