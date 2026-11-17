@@ -189,7 +189,7 @@ def chat_cloudflare_free(
     # images. Pair the 12/14 real views with visible order labels; never
     # silently omit a screenshot, trust generated scores, or change the
     # original QA captures.
-    if image_paths and stage == "qa" and len(image_paths) in (12, 14):
+    if image_paths and stage == "qa" and len(image_paths) in (4, 6, 12, 14):
         content = compact_concept_review_user_content(user_prompt, image_paths)
     else:
         content = (compact_vision_user_content(user_prompt, image_paths)
