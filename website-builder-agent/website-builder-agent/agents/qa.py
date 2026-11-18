@@ -1053,6 +1053,14 @@ Tämä palautusskeema korvaa aiemman esimerkkiskeeman:
     "company_authenticity": "how original branding and real services dominate",
     "prior_patterns_compared": ["other known client design compositions"],
     "unresolved": []
+  },
+  "global_craft_experience_comparison": {
+    "references_observed": [],
+    "observed_strengths": [],
+    "generated_experience_findings": [],
+    "critical_experience_gaps": [],
+    "repair_actions": [],
+    "independently_9_5_certified": false
   }
 }
 Tekoälymäisyyden riski 0 = ei havaittuja geneerisiä piirteitä ja
@@ -1064,6 +1072,15 @@ ilmoita unresolved-puutteena eikä hyväksyntää saa myöntää.
 Kirjaa konkreettisia toistuvia tekstin/kuvien/elementtien piirteitä.
 Älä päättele tekijää ulkoasusta. Tavoite <=2/10. Samankaltainen
 toimiala EI yksin ole hylkäysperuste.
+V7-global_craft_experience_comparison: täytä kenttä vain aidosta
+selain- ja videohavaintoaineistosta. Jos kolme vertailukohdetta tai
+rakennetun sivun scrollausnäyttö puuttuu, references_observed ja löydökset
+ovat vain oikeasti havaittuja; kirjaa puute critical_experience_gaps-listaan.
+Älä täytä tyhjiä listoja automaattisen hyväksynnän saamiseksi. Jos
+vertailun jälkeen on vakavia, asiakkaan kokemusta heikentäviä puutteita,
+kirjaa ne täsmällisesti ja vaadi korjaus. Premium-tyyli ei tarkoita
+kilpailijan animaatioiden kopiointia eikä pelkkä ero palkittuun sivustoon
+ole vakava puute. riippumaton 9,5/10 -arvio pysyy todentamattomana.
 """
 
 
