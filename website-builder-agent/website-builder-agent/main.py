@@ -350,6 +350,13 @@ def cmd_sales_fact_check(args):
     report = inspect_sales_fact_review(company)
     print(json.dumps({"company_slug": slug, **report}, ensure_ascii=False, indent=2))
     if not report["ready"]:
+        # Each discovered gap enters the cross-client improvement queue.
+        # A repeated failure does not pretend that a general fix is validated.
+        from utils.global_feedback import load_ledger, save_ledger, record_qa_findings
+        ledger_file = Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
+        ledger = load_ledger(ledger_file)
+        record_qa_findings(ledger, slug, report["issues"])
+        save_ledger(ledger_file, ledger)
         raise RuntimeError("Sales outreach HOLD: final factual check is incomplete.")
 
 
