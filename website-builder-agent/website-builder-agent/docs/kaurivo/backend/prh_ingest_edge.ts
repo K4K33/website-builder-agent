@@ -198,8 +198,8 @@ Deno.serve(async req => {
    // hostname, preventing another firm's reviews from being credited.
    if(repPlatform==="trustpilot"){
     if(!claimedUrl)continue;
-    const companyHost=new URL(claimedUrl).hostname.toLowerCase().replace(/^www\\./,"");
-    if(reviewUrl.pathname.replace(/\\/$/,"").toLowerCase()!=="/review/"+companyHost)
+    const companyHost=new URL(claimedUrl).hostname.toLowerCase().replace(/^www\./,"");
+    if(reviewUrl.pathname.replace(/\/$/,"").toLowerCase()!=="/review/"+companyHost)
      continue;
    }
   }catch(_){continue;}
@@ -223,7 +223,7 @@ Deno.serve(async req => {
       "heading_missing","contact_link_missing"].includes(i)).slice(0,5):[];
   const technicalAudit=status&&allowedStatuses.has(status)?
    {status,issues:auditIssues,
-    url:status==="html_checked"&&rawAudit?.url===claimedUrl.replace(/\\/$/,"")+"/"
+    url:status==="html_checked"&&rawAudit?.url===claimedUrl.replace(/\/$/,"")+"/"
       ?String(rawAudit.url):status==="html_checked"?clean(rawAudit?.url,1200):"",
     title_present:rawAudit?.title_present===true,
     meta_description_present:rawAudit?.meta_description_present===true,
