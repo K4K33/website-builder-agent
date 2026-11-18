@@ -116,7 +116,21 @@ jobs:
             --cache data/kaurivo_site_audit_cache.json \
             --max-checks 50
 
-      - name: Sync 50 sales-first, still unverified PRH companies into private Kaurivo CRM
+      - name: Verify independent public >=4/5 reputation for up to 8 candidates (no Google or paid API)
+        if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
+        env:
+          KAURIVO_TAVILY_FREE_PLAN_CONFIRMED: ${{ vars.KAURIVO_TAVILY_FREE_PLAN_CONFIRMED }}
+          KAURIVO_TAVILY_API_KEY: ${{ secrets.KAURIVO_TAVILY_API_KEY }}
+        run: |
+          # 0 requests without a card-free provider approval and the
+          # atomic quota check. Google ratings and search snippets do not
+          # qualify a company. Only direct public platform aggregate scores
+          # with >=10 reviews and >=4.0/5 are accepted.
+          python -m utils.kaurivo_reputation_research \\
+            --packet output/nightly-prh/crm-shortlist.json \\
+            --max-queries 8
+
+      - name: Sync only verified >=4/5 reputation prospects to private Kaurivo CRM
         if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
         run: |
           python -m utils.prh_crm_sync \
