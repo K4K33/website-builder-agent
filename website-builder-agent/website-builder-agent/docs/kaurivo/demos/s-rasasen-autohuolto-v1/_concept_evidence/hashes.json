@@ -1,0 +1,23 @@
+[
+  {
+    "id": "tietoensin",
+    "desktop": "_concept_evidence/tietoensin-desktop.png",
+    "desktop_sha256": "18c015b69f4e39fd28186100456a8bc2b8e708bfac9b19746d49becaef033997",
+    "mobile": "_concept_evidence/tietoensin-mobile.png",
+    "mobile_sha256": "8443191832335c38c96c785c7ee7a9039d09fa11dd3efbed55337362857aa45a"
+  },
+  {
+    "id": "kuvaensin",
+    "desktop": "_concept_evidence/kuvaensin-desktop.png",
+    "desktop_sha256": "325dc82b8d130d690f693a902a5c598244ad73da92f9e8726d9897658abfb9af",
+    "mobile": "_concept_evidence/kuvaensin-mobile.png",
+    "mobile_sha256": "21ea2184c02f8bbb9a7773b1e58aef79dafafff4172810f34ad0303258f4b4b0"
+  },
+  {
+    "id": "editorial",
+    "desktop": "_concept_evidence/editorial-desktop.png",
+    "desktop_sha256": "4e2ab54d1f738e43ec0f8e6aee2cb917af68f6af8c0631aaaf35d504c1a6dabc",
+    "mobile": "_concept_evidence/editorial-mobile.png",
+    "mobile_sha256": "aa8c364c727f90d2b59088c1f53eb122e7d1700799c83b6850f199d6e62764c6"
+  }
+]
