@@ -45,7 +45,7 @@ def collect_global_craft_evidence(*, capture, cache=None, cache_root=None) -> di
             shots = (cache(row["url"],capture,cache_root=cache_root,
                            require_scroll_experience=True)
                      if cache is not None else capture(row["url"],row["name"]))
-            valid = complete_scroll_evidence(shots)
+            valid = complete_scroll_evidence(shots,require_video=True)
             out = compact_scroll_observations(shots)
             evidence = []
             if valid:
@@ -145,7 +145,11 @@ def compare_experiences(reference_report: dict, generated_journeys: dict) -> dic
     ref = reference_report if isinstance(reference_report,dict) else {}
     gen = generated_journeys if isinstance(generated_journeys,dict) else {}
     valid_generated = all(
-        isinstance(gen.get(v),dict) and gen[v].get("status")=="observed"
+        isinstance(gen.get(v),dict)
+        and gen[v].get("status")=="observed"
+        and isinstance(gen[v].get("video_path"),str)
+        and Path(gen[v]["video_path"]).is_file()
+        and Path(gen[v]["video_path"]).stat().st_size>300
         for v in ("desktop","mobile")
     )
     return {
