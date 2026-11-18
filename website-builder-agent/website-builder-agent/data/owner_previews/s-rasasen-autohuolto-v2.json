@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "stage": "owner_preview",
+  "status": "TECHNICAL_OWNER_PREVIEW_NOT_CLIENT_APPROVED",
+  "company_name": "S. Räsäsen Autohuolto Oy",
+  "company_business_id": "0953993-4",
+  "verified_at": "2026-11-18",
+  "source_url": "https://www.rasasenautohuolto.fi/",
+  "source_pages": [
+    "https://www.rasasenautohuolto.fi/",
+    "https://www.rasasenautohuolto.fi/autokorjaamo.html",
+    "https://www.rasasenautohuolto.fi/yhteystiedot.html"
+  ],
+  "verified_facts": {
+    "phone": "09 302 113",
+    "email": "info@rasasenautohuolto.fi",
+    "street": "Heisitie 4",
+    "postal_place": "04260 Kerava",
+    "hours": "08.00–17.00",
+    "service_exclusions": ["ruostekorjauksia", "kolarikorjauksia"],
+    "operating_claim": "20 vuoden kokemuksella",
+    "shop_network": "Autofit"
+  },
+  "brand_provenance": {
+    "name_style": "Black uppercase name text on white header; source palette bright red, white and black",
+    "source_header_logo": "Type-based company name; screenshot showed empty data:, logo img, so no verified reusable logo binary",
+    "retained_signature": ["red navigation strip", "bold black uppercase company name", "Luotettavaa palvelua takuulla."],
+    "new_mark_rights": "No new logo is represented as official",
+    "favicon": "Neutral workshop tool pictogram for Kaurivo owner review, explicitly not the official business logo",
+    "media": "Two original locally stored vector technical illustrations, not sourced company photos; clear visible prototype disclosure",
+    "original_image_reuse_status": "Not reused: photo rights are not established",
+    "client_approval": "Not requested; pending"
+  },
+  "source_inventory": {
+    "source_homepage": "verified services, auto & camper vans, service without appointment, 20-year statement, Autofit chain, original slogan",
+    "source_autokorjaamo": "all 11 listed service groups and rust/collision exclusion",
+    "source_yhteystiedot": "verified address, phone, email, weekday opening times and original functional contact form",
+    "browser_captured": true,
+    "source_mobile_and_desktop_screenshots": "Captured on 2026-11-18 in internal evidence artifact; screenshots not claimed as licensed site images"
+  },
+  "release_routes": ["index.html","palvelut/index.html","korjaamo/index.html","yhteys/index.html"],
+  "commercial_visual_review": "owner_pending",
+  "outreach_authorized": false,
+  "cms_delivery_verified": false,
+  "independent_quality_score": null
+}
