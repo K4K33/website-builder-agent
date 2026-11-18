@@ -83,6 +83,18 @@ class EmployConceptTests(unittest.TestCase):
                                                wait_until="domcontentloaded")
                             self.assertEqual(response.status,200)
                             self.assertTrue(page.locator("main h1").is_visible())
+                            # Optional private browser-image review evidence.
+                            # The source-based premium approval gate remains separate.
+                            if (os.getenv("KAURIVO_EMPLOY_VISUAL_REVIEW")=="1"
+                                    and width in (390,1440)
+                                    and suffix in ("","palvelut/","yhteys/")):
+                                import base64
+                                suffix_name=suffix.replace("/","") or "home"
+                                jpeg=page.screenshot(type="jpeg",quality=58,full_page=True,
+                                    animations="disabled")
+                                print("EMPLOY_VISUAL_"+suffix_name+"_"+str(width)
+                                    +"_BEGIN:"+base64.b64encode(jpeg).decode("ascii")
+                                    +":EMPLOY_VISUAL_END",flush=True)
                             self.assertTrue(page.locator("a[href^='tel:']").count()>0)
                             if width <= 760:
                                 header_phone=page.locator(".header-call")
