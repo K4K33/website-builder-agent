@@ -22,6 +22,10 @@
 | 14 | Home furniture / interiors e-commerce | https://andobjects.com/ | UK | The Ecom Awards selected storefront gallery; official current collection website | Editorial product photography, coherent material/texture hierarchy and practical buying path | Copying products, photo assets or luxury whitespace where actual catalog needs more information |
 | 15 | Commercial cleaning services | https://cleanology.com/ | UK | Web Excellence Awards winner Cleanology brand/site redesign | Real people, staff/team process, service credibility and quote/contact journey | Abstract ESG/green claims without business-specific sourcing |
 
+## Automotive quality must be split into complementary visual and functional references
+
+For future auto repair projects, `https://singervehicledesign.com/` is an **additional visual craft reference** from the USA: real restored vehicle details, photography and high-end automotive brand care. Singer is NOT an independent general garage and its luxury visual language must not overwrite the original repair business's honest positioning. `https://www.electrifiedgarage.com/` is a **specialist content and conversion reference**: EV workshop support, transparent technical information and real locations; its large technical/cutaway drawing is NOT an automatically approved design pattern for Kaurivo. `https://www.urbanautocare.com/` is another useful ordinary garage comparison for practical services, appointment and local trust. Require three separately evaluated modes for the automotive vertical rather than a single reference whose graphics would repeat the Räsänen mistakes.
+
 ## Secondary international references discovered, not part of the first 15
 - Automotive practical conversion: https://www.urbanautocare.com/ (USA).
 - Fine-dining site with 2026 Best Restaurant WebAward: https://www.seagars.com/ (USA).
