@@ -35,7 +35,7 @@ def audit(*,count=15,category="",global_craft=False,output_dir="output/v7-refere
         try:
             shots=capture_website(url,"global-v7-"+row["category"],
                                   viewports=REFERENCE_VIEWPORTS,scroll_experience=True)
-            verified=complete_scroll_evidence(shots)
+            verified=complete_scroll_evidence(shots,require_video=global_craft)
             observations=compact_scroll_observations(shots)
             entry={"category":row["category"],"url":url,
                    "name":row.get("name") or row.get("label") or row["category"],
