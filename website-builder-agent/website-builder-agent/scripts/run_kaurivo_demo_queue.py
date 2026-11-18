@@ -864,6 +864,31 @@ def local_browser_smoke(site_root,routes):
                 page.goto((site_root/route).resolve().as_uri(),
                           wait_until="load",timeout=30000)
                 assert page.locator("h1").count()>0
+                # A browser tab with a generic title, missing icon, small
+                # navigation or visually broken imagery is not a finished
+                # premium client site even if its HTML passes lint tests.
+                details=page.evaluate("""() => ({
+                    title:document.title.trim(),
+                    icon:!!document.querySelector('link[rel~="icon"][href]'),
+                    badImages:[...document.images].filter(i=>i.complete && i.naturalWidth===0).length,
+                    navTooSmall:[...document.querySelectorAll('header nav a')].filter(a=>{
+                      if(!a.getClientRects().length)return false;
+                      return parseFloat(getComputedStyle(a).fontSize)<14;
+                    }).length,
+                    tapTooSmall:[...document.querySelectorAll('header button')].filter(b=>{
+                      if(!b.getClientRects().length)return false;
+                      let r=b.getBoundingClientRect();
+                      return r.width<40||r.height<40;
+                    }).length
+                  })""")
+                if not details["title"] or not details["icon"]:
+                    raise HoldError("browser_tab_incomplete")
+                if details["badImages"]:
+                    raise HoldError("broken_rendered_images")
+                if details["navTooSmall"]:
+                    raise HoldError("header_nav_typography_too_small")
+                if details["tapTooSmall"]:
+                    raise HoldError("header_tap_targets_too_small")
                 overflow=page.evaluate(
                     "document.documentElement.scrollWidth>innerWidth+2"
                 )
