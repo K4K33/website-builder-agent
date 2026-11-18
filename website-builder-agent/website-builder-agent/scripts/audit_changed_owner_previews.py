@@ -64,7 +64,7 @@ def check_preview(slug:str)->list[str]:
         if not soup.select_one('meta[name="robots"][content*="noindex"]'):
             problems.append(f'{route}: owner review must not be indexed')
         if len(soup.select('main h1'))!=1:problems.append(f'{route}: one meaningful main H1 required')
-        if not soup.select_one('.demo-band') or 'virallinen' not in soup.select_one('.demo-band').get_text(' ',strip=True):
+        if not soup.select_one('.demo-band b') or 'ei yrityksen virallinen sivu' not in soup.select_one('.demo-band b').get_text(' ',strip=True).casefold():
             problems.append(f'{route}: non-official demo disclaimer missing')
         if soup.select_one('header img,header svg.brand-logo'):
             problems.append(f'{route}: unverified company logo graphic')
