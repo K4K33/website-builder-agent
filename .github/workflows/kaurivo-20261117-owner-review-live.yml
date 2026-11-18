@@ -1,4 +1,4 @@
-name: Kaurivo Nov 17 exact live technical preview verification
+name: Kaurivo block publicly accessible unfinished 17 Nov owner-review demos
 on:
   workflow_run:
     workflows: ["Deploy static content to Pages"]
@@ -9,63 +9,39 @@ permissions:
   contents: read
 
 concurrency:
-  group: kaurivo-20261117-owner-review-smoke
+  group: kaurivo-20261117-owner-review-unpublished
   cancel-in-progress: true
 
 jobs:
-  exact-live-preview:
+  ensure-unpublished:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 7
     steps:
-      - name: Verify exact HTTP release, 12 public routes and asset paths
+      - uses: actions/checkout@v4
+      - name: Verify staged draft source is not in publicly deployed docs
+        run: |
+          test ! -e website-builder-agent/website-builder-agent/docs/kaurivo/owner-review
+      - name: Verify all 3 incomplete demo links are not publicly available
         shell: bash
         run: |
           set -euo pipefail
           base="https://k4k33.github.io/website-builder-agent/kaurivo/owner-review/2026-11-17"
-          passed=0
           for slug in ostroferia-kurkela settimedia talousfocus; do
-            for route in "" "yhteys/" "assets/site.css" "assets/site.js"; do
-              case "$slug:$route" in
-                ostroferia-kurkela:*) routes="menu/ tilaisuudet/" ;;
-                settimedia:*) routes="palvelut/ tiimi/" ;;
-                talousfocus:*) routes="palvelut/ toimialat/" ;;
-              esac
-              if [[ "$route" == "" ]]; then
-                for additional in $routes; do
-                  url="$base/$slug/$additional"
-                  http="$(curl -fsSL --max-time 18 -o /tmp/kaurivo-preview -w '%{http_code}' "$url")"
-                  if [[ "$http" != "200" ]] || ! grep -Fq 'QUALITY_PENDING' /tmp/kaurivo-preview; then
-                    echo "::error::Live inner route failed exact HOLD content check: $url"; exit 1
-                  fi
-                  passed=$((passed+1))
-                done
+            url="$base/$slug/"
+            blocked=false
+            # Pages/CDN may settle after the GitHub deployment job completes.
+            for attempt in 1 2 3 4 5 6; do
+              code="$(curl -sS -L --max-time 15 -o /dev/null -w '%{http_code}' "$url" || true)"
+              if [[ "$code" == 404 || "$code" == 410 ]]; then
+                blocked=true
+                break
               fi
-              url="$base/$slug/$route"
-              ok=false
-              for attempt in 1 2 3 4; do
-                http="$(curl -sSL --max-time 18 -o /tmp/kaurivo-preview -w '%{http_code}' "$url" || true)"
-                if [[ "$http" == "200" ]]; then
-                  if [[ "$route" == *.css ]]; then
-                    grep -Fq 'font-size:16px' /tmp/kaurivo-preview && ok=true
-                  elif [[ "$route" == *.js ]]; then
-                    grep -Fq 'IntersectionObserver' /tmp/kaurivo-preview && ok=true
-                  else
-                    grep -Fq 'QUALITY_PENDING' /tmp/kaurivo-preview &&
-                    grep -Fq 'noindex' /tmp/kaurivo-preview && ok=true
-                  fi
-                fi
-                [[ "$ok" == true ]] && break
-                sleep 5
-              done
-              if [[ "$ok" != true ]]; then
-                echo "::error::Missing or incorrect exact live technical preview: $url"; exit 1
-              fi
-              passed=$((passed+1))
+              sleep 6
             done
+            if [[ "$blocked" != true ]]; then
+              echo "::error::Unapproved demo is still publicly accessible or status not verifiable: $url"
+              exit 1
+            fi
           done
-          url="$base/QUALITY_PENDING.json"
-          curl --fail --silent --show-error --location --max-time 18 "$url" -o /tmp/kaurivo-release
-          grep -Fq '"client_outreach_allowed": false' /tmp/kaurivo-release
-          grep -Fq '"count_html": 12' /tmp/kaurivo-release
-          echo "Verified $passed HTML and asset URLs. All remain QUALITY_PENDING; NOT customer-ready." >> "$GITHUB_STEP_SUMMARY"
+          echo "All three unfinished owner-review previews are unpublished; no owner demo links permitted." >> "$GITHUB_STEP_SUMMARY"

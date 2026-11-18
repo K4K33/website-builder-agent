@@ -42,12 +42,14 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
     def render(self,page,jobs):
         page.evaluate("items => window.KaurivoDemoJobs.render(items, null, {})", jobs)
 
-    def job(self,status="internal_preview", old=OLD, preview=PREVIEW):
+    def job(self,status="approved_preview", old=OLD, preview=PREVIEW):
         return {
             "id":"demo-test-1", "status":status,"company_name":"Esimerkki Oy",
             "business_id":"1111111-1","created_at":"2026-11-11T12:00:00Z",
             "original_url":old,"preview_url":preview,"qa_url":LOG,
             "release_sha":SHA,
+            "quality_approved":True,"independent_visual_score":9.5,
+            "quality_evidence_sha256":"b"*64,
             "progress":"Valmis", "prospect_id":"aabbccdd-aaaa-4aaa-8aaa-123456789abc",
         }
 
@@ -76,6 +78,27 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
             page.wait_for_function("Boolean(window.__copied)")
             self.assertEqual(page.evaluate("window.__copied"),
                              "Esimerkki Oy\nVanha sivu: "+OLD+"\nUusi sivu: "+PREVIEW)
+        finally:
+            page.close()
+
+    def test_technical_preview_is_never_a_demo_even_with_valid_public_qa_url(self):
+        page=self.page()
+        try:
+            job=self.job(status="internal_preview")
+            self.render(page,[job])
+            self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
+            self.assertEqual(page.locator("#demo-hold-list .demo-record").count(),1)
+            self.assertEqual(page.locator("#demo-hold-list .demo-comparison-link").count(),1)
+            self.assertEqual(page.locator("a[href='"+PREVIEW+"']").count(),0)
+            self.assertIn("9,5/10",page.locator("#demo-hold-list").inner_text())
+            job["status"]="approved_preview"
+            job["independent_visual_score"]=9.4
+            self.render(page,[job])
+            self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
+            job["independent_visual_score"]=9.5
+            job["quality_evidence_sha256"]=""
+            self.render(page,[job])
+            self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
         finally:
             page.close()
 

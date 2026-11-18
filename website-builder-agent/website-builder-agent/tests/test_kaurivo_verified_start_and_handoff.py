@@ -123,7 +123,7 @@ class AgencyPreflightTests(unittest.TestCase):
     def test_ui_reports_real_claim_only_not_dispatch_acceptance(self):
         self.assertIn('async function verifyBuildStart(db,jobId)',PANEL)
         self.assertIn('.select("status").eq("id",jobId).maybeSingle()',PANEL)
-        self.assertIn('if(data.status==="internal_preview")return "ready";',PANEL)
+        self.assertIn('if(data.status==="internal_preview")return "pending_quality";',PANEL)
         self.assertIn('if(["hold","failed"].includes(data.status))return "blocked";',PANEL)
         self.assertIn('return "queued";',PANEL)
         self.assertIn('dispatchFeedback(dispatch,toast,confirmed)',PANEL)

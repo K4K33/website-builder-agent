@@ -51,9 +51,17 @@ class OwnerReviewBatchTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"incomplete pages"):
                 validate_and_install(archive,dest)
             self.assertFalse(dest.exists())
-    def test_static_publish_does_not_skip_staging_audit(self):
+    def test_unfinished_owner_review_must_not_be_deployed_to_pages(self):
         workflow=(ROOT.parents[1]/".github/workflows/static.yml").read_text()
         self.assertIn("audit_changed_demo_previews.py",workflow)
-        self.assertIn("install_unapproved_owner_review_batch.py",workflow)
-        self.assertLess(workflow.index("install_unapproved_owner_review_batch.py"),workflow.index("actions/upload-pages-artifact"))
+        self.assertNotIn("install_unapproved_owner_review_batch.py",workflow)
+        self.assertIn("test -e website-builder-agent/website-builder-agent/docs/kaurivo/owner-review",workflow)
+        self.assertLess(workflow.index("Refuse to publish unfinished owner-review demo pages"),
+                        workflow.index("actions/upload-pages-artifact"))
+    def test_public_followup_checks_that_unapproved_links_are_removed(self):
+        workflow=(ROOT.parents[1]/".github/workflows/kaurivo-20261117-owner-review-live.yml").read_text()
+        self.assertIn("not publicly available",workflow)
+        for slug in SITES:
+            self.assertIn(slug,workflow)
+        self.assertNotIn("Verified $passed",workflow)
 if __name__=="__main__":unittest.main()
