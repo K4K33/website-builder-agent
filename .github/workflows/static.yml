@@ -46,6 +46,7 @@ jobs:
           export BASE_SHA HEAD_SHA
           cd website-builder-agent/website-builder-agent
           python scripts/audit_changed_demo_previews.py
+          python scripts/audit_changed_owner_previews.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

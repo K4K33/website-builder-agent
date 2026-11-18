@@ -1,3 +1,39 @@
+## ALWAYS DIRECT BROWSER LINK + PREMIUM DETAILS (18 NOV 2026, ACTIVE)
+
+The user must NEVER request the demo URL separately. Every finished customer
+design task includes real clickable Vanha sivu and Avaa uusi demo links,
+opening the real navigable multi-page site in a browser tab. Do not substitute
+GitHub code, ZIP, screenshots, PDF or a generic preview card. Publish and test
+the hosted HTML, images, CSS, scripts, all subpages, and mobile navigation
+before claiming a preview is ready. If unavailable, report the real blocker.
+
+**Owner review is NOT client-sales permission.** A source-verified and
+technically passing noindex owner preview can be presented before owner's
+visual acceptance. Actual sales require visual signoff, company fact recheck,
+image rights, lawful individual outreach and final hosted smoke. Customer
+handover additionally needs live editable CMS and restore testing.
+
+Every site, every route, has strict premium micro-detail requirements:
+- A unique browser tab title with the exact company name and truthful page
+  topic, meaningful meta description and correct HTML language.
+- Original rights-cleared favicon/logo if verified. Otherwise use an explicitly
+  neutral owner-preview favicon and original company name as plain text.
+  Never invent a company logomark without client authorization.
+- Balanced full-size navigation, integrated contact action, accessible focus,
+  hover/tap states, careful spacing, polished responsive typography, restrained
+  arrows and no gratuitous numbering or repetitive marketing slogans.
+- Authentic, rights-cleared source photography wherever feasible; otherwise
+  clearly identified, reliably loaded locally bundled illustrations.
+  Preserve source colors, typography character and mandatory slogans.
+- Every real service, exclusion, phone, email, hours, form/booking journey,
+  genuine verified partner, language, user task and relevant page survives.
+- Live-host browser verification checks all CSS/JS/media/favicons, mobile menu,
+  horizontal overflow, favicon rendering, and version-specific HTML markers.
+
+A separate source-and-brand gate runs for ALL changed owner previews before
+GitHub Pages deployment, rather than publishing a folder to bypass QA.
+Customer release remains a different, stricter signoff.
+
 ## 18.11.2026 — PAKOLLINEN SELAIMESSA AVATTAVA DEMO JA PREMIUM-YKSITYISKOHDAT
 
 Tämä on PERMANENTTI vaatimus jokaiselle Kaurivon uudelle sivustolle ja muutokselle. Käyttäjä EI JOUdu pyytämään verkkolinkkiä erikseen. Rakennustyö sisältää julkaisun, aidon verkkoselain- ja mobiilitarkistuksen, sekä vastauksen jossa on aina **Vanha sivu** ja **Avaa uusi demo** -linkit. "Avaa demo" avaa suoraan sivuston omalle välilehdelleen (ei ZIP, GitHubin koodinäkymä, PDF, kuvatiedosto, selaimen virhesivu tai korvaava geneerinen demokortti). Linkkiä ei saa keksiä, ja sen julkaistun sisällön täytyy vastata nimenomaan viimeisintä rakennusversiota.
