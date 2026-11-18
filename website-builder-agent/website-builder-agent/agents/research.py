@@ -737,7 +737,9 @@ def _select_reference_candidates(references, facts, target_url):
 
 
 def _collect_reference_evidence(references, target_url):
-    capture_reference = partial(capture_website, viewports=REFERENCE_VIEWPORTS)
+    from utils.reference_scroll_experience import complete_scroll_evidence
+    capture_reference = partial(capture_website, viewports=REFERENCE_VIEWPORTS,
+                                scroll_experience=True)
     candidates, domains = [], {urlsplit(canonical_url(target_url)).hostname}
     for reference in references[:5]:
         url = canonical_url(reference.get("url"))
@@ -753,11 +755,13 @@ def _collect_reference_evidence(references, target_url):
             shots = (capture_cached(
                 url, capture_reference,
                 cache_root=os.path.join(config.OUTPUT_DIR, "_reference_screenshot_cache"),
+                require_scroll_experience=True,
             ) if config.free_only()
                      else capture_reference(url, "reference-" + domain + "-" + uuid4().hex[:12]))
-            if not isinstance(shots, dict) or not all(
+            if (not isinstance(shots, dict) or not complete_scroll_evidence(shots)
+                    or not all(
                     isinstance(shots.get(view), str) and os.path.isfile(shots[view])
-                    for view in ("desktop", "mobile")):
+                    for view in ("desktop", "mobile"))):
                 return None
             return {**reference, "url": url, "screenshots": shots,
                     "observed_at": datetime.now(timezone.utc).isoformat()}
@@ -1355,7 +1359,12 @@ Raaka HTML:
         else _select_reference_candidates(references, company_facts, url)
     )
     reference_evidence = (
-        progress["reference_evidence"] if progress.get("milestone") == "references"
+        progress["reference_evidence"] if (
+            progress.get("milestone") == "references"
+            and isinstance(progress.get("reference_evidence"), list)
+            and all(__import__("utils.reference_scroll_experience", fromlist=["complete_scroll_evidence"])
+                    .complete_scroll_evidence(item.get("screenshots"))
+                    for item in progress["reference_evidence"])) 
         else _collect_reference_evidence(selected, url)
     )
     if (progress.get("milestone") != "references" and
@@ -1380,7 +1389,10 @@ SOURCE-LED INDUSTRY CUSTOMER TASKS (not a layout template):
 OBSERVED INDUSTRY REFERENCES (not facts about the target):
 Image order: {json.dumps(image_labels, ensure_ascii=False)}
 {json.dumps(compact_reference_for_prompt(reference_evidence), ensure_ascii=False)}
-Compare the actual customer journey, typography, layout, imagery and factual detail.
+Compare real scroll progress and the changing composition between frames,
+how sticky navigation, real animation/motion and image reveals behave,
+along with typography, layout, imagery and factual detail.
+Never claim motion quality unless supported by observed browser evidence.
 Record concrete observations and target-specific adaptations in reference_comparison.
 Never copy competitors' text, assets, certifications or service promises.
 
