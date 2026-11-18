@@ -72,7 +72,7 @@ class EmployConceptTests(unittest.TestCase):
         with sync_playwright() as p:
             browser=p.chromium.launch(headless=True,args=["--disable-gpu"])
             try:
-                for width,height in [(390,844),(1440,900)]:
+                for width,height in [(320,740),(390,844),(768,1024),(1440,900)]:
                     page=browser.new_page(viewport={"width":width,"height":height})
                     errs=[]
                     page.on("pageerror",lambda e:errs.append(str(e)))
@@ -84,6 +84,14 @@ class EmployConceptTests(unittest.TestCase):
                             self.assertEqual(response.status,200)
                             self.assertTrue(page.locator("main h1").is_visible())
                             self.assertTrue(page.locator("a[href^='tel:']").count()>0)
+                            if width <= 760:
+                                header_phone=page.locator(".header-call")
+                                self.assertTrue(header_phone.is_visible())
+                                font_size=page.evaluate("parseFloat(getComputedStyle(document.querySelector('.header-call')).fontSize)")
+                                self.assertGreaterEqual(font_size,10)
+                                rect=header_phone.bounding_box()
+                                self.assertGreater(rect["width"],65)
+                                self.assertLessEqual(rect["x"]+rect["width"],width+1)
                             overflow=page.evaluate(
                                 "document.documentElement.scrollWidth-window.innerWidth"
                             )
