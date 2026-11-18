@@ -146,7 +146,7 @@ def complete_scroll_evidence(shots: dict) -> bool:
             file=Path(frame["screenshot"])
             try:
                 if (not file.is_file() or file.stat().st_size<24 or
-                        file.read_bytes()[:8]!=b"\\x89PNG\\r\\n\\x1a\\n" or
+                        file.read_bytes()[:8]!=bytes.fromhex("89504e470d0a1a0a") or
                         sha256(file.read_bytes()).hexdigest()!=frame.get("sha256")):
                     return False
             except OSError:
