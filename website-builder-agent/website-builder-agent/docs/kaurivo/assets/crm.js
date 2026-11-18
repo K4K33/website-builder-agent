@@ -115,6 +115,21 @@
      original.hostname===tested.hostname;
   }catch(_){return false;}
  }
+ function fourStarIndependentReputation(c){
+  const r=c.reputation_evidence||{};
+  if(r.status!=="qualified"||Number(r.rating)<4||Number(r.rating)>5||
+     !Number.isInteger(Number(r.review_count))||Number(r.review_count)<10||
+     r.method!=="direct_public_review_page_structured_rating")return false;
+  try{
+   const u=new URL(r.source_url||"");
+   const host=u.hostname.toLowerCase();
+   const allowed=["trustpilot.com","tripadvisor.com","tripadvisor.fi",
+     "tripadvisor.se","yelp.com"];
+   const date=Date.parse(r.checked_at||"");
+   return u.protocol==="https:"&&allowed.some(h=>host===h||host.endsWith("."+h))&&
+     Number.isFinite(date)&&Math.abs(Date.now()-date)<45*86400000;
+  }catch(_){return false;}
+ }
  function preliminaryScore(c){
   return Math.max(0,Math.min(60,Number(c.screening_priority)||0));
  }
@@ -346,7 +361,9 @@
   const isToday=selectedDay===helsinkiToday();
   const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
   const inaccessible=rows.prospects.filter(x=>!websitePubliclyAccessible(x)).length;
+  const withoutReputation=rows.prospects.filter(x=>!fourStarIndependentReputation(x)).length;
   let visible=rows.prospects.filter(x=>websitePubliclyAccessible(x)&&
+    fourStarIndependentReputation(x)&&
     (x.review_status!=="skipped"||$("show-skipped-prospects").checked)).sort((a,b)=>{
      if(Boolean(a.marketing_opt_out)!==Boolean(b.marketing_opt_out))
       return Number(Boolean(a.marketing_opt_out))-Number(Boolean(b.marketing_opt_out));
@@ -369,13 +386,14 @@
   $("morning-summary").textContent=rows.prospects.length
     ? visible.length+" yritystä tarkistettavana · "+withSites+" rekisteri-/tarkistuslinkkiä"+(suggestions?" · "+suggestions+" sivuehdotusta":"")+(excluded&&!$("show-skipped-prospects").checked
       ?" · "+excluded+" ohitettu":"")+
-      (inaccessible?" · "+inaccessible+" suljettua/tarkistamatonta sivua piilotettu":"")+
+      (inaccessible?" · "+inaccessible+" suljettua/tarkistamatonta sivua":"")+
+      (withoutReputation?" · "+withoutReputation+" ilman vahvistettua väh. 4/5-mainetta":"")+
       " · "+selectedDay
     : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
   if(!visible.length)empty(prospects,mode==="top"
      ?"Ei vielä tarkistettuja, vähintään 65/100-pisteen myyntimahdollisuuksia. Tarkista ensin yritykset ja verkkosivut."
      :rows.prospects.length
-      ?"Ei vielä vahvistettavia julkisia yrityssivuja. Yksityiset, kirjautumisen takana olevat ja tarkistamattomat sivut pidetään pois hakutuloksista."
+      ?"Ei vielä yrityksiä, joilla on sekä julkisesti tarkistettu sivu että vähintään 4/5 riippumaton asiakasarvio (vähintään 10 arvostelua). Arvostelemattomia yrityksiä ei merkitä huonoiksi, vaan niitä ei näytetä laatulistalla."
       :"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
   for(const candidate of visible){
    const row=record(prospects,candidate.company_name,
@@ -412,6 +430,17 @@
    if(candidate.contact_language==="undetermined"&&swedishLanguageHint(candidate))
     append(row.main,"div","record-warning",
       "Ruotsin kieli mahdollinen · tarkista yrityksen oma kieli ennen yhteydenottoa tai demoa. Nimi ja paikkakunta eivät yksin todista kieltä.");
+   const rep=candidate.reputation_evidence||{};
+   append(row.main,"div","record-sub","Riippumaton asiakasmaine: "+
+     Number(rep.rating).toFixed(1)+"/5 ★ · "+Number(rep.review_count)+
+     " arvostelua · "+String(rep.platform||"lähde")+
+     " · tarkistettu "+new Date(rep.checked_at).toLocaleDateString("fi-FI"));
+   try{
+    const source=new URL(rep.source_url);
+    const reputationLink=append(row.main,"a","record-website","Avaa mainetiedon lähde");
+    reputationLink.href=source.href;reputationLink.target="_blank";
+    reputationLink.rel="noopener noreferrer";
+   }catch(_){}
    append(row.main,"div","record-sub",leadReviewBand(candidate));
    if(candidate.screening_reason)
     append(row.main,"div","record-sub","Hakuperusteet: "+String(candidate.screening_reason).slice(0,500));

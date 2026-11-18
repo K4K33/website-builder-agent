@@ -151,6 +151,32 @@ async function notifyDaily(event:string,source:"morning"|"national"):Promise<Res
  const leads=await result.json();
  const count=leads.length;
  if(!count){
+  // A verified, completed nightly run with zero 4-star matches is NOT a
+  // failed or missing run. Send a truthful zero-result summary at 08:00+.
+  const completed=await rest("kaurivo_pipeline_events?event_day=eq."+day+
+   "&component=eq.national_search&outcome=eq.success&select=id&limit=1");
+  const successful=completed.ok&&(await completed.json()).length>0;
+  if(successful){
+   const subs=await subscriptions("select=id,user_id,endpoint,p256dh,auth_secret,last_notified_date&limit=100");
+   const pending=subs.filter(s=>s.last_notified_date!==day);
+   let delivered=0;
+   if(pending.length){
+    const keys=await vapidKeys();
+    for(const sub of pending){
+     if(await deliver(sub,{
+      title:"Kaurivo · päivän mainearvio",
+      body:"Tänään ei vahvistettu vähintään 4/5-mainekriteerin täyttäviä yrityksiä rajatussa haussa.",
+      url:ADMIN_URL+"?view=prospects&day="+day,
+      tag:"kaurivo-leads-"+day
+     },keys,day))delivered++;
+    }
+   }
+   await recordMorningEvent(day,delivered===pending.length?"success":"failure",
+     "Yöhaku valmistui: 0 riittävästi arvioitua yritystä",0,delivered);
+   return reply(delivered===pending.length?200:503,{ok:delivered===pending.length,
+     day,companies:0,notifications:delivered,reason:"zero_verified_reputation_matches"});
+  }
+
   // Do not alarm before the main and backup discovery windows have passed.
   // At the final 09:17 check, send a neutral missing-list warning.
   if(event==="schedule"&&source==="morning"&&helsinkiHour()>=9){

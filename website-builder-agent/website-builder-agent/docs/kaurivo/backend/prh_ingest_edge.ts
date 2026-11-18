@@ -167,6 +167,50 @@ Deno.serve(async req => {
        target.hostname!==observed.hostname)continue;
    }catch(_){continue;}
   }
+  // Reputation must be an independently sourced, public 5-star aggregate.
+  // No Google rating / social follower count / own-site testimonial qualifies.
+  const re=c.reputation_evidence as Record<string,unknown> | undefined;
+  if(!re||typeof re!=="object"||Array.isArray(re)||
+     re.status!=="qualified"||
+     typeof re.rating!=="number"||re.rating<4||re.rating>5||
+     typeof re.review_count!=="number"||!Number.isInteger(re.review_count)||re.review_count<10||
+     re.review_count>2000000||
+     re.method!=="direct_public_review_page_structured_rating"||
+     typeof re.checked_at!=="string"||
+     !Number.isFinite(Date.parse(re.checked_at))||
+     Math.abs(Date.now()-Date.parse(re.checked_at))>7*86400000||
+     typeof re.source_url!=="string"||
+     !validWebsite(re.source_url))continue;
+  let repPlatform="";
+  try {
+   const reviewUrl=new URL(re.source_url);
+   const host=reviewUrl.hostname.toLowerCase();
+   if(host==="trustpilot.com"||host.endsWith(".trustpilot.com"))
+    repPlatform="trustpilot";
+   else if(host==="tripadvisor.com"||host.endsWith(".tripadvisor.com")||
+           host==="tripadvisor.fi"||host.endsWith(".tripadvisor.fi")||
+           host==="tripadvisor.se"||host.endsWith(".tripadvisor.se"))
+    repPlatform="tripadvisor";
+   else if(host==="yelp.com"||host.endsWith(".yelp.com"))
+    repPlatform="yelp";
+   if(repPlatform!==re.platform)continue;
+   // Third-party Trustpilot pages must be pinned to the company's own
+   // hostname, preventing another firm's reviews from being credited.
+   if(repPlatform==="trustpilot"){
+    if(!claimedUrl)continue;
+    const companyHost=new URL(claimedUrl).hostname.toLowerCase().replace(/^www\./,"");
+    if(reviewUrl.pathname.replace(/\/$/,"").toLowerCase()!=="/review/"+companyHost)
+     continue;
+   }
+  }catch(_){continue;}
+  const reputationEvidence={
+   status:"qualified",rating:Number(re.rating),review_count:Number(re.review_count),
+   source_url:clean(re.source_url,1200),platform:repPlatform,
+   checked_at:new Date(re.checked_at).toISOString(),
+   method:"direct_public_review_page_structured_rating",
+   popularity_tier:["limited","moderate","substantial"].includes(String(re.popularity_tier))
+       ?String(re.popularity_tier):"limited"
+  };
   const allowedStatuses=new Set(["html_checked","redirect_not_followed",
    "blocked_or_limited","non_html","html_too_large","temporarily_unavailable",
    "unsafe_or_unresolvable_url"]);
@@ -179,6 +223,7 @@ Deno.serve(async req => {
       "heading_missing","contact_link_missing"].includes(i)).slice(0,5):[];
   const technicalAudit=status&&allowedStatuses.has(status)?
    {status,issues:auditIssues,
+    url:status==="html_checked"?clean(rawAudit?.url,1200):"",
     title_present:rawAudit?.title_present===true,
     meta_description_present:rawAudit?.meta_description_present===true,
     viewport_present:rawAudit?.viewport_present===true,
@@ -214,6 +259,7 @@ Deno.serve(async req => {
    city_hint:clean(c.city_hint,80),
    industry_code_hint:clean(c.industry_code_hint,20),
    website_technical_audit:technicalAudit,
+   reputation_evidence:reputationEvidence,
    website_audit_checked_at:status&&typeof c.website_audit_checked_at==="string" &&
      !Number.isNaN(Date.parse(c.website_audit_checked_at))?
      new Date(c.website_audit_checked_at).toISOString():null,
@@ -234,8 +280,20 @@ Deno.serve(async req => {
   });
  }
  if(!candidates.length){
-  return send(200,{ok:true,processed:0,added:0,report_recorded:false,
-    reason:"no_verified_public_website_leads",emails_sent:0,ai_credits_used:0});
+  // A successful strict screening run with ZERO qualifying leads is not
+  // a missing or broken morning run. Record it to avoid a false outage push.
+  const event=await fetch(SUPABASE_URL+"/rest/v1/kaurivo_pipeline_events",{
+   method:"POST",headers:{"apikey":SERVICE_ROLE,
+     "authorization":"Bearer "+SERVICE_ROLE,"content-type":"application/json",
+     "prefer":"return=minimal"},
+   body:JSON.stringify({event_day:data.date,component:"national_search",
+     outcome:"success",
+     details:"Rajatussa aineistossa ei vahvistettu vähintään 4/5 mainetta (10 arvostelua)",
+     records:0})
+  }).catch(()=>null);
+  return send(200,{ok:true,processed:0,added:0,
+    report_recorded:Boolean(event?.ok),
+    reason:"no_independently_verified_4star_leads",emails_sent:0,ai_credits_used:0});
  }
  try {
   const result=await fetch(SUPABASE_URL+"/rest/v1/kaurivo_crm_prospects?on_conflict=business_id",{
@@ -261,7 +319,7 @@ Deno.serve(async req => {
    method:"POST",headers:{"apikey":SERVICE_ROLE,"authorization":"Bearer "+SERVICE_ROLE,
      "content-type":"application/json","prefer":"return=minimal"},
    body:JSON.stringify({event_day:data.date,component:"national_search",
-     outcome:"success",details:"PRH-aineisto tallennettu",records:inserted})
+     outcome:"success",details:"Julkinen sivu ja vähintään 4/5 riippumaton asiakaspalaute vahvistettu",records:inserted})
   }).catch(()=>null);
   return send(200,{ok:true,processed:candidates.length,added:inserted,
    report_recorded:Boolean(event?.ok),emails_sent:0,ai_credits_used:0});
