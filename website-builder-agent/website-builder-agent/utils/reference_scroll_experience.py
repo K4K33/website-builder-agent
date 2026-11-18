@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from hashlib import sha256
 from pathlib import Path
+from PIL import Image, ImageDraw
+
 
 PROTOCOL = "real-browser-scroll-v1"
 FRACTIONS = (0.0, 0.25, 0.5, 0.75, 1.0)
@@ -66,6 +68,24 @@ def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
             page.screenshot(path=str(image),full_page=False,animations="allow",timeout=12000)
             frames.append({**observation,"fraction":fraction,"screenshot":str(image),
                            "sha256":sha256(image.read_bytes()).hexdigest()})
+        # Five actual viewport captures become one labelled sequence: models
+        # see the visual rhythm without exceeding free-vision image budgets.
+        strips=[]
+        for frame in frames:
+            with Image.open(frame["screenshot"]) as screenshot:
+                canvas_width = 300 if page.viewport_size["width"]>700 else 200
+                height = max(120, round(screenshot.height * canvas_width / screenshot.width))
+                strips.append(screenshot.convert("RGB").resize((canvas_width,height)))
+        margin=24
+        sheet=Image.new("RGB",(sum(im.width for im in strips),max(im.height for im in strips)+margin),"white")
+        draw=ImageDraw.Draw(sheet)
+        left=0
+        for frame,im in zip(frames,strips):
+            sheet.paste(im,(left,margin))
+            draw.text((left+5,5),str(round(frame["fraction"]*100))+"% scroll",fill="black")
+            left+=im.width
+        sheet_path=prefix.parent/(prefix.name+"-scroll-sequence.jpg")
+        sheet.save(sheet_path,quality=83,optimize=True)
         # Observe at one unchanged position, not merely a visual change caused
         # by scrolling to different content. This is only a motion *signal*.
         page.evaluate("(y)=>window.scrollTo(0,y)",round(extent*0.5))
@@ -95,6 +115,7 @@ def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
                 "url":page.url,
                 "document_scroll_range":round(extent),
                 "frames":frames,
+                "scroll_sequence_image":str(sheet_path),
                 "same_position_visual_change":a!=b,
                 "nav_hover_visual_change":hover_change,
                 "quality_review_required":True,
@@ -112,6 +133,9 @@ def complete_scroll_evidence(shots: dict) -> bool:
     for view in ("desktop","mobile"):
         record=journey.get(view)
         if not isinstance(record,dict) or record.get("protocol")!=PROTOCOL or record.get("status")!="observed":
+            return False
+        sequence=record.get("scroll_sequence_image")
+        if not isinstance(sequence,str) or not Path(sequence).is_file():
             return False
         frames=record.get("frames")
         if not isinstance(frames,list) or len(frames)<5 or len({f.get("y") for f in frames if isinstance(f,dict)})<3:
