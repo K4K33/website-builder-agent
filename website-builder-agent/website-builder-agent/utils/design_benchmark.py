@@ -141,4 +141,13 @@ def reference_image_inputs(benchmark):
             path = record["screenshots"][view]
             paths.append(path)
             labels.append({"image": len(paths), "url": record["url"], "viewport": view})
+            # This is a contact sheet of FIVE actual sequential scroll
+            # positions, not a hero screenshot or a design rating.
+            timeline = ((record.get("screenshots") or {}).get("scroll_experience") or {}).get(view) or {}
+            sheet = timeline.get("scroll_sequence_image")
+            if isinstance(sheet,str) and Path(sheet).is_file():
+                paths.append(sheet)
+                labels.append({"image": len(paths), "url": record["url"],
+                               "viewport": view, "kind": "five_step_live_scroll_sequence",
+                               "read_direction": "left_to_right"})
     return paths, labels
