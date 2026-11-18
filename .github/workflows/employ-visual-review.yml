@@ -1,0 +1,31 @@
+name: Employ private visual inspection (not a release)
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/demos/employ-engineering-concept-v1/**"
+      - "website-builder-agent/website-builder-agent/tests/test_employ_source_bound_demo.py"
+      - ".github/workflows/employ-visual-review.yml"
+permissions:
+  contents: read
+jobs:
+  source-unavailable-concept-visual:
+    if: ${{ github.event.pull_request.number == 239 }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Playwright (no paid APIs)
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install chromium
+      - name: Render and inspect actual mobile/desktop views, no publication
+        env:
+          KAURIVO_EMPLOY_VISUAL_REVIEW: "1"
+          REQUIRE_BROWSER_TESTS: "1"
+        run: python -m unittest tests.test_employ_source_bound_demo -v
