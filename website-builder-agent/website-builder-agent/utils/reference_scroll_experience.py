@@ -60,9 +60,20 @@ def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
         if not isinstance(extent,(int,float)) or extent < 260:
             return {"protocol":PROTOCOL,"status":"not_scrollable",
                     "reason":"Insufficient vertical journey to establish a scroll benchmark."}
+        # Scroll like an actual visitor instead of only moving the viewport
+        # instantaneously. Wheel lets intersection/reveal handlers run.
+        view = page.viewport_size or {"width":390,"height":844}
+        page.mouse.move(view["width"] * .58,view["height"] * .63)
+        last_goal = 0
         for index, fraction in enumerate(FRACTIONS):
-            page.evaluate("(y)=>window.scrollTo(0,y)",round(extent*fraction))
-            page.wait_for_timeout(240)
+            goal=round(extent*fraction)
+            if goal>last_goal:
+                chunks=max(1,min(9,round((goal-last_goal)/max(180,view["height"]*.40))))
+                for step in range(chunks):
+                    page.mouse.wheel(0,(goal-last_goal)/chunks)
+                    page.wait_for_timeout(65)
+            page.wait_for_timeout(260)
+            last_goal=goal
             observation = page.evaluate(_OBSERVE)
             image = prefix.parent / (prefix.name + f"-{index}.png")
             page.screenshot(path=str(image),full_page=False,animations="allow",timeout=12000)
