@@ -52,7 +52,7 @@
  const STATUS={
   queued:"Jonossa",researching:"Taustatutkimus",building:"Rakenteilla",
   qa:"Laatutarkistus",publishing:"Julkaisutarkistus",
-  internal_preview:"Sisäinen esikatselu",hold:"Odottaa korjausta",failed:"Virhe"
+  internal_preview:"Laatuhyväksyntä kesken",approved_preview:"Hyväksytty demo",hold:"Odottaa korjausta",failed:"Virhe"
  };
  const GITHUB_WORKFLOW="https://github.com/K4K33/website-builder-agent/actions/workflows/kaurivo-demo-worker.yml";
  const DISPATCH_MESSAGES={
@@ -106,7 +106,8 @@
       .select("status").eq("id",jobId).maybeSingle();
     if(error||!data)return "unknown";
     if(["researching","building","qa","publishing"].includes(data.status))return "running";
-    if(data.status==="internal_preview")return "ready";
+    if(data.status==="approved_preview")return "ready";
+    if(data.status==="internal_preview")return "pending_quality";
     if(["hold","failed"].includes(data.status))return "blocked";
    }catch(_){return "unknown";}
    if(attempt<4)await new Promise(resolve=>setTimeout(resolve,650));
@@ -118,7 +119,9 @@
    if(verified==="running"){
     toast("Windows- tai GitHub-rakentaja on aloittanut valitun yrityksen työn.","success");
    }else if(verified==="ready"){
-    toast("Demo on jo valmistunut. Avaa uusi sivu Demot-näkymästä.","success");
+    toast("Laatuhyväksytty demo on Demot-näkymässä.","success");
+   }else if(verified==="pending_quality"){
+    toast("Tekninen rakennus on tehty, mutta riippumaton laatuhyväksyntä puuttuu. Demolinkkiä ei anneta.","error");
    }else if(verified==="blocked"){
     toast("Rakennus pysähtyi. Katso Demot-näkymän tarkka virhesyy.","error");
    }else{
@@ -188,7 +191,7 @@
   const oldHref=comparisonLink(group,"Vanha sivu",job.original_url,null,
     job.original_url?"Vanhan sivun osoitetta ei voitu vahvistaa.":"Ei aiempaa verkkosivua");
   const newHref=comparisonLink(group,"Uusi sivu",ready?job.preview_url:null,"preview",
-    job.status==="internal_preview"?"Julkaisun vahvistus puuttuu":
+    job.status==="internal_preview"?"Riippumaton 9,5/10-laatuhyväksyntä puuttuu":
     ACTIVE.has(job.status)?"Uusi sivu valmistuu laatutarkistuksen jälkeen":
     "Uutta sivua ei ole vielä hyväksytysti julkaistu");
   if(oldHref&&newHref){
@@ -215,7 +218,15 @@
  }
  function isActive(job){return job&&ACTIVE.has(job.status);}
  function canShowPreview(job){
-  return job.status==="internal_preview"&&
+  // Backend internal_preview is ONLY a technical checkpoint. Never turn
+  // a GitHub/Render 200 + QA link into an owner-deliverable demo.
+  // Fail closed until the backend supplies a separately approved release
+  // record bound to the exact source and independent full-site 9.5 verdict.
+  return job.status==="approved_preview"&&job.quality_approved===true&&
+   Number.isFinite(Number(job.independent_visual_score))&&
+   Number(job.independent_visual_score)>=9.5&&
+   Number(job.independent_visual_score)<=10&&
+   /^[0-9a-f]{64}$/.test(job.quality_evidence_sha256||"")&&
    /^[0-9a-f]{40}$/.test(job.release_sha||"")&&
    validUrl(job.preview_url,"preview")&&validUrl(job.qa_url,"qa");
  }
@@ -291,7 +302,7 @@
       }finally{resume.disabled=false;}
     });
   }
-  const badge=append(actions,"span","tag "+(job.status==="internal_preview"?"tag-won":""),
+  const badge=append(actions,"span","tag "+(canShowPreview(job)?"tag-won":""),
     deferred&&["free_ai_rate_limit","free_ai_capacity_unavailable"].includes(job.error_code)
      ?"Odottaa pilvi-AI:ta":
     deferred?"Jatkuu automaattisesti":dispatchFailure?"Käynnistys estynyt":
@@ -318,8 +329,8 @@
     "Testaa varmuuskopio ja palautus. Anna asiakkaalle kirjalliset muokkausohjeet.",
     "Pyydä asiakkaan hyväksyntä. Vasta tämän jälkeen sivusto on luovutusvalmis."
    ]) append(steps,"li","",step);
-  }else if(job.status==="internal_preview"){
-   append(main,"div","record-warning","Julkaisutodiste on puutteellinen. Uutta linkkiä ei näytetä.");
+  }else if(job.status==="internal_preview"||job.status==="approved_preview"){
+   append(main,"div","record-warning","Riippumaton 9,5/10-laatuhyväksyntä ja tarkkaan julkaisuversioon sidottu hyväksyntätodiste puuttuvat. Uutta linkkiä ei näytetä.");
   }
   if(job.status==="queued"&&!deferred){
    // Scheduling is a backup, not a guaranteed five-minute service. Attempt
@@ -514,12 +525,12 @@
   const ready=all.filter(canShowPreview);
   const active=all.filter(isActive);
   const held=all.filter(j=>j.status==="failed"||j.status==="hold"||
-    (j.status==="internal_preview"&&!canShowPreview(j)));
+    (["internal_preview","approved_preview"].includes(j.status)&&!canShowPreview(j)));
   const summary=$("demo-summary");
-  if(summary)summary.textContent=ready.length+" sisäistä esikatselua · "+
+  if(summary)summary.textContent=ready.length+" laatuhyväksyttyä demoa · "+
       active.length+" työn alla · "+held.length+" odottaa korjausta";
   for(const [id,items,missing] of [
-   ["demo-ready-list",ready,"Ei vielä julkaistuja ja teknisesti tarkistettuja demoja."],
+   ["demo-ready-list",ready,"Ei vielä riippumattomasti laatuhyväksyttyjä demoja."],
    ["demo-running-list",active,"Ei tällä hetkellä rakennettavia demoja."],
    ["demo-hold-list",held,"Ei pysähtyneitä tai hylättyjä rakennustöitä."]
   ]){
