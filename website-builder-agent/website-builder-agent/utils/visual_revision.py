@@ -33,6 +33,14 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
         str(x.get("code") or "visual defect") + ": " + str(x.get("repair") or "")
         for x in v7.get("blocking") or [] if isinstance(x, dict)
     ]
+    # Advisory pattern warnings become targeted repairs ONLY when the actual
+    # screenshot reviewer confirms that the result still looks formulaic.
+    ai_signal = ((qa.get("content_review") or {}).get("ai_style_review") or {})
+    ai_risk = ai_signal.get("risk_score")
+    v7_style_actions = [
+        str(x.get("code") or "style") + ": " + str(x.get("repair") or "")
+        for x in (v7.get("review_required") or []) if isinstance(x, dict)
+    ] if isinstance(ai_risk, (int, float)) and not isinstance(ai_risk, bool) and ai_risk > 2 else []
     static = list((qa.get("automated") or {}).get("automated_issues") or [])
     content_missing = [
         str(item.get("label") or item) if isinstance(item, dict) else str(item)
@@ -64,6 +72,7 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
           for x in visual_hints],
         *[str(x) for x in static],
         *v7_blockers,
+        *v7_style_actions,
         *browser_fixable,
         *content_missing,
         *source_missing,
@@ -99,6 +108,7 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
             },
             "actionable_defects": actions,
             "v7_objective_visual": v7_blockers[:8],
+            "v7_style_directions_from_high_ai_risk": v7_style_actions[:8],
             "static": static[:12],
             "browser": browser_fixable[:10],
             "source_content_missing": source_missing[:10],
