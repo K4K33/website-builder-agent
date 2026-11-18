@@ -1591,6 +1591,10 @@ def build_site(
     creative = validate_creative_directions(research)
     brand_blueprint = derive_brand_site_blueprint(research)
     agency_plan = agency_handoff(research)
+    # V7 is generated from verified Research evidence, not an invented visual
+    # identity. These are CANDIDATE international examples, not source facts.
+    from utils.quality_v7 import design_brief
+    v7_brief = design_brief(research, company)
     architecture = validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
@@ -1640,6 +1644,17 @@ def build_site(
                                       for route in selected_entry['routes'])
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+KAURIVO V7 — VELVOITTAVA YRITYSKOHTAINEN SUUNNITTELUPAKETTI:
+{json.dumps(v7_brief, ensure_ascii=False)}
+Lähdepassin kuvat ovat EHDOKKAITA, joihin EI ole automaattista
+käyttöoikeutta. Valitse todennetusti luvallista oikeaa aineistoa ennen
+uutta kuvitusta. Jos aito yrityskuvasarja on merkityksellinen, älä
+tuo teknistä pyörä-/ratas-SVG:tä, tekokarttaa tai numerokortteja
+vain täyttääksesi tilaa. Arvioi fontin luonnollinen muoto ja todellinen
+tekstipalstan leveys 390, 768 ja 1440 pikselin näkymissä.
+Kansainväliset benchmark-osoitteet ovat vasta etsintäehdokkaita;
+vain erikseen havaittuja kuvakaappauksia saa käyttää laatunäyttönä.
 
 VALITTU SELAIMESSA VERRATTU TODELLINEN PROTOTYYPPI (rakenna sama valittu ilme koko sivustolle):
 {selected_preview}
