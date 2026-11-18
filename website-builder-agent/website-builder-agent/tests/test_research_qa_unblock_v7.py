@@ -65,6 +65,45 @@ class SectorDiscoveryUnblock(TestCase):
             self.assertEqual(len({url.split("/")[2] for url in urls}), len(urls))
 
 
+
+
+class SourceQuoteReconciliation(TestCase):
+    def test_exact_nearby_service_heading_can_repair_model_fragment(self):
+        from utils.service_quality import reconcile_primary_offering_with_source
+        page = {
+            "url": "https://client.example/palvelut",
+            "text": (
+                "Sähköinen lukitus yrityksiin. "
+                "Asennamme ja huollamme ovien sähköisiä lukkoja ja kulunvalvontaa. "
+                "Toimimme asiakkaan tarpeiden mukaan."
+            ),
+        }
+        result = reconcile_primary_offering_with_source({
+            "source_url": page["url"],
+            "label": "Sähköinen lukitus",
+            "quote": "Asennamme ja huollamme ovien sähköisiä lukkoja ja kulunvalvontaa.",
+        }, [page])
+        self.assertEqual(result["source_url"], page["url"])
+        self.assertIn("Sähköinen lukitus", result["quote"])
+        self.assertIn("Asennamme ja huollamme", result["quote"])
+
+    def test_hallucinated_quote_or_unverified_site_still_fails(self):
+        from utils.service_quality import reconcile_primary_offering_with_source
+        for sample in (
+            {"source_url": "https://client.example/palvelut", "label": "Sähköinen lukitus",
+             "quote": "Tarjoamme 24 tunnin maksutonta lukituspalvelua kaikille."},
+            {"source_url": "https://other.example/palvelut", "label": "Sähköinen lukitus",
+             "quote": "Asennamme ja huollamme sähköisiä lukkoja."},
+            {"source_url": "https://client.example/palvelut", "label": "Sähköinen lukitus",
+             "quote": "Asennamme ja huollamme ovien sähköisiä lukkoja."},
+        ):
+            with self.assertRaises(RuntimeError):
+                reconcile_primary_offering_with_source(sample, [{
+                    "url": "https://client.example/palvelut",
+                    "text": "Sähköinen lukitus yrityksiin. Asennamme ja huollamme ovien mekaanisia lukkoja.",
+                }])
+
+
 class GlobalCraftReviewerSchema(TestCase):
     def test_json_example_in_visual_review_prompt_is_parseable_and_complete(self):
         source = (Path(__file__).resolve().parents[1] / "agents" / "qa.py").read_text("utf-8")
