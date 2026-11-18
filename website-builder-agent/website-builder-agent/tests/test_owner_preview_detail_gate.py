@@ -66,6 +66,27 @@ class OwnerPreviewDetailTests(unittest.TestCase):
             encoding="utf-8")
         self.assertTrue(any("non-official demo disclaimer" in p for p in self.check()))
 
+    def test_full_width_service_copy_not_squeezed_by_decorative_grid_track(self):
+        # Real user video caught a ~70px description column that a standard
+        # no-overflow browser assertion missed. Keep the universal live smoke.
+        css = (self.base / SLUG / "assets/site.css").read_text(encoding="utf-8")
+        self.assertIn(
+            ".service-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,180px)",
+            css,
+        )
+        self.assertNotIn("grid-template-columns:70px 1fr 180px", css)
+        self.assertNotIn("grid-template-columns:34px 1fr", css)
+        smoke = (gate.ROOT / "scripts/smoke_live_owner_previews.py").read_text(encoding="utf-8")
+        self.assertIn("serviceTextWidths", smoke)
+        self.assertIn('item["width"] < 280', smoke)
+
+    def test_pro_reviewer_must_evaluate_ai_signature_from_real_visuals(self):
+        prompt = (gate.ROOT / "docs/KAURIVO_MESTARI_PROMPT.md").read_text(encoding="utf-8")
+        self.assertIn("AI-TUNNISTETTAVUUS", prompt)
+        self.assertIn("lähetetystä näytön tallenteesta", prompt)
+        self.assertIn("venytetty", prompt)
+        self.assertIn("turhat 01/02/03-numerot", prompt)
+
     def test_no_contact_or_false_services_claims_and_no_outreach(self):
         page = self.base / SLUG / "palvelut/index.html"
         page.write_text(page.read_text().replace(
