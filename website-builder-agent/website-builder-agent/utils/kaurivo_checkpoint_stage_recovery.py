@@ -6,6 +6,21 @@ approval and must be regenerated with the active browser and quality gates.
 """
 
 
+def needs_research_restart(resumed, restored_company, current_master_sha256):
+    """Old private checkpoints never approve a build under a newer master.
+
+    The source URL and identity are validated during archive restoration. If
+    the canonical prompt changed, research and all downstream visual evidence
+    must be rebuilt, not treated as an unrepairable HOLD or waved through.
+    Partial research performs its own versioned progress validation.
+    """
+    if resumed in (None, "research_partial"):
+        return False
+    research = (restored_company or {}).get("research") if isinstance(restored_company, dict) else None
+    return (not isinstance(research, dict) or
+            research.get("master_prompt_sha256") != current_master_sha256)
+
+
 def completed_stage_index(resumed, restored_company=None, *, concept_root=None):
     """Return the last usable stage, retaining source research for failed concepts."""
     if resumed in (None, "research_partial"):
