@@ -281,7 +281,19 @@ Deno.serve(async req => {
   });
  }
  if(!candidates.length){
-  return send(200,{ok:true,processed:0,added:0,report_recorded:false,
+  // A successful strict screening run with ZERO qualifying leads is not
+  // a missing or broken morning run. Record it to avoid a false outage push.
+  const event=await fetch(SUPABASE_URL+"/rest/v1/kaurivo_pipeline_events",{
+   method:"POST",headers:{"apikey":SERVICE_ROLE,
+     "authorization":"Bearer "+SERVICE_ROLE,"content-type":"application/json",
+     "prefer":"return=minimal"},
+   body:JSON.stringify({event_day:data.date,component:"national_search",
+     outcome:"success",
+     details:"Rajatussa aineistossa ei vahvistettu vähintään 4/5 mainetta (10 arvostelua)",
+     records:0})
+  }).catch(()=>null);
+  return send(200,{ok:true,processed:0,added:0,
+    report_recorded:Boolean(event?.ok),
     reason:"no_independently_verified_4star_leads",emails_sent:0,ai_credits_used:0});
  }
  try {
