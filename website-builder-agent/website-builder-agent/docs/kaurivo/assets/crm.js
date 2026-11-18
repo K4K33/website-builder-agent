@@ -99,6 +99,22 @@
     (c.website_found_url||c.website_listed_url)?10:5; // 10 evidence clarity
   return Math.min(100,need+priority+activity+commercial+quality);
  }
+ // Do not surface claimed websites that are private, unreachable or not
+ // checked in a real public HTML request. No website remains a different
+ // source-research candidate, not a 'confirmed no website' claim.
+ function websitePubliclyAccessible(c){
+  const claimed=c.website_listed_url||c.website_candidate_url||c.website_found_url;
+  if(!claimed)return true;
+  if(c.website_verified===true)return true; // explicit human-verified source
+  const a=c.website_technical_audit;
+  if(!a||a.status!=="html_checked"||!c.website_audit_checked_at)return false;
+  try{
+   const original=new URL(c.website_listed_url||c.website_candidate_url||c.website_found_url);
+   const tested=new URL(a.url||"");
+   return original.protocol==="https:"&&tested.protocol==="https:"&&
+     original.hostname===tested.hostname;
+  }catch(_){return false;}
+ }
  function preliminaryScore(c){
   return Math.max(0,Math.min(60,Number(c.screening_priority)||0));
  }
@@ -329,8 +345,9 @@
   $("prospect-day").value=selectedDay;
   const isToday=selectedDay===helsinkiToday();
   const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
-  let visible=rows.prospects.filter(x=>x.review_status!=="skipped"||
-    $("show-skipped-prospects").checked).sort((a,b)=>{
+  const inaccessible=rows.prospects.filter(x=>!websitePubliclyAccessible(x)).length;
+  let visible=rows.prospects.filter(x=>websitePubliclyAccessible(x)&&
+    (x.review_status!=="skipped"||$("show-skipped-prospects").checked)).sort((a,b)=>{
      if(Boolean(a.marketing_opt_out)!==Boolean(b.marketing_opt_out))
       return Number(Boolean(a.marketing_opt_out))-Number(Boolean(b.marketing_opt_out));
      const aScore=leadEvidenceScore(a),bScore=leadEvidenceScore(b);
@@ -351,12 +368,14 @@
   const suggestions=visible.filter(x=>!x.website_found_url&&!x.website_listed_url&&x.website_candidate_url).length;
   $("morning-summary").textContent=rows.prospects.length
     ? visible.length+" yritystä tarkistettavana · "+withSites+" rekisteri-/tarkistuslinkkiä"+(suggestions?" · "+suggestions+" sivuehdotusta":"")+(excluded&&!$("show-skipped-prospects").checked
-      ?" · "+excluded+" ohitettu":"")+" · "+selectedDay
+      ?" · "+excluded+" ohitettu":"")+
+      (inaccessible?" · "+inaccessible+" suljettua/tarkistamatonta sivua piilotettu":"")+
+      " · "+selectedDay
     : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
   if(!visible.length)empty(prospects,mode==="top"
      ?"Ei vielä tarkistettuja, vähintään 65/100-pisteen myyntimahdollisuuksia. Tarkista ensin yritykset ja verkkosivut."
      :rows.prospects.length
-      ?"Ei tässä näkymässä tarkistettavia yrityksiä. Voit näyttää myös ohitetut yritykset."
+      ?"Ei vielä vahvistettavia julkisia yrityssivuja. Yksityiset, kirjautumisen takana olevat ja tarkistamattomat sivut pidetään pois hakutuloksista."
       :"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
   for(const candidate of visible){
    const row=record(prospects,candidate.company_name,

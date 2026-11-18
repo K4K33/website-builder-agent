@@ -63,6 +63,18 @@ class NightlySyncTests(unittest.TestCase):
             self.assertEqual(events[1][2]["Authorization"],"Bearer "+"a"*150)
             self.assertEqual(events[1][3]["candidates"][0]["business_activity"],"unverified")
 
+    def test_all_private_or_unchecked_candidates_filtered_needs_no_oidc(self):
+        with tempfile.TemporaryDirectory() as folder:
+            packet=sample()
+            packet["candidates"]=[]
+            p=Path(folder)/"crm-shortlist.json"
+            p.write_text(json.dumps(packet),encoding="utf-8")
+            def fail(*a,**k):
+                self.fail("Zero verified prospects must consume zero external requests")
+            result=push_packet(p,env={},get=fail,post=fail)
+            self.assertEqual(result["processed"],0)
+            self.assertEqual(result["emails_sent"],0)
+
     def test_offline_or_missing_oidc_cannot_sync(self):
         with tempfile.TemporaryDirectory() as folder:
             p=Path(folder)/"shortlist.json"

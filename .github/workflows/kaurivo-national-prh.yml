@@ -31,7 +31,7 @@ concurrency:
 jobs:
   national:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: website-builder-agent/website-builder-agent
@@ -108,13 +108,13 @@ jobs:
             --packet output/nightly-prh/crm-shortlist.json \
             --max-queries 12
 
-      - name: Check up to 12 listed websites and rank by observed improvement signals (no paid APIs)
+      - name: Validate up to 50 company homepages and exclude inaccessible sites (no paid APIs)
         if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}
         run: |
           python -m utils.kaurivo_site_audit \
             --packet output/nightly-prh/crm-shortlist.json \
             --cache data/kaurivo_site_audit_cache.json \
-            --max-checks 12
+            --max-checks 50
 
       - name: Sync 50 sales-first, still unverified PRH companies into private Kaurivo CRM
         if: ${{ success() && steps.gate.outputs.should_scan == 'true' && env.KAURIVO_PRH_MODE == 'pilot-live' }}

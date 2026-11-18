@@ -152,6 +152,21 @@ Deno.serve(async req => {
      typeof found?.url==="string" && validWebsite(clean(found.url,1200))
      ?clean(found.url,1200):"";
   const rawAudit=c.site_technical_audit as Record<string,unknown> | undefined;
+  // Defense in depth: the overnight source checker must have fetched the
+  // exact public company homepage. Neither PRH's URL nor a Tavily suggestion
+  // proves the website is accessible. Exclude unaudited/private/login pages.
+  const claimedUrl=clean(c.website_listed_url,1200)||candidate;
+  if(claimedUrl){
+   if(rawAudit?.status!=="html_checked"||
+      typeof rawAudit.url!=="string"||
+      typeof c.website_audit_checked_at!=="string"||
+      Number.isNaN(Date.parse(c.website_audit_checked_at)))continue;
+   try{
+    const target=new URL(claimedUrl), observed=new URL(rawAudit.url);
+    if(target.protocol!=="https:"||observed.protocol!=="https:"||
+       target.hostname!==observed.hostname)continue;
+   }catch(_){continue;}
+  }
   const allowedStatuses=new Set(["html_checked","redirect_not_followed",
    "blocked_or_limited","non_html","html_too_large","temporarily_unavailable",
    "unsafe_or_unresolvable_url"]);
@@ -217,6 +232,10 @@ Deno.serve(async req => {
    activity_verified:false,
    financial_verified:false
   });
+ }
+ if(!candidates.length){
+  return send(200,{ok:true,processed:0,added:0,report_recorded:false,
+    reason:"no_verified_public_website_leads",emails_sent:0,ai_credits_used:0});
  }
  try {
   const result=await fetch(SUPABASE_URL+"/rest/v1/kaurivo_crm_prospects?on_conflict=business_id",{

@@ -7,6 +7,7 @@ import unittest
 
 from utils.kaurivo_site_audit import (
     safe_homepage, inspect_site, extract_html_signals, audit_packet,
+    candidate_public_site_verified, is_restricted_homepage,
 )
 from utils.kaurivo_lead_quality import choose_shortlist, observed_technical_opportunity
 from utils.kaurivo_feedback_priors import get_weights
@@ -52,6 +53,70 @@ class SiteLearningTests(unittest.TestCase):
         self.assertIn("viewport_missing",result["issues"])
         self.assertIn("contact_link_missing",result["issues"])
         self.assertEqual(result["html_language_hint"],"undetermined")
+
+    def test_private_and_login_homepages_are_not_public_company_sites(self):
+        private_pages=[
+          '<html><head><title>Private site</title></head><body><h1>Access denied</h1></body></html>',
+          '<html><body><main><h1>Kirjaudu sisään</h1><form>'
+          '<input type="password"></form></main></body></html>',
+          '<html><body><main><h1>Log in</h1><form>'
+          '<input type="password"></form></main></body></html>'
+        ]
+        for source in private_pages:
+            with self.subTest(source=source[:35]):
+                self.assertTrue(is_restricted_homepage(source))
+                class PrivateSite(FakeSite):
+                    def iter_content(self,chunk_size=None):
+                        yield source.encode("utf-8")
+                result=inspect_site("https://firm.fi",get=lambda *a,**k:PrivateSite(),
+                                    resolve=public_dns)
+                self.assertEqual(result["status"],"restricted_or_login")
+        public_with_login='<html><head><title>Rakennuspalvelut Oy</title></head>' + (
+          '<body><main><h1>Monipuoliset rakennuspalvelut</h1>'+
+          ('<p>Referenssit, työkuvat, rakennusurakat, palvelut ja yhteystiedot.</p>'*30)+
+          '<form><input type="password"></form></main></body></html>')
+        self.assertFalse(is_restricted_homepage(public_with_login))
+
+    def test_claimed_website_requires_bound_public_html_evidence(self):
+        blank={"name":"Aidosti sivuton?","website_listed_url":""}
+        self.assertTrue(candidate_public_site_verified(blank))
+        item={"website_listed_url":"https://firma.fi"}
+        self.assertFalse(candidate_public_site_verified(item))
+        item["site_technical_audit"]={"status":"restricted_or_login"}
+        self.assertFalse(candidate_public_site_verified(item))
+        item["site_technical_audit"]={"status":"html_checked",
+                                       "url":"https://toinen.fi/"}
+        item["website_audit_checked_at"]="2026-11-18T08:00:00Z"
+        self.assertFalse(candidate_public_site_verified(item))
+        item["site_technical_audit"]["url"]="https://firma.fi/"
+        self.assertTrue(candidate_public_site_verified(item))
+
+    def test_private_unreachable_and_unchecked_sites_are_removed_before_crm(self):
+        class Blocked(FakeSite):
+            status_code=403
+        with tempfile.TemporaryDirectory() as temp:
+            packet=Path(temp)/"shortlist.json";cache=Path(temp)/"cache.json"
+            rows=[
+              {"name":"Julkinen Oy","website_listed_url":"https://open.fi/"},
+              {"name":"Yksityinen Oy","website_listed_url":"https://private.fi/"},
+              {"name":"Ei vastausta Oy","website_listed_url":"https://broken.fi/"},
+              {"name":"Ei sivulinkkiä Oy","website_listed_url":""},
+              {"name":"Ei tarkistettu Oy","website_listed_url":"https://unchecked.fi/"}
+            ]
+            packet.write_text(json.dumps({"schema":"kaurivo_prh_shortlist_v1",
+                "mode":"pilot-live","date":"2026-11-18","candidates":rows}),encoding="utf-8")
+            class Gone(FakeSite):
+                status_code=404
+            def get(url,**kwargs):
+                if "private.fi" in url:return Blocked()
+                if "broken.fi" in url:return Gone()
+                return FakeSite()
+            result=audit_packet(packet,cache,get=get,resolve=public_dns,
+                max_checks=3,now=datetime(2026,11,18,tzinfo=timezone.utc))
+            self.assertEqual(result["excluded_unverified_websites"],3)
+            names={r["name"] for r in json.loads(packet.read_text())["candidates"]}
+            self.assertEqual(names,{"Julkinen Oy","Ei sivulinkkiä Oy"})
+            self.assertFalse("Yksityinen Oy" in names)
 
     def test_same_origin_broken_links_are_only_head_hints(self):
         class LinkSite(FakeSite):
@@ -163,7 +228,7 @@ class SiteLearningTests(unittest.TestCase):
         js=(ROOT/"docs/kaurivo/assets/crm.js").read_text()
         ingest=(ROOT/"docs/kaurivo/backend/prh_ingest_edge.ts").read_text()
         self.assertIn("--max-candidates 9000",yaml)
-        self.assertIn("--max-checks 12",yaml)
+        self.assertIn("--max-checks 50",yaml)
         self.assertIn("sales-priority-report.md",yaml)
         self.assertIn("kaurivo_site_audit_cache.json",yaml)
         self.assertIn("kaurivo_feedback_priors",yaml)
