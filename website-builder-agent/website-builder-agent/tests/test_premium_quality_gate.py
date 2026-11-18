@@ -190,7 +190,7 @@ class PremiumGateTests(unittest.TestCase):
         ]
         self.assertEqual(discover_source_journeys(self.research), [])
 
-    def test_new_premium_client_cannot_bypass_two_reviewers_at_approval(self):
+    def test_new_premium_client_cannot_bypass_current_visual_acceptance(self):
         import hashlib
         from unittest.mock import patch
         from agents.qa import approve_company
@@ -214,7 +214,7 @@ class PremiumGateTests(unittest.TestCase):
                     "approved": True, "reviewer_kind": "human",
                     "build_sha256": site_digest(self.html),
                 }
-                with self.assertRaisesRegex(RuntimeError, "two-reviewer"):
+                with self.assertRaisesRegex(RuntimeError, "commercial visual acceptance HOLD"):
                     approve_company("test")
 
     def test_verified_content_matrix_does_not_approve_stale_html(self):
