@@ -254,6 +254,9 @@ jobs:
           # Exact :free candidates and separate QA remain enforced in code.
           KAURIVO_PREFER_VERIFIED_FREE_ALTERNATE: "1"
           KAURIVO_BROWSER_SOURCE_FALLBACK: "1"
+          # Compare all three award-winning experiential standards in actual
+          # browsers at the final QA stage, not just a screenshot collage.
+          KAURIVO_LIVE_CRAFT_QA: "1"
           AI_BACKEND: openrouter
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           # Optional only: deliberately OFF until the owner creates a
