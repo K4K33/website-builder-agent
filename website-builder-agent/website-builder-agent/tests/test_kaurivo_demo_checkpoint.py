@@ -111,6 +111,8 @@ class PrivateCheckpointTests(unittest.TestCase):
                   "scripts" / "run_kaurivo_demo_queue.py").read_text()
         self.assertIn("needs_research_restart(", runner)
         self.assertIn('records[agent_slug] = {', runner)
+        self.assertIn('"checkpoint_reset",job_id=working_job["id"]', runner)
+        self.assertIn('"checkpoint_info",job_id=working_job["id"]', runner)
         self.assertIn('run_cli(["research",agent_slug]', runner)
         self.assertIn('verify_design_handoff(load_company(agent_slug),selected=False)', runner)
 
