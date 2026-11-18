@@ -58,7 +58,10 @@ def main(slug):
                   favicon:document.querySelector('link[rel~=icon]')?.href || '',
                   styles:([...document.styleSheets].filter(x=>x.href).length),
                   images:[...document.images].map(i=>({ok:i.complete&&i.naturalWidth>0,src:i.src})),
-                  headerBackground:getComputedStyle(document.querySelector('header.header')).backgroundColor
+                  headerBackground:getComputedStyle(document.querySelector('header.header')).backgroundColor,
+                  serviceTextWidths:[...document.querySelectorAll('article.service-row > div')].map(
+                    e=>({width:Math.round(e.getBoundingClientRect().width),
+                         textLength:(e.innerText||'').trim().length}))
                 })""")
                 if evidence["company_name"] not in checks["title"]:
                     errors.append(f"{route}@{width} wrong browser tab title")
@@ -68,6 +71,15 @@ def main(slug):
                     errors.append(f"{route}@{width} language/headings broken")
                 if checks["scroll"]>width+2:
                     errors.append(f"{route}@{width} horizontal overflow: {checks['scroll']}")
+                # Text squeezed to one-word lines can pass the standard no-overflow
+                # test; reject critically narrow real service descriptions.
+                if width >= 1200:
+                    for item in checks["serviceTextWidths"]:
+                        if item["textLength"] >= 90 and item["width"] < 280:
+                            errors.append(
+                                f"{route}@{width} unreadable service text column "
+                                f"{item['width']}px (requires >=280px)"
+                            )
                 if not any(label in checks["disclaimer"].lower() for label in ("ei ole yrityksen virallinen sivu","ei yrityksen virallinen sivu")):
                     errors.append(f"{route}@{width} independent-review banner missing")
                 if not checks["favicon"] or "preview-favicon.svg" not in checks["favicon"]:
