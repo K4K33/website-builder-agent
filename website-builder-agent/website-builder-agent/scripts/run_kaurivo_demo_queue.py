@@ -238,17 +238,30 @@ def safe_company_url(url):
             raise HoldError("source_url_not_https")
         if parsed.port not in (None,443):
             raise HoldError("source_nonstandard_port")
+        # urlsplit.hostname remains Unicode for Finnish IDNs (ä/ö).
+        # Strict IDNA -> ASCII avoids rejecting genuine HTTPS domains such as
+        # kärryt.net while keeping DNS/IP SSRF restrictions intact.
         host=parsed.hostname
-        if len(host)>253 or host.endswith(".local") or host in ("localhost","metadata.google.internal"):
-            raise HoldError("source_host_blocked")
-        if not re.fullmatch(r"[a-z0-9.-]+",host,re.I):
+        if not host or host.endswith("."):
             raise HoldError("source_host_invalid")
         try:
-            ipaddress.ip_address(host)
+            dns_host=host.encode("idna").decode("ascii").lower()
+        except (UnicodeError, UnicodeDecodeError):
+            raise HoldError("source_host_invalid")
+        labels=dns_host.split(".")
+        if (len(dns_host)>253 or len(labels)<2
+                or any(not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label)
+                       for label in labels)):
+            raise HoldError("source_host_invalid")
+        if (dns_host in ("localhost","metadata.google.internal")
+                or dns_host.endswith((".local",".localhost",".internal"))):
+            raise HoldError("source_host_blocked")
+        try:
+            ipaddress.ip_address(dns_host)
             raise HoldError("source_ip_literally_blocked")
         except ValueError:
             pass
-        infos=socket.getaddrinfo(host,443,type=socket.SOCK_STREAM)
+        infos=socket.getaddrinfo(dns_host,443,type=socket.SOCK_STREAM)
         if not infos or any(
             not ipaddress.ip_address(info[4][0]).is_global for info in infos
         ):
