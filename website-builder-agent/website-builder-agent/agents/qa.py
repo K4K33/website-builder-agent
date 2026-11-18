@@ -52,6 +52,7 @@ from pathlib import Path
 
 from utils.quality import normalize_facts, canonical_url
 from utils.content_parity import audit_content_parity
+from utils.temporal_claims import audit_temporal_claims
 from utils.source_fidelity import audit_source_fidelity
 from utils.design_benchmark import validate_benchmark, validate_design_plan, reference_image_inputs
 from utils.state import (
@@ -1222,6 +1223,7 @@ def run_qa(slug_or_name: str) -> dict:
         html, research, source_url=company.get("url", ""),
         rendered_pages=rendered_pages
     )
+    temporal_claims = audit_temporal_claims(rendered_pages, research)
     bundle_digest = site_sha256(site_root, list(rendered_pages))
     universal = audit_universal_standards(
         html, research, company=company, stage="internal_demo",
@@ -1427,12 +1429,14 @@ def run_qa(slug_or_name: str) -> dict:
         "content_review": review,
         "content_parity": parity,
         "source_fidelity": source_fidelity,
+        "temporal_claims": temporal_claims,
         "universal_quality": universal,
         "unimplemented_global_feedback": pending_general_rules,
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "site_sha256": bundle_digest,
-        "overall_pass": (not premium_effects["blocking"]
+        "overall_pass": (temporal_claims["pass"]
+                         and not premium_effects["blocking"]
                          and parity["pass"] and source_fidelity["pass"]
                          and nav["pass"] and originality["pass"]
                          and universal["automated_pass"]
@@ -1466,6 +1470,7 @@ def run_qa(slug_or_name: str) -> dict:
               + [x["label"] for x in parity["missing"]]
               + [str(x.get("kind","unknown"))+": "+str(x.get("source","")) for x in source_fidelity["missing"]]
               + list(source_fidelity["pending"])
+              + list(temporal_claims["issues"])
               + [m for values in universal["blocking_problems"].values() for m in values]
               + list(browser.get("issues") or [])
               + list(visual_comparison.get("missing") or [])

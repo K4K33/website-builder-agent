@@ -125,7 +125,8 @@ class OutreachReleaseGateTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "HOLD"):
                     outreach.approve_outreach("kotifixi")
 
-    def test_three_good_reviewed_demos_are_not_enough_without_live_public_proof(self):
+    @patch("utils.sales_fact_gate.inspect_sales_fact_review", return_value={"ready": True, "issues": []})
+    def test_three_good_reviewed_demos_are_not_enough_without_live_public_proof(self, _fact_gate):
         record = self._record([review("kotifixi"), review("client-b"), review("client-c")])
         with patch.object(outreach, "get_company", return_value=("kotifixi", record)):
             with patch.object(outreach, "company_is_suppressed", return_value=False):
@@ -134,7 +135,8 @@ class OutreachReleaseGateTests(unittest.TestCase):
                         outreach.approve_outreach("kotifixi")
                     persist.assert_not_called()
 
-    def test_three_reviewed_demos_and_separately_verified_release_can_be_approved(self):
+    @patch("utils.sales_fact_gate.inspect_sales_fact_review", return_value={"ready": True, "issues": []})
+    def test_three_reviewed_demos_and_separately_verified_release_can_be_approved(self, _fact_gate):
         record = self._record([review("kotifixi"), review("client-b"), review("client-c")])
         with patch.object(outreach, "get_company", return_value=("kotifixi", record)):
             with patch.object(outreach, "company_is_suppressed", return_value=False):

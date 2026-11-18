@@ -341,6 +341,25 @@ def cmd_outreach(args):
 def cmd_approve_outreach(args):
     outreach.approve_outreach(args.company)
 
+def cmd_sales_fact_check(args):
+    """Offline report. Owner design approval does not count as factual signoff."""
+    from utils.sales_fact_gate import inspect_sales_fact_review
+    slug, company = get_company(args.company)
+    if company is None:
+        raise RuntimeError("Company not found.")
+    report = inspect_sales_fact_review(company)
+    print(json.dumps({"company_slug": slug, **report}, ensure_ascii=False, indent=2))
+    if not report["ready"]:
+        # Each discovered gap enters the cross-client improvement queue.
+        # A repeated failure does not pretend that a general fix is validated.
+        from utils.global_feedback import load_ledger, save_ledger, record_qa_findings
+        ledger_file = Path(config.OUTPUT_DIR) / "_kaurivo_global_quality.json"
+        ledger = load_ledger(ledger_file)
+        record_qa_findings(ledger, slug, report["issues"])
+        save_ledger(ledger_file, ledger)
+        raise RuntimeError("Sales outreach HOLD: final factual check is incomplete.")
+
+
 
 # =========================================================
 # SHOW
@@ -1258,6 +1277,14 @@ def build_parser():
     parser_approve_outreach.set_defaults(
         func=cmd_approve_outreach
     )
+
+    # This can be run after the owner accepts a design, before email approval.
+    parser_sales_facts = subparsers.add_parser(
+        "sales-fact-check",
+        help="Check factual evidence against the exact approved build before sales.",
+    )
+    parser_sales_facts.add_argument("company")
+    parser_sales_facts.set_defaults(func=cmd_sales_fact_check)
 
     # -----------------------------------------------------
     # SHOW

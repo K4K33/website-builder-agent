@@ -166,3 +166,57 @@ Run free tests: \`python -m unittest tests.test_marketing_compliance -v\`.
 ## Demo must-haves and customer feedback
 
 When emailing a QA-approved company-specific demo, include one short optional question asking what MUST be on the final website. Replying to the same Gmail thread is always possible. Only include the reusable demo-review form link when the FormSubmit recipient is activated and a real submission is delivered, and only when the private customer record has `demo_review_intake_confirmed=True` and an explicit `demo_review_url`. Wishes do not create a contractual scope. After a real client project is completed, collect feedback in an individual Gmail reply request, not via the public site. Drafting is not sending. See CUSTOMER_FEEDBACK.md.
+
+
+## Sales workflow after the owner likes a design (18 November 2026)
+
+`"Tämä on hyvä"` means **owner design acceptance only**, not a
+factual certification or permission to send. This keeps sales moving without
+quietly mailing unsupported claims.
+
+1. Finish independent multi-route/mobile/desktop design approval and source
+   rights verification. If the original source is inaccessible, keep the demo
+   in HOLD; never reclassify a DNS failure as `confirmed_no_website`.
+2. Run a separate fresh human-assisted **final factual review** against the
+   exact QA/owner-accepted build. Review official identity, active company,
+   actual service scope (a registry category is insufficient), address/phone/
+   email, every source route, prices/terms, languages, FAQ, original brand and
+   photos with usage rights, citations, sponsors and real customer reviews.
+   Test every practical CTA and contact path in the actual hosted site.
+3. Record `company.sales_fact_review` privately, with `reviewer_kind=human`,
+   `reviewer`, `checked_at`, `status=verified`,
+   `original_site_status` (`verified_existing_website` or properly
+   evidenced `confirmed_no_website`), `build_version`,
+   `html_sha256`, `site_sha256`, and `research_sha256` from
+   `utils.sales_fact_gate.research_fingerprint(company["research"])`.
+   Set `reviewed_routes` to every `build.page_paths` entry, and both
+   `unresolved_issues` and `missing_or_changed_facts` to empty lists
+   only AFTER source and full-site verification.
+4. Each of the eight `REQUIRED_AREAS` in `utils.sales_fact_gate` needs an
+   `areas[category]` record with `status=verified`, `source_url` and
+   current `checked_at`. `not_applicable` is allowed only for categories
+   the gate permits, with a specific source-grounded reason. Do not mark an
+   inaccessible source as `not_applicable` to circumvent evidence checks.
+   Store `corrections: []` when no issues were found.
+5. When facts are missing, first correct the company-specific evidence and
+   pages. For each resolved generalizable omission, record in `corrections`:
+   `status=fixed`, a concrete `evidence` reference,
+   `reusable_rule=true`, and a real `regression_test` identifier.
+   Update the canonical Master Prompt/Builder mapping and add that regression
+   test. Test the same pattern on an unrelated client before calling it
+   generally validated. A changed source/build invalidates the previous
+   final fact record, so rerun QA and approval where needed.
+6. Run `python main.py sales-fact-check <company>` locally. A successful
+   report is a prerequisite, **not proof** of an independent 9.5 review,
+   rights, compliant address, or a working public demo.
+7. Only then prepare a personalized sales email, check current activity,
+   recipient classification, suppression/consent/privacy/opt-out controls,
+   the sender `hello.kaurivo@gmail.com` and exact HTML demo link.
+   The owner must approve that specific outgoing message separately.
+   No automatic mail is sent from the Python agent.
+
+**Implementation boundary:** The checker verifies a signed, current,
+source-bound record and fails closed. It does NOT browse sources by itself,
+cannot authenticate a person's assertions and does not manufacture review
+scores. Automated omissions enter the reusable QA/feedback loop; genuinely
+new errors require an implemented checker and regression test.
