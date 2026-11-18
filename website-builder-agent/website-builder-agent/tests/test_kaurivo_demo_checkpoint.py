@@ -90,6 +90,21 @@ class PrivateCheckpointTests(unittest.TestCase):
                 self.assertTrue(needs_research_restart(phase, {}, current))
                 self.assertFalse(needs_research_restart(
                     phase, {"research": {"master_prompt_sha256": current}}, current))
+        # Same historic V6 hash is not enough: changing V7 also invalidates
+        # previous source research, its creative selection and rendered QA.
+        self.assertTrue(needs_research_restart(
+            "researched", {"research": {"master_prompt_sha256": current}},
+            current, "v7-new"))
+        self.assertFalse(needs_research_restart(
+            "researched", {"research": {
+                "master_prompt_sha256": current,
+                "v7_design_brief": {"master_sha256": "v7-new"}}},
+            current, "v7-new"))
+        self.assertTrue(needs_research_restart(
+            "built", {"research": {
+                "master_prompt_sha256": current,
+                "v7_design_brief": {"master_sha256": "v7-old"}}},
+            current, "v7-new"))
         self.assertFalse(needs_research_restart(None, None, current))
         self.assertFalse(needs_research_restart("research_partial", None, current))
         runner = (Path(__file__).resolve().parents[1] /
