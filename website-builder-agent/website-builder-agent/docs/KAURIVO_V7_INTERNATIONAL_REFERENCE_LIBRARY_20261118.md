@@ -46,6 +46,16 @@ For future auto repair projects, `https://singervehicledesign.com/` is an **addi
 5. Run objective browser QA (all routes, font load, text column widths, click targets, links, media rights, title, favicon, no overflow, real booking/quote path) separately. All hard functional/factual defects must fail regardless of aesthetic score.
 6. Blind-test at least 5 newly researched enterprises from unrelated sectors, with a baseline and V7 same-source comparison. Refine process based on root causes. Do not store reference assets as customer-owned assets or scrape/copy third-party protected media.
 
+## Global craft calibration — not sector templates
+
+These 3 extra examples are **global design-excellence standards**, not direct small-business sector templates:
+
+- **https://landonorris.com/** — UK, Awwwards Site of the Year 2025 (also 2026 Webby sports recognition). Learn deliberate kinetic storytelling, excellent photography and carefully orchestrated transitions. Do not replicate F1 gaming, long loading animations or enormous media budgets in local repair/service sites. Official site confirmed; award-context source https://rickcreates.com/r/2025-11-20-lando-norris .
+- **https://brand.dropbox.com/** — USA, CSS Design Awards 2025 Website of the Year. Learn brand identity consistency, type, color, imagery, and motion as one coherent language. The *brand guidelines* itself is educational; do not copy its protected artwork or try to reproduce its entire experience. Source https://www.cssdesignawards.com/blog/2025-website-of-the-year-winners/430/ .
+- **https://www.igloo.inc/** — International/USA-linked digital studio, Webby Winner Best Visual Design (Aesthetic) 2026. Learn intentional artistic visual interaction (not its exact assets, markup or art direction). Official site is JavaScript-heavy and must be captured with a real browser before using as an approved comparator. Source https://winners.webbyawards.com/2026/websites-and-mobile-sites/features-design/best-visual-design-aesthetic/361001/igloo-inc .
+
+**Critical:** A high-art experiential site is not an excuse to harm basic usability. The Kaurivo portfolio target 9.5/10 means equivalent execution care relative to the business, not replicating these sites' scale, art assets or animation systems.
+
 ## Evidence pointers (public, 2026-11-18)
 - LAVA Dental CSSDA: https://www.cssdesignawards.com/sites/lava-dental/48695/
 - Enoteca CSSDA: https://cssdesignawards.com/sites/enoteca-della-valpolicella/47824/
