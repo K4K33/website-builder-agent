@@ -1,0 +1,156 @@
+"""V7 reference UX evidence from a REAL browser scroll, not one screenshot.
+
+This is observational instrumentation, not a 9.5 aesthetic score or a
+licence to reproduce a competitor's branding, media or interaction design.
+Never click forms, bookings, purchases or external links.
+"""
+from __future__ import annotations
+
+from hashlib import sha256
+from pathlib import Path
+
+PROTOCOL = "real-browser-scroll-v1"
+FRACTIONS = (0.0, 0.25, 0.5, 0.75, 1.0)
+
+# Read-only DOM observation at each *actual* scroll position.
+_OBSERVE = """() => {
+  const visible = el => {
+    const r=el.getBoundingClientRect(), s=getComputedStyle(el);
+    return r.height>0 && r.width>0 && r.bottom>0 &&
+      r.top<innerHeight && s.display!=='none' && s.visibility!=='hidden';
+  };
+  const txt = el => (el.innerText || el.textContent || '').trim().replace(/\\s+/g,' ').slice(0,100);
+  const sample = (selector,limit) =>
+    [...document.querySelectorAll(selector)].filter(visible).slice(0,limit).map(txt).filter(Boolean);
+  return {
+    y: Math.round(scrollY),
+    viewport_height: innerHeight,
+    page_height: Math.max(document.documentElement.scrollHeight,document.body.scrollHeight),
+    headings: sample('main h1,main h2,main h3,h1,h2',7),
+    ctas: sample('a[href],button',5),
+    media_visible: [...document.querySelectorAll('main img,main video,picture img')]
+      .filter(visible).length,
+    animations_running: document.getAnimations ? document.getAnimations()
+      .filter(x=>x.playState==='running').length : 0,
+    sticky_visible: [...document.querySelectorAll('header,nav,[style*="sticky"],[style*="fixed"]')]
+      .filter(visible).filter(x=>['fixed','sticky'].includes(getComputedStyle(x).position))
+      .length
+  };
+}"""
+
+
+def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
+    """Scroll through a real loaded page in five steps with time for reveals.
+
+    Save distinct viewport frames, DOM observations and a same-position motion
+    sample. Visual differences may be video/lazy loading; they aren't graded.
+    No clicks on live business actions. Browser and external URL safety belong
+    to the caller's restricted Playwright context.
+    """
+    prefix = Path(output_prefix)
+    prefix.parent.mkdir(parents=True, exist_ok=True)
+    frames = []
+    try:
+        page.evaluate("window.scrollTo(0,0)")
+        page.wait_for_timeout(170)
+        extent = page.evaluate("""() => Math.max(
+            document.documentElement.scrollHeight,document.body.scrollHeight)-innerHeight""")
+        if not isinstance(extent,(int,float)) or extent < 260:
+            return {"protocol":PROTOCOL,"status":"not_scrollable",
+                    "reason":"Insufficient vertical journey to establish a scroll benchmark."}
+        for index, fraction in enumerate(FRACTIONS):
+            page.evaluate("(y)=>window.scrollTo(0,y)",round(extent*fraction))
+            page.wait_for_timeout(240)
+            observation = page.evaluate(_OBSERVE)
+            image = prefix.parent / (prefix.name + f"-{index}.png")
+            page.screenshot(path=str(image),full_page=False,animations="allow",timeout=12000)
+            frames.append({**observation,"fraction":fraction,"screenshot":str(image),
+                           "sha256":sha256(image.read_bytes()).hexdigest()})
+        # Observe at one unchanged position, not merely a visual change caused
+        # by scrolling to different content. This is only a motion *signal*.
+        page.evaluate("(y)=>window.scrollTo(0,y)",round(extent*0.5))
+        page.wait_for_timeout(110)
+        a = sha256(page.screenshot(full_page=False,animations="allow")).hexdigest()
+        page.wait_for_timeout(510)
+        b = sha256(page.screenshot(full_page=False,animations="allow")).hexdigest()
+        # No destructive navigation. Hover on actual desktop navigation only.
+        hover_change = None
+        if page.viewport_size and page.viewport_size["width"] > 700:
+            try:
+                nav = page.locator("header nav a, nav a").first
+                if nav.count() and nav.is_visible(timeout=1000):
+                    before = sha256(page.screenshot(full_page=False,animations="allow")).hexdigest()
+                    nav.hover(timeout=1500)
+                    page.wait_for_timeout(150)
+                    after = sha256(page.screenshot(full_page=False,animations="allow")).hexdigest()
+                    hover_change = before != after
+            except Exception:
+                hover_change = None
+        page.evaluate("window.scrollTo(0,0)")
+        steps = {row["y"] for row in frames}
+        return {"protocol":PROTOCOL,
+                "status":"observed" if len(steps)>=3 else "insufficient_scroll_steps",
+                "browser_scrolled":True,
+                "viewport_width":page.viewport_size["width"] if page.viewport_size else 0,
+                "url":page.url,
+                "document_scroll_range":round(extent),
+                "frames":frames,
+                "same_position_visual_change":a!=b,
+                "nav_hover_visual_change":hover_change,
+                "quality_review_required":True,
+                "caveat":"Animation/hover signals and photos do not prove smoothness or design quality."}
+    except Exception as exc:
+        return {"protocol":PROTOCOL,"status":"capture_failed",
+                "error_type":type(exc).__name__,"quality_review_required":True}
+
+
+def complete_scroll_evidence(shots: dict) -> bool:
+    """Do not promote a single full-page screenshot to a UX benchmark."""
+    journey = shots.get("scroll_experience") if isinstance(shots,dict) else None
+    if not isinstance(journey,dict):
+        return False
+    for view in ("desktop","mobile"):
+        record=journey.get(view)
+        if not isinstance(record,dict) or record.get("protocol")!=PROTOCOL or record.get("status")!="observed":
+            return False
+        frames=record.get("frames")
+        if not isinstance(frames,list) or len(frames)<5 or len({f.get("y") for f in frames if isinstance(f,dict)})<3:
+            return False
+        for frame in frames:
+            if not isinstance(frame,dict) or not isinstance(frame.get("screenshot"),str):
+                return False
+            file=Path(frame["screenshot"])
+            try:
+                if (not file.is_file() or file.stat().st_size<24 or
+                        file.read_bytes()[:8]!=b"\\x89PNG\\r\\n\\x1a\\n" or
+                        sha256(file.read_bytes()).hexdigest()!=frame.get("sha256")):
+                    return False
+            except OSError:
+                return False
+    return True
+
+
+def compact_scroll_observations(shots: dict) -> dict:
+    """Facts for Builder/QA prompts; never invent a premium quality score."""
+    journey=shots.get("scroll_experience") if isinstance(shots,dict) else None
+    out={"protocol":PROTOCOL,"verified":complete_scroll_evidence(shots),"views":{}}
+    if not isinstance(journey,dict):
+        return out
+    for view in ("desktop","mobile"):
+        rec=journey.get(view) or {}
+        if not isinstance(rec,dict):
+            continue
+        frames=rec.get("frames") or []
+        out["views"][view]={
+            "status":rec.get("status"),
+            "scroll_range":rec.get("document_scroll_range"),
+            "scroll_story":[{"at":f.get("fraction"),
+                             "headings":(f.get("headings") or [])[:4],
+                             "media_visible":f.get("media_visible"),
+                             "sticky_visible":f.get("sticky_visible"),
+                             "animations_running":f.get("animations_running")}
+                            for f in frames[:5] if isinstance(f,dict)],
+            "same_position_visual_change":rec.get("same_position_visual_change"),
+            "nav_hover_visual_change":rec.get("nav_hover_visual_change"),
+        }
+    return out
