@@ -809,6 +809,22 @@ def verify_static_site(site_root,expected_routes):
            for route in sorted(expected)}
     css="\n".join(p.read_text(encoding="utf-8") for p in site_root.rglob("*.css"))
     js="\n".join(p.read_text(encoding="utf-8") for p in site_root.rglob("*.js"))
+    from utils.demo_browser_identity import audit_browser_identity
+    tab=audit_browser_identity(pages)
+    if not tab["pass"]:
+        raise HoldError("browser_identity_incomplete")
+    # Ensure the favicon is an actual served file, not a broken local URL.
+    for route, html in pages.items():
+        soup=BeautifulSoup(html,"html.parser")
+        for icon in soup.select('link[rel~="icon"][href]'):
+            href=str(icon.get("href") or "").split("?",1)[0]
+            if href.startswith("data:"):
+                continue
+            if href.startswith(("http://","https://","//")):
+                raise HoldError("unapproved_external_favicon")
+            actual=((site_root/route).parent/href).resolve()
+            if not actual.is_relative_to(site_root.resolve()) or not actual.is_file():
+                raise HoldError("favicon_asset_missing")
     result=audit_premium_experience(pages,css_text=css,js_text=js)
     if result["blocking"]:
         raise HoldError("premium_interaction_blocked")
