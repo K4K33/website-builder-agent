@@ -85,6 +85,9 @@ def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS,
     results = {}
     metrics = {}
     scroll_journeys = {}
+    video_folder = folder / (filename + "-scroll-videos")
+    if scroll_experience:
+        video_folder.mkdir(exist_ok=True)
     print("  [screenshot] Original source capture: " + str(url))
     try:
         with sync_playwright() as pw:
@@ -98,7 +101,10 @@ def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS,
                         has_touch=width <= 390,
                         reduced_motion="no-preference" if scroll_experience else "reduce",
                         service_workers="block",
+                        **({"record_video_dir": str(video_folder)}
+                           if scroll_experience and name in ("desktop", "mobile") else {}),
                     )
+                    page = None
                     try:
                         page = context.new_page()
                         page.goto(url, wait_until="domcontentloaded", timeout=25000)
@@ -120,7 +126,16 @@ def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS,
                         print("  [screenshot] " + name + ": unavailable (" +
                               type(error).__name__ + ")")
                     finally:
+                        video = page.video if page is not None else None
                         context.close()
+                        if (video is not None and name in scroll_journeys
+                                and scroll_experience):
+                            try:
+                                video_path = Path(video.path())
+                                if video_path.is_file() and video_path.stat().st_size > 300:
+                                    scroll_journeys[name]["video_path"] = str(video_path)
+                            except Exception:
+                                pass
             finally:
                 browser.close()
     except Exception as error:
