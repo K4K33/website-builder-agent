@@ -223,8 +223,7 @@ Deno.serve(async req => {
       "heading_missing","contact_link_missing"].includes(i)).slice(0,5):[];
   const technicalAudit=status&&allowedStatuses.has(status)?
    {status,issues:auditIssues,
-    url:status==="html_checked"&&rawAudit?.url===claimedUrl.replace(/\/$/,"")+"/"
-      ?String(rawAudit.url):status==="html_checked"?clean(rawAudit?.url,1200):"",
+    url:status==="html_checked"?clean(rawAudit?.url,1200):"",
     title_present:rawAudit?.title_present===true,
     meta_description_present:rawAudit?.meta_description_present===true,
     viewport_present:rawAudit?.viewport_present===true,
