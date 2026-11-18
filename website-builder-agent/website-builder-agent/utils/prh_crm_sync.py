@@ -31,8 +31,13 @@ def push_packet(packet_path, *, env=None, get=requests.get, post=requests.post):
             or data.get("mode") != "pilot-live"
             or data.get("not_verified_for_outreach") is not True
             or not isinstance(data.get("candidates"), list)
-            or not 1 <= len(data["candidates"]) <= 50):
+            or not 0 <= len(data["candidates"]) <= 50):
         raise RuntimeError("Only an official real PRH pilot-live shortlist can be synced")
+    # All candidates may have failed the public homepage verification.
+    # Zero records is a legitimate result; do not claim OIDC or manufacture leads.
+    if not data["candidates"]:
+        return {"processed": 0, "ai_credits_used": 0, "emails_sent": 0,
+                "target": "Kaurivo-only private lead review queue"}
 
     request_url = env.get("ACTIONS_ID_TOKEN_REQUEST_URL", "")
     request_token = env.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "")
