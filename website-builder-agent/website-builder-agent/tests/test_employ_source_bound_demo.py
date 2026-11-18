@@ -108,6 +108,16 @@ class EmployConceptTests(unittest.TestCase):
                             overflow=page.evaluate(
                                 "document.documentElement.scrollWidth-window.innerWidth"
                             )
+                            if overflow > 3:
+                                offenders=page.evaluate("""() => Array.from(document.querySelectorAll('body *'))
+                                  .map(e => ({tag:e.tagName,cls:String(e.className).slice(0,80),
+                                    text:(e.textContent||'').trim().slice(0,60),
+                                    right:Math.round(e.getBoundingClientRect().right),
+                                    width:Math.round(e.getBoundingClientRect().width)}))
+                                  .filter(o=>o.right>window.innerWidth+3)
+                                  .slice(0,16)""")
+                                print("EMPLOY_OVERFLOW_DEBUG",width,suffix,
+                                      offenders,flush=True)
                             self.assertLessEqual(overflow,3,
                                 f"Unexpected sideways scroll: {width}px {suffix}: {overflow}")
                             for link in page.locator(".site-nav a").all():
