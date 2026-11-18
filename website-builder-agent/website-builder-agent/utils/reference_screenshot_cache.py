@@ -30,7 +30,7 @@ def capture_cached(url: str, capture, *, cache_root: str | Path,
                     and saved.get("source_url") == url):
                 files = saved.get("screenshots") or {}
                 from utils.reference_scroll_experience import complete_scroll_evidence
-                if (not require_scroll_experience or complete_scroll_evidence(files)) and all(
+                if (not require_scroll_experience or complete_scroll_evidence(files,require_video=True)) and all(
                     isinstance(files.get(view), str)
                     and Path(files[view]).is_file()
                     and sha256(Path(files[view]).read_bytes()).hexdigest()
@@ -44,7 +44,7 @@ def capture_cached(url: str, capture, *, cache_root: str | Path,
     if not isinstance(shots, dict):
         return None
     from utils.reference_scroll_experience import complete_scroll_evidence
-    if require_scroll_experience and not complete_scroll_evidence(shots):
+    if require_scroll_experience and not complete_scroll_evidence(shots,require_video=True):
         return None
     if not all(
         isinstance(shots.get(view), str) and Path(shots[view]).is_file()
