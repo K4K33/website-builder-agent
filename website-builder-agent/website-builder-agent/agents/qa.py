@@ -912,14 +912,15 @@ jotka kierrättävät käyttäjää ilman uutta tietoa.
 Älä väitä sivustonlaajuista tarkistusta tehdyksi, jos
 käytössä on vain yksittäisen sivun kuvakaappaus.
 
-YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
-- Yksi asiakasdemo ei riitä. Tavoitteena jokaisessa
-  asiakasprojektissa oikean ulkoisen riippumattoman AI:n
-  arvosana vähintään 9,5/10, myös vähintään kolmessa
-  erillisessä tuoreessa yritysprojektissa. ÄLÄ KEKSI
-  pisteitä tai väitä AI:n arvioineen työtä ilman näyttöä.
-  Mobiilin ja desktopin sekä alisivujen arvioinnit
-  tehdään aina ennen hyväksyntää.
+YLEINEN V9-LUONNOLLINEN TEKSTI JA PITKÄN AIKAVÄLIN 9,5-LAATUTAVOITE:
+- Tavoitteena on saavuttaa ulkoisten riippumattomien arvioijien
+  todellinen vähintään 9,5/10 taso usealla eri yrityssivustolla.
+  Tätä EI vaadita ensimmäisten laadukkaiden demojen myynnin ehdoksi.
+  Tarkista yksittäisen myyntiin tarjottavan sivuston jokainen sivu
+  oikeasta mobiili- ja desktop-näkymästä, asiakastehtävät, faktat,
+  brändi, käyttöoikeudet ja vakavat laatupuutteet. Omistajan
+  aito hyväksyntä vaaditaan tarkkaan kyseiseen sivustoversioon.
+  ÄLÄ KEKSI pisteitä tai väitä AI:n arvioineen työtä ilman näyttöä.
 - VASTAKOHTAPARIEN (esim. "Vähemmän X, enemmän Y"
   tai "Ei vain X vaan Y") EHDOTON MAKSIMI ON 1 KOKO
   VERKKOSIVUSTOLLA, ei yksi per sivu. Jos pari kuulostaa
@@ -938,10 +939,12 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   tarraa. Kuvaluonteen kertoo pieni vieressä oleva
   tekstiselite ja demon lähetysviesti.
 - Yksittäinen ulkoinen 8,5/10-arvio tai itse annettu
-  9,5/10-piste EI tarkoita läpäisyä. Etene
-  maksuttomien rakenteen ja selaimen testien kautta
-  ulkoiseen arvosteluun. Kirjaa palautteet ja
-  korjaa mahdolliset toistuvat ongelmat koko agenttiin.
+  9,5/10-piste EI yksin todista myyntikelpoisuutta tai valmiutta.
+  Etene lähteistetyistä sisällöistä oikeisiin selaintesteihin,
+  dokumentoituun omistajan arvioon ja faktatarkistukseen.
+  Ulkoinen 9,5-tasotarkastelu on kehitysmittari, ei
+  ensimmäisen myyntiviestin pysäyttävä ehto.
+  Kirjaa palautteet ja korjaa toistuvat ongelmat agenttiin.
 
 YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
 - Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat
