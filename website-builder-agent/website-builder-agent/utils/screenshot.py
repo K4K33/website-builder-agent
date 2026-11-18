@@ -72,7 +72,8 @@ FIRST_VIEW_SCRIPT = """() => {
 }"""
 
 
-def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS) -> dict | None:
+def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS,
+                    scroll_experience: bool = False) -> dict | None:
     """Capture full-page source and DOM first-view metadata at the requested sizes."""
 
     if not _safe_remote_url(url):
@@ -83,6 +84,7 @@ def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS) -> dict
     filename = _safe_filename(company_name)
     results = {}
     metrics = {}
+    scroll_journeys = {}
     print("  [screenshot] Original source capture: " + str(url))
     try:
         with sync_playwright() as pw:
@@ -94,7 +96,7 @@ def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS) -> dict
                         device_scale_factor=1,
                         is_mobile=width <= 390,
                         has_touch=width <= 390,
-                        reduced_motion="reduce",
+                        reduced_motion="no-preference" if scroll_experience else "reduce",
                         service_workers="block",
                     )
                     try:
@@ -105,6 +107,10 @@ def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS) -> dict
                             metrics[name] = page.evaluate(FIRST_VIEW_SCRIPT)
                         except Exception:
                             metrics[name] = {"measured": False}
+                        if scroll_experience and name in ("desktop", "mobile"):
+                            from utils.reference_scroll_experience import record_scroll_experience
+                            scroll_journeys[name] = record_scroll_experience(
+                                page, output_prefix=folder / (filename + "-" + name + "-scroll"))
                         target = folder / (filename + "_" + name + ".png")
                         page.screenshot(path=str(target), full_page=True,
                                         animations="disabled", timeout=20000)
@@ -124,6 +130,8 @@ def capture_website(url: str, company_name: str, *, viewports=VIEWPORTS) -> dict
     if not results:
         return None
     results["first_fold_observations"] = metrics
+    if scroll_experience:
+        results["scroll_experience"] = scroll_journeys
     results["captured_at"] = datetime.now(timezone.utc).isoformat()
     results["capture_url"] = str(url)
     return results
