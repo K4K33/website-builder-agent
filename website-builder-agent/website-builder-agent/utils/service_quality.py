@@ -54,7 +54,10 @@ MASTER_PROMPT_SOURCE = MASTER_PROMPT_PATH.read_text(encoding="utf-8")
 from utils.quality_v7 import V7_POLICY, V7_SHA256
 # Version-bound research/preview evidence now changes when either V6 archive
 # or the short active V7 design contract changes.
-MASTER_PROMPT_SHA256 = hashlib.sha256(
+MASTER_PROMPT_SHA256 = hashlib.sha256(MASTER_PROMPT_SOURCE.encode("utf-8")).hexdigest()
+# Preserve historical V6 contract IDs used in source-bound review evidence.
+# V7 has a separate immutable SHA in every new design brief.
+EFFECTIVE_MASTER_PROMPT_SHA256 = hashlib.sha256(
     (MASTER_PROMPT_SOURCE + "\nV7:" + V7_SHA256).encode("utf-8")
 ).hexdigest()
 _MASTER_START = "<!-- ACTIVE_RUNTIME_CONTRACT_START -->"
