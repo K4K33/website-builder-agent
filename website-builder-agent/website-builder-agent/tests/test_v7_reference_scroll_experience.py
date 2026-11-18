@@ -71,6 +71,43 @@ class ScrollReferenceTests(unittest.TestCase):
                                                    "mobile":"example.png"}))
         self.assertFalse(compact_scroll_observations({})["verified"])
 
+    def test_real_wheel_driven_canvas_style_journey_without_native_scroll(self):
+        # Some awarded experiences deliberately keep scrollY at zero while
+        # advancing the visual scene on actual wheel events. They must not
+        # be mistaken for an unscrollable static site.
+        from playwright.sync_api import sync_playwright
+        markup = """<!doctype html><html><head><style>
+            html,body{height:100%;overflow:hidden;margin:0}
+            #scene{height:100vh;display:grid;place-items:center;
+                   font:56px Arial;background:rgb(20,20,20);color:white}
+        </style></head><body><main id="scene">Scene zero</main>
+        <script>
+          let scene=0;
+          window.addEventListener("wheel", event=>{
+            scene+=1;
+            document.querySelector("#scene").textContent="Scene "+scene;
+            document.querySelector("#scene").style.backgroundColor=
+                "rgb("+((20+scene*23)%220)+",30,60)";
+            event.preventDefault();
+          },{passive:false});
+        </script></body></html>"""
+        with TemporaryDirectory() as d, sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            try:
+                page=browser.new_page(viewport={"width":1200,"height":800})
+                page.set_content(markup)
+                result=record_scroll_experience(
+                    page,output_prefix=Path(d)/"canvas-journey")
+                self.assertEqual(result["status"],"observed",result)
+                self.assertEqual(result["scroll_mechanism"],
+                                 "visual_without_native_scroll")
+                self.assertEqual(len({frame["y"] for frame in
+                                      result["frames"]}),1)
+                self.assertGreaterEqual(len({frame["sha256"] for frame in
+                                             result["frames"]}),3)
+            finally:
+                browser.close()
+
     def test_empty_page_is_not_a_qualified_scroll_benchmark(self):
         from playwright.sync_api import sync_playwright
         with TemporaryDirectory() as d, sync_playwright() as p:
