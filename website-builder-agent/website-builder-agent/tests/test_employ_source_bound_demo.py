@@ -34,6 +34,10 @@ class EmployConceptTests(unittest.TestCase):
         home=(folder/"index.html").read_text(encoding="utf-8")
         services=(folder/"palvelut/index.html").read_text(encoding="utf-8")
         process=(folder/"toimintatapa/index.html").read_text(encoding="utf-8")
+        # Asiakastieto reports the operational start in 2008, not a
+        # verified company registration/incorporation year.
+        self.assertIn("Toiminta käynnistynyt 2008", home)
+        self.assertNotIn("Yritys rekisteröity 2008", home)
         self.assertIn("faq-grid",home)
         self.assertIn("Miten suunnittelutarpeen voi kuvata?",home)
         self.assertIn("Kerro hankkeesta.",services)
