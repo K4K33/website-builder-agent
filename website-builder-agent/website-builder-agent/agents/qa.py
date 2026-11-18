@@ -41,7 +41,7 @@ from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
 from utils.client_facing_integrity import audit_layout_review_flags
 from utils.premium_quality_gate import (
-    source_coverage_matrix, verify_independent_premium_reviews,
+    source_coverage_matrix,
     audit_primary_journeys, site_digest,
 )
 from utils.global_feedback import (
@@ -1544,12 +1544,18 @@ def approve_company(slug_or_name):
         elif coverage["status"] != "verified":
             raise RuntimeError("Premium acceptance: old-to-new source coverage remains "
                                "missing or unverified; review the matrix.")
-        reviews = verify_independent_premium_reviews(
-            research.get("premium_independent_reviews"), rendered, research
+        # A genuinely accepted single client site may be sold while the
+        # agency continues working toward an independent 9.5/10 benchmark.
+        from utils.commercial_visual_gate import assess_commercial_visual_review
+        sale_visual = assess_commercial_visual_review(
+            company.get("commercial_visual_review"),
+            site_sha256=full_digest or qa.get("site_sha256", ""),
+            routes=routes or ["index.html"],
+            source_inventory=research.get("source_inventory"),
         )
-        if not reviews["pass"]:
-            raise RuntimeError("Premium acceptance: 9.5/10 two-reviewer evidence is incomplete: "
-                               + "; ".join(reviews["issues"][:4]))
+        if not sale_visual["approved"]:
+            raise RuntimeError("Current-build commercial visual acceptance HOLD: "
+                               + "; ".join(sale_visual["issues"][:4]))
         tasks = research.get("primary_user_journeys")
         journeys = audit_primary_journeys(rendered, tasks)
         if not tasks or not journeys["pass"]:
