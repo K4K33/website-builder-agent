@@ -1,3 +1,19 @@
+## 18.11.2026 — PAKOLLINEN SELAIMESSA AVATTAVA DEMO JA PREMIUM-YKSITYISKOHDAT
+
+Tämä on PERMANENTTI vaatimus jokaiselle Kaurivon uudelle sivustolle ja muutokselle. Käyttäjä EI JOUdu pyytämään verkkolinkkiä erikseen. Rakennustyö sisältää julkaisun, aidon verkkoselain- ja mobiilitarkistuksen, sekä vastauksen jossa on aina **Vanha sivu** ja **Avaa uusi demo** -linkit. "Avaa demo" avaa suoraan sivuston omalle välilehdelleen (ei ZIP, GitHubin koodinäkymä, PDF, kuvatiedosto, selaimen virhesivu tai korvaava geneerinen demokortti). Linkkiä ei saa keksiä, ja sen julkaistun sisällön täytyy vastata nimenomaan viimeisintä rakennusversiota.
+
+**Aito omistajan esikatselu** on erotettava **asiakkaalle lähetettävästä myyntidemosta** ja **lopullisesta CMS-toimituksesta**. Omistaja voi arvioida laadukkaan teknisesti/lähteistetysti varmennetun sivuston aidosta HTTPS-esikatselusta ilman jo valmiiksi annettua omistajan visuaalista hyväksyntää (muuten arviointi on mahdoton kehä). Esikatselu ei saa sisältää toimimattomia elementtejä, keksittyjä tietoja, oikeudettomia logomerkkejä tai näkyvästi keskeneräisiä kuvia/osiota; se merkitään rehellisesti itsenäiseksi suunnitteludemoksi ja noindex. Sen näyttäminen omistajalle ei itsessään hyväksy sitä asiakkaalle. **Asiakkaan esittely ja myynti** edellyttävät lisäksi omistajan hyväksyntää, ajantasaista erillistä faktatarkistusta, julkaisua, käyttöoikeuksia ja lainmukaista yksilöllistä yhteydenottoa. **CMS-toimitus** vaatii myös asiakkaan lopullisen hyväksynnän ja oikeasti testatun muokkaamisen.
+
+**Jokaisella sivulla, myös alisivuilla:**
+- Selaimen välilehden `<title>` sisältää yrityksen vahvistetun nimen ja kyseisen sivun oikean palvelun/aiheen. Ei "Kaurivo demo", "index", "Etusivu" yksin, teknisiä sanoja tai tarpeetonta pitkää otsikkoa.
+- Oikeasta lähteestä varmennettu favicon ja logo käyttöoikeuksineen, TAI sisäisessä suunnitteludemossa erikseen ja näkyvästi neutraaliksi merkitty ei-yritysbrändinen tilapäinen sivuikoni, jos logosta ei ole oikeuksia. Keksittyä monogrammia tai uutta yrityslogoa ei koskaan esitetä aitona. Näkyvän sivuikonin todellinen renderöityminen tarkistetaan selaimessa.
+- Tosi `<html lang>`, yrityksen omiin faktoihin perustuva yksilöllinen meta description ja oikea nimi headerissa, footerissa ja linkkien saavutettavuusnimissä.
+- Headerin teksti/puhelin ja navigaatio tasapainossa, mobiilin painikkeet riittävän suuria, oikea klikattava kohde, laadukas focus/hover/pressed-tila, responsiiviset marginaalit, hierarkia, rivivälit ja kirjainten määrä; ei turhaa numerointia, nuolispämmiä tai AI-tyylisiä vastakohtapareja.
+- Hero-kuva tai näkyvä kuvitus latautuu varmasti julkaistulla URL:lla. Käytä ensisijaisesti käyttöoikeudeltaan varmennettuja yrityksen oikeita kuvia; muuten merkitse laadukas lisensoitu kuvituskuva selvästi kuvitukseksi. Ei rikkinäisiä etäkuvia, yksiväristä tyhjää kuvanpaikkablokkia, kirjaston väärää kuvaa, toistuvia kuvia tai pilkkomattomia huonolaatuisia alkuperäisiä.
+- Jokainen sivu testataan ainakin 390/768/1440 px, kaikki sisäiset linkit, kieliversiot, CTA:t, kuvat, faviconit, CSS, JavaScript, välilehtiotsikot ja todellinen selainvirheettömyys. Katso myös aidon sivun visuaalinen rytmi, eri sivujen ero ja premium-yksityiskohdat, ei vain tekniset testit.
+
+**Julkaisun vastauksen automaattinen malli:** "Vanha sivu: [oikea URL] · Avaa uusi demo: [tarkistettu HTTPS URL] · Tila: omistajan esikatselu / myyntihyväksytty". Näytä aina kaksi suoraan klikattavaa linkkiä, kun uusi sivu on julkaistu ja toimiva. Jos julkaisua ei voitu todentaa, sano selvästi mikä estää ja jatka teknistä korjausta; älä kutsu ZIP-tiedostoa valmiiksi demoksi tai arvaa julkaisun osoitetta. Pidä tämä sääntö molemmissa manuaalisissa ChatGPT-työnkuluissa ja automaattisessa `Rakenna demo` -painikkeessa.
+
 # Kaurivo — every reviewable version gets a working preview link automatically
 
 **Permanent agency workflow rule (2026-11-02).** Applies to all client demos and
