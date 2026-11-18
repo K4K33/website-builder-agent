@@ -1235,6 +1235,21 @@ def main():
             if needs_research_restart(
                     resume, load_company(agent_slug) if resume else None,
                     MASTER_PROMPT_SHA256, V7_SHA256):
+                # The checkpoint RPC forbids backward stage transitions.
+                # Invalidate only the fully authenticated current snapshot
+                # by SHA before persisting replacement Research.
+                current_checkpoint = call_worker(
+                    "checkpoint_info",job_id=working_job["id"]).get("checkpoint")
+                if (not isinstance(current_checkpoint,dict)
+                        or current_checkpoint.get("stage") != resume
+                        or not re.fullmatch(r"[0-9a-f]{64}",
+                                            str(current_checkpoint.get("sha256","")))):
+                    raise HoldError("checkpoint_stale_reset_failed")
+                reset_reply=call_worker(
+                    "checkpoint_reset",job_id=working_job["id"],
+                    checksum=current_checkpoint["sha256"])
+                if reset_reply.get("reset") is not True:
+                    raise HoldError("checkpoint_stale_reset_failed")
                 from utils.state import load_companies, save_companies
                 records = load_companies()
                 records[agent_slug] = {
