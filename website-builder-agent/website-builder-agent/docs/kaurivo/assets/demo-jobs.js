@@ -191,7 +191,7 @@
   const oldHref=comparisonLink(group,"Vanha sivu",job.original_url,null,
     job.original_url?"Vanhan sivun osoitetta ei voitu vahvistaa.":"Ei aiempaa verkkosivua");
   const newHref=comparisonLink(group,"Uusi sivu",ready?job.preview_url:null,"preview",
-    job.status==="internal_preview"?"Riippumaton 9,5/10-laatuhyväksyntä puuttuu":
+    job.status==="internal_preview"?"Sivustoversion faktatarkistus ja laadun hyväksyntä puuttuvat":
     ACTIVE.has(job.status)?"Uusi sivu valmistuu laatutarkistuksen jälkeen":
     "Uutta sivua ei ole vielä hyväksytysti julkaistu");
   if(oldHref&&newHref){
@@ -221,11 +221,9 @@
   // Backend internal_preview is ONLY a technical checkpoint. Never turn
   // a GitHub/Render 200 + QA link into an owner-deliverable demo.
   // Fail closed until the backend supplies a separately approved release
-  // record bound to the exact source and independent full-site 9.5 verdict.
+  // record bound to the exact source and owner-accepted current-build visual quality.
   return job.status==="approved_preview"&&job.quality_approved===true&&
-   Number.isFinite(Number(job.independent_visual_score))&&
-   Number(job.independent_visual_score)>=9.5&&
-   Number(job.independent_visual_score)<=10&&
+   job.commercial_visual_approved===true&&
    /^[0-9a-f]{64}$/.test(job.quality_evidence_sha256||"")&&
    /^[0-9a-f]{40}$/.test(job.release_sha||"")&&
    validUrl(job.preview_url,"preview")&&validUrl(job.qa_url,"qa");
@@ -330,7 +328,7 @@
     "Pyydä asiakkaan hyväksyntä. Vasta tämän jälkeen sivusto on luovutusvalmis."
    ]) append(steps,"li","",step);
   }else if(job.status==="internal_preview"||job.status==="approved_preview"){
-   append(main,"div","record-warning","Riippumaton 9,5/10-laatuhyväksyntä ja tarkkaan julkaisuversioon sidottu hyväksyntätodiste puuttuvat. Uutta linkkiä ei näytetä.");
+   append(main,"div","record-warning","Oikeaan julkaisuversioon sidottu ulkoasun hyväksyntä, faktatarkistus ja julkisen sivun tarkistus puuttuvat. Uutta linkkiä ei näytetä.");
   }
   if(job.status==="queued"&&!deferred){
    // Scheduling is a backup, not a guaranteed five-minute service. Attempt
