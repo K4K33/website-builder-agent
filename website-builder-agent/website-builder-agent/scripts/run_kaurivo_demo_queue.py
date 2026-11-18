@@ -1230,10 +1230,11 @@ def main():
             # returning design_handoff_incomplete / master_prompt_version.
             # Never reuse old concepts, screenshots, build or QA as approved.
             from utils.service_quality import MASTER_PROMPT_SHA256
+            from utils.quality_v7 import V7_SHA256
             from utils.kaurivo_checkpoint_stage_recovery import needs_research_restart
             if needs_research_restart(
                     resume, load_company(agent_slug) if resume else None,
-                    MASTER_PROMPT_SHA256):
+                    MASTER_PROMPT_SHA256, V7_SHA256):
                 from utils.state import load_companies, save_companies
                 records = load_companies()
                 records[agent_slug] = {
