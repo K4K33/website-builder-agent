@@ -36,7 +36,7 @@ class EmployConceptTests(unittest.TestCase):
         process=(folder/"toimintatapa/index.html").read_text(encoding="utf-8")
         self.assertIn("faq-grid",home)
         self.assertIn("Miten suunnittelutarpeen voi kuvata?",home)
-        self.assertIn("Varmista suunnittelutehtävän rajaus.",services)
+        self.assertIn("Kerro hankkeesta.",services)
         self.assertIn("Seuraava vaihe alkaa yhteydenotosta.",process)
         for suffix in PAGES:
             page_text=(folder/suffix/"index.html").read_text(encoding="utf-8")
