@@ -173,8 +173,8 @@ Deno.serve(async req => {
   if(!re||typeof re!=="object"||Array.isArray(re)||
      re.status!=="qualified"||
      typeof re.rating!=="number"||re.rating<4||re.rating>5||
-     !Number.isInteger(re.review_count)||Number(re.review_count)<10||
-     Number(re.review_count)>2000000||
+     typeof re.review_count!=="number"||!Number.isInteger(re.review_count)||re.review_count<10||
+     re.review_count>2000000||
      re.method!=="direct_public_review_page_structured_rating"||
      typeof re.checked_at!=="string"||
      !Number.isFinite(Date.parse(re.checked_at))||
