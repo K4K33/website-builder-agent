@@ -1210,6 +1210,10 @@ def run_qa(slug_or_name: str) -> dict:
     # Read the exact assembled local CSS/JS, not just inline HTML. A beautiful
     # first fold cannot override a known, business-agnostic motion defect.
     premium_effects = audit_premium_effect_assets(rendered_pages, site_root)
+    # These deterministic hints are *not* an independent aesthetic score.
+    from utils.quality_v7 import visual_risks
+    v7_visual = visual_risks(rendered_pages, research=research)
+
     planned_architecture = None
     if research.get("site_architecture") or build.get("page_paths"):
         planned_architecture = validate_site_architecture(
@@ -1410,6 +1414,8 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps({"premium_visual_protocol":research.get("premium_visual_protocol"),
                                   "all_routes_desktop_mobile_screenshot_order":route_view_ids},
                                  ensure_ascii=False)
+                    + "\nV7 VISIBLE PREMIUM RED-TEAM CUES (these are machine hints, NOT evidence of 9.5):\n"
+                    + json.dumps(v7_visual, ensure_ascii=False)
                     + "\nALL PAGE VISIBLE CONTENT:\n"
                     + "\n".join(route+": "+_build_ai_snapshot(body)
                                 for route,body in rendered_pages.items()),
@@ -1423,6 +1429,7 @@ def run_qa(slug_or_name: str) -> dict:
         browser.get("visual_review_flags") or [], rendered_pages, research
     )
     result = {
+        "v7_visual_risks": v7_visual,
         "layout_composition_review": layout_review,
         "automated": automated, "visual_media": visual_media,
         "premium_effects": premium_effects,
@@ -1438,7 +1445,8 @@ def run_qa(slug_or_name: str) -> dict:
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "site_sha256": bundle_digest,
-        "overall_pass": (temporal_claims["pass"]
+        "overall_pass": (not v7_visual["blocking"]
+                         and temporal_claims["pass"]
                          and not premium_effects["blocking"]
                          and parity["pass"] and source_fidelity["pass"]
                          and nav["pass"] and originality["pass"]
