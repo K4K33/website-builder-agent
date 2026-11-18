@@ -12,16 +12,21 @@ import json
 from pathlib import Path
 
 from utils.quality_v7 import REFERENCES_V7
+from utils.global_craft_experience import required_global_craft_sites
 from utils.screenshot import capture_website,REFERENCE_VIEWPORTS
 from utils.reference_scroll_experience import complete_scroll_evidence,compact_scroll_observations
 
 
-def audit(*,count=15,category="",output_dir="output/v7-reference-scroll-audit"):
+def audit(*,count=15,category="",global_craft=False,output_dir="output/v7-reference-scroll-audit"):
     folder=Path(output_dir)
     folder.mkdir(parents=True,exist_ok=True)
     data=json.loads(REFERENCES_V7.read_text("utf-8"))
-    targets=[row for row in data["industries"]
-             if not category or row["category"]==category][:count]
+    if global_craft:
+        targets=[{**row,"category":"award_"+str(index+1)}
+                 for index,row in enumerate(required_global_craft_sites())]
+    else:
+        targets=[row for row in data["industries"]
+                 if not category or row["category"]==category][:count]
     if not targets:
         raise ValueError("No reference candidate matches the category")
     entries=[]
@@ -33,6 +38,7 @@ def audit(*,count=15,category="",output_dir="output/v7-reference-scroll-audit"):
             verified=complete_scroll_evidence(shots)
             observations=compact_scroll_observations(shots)
             entry={"category":row["category"],"url":url,
+                   "name":row.get("name") or row.get("label") or row["category"],
                    "browser_scroll_evidence":"OBSERVED" if verified else "PENDING",
                    "experience":observations,
                    "aesthetic_quality_review":"NOT_ASSESSED",
@@ -40,6 +46,7 @@ def audit(*,count=15,category="",output_dir="output/v7-reference-scroll-audit"):
                    "status":row.get("status")}
         except Exception as exc:
             entry={"category":row["category"],"url":url,
+                   "name":row.get("name") or row["category"],
                    "browser_scroll_evidence":"PENDING","error_type":type(exc).__name__,
                    "aesthetic_quality_review":"NOT_ASSESSED",
                    "human_scrolling_and_motion_review":"PENDING"}
@@ -47,6 +54,8 @@ def audit(*,count=15,category="",output_dir="output/v7-reference-scroll-audit"):
         print(row["category"],entry["browser_scroll_evidence"],flush=True)
     report={"protocol":"kaurivo-v7-international-live-scroll-audit-v1",
             "at_utc":datetime.now(timezone.utc).isoformat(),
+            "mode":"three_global_awarded_craft_benchmarks" if global_craft else
+                   "fifteen_sector_reference_candidates",
             "attempted":len(entries),
             "actually_scrolled_and_evidenced":sum(
                 row["browser_scroll_evidence"]=="OBSERVED" for row in entries),
@@ -61,12 +70,15 @@ def audit(*,count=15,category="",output_dir="output/v7-reference-scroll-audit"):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--count",type=int,default=15)
+    parser.add_argument("--global-craft",action="store_true",
+                        help="Audit only the three award-winning global V7 QA standards")
     parser.add_argument("--category",default="")
     parser.add_argument("--output-dir",default="output/v7-reference-scroll-audit")
     args=parser.parse_args()
     if not 1<=args.count<=15:
         parser.error("--count must be 1..15")
-    report=audit(count=args.count,category=args.category,output_dir=args.output_dir)
+    report=audit(count=args.count,category=args.category,
+                 global_craft=args.global_craft,output_dir=args.output_dir)
     print("Observed live scroll: "+str(report["actually_scrolled_and_evidenced"])+
           "/"+str(report["attempted"]))
 
