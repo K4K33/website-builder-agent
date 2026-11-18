@@ -15,4 +15,5 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 
 /* Questions are native disclosure controls: keyboard, touch and reduced motion work without JS. */
+.section-head h2,.page-title,.feature-title,.focus-line h2{overflow-wrap:anywhere;hyphens:auto}
 .faq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.faq-grid details{border-top:2px solid var(--ink);padding:26px 0;min-height:185px}.faq-grid summary{font-size:21px;font-weight:660;letter-spacing:-.045em;line-height:1.28;list-style:none;cursor:pointer;position:relative;padding-right:24px}.faq-grid summary::-webkit-details-marker{display:none}.faq-grid summary::after{content:"+";position:absolute;right:0;top:0;font-weight:400}.faq-grid details[open] summary::after{content:"−"}.faq-grid details p{font-size:14px;line-height:1.7;color:#53645b;max-width:350px}.faq-grid details p a{text-decoration:underline;text-underline-offset:3px}@media(max-width:760px){.faq-grid{grid-template-columns:1fr;gap:0}.faq-grid details{min-height:0;padding:21px 0}}
