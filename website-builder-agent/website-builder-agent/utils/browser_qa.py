@@ -99,6 +99,36 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                         ],
                                         src: (el.currentSrc || el.src).slice(0,140),
                                     })).slice(0,8),
+                                // Real paragraph widths catch the ~70px service text
+                                // that once passed scrollWidth and screenshot tests.
+                                // Restrict to substantial prose within MAIN, not
+                                // icons, compact labels or short numeric chips.
+                                unreadableTextColumns: [...document.querySelectorAll(
+                                    'main p,main li,main blockquote'
+                                )].filter(visible).map(el => {
+                                    const r = el.getBoundingClientRect();
+                                    const text = (el.innerText || '').trim();
+                                    return {
+                                        width: Math.round(r.width), chars: text.length,
+                                        excerpt: text.slice(0, 90),
+                                        lineHeight: getComputedStyle(el).lineHeight,
+                                    };
+                                }).filter(x => x.chars >= 110 &&
+                                    x.width < (innerWidth >= 1200 ? 180 :
+                                               innerWidth >= 768 ? 160 :
+                                               innerWidth >= 390 ? 120 : 103)
+                                ).slice(0, 8),
+                                squeezedHeadings: [...document.querySelectorAll('main h1,main h2,main h3')]
+                                    .filter(visible).map(el => {
+                                        const style = getComputedStyle(el);
+                                        const size = parseFloat(style.fontSize) || 0;
+                                        const spacing = parseFloat(style.letterSpacing);
+                                        return { size, spacing,
+                                            text: (el.innerText || '').trim().slice(0, 90),
+                                            font: style.fontFamily };
+                                    }).filter(x => x.size >= 40 && Number.isFinite(x.spacing)
+                                        && x.spacing <= -x.size * 0.075
+                                    ).slice(0, 8),
                                 // A tall almost-empty column next to substantial
                                 // content is a human layout-review candidate,
                                 // NOT a numeric automatic design verdict.
@@ -200,6 +230,21 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                         "Review genuine product/work visibility; a CSS image "
                                         "or gradient alone cannot prove source photo priority. "
                                         "Do not automatically reject text-first businesses.",
+                            })
+                        if findings.get("unreadableTextColumns"):
+                            # Objective content defect, not an aesthetic opinion:
+                            # readers cannot use a 70px column of ordinary prose.
+                            issues.append(
+                                f"{name}: unreadable substantial text column: "
+                                + json.dumps(findings["unreadableTextColumns"][:4],
+                                             ensure_ascii=False)
+                            )
+                        if findings.get("squeezedHeadings"):
+                            visual_review_flags.append({
+                                "viewport": name,
+                                "kind": "squeezed_display_typography",
+                                "evidence": findings["squeezedHeadings"],
+                                "note": "Actual CSS spacing is strongly negative; inspect real letterforms and line wraps.",
                             })
                         if findings.get("columnImbalance"):
                             visual_review_flags.extend([
