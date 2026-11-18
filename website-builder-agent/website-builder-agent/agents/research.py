@@ -1011,6 +1011,12 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     _validate_research_design(research_data, "", images)
     validate_creative_directions(research_data)
     validate_site_architecture(research_data, no_site=True)
+    # One company-specific source/art-direction record is consumed by Builder
+    # and QA. Absence of a website never proves absence of a brand.
+    from utils.quality_v7 import source_passport, design_brief
+    research_data["v7_source_passport"] = source_passport(research_data, company)
+    research_data["v7_design_brief"] = design_brief(research_data, company)
+    research_data["v7_visual_protocol"] = "v7"
     updated = upsert_company(slug, {"research": research_data})
     set_status(slug, "researched")
     return updated
@@ -1582,6 +1588,11 @@ Tärkeää:
     _repair_source_map(research_data, url)
     bind_source_routes(research_data)
     validate_site_architecture(research_data)
+
+    from utils.quality_v7 import source_passport, design_brief
+    research_data["v7_source_passport"] = source_passport(research_data, company)
+    research_data["v7_design_brief"] = design_brief(research_data, company)
+    research_data["v7_visual_protocol"] = "v7"
 
     updated_company = upsert_company(
         slug,
