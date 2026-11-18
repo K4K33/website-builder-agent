@@ -1,0 +1,46 @@
+name: Kaurivo international V7 full-scroll reference audit
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "Number of sector candidates (1-15)"
+        type: number
+        default: 15
+        required: false
+  push:
+    branches: [main]
+    paths:
+      - "website-builder-agent/website-builder-agent/utils/reference_scroll_experience.py"
+      - "website-builder-agent/website-builder-agent/scripts/audit_v7_reference_scroll.py"
+      - "website-builder-agent/website-builder-agent/config/kaurivo_v7_reference_candidates.json"
+permissions:
+  contents: read
+jobs:
+  live-scroll-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install real Chromium and evidence tools
+        run: |
+          python -m pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Scroll actual international sites desktop and mobile
+        run: |
+          python -m scripts.audit_v7_reference_scroll --count "$COUNT"
+        env:
+          COUNT: ${{ github.event.inputs.count || '15' }}
+      - name: Retain audit metadata even for inaccessible references
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaurivo-v7-real-scroll-metadata-${{ github.run_id }}
+          path: website-builder-agent/website-builder-agent/output/v7-reference-scroll-audit/report.json
+          if-no-files-found: warn
+          retention-days: 21
