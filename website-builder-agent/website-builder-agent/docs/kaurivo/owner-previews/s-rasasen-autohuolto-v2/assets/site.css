@@ -27,4 +27,4 @@
 @media(max-width:760px){.header-inner{height:74px}.source-slogan{bottom:calc(100% + 12px)}.full-service-list{grid-template-columns:1fr}.hours-content{align-items:start;flex-direction:column;gap:20px}.hours-content dl{min-width:0;width:100%}.service-card:hover{transform:none}.brand-sub{letter-spacing:.06em}}
 @media(prefers-reduced-motion:reduce){.btn,.service-card{transform:none!important;transition:none!important}}
 
-.source-slogan{position:static;display:inline-block;background:#d90029;color:#fff;font-weight:800;font-size:12px;line-height:1.4;letter-spacing:.04em;padding:8px 14px;margin:16px 0 0}.hero .section-tag+.source-slogan{margin-top:20px}
+.source-slogan{position:static;display:inline-block;background:#d90029;color:#fff;font-weight:800;font-size:12px;line-height:1.4;letter-spacing:.04em;padding:8px 14px;margin:16px 0 0}.hero .section-tag+.source-slogan{margin-top:20px}\n@media(max-width:760px){.demo-band{flex-wrap:wrap;gap:7px 16px}.demo-band b{font-size:10px;letter-spacing:.025em;margin-right:0}.demo-band>a{font-size:11px}}\n
