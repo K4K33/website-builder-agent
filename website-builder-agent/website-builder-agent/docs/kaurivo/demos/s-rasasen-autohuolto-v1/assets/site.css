@@ -14,3 +14,98 @@
 @media(max-width:760px){.demo-band{padding:7px 18px}.demo-detail{display:none}.container{width:calc(100% - 40px)}.header-inner{width:calc(100% - 40px);height:74px}.brand-main{font-size:23px}.brand-sub{font-size:9px}.desktop-nav{display:none}.header-phone{margin-left:auto;border:none;padding:0}.header-phone strong{font-size:15px}.header-phone .phone-caption{font-size:8px}.menu-trigger{border:1px solid #ffffff50;background:none;width:42px;height:42px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;flex-shrink:0}.menu-trigger span{height:2px;width:19px;background:#fff;transition:transform .2s}.menu-trigger[aria-expanded=true] span:first-child{transform:translateY(7px) rotate(45deg)}.menu-trigger[aria-expanded=true] span:nth-child(2){opacity:0}.menu-trigger[aria-expanded=true] span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}.mobile-nav:not([hidden]){display:flex;position:absolute;left:0;right:0;top:100%;background:#202526;padding:10px 20px 24px;border-bottom:2px solid var(--red);flex-direction:column;box-shadow:0 16px 32px #0006}.mobile-nav>a{padding:13px 4px;border-bottom:1px solid #ffffff15;font-size:15px;font-weight:700}.mobile-nav>a[aria-current=page]{color:#fa9b85}.mobile-nav>a.mobile-call{background:var(--red);text-align:center;border:0;margin-top:14px;padding:15px}.hero{min-height:700px}.hero-photo{background-position:center,60% center}.hero h1{font-size:clamp(55px,11vw,80px);margin:30px 0 24px}.hero-content{padding-top:76px;padding-bottom:90px}.hero-content>p{font-size:16px}.hero-footnote{margin-top:55px;flex-wrap:wrap;gap:10px}.hero-side{display:none}.facts-grid{grid-template-columns:1fr}.fact{padding:24px 0!important;border-right:none;border-bottom:1px solid #ffffff25}.fact:last-child{border-bottom:none}.section{padding:78px 0}.section-heading,.trust-layout,.faq-layout,.cta-inner,.contact-grid,.page-hero-layout,.footer-top{grid-template-columns:1fr;gap:34px}.section h2{font-size:clamp(42px,9vw,60px)}.section-heading{margin-bottom:34px}.section-intro p{margin:0 0 18px}.service-grid{grid-template-columns:1fr}.service-card{min-height:385px;padding:28px}.service-card h3{font-size:43px}.trust-visual{order:2}.trust-visual img{height:350px}.trust-copy{order:1}.cta-strip{padding:70px 0}.cta-strip h2{font-size:64px}.cta-panel{padding:29px}.page-hero{padding:65px 0 70px}.page-hero h1{font-size:clamp(50px,10vw,74px)}.page-hero-layout{gap:40px}.page-hero-image{height:270px}.service-row{grid-template-columns:34px 1fr;gap:15px;padding:28px 0}.service-label{grid-column:2;justify-self:start}.service-row h3{font-size:28px}.ribbon-content{display:block}.ribbon-actions{margin-top:25px}.story-highlight{padding:35px;min-height:420px}.story-number{font-size:150px;margin:26px 0 0}.workshop-visual{height:320px}.contact-grid{gap:25px}.contact-aside{padding:0}.contact-hero{min-height:400px;padding:70px 0}.contact-primary h2{margin-bottom:32px}.location-card{min-height:380px}.footer-top{gap:38px;padding-top:60px;padding-bottom:50px}.footer-bottom{flex-direction:column;gap:15px}}
 @media(max-width:400px){.header-phone{display:none}.brand-main{font-size:22px}.hero h1{font-size:53px}.hero-actions .btn{width:100%}.cta-strip h2{font-size:56px}.big-phone{font-size:42px}.service-card h3{font-size:38px}.ribbon-actions .btn{width:100%}.contact-buttons .btn{width:100%}.contact-detail>a{font-size:22px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* V2 FINISHING PASS · based on the verified original's black wordmark,
+   saturated red navigation stripe and mechanic imagery, not a generic theme. */
+:root{--red:#bd122e;--ink:#161b1d;--warm:#f5f2ec}
+.header{background:#171a1cf5;border-bottom:3px solid var(--red)}
+.header-inner{height:88px}
+.desktop-nav a{font-size:15px;letter-spacing:-.014em;color:#e0dfe0;padding:19px 0}
+.desktop-nav a:hover{color:#fff}
+.desktop-nav a[aria-current=page]:after{height:3px;bottom:11px}
+.header-phone{padding-left:24px}
+.header-phone strong{font-size:20px}
+.phone-caption{font-size:10px}
+.brand-main{font-size:29px;letter-spacing:-.055em}
+.brand-sub{font-size:10px;letter-spacing:.17em;color:#fff}
+.brand-sub i{color:#b7b1ae;letter-spacing:.12em}
+.demo-band{background:#2b3032;color:#eee}
+.demo-band b{color:#fff}
+.eyebrow{letter-spacing:.14em}
+.btn{font-size:14px;min-height:52px;border-radius:2px;letter-spacing:0}
+.btn-red{background:var(--red)}
+.btn-red:hover{background:#981026}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,a:focus-visible{outline-color:#f35768;outline-offset:3px}
+.hero{min-height:675px;background:#141719}
+.hero-photo{filter:saturate(.85);background-position:center,65% 52%}
+.hero-photo:after{background:linear-gradient(90deg,#101519d9 0%,#10151952 60%,#10151916 100%)}
+.hero h1{font-size:clamp(62px,7vw,99px);letter-spacing:-.065em;max-width:740px}
+.hero h1 em{color:#ffbcbf}
+.hero-content>p{max-width:510px;text-shadow:0 1px 3px #0008}
+.hero-side{display:none}
+.fact-index,.service-number,.service-overline>span{display:none}
+.fact{gap:0}
+.facts-grid{gap:0}
+.fact strong{font-size:22px}
+.service-overline{font-size:11px}
+.service-card{border-radius:2px}
+.service-card:hover{transform:translateY(-3px)}
+.service-feature:before{opacity:.6}
+.service-photo{background-position:center;background-size:cover}
+.service-row{grid-template-columns:minmax(0,1fr) 205px;gap:35px}
+.service-row p{font-size:15px}
+.service-row h3{font-size:32px}
+.cta-strip{background:#a91028}
+.cta-panel{background:#870f22}
+.page-hero{background:#171a1c}
+.page-hero-image{background-position:center;background-size:cover}
+.trust-visual{background:#242b2d}
+.trust-visual img{filter:none;object-position:center}
+.image-caption{font-size:11px;color:#ebd2d0}
+.location-pin{box-shadow:0 0 0 10px #c71b3559}
+.original-form-section{padding-top:70px;padding-bottom:72px;background:#e8e3da}
+.original-form-continuity{display:grid;grid-template-columns:.8fr 1.2fr;align-items:center;gap:30px 70px}
+.original-form-continuity h3{font-size:clamp(32px,4.5vw,52px);margin:0}
+.original-form-continuity p{font-size:16px;line-height:1.7;color:#4e5354;margin:0}
+.original-form-continuity a{justify-self:start;grid-column:2}
+.service-catalogue{background:#fdfbf7}
+.catalogue-heading{display:grid;grid-template-columns:1.15fr .65fr;gap:80px;align-items:end;margin-bottom:50px}
+.catalogue-heading h2{font-size:clamp(42px,5vw,64px)}
+.catalogue-heading>p{max-width:350px;color:#575b5c;font-size:16px;line-height:1.7;margin:0}
+.service-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #c5c7c7;border-left:1px solid #c5c7c7}
+.service-pills span{display:flex;align-items:center;padding:22px 26px;min-height:74px;border-bottom:1px solid #c5c7c7;border-right:1px solid #c5c7c7;font-size:15px;font-weight:700}
+.scope-note{margin-top:40px;border-left:4px solid var(--red);padding:23px 26px;background:#f0ece6}
+.scope-note strong{display:block;font-size:17px;margin-bottom:8px}
+.scope-note p{margin:0;max-width:850px;color:#555d5d;line-height:1.65;font-size:15px}
+.contact-detail small{font-size:13px;color:#636a68;line-height:1.5}
+.footer-brand{font-size:24px}
+@media(max-width:1050px){
+ .header-inner{gap:14px}.desktop-nav{gap:15px}.desktop-nav a{font-size:14px}
+ .header-phone{padding-left:14px}.header-phone strong{font-size:17px}
+}
+@media(max-width:760px){
+ .header-inner{height:74px}
+ .brand-main{font-size:23px}
+ .brand-sub{font-size:9px}
+ .header-phone{padding:0}
+ .hero{min-height:660px}
+ .hero-photo{background-position:center,62% center}
+ .hero-photo:after{background:linear-gradient(0deg,#101417d9,#11161968 83%)}
+ .service-row{grid-template-columns:1fr;gap:12px}
+ .service-label{grid-column:1}
+ .service-pills{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .catalogue-heading,.original-form-continuity{grid-template-columns:1fr;gap:22px}
+ .original-form-continuity a{grid-column:1}
+ .catalogue-heading{margin-bottom:34px}
+ .page-hero-image{height:310px}
+}
+@media(max-width:430px){
+ .service-pills{grid-template-columns:1fr}
+ .service-pills span{min-height:61px;padding:17px 20px}
+ .original-form-continuity a{width:100%}
+ .hero h1{font-size:clamp(51px,12vw,63px)}
+ .header-phone{display:none}
+}
+@media(prefers-reduced-motion:reduce){.service-card:hover,.btn:hover{transform:none}}
