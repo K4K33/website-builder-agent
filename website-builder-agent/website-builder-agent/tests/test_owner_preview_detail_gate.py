@@ -58,6 +58,14 @@ class OwnerPreviewDetailTests(unittest.TestCase):
         page.write_text(text)
         self.assertTrue(any("missing locally deployed asset" in p for p in self.check()))
 
+    def test_disclaimer_must_be_visible_even_when_mobile_detail_is_hidden(self):
+        f = self.base / SLUG / "index.html"
+        f.write_text(f.read_text().replace(
+            "KAURIVO · EI YRITYKSEN VIRALLINEN SIVU",
+            "KAURIVO / SUUNNITTELUDEMO"),
+            encoding="utf-8")
+        self.assertTrue(any("non-official demo disclaimer" in p for p in self.check()))
+
     def test_no_contact_or_false_services_claims_and_no_outreach(self):
         page = self.base / SLUG / "palvelut/index.html"
         page.write_text(page.read_text().replace(
