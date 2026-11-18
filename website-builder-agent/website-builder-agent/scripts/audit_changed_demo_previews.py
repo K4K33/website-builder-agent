@@ -20,6 +20,7 @@ from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.demo_origin_gate import verify_demo_concept_evidence
 from utils.premium_experience_gate import audit_premium_experience
 from utils.brand_lock import audit_brand_lock
+from utils.demo_browser_identity import audit_browser_identity
 from bs4 import BeautifulSoup
 # The production auto-preview branch used to bypass the demos/ provenance
 # gate. Validate every preview there with exactly the same universal rules.
@@ -170,6 +171,16 @@ def main():
             failed=True
         if motion["pending"]:
             print("VISUAL_REVIEW_PENDING", slug, "; ".join(motion["pending"][:3]))
+        # Every new site MUST include a polished, non-generic browser tab and
+        # honest icon. A static href alone is not a real browser render.
+        from pathlib import Path as _P
+        identity_name = " ".join(slug.replace("-", " ").split())
+        # Prefer source-verified name from provenance when available; never
+        # use slugs as asserted company identity.
+        identity = audit_browser_identity(pages)
+        for item in identity["issues"]:
+            print("BLOCK",slug,"browser_tab_or_favicon",item)
+            failed=True
         premium=audit_premium_experience(pages,css_text=css,js_text=js)
         for problem in premium["blocking"]:
             print("BLOCK",slug,"premium_interaction",problem["kind"],"@",problem.get("route"))
