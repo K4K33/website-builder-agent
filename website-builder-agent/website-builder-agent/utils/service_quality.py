@@ -51,7 +51,12 @@ from synthetic tests or the same demo revised repeatedly.
 # multiplying tokens/API costs for every Research/Builder/Revision/QA call.
 MASTER_PROMPT_PATH = Path(__file__).resolve().parents[1] / "docs/KAURIVO_MESTARI_PROMPT.md"
 MASTER_PROMPT_SOURCE = MASTER_PROMPT_PATH.read_text(encoding="utf-8")
-MASTER_PROMPT_SHA256 = hashlib.sha256(MASTER_PROMPT_SOURCE.encode("utf-8")).hexdigest()
+from utils.quality_v7 import V7_POLICY, V7_SHA256
+# Version-bound research/preview evidence now changes when either V6 archive
+# or the short active V7 design contract changes.
+MASTER_PROMPT_SHA256 = hashlib.sha256(
+    (MASTER_PROMPT_SOURCE + "\nV7:" + V7_SHA256).encode("utf-8")
+).hexdigest()
 _MASTER_START = "<!-- ACTIVE_RUNTIME_CONTRACT_START -->"
 _MASTER_END = "<!-- ACTIVE_RUNTIME_CONTRACT_END -->"
 if MASTER_PROMPT_SOURCE.count(_MASTER_START) != 1 or MASTER_PROMPT_SOURCE.count(_MASTER_END) != 1:
@@ -60,6 +65,10 @@ _active = MASTER_PROMPT_SOURCE.split(_MASTER_START, 1)[1].split(_MASTER_END, 1)[
 if len(_active) < 500:
     raise RuntimeError("Canonical master prompt runtime contract is incomplete")
 POLICY += "\n" + _active + "\n"
+# A short, ordered current standard overrides contradictory historical aesthetic
+# instructions. Old factual/rights/SEO gates remain mandatory.
+POLICY += "\nCURRENT K4URIVO MASTER V7 (design wins over decorative novelty):\n" + V7_POLICY + "\n"
+
 
 
 
