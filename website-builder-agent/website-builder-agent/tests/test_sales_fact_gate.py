@@ -102,6 +102,17 @@ class SalesFactGateTests(unittest.TestCase):
         company["sales_fact_review"]["corrections"][0]["regression_test"] = "tests.test_phone_parity"
         self.assertTrue(inspect_sales_fact_review(company)["ready"])
 
+    def test_outreach_approval_requires_completed_review(self):
+        from unittest.mock import patch
+        from agents import outreach
+        record = example_record()
+        record["outreach"] = {"subject": "Sample", "body": "Sample"}
+        del record["sales_fact_review"]
+        with patch.object(outreach, "get_company",
+                          return_value=("verified-example", record)):
+            with self.assertRaisesRegex(RuntimeError, "factual verification"):
+                outreach.approve_outreach("verified-example")
+
     def test_stale_future_and_unverified_areas_block(self):
         now = datetime.now(timezone.utc)
         company = example_record(now)
