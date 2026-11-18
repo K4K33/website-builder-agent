@@ -1,0 +1,33 @@
+name: Kaurivo source-grounded browser preview metadata gate
+
+on:
+  pull_request:
+    paths:
+      - 'website-builder-agent/website-builder-agent/docs/kaurivo/owner-previews/**'
+      - 'website-builder-agent/website-builder-agent/data/owner_previews/**'
+      - 'website-builder-agent/website-builder-agent/scripts/audit_changed_owner_previews.py'
+      - '.github/workflows/kaurivo-owner-preview-detail-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install beautifulsoup4
+      - name: Prevent incomplete, inaccurate or unbranded web preview
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+          HEAD_SHA: ${{ github.sha }}
+        working-directory: website-builder-agent/website-builder-agent
+        run: python scripts/audit_changed_owner_previews.py
