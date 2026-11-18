@@ -1,7 +1,19 @@
-# Kaurivo: sustained 9.5 / 10 independent-quality gate
+# Kaurivo: sustained 9.5 / 10 independent-quality DEVELOPMENT BENCHMARK
 
-**Scope:** Every customer demo, redesign, public preview, client pitch and
-production delivery. This is not a one-time Kotifixi-only milestone.
+**Scope:** Long-term measurement of Kaurivo's repeatable agency-wide design quality across different clients. The score is NOT a prerequisite for the first high-quality demo sale, public sales preview or customer delivery. The commercial release gate separately verifies the real current website, facts, rights, design, security and operational functionality.
+
+## Individual site: commercially eligible before reaching 9.5 (18 November 2026)
+
+Start selling as soon as the actual company-specific demo is of high quality
+and the owner has accepted its full current build. A sale-ready website must
+have no unresolved critical visual/functionality defects, source-faithful
+and lawful copy and media, working customer journeys, mobile and desktop
+review, exact hosted HTTPS verification and final source-bound factual check.
+No numeric score is invented as a substitute for those checks. One client's
+readiness never depends on having three prior projects. For delivery to a
+paying client, also verify the agreed scope, customer acceptance and editable
+CMS with rollback. Continue recording optional external 9.5 assessments as
+a distinct quality-improvement measurement.
 
 ## Integrated website score (owner rule, 2026-11-09)
 
@@ -29,11 +41,9 @@ Subtle photo parallax must be checked at desktop, touch and reduced motion.
 Source visual richness must still be preserved or meaningfully improved;
 this is not a rule to flatten all client sites into static sections.
 
-## Release rule
+## Agency-wide 9.5 benchmark rule (NOT a sales prerequisite)
 
-A demo may be built, revised and privately previewed before the gate passes,
-but it must be labelled a **candidate / NOT APPROVED FOR CUSTOMER OUTREACH**.
-The first outbound demo pitch must not be marked approved until:
+A demo can be sold before this agency-wide benchmark is reached if the **separate commercial release gate** passes. No premature claim of a 9.5 achievement is permitted. To claim that Kaurivo has achieved sustained independent 9.5 quality:
 
 1. The current exact source build has passed offline static checks, real
    browser interaction across 320, 390, 768 and 1440 px, working destinations,
