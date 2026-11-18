@@ -39,7 +39,7 @@ class GlobalCraftExperiences(TestCase):
         comparison=compare_experiences(rows,{"desktop":{"status":"observed","frames":[]},
                                              "mobile":{"status":"observed","frames":[]}})
         self.assertFalse(comparison["reference_all_three_scrolled"])
-        self.assertTrue(comparison["generated_home_scrolled"])
+        self.assertFalse(comparison["generated_home_scrolled"])
         self.assertFalse(comparison["comparison_assessed_by_expert"])
         self.assertIsNone(comparison["quality_score"])
         self.assertIn("timing of reveals",comparison["review_instructions"])
