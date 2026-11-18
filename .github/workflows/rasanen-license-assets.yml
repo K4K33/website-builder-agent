@@ -28,6 +28,8 @@ jobs:
           pictures=[
             ('Mechanic repairing car engine 1.jpg','garage-hero.webp',(1440,960)),
             ('The mechanic work shop.jpg','garage-detail.webp',(1000,1050)),
+            ('Mechanic repairing car engine.jpg','garage-service.webp',(1220,1000)),
+            ('Engineer is repairing the engine.jpg','garage-workshop.webp',(1400,820)),
           ]
           for name,filename,dimensions in pictures:
               url='https://commons.wikimedia.org/wiki/Special:FilePath/'+quote(name)+'?width=1800'
