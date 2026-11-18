@@ -87,6 +87,7 @@ class SectorReferenceTests(unittest.TestCase):
                 return {"desktop": screenshot.name, "mobile": screenshot.name}
 
             with patch.object(research.config, "free_only", return_value=False), \
+                 patch("utils.reference_scroll_experience.complete_scroll_evidence", return_value=True), \
                  patch.object(research, "capture_website", side_effect=capture) as browser:
                 evidence = research._collect_reference_evidence(candidates, "https://target.example")
 
