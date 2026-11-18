@@ -119,8 +119,16 @@ def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
                 hover_change = None
         page.evaluate("window.scrollTo(0,0)")
         steps = {row["y"] for row in frames}
+        rendered_steps = {row["sha256"] for row in frames}
+        # Scroll-jacked/canvas sites may animate on wheel while window.scrollY
+        # remains 0. Recorded video is required by global-craft QA in this case.
+        visually_advanced = len(rendered_steps) >= 3
+        browser_advanced = len(steps) >= 3
         return {"protocol":PROTOCOL,
-                "status":"observed" if len(steps)>=3 else "insufficient_scroll_steps",
+                "status":"observed" if (browser_advanced or visually_advanced) else
+                         "insufficient_scroll_steps",
+                "scroll_mechanism":"native" if browser_advanced else
+                                   "visual_without_native_scroll",
                 "browser_scrolled":True,
                 "viewport_width":page.viewport_size["width"] if page.viewport_size else 0,
                 "url":page.url,
@@ -136,7 +144,7 @@ def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
                 "error_type":type(exc).__name__,"quality_review_required":True}
 
 
-def complete_scroll_evidence(shots: dict) -> bool:
+def complete_scroll_evidence(shots: dict, *, require_video: bool = False) -> bool:
     """Do not promote a single full-page screenshot to a UX benchmark."""
     journey = shots.get("scroll_experience") if isinstance(shots,dict) else None
     if not isinstance(journey,dict):
@@ -145,11 +153,24 @@ def complete_scroll_evidence(shots: dict) -> bool:
         record=journey.get(view)
         if not isinstance(record,dict) or record.get("protocol")!=PROTOCOL or record.get("status")!="observed":
             return False
+        if require_video:
+            video=record.get("video_path")
+            if not isinstance(video,str):
+                return False
+            try:
+                if not Path(video).is_file() or Path(video).stat().st_size <= 300:
+                    return False
+            except OSError:
+                return False
         sequence=record.get("scroll_sequence_image")
         if not isinstance(sequence,str) or not Path(sequence).is_file():
             return False
         frames=record.get("frames")
-        if not isinstance(frames,list) or len(frames)<5 or len({f.get("y") for f in frames if isinstance(f,dict)})<3:
+        if not isinstance(frames,list) or len(frames)<5:
+            return False
+        moved=len({f.get("y") for f in frames if isinstance(f,dict)})>=3
+        visuals=len({f.get("sha256") for f in frames if isinstance(f,dict)})>=3
+        if not moved and not (require_video and visuals):
             return False
         for frame in frames:
             if not isinstance(frame,dict) or not isinstance(frame.get("screenshot"),str):
