@@ -1,0 +1,164 @@
+{
+  "schema_version": "v7.0",
+  "review_status": "UNVALIDATED_DISCOVERY_ONLY",
+  "source": "International selection 2026-11-18",
+  "industries": [
+    {
+      "category": "auto_repair",
+      "label": "Autokorjaamo",
+      "url": "https://www.electrifiedgarage.com/",
+      "country": "USA",
+      "design_lesson": "repair services and EV specifics",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "restaurant",
+      "label": "Ravintola",
+      "url": "https://www.enotecadellavalpolicella.it/",
+      "country": "Italy",
+      "design_lesson": "hospitality photography",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "cafe",
+      "label": "Kahvila",
+      "url": "https://www.cafebinocle.com/en",
+      "country": "Canada",
+      "design_lesson": "distinct identity and shop",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "bakery",
+      "label": "Leipomo",
+      "url": "https://www.backhausbread.com/",
+      "country": "USA",
+      "design_lesson": "food/product and pickup",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "dentist",
+      "label": "Hammasklinikka",
+      "url": "https://lavadental.lv/en",
+      "country": "Latvia",
+      "design_lesson": "patient journey",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "law",
+      "label": "Asianajotoimisto",
+      "url": "https://www.outputlaw.com/",
+      "country": "USA",
+      "design_lesson": "professional niche",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "architecture",
+      "label": "Arkkitehtuuri",
+      "url": "https://www.arqui9.com/",
+      "country": "UK",
+      "design_lesson": "project film and real work",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "construction",
+      "label": "Rakennusliike",
+      "url": "https://woodhullmaine.com/",
+      "country": "USA",
+      "design_lesson": "finished construction proof",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "landscape",
+      "label": "Pihasuunnittelu",
+      "url": "https://susanfriedmanlandscape.com/",
+      "country": "USA",
+      "design_lesson": "real projects",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "fitness",
+      "label": "Kuntosali",
+      "url": "https://kxpilates.com/au",
+      "country": "Australia",
+      "design_lesson": "classes and schedule",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "wellness",
+      "label": "Hyvinvointi",
+      "url": "https://www.thenowmassage.com/",
+      "country": "USA",
+      "design_lesson": "trust and booking",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "hotel",
+      "label": "Hotelli",
+      "url": "https://www.themusehotel.com/",
+      "country": "USA",
+      "design_lesson": "rooms and booking",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "real_estate",
+      "label": "Kiinteistönvälitys",
+      "url": "https://premierestateproperties.com/",
+      "country": "USA",
+      "design_lesson": "real listings",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "furniture",
+      "label": "Huonekalut",
+      "url": "https://andobjects.com/",
+      "country": "UK",
+      "design_lesson": "material product shots",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "cleaning",
+      "label": "Siivouspalvelut",
+      "url": "https://cleanology.com/",
+      "country": "UK",
+      "design_lesson": "real team and quoting",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    }
+  ],
+  "global_craft": [
+    {
+      "name": "Singer Vehicle Design",
+      "url": "https://singervehicledesign.com/",
+      "discipline": "automotive photo craft, not ordinary auto repair"
+    },
+    {
+      "name": "Lando Norris",
+      "url": "https://landonorris.com/",
+      "discipline": "choreographed motion/brand artistry"
+    },
+    {
+      "name": "Dropbox brand",
+      "url": "https://brand.dropbox.com/",
+      "discipline": "coherent type/brand system"
+    },
+    {
+      "name": "Igloo Inc.",
+      "url": "https://www.igloo.inc/",
+      "discipline": "art-direction concept quality"
+    }
+  ]
+}
