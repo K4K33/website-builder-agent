@@ -1,0 +1,84 @@
+name: Rasanen original site source and brand capture
+on:
+  push:
+    branches: [demo/rasasen-autohuolto-owner-review-20261118]
+    paths:
+      - .github/workflows/rasanen-source-capture.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          python -m pip install playwright pillow beautifulsoup4
+          python -m playwright install --with-deps chromium
+      - name: Probe source real pages and preserve screenshot evidence
+        run: |
+          python - <<'PY'
+          import json,pathlib,io,base64
+          from PIL import Image
+          from playwright.sync_api import sync_playwright
+          root=pathlib.Path("source-evidence/rasanen")
+          root.mkdir(parents=True,exist_ok=True)
+          urls=["https://www.rasasenautohuolto.fi/","https://www.rasasenautohuolto.fi/autokorjaamo","https://www.rasasenautohuolto.fi/yhteystiedot"]
+          report=[]
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              for i,url in enumerate(urls):
+                  rec={"url":url,"viewports":{}}
+                  for width in [390,1440]:
+                      page=browser.new_page(viewport={"width":width,"height":900},device_scale_factor=1)
+                      try:
+                          response=page.goto(url,wait_until="domcontentloaded",timeout=27000)
+                          page.wait_for_timeout(2200)
+                          data=page.evaluate("""() => {
+                            let b=document.body,h=document.querySelector('header')||b;
+                            return {
+                              title:document.title, final_url:location.href,
+                              h1:[...document.querySelectorAll('h1')].map(n=>n.innerText),
+                              body_text:(b.innerText||'').slice(0,7000),
+                              body_bg:getComputedStyle(b).backgroundColor,
+                              header_bg:getComputedStyle(h).backgroundColor,
+                              header_font:getComputedStyle(h).fontFamily,
+                              theme:document.querySelector('meta[name="theme-color"]')?.content||"",
+                              logos:[...document.querySelectorAll('header img,header svg,header [class*="logo"],.logo')].map(n=>({tag:n.tagName,src:n.getAttribute('src'),cls:n.className?.baseVal||n.className||"",outer:n.outerHTML.slice(0,550)})).slice(0,30),
+                              images:[...document.images].map(n=>({src:n.currentSrc||n.src,alt:n.alt,naturalWidth:n.naturalWidth,naturalHeight:n.naturalHeight})).slice(0,50),
+                              videos:document.querySelectorAll('video').length,
+                              links:[...document.querySelectorAll('a[href]')].map(n=>({text:(n.innerText||'').trim().slice(0,65),url:n.href})).filter(x=>x.text).slice(0,60)
+                            }
+                          }""")
+                          path=root/f"source-{i}-{width}.png"
+                          page.screenshot(path=str(path),full_page=True,timeout=20000,animations="disabled")
+                          rec["viewports"][str(width)]={"status":response.status if response else None,**data,"screenshot":str(path)}
+                          if i==0 and width==1440:
+                              im=Image.open(path)
+                              im.thumbnail((600,880))
+                              buf=io.BytesIO()
+                              im.convert("RGB").save(buf,"JPEG",quality=43,optimize=True)
+                              print("ORIGINAL_THUMB_BASE64="+base64.b64encode(buf.getvalue()).decode())
+                      except Exception as exc:
+                          rec["viewports"][str(width)]={"error":str(exc)[:350]}
+                      finally:
+                          page.close()
+                  report.append(rec)
+              browser.close()
+          (root/"original.json").write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          for e in report:
+              d=e["viewports"].get("1440",{})
+              print("SOURCE_PAGE",e["url"],"STATUS",d.get("status"),"URL",d.get("final_url"),"TITLE",d.get("title"),"ERROR",d.get("error"))
+              print("SOURCE_BRAND",e["url"],"LOGOS",json.dumps(d.get("logos",[]),ensure_ascii=False)[:4000])
+              print("SOURCE_IMAGES",e["url"],json.dumps(d.get("images",[]),ensure_ascii=False)[:5000])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rasanen-original-browser-evidence
+          path: source-evidence/rasanen/
+          retention-days: 30
+          if-no-files-found: warn
