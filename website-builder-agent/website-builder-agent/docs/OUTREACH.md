@@ -220,3 +220,36 @@ source-bound record and fails closed. It does NOT browse sources by itself,
 cannot authenticate a person's assertions and does not manufacture review
 scores. Automated omissions enter the reusable QA/feedback loop; genuinely
 new errors require an implemented checker and regression test.
+
+
+## 18 November 2026: begin real sales before 9.5/10
+
+**9.5/10 is the aspirational, independently measured long-term agency-quality
+goal, not an automatic sales or customer-handover prerequisite.** The old
+three-distinct-project 9.5 evidence check remains useful for measuring the
+studio's general maturity, but a first customer does NOT need to wait for
+three other finished clients.
+
+An individual high-quality demo may be shown to a prospective company after:
+- the owner reviews its REAL phone and desktop screenshots, each public route,
+  brand fidelity, readability, and customer journey, with no critical issues;
+  record `company.commercial_visual_review` with
+  `approved=true`, `reviewer_kind=human`, `reviewer`, `checked_at`,
+  `site_sha256` equal to the full QA bundle digest, `routes_reviewed`
+  matching all built routes, `viewports_reviewed` including phone/desktop,
+  `critical_issues=[]`, `evidence_reference` and checked booleans for
+  `source_comparison_reviewed`, `brand_and_media_reviewed`,
+  `readability_and_mobile_reviewed` and `commercial_journey_reviewed`.
+  When an original site exists, also record the exact
+  `source_inventory_sha256` as `source_sha256`.
+- the previously required *separate* sales fact review and the full set of
+  real source, legal, image-rights, company-status, user journey and live HTTPS
+  browser checks pass for that EXACT version;
+- the owner approves the actual recipient and final outgoing message separately.
+
+The 9.5 benchmark may be tracked and improved in parallel, and an independent
+review can still be solicited on any demo. Scores should not be invented; a
+favorable self-rating cannot override a missing source, failed browser QA or
+incorrect business information. Customer handover also continues to require
+editable CMS, proper acceptance and rollback verification. Nothing here
+authorizes automated sending or bypassing the real-site quality controls.

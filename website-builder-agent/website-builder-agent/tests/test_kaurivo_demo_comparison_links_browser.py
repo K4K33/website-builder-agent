@@ -48,7 +48,7 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
             "business_id":"1111111-1","created_at":"2026-11-11T12:00:00Z",
             "original_url":old,"preview_url":preview,"qa_url":LOG,
             "release_sha":SHA,
-            "quality_approved":True,"independent_visual_score":9.5,
+            "quality_approved":True,"commercial_visual_approved":True,"independent_visual_score":9.4,
             "quality_evidence_sha256":"b"*64,
             "progress":"Valmis", "prospect_id":"aabbccdd-aaaa-4aaa-8aaa-123456789abc",
         }
@@ -90,12 +90,12 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
             self.assertEqual(page.locator("#demo-hold-list .demo-record").count(),1)
             self.assertEqual(page.locator("#demo-hold-list .demo-comparison-link").count(),1)
             self.assertEqual(page.locator("a[href='"+PREVIEW+"']").count(),0)
-            self.assertIn("9,5/10",page.locator("#demo-hold-list").inner_text())
+            self.assertIn("laadun hyväksyntä",page.locator("#demo-hold-list").inner_text())
             job["status"]="approved_preview"
-            job["independent_visual_score"]=9.4
+            job["commercial_visual_approved"]=False
             self.render(page,[job])
             self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
-            job["independent_visual_score"]=9.5
+            job["commercial_visual_approved"]=True
             job["quality_evidence_sha256"]=""
             self.render(page,[job])
             self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)

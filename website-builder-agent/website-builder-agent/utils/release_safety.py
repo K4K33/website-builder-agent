@@ -19,7 +19,7 @@ from utils.concept_previews import validate_selected_concept
 from utils.service_quality import MASTER_PROMPT_SHA256
 from utils.site_integrity import site_sha256
 from utils.site_architecture import route_path
-from utils.premium_quality_gate import verify_independent_premium_reviews
+from utils.commercial_visual_gate import assess_commercial_visual_review
 
 
 MIN_VIEWPORTS = ("390", "1440")
@@ -166,17 +166,21 @@ def inspect_release_safety(company, *, customer_delivery=False):
     except (RuntimeError, ValueError, OSError, TypeError, KeyError) as error:
         problems.append("Concept protocol HOLD: " + str(error))
     pages, digest, _ = _current_artifact(company, problems)
+    # Evaluate THIS company's sale readiness without requiring three prior
+    # 9.5/10 clients or a numeric external score. Missing real visual review
+    # still blocks the sale; a passing unit test is never aesthetic approval.
     if pages:
-        try:
-            independent = verify_independent_premium_reviews(
-                research.get("premium_independent_reviews"), pages, research)
-            if not independent.get("pass"):
-                problems.append("Independent exact-build 9.5/10 review is missing or failed: "
-                                + "; ".join(independent.get("issues", [])[:3]))
-        except (TypeError, ValueError, OSError) as error:
-            problems.append("Independent review cannot be validated: " + str(error))
+        visual = assess_commercial_visual_review(
+            company.get("commercial_visual_review"),
+            site_sha256=digest,
+            routes=set(pages),
+            source_inventory=research.get("source_inventory"),
+        )
+        if not visual["approved"]:
+            problems.append("Current-build owner visual review missing or failed: "
+                            + "; ".join(visual["issues"][:4]))
     else:
-        problems.append("Cannot verify the independent visual review without real current pages.")
+        problems.append("Cannot validate visual acceptance without the real reviewed pages.")
     media = company.get("media_rights_review") or {}
     if (media.get("approved_by_owner") is not True
             or media.get("site_sha256") != digest

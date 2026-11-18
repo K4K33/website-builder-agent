@@ -41,7 +41,7 @@ from utils.kaurivo_site_quality_gate import lint_site_copy
 from utils.universal_quality import audit_universal_standards
 from utils.client_facing_integrity import audit_layout_review_flags
 from utils.premium_quality_gate import (
-    source_coverage_matrix, verify_independent_premium_reviews,
+    source_coverage_matrix,
     audit_primary_journeys, site_digest,
 )
 from utils.global_feedback import (
@@ -912,14 +912,15 @@ jotka kierrättävät käyttäjää ilman uutta tietoa.
 Älä väitä sivustonlaajuista tarkistusta tehdyksi, jos
 käytössä on vain yksittäisen sivun kuvakaappaus.
 
-YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
-- Yksi asiakasdemo ei riitä. Tavoitteena jokaisessa
-  asiakasprojektissa oikean ulkoisen riippumattoman AI:n
-  arvosana vähintään 9,5/10, myös vähintään kolmessa
-  erillisessä tuoreessa yritysprojektissa. ÄLÄ KEKSI
-  pisteitä tai väitä AI:n arvioineen työtä ilman näyttöä.
-  Mobiilin ja desktopin sekä alisivujen arvioinnit
-  tehdään aina ennen hyväksyntää.
+YLEINEN V9-LUONNOLLINEN TEKSTI JA PITKÄN AIKAVÄLIN 9,5-LAATUTAVOITE:
+- Tavoitteena on saavuttaa ulkoisten riippumattomien arvioijien
+  todellinen vähintään 9,5/10 taso usealla eri yrityssivustolla.
+  Tätä EI vaadita ensimmäisten laadukkaiden demojen myynnin ehdoksi.
+  Tarkista yksittäisen myyntiin tarjottavan sivuston jokainen sivu
+  oikeasta mobiili- ja desktop-näkymästä, asiakastehtävät, faktat,
+  brändi, käyttöoikeudet ja vakavat laatupuutteet. Omistajan
+  aito hyväksyntä vaaditaan tarkkaan kyseiseen sivustoversioon.
+  ÄLÄ KEKSI pisteitä tai väitä AI:n arvioineen työtä ilman näyttöä.
 - VASTAKOHTAPARIEN (esim. "Vähemmän X, enemmän Y"
   tai "Ei vain X vaan Y") EHDOTON MAKSIMI ON 1 KOKO
   VERKKOSIVUSTOLLA, ei yksi per sivu. Jos pari kuulostaa
@@ -938,10 +939,12 @@ YLEINEN V9-LUONNOLLINEN TEKSTI JA PYSYVÄ 9,5-LAATURAJA:
   tarraa. Kuvaluonteen kertoo pieni vieressä oleva
   tekstiselite ja demon lähetysviesti.
 - Yksittäinen ulkoinen 8,5/10-arvio tai itse annettu
-  9,5/10-piste EI tarkoita läpäisyä. Etene
-  maksuttomien rakenteen ja selaimen testien kautta
-  ulkoiseen arvosteluun. Kirjaa palautteet ja
-  korjaa mahdolliset toistuvat ongelmat koko agenttiin.
+  9,5/10-piste EI yksin todista myyntikelpoisuutta tai valmiutta.
+  Etene lähteistetyistä sisällöistä oikeisiin selaintesteihin,
+  dokumentoituun omistajan arvioon ja faktatarkistukseen.
+  Ulkoinen 9,5-tasotarkastelu on kehitysmittari, ei
+  ensimmäisen myyntiviestin pysäyttävä ehto.
+  Kirjaa palautteet ja korjaa toistuvat ongelmat agenttiin.
 
 YLEINEN V8-KUVAJÄRJESTYS KAIKILLE ASIAKKAILLE:
 - Käytä ensisijaisesti yrityksen OIKEITA kuvia, kun ne ovat
@@ -1544,12 +1547,18 @@ def approve_company(slug_or_name):
         elif coverage["status"] != "verified":
             raise RuntimeError("Premium acceptance: old-to-new source coverage remains "
                                "missing or unverified; review the matrix.")
-        reviews = verify_independent_premium_reviews(
-            research.get("premium_independent_reviews"), rendered, research
+        # A genuinely accepted single client site may be sold while the
+        # agency continues working toward an independent 9.5/10 benchmark.
+        from utils.commercial_visual_gate import assess_commercial_visual_review
+        sale_visual = assess_commercial_visual_review(
+            company.get("commercial_visual_review"),
+            site_sha256=full_digest or qa.get("site_sha256", ""),
+            routes=routes or ["index.html"],
+            source_inventory=research.get("source_inventory"),
         )
-        if not reviews["pass"]:
-            raise RuntimeError("Premium acceptance: 9.5/10 two-reviewer evidence is incomplete: "
-                               + "; ".join(reviews["issues"][:4]))
+        if not sale_visual["approved"]:
+            raise RuntimeError("Current-build commercial visual acceptance HOLD: "
+                               + "; ".join(sale_visual["issues"][:4]))
         tasks = research.get("primary_user_journeys")
         journeys = audit_primary_journeys(rendered, tasks)
         if not tasks or not journeys["pass"]:
