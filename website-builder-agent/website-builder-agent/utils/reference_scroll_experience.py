@@ -57,16 +57,20 @@ def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
         page.wait_for_timeout(170)
         extent = page.evaluate("""() => Math.max(
             document.documentElement.scrollHeight,document.body.scrollHeight)-innerHeight""")
-        if not isinstance(extent,(int,float)) or extent < 260:
-            return {"protocol":PROTOCOL,"status":"not_scrollable",
-                    "reason":"Insufficient vertical journey to establish a scroll benchmark."}
+        if not isinstance(extent,(int,float)):
+            return {"protocol":PROTOCOL,"status":"capture_failed",
+                    "reason":"Document scroll extent could not be measured."}
+        # A scene driven by canvas/transform may have no native scroll height.
+        # Still issue real wheel events, but only accept it if the live scene
+        # visually advances across several positions. A short static page
+        # therefore remains NOT a scroll benchmark.
         # Scroll like an actual visitor instead of only moving the viewport
         # instantaneously. Wheel lets intersection/reveal handlers run.
         view = page.viewport_size or {"width":390,"height":844}
         page.mouse.move(view["width"] * .58,view["height"] * .63)
         last_goal = 0
         for index, fraction in enumerate(FRACTIONS):
-            goal=round(extent*fraction)
+            goal=round(extent*fraction) if extent>=260 else round(view["height"]*2*fraction)
             if goal>last_goal:
                 chunks=max(1,min(9,round((goal-last_goal)/max(180,view["height"]*.40))))
                 for step in range(chunks):
@@ -126,7 +130,7 @@ def record_scroll_experience(page, *, output_prefix: str | Path) -> dict:
         browser_advanced = len(steps) >= 3
         return {"protocol":PROTOCOL,
                 "status":"observed" if (browser_advanced or visually_advanced) else
-                         "insufficient_scroll_steps",
+                         ("not_scrollable" if extent<260 else "insufficient_scroll_steps"),
                 "scroll_mechanism":"native" if browser_advanced else
                                    "visual_without_native_scroll",
                 "browser_scrolled":True,
