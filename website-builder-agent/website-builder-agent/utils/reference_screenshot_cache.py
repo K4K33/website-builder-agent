@@ -14,7 +14,8 @@ TTL_DAYS = 7
 
 
 def capture_cached(url: str, capture, *, cache_root: str | Path,
-                   now: datetime | None = None) -> dict | None:
+                   now: datetime | None = None,
+                   require_scroll_experience: bool = False) -> dict | None:
     now = now or datetime.now(timezone.utc)
     root = Path(cache_root).resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -28,7 +29,8 @@ def capture_cached(url: str, capture, *, cache_root: str | Path,
                     and now - observed <= timedelta(days=TTL_DAYS)
                     and saved.get("source_url") == url):
                 files = saved.get("screenshots") or {}
-                if all(
+                from utils.reference_scroll_experience import complete_scroll_evidence
+                if (not require_scroll_experience or complete_scroll_evidence(files)) and all(
                     isinstance(files.get(view), str)
                     and Path(files[view]).is_file()
                     and sha256(Path(files[view]).read_bytes()).hexdigest()
@@ -40,6 +42,9 @@ def capture_cached(url: str, capture, *, cache_root: str | Path,
             pass
     shots = capture(url, "reference-" + identity)
     if not isinstance(shots, dict):
+        return None
+    from utils.reference_scroll_experience import complete_scroll_evidence
+    if require_scroll_experience and not complete_scroll_evidence(shots):
         return None
     if not all(
         isinstance(shots.get(view), str) and Path(shots[view]).is_file()
