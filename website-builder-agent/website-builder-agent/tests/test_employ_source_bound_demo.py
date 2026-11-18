@@ -86,8 +86,9 @@ class EmployConceptTests(unittest.TestCase):
                             # Optional private browser-image review evidence.
                             # The source-based premium approval gate remains separate.
                             if (os.getenv("KAURIVO_EMPLOY_VISUAL_REVIEW")=="1"
-                                    and width in (390,1440)
-                                    and suffix in ("","palvelut/","yhteys/")):
+                                    and width in (320,390,1440)
+                                    and suffix in ("","palvelut/","yhteys/")
+                                    and (width != 320 or suffix=="")):
                                 import base64
                                 suffix_name=suffix.replace("/","") or "home"
                                 jpeg=page.screenshot(type="jpeg",quality=58,full_page=True,
