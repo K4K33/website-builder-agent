@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from functools import partial
 from uuid import uuid4
 
-from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256, validate_primary_offering
+from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256, reconcile_primary_offering_with_source
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import (
@@ -1293,7 +1293,7 @@ Raaka HTML:
     company_facts = normalize_facts(company_facts)
     primary_offering = None
     if not isinstance(saved_extraction, dict) or "primary_offering_evidence" in extracted:
-        primary_offering = validate_primary_offering(
+        primary_offering = reconcile_primary_offering_with_source(
             extracted.get("primary_offering_evidence"), source_inventory["pages"]
         )
 

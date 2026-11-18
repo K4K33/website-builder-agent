@@ -20,6 +20,22 @@ from utils.quality import canonical_url
 CACHE_DAYS = 14
 # Categories use existing OSM tags or curated operator candidates.
 INDUSTRY_ALIASES = {
+    # Distinct freight and security-service operators must be compared to their
+    # own trade, never a generic consumer shop or a passenger transport site.
+    "tieliikenteen tavarankuljetus": "maantiekuljetus",
+    "tavarankuljetus": "maantiekuljetus",
+    "rahtikuljetukset": "maantiekuljetus",
+    "maantiekuljetukset": "maantiekuljetus",
+    "kuljetusliike": "maantiekuljetus",
+    "road freight": "maantiekuljetus",
+    "freight transport": "maantiekuljetus",
+    "lukkoliike": "lukituspalvelut",
+    "lukkoseppä": "lukituspalvelut",
+    "lukitustekniikka": "lukituspalvelut",
+    "lukituspalvelut": "lukituspalvelut",
+    "lukitusjärjestelmät": "lukituspalvelut",
+    "locksmith": "lukituspalvelut",
+    "lock installation": "lukituspalvelut",
     "kukkakauppa": "kukkakauppa", "florist": "kukkakauppa",
     "kampaamo": "kampaamo", "parturi": "kampaamo", "hairdresser": "kampaamo",
     "kauneushoitola": "kauneushoitola", "beauty salon": "kauneushoitola",
@@ -105,6 +121,24 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    # Real official operator pages located publicly in Nov 2026. Candidates
+    # only: same-industry LLM decision, exact quotation, browser screenshots
+    # and brand/source QA are still compulsory on every customer build.
+    "maantiekuljetus": (
+        ("Salon Rahtiasema / Kuljetus", "https://kuljetusliike.com/"),
+        ("TKH", "https://tkh.fi/rahti-ja-erikoiskuljetukset/"),
+        ("Eloranta Logistics", "https://www.elorantalogistics.fi/en/"),
+        ("NEL Express", "https://nel-express.fi/"),
+        ("NCS Finland", "https://www.ncs.fi/freight_transportation_services/road_freight/"),
+        ("Colnord", "https://www.colnord.com/services"),
+    ),
+    "lukituspalvelut": (
+        ("Lukkokeskus", "https://www.lukkokeskus.fi/palvelut/lukitus"),
+        ("Uudenmaan Lukitus", "https://uudenmaanlukitus.fi/palvelut"),
+        ("Pohjoisen Lukitus", "https://www.pohjoisenlukitus.fi/huolto-ja-yllapitosopimukset/"),
+        ("RTK-Palvelu", "https://www.rtkpalvelu.fi/palvelut/lukitustekniikka/"),
+        ("Caverion", "https://www.caverion.fi/katalogi/palvelut/lukitustekniikka/"),
+    ),
     "parkettityöt": (
         ("Parkettityö Ahtinen", "https://www.parkettityoahtinen.fi/"),
         ("Eemelin Parketti", "https://eemelinparketti.fi/"),

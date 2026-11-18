@@ -113,6 +113,54 @@ def validate_primary_offering(evidence, pages):
                        "confirm a current product or service with a customer-facing source.")
 
 
+def reconcile_primary_offering_with_source(evidence, pages):
+    """Repair a formatting-only model quotation using exact adjacent source text.
+
+    Never infer a product, change a source URL, accept a paraphrased quote, or
+    treat an industry registry as a client-facing service page. This covers
+    cases where a model chooses a real service heading as its label and a
+    verbatim paragraph immediately beneath it as its quote. The strict original
+    validator remains the authority on the repaired evidence.
+    """
+    try:
+        return validate_primary_offering(evidence, pages)
+    except RuntimeError:
+        if not isinstance(evidence, dict):
+            raise
+        url = evidence.get("source_url")
+        label = _normal(evidence.get("label"))
+        quote = _normal(evidence.get("quote"))
+        if (not isinstance(url, str) or is_registry_source(url)
+                or len(label) < 5 or len(label) > 90
+                or len(quote.split()) < 3 or len(quote) > 280
+                or _REGISTRY_SCOPE.search(label) or _REGISTRY_SCOPE.search(quote)):
+            raise
+        for page in pages if isinstance(pages, list) else []:
+            if page.get("url") != url:
+                continue
+            original = _normal(page.get("text"))
+            folded = original.casefold()
+            quote_at = folded.find(quote.casefold())
+            if quote_at < 0:
+                continue  # A paraphrased or hallucinated model quote is never repaired.
+            near_start = max(0, quote_at - 200)
+            near_end = min(len(original), quote_at + len(quote) + 200)
+            label_at = folded.find(label.casefold(), near_start, near_end)
+            if label_at < 0:
+                continue
+            first = min(quote_at, label_at)
+            last = max(quote_at + len(quote), label_at + len(label))
+            if last - first > 250:
+                continue
+            exact_span = original[max(0, first - 45):min(len(original), last + 45)]
+            if _REGISTRY_SCOPE.search(exact_span):
+                continue
+            return validate_primary_offering(
+                {"source_url": url, "label": label, "quote": exact_span}, pages
+            )
+        raise
+
+
 _GENERIC_ACTIONS = {
     'lähetä tiedustelu', 'ota yhteyttä', 'lue lisää', 'tutustu', 'tutustu lisää',
     'skicka en förfrågan', 'kontakta oss', 'läs mer',
