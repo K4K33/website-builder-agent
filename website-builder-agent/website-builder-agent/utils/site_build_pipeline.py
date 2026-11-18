@@ -48,6 +48,12 @@ def build_pages_from_response(raw: str, *, slug: str,
     motion=audit_visual_motion(pages, research, assets_complete=not linked_style_or_script)
     if motion["blocking"]:
         raise RuntimeError("Inaccessible motion effects: " + "; ".join(motion["blocking"][:4]))
+    from utils.quality_v7 import visual_risks
+    v7 = visual_risks(pages, research=research)
+    if research.get("v7_visual_protocol") == "v7" and v7["blocking"]:
+        raise RuntimeError("V7 objective visual defect: "
+                           + "; ".join(str(x["code"])+": "+str(x["repair"])
+                                       for x in v7["blocking"][:5]))
     navigation=validate_site_navigation(pages, architecture)
     if not navigation["pass"]:
         raise RuntimeError("Incomplete real multi-page navigation: " +

@@ -519,6 +519,21 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
     Never silently upgrade advanced searches or buy additional credits.
     A Tavily/API outage or exhausted free budget retains prior real sources.
     """
+    # International V7 library is candidate DISCOVERY, never an already-
+    # approved reference or an excuse to copy a foreign brand's site.
+    # Actual URL crawling, primary-source same-industry quote verification,
+    # screenshots and per-route comparison still happen downstream.
+    from utils.quality_v7 import reference_candidates
+    curated = reference_candidates(industry)
+    def add_curated(rows):
+        seen = {canonical_url(item.get("url")) for item in rows}
+        for entry in curated:
+            url = canonical_url(entry["url"])
+            if url and url not in seen and url != canonical_url(target_url):
+                seen.add(url)
+                rows.append({"url": url, "title": "International candidate - requires verification",
+                             "content": "Curated design research lead, NOT observed site evidence"})
+        return rows
     if config.free_only():
         references = []
         try:
@@ -547,6 +562,7 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
                         references.append(item)
             except RuntimeError as error:
                 print("[Research] Free Tavily allowance unavailable: " + str(error)[:160])
+        references = add_curated(references)
         if len(references) < 3:
             raise RuntimeError(
                 "Not enough real operator candidates from free sources. "
@@ -557,7 +573,7 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
     references += _search_tavily(
         f"{industry} yritys palvelut yhteystiedot", max_results=5,
     )
-    return references
+    return add_curated(references)
 
 
 def _format_search_results(
@@ -1011,6 +1027,12 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     _validate_research_design(research_data, "", images)
     validate_creative_directions(research_data)
     validate_site_architecture(research_data, no_site=True)
+    # One company-specific source/art-direction record is consumed by Builder
+    # and QA. Absence of a website never proves absence of a brand.
+    from utils.quality_v7 import source_passport, design_brief
+    research_data["v7_source_passport"] = source_passport(research_data, company)
+    research_data["v7_design_brief"] = design_brief(research_data, company)
+    research_data["v7_visual_protocol"] = "v7"
     updated = upsert_company(slug, {"research": research_data})
     set_status(slug, "researched")
     return updated
@@ -1582,6 +1604,11 @@ Tärkeää:
     _repair_source_map(research_data, url)
     bind_source_routes(research_data)
     validate_site_architecture(research_data)
+
+    from utils.quality_v7 import source_passport, design_brief
+    research_data["v7_source_passport"] = source_passport(research_data, company)
+    research_data["v7_design_brief"] = design_brief(research_data, company)
+    research_data["v7_visual_protocol"] = "v7"
 
     updated_company = upsert_company(
         slug,
