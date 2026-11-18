@@ -18,7 +18,7 @@ import requests
 from bs4 import BeautifulSoup
 from .kaurivo_lead_quality import sales_research_key, observed_technical_opportunity
 
-MAX_CHECKS = 12
+MAX_CHECKS = 50
 MAX_PACKET_BYTES = 500_000
 MAX_HTML_BYTES = 512_000
 CACHE_MAX = 2500
@@ -91,6 +91,58 @@ def extract_html_signals(html, checked_url):
        "html_language_hint":lang_suggestion,"language_hints":sorted(languages),
        "issues":issues,"method":"one_public_homepage_html_only"}
 
+def is_restricted_homepage(html):
+    """Detect actual private/login landing pages, not public sites with a login link.
+
+    A simple 200 HTML is NOT proof of public company content. Use prominent
+    page text and password-form evidence; never log passwords or crawl forms.
+    """
+    soup=BeautifulSoup(html,"html.parser")
+    prominent=" ".join(el.get_text(" ",strip=True).lower()
+        for el in ([soup.title] if soup.title else [])+
+                  soup.find_all(["h1","h2"],limit=4))
+    private_re=re.compile(
+        r"\\b(?:private (?:site|website|page)|site is private|"
+        r"password protected|access denied|site access restricted|"
+        r"sivusto on yksityinen|yksityinen verkkosivu|"
+        r"sivusto on suojattu|pääsy estetty|"
+        r"lösenordsskyddad|privat webbplats)\\b",re.I)
+    if private_re.search(prominent):return True
+    password=bool(soup.select("form input[type=password], input[type=password]"))
+    sign_in=re.search(
+        r"\\b(?:log ?in|sign ?in|login|kirjaudu|kirjautuminen|"
+        r"salasanalla suojattu|lösenord|logga in|inloggning)\\b",
+        prominent,re.I)
+    # A customer login box is common on PUBLIC websites; only reject when
+    # that login is the page's main purpose rather than a supplementary tool.
+    main=soup.find("main") or soup.find("article")
+    content=(main or soup.body or soup).get_text(" ",strip=True)
+    return bool(password and sign_in and len(content)<900)
+
+
+def candidate_public_site_verified(lead):
+    """Fail closed for any claimed website without its own successful HTML audit.
+
+    A company with no identified URL is separate missing-website research,
+    not a verified public-site company and NOT proof of website absence.
+    """
+    found=lead.get("website_search_candidate") or {}
+    candidate=found.get("url") if isinstance(found,dict) else ""
+    url=lead.get("website_listed_url") or candidate or ""
+    if not url:return True
+    audit=lead.get("site_technical_audit") or {}
+    if not isinstance(audit,dict) or audit.get("status")!="html_checked":
+        return False
+    try:
+        observed=urlsplit(audit.get("url") or "")
+        claimed=urlsplit(url)
+        return (observed.scheme=="https" and claimed.scheme=="https"
+                and observed.hostname==claimed.hostname
+                and bool(lead.get("website_audit_checked_at")))
+    except (TypeError,ValueError):
+        return False
+
+
 def inspect_site(url, *,get=requests.get,head=None,resolve=socket.getaddrinfo):
     safe=safe_homepage(url,resolve=resolve)
     if not safe:return {"status":"unsafe_or_unresolvable_url","issues":[]}
@@ -116,6 +168,8 @@ def inspect_site(url, *,get=requests.get,head=None,resolve=socket.getaddrinfo):
                 chunks.append(chunk)
             encoding=response.encoding or "utf-8"
             html=b"".join(chunks).decode(encoding,"replace")
+            if is_restricted_homepage(html):
+                return {"status":"restricted_or_login","issues":[]}
             result=extract_html_signals(html,safe)
             # Optional HEAD checks are only a small same-host sample.
             # Never call cross-domain links or treat HEAD failures as proof.
@@ -172,7 +226,9 @@ def audit_packet(packet_path,cache_path,*,get=requests.get,head=None,
     attempts=0;cached=0;ok=0
     max_checks=min(MAX_CHECKS,max(0,int(max_checks)))
     for lead in packet["candidates"]:
-        url=lead.get("website_listed_url") or ""
+        found=lead.get("website_search_candidate") or {}
+        candidate=found.get("url") if isinstance(found,dict) else ""
+        url=lead.get("website_listed_url") or candidate or ""
         if not url:continue
         key=urlsplit(url).hostname
         if not key:continue
@@ -192,15 +248,24 @@ def audit_packet(packet_path,cache_path,*,get=requests.get,head=None,
         lead["site_technical_audit"]=audit
         lead["website_audit_checked_at"]=cache[key]["at"]
         if audit.get("status")=="html_checked":ok+=1
-    # Second-stage, evidence-backed ordering AFTER the no-cost HTML checks.
-    # This is research order, not proof of a poor-looking site, active
-    # operation, solvency or intent to buy. Never remove an unknown prospect
-    # merely because the PRH register omitted a website.
+    # Hard admission gate: if a website is claimed, a publicly retrievable
+    # HTML homepage is required. Private/blocked/login, 401/403, broken,
+    # redirected without verification, and untested pages never enter CRM.
+    # Businesses without any website URL remain separate research candidates.
+    before=len(packet["candidates"])
+    packet["candidates"]=[
+        c for c in packet["candidates"] if candidate_public_site_verified(c)
+    ]
+    rejected=before-len(packet["candidates"])
+    # Second-stage ordering only for qualified public sites and no-URL leads.
     packet["candidates"].sort(
         key=lambda c:sales_research_key(c,str(packet.get("date") or ""))
     )
     report=[
         "# Kaurivo – myyntiin tähtäävä yöhaun tutkimusjärjestys", "",
+        f"Poistettu {rejected} yritystä, joiden väitettyä verkkosivua ei voitu vahvistaa julkiseksi.",
+        "200-vastaus kirjautumissivulta ei ole hyväksytty etusivu.",
+        "Yritykset ilman PRH- tai hakuosoitetta ovat erillisiä sivuttomuuden tutkimuskohteita.", "" ,
         "Ensisijainen kohde: yritys, jolla on olemassa oleva parannettavissa oleva verkkosivu.",
         "Mukana on myös yrityksiä, joilta PRH ei ilmoita sivua (ei todista sivuttomuutta).",
         "Arvioinnin tavoitteet: sivuston parannus 30 %, maksukyky 20 %, ostotarve 20 %,",
@@ -243,6 +308,8 @@ def audit_packet(packet_path,cache_path,*,get=requests.get,head=None,
     cache_path.parent.mkdir(parents=True,exist_ok=True)
     cache_path.write_text(json.dumps(cache,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     return {"checked":attempts,"cache_hits":cached,"html_checked":ok,
+            "excluded_unverified_websites":rejected,
+            "admitted_to_crm":len(packet["candidates"]),
             "external_paid_credits_used":0,"assets_crawled":0,"marketing_sent":0}
 
 def main(argv=None):
