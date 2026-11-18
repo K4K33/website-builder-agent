@@ -282,7 +282,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         from scripts.run_kaurivo_demo_queue import (
             snapshot_for_preview, verify_static_site
         )
-        site='<!doctype html><html lang="fi"><head><title>Yritys</title></head><body><main><h1>Palvelut</h1><p>Esimerkki</p></main></body></html>'
+        site='<!doctype html><html lang="fi"><head><title>Esimerkki Oy | Autohuolto ja korjaamo Keravalla</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E" data-demo-neutral-icon><meta name="description" content="Esimerkki Oy tarjoaa autohuoltoa ja korjauspalveluja Keravalla, ota yhteyttä."></head><body><div class="demo-band">Itsenäinen suunnitteludemo</div><header>Esimerkki Oy</header><nav><a href="palvelut/">Palvelut</a></nav><main><h1>Palvelut</h1><p>Esimerkki</p></main></body></html>'
         with TemporaryDirectory() as td:
             root=Path(td)
             original=root/"source"
@@ -312,7 +312,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         from scripts.run_kaurivo_demo_queue import (
             verify_static_site, HoldError
         )
-        site='<!doctype html><html><head><meta name="robots" content="noindex"></head><body><main><h1>Hei</h1></main></body></html>'
+        site='<!doctype html><html lang="fi"><head><title>Esimerkki Oy | Autohuolto ja korjaamo Keravalla</title><meta name="robots" content="noindex"><link rel="icon" href="data:image/svg+xml,%3Csvg%2F%3E" data-demo-neutral-icon><meta name="description" content="Esimerkki Oy tarjoaa huoltoa ja korjauspalveluja Keravalla, ota yhteyttä."></head><body><div class="demo-band">Itsenäinen suunnitteludemo</div><header>Esimerkki Oy</header><nav><a href="palvelut.html">Palvelut</a></nav><main><h1>Hei</h1></main></body></html>'
         with TemporaryDirectory() as td:
             root=Path(td)
             (root/"index.html").write_text(site)

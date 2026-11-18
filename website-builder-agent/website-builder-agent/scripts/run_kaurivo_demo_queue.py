@@ -809,6 +809,22 @@ def verify_static_site(site_root,expected_routes):
            for route in sorted(expected)}
     css="\n".join(p.read_text(encoding="utf-8") for p in site_root.rglob("*.css"))
     js="\n".join(p.read_text(encoding="utf-8") for p in site_root.rglob("*.js"))
+    from utils.demo_browser_identity import audit_browser_identity
+    tab=audit_browser_identity(pages)
+    if not tab["pass"]:
+        raise HoldError("browser_identity_incomplete")
+    # Ensure the favicon is an actual served file, not a broken local URL.
+    for route, html in pages.items():
+        soup=BeautifulSoup(html,"html.parser")
+        for icon in soup.select('link[rel~="icon"][href]'):
+            href=str(icon.get("href") or "").split("?",1)[0]
+            if href.startswith("data:"):
+                continue
+            if href.startswith(("http://","https://","//")):
+                raise HoldError("unapproved_external_favicon")
+            actual=((site_root/route).parent/href).resolve()
+            if not actual.is_relative_to(site_root.resolve()) or not actual.is_file():
+                raise HoldError("favicon_asset_missing")
     result=audit_premium_experience(pages,css_text=css,js_text=js)
     if result["blocking"]:
         raise HoldError("premium_interaction_blocked")
@@ -848,6 +864,31 @@ def local_browser_smoke(site_root,routes):
                 page.goto((site_root/route).resolve().as_uri(),
                           wait_until="load",timeout=30000)
                 assert page.locator("h1").count()>0
+                # A browser tab with a generic title, missing icon, small
+                # navigation or visually broken imagery is not a finished
+                # premium client site even if its HTML passes lint tests.
+                details=page.evaluate("""() => ({
+                    title:document.title.trim(),
+                    icon:!!document.querySelector('link[rel~="icon"][href]'),
+                    badImages:[...document.images].filter(i=>i.complete && i.naturalWidth===0).length,
+                    navTooSmall:[...document.querySelectorAll('header nav a')].filter(a=>{
+                      if(!a.getClientRects().length)return false;
+                      return parseFloat(getComputedStyle(a).fontSize)<14;
+                    }).length,
+                    tapTooSmall:[...document.querySelectorAll('header button')].filter(b=>{
+                      if(!b.getClientRects().length)return false;
+                      let r=b.getBoundingClientRect();
+                      return r.width<40||r.height<40;
+                    }).length
+                  })""")
+                if not details["title"] or not details["icon"]:
+                    raise HoldError("browser_tab_incomplete")
+                if details["badImages"]:
+                    raise HoldError("broken_rendered_images")
+                if details["navTooSmall"]:
+                    raise HoldError("header_nav_typography_too_small")
+                if details["tapTooSmall"]:
+                    raise HoldError("header_tap_targets_too_small")
                 overflow=page.evaluate(
                     "document.documentElement.scrollWidth>innerWidth+2"
                 )
