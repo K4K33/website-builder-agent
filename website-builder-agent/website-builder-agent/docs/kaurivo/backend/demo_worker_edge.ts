@@ -15,7 +15,7 @@ const reply=(status:number,value:Record<string,unknown>)=>new Response(JSON.stri
   "x-content-type-options":"nosniff","vary":"Authorization"}
 });
 type Work={action?:string;job_id?:string;ready?:boolean;backend?:string;status?:string;progress?:string;
- preview_url?:string;qa_url?:string;release_sha?:string;error_code?:string;key_http_status?:number};
+ preview_url?:string;qa_url?:string;release_sha?:string;error_code?:string;key_http_status?:number;checksum?:string};
 async function rpc(name:string,body:Record<string,unknown>){
  const resp=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{
   method:"POST",
@@ -236,6 +236,29 @@ Deno.serve(async request=>{
     "content-type":"application/zip","cache-control":"no-store",
     "x-content-type-options":"nosniff","x-checkpoint-stage":info.stage,
     "x-checkpoint-sha256":info.checksum,"vary":"Authorization"}});
+  }
+  if(data.action==="checkpoint_reset"){
+   // Authenticated current-run compare-and-delete for an obsolete Master
+   // Prompt checkpoint. Never relax the monotonic checkpoint_record API.
+   if(Object.keys(data).length!==3||typeof data.job_id!=="string"||
+      !UUID.test(data.job_id)||typeof data.checksum!=="string"||
+      !SHA.test(data.checksum))
+      return reply(400,{ok:false,error:"checkpoint_reset_args"});
+   const allowed=await rpc("kaurivo_worker_checkpoint_can_write",{
+      p_id:data.job_id,p_run_id:run_id});
+   if(allowed!==true)return reply(403,{ok:false,error:"checkpoint_not_claimed"});
+   const current=await checkpointMeta(data.job_id,run_id);
+   if(!current||current.checksum!==data.checksum)
+      return reply(409,{ok:false,error:"checkpoint_changed"});
+   const reset=await rpc("kaurivo_worker_checkpoint_reset",{
+      p_id:data.job_id,p_run_id:run_id,p_current_checksum:data.checksum});
+   if(reset!==true)return reply(409,{ok:false,error:"checkpoint_reset_denied"});
+   // Delete only the unreferenced old content-addressed blob, best effort.
+   await fetch(SUPABASE_URL+"/storage/v1/object/"+CHECKPOINT_BUCKET,{
+     method:"DELETE",headers:{...storageHeaders(),"content-type":"application/json"},
+     body:JSON.stringify({prefixes:[current.object_path]})
+   }).catch(()=>{});
+   return reply(200,{ok:true,reset:true});
   }
   if(data.action==="claim"){
    const keys=Object.keys(data);

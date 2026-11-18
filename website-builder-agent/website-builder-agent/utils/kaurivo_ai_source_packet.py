@@ -189,11 +189,13 @@ def compact_reference_for_prompt(reference_evidence: list[dict]) -> list[dict]:
     """Keep original screenshot paths and evidence untouched; limit text sent to LLM."""
     if not isinstance(reference_evidence, list):
         raise TypeError("reference evidence expected")
+    from utils.reference_scroll_experience import compact_scroll_observations
     return [{
         "url": item.get("url"),
         "title": _short(item.get("title"), 240),
         "industry_match": item.get("industry_match"),
         "source_text_excerpt": _selected_site_text(item.get("site_text"), 1400),
+        "real_scroll_journey": compact_scroll_observations(item.get("screenshots")),
         "screenshot_views": [
             view for view in ("desktop", "mobile")
             if isinstance(item.get("screenshots"), dict)

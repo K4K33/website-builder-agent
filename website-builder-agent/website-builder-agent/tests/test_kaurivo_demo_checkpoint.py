@@ -79,6 +79,43 @@ class PrivateCheckpointTests(unittest.TestCase):
         self.assertEqual(completed_stage_index("selected"), 2)
         self.assertEqual(completed_stage_index("built"), 3)
 
+    def test_outdated_master_checkpoint_restarts_research_not_stale_build(self):
+        from utils.kaurivo_checkpoint_stage_recovery import needs_research_restart
+        current = "a" * 64
+        for phase in ("researched", "concepts", "selected", "built",
+                      "revised_1", "revised_2"):
+            with self.subTest(phase=phase):
+                self.assertTrue(needs_research_restart(
+                    phase, {"research": {"master_prompt_sha256": "b" * 64}}, current))
+                self.assertTrue(needs_research_restart(phase, {}, current))
+                self.assertFalse(needs_research_restart(
+                    phase, {"research": {"master_prompt_sha256": current}}, current))
+        # Same historic V6 hash is not enough: changing V7 also invalidates
+        # previous source research, its creative selection and rendered QA.
+        self.assertTrue(needs_research_restart(
+            "researched", {"research": {"master_prompt_sha256": current}},
+            current, "v7-new"))
+        self.assertFalse(needs_research_restart(
+            "researched", {"research": {
+                "master_prompt_sha256": current,
+                "v7_design_brief": {"master_sha256": "v7-new"}}},
+            current, "v7-new"))
+        self.assertTrue(needs_research_restart(
+            "built", {"research": {
+                "master_prompt_sha256": current,
+                "v7_design_brief": {"master_sha256": "v7-old"}}},
+            current, "v7-new"))
+        self.assertFalse(needs_research_restart(None, None, current))
+        self.assertFalse(needs_research_restart("research_partial", None, current))
+        runner = (Path(__file__).resolve().parents[1] /
+                  "scripts" / "run_kaurivo_demo_queue.py").read_text()
+        self.assertIn("needs_research_restart(", runner)
+        self.assertIn('records[agent_slug] = {', runner)
+        self.assertIn('"checkpoint_reset",job_id=working_job["id"]', runner)
+        self.assertIn('"checkpoint_info",job_id=working_job["id"]', runner)
+        self.assertIn('run_cli(["research",agent_slug]', runner)
+        self.assertIn('verify_design_handoff(load_company(agent_slug),selected=False)', runner)
+
     def test_checkpoint_change_wakes_live_worker_without_weakening_claims(self):
         workflow = (Path(__file__).resolve().parents[3] / ".github" /
                     "workflows" / "kaurivo-demo-worker.yml").read_text(encoding="utf-8")

@@ -1225,6 +1225,40 @@ def main():
                 raise HoldError("company_name_invalid")
             resume=restore_private_checkpoint(agent_slug,company_name,source)
             last_checkpoint = resume
+            # Verified private archives can contain research made under an old
+            # Master Prompt. Re-run source research instead of repeatedly
+            # returning design_handoff_incomplete / master_prompt_version.
+            # Never reuse old concepts, screenshots, build or QA as approved.
+            from utils.service_quality import MASTER_PROMPT_SHA256
+            from utils.quality_v7 import V7_SHA256
+            from utils.kaurivo_checkpoint_stage_recovery import needs_research_restart
+            if needs_research_restart(
+                    resume, load_company(agent_slug) if resume else None,
+                    MASTER_PROMPT_SHA256, V7_SHA256):
+                # The checkpoint RPC forbids backward stage transitions.
+                # Invalidate only the fully authenticated current snapshot
+                # by SHA before persisting replacement Research.
+                current_checkpoint = call_worker(
+                    "checkpoint_info",job_id=working_job["id"]).get("checkpoint")
+                if (not isinstance(current_checkpoint,dict)
+                        or current_checkpoint.get("stage") != resume
+                        or not re.fullmatch(r"[0-9a-f]{64}",
+                                            str(current_checkpoint.get("sha256","")))):
+                    raise HoldError("checkpoint_stale_reset_failed")
+                reset_reply=call_worker(
+                    "checkpoint_reset",job_id=working_job["id"],
+                    checksum=current_checkpoint["sha256"])
+                if reset_reply.get("reset") is not True:
+                    raise HoldError("checkpoint_stale_reset_failed")
+                from utils.state import load_companies, save_companies
+                records = load_companies()
+                records[agent_slug] = {
+                    "name": company_name, "url": source, "status": "found"
+                }
+                save_companies(records)
+                resume = None
+                last_checkpoint = None
+                print("Kaurivo demo queue: outdated master checkpoint; source research must be rebuilt.")
             done = completed_stage_index(
                 resume, load_company(agent_slug) if resume == "concepts" else None,
                 concept_root=PROJECT / "output" / agent_slug)

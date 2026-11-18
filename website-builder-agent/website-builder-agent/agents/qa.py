@@ -1294,6 +1294,11 @@ def run_qa(slug_or_name: str) -> dict:
     browser = {"pass": False, "issues": ["Skipped: static checks failed"], "screenshots": {}}
     review = {"content_ok": False, "issues": [], "notes": "AI review skipped"}
     benchmark_urls, decisions = [], []
+    craft_requested = (research.get("v7_visual_protocol") == "v7"
+                       and os.environ.get("KAURIVO_LIVE_CRAFT_QA") == "1")
+    global_craft = {"status":"NOT_REQUESTED",
+                    "all_three_scrolled":False,"generated_home_scrolled":False}
+    craft_images = []
     visual_comparison = {"status": "not_run", "pairs": {}, "repair_hints": [],
                          "missing": [], "render_errors": []}
     if (automated["automated_pass"] and not parity_hard_missing
@@ -1367,6 +1372,41 @@ def run_qa(slug_or_name: str) -> dict:
                         })
                         if route!="index.html":
                             other_page_shots.append(image)
+                if craft_requested:
+                    # The three award-winning global references are a separate
+                    # QA comparison from sector references. Evidence is gathered
+                    # from REAL scrolling and browser videos, never a static
+                    # competitor screenshot alone.
+                    from functools import partial
+                    from utils.screenshot import capture_website, REFERENCE_VIEWPORTS
+                    from utils.reference_screenshot_cache import capture_cached
+                    from utils.global_craft_experience import (
+                        collect_global_craft_evidence, capture_generated_site_journey,
+                        compare_experiences,
+                    )
+                    reference_capture = partial(
+                        capture_website, viewports=REFERENCE_VIEWPORTS,
+                        scroll_experience=True)
+                    award_report = collect_global_craft_evidence(
+                        capture=reference_capture, cache=capture_cached,
+                        cache_root=Path(config.OUTPUT_DIR)/"_global_craft_cache")
+                    actual_journey = capture_generated_site_journey(
+                        site_root/"index.html",
+                        output_root=Path(config.OUTPUT_DIR)/"_global_craft_qa"/slug)
+                    global_craft = compare_experiences(award_report,actual_journey)
+                    global_craft["status"] = award_report["calibration_status"]
+                    global_craft["build_sha256"] = bundle_digest
+                    for row in award_report["benchmarks"]:
+                        for evidence in row.get("media_evidence") or []:
+                            image = evidence.get("sequence_image")
+                            if (evidence.get("viewport")=="desktop" and
+                                    isinstance(image,str) and Path(image).is_file()):
+                                craft_images.append(image)
+                    for view in ("desktop","mobile"):
+                        sequence=(actual_journey.get(view) or {}).get(
+                            "scroll_sequence_image")
+                        if isinstance(sequence,str) and Path(sequence).is_file():
+                            craft_images.append(sequence)
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT + SERVICE_QUALITY_POLICY,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
@@ -1419,6 +1459,26 @@ def run_qa(slug_or_name: str) -> dict:
                     + json.dumps({"premium_visual_protocol":research.get("premium_visual_protocol"),
                                   "all_routes_desktop_mobile_screenshot_order":route_view_ids},
                                  ensure_ascii=False)
+                    + "\nGLOBAL AWARD-WINNING UX COMPARISON: Lando Norris, Dropbox Brand, Igloo Inc.\n"
+                    "This is separate from sector references. Compare the REAL "
+                    "desktop/mobile WHEEL-SCROLLED and RECORDED experiences, "
+                    "their section pacing, motion timing, visual storytelling, "
+                    "typography, navigation interactions, and overall execution "
+                    "care. Images are scroll filmstrips ONLY; browser motion "
+                    "observations and private videos are the temporal evidence. "
+                    "Do NOT claim that stills prove smoothness or that generated "
+                    "sites must mimic rich F1 animation. Judge appropriate "
+                    "premium craft and usefulness for THIS business. "
+                    "Return global_craft_experience_comparison with "
+                    "references_observed (names), observed_strengths (list), "
+                    "generated_experience_findings (list of specific evidence), "
+                    "critical_experience_gaps (list), repair_actions (list), "
+                    "and independently_9_5_certified=false. If browser evidence "
+                    "missing, report that explicitly.\n"
+                    + json.dumps(global_craft,ensure_ascii=False,default=str)
+                    + "\nGLOBAL CRAFT SCROLL FILMSTRIPS: appended AFTER sector images. "
+                    "In order Lando Norris, Dropbox Brand, Igloo Inc. desktop "
+                    "and then new site desktop/mobile when captured.\n"
                     + "\nV7 VISIBLE PREMIUM RED-TEAM CUES (these are machine hints, NOT evidence of 9.5):\n"
                     + json.dumps(v7_visual, ensure_ascii=False)
                     + "\nALL PAGE VISIBLE CONTENT:\n"
@@ -1426,7 +1486,7 @@ def run_qa(slug_or_name: str) -> dict:
                                 for route,body in rendered_pages.items()),
                     max_tokens=7000, stage="qa",
                     image_paths=paired_images + list(browser["screenshots"].values()) + other_page_shots
-                                + benchmark_images,
+                                + benchmark_images + craft_images,
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}
@@ -1442,6 +1502,7 @@ def run_qa(slug_or_name: str) -> dict:
         "site_pages":list(rendered_pages),
         "browser": browser, "visual_comparison": visual_comparison,
         "content_review": review,
+        "global_craft_experience": global_craft,
         "content_parity": parity,
         "source_fidelity": source_fidelity,
         "temporal_claims": temporal_claims,
@@ -1450,7 +1511,15 @@ def run_qa(slug_or_name: str) -> dict:
         "build_version": build.get("version"),
         "html_sha256": hashlib.sha256(html_bytes).hexdigest(),
         "site_sha256": bundle_digest,
-        "overall_pass": (not v7_visual["blocking"]
+        "overall_pass": ((not craft_requested or
+                           (global_craft.get("reference_all_three_scrolled") is True
+                            and global_craft.get("generated_home_scrolled") is True
+                            and isinstance(review.get("global_craft_experience_comparison"),dict)
+                            and {str(x).strip().casefold() for x in
+                                 (review["global_craft_experience_comparison"].get("references_observed") or [])}
+                                == {"lando norris","dropbox brand","igloo inc."}
+                            and review["global_craft_experience_comparison"].get("critical_experience_gaps") == []))
+                         and not v7_visual["blocking"]
                          and temporal_claims["pass"]
                          and not premium_effects["blocking"]
                          and parity["pass"] and source_fidelity["pass"]

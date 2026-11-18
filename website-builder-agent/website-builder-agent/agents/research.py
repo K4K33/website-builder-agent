@@ -737,6 +737,9 @@ def _select_reference_candidates(references, facts, target_url):
 
 
 def _collect_reference_evidence(references, target_url):
+    # Sector-relevant operators are Research references. The separate
+    # global award QA requires video-backed scroll; ordinary source research
+    # must not reject good, short or static competitor sites for that reason.
     capture_reference = partial(capture_website, viewports=REFERENCE_VIEWPORTS)
     candidates, domains = [], {urlsplit(canonical_url(target_url)).hostname}
     for reference in references[:5]:
@@ -1380,7 +1383,10 @@ SOURCE-LED INDUSTRY CUSTOMER TASKS (not a layout template):
 OBSERVED INDUSTRY REFERENCES (not facts about the target):
 Image order: {json.dumps(image_labels, ensure_ascii=False)}
 {json.dumps(compact_reference_for_prompt(reference_evidence), ensure_ascii=False)}
-Compare the actual customer journey, typography, layout, imagery and factual detail.
+Compare the observed desktop/mobile layout, typography, imagery and
+business customer journey. Evaluate scroll and motion only when actual
+browser evidence exists; these ordinary sector reference screenshots
+are not the three separate award-winning live UX quality standards.
 Record concrete observations and target-specific adaptations in reference_comparison.
 Never copy competitors' text, assets, certifications or service promises.
 
