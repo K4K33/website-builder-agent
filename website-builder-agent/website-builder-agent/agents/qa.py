@@ -1515,8 +1515,9 @@ def run_qa(slug_or_name: str) -> dict:
                            (global_craft.get("reference_all_three_scrolled") is True
                             and global_craft.get("generated_home_scrolled") is True
                             and isinstance(review.get("global_craft_experience_comparison"),dict)
-                            and set(review["global_craft_experience_comparison"].get("references_observed") or [])
-                                == {"Lando Norris","Dropbox brand","Igloo Inc."}
+                            and {str(x).strip().casefold() for x in
+                                 (review["global_craft_experience_comparison"].get("references_observed") or [])}
+                                == {"lando norris","dropbox brand","igloo inc."}
                             and review["global_craft_experience_comparison"].get("critical_experience_gaps") == []))
                          and not v7_visual["blocking"]
                          and temporal_claims["pass"]
