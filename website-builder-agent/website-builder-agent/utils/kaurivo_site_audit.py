@@ -102,16 +102,16 @@ def is_restricted_homepage(html):
         for el in ([soup.title] if soup.title else [])+
                   soup.find_all(["h1","h2"],limit=4))
     private_re=re.compile(
-        r"\\b(?:private (?:site|website|page)|site is private|"
+        r"\b(?:private (?:site|website|page)|site is private|"
         r"password protected|access denied|site access restricted|"
         r"sivusto on yksityinen|yksityinen verkkosivu|"
         r"sivusto on suojattu|pääsy estetty|"
-        r"lösenordsskyddad|privat webbplats)\\b",re.I)
+        r"lösenordsskyddad|privat webbplats)\b",re.I)
     if private_re.search(prominent):return True
     password=bool(soup.select("form input[type=password], input[type=password]"))
     sign_in=re.search(
-        r"\\b(?:log ?in|sign ?in|login|kirjaudu|kirjautuminen|"
-        r"salasanalla suojattu|lösenord|logga in|inloggning)\\b",
+        r"\b(?:log ?in|sign ?in|login|kirjaudu|kirjautuminen|"
+        r"salasanalla suojattu|lösenord|logga in|inloggning)\b",
         prominent,re.I)
     # A customer login box is common on PUBLIC websites; only reject when
     # that login is the page's main purpose rather than a supplementary tool.
