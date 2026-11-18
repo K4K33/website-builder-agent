@@ -470,6 +470,17 @@ def approve_outreach(
             f"Yrityksen '{slug}' outreach-luonnos on tyhjä."
         )
 
+    # Visual/design approval is not proof of factual correctness.
+    # Missing source facts, wrong details, stale contact information or an
+    # unreviewed email claim block customer-facing approval, not drafting.
+    from utils.sales_fact_gate import inspect_sales_fact_review
+    fact_report = inspect_sales_fact_review(company)
+    if not fact_report["ready"]:
+        raise RuntimeError(
+            "Kaurivo final factual verification: HOLD. "
+            + "; ".join(fact_report["issues"][:8])
+        )
+
     # Owner's latest rule: no CUSTOMER outreach approval on one pretty demo.
     # Three distinct current external-AI reviewed client projects must meet
     # >=9.5 on mobile + desktop with documented source/provenance.
