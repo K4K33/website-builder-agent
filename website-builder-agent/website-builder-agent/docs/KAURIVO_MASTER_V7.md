@@ -1,5 +1,5 @@
 # KAURIVO MASTER V7 — active design craft contract
-Version: 7.0.1 (18 November 2026). This is a RUNTIME instruction, not merely a reference document.
+Version: 7.0.2 (18 November 2026). This is a RUNTIME instruction, not merely a reference document.
 
 MISSION: Design a credible, company-specific, commercially useful premium website. Preserve the owner's real identity and authentic strengths before adding novelty. A fully functional page is NOT necessarily well designed. The final 9.5/10 independently assessed agency benchmark is aspirational, not a numeric bar that prevents ethical early sales.
 
@@ -29,3 +29,32 @@ Severe defects (false facts, image rights, 70px desktop description, fake map re
 
 ## International references
 Use the curated international benchmark library for candidate DISCOVERY and design education only; URLs with candidate status are NOT authenticated screenshot evidence or 10/10 scores. A reference may teach craftsmanship, information structure or booking flow; do not paste its brand aesthetic into unrelated Finnish SMEs. An excellent visual benchmark and a good real-user service benchmark can be different sites. Existing current-site photography and company identity always take precedence.
+
+## Three awarded global craft calibrators — mandatory distinction
+Final V7 visual QA compares the exact GENERATED site to three awarded global
+craft experiences: https://landonorris.com/ (kinetic storytelling),
+https://brand.dropbox.com/ (coherent brand/typography/motion), and
+https://www.igloo.inc/ (purposeful visual interaction). These three sites are
+a cross-industry EXECUTION-QUALITY baseline, **not** same-sector Research
+references, templates, target layouts or a license to copy assets.
+
+**Do not compare only screenshots.** Observe each real browser experience by
+deliberately scrolling its entire page (including transformed/scroll-jacked
+experiences), capturing desktop AND mobile viewport progress and actual browser
+video; check hero-to-subpage pacing, scroll-triggered changes, navigation
+feedback, image reveal timing, sticky elements, perceived smoothness,
+reduced-motion alternative, coherence and use-case relevance. Save the
+observations for the site's FINAL QA and compare to the generated site's
+equivalent browser-scrolled journey. A collage of five captured views is
+helpful evidence, but NEVER a substitute for the browser video or actual
+review of the interactive experience. A video FILE existing is not proof
+that a qualified reviewer watched or judged it.
+
+Judge the Finnish client's site on equivalent *design discipline and execution
+care* relative to its business, not equal visual complexity, identical scroll
+physics or the quantity of animations. No fake 9.5 score, self-certified award
+standard or "experience reviewed" status when reference sites cannot be opened,
+video is missing, or the actual experience has not been inspected. State the
+observable gap and specific business-appropriate repair actions. The automated
+visual QA is separate from a genuinely independent human/external acceptance
+and from authorization to sell or publish.
