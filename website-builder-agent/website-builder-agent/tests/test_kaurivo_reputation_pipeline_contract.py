@@ -14,7 +14,7 @@ class ReputationPipelineContractTests(unittest.TestCase):
         self.assertIn("--max-queries 8",workflow)
         self.assertIn("make_credit_reservation()",script)
         self.assertIn("re.status!==\"qualified\"",edge)
-        self.assertIn("Number(re.review_count)<10",edge)
+        self.assertIn("re.review_count<10",edge)
         self.assertIn("re.rating<4",edge)
         self.assertIn("reputation_evidence:reputationEvidence",edge)
 
