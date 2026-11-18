@@ -68,7 +68,7 @@ def main(slug):
                     errors.append(f"{route}@{width} language/headings broken")
                 if checks["scroll"]>width+2:
                     errors.append(f"{route}@{width} horizontal overflow: {checks['scroll']}")
-                if "ei ole yrityksen virallinen sivu" not in checks["disclaimer"].lower():
+                if not any(label in checks["disclaimer"].lower() for label in ("ei ole yrityksen virallinen sivu","ei yrityksen virallinen sivu")):
                     errors.append(f"{route}@{width} independent-review banner missing")
                 if not checks["favicon"] or "preview-favicon.svg" not in checks["favicon"]:
                     errors.append(f"{route}@{width} wrong favicon")
