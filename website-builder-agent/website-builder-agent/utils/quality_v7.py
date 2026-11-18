@@ -169,7 +169,7 @@ def visual_risks(pages: dict[str, str], *, css_text: str = "",
             review.append({"route": route, "code": "artificially_condensed_typography",
                            "repair": "Inspect real heading glyphs and use a properly licensed natural font/fallback."})
         if any(float("0." + value) >= .07 for value in
-               re.findall(r"letter-spacing\s*:\s*-0\.(\d+)em", styles, re.I)
+               re.findall(r"letter-spacing\s*:\s*-0?\.(\d+)em", styles, re.I)
                if value.isdigit()):
             review.append({"route": route, "code": "extreme_negative_letterspacing",
                            "repair": "Inspect actual 390/768/1440 screenshots, reduce squeezed headline tracking."})
