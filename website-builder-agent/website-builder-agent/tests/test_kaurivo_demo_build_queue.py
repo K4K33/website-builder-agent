@@ -563,6 +563,8 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
           city_hint:'Helsinki',industry_code_hint:'95240',
           website_listed_url:'https://example.com/',website_found_url:'',
           website_candidate_url:'',research_notes:'',
+          website_technical_audit:{status:'html_checked',url:'https://example.com/'},
+          website_audit_checked_at:'2026-11-18T09:00:00Z',
           discovery_date:new Date().toISOString().slice(0,10),
           review_status:'unverified',website_assessment:'unreviewed',
           business_activity_assessment:'unreviewed',
