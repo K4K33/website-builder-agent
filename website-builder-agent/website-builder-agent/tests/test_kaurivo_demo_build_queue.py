@@ -49,6 +49,10 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('Ei aiempaa verkkosivua',panel)
         self.assertIn('demo-comparison',CSS.read_text(encoding="utf-8"))
         self.assertIn('crm.css?v=20261112-local1',html)
+        self.assertIn('quality_evidence_sha256',panel)
+        self.assertIn('independent_visual_score',panel)
+        self.assertIn('job.status==="approved_preview"',panel)
+        self.assertNotIn('return job.status==="internal_preview"&&',panel)
         self.assertIn('qa_url',panel)
         self.assertIn('release_sha',panel)
         self.assertIn('onrender',panel)
@@ -647,6 +651,22 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
                       window.__demoRows[0].preview_url='https://kaurivo-auto-demos-2026.onrender.com/test/index.html';
                       window.__demoRows[0].qa_url='https://github.com/K4K33/website-builder-agent/actions/runs/12345';
                       window.__demoRows[0].release_sha='a'.repeat(40);
+                    }""")
+                    page.locator("#refresh-demos").click()
+                    page.wait_for_function(
+                       "document.querySelector('#demo-hold-list').textContent.includes('Esimerkki Verhoomo')"
+                    )
+                    self.assertEqual(page.locator("#demo-ready-list a.demo-comparison-link").count(),0)
+                    self.assertEqual(page.locator("#demo-hold-list a.demo-comparison-link").count(),1)
+                    self.assertEqual(page.locator("#demo-hold-list .demo-copy-comparison").count(),0)
+                    self.assertIn("9,5/10",page.locator("#demo-hold-list").inner_text())
+                    # A technical-preview URL is blocked until separate
+                    # independent score and exact-release approval exist.
+                    page.evaluate("""()=>{
+                       window.__demoRows[0].status='approved_preview';
+                       window.__demoRows[0].quality_approved=true;
+                       window.__demoRows[0].independent_visual_score=9.5;
+                       window.__demoRows[0].quality_evidence_sha256='b'.repeat(64);
                     }""")
                     page.locator("#refresh-demos").click()
                     page.wait_for_function(
