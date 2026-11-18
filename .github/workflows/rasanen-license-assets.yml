@@ -1,0 +1,55 @@
+name: Rasanen copyright-safe real demo photos
+on:
+  push:
+    branches: [demo/rasasen-autohuolto-owner-review-20261118]
+    paths:
+      - .github/workflows/rasanen-license-assets.yml
+permissions:
+  contents: write
+jobs:
+  photos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: demo/rasasen-autohuolto-owner-review-20261118}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install requests pillow
+      - name: Verify and download actual CC0 illustrative photographs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image,ImageOps
+          from urllib.parse import quote
+          import requests,io
+          root=Path('website-builder-agent/website-builder-agent/docs/kaurivo/demos/s-rasasen-autohuolto-v1/assets')
+          root.mkdir(parents=True,exist_ok=True)
+          pictures=[
+            ('Mechanic repairing car engine 1.jpg','garage-hero.webp',(1440,960)),
+            ('The mechanic work shop.jpg','garage-detail.webp',(1000,1050)),
+            ('Mechanic repairing car engine.jpg','garage-service.webp',(1220,1000)),
+            ('Engineer is repairing the engine.jpg','garage-workshop.webp',(1400,820)),
+          ]
+          for name,filename,dimensions in pictures:
+              url='https://commons.wikimedia.org/wiki/Special:FilePath/'+quote(name)+'?width=1800'
+              r=requests.get(url,headers={'User-Agent':'KaurivoResearch/1.0 (source-licensed demo; contact: hello.kaurivo@gmail.com)'},timeout=40)
+              print('SOURCE_IMAGE',name,'HTTP',r.status_code,'TYPE',r.headers.get('content-type'),'BYTES',len(r.content))
+              r.raise_for_status()
+              if not r.headers.get('content-type','').startswith('image/'):
+                  raise RuntimeError('Commons did not return an image for '+name)
+              im=Image.open(io.BytesIO(r.content)).convert('RGB')
+              if min(im.size)<400:raise RuntimeError('Source resolution too small for '+name)
+              im=ImageOps.fit(im,dimensions,method=Image.Resampling.LANCZOS)
+              im.save(root/filename,'WEBP',quality=80,method=6)
+              print('SAVED',root/filename,'BYTES',(root/filename).stat().st_size)
+          PY
+      - name: Commit vetted local binary photos to the owner-review branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website-builder-agent/website-builder-agent/docs/kaurivo/demos/s-rasasen-autohuolto-v1/assets/garage-*.webp
+          if git diff --cached --quiet; then echo "Already present"; else
+            git commit -m "Add documented Commons CC0 garage imagery to Räsänen design demo"
+            git push origin HEAD:demo/rasasen-autohuolto-owner-review-20261118
+          fi

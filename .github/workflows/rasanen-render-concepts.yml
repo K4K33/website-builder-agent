@@ -1,0 +1,40 @@
+name: Rasanen real three-concept comparison renders
+on:
+  push:
+    branches: [demo/rasasen-autohuolto-owner-review-20261118]
+    paths:
+      - .github/workflows/rasanen-render-concepts.yml
+      - website-builder-agent/website-builder-agent/scripts/rasanen_render_concepts.py
+permissions:
+  contents: write
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: demo/rasasen-autohuolto-owner-review-20261118}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Render three genuine concept variants and phone/desktop PNGs
+        run: |
+          cd website-builder-agent/website-builder-agent
+          python scripts/rasanen_render_concepts.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rasanen-concepts-real-browser
+          path: website-builder-agent/website-builder-agent/docs/kaurivo/demos/s-rasasen-autohuolto-v1/_concept_evidence/
+          retention-days: 30
+      - name: Commit only real screenshot evidence to draft branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website-builder-agent/website-builder-agent/docs/kaurivo/demos/s-rasasen-autohuolto-v1/_concept_evidence/
+          if git diff --cached --quiet; then echo "No screenshot changes"; else
+            git commit -m "Capture six real visual direction screenshots for Räsänen owner review"
+            git push origin HEAD:demo/rasasen-autohuolto-owner-review-20261118
+          fi
