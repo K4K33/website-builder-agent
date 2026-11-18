@@ -95,7 +95,7 @@ def _walk_json(node):
 def _aggregate_candidates(html):
     soup = BeautifulSoup(html, "html.parser")
     title = soup.title.get_text(" ", strip=True) if soup.title else ""
-    for script in soup.find_all("script", type=re.compile(r"application/ld\\+json", re.I), limit=35):
+    for script in soup.find_all("script", type=re.compile(r"application/ld\+json", re.I), limit=35):
         try:
             raw = json.loads(script.string or script.get_text())
         except (ValueError, TypeError):
@@ -191,7 +191,7 @@ def enrich_reputation(packet_path, *, key="", claim=None, post=requests.post,
             or len(packet["candidates"]) > 50):
         raise ValueError("Only source-bound daily shortlists are permitted")
     candidates = packet["candidates"]
-    if config.free_only() and not config.tavily_free_plan_confirmed(scheduled=True):
+    if not config.tavily_free_plan_confirmed(scheduled=True):
         return {"enabled": False, "searched": 0, "qualified": 0, "reason": "free_plan_not_confirmed"}
     if not key or claim is None:
         return {"enabled": False, "searched": 0, "qualified": 0, "reason": "no_free_search_access"}
