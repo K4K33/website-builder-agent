@@ -82,6 +82,64 @@ def capture_generated_home_journey(page, *, output_prefix) -> dict:
     return record_scroll_experience(page,output_prefix=output_prefix)
 
 
+def capture_generated_site_journey(homepage: str | Path, *, output_root: str | Path) -> dict:
+    """Private actual wheel-scroll/video evidence of exact generated homepage.
+
+    Browses LOCAL prepared assets only: customer JS cannot open network origins.
+    Video files and screenshots stay out of public-site deliverable.
+    """
+    from urllib.parse import unquote, urlsplit
+    from playwright.sync_api import sync_playwright
+
+    source=Path(homepage).resolve()
+    if not source.is_file():
+        raise RuntimeError("Exact homepage missing for global craft comparison.")
+    directory=Path(output_root).resolve()
+    directory.mkdir(parents=True,exist_ok=True)
+    results={}
+    with sync_playwright() as pw:
+        browser=pw.chromium.launch(headless=True)
+        try:
+            for name,width,height in (("desktop",1440,900),("mobile",390,844)):
+                video_dir=directory/name
+                video_dir.mkdir(parents=True,exist_ok=True)
+                context=browser.new_context(
+                    viewport={"width":width,"height":height},
+                    device_scale_factor=1,is_mobile=width<=390,has_touch=width<=390,
+                    reduced_motion="no-preference",service_workers="block",
+                    record_video_dir=str(video_dir))
+                def local_only(route):
+                    url=route.request.url
+                    safe=url.startswith("data:")
+                    if url.startswith("file:"):
+                        parsed=urlsplit(url)
+                        file=Path(unquote(parsed.path)).resolve()
+                        safe=(parsed.netloc in ("","localhost")
+                              and file.is_relative_to(source.parent) and file.is_file())
+                    return route.continue_() if safe else route.abort()
+                context.route("**/*",local_only)
+                page=context.new_page()
+                try:
+                    page.goto(source.as_uri(),wait_until="load",timeout=15000)
+                    page.wait_for_timeout(350)
+                    results[name]=record_scroll_experience(
+                        page,output_prefix=directory/(name+"-build"))
+                except Exception as exc:
+                    results[name]={"status":"capture_failed","error_type":type(exc).__name__}
+                finally:
+                    video=page.video
+                    context.close()
+                    try:
+                        movie=Path(video.path()) if video else None
+                        if movie and movie.is_file() and movie.stat().st_size>300:
+                            results[name]["video_path"]=str(movie)
+                    except Exception:
+                        pass
+        finally:
+            browser.close()
+    return results
+
+
 def compare_experiences(reference_report: dict, generated_journeys: dict) -> dict:
     """Prepare inspectable, honest QA contract. No automatic taste scores."""
     ref = reference_report if isinstance(reference_report,dict) else {}
