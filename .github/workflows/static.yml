@@ -55,11 +55,15 @@ jobs:
           echo "=== DOCS ==="
           find ./website-builder-agent/website-builder-agent/docs -maxdepth 3 -type f -print
 
-      # These are explicitly unapproved owner-only technical previews, never
-      # public demo/sales completions. Never grant a source/visual QA PASS.
-      - name: Verify 12 page owner-review batch and keep QUALITY_PENDING status
+      # A TECHNICAL_PREVIEW_ONLY / QUALITY_PENDING / HOLD artifact must
+      # never become a public Pages URL or a link handed to the owner.
+      # Keep draft source bundles in private build QA, not public docs.
+      - name: Refuse to publish unfinished owner-review demo pages
         run: |
-          python website-builder-agent/website-builder-agent/scripts/install_unapproved_owner_review_batch.py --archive website-builder-agent/website-builder-agent/data/manual_owner_reviews/20261117_three_local_concepts.tar.xz.b64 --dest website-builder-agent/website-builder-agent/docs/kaurivo/owner-review/2026-11-17
+          if test -e website-builder-agent/website-builder-agent/docs/kaurivo/owner-review; then
+            echo "::error::Unapproved owner-review drafts are not publishable. Finish the master-prompt gates first."
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
