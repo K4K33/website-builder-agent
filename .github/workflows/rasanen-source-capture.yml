@@ -49,6 +49,13 @@ jobs:
                               theme:document.querySelector('meta[name="theme-color"]')?.content||"",
                               logos:[...document.querySelectorAll('header img,header svg,header [class*="logo"],.logo')].map(n=>({tag:n.tagName,src:n.getAttribute('src'),cls:n.className?.baseVal||n.className||"",outer:n.outerHTML.slice(0,550)})).slice(0,30),
                               images:[...document.images].map(n=>({src:n.currentSrc||n.src,alt:n.alt,naturalWidth:n.naturalWidth,naturalHeight:n.naturalHeight})).slice(0,50),
+                              backgrounds:[...document.querySelectorAll('*')].map(el=>({
+                                cls:typeof el.className==='string'?el.className.slice(0,75):"",
+                                tag:el.tagName,
+                                bg:getComputedStyle(el).backgroundImage,
+                                width:Math.round(el.getBoundingClientRect().width),
+                                height:Math.round(el.getBoundingClientRect().height)
+                              })).filter(x=>x.bg!=='none'&&x.width>100&&x.height>70).slice(0,55),
                               videos:document.querySelectorAll('video').length,
                               links:[...document.querySelectorAll('a[href]')].map(n=>({text:(n.innerText||'').trim().slice(0,65),url:n.href})).filter(x=>x.text).slice(0,60)
                             }
@@ -74,6 +81,7 @@ jobs:
               print("SOURCE_PAGE",e["url"],"STATUS",d.get("status"),"URL",d.get("final_url"),"TITLE",d.get("title"),"ERROR",d.get("error"))
               print("SOURCE_BRAND",e["url"],"LOGOS",json.dumps(d.get("logos",[]),ensure_ascii=False)[:4000])
               print("SOURCE_IMAGES",e["url"],json.dumps(d.get("images",[]),ensure_ascii=False)[:5000])
+              print("SOURCE_BACKGROUNDS",e["url"],json.dumps(d.get("backgrounds",[]),ensure_ascii=False)[:5000])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
