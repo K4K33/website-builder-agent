@@ -1,0 +1,37 @@
+name: Kaurivo Räsänen live owner preview browser QA
+
+on:
+  workflow_run:
+    workflows: ["Deploy static content to Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-preview:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Open each public route and verify real assets + tab titles on 3 devices
+        working-directory: website-builder-agent/website-builder-agent
+        env:
+          KAURIVO_BROWSER_EVIDENCE_DIR: /tmp/kaurivo-owner-preview-screenshots
+        run: python scripts/smoke_live_owner_previews.py s-rasasen-autohuolto-v2
+      - name: Retain screenshot evidence even if a live assertion fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaurivo-rasanen-v2-live-viewport-proof
+          path: /tmp/kaurivo-owner-preview-screenshots
+          if-no-files-found: ignore
