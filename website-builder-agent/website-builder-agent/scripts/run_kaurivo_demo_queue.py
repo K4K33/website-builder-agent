@@ -620,6 +620,15 @@ def run_cli(args,log_handle,deadline=None):
             browser_hints = (browser_tail.rsplit(marker, 1)[1].partition("\n")[0]
                              if marker in browser_tail else "")
             safe_hints = (
+                ("different visual compositions", "konseptien liian samanlainen sommittelu"),
+                ("original firm's evidenced palette", "alkuperäisen brändin värit"),
+                ("source-verified current service", "vahvistettu palvelu puuttuu avausnäkymästä"),
+                ("generic technical hero illustration", "yleinen kuvitus avausnäkymässä"),
+                ("improvised CSS", "epäaito tuotekuva avausnäkymässä"),
+                ("narrow text columns", "liian kapeat tekstipalstat"),
+                ("verified brand logo", "logon terävyys"),
+                ("first viewport", "alkuperäinen kuvamateriaali avausnäkymässä"),
+                ("offline browser rendering", "selainrenderöinti, tarkempi syy puuttuu"),
                 ("horizontal overflow", "mobiilin vaakasuuntainen ylivuoto"),
                 ("touch", "kosketuskohteiden koko"),
                 ("staged images", "kuvien eheys"),
@@ -1366,7 +1375,10 @@ def main():
             if (stage == "building" and last_checkpoint and
                     (PROJECT / "output" / agent_slug / "_demo_page_drafts").is_dir()):
                 try:
-                    save_private_checkpoint(last_checkpoint, agent_slug)
+                    if error.code == "concept_browser_validation_blocked":
+                        save_private_checkpoint("concepts", agent_slug)
+                    else:
+                        save_private_checkpoint(last_checkpoint, agent_slug)
                 except HoldError:
                     print("Kaurivo demo queue: previous verified checkpoint retained.")
             # The complete "researched" checkpoint exists only after the
