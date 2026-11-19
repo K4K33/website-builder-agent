@@ -1235,7 +1235,7 @@ def main():
             from utils.kaurivo_checkpoint_stage_recovery import needs_research_restart
             if needs_research_restart(
                     resume, load_company(agent_slug) if resume else None,
-                    MASTER_PROMPT_SHA256, V7_SHA256):
+                    MASTER_PROMPT_SHA256, V7_SHA256, require_v8=True):
                 # The checkpoint RPC forbids backward stage transitions.
                 # Invalidate only the fully authenticated current snapshot
                 # by SHA before persisting replacement Research.
