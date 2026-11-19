@@ -15,7 +15,7 @@ def main():
     results, errors=[],[]
     with sync_playwright() as p:
         browser=p.chromium.launch(headless=True,args=["--no-sandbox"])
-        for width,height,label in ((1440,900,"desktop"),(390,844,"mobile")):
+        for width,height,label in ((1440,900,"desktop"),(768,1024,"tablet"),(390,844,"mobile"),(320,700,"small-mobile")):
             context=browser.new_context(viewport={"width":width,"height":height},device_scale_factor=1)
             for file in PAGES:
                 page=context.new_page()
@@ -29,13 +29,17 @@ def main():
                     title: document.title,
                     h1: document.querySelector('h1')?.textContent?.trim() || '',
                     overflow: document.documentElement.scrollWidth > innerWidth+2,
+                    overflowNodes:[...document.querySelectorAll('body *')].filter(el=>{
+                        let r=el.getBoundingClientRect();return r.right>innerWidth+2
+                            && getComputedStyle(el).position!=='absolute'
+                    }).slice(0,7).map(el=>el.tagName+'.'+String(el.className).slice(0,40)+':'+Math.round(el.getBoundingClientRect().right)),
                     navCount: document.querySelectorAll('nav a').length,
                     images: [...document.querySelectorAll('main img')].map(i=>({
                        src:i.currentSrc, loaded:i.complete&&i.naturalWidth>0,
                        width:i.naturalWidth,height:i.naturalHeight}))
                 })""")
                 if not facts["h1"] or facts["navCount"]<4:errors.append(name+": missing content/navigation")
-                if facts["overflow"]:errors.append(name+": horizontal overflow")
+                if facts["overflow"]:errors.append(name+": horizontal overflow at "+str(facts["overflowNodes"]))
                 if console:errors.append(name+": page errors "+str(console))
                 # Every public navigation link stays a real working page.
                 hrefs=page.locator('nav a[href]').evaluate_all("(els)=>els.map(e=>e.getAttribute('href'))")
