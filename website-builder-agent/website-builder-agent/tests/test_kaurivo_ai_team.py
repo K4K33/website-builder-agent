@@ -19,7 +19,7 @@ class AITeamTests(unittest.TestCase):
         self.assertIsNone(team.task_role(issue(author="visitor")))
         self.assertIsNone(team.task_role(issue(labels=[])))
         self.assertIsNone(team.task_role(issue(body="Role: admin\nTask: hello")))
-        self.assertIsNone(team.task_role({**issue(), "pull_request": {}}))
+        self.assertIsNone(team.task_role({**issue(), "pull_request": {"url": "https://github.com/example/pr"}}))
         self.assertIsNone(team.task_role(issue(labels=[team.RUNNING, team.READY])))
 
     def test_paid_model_rejected_before_http(self):
