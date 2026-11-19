@@ -18,6 +18,14 @@ CREATIVE_AXES = ("first_view", "information_architecture", "navigation", "image_
 def _normalized(value: str) -> str:
     return re.sub(r"\s+", " ", str(value or "").strip().casefold())
 
+class CreativeBusinessReasonError(RuntimeError):
+    def __init__(self, index: int):
+        self.index = index
+        super().__init__(
+            f"Creative direction #{index + 1} field business_reason must explain a customer/business reason."
+        )
+
+
 def validate_creative_directions(research: dict) -> dict:
     """Hard-gate prior to model Build: three distinctive, sourced proposals."""
     raw=research.get("creative_directions")
@@ -42,7 +50,7 @@ def validate_creative_directions(research: dict) -> dict:
                    ("yrity", "customer", "client", "asiaka", "osto", "ostaja",
                     "kävij", "palvel", "service", "tuot", "product", "toimial",
                     "business", "käyttäj", "kund", "besökar", "köpar", "tjänst")):
-            raise RuntimeError("Creative direction must explain a customer/business reason, not a style trend.")
+            raise CreativeBusinessReasonError(index - 1)
     # Similar descriptions across the important structural axes are rejected.
     # Three palette/font variants are not three creative proposals.
     for i in range(3):
