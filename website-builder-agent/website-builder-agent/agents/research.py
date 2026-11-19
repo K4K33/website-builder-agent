@@ -1303,7 +1303,8 @@ Raaka HTML:
             # and observed service headings alone. Fail closed when those
             # pages contain no specific customer-facing service.
             primary_offering = source_proven_primary_offering(
-                source_inventory["pages"], company_facts.get("services")
+                source_inventory["pages"], company_facts.get("services"),
+                company_name=name,
             )
 
     industry = str(
