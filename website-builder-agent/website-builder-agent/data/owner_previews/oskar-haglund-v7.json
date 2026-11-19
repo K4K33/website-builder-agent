@@ -1,0 +1,108 @@
+{
+  "schema_version": 2,
+  "stage": "owner_preview",
+  "status": "OWNER_PREVIEW_SOURCE_LIMITED_NO_CLIENT_APPROVAL",
+  "research_mode": "official_site_inaccessible_registry_concept",
+  "company_name": "Ab Oskar Haglund Oy",
+  "company_business_id": "0291625-8",
+  "verified_at": "2026-11-19T06:11:00+00:00",
+  "discovery_date": "2026-11-19",
+  "original_website_url": "https://www.oskarhaglund.fi/",
+  "official_site_access": "unavailable_to_current_research",
+  "brand_verification": "pending",
+  "photos_verified_for_reuse": false,
+  "source_url": "https://vasek.yrityshakemistot.fi/companies/6df09243-2ac4-4409-b3b5-3641436e70fe",
+  "source_pages": [
+    "https://vasek.yrityshakemistot.fi/companies/6df09243-2ac4-4409-b3b5-3641436e70fe",
+    "https://syynilabs.fi/yritys/0291625-8"
+  ],
+  "source_observations": [
+    {
+      "source": "https://vasek.yrityshakemistot.fi/companies/6df09243-2ac4-4409-b3b5-3641436e70fe",
+      "kind": "regional_business_directory",
+      "claims": [
+        "legal business name and id",
+        "street and city",
+        "telephone",
+        "email",
+        "listed domain",
+        "registered industry"
+      ],
+      "checked": "2026-11-19",
+      "notes": "Original domain is shown as a web address but its live content was not available; not proof that the business lacks a website"
+    },
+    {
+      "source": "https://syynilabs.fi/yritys/0291625-8",
+      "kind": "public_registry_aggregator",
+      "claims": [
+        "legal business name",
+        "business id",
+        "business city",
+        "registered road freight industry",
+        "active registration"
+      ],
+      "checked": "2026-11-19",
+      "notes": "Registration proof is not proof of an exact current service catalogue or visual brand"
+    }
+  ],
+  "verified_facts": {
+    "business_id": "0291625-8",
+    "company_name": "Ab Oskar Haglund Oy",
+    "phone": "+35863153027",
+    "email": "info@oskarhaglund.fi",
+    "street": "Skiffersgatan 6",
+    "postal_code": "65300",
+    "city": "Vaasa",
+    "registered_industry": "Tieliikenteen tavarankuljetus",
+    "hours": "unknown_not_asserted",
+    "services": [
+      "registered road freight industry only"
+    ],
+    "service_exclusions": [
+      "no confirmed current transport classes",
+      "no verified prices or capacity",
+      "no verified operating hours",
+      "no current original site content",
+      "no reused company photography"
+    ]
+  },
+  "brand_provenance": {
+    "identity_status": "unverified",
+    "original_logo_status": "original website inaccessible; no original logo captured",
+    "retained_signature": "legal company name as neutral typographic text only",
+    "original_color_status": "unavailable; proposed colors are NOT claimed official",
+    "original_image_reuse_status": "none_unverified_rights",
+    "new_mark_rights": "no_new_logo",
+    "media": "Original vector illustration by Kaurivo; does not depict the company's vehicles or employees",
+    "client_approval": "not requested; absent"
+  },
+  "source_inventory": {
+    "original_site_observed": false,
+    "original_website_url": "https://www.oskarhaglund.fi/",
+    "logo_candidates": [],
+    "licensed_company_photos": [],
+    "available_official_service_pages": [],
+    "verification_status": "research_gap_visible_in_public_owner_study"
+  },
+  "languages": [
+    "sv",
+    "fi"
+  ],
+  "release_routes": [
+    "index.html",
+    "tjanster/index.html",
+    "kontakt/index.html"
+  ],
+  "outreach_authorized": false,
+  "marketing_eligible": false,
+  "client_approved": false,
+  "cms_delivery_verified": false,
+  "independent_quality_score": null,
+  "preview_purpose": "Inspect prototype craft only, not company approval, not a sales-ready V7 delivery",
+  "QA_next": [
+    "Real Chromium viewport/scroll/keyboard and language checks",
+    "Review concept by independent web designer",
+    "Verify original official logo, content, language and image rights if possible",
+    "Only then client-ready release"
+  ]
+}
