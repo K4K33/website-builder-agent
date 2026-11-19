@@ -124,6 +124,17 @@ class IdentityAndHeroV8(unittest.TestCase):
         self.assertEqual(report["blocking"][0]["code"],"unproven_brand_accent")
         self.assertEqual(report["blocking"][0]["evidence"],["#c9e87f"])
 
+    def test_unproven_accent_cannot_hide_as_arbitrary_root_variable(self):
+        fragment=html(accent="#14251f").replace("</style>","--hot:#d5ff00;</style>")
+        report=audit_art_direction({"index.html":fragment},existing(theme="#14251f"))
+        self.assertIn("#d5ff00",report["blocking"][0]["evidence"])
+
+    def test_unproven_literal_background_color_cannot_bypass_root_token_check(self):
+        fragment=html(accent="#14251f").replace(
+            "</style>",".hero{background:#d5ff00}button{background:#d5ff00}</style>")
+        report=audit_art_direction({"index.html":fragment},existing(theme="#14251f"))
+        self.assertIn("#d5ff00",report["blocking"][0]["evidence"])
+
     def test_company_verified_brand_color_is_permitted(self):
         research=existing(theme="#c9e87f")
         report=audit_art_direction({"index.html":html()},research)
