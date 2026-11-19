@@ -693,6 +693,7 @@ def qa_repair_feedback(qa):
         ("site_navigation","issues"),
         ("visual_comparison","repair_hints"),
         ("layout_composition_review","issues"),
+        ("v8_art_direction","blocking"),
         ("content_review","issues"),
     ]
     for section,key in keys:
