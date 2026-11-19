@@ -83,6 +83,39 @@ class SourceReadinessV8(unittest.TestCase):
         self.assertNotIn('if not isinstance(saved_extraction, dict) or "primary_offering_evidence" in extracted:',source)
 
 
+class IndependentConceptCompositionV8(unittest.TestCase):
+    def test_three_palette_and_grid_ratio_variants_are_near_duplicates(self):
+        from utils.concept_v8_design_diversity import near_duplicate_concepts
+        def variant(ratio,accent):
+            return """<!doctype html><html><head><style>
+              main{display:grid;grid-template-columns:%s}
+              body{color:%s}</style></head><body><main>
+              <section><div><h1>Client</h1><p>Client service</p></div>
+                <div><p>Proof</p></div></section>
+              <section><h2>Services</h2><p>Details</p></section>
+              </main></body></html>""" % (ratio,accent)
+        concepts={
+            "a":{"index.html":variant("1fr 1fr","red"),
+                 "services.html":variant("1fr 1fr","red")},
+            "b":{"index.html":variant("1.2fr .8fr","green"),
+                 "services.html":variant("1.2fr .8fr","green")},
+            "c":{"index.html":variant("2fr 1fr","blue"),
+                 "services.html":variant("2fr 1fr","blue")},
+        }
+        result=near_duplicate_concepts(concepts)
+        self.assertGreaterEqual(len(result),2)
+        self.assertTrue({"b","c"}.issubset({row["second"] for row in result}))
+
+    def test_genuinely_different_media_and_section_compositions_remain_allowed(self):
+        from utils.concept_v8_design_diversity import near_duplicate_concepts
+        concepts={
+            "a":{"index.html":"<main><section><h1>Photo</h1><img src='hero.png'></section></main>"},
+            "b":{"index.html":"<main><article><h1>Editorial</h1><p>Long story</p></article></main>"},
+            "c":{"index.html":"<main><section><picture><img src='a.png'></picture><figure><blockquote>Review</blockquote></figure></section><section><p>Other content</p></section></main>"},
+        }
+        self.assertEqual(near_duplicate_concepts(concepts),[])
+
+
 class IdentityAndHeroV8(unittest.TestCase):
     def test_unproven_lime_neon_accent_blocks_source_based_client_brand(self):
         research=existing(theme="#14251f")
