@@ -69,7 +69,8 @@ class PhotoSequenceBrowserTests(unittest.TestCase):
                 if os.getenv("REQUIRE_BROWSER_TESTS") != "1":
                     self.skipTest("Chromium not installed")
             self.assertTrue(report["pass"], report["issues"])
-            evidence = [item for item in report["visual_review_flags"]
-                        if item["category"] == "source_photo_sequence"]
+            evidence = report["photo_sequences"]
+            self.assertFalse(any(item.get("category") == "source_photo_sequence"
+                                 for item in report["visual_review_flags"]))
             self.assertEqual({item["viewport"] for item in evidence}, {"desktop", "mobile"})
             self.assertTrue(all(Path(item["filmstrip"]).is_file() for item in evidence))

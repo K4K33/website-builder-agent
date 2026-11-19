@@ -9,7 +9,7 @@ from utils.browser_motion_proof import audit_declared_interactions, audit_photo_
 def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_file_root=None):
     source = Path(path).resolve()
     issues, screenshots, visual_review_flags = [], {}, []
-    first_fold_observations = {}
+    first_fold_observations, photo_sequences = {}, []
     viewports = (("desktop", 1440, 900), ("tablet", 768, 1024),
                  ("mobile", 390, 844), ("small_mobile", 320, 740))
     try:
@@ -532,7 +532,7 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                             motion = audit_photo_sequences(
                                 page, output_dir=destination.parent / "_motion" / source.stem, viewport=name)
                             issues.extend(f"{name}: {problem}" for problem in motion["issues"])
-                            visual_review_flags.extend(motion["observations"])
+                            photo_sequences.extend(motion["observations"])
                             issues.extend(f"{name}: JavaScript error during motion: {e[:180]}"
                                           for e in errors[:3]
                                           if f"{name}: JavaScript error: {e[:180]}" not in issues)
@@ -545,5 +545,6 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
     return {"pass": not issues and len(screenshots) == len(viewports),
             "issues": issues, "screenshots": screenshots,
             "visual_review_flags": visual_review_flags,
+            "photo_sequences": photo_sequences,
             "first_fold_observations": first_fold_observations,
             "note": "Whitespace/layout flags need independently reviewed full-page screenshots."}

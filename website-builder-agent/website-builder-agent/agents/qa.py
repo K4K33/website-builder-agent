@@ -1355,6 +1355,11 @@ def run_qa(slug_or_name: str) -> dict:
             for route, result in page_browsers.items()
             for finding in result.get("visual_review_flags") or []
         ]
+        browser["photo_sequences"] = [
+            {"route": route, **observation}
+            for route, result in page_browsers.items()
+            for observation in result.get("photo_sequences") or []
+        ]
         # Generate paired source-versus-redesign evidence before any paid AI
         # review. Original screenshot failures cannot certify brand fidelity.
         visual_comparison = build_visual_comparison(
@@ -1433,8 +1438,7 @@ def run_qa(slug_or_name: str) -> dict:
                             "scroll_sequence_image")
                         if isinstance(sequence,str) and Path(sequence).is_file():
                             craft_images.append(sequence)
-                photo_sequences = [finding for finding in browser["visual_review_flags"]
-                                   if finding.get("category") == "source_photo_sequence"]
+                photo_sequences = browser["photo_sequences"]
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT + SERVICE_QUALITY_POLICY,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"

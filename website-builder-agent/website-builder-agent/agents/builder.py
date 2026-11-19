@@ -2323,9 +2323,8 @@ sama tapa kuin ensimmäisessä rakentamisessa. Älä palauta vain index.html.
                    if isinstance(path, str) and os.path.isfile(path)]
     site_root = Path(_output_dir(slug)).resolve()
     motion_views = [
-        str(path) for finding in prior_browser.get("visual_review_flags") or []
-        if finding.get("category") == "source_photo_sequence"
-        and isinstance(finding.get("filmstrip"), str)
+        str(path) for finding in prior_browser.get("photo_sequences") or []
+        if isinstance(finding.get("filmstrip"), str)
         and (path := Path(finding["filmstrip"]).resolve()).is_relative_to(site_root)
         and path.is_file()
     ]
