@@ -125,7 +125,7 @@ class IdentityAndHeroV8(unittest.TestCase):
         self.assertEqual(report["blocking"][0]["evidence"],["#c9e87f"])
 
     def test_unproven_accent_cannot_hide_as_arbitrary_root_variable(self):
-        fragment=html(accent="#14251f").replace("</style>","--hot:#d5ff00;</style>")
+        fragment=html(accent="#14251f").replace("--ink:#14251f}", "--ink:#14251f;--hot:#d5ff00}")
         report=audit_art_direction({"index.html":fragment},existing(theme="#14251f"))
         self.assertIn("#d5ff00",report["blocking"][0]["evidence"])
 
