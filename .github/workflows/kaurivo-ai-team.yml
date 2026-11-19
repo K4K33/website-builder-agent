@@ -1,0 +1,45 @@
+name: Kaurivo AI team control tower
+
+# Best-effort 24-hour watch. GitHub schedules can be delayed or skipped.
+# Does not bypass private Kaurivo CRM, builder QA or owner approvals.
+on:
+  schedule:
+    - cron: "17,47 * * * *"
+    # Reserve the free-model allowance for the existing demo builder: only
+    # four automatic AI tasks per UTC day, alongside ongoing monitoring.
+    - cron: "23 0,6,12,18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: kaurivo-ai-control-tower
+  cancel-in-progress: false
+
+jobs:
+  supervise:
+    if: github.repository == 'K4K33/website-builder-agent' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify control tower logic without model calls
+        run: python -m unittest discover -s tests -p test_kaurivo_ai_team.py -v
+      - name: Monitor production builder and process up to one approved task
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          KAURIVO_TEAM_MODEL_FREE: ${{ vars.KAURIVO_TEAM_MODEL_FREE || 'google/gemma-4-31b-it:free' }}
+          KAURIVO_TEAM_ALLOW_TASKS: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '23 0,6,12,18 * * *' }}
+        run: python -m scripts.kaurivo_ai_team
