@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from functools import partial
 from uuid import uuid4
 
-from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256, reconcile_primary_offering_with_source
+from utils.service_quality import POLICY as SERVICE_QUALITY_POLICY, service_brief, reset_generated_review_claims, MASTER_PROMPT_SHA256, reconcile_primary_offering_with_source, source_proven_primary_offering
 from utils.quality import normalize_facts, DESIGN_CONTRACT, canonical_url
 from utils.verified_profile import validate_verified_profile
 from utils.design_benchmark import (
@@ -1293,9 +1293,18 @@ Raaka HTML:
     company_facts = normalize_facts(company_facts)
     primary_offering = None
     if not isinstance(saved_extraction, dict) or "primary_offering_evidence" in extracted:
-        primary_offering = reconcile_primary_offering_with_source(
-            extracted.get("primary_offering_evidence"), source_inventory["pages"]
-        )
+        try:
+            primary_offering = reconcile_primary_offering_with_source(
+                extracted.get("primary_offering_evidence"), source_inventory["pages"]
+            )
+        except RuntimeError:
+            # The model's excerpt is NOT evidence if paraphrased or unbound.
+            # Recover from actual browser-crawled first-party source pages
+            # and observed service headings alone. Fail closed when those
+            # pages contain no specific customer-facing service.
+            primary_offering = source_proven_primary_offering(
+                source_inventory["pages"], company_facts.get("services")
+            )
 
     industry = str(
         company_facts.get(
