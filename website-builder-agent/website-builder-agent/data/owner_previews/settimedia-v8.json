@@ -1,0 +1,55 @@
+{
+  "schema_version": 3,
+  "stage": "owner_preview",
+  "research_mode": "source_linked_internal_study",
+  "status": "OWNER_PREVIEW_SOURCE_LINKED_RIGHTS_UNVERIFIED",
+  "company_name": "Settimedia Oy",
+  "company_business_id": "3405263-4",
+  "source_url": "https://settimediafin.com/",
+  "source_pages": [
+    "https://settimediafin.com/",
+    "https://settimediafin.com/about/",
+    "https://settimediafin.com/contact/"
+  ],
+  "verified_at": "2026-11-19T12:30:00Z",
+  "outreach_authorized": false,
+  "marketing_eligible": false,
+  "client_approved": false,
+  "independent_quality_score": null,
+  "cms_delivery_verified": false,
+  "brand_provenance": {
+    "identity_status": "not_independently_verified",
+    "original_image_reuse_status": "source_links_only_rights_unverified",
+    "new_mark_rights": "no_new_logo",
+    "note": "typographic name only; neutral proposed palette"
+  },
+  "verified_facts": {
+    "phone": "+358405245559",
+    "email": "info@settimediafin.com",
+    "business_id": "3405263-4",
+    "city": "Helsinki",
+    "services": [
+      "sisältöstrategia",
+      "postaukset",
+      "valokuvat ja grafiikat",
+      "raportointi"
+    ]
+  },
+  "source_media_urls": [
+    "https://settimediafin.com/wp-content/uploads/2025/08/WhatsApp-Image-2025-07-28-at-15.35.54.jpeg",
+    "https://settimediafin.com/wp-content/uploads/2025/08/627d1dc3-a034-43bd-983e-f7f9aee9a08b-819x1024.jpeg",
+    "https://settimediafin.com/wp-content/uploads/2025/08/4dac82ee-a78b-4db0-8b67-a9cf8cd74a64-1-683x1024.jpg",
+    "https://settimediafin.com/wp-content/uploads/2025/08/Settimedia_Ingrid_21-1-700x1024.jpeg",
+    "https://settimediafin.com/wp-content/uploads/2025/08/IMG_8284-1-683x1024.jpg",
+    "https://settimediafin.com/wp-content/uploads/2025/08/IMG_8207-1-683x1024.jpeg"
+  ],
+  "release_routes": [
+    "index.html",
+    "palvelut.html",
+    "meista.html",
+    "yhteys.html"
+  ],
+  "visible_disclaimer": "Kaurivon sisäinen uudistusesitys · Ei Settimedia Oy:n hyväksymä tai julkaisema",
+  "source_evidence_method": "Observed original public text pages plus checked index URLs; photos are source links without copied bytes or rights authorization.",
+  "not_an_automatic_demo_build": true
+}
