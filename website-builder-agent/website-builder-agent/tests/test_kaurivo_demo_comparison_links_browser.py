@@ -47,7 +47,8 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
             "id":"demo-test-1", "status":status,"company_name":"Esimerkki Oy",
             "business_id":"1111111-1","created_at":"2026-11-11T12:00:00Z",
             "original_url":old,"preview_url":preview,"qa_url":LOG,
-            "release_sha":SHA,
+            "release_sha":SHA,"runner_kind":"github",
+            "github_run_url":LOG,
             "quality_approved":True,"commercial_visual_approved":True,"independent_visual_score":9.4,
             "quality_evidence_sha256":"b"*64,
             "progress":"Valmis", "prospect_id":"aabbccdd-aaaa-4aaa-8aaa-123456789abc",
@@ -81,24 +82,56 @@ class ComparisonLinksBrowserTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_technical_preview_is_never_a_demo_even_with_valid_public_qa_url(self):
+    def test_technical_preview_is_inspectable_but_never_labelled_a_ready_client_demo(self):
         page=self.page()
         try:
             job=self.job(status="internal_preview")
+            # The current production database has no commercial approval fields.
+            # Technical inspection is intentionally independent of those fields.
+            job.pop("quality_approved")
+            job.pop("commercial_visual_approved")
+            job.pop("quality_evidence_sha256")
             self.render(page,[job])
             self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
             self.assertEqual(page.locator("#demo-hold-list .demo-record").count(),1)
             self.assertEqual(page.locator("#demo-hold-list .demo-comparison-link").count(),1)
-            self.assertEqual(page.locator("a[href='"+PREVIEW+"']").count(),0)
-            self.assertIn("laadun hyväksyntä",page.locator("#demo-hold-list").inner_text())
+            self.assertEqual(page.locator("#demo-hold-list .demo-copy-comparison").count(),0)
+            self.assertEqual(page.get_by_role("link",name="Avaa tekninen esikatselu").count(),1)
+            self.assertEqual(page.get_by_role("link",name="Avaa tekninen esikatselu").get_attribute("href"),PREVIEW)
+            self.assertEqual(page.get_by_role("link",name="Tarkistuksen todiste").get_attribute("href"),LOG)
+            self.assertIn("Ei 9,5/10-laatuhyväksyntää",page.locator("#demo-hold-list").inner_text())
+            self.assertIn("ei saa lähettää asiakkaalle",page.locator("#demo-hold-list").inner_text())
+            # Synthetic commercial approval without the SHA does not upgrade it.
             job["status"]="approved_preview"
             job["commercial_visual_approved"]=False
             self.render(page,[job])
             self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
+            self.assertEqual(page.locator("a[href='"+PREVIEW+"']").count(),0)
             job["commercial_visual_approved"]=True
             job["quality_evidence_sha256"]=""
             self.render(page,[job])
             self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
+        finally:
+            page.close()
+
+    def test_unverified_technical_release_never_leaks_link(self):
+        page=self.page()
+        try:
+            for mutation in (
+                {"release_sha":""},
+                {"runner_kind":"unknown"},
+                {"qa_url":"https://malicious.example/report"},
+                {"qa_url":"https://github.com/K4K33/website-builder-agent/actions/runs/123"},
+                {"preview_url":"https://malicious.example/index.html"},
+                {"preview_url":"https://kaurivo-auto-demos-2026.onrender.com/other/index.html?fake=yes"},
+            ):
+                with self.subTest(mutation=mutation):
+                    job=self.job(status="internal_preview")
+                    job.update(mutation)
+                    self.render(page,[job])
+                    self.assertEqual(page.locator("#demo-ready-list .demo-record").count(),0)
+                    self.assertEqual(page.get_by_role("link",name="Avaa tekninen esikatselu").count(),0)
+                    self.assertEqual(page.locator("a[href='"+PREVIEW+"']").count(),0)
         finally:
             page.close()
 
