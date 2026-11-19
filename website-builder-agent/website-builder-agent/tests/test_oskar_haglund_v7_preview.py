@@ -95,18 +95,22 @@ class RealBrowserFirstMorningPreview(TestCase):
                             self.assertTrue(page.locator("main h1").is_visible())
                             self.assertTrue(page.locator(".demo-band b").is_visible())
                             self.assertEqual(page.locator("html").get_attribute("lang"),"sv")
-                            overflow=page.evaluate(
-                                "Math.max(document.body.scrollWidth,document.documentElement.scrollWidth)-window.innerWidth"
-                            )
-                            self.assertLessEqual(overflow,2,f"{route} width={viewport} overflow={overflow}")
-                            self.assertGreater(page.locator("main").bounding_box()["height"],220)
-                            self.assertTrue(page.locator("a[href^='tel:']").first.is_attached())
-                            self.assertTrue(page.locator("a[href^='mailto:']").first.is_attached())
                             page.screenshot(
                                 path=str(output/(route.replace("/","-").replace(".html","")+"-"+str(viewport)+".png")),
                                 full_page=True,
                                 animations="disabled",
                             )
+                            overflow=page.evaluate(
+                                "Math.max(document.body.scrollWidth,document.documentElement.scrollWidth)-window.innerWidth"
+                            )
+                            offenders=page.evaluate("""() => [...document.querySelectorAll('body *')]
+                              .map(el=>({name:el.tagName.toLowerCase(),cls:String(el.className?.baseVal??el.className??'').slice(0,65),
+                                right:Math.round(el.getBoundingClientRect().right),width:Math.round(el.getBoundingClientRect().width)}))
+                              .filter(o=>o.right>window.innerWidth+2).slice(0,12)""")
+                            self.assertLessEqual(overflow,2,f"{route} width={viewport} overflow={overflow}; offenders={offenders}")
+                            self.assertGreater(page.locator("main").bounding_box()["height"],220)
+                            self.assertTrue(page.locator("a[href^='tel:']").count() >= 1)
+                            self.assertTrue(page.locator("a[href^='mailto:']").count() >= 1)
                             page.locator('button[data-set-lang="fi"]').click()
                             self.assertEqual(page.locator("html").get_attribute("lang"),"fi")
                             self.assertIn("Ab Oskar Haglund Oy",page.title())
