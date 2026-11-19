@@ -26,6 +26,7 @@ from utils.site_architecture import validate_site_architecture
 from utils.commerce_catalogue import commerce_builder_brief
 from utils.site_build_pipeline import build_pages_from_response
 from utils.local_media_intake import stage_local_media
+from utils.source_photo_sequence import PHOTO_SEQUENCE_BRIEF
 from utils.content_parity import audit_content_parity
 from utils.source_fidelity import (source_manifest, validate_source_plan, audit_source_fidelity)
 from utils.universal_quality import audit_universal_standards
@@ -1957,7 +1958,7 @@ Palauta vain validi JSON ilman markdownia.
 
     html = _request_site_pages(
         BUILD_SYSTEM_PROMPT,
-        user_prompt,
+        user_prompt + "\n\n" + PHOTO_SEQUENCE_BRIEF,
         slug=slug, architecture=architecture,
         image_paths=reference_images + [path for path in (company.get("screenshots") or {}).values()
                      if isinstance(path, str) and os.path.isfile(path)] or None,
@@ -1968,7 +1969,8 @@ Palauta vain validi JSON ilman markdownia.
     # Validate every planned route, source topic, real asset and link before
     # writing a single new HTML file or marking the company 'built'.
     site_result = build_pages_from_response(
-        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR
+        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR,
+        media=media_manifest,
     )
     path = site_result["output_path"]
 
@@ -2066,9 +2068,14 @@ def run_build_from_response(slug_or_name: str, response_path: str, producer: str
     validate_site_architecture(
         research, no_site=research.get("research_mode")=="verified_no_website"
     )
+    media_manifest = stage_local_media(
+        company.get("media_intake"), intake_root=config.MEDIA_INTAKE_DIR,
+        output_dir=_output_dir(slug)
+    )
     cleaned = _clean_html(Path(response_path).read_text(encoding="utf-8"))
     site_result = build_pages_from_response(
-        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR
+        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR,
+        media=media_manifest,
     )
     path = site_result["output_path"]
     upsert_company(slug, {
@@ -2311,18 +2318,36 @@ sama tapa kuin ensimmäisessä rakentamisessa. Älä palauta vain index.html.
     print(
         "  [Builder] Muokataan verkkosivua..."
     )
+    prior_browser = (company.get("qa") or {}).get("browser") or {}
+    prior_views = [path for path in (prior_browser.get("screenshots") or {}).values()
+                   if isinstance(path, str) and os.path.isfile(path)]
+    site_root = Path(_output_dir(slug)).resolve()
+    motion_views = [
+        str(path) for finding in prior_browser.get("visual_review_flags") or []
+        if finding.get("category") == "source_photo_sequence"
+        and isinstance(finding.get("filmstrip"), str)
+        and (path := Path(finding["filmstrip"]).resolve()).is_relative_to(site_root)
+        and path.is_file()
+    ]
+    if motion_views:
+        user_prompt += (
+            "\nLopussa ovat edellisen version vaihekuvakohtausten selaimessa "
+            "kuvatut alku-, siirtymä- ja lopputilat. Korjaa havaitut rajaus-, "
+            "kohdistus- tai vieritysvirheet. Jos valinnainen kohtaus ei toimi "
+            "aidolla materiaalilla, poista liike ja säilytä kuvat luettavina.\n"
+        )
 
     new_html = _request_site_pages(
         REVISE_SYSTEM_PROMPT,
-        user_prompt,
+        user_prompt + "\n\n" + PHOTO_SEQUENCE_BRIEF,
         slug=slug, architecture=architecture, current_pages=current_pages,
-        image_paths=reference_images + [path for path in (company.get("qa") or {}).get("browser", {}).get("screenshots", {}).values()
-                     if isinstance(path, str) and os.path.isfile(path)] or None,
+        image_paths=reference_images + prior_views + motion_views or None,
     )
 
     cleaned = _clean_html(new_html)
     site_result = build_pages_from_response(
-        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR
+        cleaned, slug=slug, company=company, output_root=config.OUTPUT_DIR,
+        media=media_manifest,
     )
     new_path = site_result["output_path"]
 
