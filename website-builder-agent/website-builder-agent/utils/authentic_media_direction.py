@@ -15,10 +15,10 @@ from bs4 import BeautifulSoup
 
 _BITMAP = (".jpg", ".jpeg", ".png", ".webp", ".avif", ".heic", ".gif")
 _OBJECT_ART = re.compile(
-    r"(?:^|[-_ ])(?:tire|tyre|rengas|wheel|rim|spoke|gear|"
+    r"(?:^|[^a-z0-9])(?:tire|tyre|rengas|wheel|rim|spoke|gear|"
     r"engine|motor|car-drawing|vehicle-shape|blueprint|"
     r"technical-schematic|technical-illustration|fake-map|"
-    r"road-outline|cargo-hatch)(?:$|[-_ ])", re.I,
+    r"road-outline|cargo-hatch)(?:$|[^a-z0-9])", re.I,
 )
 _DRAWN_CSS = re.compile(
     r"(?:conic-gradient|radial-gradient|border-radius\s*:\s*50%|"
