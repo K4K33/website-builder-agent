@@ -55,15 +55,14 @@
     "city": "Vaasa",
     "registered_industry": "Tieliikenteen tavarankuljetus",
     "hours": "unknown_not_asserted",
-    "services": [
-      "registered road freight industry only"
-    ],
+    "services": [],
     "service_exclusions": [
       "no confirmed current transport classes",
       "no verified prices or capacity",
       "no verified operating hours",
       "no current original site content",
-      "no reused company photography"
+      "no reused company photography",
+      "historic bus operator evidence conflicts with current registry main category; no current offered services independently verified"
     ]
   },
   "brand_provenance": {
@@ -98,11 +97,26 @@
   "client_approved": false,
   "cms_delivery_verified": false,
   "independent_quality_score": null,
-  "preview_purpose": "Inspect prototype craft only, not company approval, not a sales-ready V7 delivery",
+  "preview_purpose": "Independent nonofficial visual design study; registered business identity and contact only; all current services unresolved",
   "QA_next": [
+    "Obtain operator-confirmed present-day service portfolio before presenting sector-specific sales copy or inquiry forms",
     "Real Chromium viewport/scroll/keyboard and language checks",
     "Review concept by independent web designer",
     "Verify original official logo, content, language and image rights if possible",
     "Only then client-ready release"
-  ]
+  ],
+  "historical_service_conflict": {
+    "status": "conflicting_historic_industry_evidence",
+    "independently_current_services_verified": false,
+    "current_registry": "Finnish PRH-backed TOL 49410 road freight",
+    "historical_operator_category": "bus transport / coach",
+    "historical_sources": [
+      "https://phototrans.eu/24,1377,0,Ab_Oskar_Haglund_Oy.html",
+      "https://suomenyritysrekisteri.fi/yritysrekisteri/liikenneyhteydet/linja-autoliikenne/"
+    ],
+    "observation": "Historic bus evidence is not evidence of current passenger transport; registered freight classification is not evidence of a current freight offering either.",
+    "source_checked_at": "2026-11-19",
+    "owner_preview_rule": "Display registration only as registration. Do not assert current cargo or bus services without exact current operator proof."
+  },
+  "registry_as_current_service": false
 }
