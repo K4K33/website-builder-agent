@@ -118,10 +118,28 @@ def audit_art_direction(
             blockers.append({"route": route, "code": "invalid_page", "repair": "Render real HTML."})
             continue
         css = _read_styles(html, site_root, route)
+        # CSS models may hide an accent in an arbitrary --custom-token
+        # or emit it repeatedly as a literal, bypassing --brand/--accent.
+        # Treat dominant :root colours and repeated vivid literal paints as
+        # part of the proposed visual identity, not source-verified facts.
         source_tokens = {
             normalized for match in _TOKEN.finditer(css)
             if (normalized := _hex(match.group(1)))
         }
+        for root_match in re.finditer(r":root\\s*\\{([^{}]{0,5000})\\}", css, re.I):
+            for color in _COLOR.findall(root_match.group(1)):
+                normalized = _hex(color)
+                if normalized:
+                    source_tokens.add(normalized)
+        explicit_paints = re.findall(
+            r"(?:background(?:-color)?|border-color|color)\\s*:\\s*"
+            r"(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})(?![\\w-])", css, re.I
+        )
+        for color in set(explicit_paints):
+            if explicit_paints.count(color) >= 2:
+                normalized = _hex(color)
+                if normalized and _vivid(normalized):
+                    source_tokens.add(normalized)
         uncovered = sorted(c for c in source_tokens if _vivid(c) and c not in known)
         palette_observations[route] = {
             "named_chromatic_tokens": sorted(source_tokens),
