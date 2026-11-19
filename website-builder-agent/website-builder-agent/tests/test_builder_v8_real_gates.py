@@ -131,6 +131,21 @@ class IdentityAndHeroV8(unittest.TestCase):
         self.assertEqual(report["blocking"],[])
         self.assertEqual(derive_identity_boundaries(research)["verified_original_colors"][0]["hex"],"#c9e87f")
 
+    def test_real_oskar_owner_study_is_a_negative_source_palette_regression(self):
+        # This known weak 19 Nov concept must NEVER be certified as a
+        # company-source-faithful V8 design. Its original brand was inaccessible.
+        root=Path(__file__).resolve().parents[1]
+        site=root/"docs/kaurivo/owner-previews/oskar-haglund-v7"
+        home=(site/"index.html").read_text(encoding="utf-8")
+        research={"research_mode":"official_site_inaccessible_registry_concept",
+                  "v8_visual_protocol":"v8",
+                  "company_facts":{"name":"Ab Oskar Haglund Oy"},
+                  "source_inventory":{"pages":[]}}
+        reviewed=audit_art_direction({"index.html":home},research,site_root=site)
+        self.assertFalse(reviewed["pass"])
+        self.assertIn("unproven_brand_accent",
+                      [item["code"] for item in reviewed["blocking"]])
+
     def test_oversized_generic_road_diagram_is_not_accepted_as_business_photography(self):
         original=existing(theme="#14251f")
         markup=html(accent="#14251f").replace(
