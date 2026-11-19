@@ -265,6 +265,9 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
     if (any(word in text for word in ("itsepalvelupesul", "itsepalveluautopes", "itsepalvelupesu"))
             and any(word in text for word in ("autojen", "auton", "ajoneuvo", "pesuohjelm"))):
         return "itsepalveluautopesu"
+    if (any(term in text for term in ("seasonal menu", "kausimenu"))
+            and any(term in text for term in ("wines & cocktails", "pöytävaraus", "table reservation"))):
+        return "ravintola"
     known=normalize_industry(industry)
     if known:
         return known
