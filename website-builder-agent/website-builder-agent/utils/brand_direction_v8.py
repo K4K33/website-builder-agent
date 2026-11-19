@@ -126,14 +126,14 @@ def audit_art_direction(
             normalized for match in _TOKEN.finditer(css)
             if (normalized := _hex(match.group(1)))
         }
-        for root_match in re.finditer(r":root\\s*\\{([^{}]{0,5000})\\}", css, re.I):
+        for root_match in re.finditer(r":root\s*\{([^{}]{0,5000})\}", css, re.I):
             for color in _COLOR.findall(root_match.group(1)):
                 normalized = _hex(color)
                 if normalized:
                     source_tokens.add(normalized)
         explicit_paints = re.findall(
-            r"(?:background(?:-color)?|border-color|color)\\s*:\\s*"
-            r"(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})(?![\\w-])", css, re.I
+            r"(?:background(?:-color)?|border-color|color)\s*:\s*"
+            r"(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})(?![\w-])", css, re.I
         )
         for color in set(explicit_paints):
             if explicit_paints.count(color) >= 2:
