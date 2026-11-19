@@ -5,6 +5,7 @@ on:
       - ".github/workflows/kaurivo-builder-v8-gates.yml"
       - "website-builder-agent/website-builder-agent/utils/builder_readiness_v8.py"
       - "website-builder-agent/website-builder-agent/utils/brand_direction_v8.py"
+      - "website-builder-agent/website-builder-agent/utils/authentic_media_direction.py"
       - "website-builder-agent/website-builder-agent/utils/concept_v8_design_diversity.py"
       - "website-builder-agent/website-builder-agent/utils/concept_previews.py"
       - "website-builder-agent/website-builder-agent/utils/concept_workflow.py"
@@ -13,12 +14,15 @@ on:
       - "website-builder-agent/website-builder-agent/agents/qa.py"
       - "website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py"
       - "website-builder-agent/website-builder-agent/tests/test_builder_v8_real_gates.py"
+      - "website-builder-agent/website-builder-agent/tests/test_authentic_media_first_v8.py"
   push:
     branches: [main]
     paths:
       - "website-builder-agent/website-builder-agent/utils/builder_readiness_v8.py"
       - "website-builder-agent/website-builder-agent/utils/brand_direction_v8.py"
+      - "website-builder-agent/website-builder-agent/utils/authentic_media_direction.py"
       - "website-builder-agent/website-builder-agent/utils/concept_v8_design_diversity.py"
+      - "website-builder-agent/website-builder-agent/tests/test_authentic_media_first_v8.py"
 permissions:
   contents: read
 jobs:
@@ -39,4 +43,4 @@ jobs:
       - name: Compile actual production code
         run: python -m compileall -q agents utils scripts tests
       - name: Run exact source, brand and resume regressions
-        run: python -m unittest -v tests.test_builder_v8_real_gates
+        run: python -m unittest -v tests.test_builder_v8_real_gates tests.test_authentic_media_first_v8
