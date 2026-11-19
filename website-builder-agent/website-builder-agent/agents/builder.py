@@ -1632,6 +1632,8 @@ def build_site(
         company.get("media_intake"), intake_root=config.MEDIA_INTAKE_DIR,
         output_dir=_output_dir(slug)
     )
+    from utils.authentic_media_direction import source_media_evidence
+    media_direction = source_media_evidence(research, media_manifest)
 
     concept_choice = validate_selected_concept(company, allowed_root=Path(config.OUTPUT_DIR) / slug)
     selected_preview = ""
@@ -1682,6 +1684,22 @@ sopivia testattavia komponentteja. Tämä ei ole laatuhyväksyntä.
 
 YRITYSKOHTAINEN VISUAALINEN SYVYYS- JA LIIKESUUNNITELMA:
 {json.dumps(visual_plan, ensure_ascii=False)}
+
+AITO MEDIA ENSIN — TOTEUTETTU TARKISTUS MYÖS CONCEPT- JA QA-VAIHEESSA:
+{json.dumps(media_direction, ensure_ascii=False)}
+Asiakasyrityksen aito rengas, auto, kone, tuote, ihminen tai työympäristö
+pitää esittää hyväksytyllä aidolla valokuvalla tai videolla. Älä piirrä
+CSS-/SVG-rengasta, vanteen kuvaa, vaihteistoa, kalustoa tai keinotekoisesti
+pyörivää teknistä esinettä pääkuvaksi. Se ei korvaa todellista tuotetta.
+Jos todellista mediaa ei ole tai oikeuksia ei ole varmistettu, toteuta
+visuaalisesti vahva, sisältöön nojaava tekstipainotteinen taitto ja kirjaa
+valokuvatarve sisäiseen QA:han. Älä väitä kuvitteellista kuvapankkituotetta
+asiakkaan omaksi. Suosi laadukkaita pieniä animaatioita AITOJEN valokuvien,
+videoiden, etualan tekstin ja gallerioiden yhteydessä. Käytä animaatioita
+vain, kun liike parantaa ymmärrystä tai tunnelmaa; säilytä reduced-motion.
+Todenna videoiden/kuvien lisenssit ja lataus. Oikeasti laadukas,
+todelliseen ja luvalliseen lähdemediaan perustuva 3D tai tuoteanimaatio
+on sallittu, ei automaattisesti pakollinen.
 Suunnittele harkittu, yrityksen tuotteeseen liittyvä syvyyden, valon tai
 vuorovaikutuksen ratkaisu tai perustele miksi hillintä on parempi.
 Jokaiselle reitille oma toiminnallinen sommittelu ilman toistuvaa korttipohjaa.
