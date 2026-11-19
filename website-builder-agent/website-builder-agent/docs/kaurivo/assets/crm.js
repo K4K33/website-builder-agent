@@ -362,8 +362,13 @@
   const excluded=rows.prospects.filter(x=>x.review_status==="skipped").length;
   const inaccessible=rows.prospects.filter(x=>!websitePubliclyAccessible(x)).length;
   const withoutReputation=rows.prospects.filter(x=>!fourStarIndependentReputation(x)).length;
-  let visible=rows.prospects.filter(x=>websitePubliclyAccessible(x)&&
-    fourStarIndependentReputation(x)&&
+  const mode=$("lead-view").value;
+  // A deliberately separate *private* research queue; this is not a
+  // four-star shortlist or a recommendation to contact unverified firms.
+  const unreviewedQueue=mode==="unreviewed";
+  let visible=rows.prospects.filter(x=>
+    (unreviewedQueue||
+     (websitePubliclyAccessible(x)&&fourStarIndependentReputation(x)))&&
     (x.review_status!=="skipped"||$("show-skipped-prospects").checked)).sort((a,b)=>{
      if(Boolean(a.marketing_opt_out)!==Boolean(b.marketing_opt_out))
       return Number(Boolean(a.marketing_opt_out))-Number(Boolean(b.marketing_opt_out));
@@ -376,15 +381,17 @@
      return Number(Boolean(b.website_found_url||b.website_listed_url||b.website_candidate_url))-
       Number(Boolean(a.website_found_url||a.website_listed_url||a.website_candidate_url));
     });
-  const mode=$("lead-view").value;
   if(mode==="top")visible=visible.filter(x=>!x.marketing_opt_out&&
     x.screening_feedback!=="already_good_website"&&
     leadEvidenceScore(x)!==null&&leadEvidenceScore(x)>=65).slice(0,10);
   else if(mode==="research")visible=visible.filter(x=>!x.marketing_opt_out).slice(0,20);
+  else if(unreviewedQueue)visible=visible.filter(x=>
+    !websitePubliclyAccessible(x)||!fourStarIndependentReputation(x)).slice(0,50);
   const withSites=visible.filter(x=>x.website_found_url||x.website_listed_url).length;
   const suggestions=visible.filter(x=>!x.website_found_url&&!x.website_listed_url&&x.website_candidate_url).length;
   $("morning-summary").textContent=rows.prospects.length
-    ? visible.length+" yritystä tarkistettavana · "+withSites+" rekisteri-/tarkistuslinkkiä"+(suggestions?" · "+suggestions+" sivuehdotusta":"")+(excluded&&!$("show-skipped-prospects").checked
+    ? (unreviewedQueue?"ESITUTKIMUS · ei myyntisuosituksia · ":"")+
+      visible.length+" yritystä tarkistettavana · "+withSites+" rekisteri-/tarkistuslinkkiä"+(suggestions?" · "+suggestions+" sivuehdotusta":"")+(excluded&&!$("show-skipped-prospects").checked
       ?" · "+excluded+" ohitettu":"")+
       (inaccessible?" · "+inaccessible+" suljettua/tarkistamatonta sivua":"")+
       (withoutReputation?" · "+withoutReputation+" ilman vahvistettua väh. 4/5-mainetta":"")+
@@ -392,6 +399,8 @@
     : isToday?"Tämän päivän lista ei ole vielä valmistunut. Tarkista yöajo.":"Ei listaa valitulta päivältä.";
   if(!visible.length)empty(prospects,mode==="top"
      ?"Ei vielä tarkistettuja, vähintään 65/100-pisteen myyntimahdollisuuksia. Tarkista ensin yritykset ja verkkosivut."
+     :unreviewedQueue
+      ?"Ei tarkistamattomia yrityksiä tämän päivän yksityisessä esitutkimusjonossa."
      :rows.prospects.length
       ?"Ei vielä yrityksiä, joilla on sekä julkisesti tarkistettu sivu että vähintään 4/5 riippumaton asiakasarvio (vähintään 10 arvostelua). Arvostelemattomia yrityksiä ei merkitä huonoiksi, vaan niitä ei näytetä laatulistalla."
       :"Päivälle "+selectedDay+" ei löydy yrityksiä. Yöajo tai yritysten tuonti on voinut epäonnistua.");
@@ -431,16 +440,25 @@
     append(row.main,"div","record-warning",
       "Ruotsin kieli mahdollinen · tarkista yrityksen oma kieli ennen yhteydenottoa tai demoa. Nimi ja paikkakunta eivät yksin todista kieltä.");
    const rep=candidate.reputation_evidence||{};
-   append(row.main,"div","record-sub","Riippumaton asiakasmaine: "+
-     Number(rep.rating).toFixed(1)+"/5 ★ · "+Number(rep.review_count)+
-     " arvostelua · "+String(rep.platform||"lähde")+
-     " · tarkistettu "+new Date(rep.checked_at).toLocaleDateString("fi-FI"));
-   try{
-    const source=new URL(rep.source_url);
-    const reputationLink=append(row.main,"a","record-website","Avaa mainetiedon lähde");
-    reputationLink.href=source.href;reputationLink.target="_blank";
-    reputationLink.rel="noopener noreferrer";
-   }catch(_){}
+   if(fourStarIndependentReputation(candidate)){
+    append(row.main,"div","record-sub","Riippumaton asiakasmaine: "+
+      Number(rep.rating).toFixed(1)+"/5 ★ · "+Number(rep.review_count)+
+      " arvostelua · "+String(rep.platform||"lähde")+
+      " · tarkistettu "+new Date(rep.checked_at).toLocaleDateString("fi-FI"));
+    try{
+     const source=new URL(rep.source_url);
+     if(source.protocol==="https:"){
+      const reputationLink=append(row.main,"a","record-website","Avaa mainetiedon lähde");
+      reputationLink.href=source.href;reputationLink.target="_blank";
+      reputationLink.rel="noopener noreferrer";
+     }
+    }catch(_){}
+   }else{
+    append(row.main,"div","record-warning",
+      "Asiakasmainetta ei vielä vahvistettu vähintään 4/5 ja 10 arvostelun lähdetarkistuksella. Tämä ei tarkoita huonoa mainetta.");
+   }
+   if(unreviewedQueue)append(row.main,"div","record-warning",
+      "ESITUTKIMUS – ei myyntilistan hyväksyntää. Tarkista sivun julkisuus, yrityksen maine ja kieli ennen yhteydenottoa.");
    append(row.main,"div","record-sub",leadReviewBand(candidate));
    if(candidate.screening_reason)
     append(row.main,"div","record-sub","Hakuperusteet: "+String(candidate.screening_reason).slice(0,500));
@@ -477,6 +495,8 @@
    // Marketing opt-out STILL blocks all outreach and email actions.
    if(candidate.marketing_opt_out)
     build.title="Vain sisäinen demo. Yritykselle ei saa lähettää markkinointia.";
+   else if(unreviewedQueue)
+    build.title="Vain yksityinen rakennustesti; yrityksen verkkosivu, maine ja kieli ovat vielä tarkistamatta. Laatukriteerit voivat pysäyttää työn.";
    else if(window.KaurivoDemoJobs.healthBlocked(rows.demoHealth))
     build.title="Rakennuspyyntö tallentuu jonoon, vaikka AI-palvelu olisi tauolla.";
 
@@ -492,7 +512,7 @@
    }
    if(candidate.review_status!=="skipped"&&!candidate.marketing_opt_out)
     row.actions.append(button("Valmistele demobrief",()=>prepareDemoBrief(candidate)));
-   if(candidate.outreach_review==="human_approved" && !candidate.marketing_opt_out &&
+   if(!unreviewedQueue && candidate.outreach_review==="human_approved" && !candidate.marketing_opt_out &&
       candidate.business_activity_assessment==="active_evidence" && companyHasMatchingObservation(candidate))
     row.actions.append(button("Kopioi kevyt ensiviesti",async()=>{
      try{

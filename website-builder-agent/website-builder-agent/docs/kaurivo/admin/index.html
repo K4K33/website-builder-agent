@@ -67,7 +67,7 @@
 <button type="button" class="tab" role="tab" aria-selected="false" data-tab="reviews">Palaute</button>
 </nav>
 <div class="panel" id="tab-prospects">
-<div class="section-head morning-head"><div><span class="eyebrow">JOKA AAMU / 08.00 HELSINKI</span><h2>Aamun yritykset</h2><p>Vain yritykset, joiden julkinen verkkosivu ja vähintään 4/5 riippumaton asiakasmaine on vahvistettu (vähintään 10 arvostelua).</p></div></div>
+<div class="section-head morning-head"><div><span class="eyebrow">JOKA AAMU / 08.00 HELSINKI</span><h2>Aamun yritykset</h2><p>Oletuksena näkyvät vain yritykset, joiden julkinen verkkosivu ja vähintään 4/5 riippumaton asiakasmaine on vahvistettu (vähintään 10 arvostelua). Tarkistamattomat PRH-rivit löytyvät erillisestä esitutkimusnäkymästä. Ne eivät ole myyntisuosituksia.</p></div></div>
 <div class="morning-toolbar">
  <div class="morning-day"><label for="prospect-day" class="eyebrow">PÄIVÄ</label><input type="date" id="prospect-day" aria-label="Yrityslistan päivä"></div>
  <div class="morning-counter" id="morning-summary" role="status">Haetaan aamun yrityksiä…</div>
@@ -77,6 +77,7 @@
    <option value="all" selected>Hyvämaineiset (vähintään 4/5)</option>
    <option value="research">20 seuraavaa hyvämaineista</option>
    <option value="top">Enintään 10 vahvistettua myyntimahdollisuutta</option>
+   <option value="unreviewed">Esitutkimus: tarkistamattomat (ei myyntilista)</option>
   </select>
  </div>
 </div>
