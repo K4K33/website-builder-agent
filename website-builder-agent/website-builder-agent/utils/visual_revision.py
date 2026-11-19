@@ -30,6 +30,11 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
                     if isinstance(item, dict) and item.get("suggestion")]
     v7 = qa.get("v7_visual_risks") or {}
     v8 = qa.get("v8_art_direction") or {}
+    authentic = qa.get("authentic_media_direction") or {}
+    media_blockers = [
+        str(x.get("code") or "media") + ": " + str(x.get("repair") or "")
+        for x in (authentic.get("blocking") or []) if isinstance(x, dict)
+    ]
     v8_blockers = [
         str(x.get("code") or "identity") + ": " + str(x.get("repair") or "")
         for x in (v8.get("blocking") or []) if isinstance(x, dict)
@@ -78,6 +83,7 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
         *[str(x) for x in static],
         *v7_blockers,
         *v8_blockers,
+        *media_blockers,
         *v7_style_actions,
         *browser_fixable,
         *content_missing,
@@ -115,6 +121,7 @@ def decide_revision(qa: dict, seen_signatures: set[str] | None = None) -> dict:
             "actionable_defects": actions,
             "v7_objective_visual": v7_blockers[:8],
             "v8_source_bound_art_direction": v8_blockers[:8],
+            "authentic_real_world_media_repairs": media_blockers[:8],
             "v7_style_directions_from_high_ai_risk": v7_style_actions[:8],
             "static": static[:12],
             "browser": browser_fixable[:10],
