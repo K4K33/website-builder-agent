@@ -525,7 +525,7 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
     # screenshots and per-route comparison still happen downstream.
     from utils.quality_v7 import reference_candidates
     sector_hint = verified_sector_search_hint(industry, original_text)
-    curated = reference_candidates(sector_hint)
+    curated = reference_candidates(sector_hint, limit=5)
     def add_curated(rows):
         seen = {canonical_url(item.get("url")) for item in rows}
         for entry in curated:
