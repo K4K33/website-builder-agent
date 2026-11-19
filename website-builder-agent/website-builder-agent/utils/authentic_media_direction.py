@@ -39,7 +39,7 @@ def source_media_evidence(research: dict | None, media_items: list | None = None
         if not isinstance(page, dict):
             continue
         identity = page.get("source_identity") or {}
-        photos = identity.get("original_content_photos") or []
+        photos = list(identity.get("original_content_photos") or [])
         photos += [x for x in (page.get("images") or []) if isinstance(x, dict)]
         for item in photos:
             if not isinstance(item, dict):
