@@ -6,7 +6,7 @@ approval and must be regenerated with the active browser and quality gates.
 """
 
 
-def needs_research_restart(resumed, restored_company, current_master_sha256, current_v7_sha256=None):
+def needs_research_restart(resumed, restored_company, current_master_sha256, current_v7_sha256=None, *, require_v8=False):
     """Old private checkpoints never approve a build under a newer master.
 
     The source URL and identity are validated during archive restoration. If
@@ -25,6 +25,14 @@ def needs_research_restart(resumed, restored_company, current_master_sha256, cur
         brief = research.get("v7_design_brief")
         if (not isinstance(brief, dict) or
                 brief.get("master_sha256") != current_v7_sha256):
+            return True
+    if require_v8:
+        # A prior selected/built V7 checkpoint must never bypass the
+        # upgraded verified-service and palette rules on a new worker.
+        identity = research.get("v8_identity_boundaries")
+        if (research.get("v8_visual_protocol") != "v8"
+                or not isinstance(identity, dict)
+                or identity.get("protocol") != "company-identity-evidence-v8"):
             return True
     return False
 
