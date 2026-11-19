@@ -76,6 +76,33 @@
       "allowed_use": "principles_only_no_media_or_markup"
     },
     {
+      "category": "accounting",
+      "label": "Tilitoimisto",
+      "url": "https://www.mazumamoney.co.uk/",
+      "country": "United Kingdom",
+      "design_lesson": "Bookkeeping and accounting service navigation",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "accounting",
+      "label": "Tilitoimisto",
+      "url": "https://accountsandlegal.co.uk/",
+      "country": "United Kingdom",
+      "design_lesson": "Industry pathways and approachable expert advice",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "accounting",
+      "label": "Tilitoimisto",
+      "url": "https://sleek.com/au/small-business-accountant/",
+      "country": "Australia",
+      "design_lesson": "Clear accounting package information and inquiry path",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
       "category": "law",
       "label": "Asianajotoimisto",
       "url": "https://www.outputlaw.com/",

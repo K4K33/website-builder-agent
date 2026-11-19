@@ -268,6 +268,10 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
     if (any(term in text for term in ("seasonal menu", "kausimenu"))
             and any(term in text for term in ("wines & cocktails", "pöytävaraus", "table reservation"))):
         return "ravintola"
+    accounting = any(term in text for term in ("tilitoimisto", "accountant", "redovisningsbyrå"))
+    bookkeeping = any(term in text for term in ("kirjanpito", "bookkeeping", "bokföring"))
+    if accounting and bookkeeping:
+        return "tilitoimisto"
     known=normalize_industry(industry)
     if known:
         return known

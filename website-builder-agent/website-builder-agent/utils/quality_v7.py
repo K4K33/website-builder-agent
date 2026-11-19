@@ -29,6 +29,7 @@ SECTOR_TERMS = {
     "cafe": ("kahvil", "cafe", "café", "paahtimo", "coffee", "roast"),
     "bakery": ("leipomo", "bakery", "patisserie", "baker"),
     "dentist": ("hammas", "dental", "dentist", "odont"),
+    "accounting": ("tilitoim", "kirjanpit", "accounting", "accountancy", "bookkeep", "redovisning"),
     "law": ("lakitoimisto", "asianaj", "jurist", "law firm", "legal service"),
     "architecture": ("arkkiteh", "architect", "visualis"),
     "construction": ("rakennus", "construction", "remont", "saneeraus", "builder"),
