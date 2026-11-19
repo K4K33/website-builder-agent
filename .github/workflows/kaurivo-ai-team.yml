@@ -5,6 +5,9 @@ name: Kaurivo AI team control tower
 on:
   schedule:
     - cron: "17,47 * * * *"
+    # Reserve the free-model allowance for the existing demo builder: only
+    # four automatic AI tasks per UTC day, alongside ongoing monitoring.
+    - cron: "23 0,6,12,18 * * *"
   workflow_dispatch:
 
 permissions:
@@ -38,4 +41,5 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           KAURIVO_TEAM_MODEL_FREE: ${{ vars.KAURIVO_TEAM_MODEL_FREE || 'google/gemma-4-31b-it:free' }}
+          KAURIVO_TEAM_ALLOW_TASKS: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '23 0,6,12,18 * * *' }}
         run: python -m scripts.kaurivo_ai_team
