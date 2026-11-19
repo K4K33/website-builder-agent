@@ -41,7 +41,9 @@ def context_digest(research):
                    'architecture': research.get('site_architecture'),
                    'brand_plan': research.get('brand_preservation_plan'),
                    'premium_visual_protocol': research.get('premium_visual_protocol'),
-                   'brand_signature_plan': research.get('brand_signature_plan')})
+                   'brand_signature_plan': research.get('brand_signature_plan'),
+                   'v8_identity_boundaries': research.get('v8_identity_boundaries'),
+                   'v8_visual_protocol': research.get('v8_visual_protocol')})
 
 
 def intake_fingerprint(items, root):
@@ -280,6 +282,9 @@ def validate_concept_media(route, body, allowed):
 def browser_issue_repair_hints(issues):
     """Return bounded instructional categories, never private page data."""
     labels = (
+        ("concept_visual_near_duplicate", "Produce genuinely different visual compositions across the first fold AND main subpage; change DOM media placement and hierarchy, not just colors, words or grid ratios."),
+        ("unproven_brand_accent", "Replace unsupported vivid brand CSS tokens with the original firm's evidenced palette. Never copy global UX references."),
+        ("verified_service_not_visible_in_hero", "Place the exact source-verified current service in the first main section, not just in the footer."),
         ("horizontal overflow", "Eliminate horizontal overflow on every mobile viewport."),
         ("undersized controls", "Make visible controls large enough for touch."),
         ("broken images", "Use only intact staged images; no external or invented URLs."),
@@ -312,6 +317,13 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     if not str(producer).strip():
         raise RuntimeError('Actual concept producer must be recorded')
     pages_by_id = parse_concepts(raw, research)
+    # A changed colour or grid ratio cannot make a real V8 art direction.
+    # Keep near-duplicates as REPAIRABLE browser-comparison findings rather
+    # than throwing away all three expensive already-generated concepts.
+    from utils.concept_v8_design_diversity import near_duplicate_concepts
+    clones = (near_duplicate_concepts(pages_by_id)
+              if research.get('v8_visual_protocol') == 'v8' else [])
+    duplicated = {row['second'] for row in clones}
     parent = Path(output_parent).resolve(); parent.mkdir(parents=True, exist_ok=True)
     root = Path(mkdtemp(prefix='set-', dir=parent))
     repair_targets = {}
@@ -341,8 +353,20 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
         for relative, file in site_files(folder, list(pages)):
             entry['files'].append({'path': file.relative_to(root).as_posix(), 'sha256': file_hash(file)})
         entry['site_sha256'] = site_sha256(folder, list(pages))
+        # Reject art-direction errors on the REAL composed HTML BEFORE
+        # screenshot/vision requests. This keeps the source's actual identity
+        # separate from impressive-looking competitor colour schemes.
+        from utils.brand_direction_v8 import audit_art_direction
+        art_direction = audit_art_direction(pages, research)
         for route in pages:
             issue_count_before = len(entry['issues'])
+            if identifier in duplicated and route == 'index.html':
+                entry['issues'].append(
+                    'concept_visual_near_duplicate: change first-fold and subpage DOM, '
+                    'not merely colour, text or grid fractions')
+            for finding in art_direction['blocking']:
+                if finding.get('route') == route:
+                    entry['issues'].append(route + ': ' + str(finding['code']))
             report = renderer(folder / route, allowed_file_root=folder)
             entry['issues'].extend(str(i) for i in report.get('issues') or [])
             if report.get('pass') is not True:

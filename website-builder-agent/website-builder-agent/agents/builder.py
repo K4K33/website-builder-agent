@@ -1647,6 +1647,17 @@ Rakenna verkkosivu tämän research-datan perusteella.
 
 KAURIVO V7 — VELVOITTAVA YRITYSKOHTAINEN SUUNNITTELUPAKETTI:
 {json.dumps(v7_brief, ensure_ascii=False)}
+
+V8 SOURCE-BOUND VISUAL IDENTITY — VERIFIED CLIENT EVIDENCE, NOT BENCHMARK COLOURS:
+{json.dumps(research.get("v8_identity_boundaries") or {}, ensure_ascii=False)}
+Alkuperäisen yrityksen värit ja tunnus tulevat yrityksen OMASTA
+tarkistetusta lähteestä. Älä siirrä Lando Norrisin, Dropboxin,
+Igloon tai toimialareferenssin väripalettia, kuvia tai typografiaa
+asiakasyritykseen. Jos alkuperäisen värin näyttö puuttuu, älä käytä
+uutta huomiota herättävää limen/neonin väristä identiteettiä
+yrityksen virallisena brändinä. Älä tee itse uutta logoa.
+Käytä ensitaitteessa todennettua nykyistä palvelua, ei rekisterialaa:
+{json.dumps(research.get("primary_offering_evidence") or {}, ensure_ascii=False)}
 Lähdepassin kuvat ovat EHDOKKAITA, joihin EI ole automaattista
 käyttöoikeutta. Valitse todennetusti luvallista oikeaa aineistoa ennen
 uutta kuvitusta. Jos aito yrityskuvasarja on merkityksellinen, älä

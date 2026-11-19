@@ -1187,11 +1187,12 @@ def route_visual_review_passes(review: dict, rendered_pages: dict,
     if (not expected_view_ids or
         set(review.get("reviewed_route_view_ids") or []) != set(expected_view_ids)):
         return False
-    # V7 separates a genuine current-build visual review from the LONG-TERM
-    # 9.5/10 benchmark. Do not demand a model-invented 95/100 just to let
-    # the owner inspect an honestly marked draft; factual/critical defects
-    # and actual screenshot evidence still fail closed.
-    minimum = (0 if research.get("v7_visual_protocol") == "v7"
+    # V8 fixes a production loophole: route-specific V7 design ratings
+    # formerly passed at ZERO while a high homepage overall score could
+    # hide a terrible service/contact page. Keep the scored criterion
+    # distinct from genuine external 9.5/10 certification.
+    minimum = (config.QA_MIN_VISUAL_SCORE
+               if research.get("v7_visual_protocol") == "v7"
                else config.QA_MIN_OWNER_PREVIEW_VISUAL_SCORE)
     for route, report in route_reviews.items():
         if not isinstance(report, dict) or report.get("critical_issues") != []:
@@ -1235,6 +1236,9 @@ def run_qa(slug_or_name: str) -> dict:
     # These deterministic hints are *not* an independent aesthetic score.
     from utils.quality_v7 import visual_risks
     v7_visual = visual_risks(rendered_pages, research=research)
+    from utils.brand_direction_v8 import audit_art_direction
+    v8_art_direction = audit_art_direction(
+        rendered_pages, research, site_root=site_root)
 
     planned_architecture = None
     if research.get("site_architecture") or build.get("page_paths"):
@@ -1318,7 +1322,7 @@ def run_qa(slug_or_name: str) -> dict:
     craft_images = []
     visual_comparison = {"status": "not_run", "pairs": {}, "repair_hints": [],
                          "missing": [], "render_errors": []}
-    if (automated["automated_pass"] and not parity_hard_missing
+    if (v8_art_direction["pass"] and automated["automated_pass"] and not parity_hard_missing
             and universal["automated_pass"] and visual_media["owner_preview_ready"]
             and originality["pass"]):
         role_requirements={
@@ -1511,6 +1515,7 @@ def run_qa(slug_or_name: str) -> dict:
         browser.get("visual_review_flags") or [], rendered_pages, research
     )
     result = {
+        "v8_art_direction": v8_art_direction,
         "v7_visual_risks": v7_visual,
         "layout_composition_review": layout_review,
         "automated": automated, "visual_media": visual_media,
@@ -1537,6 +1542,7 @@ def run_qa(slug_or_name: str) -> dict:
                                 == {"lando norris","dropbox brand","igloo inc."}
                             and review["global_craft_experience_comparison"].get("critical_experience_gaps") == []))
                          and not v7_visual["blocking"]
+                         and v8_art_direction["pass"]
                          and temporal_claims["pass"]
                          and not premium_effects["blocking"]
                          and parity["pass"] and source_fidelity["pass"]
@@ -1550,8 +1556,9 @@ def run_qa(slug_or_name: str) -> dict:
                          and layout_review["pass"]
                          and review_passes(review, benchmark_urls, decisions)
                          and owner_preview_visual_passes(
-                             review, minimum=(0 if research.get("v7_visual_protocol") == "v7"
-                                              else None))
+                             review, minimum=(config.QA_MIN_VISUAL_SCORE
+                                             if research.get("v7_visual_protocol") == "v7"
+                                             else None))
                          and route_visual_review_passes(
                              review, rendered_pages, research,
                              expected_view_ids=[row["id"] for row in
@@ -1566,7 +1573,9 @@ def run_qa(slug_or_name: str) -> dict:
     # Every future general failure is recorded without a new model request.
     # Repeating the same category across different clients makes it a
     # candidate for a universal regression check, not an invented fix.
-    issues = (list(premium_effects.get("blocking") or [])
+    issues = ([str(item.get("route", "")) + ": " + str(item.get("code", ""))
+               for item in v8_art_direction["blocking"]]
+              + list(premium_effects.get("blocking") or [])
               + list(automated.get("automated_issues") or [])
               + list(originality["blocking_problems"])
               + list(visual_media["blockers"])

@@ -693,6 +693,7 @@ def qa_repair_feedback(qa):
         ("site_navigation","issues"),
         ("visual_comparison","repair_hints"),
         ("layout_composition_review","issues"),
+        ("v8_art_direction","blocking"),
         ("content_review","issues"),
     ]
     for section,key in keys:
@@ -1234,7 +1235,7 @@ def main():
             from utils.kaurivo_checkpoint_stage_recovery import needs_research_restart
             if needs_research_restart(
                     resume, load_company(agent_slug) if resume else None,
-                    MASTER_PROMPT_SHA256, V7_SHA256):
+                    MASTER_PROMPT_SHA256, V7_SHA256, require_v8=True):
                 # The checkpoint RPC forbids backward stage transitions.
                 # Invalidate only the fully authenticated current snapshot
                 # by SHA before persisting replacement Research.
@@ -1278,6 +1279,17 @@ def main():
                 verify_design_handoff(load_company(agent_slug),selected=False)
             except (RuntimeError,ValueError,TypeError,KeyError) as exc:
                 raise HoldError("design_handoff_incomplete","research:"+safe_preflight_reason(exc)) from exc
+            # Production readiness is a deterministic SOURCE test. A
+            # historical TOL/PRH industry label or a model-generated service
+            # idea does not authorize a marketing page. Check this BEFORE the
+            # three expensive concept/vision calls, including on resumes.
+            from utils.builder_readiness_v8 import assess_build_readiness
+            readiness = assess_build_readiness(
+                (load_company(agent_slug) or {}).get("research"))
+            if not readiness["ready"]:
+                raise HoldError(readiness["code"],
+                    "Nykyisen palvelun lähdenäyttö puuttuu; "
+                    "täydennä alkuperäisen yrityssivun todisteet.")
             if done<1:
                 update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
                 run_cli(["concept-previews",agent_slug],stage_log,ai_deadline)

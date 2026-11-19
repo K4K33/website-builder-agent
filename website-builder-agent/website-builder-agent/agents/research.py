@@ -1036,6 +1036,12 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     research_data["v7_source_passport"] = source_passport(research_data, company)
     research_data["v7_design_brief"] = design_brief(research_data, company)
     research_data["v7_visual_protocol"] = "v7"
+    # V8 uses the same evidence, adding deterministic identity/hero safeguards.
+    # This is stored in the immutable private source checkpoint, not guessed
+    # by an HTML model or copied from the global reference library.
+    from utils.brand_direction_v8 import derive_identity_boundaries
+    research_data["v8_visual_protocol"] = "v8"
+    research_data["v8_identity_boundaries"] = derive_identity_boundaries(research_data)
     updated = upsert_company(slug, {"research": research_data})
     set_status(slug, "researched")
     return updated
@@ -1291,11 +1297,12 @@ Raaka HTML:
         company_facts = {}
 
     company_facts = normalize_facts(company_facts)
-    primary_offering = None
-    if not isinstance(saved_extraction, dict) or "primary_offering_evidence" in extracted:
-        primary_offering = reconcile_primary_offering_with_source(
-            extracted.get("primary_offering_evidence"), source_inventory["pages"]
-        )
+    # A resumed AI extraction is NOT an authorization to skip checking the
+    # current offering. This previously let older partial snapshots proceed
+    # with no primary service evidence after a provider retry.
+    primary_offering = reconcile_primary_offering_with_source(
+        extracted.get("primary_offering_evidence"), source_inventory["pages"]
+    )
 
     industry = str(
         company_facts.get(
@@ -1615,6 +1622,12 @@ Tärkeää:
     research_data["v7_source_passport"] = source_passport(research_data, company)
     research_data["v7_design_brief"] = design_brief(research_data, company)
     research_data["v7_visual_protocol"] = "v7"
+    # V8 uses the same evidence, adding deterministic identity/hero safeguards.
+    # This is stored in the immutable private source checkpoint, not guessed
+    # by an HTML model or copied from the global reference library.
+    from utils.brand_direction_v8 import derive_identity_boundaries
+    research_data["v8_visual_protocol"] = "v8"
+    research_data["v8_identity_boundaries"] = derive_identity_boundaries(research_data)
 
     updated_company = upsert_company(
         slug,
