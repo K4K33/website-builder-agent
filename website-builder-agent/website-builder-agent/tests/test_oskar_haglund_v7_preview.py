@@ -56,6 +56,39 @@ class SourceBoundFirstMorningPreview(TestCase):
         data["source_pages"]=["https://same.example/a","https://same.example/b"]
         self.assertNotEqual(check_source_limited_concept(SLUG,data,SITE),[])
 
+    def test_historical_transport_category_conflict_blocks_unverified_current_services(self):
+        valid=json.loads(MANIFEST.read_text(encoding="utf-8"))
+        self.assertEqual(valid["historical_service_conflict"]["status"],
+                         "conflicting_historic_industry_evidence")
+        self.assertFalse(valid["registry_as_current_service"])
+        self.assertEqual(valid["verified_facts"]["services"],[])
+        for mut in (
+            lambda obj: obj.update(registry_as_current_service=True),
+            lambda obj: obj["historical_service_conflict"].update(
+                independently_current_services_verified=True),
+            lambda obj: obj["verified_facts"].update(
+                services=["International freight with dedicated trucks"]),
+            lambda obj: obj["historical_service_conflict"].update(
+                historical_sources=[]),
+        ):
+            bad=copy.deepcopy(valid)
+            mut(bad)
+            self.assertTrue(check_source_limited_concept(SLUG,bad,SITE))
+
+    def test_no_specific_cargo_inquiry_from_registration_or_historical_bus_catalogue(self):
+        from bs4 import BeautifulSoup
+        for route in ROUTES:
+            content=(SITE/route).read_text(encoding="utf-8")
+            soup=BeautifulSoup(content,"html.parser")
+            visible=soup.get_text(" ",strip=True).casefold()
+            for unproven in (
+                "transportförfrågan","kuljetustiedustelu","avhämtningsort",
+                "noutopaikka","god(s)","tavara / arvioitu","tilaa kuljetus",
+                "vuoroliikennettä","tillgänglig lastbil"
+            ):
+                self.assertNotIn(unproven,visible,route)
+            self.assertFalse(soup.select("img[src*=company]"))
+
     def test_no_client_image_or_made_up_review_is_embedded(self):
         from bs4 import BeautifulSoup
         for route in ROUTES:

@@ -160,6 +160,40 @@ def check_source_limited_concept(slug:str,data:dict,folder:Path)->list[str]:
     if any(t in text for t in ('tutkitusti 5/5','verified customer reviews',
                               'varmistettu 9,5/10','100% kuljetustakuu')):
         errors.append('Fake customer satisfaction or performance claim')
+
+    # If current registry classification contradicts older operator records,
+    # neither source may be promoted into today's paid services. Uncertainty
+    # must survive in the visible copy; a silent manifest flag is insufficient.
+    conflict=data.get('historical_service_conflict')
+    if conflict:
+        if (not isinstance(conflict,dict) or
+            conflict.get('status')!='conflicting_historic_industry_evidence' or
+            conflict.get('independently_current_services_verified') is not False or
+            data.get('registry_as_current_service') is not False or
+            len(conflict.get('historical_sources') or [])<2):
+            errors.append('Historical business conflict must block current-service inferences')
+        for route in found:
+            html=(folder/route).read_text(encoding='utf-8')
+            soup=BeautifulSoup(html,'html.parser')
+            visible=soup.get_text(' ',strip=True).casefold()
+            forbidden=(
+                'transportförfrågan','kuljetustiedustelu','förbered en transport',
+                'avhämtningsort','noutopaikka','god(s)', 'tavara / arvioitu',
+                'kuljetettava tavara','beställ transport','tilaa kuljetus',
+                'rahtipalvelumme','våra frakttjänster'
+            )
+            for term in forbidden:
+                if term in visible:
+                    errors.append(route+': unsupported current service or freight-specific inquiry: '+term)
+            if ('inte kunnat' not in visible and
+                'ei ole voitu' not in visible and
+                'ei ole vielä voitu' not in visible and
+                'tulee vahvistaa' not in visible and
+                'måste bekräftas' not in visible and
+                'har inte kunnat' not in visible):
+                errors.append(route+': uncertainty about present service offerings not visible')
+        if facts.get('services') not in ([], None):
+            errors.append('Current service list is unverified but populated')
     return errors
 
 

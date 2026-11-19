@@ -4,15 +4,15 @@
  const root=document.documentElement;
  const translations={sv:{
   menu:"Meny",close:"Stäng meny",
-  subject:"Transportförfrågan – Ab Oskar Haglund Oy",
-  preface:"Hej! Jag vill ställa en fråga om vägtransport.",
-  from:"Avhämtningsort",to:"Destination",goods:"Gods / omfattning",date:"Önskad tidpunkt",details:"Övriga uppgifter",
+  subject:"Förfrågan – Ab Oskar Haglund Oy",
+  preface:"Hej! Jag vill ställa en fråga till Ab Oskar Haglund Oy.",
+  from:"Ditt namn",to:"Din e-postadress",goods:"Ämne",date:"Önskat svar",details:"Övriga uppgifter",
   footer:"Detta är ett e-postutkast och skickas inte automatiskt."
  },fi:{
   menu:"Valikko",close:"Sulje valikko",
-  subject:"Kuljetustiedustelu – Ab Oskar Haglund Oy",
-  preface:"Hei! Haluaisin tiedustella maantiekuljetuksesta.",
-  from:"Noutopaikka",to:"Määränpää",goods:"Kuljetettava tavara / määrä",date:"Toivottu ajankohta",details:"Lisätiedot",
+  subject:"Yhteydenotto – Ab Oskar Haglund Oy",
+  preface:"Hei! Haluaisin esittää kysymyksen Ab Oskar Haglund Oy:lle.",
+  from:"Nimesi",to:"Sähköpostiosoitteesi",goods:"Viestin aihe",date:"Toivottu vastaus",details:"Lisätiedot",
   footer:"Tämä on sähköpostiluonnos. Viestiä ei lähetetä automaattisesti."
  }};
  const langButtons=[...document.querySelectorAll("[data-set-lang]")];

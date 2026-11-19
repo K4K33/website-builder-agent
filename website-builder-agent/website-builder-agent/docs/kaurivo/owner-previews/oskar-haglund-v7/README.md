@@ -62,3 +62,25 @@ https://k4k33.github.io/website-builder-agent/kaurivo/owner-previews/oskar-haglu
 
 The link above is a proposed destination and must not be claimed as live until
 GitHub Pages and HTTP/Chromium verification actually succeed.
+
+## 19 Nov cross-source research correction
+
+**Important fact conflict discovered after first prototype:** current public
+registration assigns TOL 49410 road freight, but independent historical bus
+operator records list the same legal business in passenger bus/charter
+activities. Neither source proves a current offer. The initial concept's
+freight-focused hero, transport-order call-to-action and goods inquiry were
+therefore **not grounded strongly enough**.
+
+Sources:
+- https://phototrans.eu/24,1377,0,Ab_Oskar_Haglund_Oy.html
+- https://suomenyritysrekisteri.fi/yritysrekisteri/liikenneyhteydet/linja-autoliikenne/
+- https://syynilabs.fi/yritys/0291625-8
+
+Correction: replace freight-specific commerce copy with public-fact-first
+company information and general non-sending inquiry draft, keep original
+branding and active services **unverified**, and require the build manifest
+to explicitly record historic industry conflict. A new owner-preview QA gate
+rejects reintroduced cargo requests, unsupported offering claims, or any
+manifest entry treating registration as a proven current service. The preview
+is a **limited design concept, NOT a V7 client-deliverable**.
