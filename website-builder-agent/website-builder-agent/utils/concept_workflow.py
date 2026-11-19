@@ -26,6 +26,9 @@ products to illustrated imitations of tires, vehicles, tools or people. Animate
 real photos/video meaningfully with accessible reduced-motion fallbacks. When
 real media rights are missing, use a composed text-first hero and record the
 missing asset; NEVER CSS-draw a pretend real-world product as the hero.
+For a proposed source-photo sequence show its actual ordered source frames
+and desktop/phone crops in the static concept; the Builder handles playback.
+A strong still is suitable if the staged materials do not support a scene.
 These are PRIVATE PROTOTYPES, never a completed client website or checkout.
 '''
 CONCEPT_PROMPT = '''Create ONE ACTUAL RESPONSIVE HTML CONCEPT for the supplied direction.

@@ -96,6 +96,10 @@ def collect_review_bundle(company, pages, qa, *, site_root, output_parent,
         captures = (page_reports.get(route) or {}).get('screenshots') or {}
         for viewport in ('desktop', 'mobile'):
             collect(captures.get(viewport), 'new_screenshot', route=route, viewport=viewport)
+    for route, result in page_reports.items():
+        for finding in result.get("photo_sequences") or []:
+            collect(finding.get("filmstrip"), "photo_sequence_filmstrip", route=route,
+                    viewport=finding["viewport"], task_id=str(finding["sequence"]))
     original = research.get('original_screenshots') or {}
     captures = original.get('screenshots') or original
     if (research.get('source_inventory') or {}).get('pages'):

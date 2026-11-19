@@ -1355,6 +1355,11 @@ def run_qa(slug_or_name: str) -> dict:
             for route, result in page_browsers.items()
             for finding in result.get("visual_review_flags") or []
         ]
+        browser["photo_sequences"] = [
+            {"route": route, **observation}
+            for route, result in page_browsers.items()
+            for observation in result.get("photo_sequences") or []
+        ]
         # Generate paired source-versus-redesign evidence before any paid AI
         # review. Original screenshot failures cannot certify brand fidelity.
         visual_comparison = build_visual_comparison(
@@ -1433,6 +1438,7 @@ def run_qa(slug_or_name: str) -> dict:
                             "scroll_sequence_image")
                         if isinstance(sequence,str) and Path(sequence).is_file():
                             craft_images.append(sequence)
+                photo_sequences = browser["photo_sequences"]
                 review = ask_claude_json(
                     QA_SYSTEM_PROMPT + VISUAL_REVIEW_PROMPT + SERVICE_QUALITY_POLICY,
                     "VERIFIED COMPANY FACTS (only permitted claims):\n"
@@ -1502,6 +1508,10 @@ def run_qa(slug_or_name: str) -> dict:
                     "and independently_9_5_certified=false. If browser evidence "
                     "missing, report that explicitly.\n"
                     + json.dumps(global_craft,ensure_ascii=False,default=str)
+                    + "\nPHOTO SEQUENCE BROWSER FILMSTRIPS (last attached images, order below): "
+                    "judge crops, photo alignment, transition, legibility and whether the "
+                    "scene contributes to this business. Still frames do not establish smoothness.\n"
+                    + json.dumps(photo_sequences, ensure_ascii=False)
                     + "\nGLOBAL CRAFT SCROLL FILMSTRIPS: appended AFTER sector images. "
                     "In order Lando Norris, Dropbox Brand, Igloo Inc. desktop "
                     "and then new site desktop/mobile when captured.\n"
@@ -1527,7 +1537,7 @@ def run_qa(slug_or_name: str) -> dict:
                                 for route,body in rendered_pages.items()),
                     max_tokens=7000, stage="qa",
                     image_paths=paired_images + list(browser["screenshots"].values()) + other_page_shots
-                                + benchmark_images + craft_images,
+                                + benchmark_images + craft_images + [item["filmstrip"] for item in photo_sequences],
                 )
             except RuntimeError as error:
                 review = {"content_ok": False, "issues": [str(error)], "notes": "AI review failed"}

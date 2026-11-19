@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 import tempfile
 
+from utils.source_photo_sequence import enhance_photo_sequence
 from utils.site_architecture import (
     parse_generated_site, validate_site_architecture, validate_site_navigation,
     pages_for_validation,
@@ -25,7 +26,8 @@ from utils.client_handover import client_design_brief, validate_locked_copy
 from utils.commerce_catalogue import attach_commerce_catalogue, write_commerce_artifacts
 
 def build_pages_from_response(raw: str, *, slug: str,
-                              company: dict, output_root: str | Path) -> dict:
+                              company: dict, output_root: str | Path,
+                              media: list[dict] | None = None) -> dict:
     from agents.builder import (_validate_generated_content, _validate_plan_sections)
     from agents.qa import _automated_checks
 
@@ -36,6 +38,8 @@ def build_pages_from_response(raw: str, *, slug: str,
     )
     direction=visual_direction_plan(research, creative, architecture)
     pages=parse_generated_site(raw, architecture)
+    pages = {route: enhance_photo_sequence(body, route=route, media=media or [])
+             for route, body in pages.items()}
     pages, commerce_artifacts = attach_commerce_catalogue(pages, research)
     # The creative preflight is now an explicit implementation contract,
     # not just a generic inspiration paragraph.
