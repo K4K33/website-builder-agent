@@ -70,6 +70,21 @@ class SourceReadinessV8(unittest.TestCase):
         research["fact_sources"]["services"]=[]
         self.assertFalse(assess_build_readiness(research)["ready"])
 
+    def test_v7_only_approved_checkpoint_cannot_bypass_new_v8_gates(self):
+        from utils.kaurivo_checkpoint_stage_recovery import needs_research_restart
+        archive={"research":{
+            "master_prompt_sha256":"sourcehash",
+            "v7_design_brief":{"master_sha256":"v7hash"}
+        }}
+        self.assertTrue(needs_research_restart(
+            "built",archive,"sourcehash","v7hash",require_v8=True))
+        archive["research"]["v8_visual_protocol"]="v8"
+        archive["research"]["v8_identity_boundaries"]={
+            "protocol":"company-identity-evidence-v8"
+        }
+        self.assertFalse(needs_research_restart(
+            "built",archive,"sourcehash","v7hash",require_v8=True))
+
     def test_worker_rechecks_resumed_jobs_before_model_credits(self):
         from scripts import run_kaurivo_demo_queue as worker
         source=inspect.getsource(worker.main)
