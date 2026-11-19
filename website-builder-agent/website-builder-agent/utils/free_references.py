@@ -40,6 +40,9 @@ INDUSTRY_ALIASES = {
     "kampaamo": "kampaamo", "parturi": "kampaamo", "hairdresser": "kampaamo",
     "kauneushoitola": "kauneushoitola", "beauty salon": "kauneushoitola",
     "ravintola": "ravintola", "restaurant": "ravintola",
+    "somemanagerointi": "somemanagerointi",
+    "sosiaalisen median managerointi": "somemanagerointi",
+    "social media management": "somemanagerointi",
     "kahvila": "kahvila", "cafe": "kahvila", "coffee shop": "kahvila",
     "cafeteria": "kahvila", "kahvilapalvelut": "kahvila",
     "autokorjaamo": "autokorjaamo", "car repair": "autokorjaamo",
@@ -121,6 +124,13 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    "somemanagerointi": (
+        ("The Social Shepherd", "https://thesocialshepherd.com/"),
+        ("Sociallyin", "https://sociallyin.com/"),
+        ("LYFE Marketing", "https://www.lyfemarketing.com/social-media-management-agency-lp/"),
+        ("SocialChain", "https://www.socialchain.com/"),
+        ("ICUC", "https://www.icuc.social/"),
+    ),
     # Real official operator pages located publicly in Nov 2026. Candidates
     # only: same-industry LLM decision, exact quotation, browser screenshots
     # and brand/source QA are still compulsory on every customer build.
@@ -268,6 +278,16 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
     if (any(term in text for term in ("seasonal menu", "kausimenu"))
             and any(term in text for term in ("wines & cocktails", "pöytävaraus", "table reservation"))):
         return "ravintola"
+    social_management = any(term in text for term in (
+        "somemanagerointi", "sosiaalisen median managerointi", "somekanavien hallinta",
+        "social media management",
+    ))
+    social_service = any(term in text for term in (
+        "sisältöstrategia", "sisällöntuotanto", "postaukset",
+        "content strategy", "content creation", "community management",
+    ))
+    if social_management and social_service:
+        return "somemanagerointi"
     accounting = any(term in text for term in ("tilitoimisto", "accountant", "redovisningsbyrå"))
     bookkeeping = any(term in text for term in ("kirjanpito", "bookkeeping", "bokföring"))
     if accounting and bookkeeping:
