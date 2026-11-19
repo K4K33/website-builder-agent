@@ -193,6 +193,17 @@ class ConceptWorkflowTests(unittest.TestCase):
         self.assertTrue(any("Chromium browser starts" in hint
                             for hint in real_failure))
 
+    def test_brand_and_narrow_column_failures_get_specific_repair_hints(self):
+        from utils.concept_previews import browser_issue_repair_hints
+        findings = browser_issue_repair_hints([
+            "index.html: generic_technical_hero_illustration",
+            "mobile: unreadable substantial text column: private example content",
+        ])
+        self.assertEqual(len(findings), 2)
+        self.assertIn("original company", findings[0])
+        self.assertIn("reported viewport", findings[1])
+        self.assertNotIn("private example content", " ".join(findings))
+
     def test_browser_diagnostic_is_bounded_and_never_approved_by_itself(self):
         from utils.concept_previews import write_concepts
         research, data = fixture()
