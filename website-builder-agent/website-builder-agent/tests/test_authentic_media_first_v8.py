@@ -115,6 +115,16 @@ class AuthenticMediaFirstV8(unittest.TestCase):
         self.assertTrue(result["pass"])
         self.assertTrue(result["real_motion_is_not_banned"])
 
+    def test_css_drawn_product_over_real_photo_requires_independent_visual_review(self):
+        css = ".rim{background:radial-gradient(circle,#222,#000);border-radius:50%}"
+        content = (
+            '<img src="assets/real-work.jpg" alt="Real company photo">'
+            '<span class="rim">Decorative wheel</span>'
+        )
+        result = audit_hero_media({"index.html": site(content,css)}, researched())
+        self.assertTrue(result["pass"])
+        self.assertEqual(result["review_required"][0]["code"],"fake_real_world_object_hero")
+
     def test_real_approved_client_video_allowed(self):
         result = audit_hero_media(
             {"index.html": site('<video controls src="assets/oikea-korjaamo.webm"></video>')},
