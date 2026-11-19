@@ -82,3 +82,11 @@ a{color:inherit;text-decoration:none}a:focus-visible,button:focus-visible{outlin
 @media(max-width:950px){.top-contact{display:none}.hero{grid-template-columns:1fr}.hero-copy{padding:80px 0 65px}.hero-media{min-height:480px;max-height:620px}.editorial-grid,.editorial-grid.reverse{grid-template-columns:1fr}.editorial-grid .editorial-image{order:-1}.editorial-image{min-height:400px}.section-heading{grid-template-columns:1fr;gap:10px}.steps{grid-template-columns:1fr 1fr}.team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.header-inner{height:72px}.menu-toggle{display:block;margin-left:auto}.nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--ink);padding:22px;box-shadow:0 15px 30px #0002;flex-direction:column;align-items:stretch;gap:5px}.nav.open{display:flex}.nav a{font-size:17px;padding:13px 3px}.hero-copy{padding-top:64px;padding-bottom:55px}.hero-copy h1{font-size:clamp(3.6rem,13vw,5rem)}.hero-media{height:380px;min-height:380px}.hero-tag{display:none}.ticker-inner{gap:12px}.ticker-inner span{flex:1 1 130px}.service-row{grid-template-columns:1fr;gap:11px;padding:27px 0}.service-row:hover{padding-inline:0}.steps{grid-template-columns:1fr;gap:30px}.split-call{grid-template-columns:1fr;align-items:start}.detail-section{grid-template-columns:1fr;gap:18px}.highlight{grid-template-columns:1fr;margin-block:60px;padding:30px;gap:20px}.team-grid{grid-template-columns:1fr}.person figure{height:460px}.contact-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr;gap:28px}.footer-bottom{margin-top:42px}.demo-notice{font-size:9px;padding:8px 12px}.page-hero h1{font-size:clamp(3.3rem,11vw,5.2rem)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* Source-specific QA repair: Finnish compounds must remain inside narrow phones. */
+.page-hero h1,.detail-section h2{min-width:0;overflow-wrap:break-word}
+@media(max-width:680px){
+.page-hero h1{font-size:clamp(2.72rem,10vw,4.8rem);overflow-wrap:anywhere}
+.detail-section h2{font-size:clamp(2.15rem,8.8vw,3.15rem);overflow-wrap:break-word}
+.detail-section>*{min-width:0}
+}
