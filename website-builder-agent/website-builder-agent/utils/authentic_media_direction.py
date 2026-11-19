@@ -207,7 +207,10 @@ def audit_hero_media(
                 " ".join([str(element.get("id") or ""),
                           " ".join(element.get("class") or [])]))
         ]
-        if object_nodes and _painted_product_selector(css, object_nodes) and not has_real_world_media:
+        if object_nodes and _painted_product_selector(css, object_nodes):
+            # With a genuine photo in the same fold, retain the screenshot
+            # critic's right to accept a purposeful branded interaction, but
+            # do not silently ignore an apparently drawn product overlay.
             candidates.append("css_drawn_real_world_object")
         candidates = sorted(set(candidates))
         observations[route] = {
