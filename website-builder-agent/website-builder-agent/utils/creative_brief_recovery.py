@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 from typing import Callable
 
-from utils.creative_directions import validate_creative_directions
+from utils.creative_directions import CreativeBusinessReasonError, validate_creative_directions
 
 
 def _with_consistent_choice(brief: dict) -> dict:
@@ -48,20 +48,25 @@ def ensure_creative_directions(
     source_anchors: list,
     repair_json: Callable,
     max_repairs: int = 2,
+    save_draft: Callable[[dict], None] | None = None,
 ) -> dict:
     if not isinstance(brief, dict):
         raise RuntimeError("Research brief is not a structured object.")
+    reason_index = None
     try:
         validate_creative_directions(brief)
         return brief
     except RuntimeError as first_error:
         error = str(first_error)[:250]
+        if isinstance(first_error, CreativeBusinessReasonError):
+            reason_index = first_error.index
     normalized = _with_consistent_choice(brief)
     if normalized is not brief:
         try:
             validate_creative_directions(normalized)
         except RuntimeError as exc:
             error = str(exc)[:250]
+            reason_index = exc.index if isinstance(exc, CreativeBusinessReasonError) else None
         else:
             return normalized
     if max_repairs < 1:
@@ -102,26 +107,58 @@ def ensure_creative_directions(
         "and rejected_ids naming the two alternatives. "
         "Treat the original brand as locked, not permission to rebrand."
     )
+    candidate = normalized
+    previous_reason_index = None
     for _ in range(max_repairs):
         # Feed the most recent validation failure back into the next call.
         # A new queue run would otherwise only see the original stale draft.
         packet["validation_error"] = error
-        answer = repair_json(
-            system, json.dumps(packet, ensure_ascii=False, default=str),
-            max_tokens=4500, stage="research",
-        )
-        if not isinstance(answer, dict):
-            error = "Repair model did not return a JSON object."
-            continue
-        creative_fields = ("creative_directions", "creative_selection")
-        candidate = _with_consistent_choice({
-            **brief,
-            **{key: answer[key] for key in creative_fields if key in answer},
-        })
+        if reason_index is not None:
+            direction = candidate["creative_directions"][reason_index]
+            task = (
+                "Write a fresh reason from the source. Explain what an actual customer needs "
+                "to do and how the proposal helps them do it."
+                if reason_index == previous_reason_index else
+                "Repair only the indicated customer/business reason, preserving the design."
+            )
+            answer = repair_json(
+                task + " Use verified facts and original excerpts only. Explicitly name the "
+                "customer. Return a JSON object with the single key business_reason.",
+                json.dumps({
+                    "company_facts": company_facts,
+                    "source_anchors": source_anchors[:6],
+                    "direction": direction,
+                    "validation_error": error,
+                }, ensure_ascii=False, default=str),
+                max_tokens=300, stage="research",
+            )
+            previous_reason_index = reason_index
+            reason = answer.get("business_reason") if isinstance(answer, dict) else None
+            if not isinstance(reason, str) or not reason.strip():
+                continue
+            directions = list(candidate["creative_directions"])
+            directions[reason_index] = {**direction, "business_reason": reason}
+            candidate = {**candidate, "creative_directions": directions}
+        else:
+            answer = repair_json(
+                system, json.dumps(packet, ensure_ascii=False, default=str),
+                max_tokens=4500, stage="research",
+            )
+            if not isinstance(answer, dict):
+                error = "Repair model did not return a JSON object."
+                continue
+            candidate = _with_consistent_choice({
+                **candidate,
+                **{key: answer[key] for key in ("creative_directions", "creative_selection")
+                   if key in answer},
+            })
         try:
             validate_creative_directions(candidate)
         except RuntimeError as exc:
             error = str(exc)[:250]
+            reason_index = exc.index if isinstance(exc, CreativeBusinessReasonError) else None
+            if save_draft is not None:
+                save_draft(candidate)
             packet["previous_creative_directions"] = candidate.get("creative_directions")
             packet["previous_selection"] = candidate.get("creative_selection")
             continue

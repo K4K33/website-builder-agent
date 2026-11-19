@@ -49,6 +49,28 @@ class BoundedCreativeRepairTests(TestCase):
                           if key not in GOOD})
         self.assertEqual(source,before,"Source draft cannot be mutated by repair")
 
+    def test_invalid_reason_retries_only_that_field_and_saves_progress(self):
+        original = deepcopy(GOOD)
+        original["creative_directions"][1]["business_reason"] = "An elegant visual trend."
+        model = Mock(side_effect=[
+            {"business_reason": "A bold new visual style."},
+            {"business_reason": "The customer needs to find the verified repair service quickly."},
+        ])
+        save = Mock()
+        result = ensure_creative_directions(
+            original, company_facts=FACTS, source_anchors=ANCHORS,
+            repair_json=model, save_draft=save,
+        )
+        validate_creative_directions(result)
+        save.assert_called_once()
+        intermediate = save.call_args.args[0]
+        self.assertEqual(intermediate["creative_directions"][1]["business_reason"],
+                         "A bold new visual style.")
+        self.assertIn("Creative direction #2", model.call_args.args[1])
+        self.assertIn("fresh reason", model.call_args.args[0])
+        self.assertEqual(result["creative_directions"][0], original["creative_directions"][0])
+        self.assertEqual(result["creative_selection"], original["creative_selection"])
+
     def test_unrequested_fields_in_model_reply_cannot_rewrite_source(self):
         original = {"creative_directions": [], "company_facts": FACTS}
         model = Mock(return_value={**deepcopy(GOOD), "company_facts": {"name": "Invented"}})

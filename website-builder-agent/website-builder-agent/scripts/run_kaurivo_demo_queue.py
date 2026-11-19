@@ -518,6 +518,8 @@ def creative_failure_diagnostic(handle, start_position=0):
                      if line.startswith("RuntimeError: ")), "")
     from utils.creative_directions import FIELDS
     for index in range(1, 4):
+        if f"Creative direction #{index} field business_reason" in terminal:
+            return f"Konseptin {index} perustelusta (business_reason) puuttuu asiakkaan tarve"
         marker = f"Creative direction #{index} incomplete: "
         if marker in terminal:
             parts = terminal.split(marker, 1)[1].split(", ")

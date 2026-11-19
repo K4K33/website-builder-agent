@@ -281,6 +281,9 @@
   // An old dispatch stays recorded when a claimed build returns to the queue.
   const dispatchAccepted=awaitingDispatch&&!dispatchFailure&&Number.isFinite(acceptedAt)&&
     (!Number.isFinite(startedAt)||acceptedAt>startedAt);
+  const retryAt=Date.parse(job.next_eligible_at||"");
+  const retryOverdue=awaitingDispatch&&Boolean(job.error_code)&&
+    Number.isFinite(retryAt)&&Date.now()-retryAt>120000&&!dispatchAccepted&&!dispatchFailure;
   const dispatchElapsed=dispatchAccepted?Date.now()-acceptedAt:0;
   const dispatchStalled=dispatchAccepted&&Number.isFinite(dispatchElapsed)
     &&dispatchElapsed>120000;
@@ -288,6 +291,7 @@
     dispatchFailure?"GitHub-käynnistys epäonnistui. Rakennus ei ole käynnissä.":
     dispatchStalled?"GitHubille lähetetty käynnistyspyyntö ei ole johtanut vahvistettuun rakennuksen aloitukseen.":
     dispatchAccepted?"Käynnistyspyyntö lähetetty GitHubille. Odotetaan rakennuksen aloitusta.":
+    retryOverdue?"Uusi ajo on myöhässä. Työ odottaa käynnistystä.":
     job.progress||STATUS[job.status]||"Odottaa"); 
   if(localActive)append(main,"div","record-sub",
     "Työ suoritetaan omalla Windows-rakentajalla ilman GitHubin suoritusjonoa.");
@@ -315,6 +319,10 @@
     "Seuraava automaattinen yritys aikaisintaan: "+new Date(job.next_eligible_at).toLocaleString("fi-FI",{
       timeZone:"Europe/Helsinki"
     })+" Suomen aikaa. Vanhat tarkistuspisteet säilyvät.");
+  if(retryOverdue)append(main,"div","record-sub",
+    "Ajo voitiin käynnistää aikaisintaan "+new Date(retryAt).toLocaleString("fi-FI",{
+      timeZone:"Europe/Helsinki"
+    })+" Suomen aikaa. Viimeisin tieto: "+(job.progress||STATUS[job.status]));
   if(cloudRecovery)append(main,"div","record-sub",
     "Vanhan Codex-työn rajoitus ei estä yhtä pilvijatkoa. Työ jatkuu tallennetuista vaiheista, jos ilmaista pilvikapasiteettia on.");
   const actions=append(row,"div","record-actions");
