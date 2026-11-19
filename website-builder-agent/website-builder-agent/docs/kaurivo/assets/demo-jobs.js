@@ -228,6 +228,30 @@
    /^[0-9a-f]{40}$/.test(job.release_sha||"")&&
    validUrl(job.preview_url,"preview")&&validUrl(job.qa_url,"qa");
  }
+ // This is intentionally NOT commercial QA approval: the exact-source
+ // QA/build worker has already browser-tested the published static artifact,
+ // but source/editorial review and the owner's design acceptance remain pending.
+ // The admin may inspect the technical result without any change to status,
+ // immutable release SHA, or client-send eligibility. URL constraints are
+ // matched to the worker's actual publish()/verify_public() contract.
+ function canInspectTechnicalPreview(job){
+  if(!job||job.status!=="internal_preview"||
+     !/^[0-9a-f]{40}$/.test(job.release_sha||""))return false;
+  const preview=validUrl(job.preview_url,"preview");
+  const qa=validUrl(job.qa_url,"qa");
+  if(!preview||!qa)return false;
+  const parsed=new URL(preview);
+  if(parsed.hostname!=="kaurivo-auto-demos-2026.onrender.com"||
+     !/^\/[a-z0-9-]+\/index[.]html$/.test(parsed.pathname)||
+     parsed.search||parsed.hash)return false;
+  if(job.runner_kind==="github"){
+   return validUrl(job.github_run_url,"qa")===qa;
+  }
+  if(job.runner_kind==="local"){
+   return qa===preview.replace(/index[.]html$/,"qa.html");
+  }
+  return false;
+ }
  function card(target,job,options){
   const deferred=job.status==="queued"&&
     Number.isFinite(Date.parse(job.next_eligible_at||""))&&
@@ -327,8 +351,17 @@
     "Testaa varmuuskopio ja palautus. Anna asiakkaalle kirjalliset muokkausohjeet.",
     "Pyydä asiakkaan hyväksyntä. Vasta tämän jälkeen sivusto on luovutusvalmis."
    ]) append(steps,"li","",step);
+  }else if(canInspectTechnicalPreview(job)){
+   // Only an already source/QA-checked internal release, never queued/hold.
+   // Owner inspection != independent 9.5/10 approval != customer delivery.
+   external(actions,"Avaa tekninen esikatselu",job.preview_url,"preview");
+   external(actions,"Tarkistuksen todiste",job.qa_url,"qa");
+   append(main,"div","record-warning",
+    "TEKNINEN ESIKATSELU. Sivusto on rakennettu ja tarkistettu julkisesta osoitteesta, mutta alkuperäisen brändin, sisältöjen ja ulkoasun lopullinen hyväksyntä puuttuu. Linkkiä ei saa lähettää asiakkaalle. Ei 9,5/10-laatuhyväksyntää.");
+   append(main,"div","record-sub",
+    "Rakentaja säilyttää työn tilassa Laadun hyväksyntä kesken. Sisäinen linkki näkyy vain kirjautuneen ylläpitäjän Demot-näkymässä; itse testisivu on suoran URL-osoitteen tietävien avattavissa.");
   }else if(job.status==="internal_preview"||job.status==="approved_preview"){
-   append(main,"div","record-warning","Oikeaan julkaisuversioon sidottu ulkoasun hyväksyntä, faktatarkistus ja julkisen sivun tarkistus puuttuvat. Uutta linkkiä ei näytetä.");
+   append(main,"div","record-warning","Oikeaan julkaisuversioon sidottu luotettava QA-todiste tai hyväksyntä puuttuu. Uutta linkkiä ei näytetä.");
   }
   if(job.status==="queued"&&!deferred){
    // Scheduling is a backup, not a guaranteed five-minute service. Attempt

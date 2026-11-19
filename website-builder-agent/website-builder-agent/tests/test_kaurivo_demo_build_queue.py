@@ -130,6 +130,20 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertNotIn("company has opted out",migration)
         self.assertNotIn("daily free-build request cap reached",migration)
 
+    def test_v7_source_quality_changes_wake_single_queued_cloud_job(self):
+        workflow=FLOW.read_text(encoding="utf-8")
+        for path in (
+            "agents/qa.py", "utils/service_quality.py", "utils/quality_v7.py",
+            "utils/global_craft_experience.py", "utils/reference_scroll_experience.py",
+            "docs/KAURIVO_MASTER_V7.md", "docs/KAURIVO_MESTARI_PROMPT.md",
+        ):
+            with self.subTest(path=path):
+                self.assertIn('"website-builder-agent/website-builder-agent/'+path+'"', workflow)
+        self.assertIn("Securely claim one queued job",workflow)
+        self.assertIn("has_job=false",workflow)
+        self.assertIn("FREE_ONLY: \"1\"",workflow)
+        self.assertIn("kaurivo-demo-worker-xhsfbcwpwbgdbatrcyuk",workflow)
+
     def test_immediate_dispatch_is_admin_authenticated_and_not_public(self):
         js=DASHBOARD.read_text(encoding="utf-8")
         edge=(SITE/"backend/demo_immediate_dispatch_edge.ts").read_text(encoding="utf-8")
