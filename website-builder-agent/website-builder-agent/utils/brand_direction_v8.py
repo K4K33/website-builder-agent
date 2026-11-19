@@ -151,7 +151,7 @@ def audit_art_direction(
         if strict and route == "index.html":
             soup = BeautifulSoup(html, "html.parser")
             for svg in soup.select("main svg"):
-                box = re.findall(r"-?\\d+(?:\\.\\d+)?", str(svg.get("viewbox") or ""))
+                box = re.findall(r"-?\d+(?:\.\d+)?", str(svg.get("viewbox") or ""))
                 if len(box) != 4:
                     continue
                 try:
