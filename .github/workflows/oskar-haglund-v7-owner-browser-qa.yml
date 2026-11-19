@@ -1,0 +1,75 @@
+name: Oskar Haglund V7 owner-preview real-browser QA
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/owner-previews/oskar-haglund-v7/**"
+      - "website-builder-agent/website-builder-agent/data/owner_previews/oskar-haglund-v7.json"
+      - "website-builder-agent/website-builder-agent/tests/test_oskar_haglund_v7_preview.py"
+      - "website-builder-agent/website-builder-agent/scripts/audit_changed_owner_previews.py"
+      - ".github/workflows/oskar-haglund-v7-owner-browser-qa.yml"
+  push:
+    branches: [main]
+    paths:
+      - "website-builder-agent/website-builder-agent/docs/kaurivo/owner-previews/oskar-haglund-v7/**"
+      - "website-builder-agent/website-builder-agent/data/owner_previews/oskar-haglund-v7.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-review-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: website-builder-agent/website-builder-agent/requirements.txt
+      - name: Install existing free QA dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m playwright install chromium
+          if ! python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); b.close(); p.stop()'; then
+            python -m playwright install-deps chromium
+          fi
+      - name: Verify independent public facts and render 3 routes in 4 viewports
+        run: python -m unittest tests.test_oskar_haglund_v7_preview -v
+      - name: Record actual new-site desktop and mobile wheel-scroll experience
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from utils.global_craft_experience import capture_generated_site_journey
+          home=Path("docs/kaurivo/owner-previews/oskar-haglund-v7/index.html")
+          root=Path("output/oskar-haglund-v7-global-craft")
+          result=capture_generated_site_journey(home,output_root=root)
+          summary={
+            "prototype":"Ab Oskar Haglund Oy",
+            "independent_9_5_certified":False,
+            "owner_preview_only":True,
+            "original_brand_unavailable":True,
+            "views":{k:{"status":v.get("status"),
+                         "scroll_range":v.get("document_scroll_range"),
+                         "video_recorded":bool(v.get("video_path"))}
+                     for k,v in result.items()}
+          }
+          (root/"summary.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
+          print(summary)
+          for view in ("desktop","mobile"):
+            if result.get(view,{}).get("status")!="observed":
+              raise SystemExit("Real wheel-scroll evidence incomplete: "+view)
+          PY
+      - name: Preserve real scroll video and responsive review images even if QA fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oskar-haglund-v7-source-bounded-browser-evidence-${{ github.run_id }}
+          path: |
+            website-builder-agent/website-builder-agent/output/oskar-haglund-v7-browser-evidence/**
+            website-builder-agent/website-builder-agent/output/oskar-haglund-v7-global-craft/**
+          if-no-files-found: warn
+          retention-days: 30
