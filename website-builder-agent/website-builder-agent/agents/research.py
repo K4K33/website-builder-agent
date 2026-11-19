@@ -1527,6 +1527,13 @@ Tärkeää:
             master_prompt_sha256=MASTER_PROMPT_SHA256,
             draft_design_brief=brief,
         )
+    def save_creative_draft(draft):
+        if progress.get("milestone") == "references":
+            save_progress(
+                slug, company, milestone="references", source_url=url,
+                master_prompt_sha256=MASTER_PROMPT_SHA256, draft_design_brief=draft,
+            )
+
     repaired_brief = ensure_creative_directions(
         brief, company_facts=company_facts,
         source_anchors=[
@@ -1538,6 +1545,7 @@ Tärkeää:
             for item in source_excerpts[:2]
         ],
         repair_json=ask_claude_json,
+        save_draft=save_creative_draft,
     )
     if repaired_brief is not brief:
         brief = repaired_brief
