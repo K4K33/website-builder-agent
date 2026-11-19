@@ -77,3 +77,25 @@ class VerbatimSourceOfferingFallback(TestCase):
              "headings":{"h2":["Yhteystiedot","Ajankohtaista"]}}
         with self.assertRaises(RuntimeError):
             source_proven_primary_offering([page],["Elintarvikekuljetukset"])
+
+    def test_client_legal_name_is_not_falsely_accepted_as_a_service(self):
+        name="Oy Auto Kuljetus Palvelu Ab"
+        page={
+            "url":URL,
+            "text":(
+                name+" on perustettu huolehtimaan yhteystiedoista. "
+                "Tämä sivu tarjoaa esittelyn yrityksen historiasta, "
+                "taustoista ja henkilöistä. Varsinaisia tilattavia "
+                "palveluja ei mainita eikä palvelun kuvausta löydy."
+            ),
+            "headings":{"h2":[name]},
+        }
+        with self.assertRaises(RuntimeError):
+            source_proven_primary_offering([page], [], company_name=name)
+
+    def test_real_transport_heading_remains_valid_when_company_name_in_context(self):
+        proof=source_proven_primary_offering(
+            [SOURCE],["Elintarvikekuljetukset"],
+            company_name="Oy Auto Kuljetus Palvelu Ab",
+        )
+        self.assertEqual(proof["label"],"Elintarvikekuljetukset")
