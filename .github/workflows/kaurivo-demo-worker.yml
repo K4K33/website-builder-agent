@@ -23,6 +23,7 @@ on:
       - "website-builder-agent/website-builder-agent/docs/KAURIVO_MESTARI_PROMPT.md"
       - "website-builder-agent/website-builder-agent/utils/creative_brief_recovery.py"
       - "website-builder-agent/website-builder-agent/utils/creative_directions.py"
+      - "website-builder-agent/website-builder-agent/utils/site_architecture.py"
       - "website-builder-agent/website-builder-agent/utils/concept_workflow.py"
       - "website-builder-agent/website-builder-agent/utils/concept_previews.py"
       - "website-builder-agent/website-builder-agent/utils/concept_contrast_recovery.py"

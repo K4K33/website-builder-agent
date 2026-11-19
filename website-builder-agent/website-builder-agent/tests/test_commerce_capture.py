@@ -52,9 +52,10 @@ class CommerceCaptureTests(unittest.TestCase):
              "site_architecture": {"pages": [{"path": "index.html",
                  "purpose": "Yrityksen etusivu ja tärkeimmät tiedot",
                  "user_task": "Asiakas löytää yrityksen pääpalvelut etusivulta",
-                 "section_ids": ["hero"]}]}}
+                 "section_ids": ["hero", "#Kausi Menu", "Pöytävaraus", "kausi-menu"]}]}}
         bind_source_routes(r)
         result = validate_site_architecture(r)
+        self.assertEqual(result["pages"][0]["section_ids"], ["hero", "kausi-menu", "poytavaraus"])
         self.assertEqual(result["page_paths"], ["index.html", "palvelut.html"])
         self.assertEqual(r["site_architecture"]["pages"][1]["section_ids"], ["huolto", "palvelut"])
 

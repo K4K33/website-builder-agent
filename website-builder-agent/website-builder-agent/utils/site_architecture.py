@@ -8,6 +8,8 @@ import json
 import re
 from pathlib import PurePosixPath
 
+from slugify import slugify
+
 MAX_PAGES = 14
 MAX_JSON_BYTES = 1_600_000
 
@@ -40,6 +42,19 @@ def bind_source_routes(research: dict) -> None:
         return
     by_route = {str(page.get("path") or ""): page for page in pages
                 if isinstance(page, dict)}
+    for page in by_route.values():
+        sections = page.get("section_ids")
+        if not isinstance(sections, list):
+            continue
+        normalized = []
+        for section in sections:
+            if isinstance(section, str) and not re.fullmatch(r"[a-z][a-z0-9_-]*", section):
+                fragment = slugify(section)
+                if fragment:
+                    section = fragment if fragment[0].isalpha() else f"section-{fragment}"
+            if section not in normalized:
+                normalized.append(section)
+        page["section_ids"] = normalized
     sources = {str(item.get("source_url") or ""): item
                for item in (research.get("source_content_map") or {}).get("pages") or []
                if isinstance(item, dict)}
@@ -96,7 +111,7 @@ def validate_site_architecture(research: dict, *, no_site: bool = False) -> dict
         if not isinstance(sections, list) or not sections or any(
             not re.fullmatch(r"[a-z][a-z0-9_-]*", str(a or "")) for a in sections
         ):
-            raise RuntimeError("Every planned route needs valid section ids.")
+            raise RuntimeError(f"Every planned route needs valid section ids. Route: {route}")
     # The earlier validator claimed every route has a DISTINCT visitor task,
     # but only checked that some non-empty prose existed. A generator could
     # duplicate the exact same task and hero across five pages. Reject it
