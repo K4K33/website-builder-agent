@@ -170,6 +170,9 @@ def generate_concepts(name, *, response_path=None, producer=''):
         from utils.demo_page_drafts import draft_pages
         directions = {item["id"]: item for item in
                       validate_creative_directions(research)["alternatives"]}
+        previous_review = company.get("concept_previews") or {}
+        prior_attempt = (previous_review.get("set_sha256")
+                         if previous_review.get("status") == "blocked" else None)
         for revision in range(1, 3):
             if result["status"] == "ready_for_comparison":
                 break
@@ -199,6 +202,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
                             result.get("private_repair_evidence", {})
                                   .get(identifier, {}).get(route, [])
                         ),
+                        "previous_blocked_review": prior_attempt,
                         "previous_html": original,
                     }, ensure_ascii=False)
                     repair_system = (
@@ -214,7 +218,8 @@ def generate_concepts(name, *, response_path=None, producer=''):
                         "issues without deleting authentic content, imagery or "
                         "visual effects that can be made accessible. Do not "
                         "invent photos or rely on external "
-                        "resources. " + CONCEPT_PAGE_RULES
+                        "resources. If a previous blocked review is present, try a "
+                        "different concrete correction for the observed defect. " + CONCEPT_PAGE_RULES
                     )
                     pages = draft_pages(
                         root=root, job_id=os.environ["KAURIVO_QUEUED_DEMO_ID"],
