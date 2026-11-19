@@ -26,9 +26,9 @@ jobs:
           set -euo pipefail
           base="https://k4k33.github.io/website-builder-agent/kaurivo/owner-previews/oskar-haglund-v7/"
           for entry in \
-            "|Ei yrityksen virallinen sivu" \
-            "tjanster/|data-email-builder" \
-            "kontakt/|info@oskarhaglund.fi" \
+            "|Offentliga register anger vägtransport" \
+            "tjanster/|Företagsinfo · Ab Oskar Haglund Oy" \
+            "kontakt/|nuvarande verksamhet och tjänster" \
             "assets/site.css|.hero-art" \
             "assets/site.js|data-email-builder" \
             "assets/favicon.svg|Neutral demo favicon"; do
