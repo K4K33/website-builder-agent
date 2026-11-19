@@ -101,7 +101,7 @@ def _service_visible_in_first_view(label: str, text: str) -> bool:
         return False
     if label in text:
         return True
-    terms = re.findall(r"[^\\W\\d_]{4,}", label, flags=re.UNICODE)
+    terms = re.findall(r"[^\W\d_]{4,}", label, flags=re.UNICODE)
     if not terms:
         return False
     # Stem matching here checks that source-verified service words actually
