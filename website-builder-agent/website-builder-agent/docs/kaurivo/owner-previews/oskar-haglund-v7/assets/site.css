@@ -76,6 +76,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .fact strong{font-size:16px;font-weight:730;letter-spacing:-.015em}
 .intro{padding:clamp(100px,11vw,170px) 0 110px}
 .intro-grid{display:grid;grid-template-columns:.44fr 1fr;gap:50px}
+.intro-grid > *,.process-grid > *,.statement-inner > *,.contact-layout > *{min-width:0}
 .intro-grid .eyebrow{margin:12px 0}
 .intro-content{max-width:1070px}
 .intro-content .section-title{margin-bottom:32px}
