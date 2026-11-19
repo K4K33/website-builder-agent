@@ -131,6 +131,27 @@ class IdentityAndHeroV8(unittest.TestCase):
         self.assertEqual(report["blocking"],[])
         self.assertEqual(derive_identity_boundaries(research)["verified_original_colors"][0]["hex"],"#c9e87f")
 
+    def test_oversized_generic_road_diagram_is_not_accepted_as_business_photography(self):
+        original=existing(theme="#14251f")
+        markup=html(accent="#14251f").replace(
+            "</section>",
+            '<svg class="terrain" viewBox="0 0 650 745" aria-hidden="true">'
+            '<path class="road-outline" d="M5 0L400 745"></path></svg></section>'
+        )
+        report=audit_art_direction({"index.html":markup},original)
+        self.assertIn("generic_technical_hero_illustration",
+                      [x["code"] for x in report["blocking"]])
+
+    def test_ordinary_small_svg_icon_stays_usable(self):
+        original=existing(theme="#14251f")
+        markup=html(accent="#14251f").replace(
+            "</section>",
+            '<svg class="terrain" viewBox="0 0 24 24" aria-hidden="true">'
+            '<path d="M5 0L20 20"></path></svg></section>'
+        )
+        report=audit_art_direction({"index.html":markup},original)
+        self.assertTrue(report["pass"])
+
     def test_missing_service_in_first_fold_is_a_specific_repair(self):
         report=audit_art_direction({"index.html":html(intro="Tervetuloa meille!",accent="#14251f")},
                                    existing(theme="#14251f"))
