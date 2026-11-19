@@ -103,6 +103,14 @@ def generate_concepts(name, *, response_path=None, producer=''):
                 "facts": research.get("company_facts"), "direction": direction,
                 "prototype_routes": routes, "media": media,
                 "brand_plan": research.get("brand_preservation_plan"),
+                "source_bound_visual_identity_v8": research.get("v8_identity_boundaries"),
+                "verified_core_service": research.get("primary_offering_evidence"),
+                "direction_identity_rule": (
+                    "Global award sites and industry references are not sources "
+                    "for this firm's colours. Preserve source-observed identity, "
+                    "show the verified current service in the first main section; "
+                    "a vivid unproven accent is not an acceptable brand palette."
+                ),
             }, ensure_ascii=False)
             pages = draft_pages(
                 root=root, job_id=os.environ["KAURIVO_QUEUED_DEMO_ID"],
@@ -129,6 +137,8 @@ def generate_concepts(name, *, response_path=None, producer=''):
                 'exact_direction_id': direction['id'],
                 'required_routes': preview_routes(research), 'media': media,
                 'brand_plan': research.get('brand_preservation_plan'),
+                'source_bound_visual_identity_v8': research.get('v8_identity_boundaries'),
+                'verified_core_service': research.get('primary_offering_evidence'),
                 'site_architecture': research.get('site_architecture')}, ensure_ascii=False),
                 max_tokens=min(config.BUILDER_MAX_TOKENS, 12000), stage='builder')
             concepts = response.get('concepts') if isinstance(response, dict) else None
@@ -165,6 +175,8 @@ def generate_concepts(name, *, response_path=None, producer=''):
                     packet = json.dumps({
                         "verified_facts": research.get("company_facts"),
                         "source_brand": research.get("brand_preservation_plan"),
+                        "source_bound_visual_identity_v8": research.get("v8_identity_boundaries"),
+                        "verified_core_service": research.get("primary_offering_evidence"),
                         "direction": directions[identifier],
                         "allowed_media": media,
                         "route": route,
