@@ -144,6 +144,40 @@ def audit_art_direction(
                 blockers.append(finding)
             else:
                 review.append(finding)
+        # A huge technical road/gear schematic used only for decoration
+        # cannot replace real source business imagery or service content.
+        # Small ordinary SVG icons and genuinely original company media are
+        # not rejected by this narrow evidence-driven rule.
+        if strict and route == "index.html":
+            soup = BeautifulSoup(html, "html.parser")
+            for svg in soup.select("main svg"):
+                box = re.findall(r"-?\\d+(?:\\.\\d+)?", str(svg.get("viewbox") or ""))
+                if len(box) != 4:
+                    continue
+                try:
+                    oversized = float(box[2]) >= 250 and float(box[3]) >= 250
+                except ValueError:
+                    continue
+                nearby = " ".join([
+                    str(svg.get("class") or ""),
+                    str(svg.parent.get("class") if svg.parent else ""),
+                    str(svg.get("id") or ""),
+                    " ".join(str(tag.get("class") or "")
+                             for tag in svg.find_all(["path", "g", "pattern"])[:14]),
+                ]).casefold()
+                if oversized and re.search(
+                    r"terrain|road-outline|road-center|cargo-hatch|blueprint|"
+                    r"gear-outline|technical-schematic|fake-map", nearby):
+                    blockers.append({
+                        "route": route,
+                        "code": "generic_technical_hero_illustration",
+                        "repair": (
+                            "Remove the unsupported decorative road/gear or "
+                            "pseudo-map SVG. Use the company's evidenced images "
+                            "and an actually useful, source-led first fold."
+                        ),
+                    })
+                    break
         if strict and label and route == "index.html":
             soup = BeautifulSoup(html, "html.parser")
             main = soup.find("main")
