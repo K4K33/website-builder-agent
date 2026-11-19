@@ -22,8 +22,31 @@ _OBJECT_ART = re.compile(
 )
 _DRAWN_CSS = re.compile(
     r"(?:conic-gradient|radial-gradient|border-radius\s*:\s*50%|"
-    r"clip-path\s*:|@keyframes|transform\s*:\s*rotate)", re.I,
+    r"clip-path\s*:|box-shadow\s*:)", re.I,
 )
+_CSS_RULE = re.compile(r"([^{}]{1,250})\{([^{}]{1,1500})\}", re.S)
+_PHOTO_URL = re.compile(r"url\([^)]*\.(?:jpe?g|png|webp|avif|gif)(?:[?#)'\" ]|$)", re.I)
+
+
+def _painted_product_selector(css: str, nodes: list) -> bool:
+    """Evidence that the *actual object* is CSS-painted, not a nearby fade."""
+    selectors = set()
+    for node in nodes:
+        classes = node.get("class") or []
+        selectors.update("." + label for label in classes if isinstance(label, str))
+        if node.get("id"):
+            selectors.add("#" + str(node["id"]))
+        inline = str(node.get("style") or "")
+        if _DRAWN_CSS.search(inline) and not _PHOTO_URL.search(inline):
+            return True
+    if not selectors:
+        return False
+    for rule in _CSS_RULE.finditer(css):
+        selector, body = rule.group(1), rule.group(2)
+        if (any(token in selector for token in selectors)
+                and _DRAWN_CSS.search(body) and not _PHOTO_URL.search(body)):
+            return True
+    return False
 _SVG_DIMS = re.compile(r"-?\d+(?:\.\d+)?")
 
 
@@ -184,7 +207,7 @@ def audit_hero_media(
                 " ".join([str(element.get("id") or ""),
                           " ".join(element.get("class") or [])]))
         ]
-        if object_nodes and _DRAWN_CSS.search(css) and not has_real_world_media:
+        if object_nodes and _painted_product_selector(css, object_nodes) and not has_real_world_media:
             candidates.append("css_drawn_real_world_object")
         candidates = sorted(set(candidates))
         observations[route] = {
