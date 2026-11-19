@@ -161,6 +161,133 @@ def reconcile_primary_offering_with_source(evidence, pages):
         raise
 
 
+# Some low-cost models return a paraphrased quotation even though the original
+# company's own site contains a complete, plainly labelled customer service.
+# Search ONLY the already-crawled first-party text and headings rather than
+# hallucinating a source, silently using a registry, or approving a false quote.
+_OBSERVED_SERVICE_TERMS = re.compile(
+    r"kuljet|transport|logisti|varast|huolt|korja|asenn|"
+    r"remont|rakenn|maala|siivou|hoito|terapia|klinikk|"
+    r"hammas|kampa|kauneus|ravintola|kahvil|lounas|"
+    r"leipom|cater|myymäl|kauppa|palvelu|service|"
+    r"underhåll|reparat|installat|behandling|"
+    r"tjänst|konsult|mittau|suunnittel|design|"
+    r"valmist|tuotant|kiinteist|majoit|hotell|"
+    r"lvi|putki|sähkö|lukit|avain|kukka|näkö|"
+    r"optic|auto|rengas|muutto|pesu|rahti|freight|"
+    r"kaivu|maanrakenn|rakennusmittau",
+    re.I,
+)
+_NOT_OFFERINGS = {
+    "palvelut", "tuotteet", "etusivu", "yhteystiedot", "ota yhteyttä",
+    "meistä", "referenssit", "hinnasto", "tietosuoja",
+    "services", "products", "contact", "home", "about us",
+    "tjänster", "produkter", "kontakt", "om oss", "läs mer",
+    "read more", "tutustu", "varaa aika",
+}
+_NON_SERVICE_URL = re.compile(
+    r"/(?:privacy|tietosuoja|cookies?|eväste|terms|käyttöehdot|"
+    r"rekry|ura|career|jobs?|tyohakemus|blog|uutiset)(?:/|$)",
+    re.I,
+)
+
+
+def _observed_headings(page: dict) -> list[str]:
+    raw=page.get("headings")
+    if isinstance(raw, dict):
+        candidates=[]
+        for level in ("h2","h3","h4"):
+            item=raw.get(level) or []
+            candidates.extend([item] if isinstance(item,str) else
+                              item if isinstance(item,list) else [])
+    elif isinstance(raw,list):
+        candidates=raw
+    else:
+        candidates=[]
+    return [_normal(value) for value in candidates
+            if isinstance(value,str) and _normal(value)][:45]
+
+
+def source_proven_primary_offering(pages, service_candidates=(), company_name=""):
+    """Recover exact source text only when an explicit *current service* is visible.
+
+    A real customer-facing original website must be present. Candidates from
+    the extraction model and original H2/H3 headings are UNTRUSTED until
+    checked against an exact contiguous 8+-word observed page excerpt.
+    Unknown, privacy, registry and generic navigation pages never qualify.
+    This provides an independent second path when a small/free model
+    paraphrases a quote, while maintaining the hard primary-offering gate.
+    """
+    if not isinstance(pages,list):
+        raise RuntimeError("Original-site primary offering unverified; "
+                           "no independently observed service source.")
+    services=service_candidates if isinstance(service_candidates,list) else []
+    services=[_normal(s) for s in services[:14] if isinstance(s,str)]
+    for page in pages[:24]:
+        if not isinstance(page,dict):
+            continue
+        url=str(page.get("url") or "")
+        if (not url.startswith("https://") or is_registry_source(url)
+                or _NON_SERVICE_URL.search(urlsplit(url).path)):
+            continue
+        original=_normal(page.get("text"))
+        if len(original)<95:
+            continue
+        folded=original.casefold()
+        heads=_observed_headings(page)
+        # Start with the independently model-proposed specific services,
+        # then consider only actual current-site headings (not registry scope).
+        labels=list(dict.fromkeys(services+heads))
+        for raw_label in labels[:65]:
+            label=_normal(raw_label)
+            legal_name=_normal(company_name)
+            if (not 7<=len(label)<=95 or len(label.split())>9
+                or label.casefold() in _NOT_OFFERINGS
+                or (legal_name and legal_name.casefold() in label.casefold())
+                or _REGISTRY_SCOPE.search(label)
+                or not _OBSERVED_SERVICE_TERMS.search(label)):
+                continue
+            index=0
+            for _ in range(7):
+                at=folded.find(label.casefold(),index)
+                if at<0:break
+                index=at+len(label)
+                # Take an exact source substring beginning at the service
+                # name, rather than inventing a label or assembling text.
+                excerpt=original[at:min(len(original),at+340)].strip()
+                # A navigation label by itself is not service evidence.
+                # Require enough explanatory words in its real vicinity.
+                if len(excerpt.split())<9:
+                    continue
+                if _REGISTRY_SCOPE.search(excerpt):
+                    continue
+                # When a model proposed the service but it was NOT also an
+                # original H2/H3 service heading, require first-person offer
+                # language near the verbatim phrase; a passing reference in a
+                # history/blog paragraph is not proof of current services.
+                original_heading=any(
+                    label.casefold()==head.casefold() for head in heads
+                )
+                if not original_heading:
+                    context=original[max(0,at-110):min(len(original),at+260)]
+                    if not re.search(
+                        r"tarjoam|tarjolla|palvelemme|kuljetamme|asennamme|"
+                        r"myymme|teemme|toteutamme|palveluihimme|"
+                        r"we offer|we provide|our services|"
+                        r"vi erbjuder|vi utför|våra tjänster",
+                        context,re.I,
+                    ):
+                        continue
+                try:
+                    return validate_primary_offering(
+                        {"label":original[at:at+len(label)],
+                         "quote":excerpt,"source_url":url},pages)
+                except RuntimeError:
+                    continue
+    raise RuntimeError("Original-site primary offering unverified; "
+                       "no exact customer-facing service excerpt in observed pages.")
+
+
 _GENERIC_ACTIONS = {
     'lähetä tiedustelu', 'ota yhteyttä', 'lue lisää', 'tutustu', 'tutustu lisää',
     'skicka en förfrågan', 'kontakta oss', 'läs mer',
