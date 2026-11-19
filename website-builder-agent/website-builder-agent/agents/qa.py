@@ -1239,6 +1239,10 @@ def run_qa(slug_or_name: str) -> dict:
     from utils.brand_direction_v8 import audit_art_direction
     v8_art_direction = audit_art_direction(
         rendered_pages, research, site_root=site_root)
+    from utils.authentic_media_direction import audit_hero_media
+    authentic_media = audit_hero_media(
+        rendered_pages, research, site_root=site_root,
+        media_items=None)
 
     planned_architecture = None
     if research.get("site_architecture") or build.get("page_paths"):
@@ -1322,7 +1326,8 @@ def run_qa(slug_or_name: str) -> dict:
     craft_images = []
     visual_comparison = {"status": "not_run", "pairs": {}, "repair_hints": [],
                          "missing": [], "render_errors": []}
-    if (v8_art_direction["pass"] and automated["automated_pass"] and not parity_hard_missing
+    if (v8_art_direction["pass"] and authentic_media["pass"]
+            and automated["automated_pass"] and not parity_hard_missing
             and universal["automated_pass"] and visual_media["owner_preview_ready"]
             and originality["pass"]):
         role_requirements={
@@ -1502,6 +1507,21 @@ def run_qa(slug_or_name: str) -> dict:
                     "and then new site desktop/mobile when captured.\n"
                     + "\nV7 VISIBLE PREMIUM RED-TEAM CUES (these are machine hints, NOT evidence of 9.5):\n"
                     + json.dumps(v7_visual, ensure_ascii=False)
+                    + "\nAUTHENTIC MEDIA VS LOW-QUALITY ILLUSTRATION REVIEW:\n"
+                    "Check the ACTUAL rendered first fold and product/service pages: "
+                    "does any supposed real-world tire, car, tool or person look "
+                    "like an improvised flat/vector/CSS illustration rather than "
+                    "authentic company media? A spinning fake wheel is a severe "
+                    "visual/credibility defect; do not reward animation quantity. "
+                    "Prefer real sourced and licensed photography/video with "
+                    "subtle meaningful transitions. Good 3D tied to real "
+                    "licensed products is allowed where browser proof exists. "
+                    "Missing source media should result in restrained editorial "
+                    "composition and a private asset request, not a fake photo "
+                    "or invented vector. Do not automatically penalize static "
+                    "pages, functional icons or genuine branded original artwork. "
+                    "Static screenshots cannot certify motion smoothness.\n"
+                    + json.dumps(authentic_media, ensure_ascii=False)
                     + "\nALL PAGE VISIBLE CONTENT:\n"
                     + "\n".join(route+": "+_build_ai_snapshot(body)
                                 for route,body in rendered_pages.items()),
@@ -1516,6 +1536,7 @@ def run_qa(slug_or_name: str) -> dict:
     )
     result = {
         "v8_art_direction": v8_art_direction,
+        "authentic_media_direction": authentic_media,
         "v7_visual_risks": v7_visual,
         "layout_composition_review": layout_review,
         "automated": automated, "visual_media": visual_media,
@@ -1542,7 +1563,7 @@ def run_qa(slug_or_name: str) -> dict:
                                 == {"lando norris","dropbox brand","igloo inc."}
                             and review["global_craft_experience_comparison"].get("critical_experience_gaps") == []))
                          and not v7_visual["blocking"]
-                         and v8_art_direction["pass"]
+                         and v8_art_direction["pass"] and authentic_media["pass"]
                          and temporal_claims["pass"]
                          and not premium_effects["blocking"]
                          and parity["pass"] and source_fidelity["pass"]
@@ -1574,7 +1595,7 @@ def run_qa(slug_or_name: str) -> dict:
     # Repeating the same category across different clients makes it a
     # candidate for a universal regression check, not an invented fix.
     issues = ([str(item.get("route", "")) + ": " + str(item.get("code", ""))
-               for item in v8_art_direction["blocking"]]
+               for item in (v8_art_direction["blocking"] + authentic_media["blocking"])]
               + list(premium_effects.get("blocking") or [])
               + list(automated.get("automated_issues") or [])
               + list(originality["blocking_problems"])

@@ -694,6 +694,7 @@ def qa_repair_feedback(qa):
         ("visual_comparison","repair_hints"),
         ("layout_composition_review","issues"),
         ("v8_art_direction","blocking"),
+        ("authentic_media_direction","blocking"),
         ("content_review","issues"),
     ]
     for section,key in keys:

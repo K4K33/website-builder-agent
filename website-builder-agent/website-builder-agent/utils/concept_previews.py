@@ -282,6 +282,7 @@ def validate_concept_media(route, body, allowed):
 def browser_issue_repair_hints(issues):
     """Return bounded instructional categories, never private page data."""
     labels = (
+        ("fake_real_world_object_hero", "Remove improvised CSS tyre/gear/product objects; use client-approved real photo/video or a photo-free editorial hero. Animation of genuine photos is welcome with reduced-motion fallback."),
         ("concept_visual_near_duplicate", "Produce genuinely different visual compositions across the first fold AND main subpage; change DOM media placement and hierarchy, not just colors, words or grid ratios."),
         ("unproven_brand_accent", "Replace unsupported vivid brand CSS tokens with the original firm's evidenced palette. Never copy global UX references."),
         ("verified_service_not_visible_in_hero", "Place the exact source-verified current service in the first main section, not just in the footer."),
@@ -358,6 +359,8 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
         # separate from impressive-looking competitor colour schemes.
         from utils.brand_direction_v8 import audit_art_direction
         art_direction = audit_art_direction(pages, research)
+        from utils.authentic_media_direction import audit_hero_media
+        authentic_media = audit_hero_media(pages, research, media_items=media)
         for route in pages:
             issue_count_before = len(entry['issues'])
             if identifier in duplicated and route == 'index.html':
@@ -365,6 +368,9 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
                     'concept_visual_near_duplicate: change first-fold and subpage DOM, '
                     'not merely colour, text or grid fractions')
             for finding in art_direction['blocking']:
+                if finding.get('route') == route:
+                    entry['issues'].append(route + ': ' + str(finding['code']))
+            for finding in authentic_media['blocking']:
                 if finding.get('route') == route:
                     entry['issues'].append(route + ': ' + str(finding['code']))
             report = renderer(folder / route, allowed_file_root=folder)
