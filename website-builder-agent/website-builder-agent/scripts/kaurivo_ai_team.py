@@ -139,7 +139,10 @@ def run_once():
     tasks = [(issue, task_role(issue)) for issue in issues]
     tasks = [(issue, role) for issue, role in tasks if role]
     lines.append("Owner-approved tasks: " + str(len(tasks)))
-    if tasks:
+    allow_tasks = os.environ.get("KAURIVO_TEAM_ALLOW_TASKS", "true").lower() in {"true", "1"}
+    if tasks and not allow_tasks:
+        lines.append("Monitoring-only window: reserve free-model credits for customer demos.")
+    if tasks and allow_tasks:
         issue, role = tasks[0]  # one task and at most one free-model call per heartbeat
         lines.append("Processing issue #" + str(issue["number"]) + " as " + role)
         update_label(issue, READY, RUNNING)  # Durable claim, even if runner crashes
