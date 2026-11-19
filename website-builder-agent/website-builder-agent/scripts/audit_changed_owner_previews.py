@@ -192,7 +192,7 @@ def check_source_limited_concept(slug:str,data:dict,folder:Path)->list[str]:
                 'måste bekräftas' not in visible and
                 'har inte kunnat' not in visible):
                 errors.append(route+': uncertainty about present service offerings not visible')
-        if str(facts.get('services') or '') not in ('[]','None'):
+        if facts.get('services') not in ([], None):
             errors.append('Current service list is unverified but populated')
     return errors
 
