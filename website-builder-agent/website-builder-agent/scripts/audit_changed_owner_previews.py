@@ -197,12 +197,155 @@ def check_source_limited_concept(slug:str,data:dict,folder:Path)->list[str]:
     return errors
 
 
+
+def check_source_linked_internal_study(slug: str, data: dict, folder: Path) -> list[str]:
+    """Strict *internal* original-media-link preview, not a client-ready site.
+
+    The external source's *own* image endpoints may be referenced for private
+    owner review, but this neither copies the images nor verifies their rights
+    or availability. This mode has no automatic sales approval and never
+    relaxes the existing approved-owner/source-limited checks.
+    """
+    from datetime import datetime, timezone
+    errors = []
+    flags = (
+        data.get("schema_version") == 3,
+        data.get("stage") == "owner_preview",
+        data.get("status") == "OWNER_PREVIEW_SOURCE_LINKED_RIGHTS_UNVERIFIED",
+        data.get("research_mode") == "source_linked_internal_study",
+        data.get("outreach_authorized") is False,
+        data.get("marketing_eligible") is False,
+        data.get("client_approved") is False,
+        data.get("cms_delivery_verified") is False,
+        data.get("independent_quality_score") is None,
+        data.get("not_an_automatic_demo_build") is True,
+    )
+    if not all(flags):
+        errors.append("Unapproved internal source-linked study cannot be shown as client-ready or score-certified")
+    name = str(data.get("company_name") or "").strip()
+    business_id = str(data.get("company_business_id") or "")
+    original = str(data.get("source_url") or "")
+    host = (urlsplit(original).hostname or "").lower()
+    if not name or not re.fullmatch(r"\d{7}-\d", business_id) or original != f"https://{host}/":
+        errors.append("Verified business identity or original company URL missing")
+    try:
+        stamp = datetime.fromisoformat(str(data.get("verified_at") or "").replace("Z", "+00:00"))
+        if stamp.tzinfo is None or stamp > datetime.now(timezone.utc):
+            errors.append("Source observation time is missing or in the future")
+    except ValueError:
+        errors.append("Source observation time invalid")
+    sources = data.get("source_pages") or []
+    if (len(sources) < 2 or not all(
+            isinstance(u, str) and u.startswith("https://")
+            and (urlsplit(u).hostname or "").lower() == host
+            for u in sources)):
+        errors.append("Two independently observed original company page references required")
+    brand = data.get("brand_provenance") or {}
+    if (brand.get("identity_status") != "not_independently_verified"
+            or brand.get("original_image_reuse_status") != "source_links_only_rights_unverified"
+            or brand.get("new_mark_rights") != "no_new_logo"):
+        errors.append("Unverified brand and imagery cannot be claimed as original approved assets")
+    facts = data.get("verified_facts") or {}
+    if (not str(facts.get("phone") or "").startswith("+358")
+            or not str(facts.get("email") or "").endswith("@"+host)
+            or not isinstance(facts.get("services"), list)
+            or len(facts["services"]) < 3):
+        errors.append("Service/contact evidence missing for the selected business")
+    media = data.get("source_media_urls") or []
+    media = set(media if isinstance(media, list) else [])
+    if (not media or not all(isinstance(url, str) and
+            url.startswith(f"https://{host}/wp-content/uploads/")
+            for url in media)):
+        errors.append("Only documented original-company media URLs may be referenced")
+    found = {p.relative_to(folder).as_posix() for p in folder.rglob("*.html")}
+    declared = data.get("release_routes") or []
+    if (not isinstance(declared, list) or len(declared) < 3
+            or "index.html" not in found or set(declared) != found):
+        errors.append("Every page must be an explicitly declared real HTML route")
+    styles = folder / "styles.css"
+    scripts = folder / "app.js"
+    if not styles.is_file() or not scripts.is_file():
+        return errors + ["Every internal demo needs packaged working CSS and JS"]
+    css = styles.read_text(encoding="utf-8")
+    js = scripts.read_text(encoding="utf-8")
+    if len(css) < 3000 or len(js) < 400 or "prefers-reduced-motion" not in css:
+        errors.append("Responsive styling / reduced-motion behaviour not implemented")
+    if re.search(r"https?://|@import\b", css, re.I):
+        errors.append("CSS cannot import off-site dependencies")
+    visible = []
+    main_images = 0
+    for route in found:
+        file = folder / route
+        soup = BeautifulSoup(file.read_text(encoding="utf-8"), "html.parser")
+        text = soup.get_text(" ", strip=True).casefold()
+        visible.append(text)
+        if not soup.html or soup.html.get("lang") != "fi":
+            errors.append(route+": Finnish language metadata missing")
+        title = soup.title.get_text(" ",strip=True) if soup.title else ""
+        if name.removesuffix(" Oy").casefold() not in title.casefold() or len(title) > 95:
+            errors.append(route+": company-specific browser title missing")
+        if len(soup.select("main h1")) != 1:
+            errors.append(route+": one main heading required")
+        if not soup.select_one('meta[name="robots"][content*="noindex"]'):
+            errors.append(route+": internal demo must not be indexed")
+        desc = soup.select_one('meta[name="description"]')
+        if not desc or len(str(desc.get("content") or "")) < 55:
+            errors.append(route+": source-grounded description missing")
+        notice = soup.select_one(".demo-notice")
+        notice_text = notice.get_text(" ",strip=True).casefold() if notice else ""
+        if not ("sisäinen" in notice_text and "ei" in notice_text
+                and "hyväksymä" in notice_text):
+            errors.append(route+": permanent clearly non-official demo banner missing")
+        if soup.select_one("header img, header svg"):
+            errors.append(route+": unauthorized original logo or fabricated vector mark")
+        if soup.find("form"):
+            errors.append(route+": untested backend form prohibited")
+        if not soup.select_one('a[href="tel:'+str(facts.get("phone") or "")+'"]'):
+            errors.append(route+": verified phone link absent")
+        if not soup.select_one('a[href="mailto:'+str(facts.get("email") or "")+'"]'):
+            errors.append(route+": direct email link absent")
+        for element in soup.select('img[src], script[src], link[rel~=stylesheet][href]'):
+            link = str(element.get("src") or element.get("href") or "")
+            if element.name == "img" and link.startswith("https://"):
+                if link not in media or not str(element.get("alt") or "").strip():
+                    errors.append(route+": photo URL is not in the original-company evidence list")
+                main_images += 1
+                continue
+            if link.startswith(("http:", "https:", "//", "data:")):
+                errors.append(route+": off-site script/style or unsourced media forbidden")
+                continue
+            asset = (file.parent/link.split("?",1)[0]).resolve()
+            if not asset.is_relative_to(folder.resolve()) or not asset.is_file():
+                errors.append(route+": broken bundled asset "+link[:80])
+        for link in soup.select("a[href]"):
+            dest = str(link.get("href") or "").strip()
+            if not dest or dest == "#" or dest.startswith("javascript:"):
+                errors.append(route+": dead clickable destination")
+            elif dest.startswith(("https://","mailto:","tel:","#")):
+                continue
+            else:
+                target = (file.parent / dest.split("#",1)[0].split("?",1)[0]).resolve()
+                if not target.is_relative_to(folder.resolve()) or not target.is_file():
+                    errors.append(route+": broken internal destination "+dest[:80])
+    combined = " ".join(visible)
+    if not all(service.casefold() in combined for service in facts.get("services") or []):
+        errors.append("Source-verified service categories missing across site")
+    if str(facts.get("email") or "").casefold() not in combined:
+        errors.append("Company email missing from visible pages")
+    if main_images < 2:
+        errors.append("Documented source photos not referenced in factual team/story sections")
+    # Browser screenshots and external URL/rights verification are entirely
+    # separate; this deterministic gate cannot mark source photos as licensed.
+    return errors
+
 def check_preview(slug:str)->list[str]:
     problems=[];folder=BASE/slug
     manifest=EVIDENCE/(slug+'.json')
     if not manifest.exists():return ['Missing independently captured source/brand evidence manifest']
     try:data=json.loads(manifest.read_text(encoding='utf-8'))
     except (ValueError,OSError):return ['Invalid evidence JSON']
+    if data.get('research_mode') == 'source_linked_internal_study':
+        return check_source_linked_internal_study(slug,data,folder)
     if data.get('research_mode') == 'official_site_inaccessible_registry_concept':
         return check_source_limited_concept(slug,data,folder)
     required=('schema_version','stage','status','company_name','verified_at','source_url','source_pages',
