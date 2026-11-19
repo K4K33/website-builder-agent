@@ -93,6 +93,26 @@ def _read_styles(html: str, site_root: Path | None = None, route: str = "") -> s
     return "\n".join(pieces)[:1_000_000]
 
 
+def _service_visible_in_first_view(label: str, text: str) -> bool:
+    """Allow natural FI/SV/EN inflections but never infer a missing service."""
+    label = " ".join(str(label or "").casefold().split())
+    text = " ".join(str(text or "").casefold().split())
+    if not label or not text:
+        return False
+    if label in text:
+        return True
+    terms = re.findall(r"[^\\W\\d_]{4,}", label, flags=re.UNICODE)
+    if not terms:
+        return False
+    # Stem matching here checks that source-verified service words actually
+    # appear in the first fold. It does NOT approve an unsourced offering.
+    hits = sum(
+        term in text or (len(term) >= 8 and term[:len(term) - 2] in text)
+        for term in terms
+    )
+    return hits >= max(1, (3 * len(terms) + 3) // 4)
+
+
 def audit_art_direction(
     pages: dict[str, str], research: dict | None,
     *, site_root: Path | None = None,
@@ -203,7 +223,7 @@ def audit_art_direction(
             first_text = " ".join(first.get_text(" ", strip=True).casefold().split()) if first else ""
             # A supporting tagline in the actual hero is sufficient; don't
             # force every customer to put a generic keyword in its h1.
-            if label.casefold() not in first_text:
+            if not _service_visible_in_first_view(label, first_text):
                 blockers.append({
                     "route": route,
                     "code": "verified_service_not_visible_in_hero",
