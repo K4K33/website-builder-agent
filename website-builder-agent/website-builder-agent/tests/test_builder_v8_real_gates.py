@@ -199,6 +199,13 @@ class IdentityAndHeroV8(unittest.TestCase):
         self.assertEqual([x["code"] for x in report["blocking"]],
                          ["verified_service_not_visible_in_hero"])
 
+    def test_finnish_inflection_does_not_false_block_a_real_sourced_service(self):
+        source=existing(theme="#14251f")
+        report=audit_art_direction(
+            {"index.html":html(intro="Rengashuollot joustavasti huoltopisteessämme.",
+                               accent="#14251f")},source)
+        self.assertTrue(report["pass"])
+
     def test_no_site_concept_never_claims_palette_is_verified(self):
         research={"research_mode":"verified_no_website",
                   "v8_visual_protocol":"v8",
