@@ -1278,6 +1278,17 @@ def main():
                 verify_design_handoff(load_company(agent_slug),selected=False)
             except (RuntimeError,ValueError,TypeError,KeyError) as exc:
                 raise HoldError("design_handoff_incomplete","research:"+safe_preflight_reason(exc)) from exc
+            # Production readiness is a deterministic SOURCE test. A
+            # historical TOL/PRH industry label or a model-generated service
+            # idea does not authorize a marketing page. Check this BEFORE the
+            # three expensive concept/vision calls, including on resumes.
+            from utils.builder_readiness_v8 import assess_build_readiness
+            readiness = assess_build_readiness(
+                (load_company(agent_slug) or {}).get("research"))
+            if not readiness["ready"]:
+                raise HoldError(readiness["code"],
+                    "Nykyisen palvelun lähdenäyttö puuttuu; "
+                    "täydennä alkuperäisen yrityssivun todisteet.")
             if done<1:
                 update("building","Rakennetaan ja vertaillaan kolmea yrityskohtaista konseptia")
                 run_cli(["concept-previews",agent_slug],stage_log,ai_deadline)
