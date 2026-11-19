@@ -21,6 +21,11 @@ the two prototype pages. Include nav, main, footer, title, meta description/view
 The concepts must visibly differ in composition and information hierarchy,
 not just colour, font, heading wording or decoration. Each home has its first
 view and one meaningful content section; the other page serves its visitor task.
+Authentic-media-first: prefer genuine approved business photos or filmed
+products to illustrated imitations of tires, vehicles, tools or people. Animate
+real photos/video meaningfully with accessible reduced-motion fallbacks. When
+real media rights are missing, use a composed text-first hero and record the
+missing asset; NEVER CSS-draw a pretend real-world product as the hero.
 These are PRIVATE PROTOTYPES, never a completed client website or checkout.
 '''
 CONCEPT_PROMPT = '''Create ONE ACTUAL RESPONSIVE HTML CONCEPT for the supplied direction.
@@ -77,6 +82,8 @@ def generate_concepts(name, *, response_path=None, producer=''):
     root = Path(config.OUTPUT_DIR) / slug
     media = stage_local_media(company.get('media_intake'), intake_root=config.MEDIA_INTAKE_DIR,
                               output_dir=root)
+    from utils.authentic_media_direction import source_media_evidence
+    media_direction = source_media_evidence(research, media)
 
     def validate_content(document, facts):
         _validate_generated_content(document, facts, source_inventory=research.get('source_inventory'))
@@ -102,6 +109,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
             packet = json.dumps({
                 "facts": research.get("company_facts"), "direction": direction,
                 "prototype_routes": routes, "media": media,
+                "authentic_media_strategy": media_direction,
                 "brand_plan": research.get("brand_preservation_plan"),
                 "source_bound_visual_identity_v8": research.get("v8_identity_boundaries"),
                 "verified_core_service": research.get("primary_offering_evidence"),
@@ -136,6 +144,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
                 'facts': research.get('company_facts'), 'direction': direction,
                 'exact_direction_id': direction['id'],
                 'required_routes': preview_routes(research), 'media': media,
+                'authentic_media_strategy': media_direction,
                 'brand_plan': research.get('brand_preservation_plan'),
                 'source_bound_visual_identity_v8': research.get('v8_identity_boundaries'),
                 'verified_core_service': research.get('primary_offering_evidence'),
@@ -179,6 +188,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
                         "verified_core_service": research.get("primary_offering_evidence"),
                         "direction": directions[identifier],
                         "allowed_media": media,
+                        "authentic_media_strategy": media_direction,
                         "route": route,
                         "required_routes": routes,
                         "observed_browser_failures": problems,
