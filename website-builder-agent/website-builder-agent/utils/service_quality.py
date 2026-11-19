@@ -259,13 +259,23 @@ def source_proven_primary_offering(pages, service_candidates=()):
                     continue
                 if _REGISTRY_SCOPE.search(excerpt):
                     continue
-                # Choose heading names only when the page itself contains
-                # those headings. Model-suggested names also need verbatim
-                # source occurrence; phrases absent from the original fail.
-                if raw_label in heads and not any(
+                # When a model proposed the service but it was NOT also an
+                # original H2/H3 service heading, require first-person offer
+                # language near the verbatim phrase; a passing reference in a
+                # history/blog paragraph is not proof of current services.
+                original_heading=any(
                     label.casefold()==head.casefold() for head in heads
-                ):
-                    continue
+                )
+                if not original_heading:
+                    context=original[max(0,at-110):min(len(original),at+260)]
+                    if not re.search(
+                        r"tarjoam|tarjolla|palvelemme|kuljetamme|asennamme|"
+                        r"myymme|teemme|toteutamme|palveluihimme|"
+                        r"we offer|we provide|our services|"
+                        r"vi erbjuder|vi utför|våra tjänster",
+                        context,re.I,
+                    ):
+                        continue
                 try:
                     return validate_primary_offering(
                         {"label":original[at:at+len(label)],
