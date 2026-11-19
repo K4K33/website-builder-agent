@@ -5,6 +5,7 @@ on:
       - ".github/workflows/kaurivo-builder-v8-gates.yml"
       - "website-builder-agent/website-builder-agent/utils/builder_readiness_v8.py"
       - "website-builder-agent/website-builder-agent/utils/brand_direction_v8.py"
+      - "website-builder-agent/website-builder-agent/utils/concept_v8_design_diversity.py"
       - "website-builder-agent/website-builder-agent/utils/concept_previews.py"
       - "website-builder-agent/website-builder-agent/utils/concept_workflow.py"
       - "website-builder-agent/website-builder-agent/agents/research.py"
@@ -17,6 +18,7 @@ on:
     paths:
       - "website-builder-agent/website-builder-agent/utils/builder_readiness_v8.py"
       - "website-builder-agent/website-builder-agent/utils/brand_direction_v8.py"
+      - "website-builder-agent/website-builder-agent/utils/concept_v8_design_diversity.py"
 permissions:
   contents: read
 jobs:
