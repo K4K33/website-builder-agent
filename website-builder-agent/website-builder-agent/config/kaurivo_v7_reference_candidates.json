@@ -15,6 +15,33 @@
     {
       "category": "restaurant",
       "label": "Ravintola",
+      "url": "https://www.themodernnyc.com/",
+      "country": "United States",
+      "design_lesson": "Seasonal dining and clear booking options",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "restaurant",
+      "label": "Ravintola",
+      "url": "https://www.gramercytavern.com/",
+      "country": "United States",
+      "design_lesson": "Distinct dining-room and tavern journeys",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "restaurant",
+      "label": "Ravintola",
+      "url": "https://www.brassnyc.com/",
+      "country": "United States",
+      "design_lesson": "Venue photography and reservation routing",
+      "status": "CANDIDATE_NOT_QUALITY_CERTIFIED",
+      "allowed_use": "principles_only_no_media_or_markup"
+    },
+    {
+      "category": "restaurant",
+      "label": "Ravintola",
       "url": "https://www.enotecadellavalpolicella.it/",
       "country": "Italy",
       "design_lesson": "hospitality photography",
