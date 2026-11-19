@@ -282,6 +282,7 @@ def validate_concept_media(route, body, allowed):
 def browser_issue_repair_hints(issues):
     """Return bounded instructional categories, never private page data."""
     labels = (
+        ("concept_visual_near_duplicate", "Produce genuinely different visual compositions across the first fold AND main subpage; change DOM media placement and hierarchy, not just colors, words or grid ratios."),
         ("unproven_brand_accent", "Replace unsupported vivid brand CSS tokens with the original firm's evidenced palette. Never copy global UX references."),
         ("verified_service_not_visible_in_hero", "Place the exact source-verified current service in the first main section, not just in the footer."),
         ("horizontal overflow", "Eliminate horizontal overflow on every mobile viewport."),
@@ -316,6 +317,13 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
     if not str(producer).strip():
         raise RuntimeError('Actual concept producer must be recorded')
     pages_by_id = parse_concepts(raw, research)
+    # A changed colour or grid ratio cannot make a real V8 art direction.
+    # Keep near-duplicates as REPAIRABLE browser-comparison findings rather
+    # than throwing away all three expensive already-generated concepts.
+    from utils.concept_v8_design_diversity import near_duplicate_concepts
+    clones = (near_duplicate_concepts(pages_by_id)
+              if research.get('v8_visual_protocol') == 'v8' else [])
+    duplicated = {row['second'] for row in clones}
     parent = Path(output_parent).resolve(); parent.mkdir(parents=True, exist_ok=True)
     root = Path(mkdtemp(prefix='set-', dir=parent))
     repair_targets = {}
@@ -352,6 +360,10 @@ def write_concepts(raw, research, *, output_parent, producer, renderer,
         art_direction = audit_art_direction(pages, research)
         for route in pages:
             issue_count_before = len(entry['issues'])
+            if identifier in duplicated and route == 'index.html':
+                entry['issues'].append(
+                    'concept_visual_near_duplicate: change first-fold and subpage DOM, '
+                    'not merely colour, text or grid fractions')
             for finding in art_direction['blocking']:
                 if finding.get('route') == route:
                     entry['issues'].append(route + ': ' + str(finding['code']))
