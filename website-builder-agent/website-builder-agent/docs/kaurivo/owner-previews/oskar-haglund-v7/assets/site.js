@@ -26,7 +26,7 @@
   for(const button of langButtons){
    button.setAttribute("aria-pressed",String(button.dataset.setLang===language));
   }
-  const pageTitle=root.dataset["title"+language.toUpperCase()];
+  const pageTitle=root.getAttribute("data-title-"+language);
   if(pageTitle)document.title=pageTitle;
   for(const toggle of document.querySelectorAll("[data-menu-toggle]")){
    if(toggle.getAttribute("aria-expanded")==="true"){
