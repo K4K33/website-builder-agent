@@ -1,0 +1,40 @@
+name: Kaurivo Builder V8 source and art-direction contract
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/kaurivo-builder-v8-gates.yml"
+      - "website-builder-agent/website-builder-agent/utils/builder_readiness_v8.py"
+      - "website-builder-agent/website-builder-agent/utils/brand_direction_v8.py"
+      - "website-builder-agent/website-builder-agent/utils/concept_previews.py"
+      - "website-builder-agent/website-builder-agent/utils/concept_workflow.py"
+      - "website-builder-agent/website-builder-agent/agents/research.py"
+      - "website-builder-agent/website-builder-agent/agents/builder.py"
+      - "website-builder-agent/website-builder-agent/agents/qa.py"
+      - "website-builder-agent/website-builder-agent/scripts/run_kaurivo_demo_queue.py"
+      - "website-builder-agent/website-builder-agent/tests/test_builder_v8_real_gates.py"
+  push:
+    branches: [main]
+    paths:
+      - "website-builder-agent/website-builder-agent/utils/builder_readiness_v8.py"
+      - "website-builder-agent/website-builder-agent/utils/brand_direction_v8.py"
+permissions:
+  contents: read
+jobs:
+  evidence-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: website-builder-agent/website-builder-agent/requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Compile actual production code
+        run: python -m compileall -q agents utils scripts tests
+      - name: Run exact source, brand and resume regressions
+        run: python -m unittest -v tests.test_builder_v8_real_gates
