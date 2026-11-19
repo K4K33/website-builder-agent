@@ -17,7 +17,7 @@ from utils.builder_readiness_v8 import assess_build_readiness, require_build_rea
 def existing(*, theme=None, mode="v8", verified=True):
     url = "https://example-business.fi/palvelut/"
     quote = "Rengashuolto ja renkaiden vaihto ammattitaitoisesti palvelupisteessämme."
-    page = {"url": url, "text": "Tarjoamme rengashuolto ja renkaiden vaihto ammattitaitoisesti palvelupisteessämme.",
+    page = {"url": url, "text": "Tarjoamme " + quote,
             "source_identity": {"theme_color": theme or "", "original_logo_candidates": []}}
     return {
         "company_facts": {"name": "Todellinen Auto Oy", "industry": "autohuolto"},
