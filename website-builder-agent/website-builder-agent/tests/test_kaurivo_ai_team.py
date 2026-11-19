@@ -45,6 +45,15 @@ class AITeamTests(unittest.TestCase):
             team.run_once()
             infer.assert_not_called()
 
+    def test_monitor_only_window_does_not_spend_ai(self):
+        with patch.dict(os.environ, {"KAURIVO_TEAM_ALLOW_TASKS": "false"}, clear=False), \
+             patch.object(team, "ensure_labels"), \
+             patch.object(team, "get_builder_status", return_value="ok"), \
+             patch.object(team, "api", return_value=[issue()]), \
+             patch.object(team, "make_draft") as infer:
+            team.run_once()
+            infer.assert_not_called()
+
     def test_claim_before_one_call_and_review_after(self):
         task = issue()
         order = []
