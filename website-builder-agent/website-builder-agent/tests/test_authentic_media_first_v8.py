@@ -64,6 +64,26 @@ class AuthenticMediaFirstV8(unittest.TestCase):
         self.assertIn("css_drawn_real_world_object",
                       result["blocking"][0]["evidence"])
 
+    def test_small_wheel_icon_with_unrelated_page_fade_is_not_falsely_blocked(self):
+        css = """
+        .small-wheel-icon{font-size:14px;color:inherit}
+        .hero p{animation:fade .4s}
+        @keyframes fade{from{opacity:0}to{opacity:1}}
+        """
+        result = audit_hero_media(
+            {"index.html": site("<span class='small-wheel-icon'>●</span>", css)}, researched())
+        self.assertTrue(result["pass"])
+
+    def test_photographic_css_background_not_mistaken_for_illustrated_tire(self):
+        css = (
+            ".wheel{background-image:url('assets/real-tire.jpg');"
+            "border-radius:50%;height:300px;width:300px}"
+        )
+        result = audit_hero_media(
+            {"index.html": site("<div class='wheel'></div>", css)}, researched())
+        self.assertTrue(result["pass"])
+        # Local file delivery and rights are checked by other media gates.
+
     def test_large_vector_tire_art_is_rejected_even_with_misleading_premium_label(self):
         svg = ('<svg viewBox="0 0 640 540" class="premium-product">'
                '<g class="tire" aria-label="rengas"><circle cx="200" cy="200" r="180"/>'
