@@ -1507,6 +1507,21 @@ def run_qa(slug_or_name: str) -> dict:
                     "and then new site desktop/mobile when captured.\n"
                     + "\nV7 VISIBLE PREMIUM RED-TEAM CUES (these are machine hints, NOT evidence of 9.5):\n"
                     + json.dumps(v7_visual, ensure_ascii=False)
+                    + "\nAUTHENTIC MEDIA VS LOW-QUALITY ILLUSTRATION REVIEW:\n"
+                    "Check the ACTUAL rendered first fold and product/service pages: "
+                    "does any supposed real-world tire, car, tool or person look "
+                    "like an improvised flat/vector/CSS illustration rather than "
+                    "authentic company media? A spinning fake wheel is a severe "
+                    "visual/credibility defect; do not reward animation quantity. "
+                    "Prefer real sourced and licensed photography/video with "
+                    "subtle meaningful transitions. Good 3D tied to real "
+                    "licensed products is allowed where browser proof exists. "
+                    "Missing source media should result in restrained editorial "
+                    "composition and a private asset request, not a fake photo "
+                    "or invented vector. Do not automatically penalize static "
+                    "pages, functional icons or genuine branded original artwork. "
+                    "Static screenshots cannot certify motion smoothness.\n"
+                    + json.dumps(authentic_media, ensure_ascii=False)
                     + "\nALL PAGE VISIBLE CONTENT:\n"
                     + "\n".join(route+": "+_build_ai_snapshot(body)
                                 for route,body in rendered_pages.items()),
