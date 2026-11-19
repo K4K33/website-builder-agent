@@ -524,7 +524,8 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
     # Actual URL crawling, primary-source same-industry quote verification,
     # screenshots and per-route comparison still happen downstream.
     from utils.quality_v7 import reference_candidates
-    curated = reference_candidates(industry)
+    sector_hint = verified_sector_search_hint(industry, original_text)
+    curated = reference_candidates(sector_hint)
     def add_curated(rows):
         seen = {canonical_url(item.get("url")) for item in rows}
         for entry in curated:
@@ -538,7 +539,7 @@ def _search_industry_references(industry: str, target_url: str, search_query: st
         references = []
         try:
             references = discover_free_references(
-                verified_sector_search_hint(industry, original_text),
+                sector_hint,
                 target_url=target_url, max_results=20,
                 regions=preferred_benchmark_regions(facts, original_text),
             )
