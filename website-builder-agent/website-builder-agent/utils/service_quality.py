@@ -208,7 +208,7 @@ def _observed_headings(page: dict) -> list[str]:
             if isinstance(value,str) and _normal(value)][:45]
 
 
-def source_proven_primary_offering(pages, service_candidates=()):
+def source_proven_primary_offering(pages, service_candidates=(), company_name=""):
     """Recover exact source text only when an explicit *current service* is visible.
 
     A real customer-facing original website must be present. Candidates from
@@ -240,8 +240,10 @@ def source_proven_primary_offering(pages, service_candidates=()):
         labels=list(dict.fromkeys(services+heads))
         for raw_label in labels[:65]:
             label=_normal(raw_label)
+            legal_name=_normal(company_name)
             if (not 7<=len(label)<=95 or len(label.split())>9
                 or label.casefold() in _NOT_OFFERINGS
+                or (legal_name and legal_name.casefold() in label.casefold())
                 or _REGISTRY_SCOPE.search(label)
                 or not _OBSERVED_SERVICE_TERMS.search(label)):
                 continue
