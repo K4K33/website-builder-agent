@@ -164,7 +164,7 @@ def run_once():
                     "rendered video or approved client deliverable.")
             update_label(issue, RUNNING, REVIEW)
             lines.append("Draft delivered; owner approval pending.")
-    else:
+    elif not tasks:
         lines.append("No approved work: no inference calls, no AI quota used.")
     text = "\n\n".join(lines) + "\n"
     print(text)
