@@ -90,3 +90,11 @@ a{color:inherit;text-decoration:none}a:focus-visible,button:focus-visible{outlin
 .detail-section h2{font-size:clamp(2.15rem,8.8vw,3.15rem);overflow-wrap:break-word}
 .detail-section>*{min-width:0}
 }
+
+/* Device QA correction: the long Finnish highlight heading must not expand a CSS grid track. */
+.highlight{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+.highlight>*{min-width:0}
+@media(max-width:680px){
+.highlight{grid-template-columns:minmax(0,1fr)}
+.highlight h2{font-size:clamp(2.0rem,7.7vw,3.1rem);overflow-wrap:anywhere;hyphens:auto}
+}
