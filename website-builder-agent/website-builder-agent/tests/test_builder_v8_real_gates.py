@@ -117,6 +117,23 @@ class IdentityAndHeroV8(unittest.TestCase):
         self.assertEqual(report["identity"]["new_colors_status"],
                          "provisional_until_owner_checks")
 
+    def test_v7_route_visual_rating_cannot_pass_at_zero_or_poor_scores(self):
+        from agents.qa import route_visual_review_passes
+        import config
+        dimensions=("desktop","mobile","premium_appeal","brand_fidelity",
+                    "image_authenticity","art_direction","interaction_quality")
+        site={"index.html":"<main><h1>Todellinen Auto Oy</h1></main>"}
+        research={"premium_visual_protocol":"v2","v7_visual_protocol":"v7"}
+        item={"critical_issues":[],"evidence":"Specific observable screenshot evidence. " * 3}
+        item.update({key:0 for key in dimensions})
+        report={"route_visual_review":{"index.html":item},
+                "reviewed_route_view_ids":["screenshot-1"]}
+        self.assertFalse(route_visual_review_passes(report,site,research,["screenshot-1"]))
+        item.update({key:config.QA_MIN_VISUAL_SCORE for key in dimensions})
+        self.assertTrue(route_visual_review_passes(report,site,research,["screenshot-1"]))
+        item["art_direction"]=config.QA_MIN_VISUAL_SCORE-1
+        self.assertFalse(route_visual_review_passes(report,site,research,["screenshot-1"]))
+
     def test_legacy_exercises_keep_original_qa_contract(self):
         report=audit_art_direction({"index.html":html()},existing(theme="#14251f",mode="legacy"))
         self.assertTrue(report["pass"])
