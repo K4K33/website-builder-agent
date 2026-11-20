@@ -108,7 +108,13 @@ class SectorReferenceTests(unittest.TestCase):
         self.assertIn('validate_benchmark(research, target_url)',SOURCE)
         self.assertIn('_repair_source_map(research_data, url)',SOURCE)
         self.assertIn('validate_source_plan(research, source_url=source_url)',SOURCE)
-        self.assertIn('validate_brand_preservation_plan(research_data)',SOURCE)
+        # The gate runs through a bounded repair that still calls the
+        # unchanged validator as its authority (Ostroferia 20.11.2026).
+        self.assertIn('repair_brand_preservation_plan(research_data, ask_claude_json)',SOURCE)
+        from inspect import getsource
+        from utils.source_identity import repair_brand_preservation_plan
+        self.assertIn('return validate_brand_preservation_plan(research)',
+                      getsource(repair_brand_preservation_plan))
 
 
 class SourcePacketTests(unittest.TestCase):
