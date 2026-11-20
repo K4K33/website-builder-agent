@@ -112,3 +112,21 @@ class SiteAuditRedirectTests(unittest.TestCase):
         self.assertEqual(inspect_site("https://katto.fi", get=get, resolve=PUBLIC)["status"],
                          "redirect_not_followed")
         self.assertEqual(get.calls, ["https://katto.fi/"])
+
+
+class PhotoRichThresholdTests(unittest.TestCase):
+    """Maalaus Valo (10 photos, 192 words) is a valid demo source."""
+
+    def _pages(self, photos, words):
+        imgs = "".join(f"<img src=/p{i}.jpg>" for i in range(photos))
+        text = " ".join(["maalaus"] * words)
+        return [("https://x.fi/", f"<html><body>{imgs}<p>{text}</p></body></html>")]
+
+    def test_photo_rich_text_light_site_is_ready(self):
+        self.assertEqual(r.assess_pages(self._pages(10, 190))["verdict"], "ready")
+
+    def test_few_photos_and_few_words_is_thin(self):
+        self.assertEqual(r.assess_pages(self._pages(4, 190))["verdict"], "thin")
+
+    def test_almost_empty_page_is_thin_even_with_photos(self):
+        self.assertEqual(r.assess_pages(self._pages(12, 60))["verdict"], "thin")
