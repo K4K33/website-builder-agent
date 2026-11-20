@@ -108,7 +108,7 @@ def _run_same_model_rest_after_router_404(
             direct_url,
             headers={"Authorization": "Bearer " + token,
                      "Content-Type": "application/json"},
-            json=direct_payload, timeout=170, allow_redirects=False)
+            json=direct_payload, timeout=(10, 330), allow_redirects=False)
     except requests.RequestException as exc:
         raise RuntimeError("NETWORK_UNAVAILABLE: Cloudflare direct REST transport failed.") from exc
     if resp.status_code == 404:
@@ -239,7 +239,7 @@ def chat_cloudflare_free(
             _CF_URL.format(account=account),
             headers={"Authorization": "Bearer " + token,
                      "Content-Type": "application/json"},
-            json=payload, timeout=170, allow_redirects=False,
+            json=payload, timeout=(10, 330), allow_redirects=False,
         )
     except requests.RequestException as exc:
         raise RuntimeError("NETWORK_UNAVAILABLE: Cloudflare request transport failed.") from exc

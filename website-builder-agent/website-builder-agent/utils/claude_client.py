@@ -138,6 +138,30 @@ def _extract_content(data: dict) -> str:
     return ""
 
 
+def _other_free_cloud(system, user_prompt, *, stage, max_tokens, image_paths, json_mode):
+    """Gemini free tier first (separate daily quota per model), then Workers Free.
+
+    Returns None when neither confirmed free provider is configured. Each
+    provider enforces its own free quota; nothing here can select a paid model.
+    """
+    from utils.gemini_free_ai import enabled as gemini_enabled, chat_gemini_free
+    from utils.cloudflare_free_ai import enabled as cf_enabled, chat_cloudflare_free
+    gemini_error = None
+    if gemini_enabled() and not image_paths:
+        try:
+            return chat_gemini_free(system, user_prompt, stage=stage,
+                                    max_tokens=max_tokens, json_mode=json_mode)
+        except RuntimeError as exc:
+            gemini_error = exc
+    if cf_enabled():
+        return chat_cloudflare_free(
+            system, user_prompt, stage=stage, max_tokens=max_tokens,
+            image_paths=image_paths, json_mode=json_mode)
+    if gemini_error is not None:
+        raise gemini_error
+    return None
+
+
 def _local_free_quota_fallback(
     system: str, user_prompt: str, *, stage: str | None,
     max_tokens: int, image_paths: list[str] | None,
@@ -149,11 +173,11 @@ def _local_free_quota_fallback(
     owner confirmation of the Workers FREE account and a server-side secret.
     """
     if config.free_only():
-        from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
-        if enabled():
-            return chat_cloudflare_free(
-                system, user_prompt, stage=stage, max_tokens=max_tokens,
-                image_paths=image_paths, json_mode=json_mode)
+        answer = _other_free_cloud(system, user_prompt, stage=stage,
+                                   max_tokens=max_tokens, image_paths=image_paths,
+                                   json_mode=json_mode)
+        if answer is not None:
+            return answer
     if not config.free_only() or os.getenv("FREE_CLOUD_LOCAL_FALLBACK", "1") != "1":
         raise RuntimeError(f"{capacity_code}: free OpenRouter capacity unavailable; no paid fallback.")
     name = (os.getenv(f"OLLAMA_{stage.upper()}_MODEL", "").strip()
@@ -247,12 +271,12 @@ def ask_claude(
     if (config.free_only() and (
             os.environ.get("KAURIVO_OPENROUTER_FREE_EXHAUSTED") == "1" or
             os.environ.get("KAURIVO_PREFER_CLOUDFLARE") == "1")):
-        from utils.cloudflare_free_ai import enabled, chat_cloudflare_free
-        if not enabled():
+        answer = _other_free_cloud(system, user_prompt, stage=stage,
+                                   max_tokens=max_tokens, image_paths=image_paths,
+                                   json_mode=json_mode)
+        if answer is None:
             raise RuntimeError("FREE_AI_CAPACITY_UNAVAILABLE: no verified free cloud capacity.")
-        return chat_cloudflare_free(
-            system, user_prompt, stage=stage, max_tokens=max_tokens,
-            image_paths=image_paths, json_mode=json_mode)
+        return answer
 
     # Validate again at the final paid-provider boundary. An unrelated
     # funded API key must never make a non-free model billable in FREE_ONLY.

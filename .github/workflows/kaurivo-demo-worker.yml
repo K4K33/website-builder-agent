@@ -278,6 +278,10 @@ jobs:
           KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
+          # Gemini API free tier (key from an AI Studio project WITHOUT billing).
+          # Empty secret = disabled. Used only after OpenRouter's free quota.
+          KAURIVO_GEMINI_API_KEY: ${{ secrets.KAURIVO_GEMINI_API_KEY }}
+          KAURIVO_GEMINI_FREE_CONFIRMED: ${{ vars.KAURIVO_GEMINI_FREE_CONFIRMED || '1' }}
           OPENROUTER_MODEL: openrouter/free
           RESEARCH_MODEL: ${{ vars.KAURIVO_RESEARCH_MODEL_FREE || 'google/gemma-4-26b-a4b-it:free' }}
           RESEARCH_FALLBACK_MODELS: ${{ vars.KAURIVO_RESEARCH_FALLBACK_MODELS_FREE || 'google/gemma-4-31b-it:free' }}
