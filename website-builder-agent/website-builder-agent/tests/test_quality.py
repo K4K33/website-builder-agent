@@ -166,7 +166,10 @@ class QualityTests(unittest.TestCase):
 
     def test_builder_and_revision_receive_actual_reference_images(self):
         fixture = self.research_fixture({'name':'Testi'})
-        with patch.object(builder,'ask_claude',return_value=HTML) as ask, patch.object(config,'model_for_stage',return_value='fixed/model'):
+        # This fixture has no contact action; the pre-build gate has its own tests.
+        import utils.pre_build_brief as pre_build
+        with patch.object(pre_build, 'ensure_pre_build_brief', side_effect=pre_build.derive_pre_build_brief), \
+                patch.object(builder,'ask_claude',return_value=HTML) as ask, patch.object(config,'model_for_stage',return_value='fixed/model'):
             builder.build_site('testi', {'research':fixture})
             self.assertEqual(len(ask.call_args.kwargs['image_paths']), 6)
             self.assertIn('first_view', ask.call_args.args[1])

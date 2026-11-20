@@ -14,7 +14,10 @@ PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4
 
 
 def fixture():
-    research = {**creative(), 'company_facts': {'name': 'Instrument Studio'},
+    research = {**creative(), 'company_facts': {'name': 'Instrument Studio',
+                                                'contact': {'email': 'studio@example.org'}},
+                'reference_comparison': [{'url': 'https://ref-a.example.org/'},
+                                         {'url': 'https://ref-b.example.org/'}],
                 'site_architecture': {'pages': [{'path': 'index.html'}, {'path': 'work/index.html'}]}}
     variants = {}
     for number in range(1, 4):

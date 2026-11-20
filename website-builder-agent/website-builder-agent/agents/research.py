@@ -1054,6 +1054,10 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     from utils.brand_direction_v8 import derive_identity_boundaries
     research_data["v8_visual_protocol"] = "v8"
     research_data["v8_identity_boundaries"] = derive_identity_boundaries(research_data)
+    # The six pre-build questions (signature, assets, feel, action, budget,
+    # facts) are answered from this evidence; concepts are gated on them.
+    from utils.pre_build_brief import derive_pre_build_brief
+    research_data["pre_build_brief"] = derive_pre_build_brief(research_data)
     updated = upsert_company(slug, {"research": research_data})
     set_status(slug, "researched")
     return updated
@@ -1668,6 +1672,10 @@ Tärkeää:
     from utils.brand_direction_v8 import derive_identity_boundaries
     research_data["v8_visual_protocol"] = "v8"
     research_data["v8_identity_boundaries"] = derive_identity_boundaries(research_data)
+    # The six pre-build questions (signature, assets, feel, action, budget,
+    # facts) are answered from this evidence; concepts are gated on them.
+    from utils.pre_build_brief import derive_pre_build_brief
+    research_data["pre_build_brief"] = derive_pre_build_brief(research_data)
 
     updated_company = upsert_company(
         slug,
