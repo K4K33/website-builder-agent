@@ -71,11 +71,20 @@ def verified_evidence_quote(candidate: dict, match: dict) -> str:
         return ""
     quote_id = match.get("quote_id")
     if isinstance(quote_id,str):
-        for item in candidate.get("quote_options") or []:
-            if (isinstance(item,dict) and item.get("quote_id")==quote_id and
-                    isinstance(item.get("text"),str) and
-                    item["text"].strip() and item["text"] in source):
+        options = [item for item in candidate.get("quote_options") or []
+                   if isinstance(item,dict) and isinstance(item.get("text"),str)
+                   and item["text"].strip() and item["text"] in source]
+        for item in options:
+            if item.get("quote_id")==quote_id:
                 return item["text"]
+        # Small free models often drop the per-candidate prefix ("q3" for
+        # "c1_q3"). Resolve ONLY within this candidate's own verbatim
+        # options; another operator's quote can never be borrowed.
+        bare = quote_id.strip().rsplit("_",1)[-1]
+        own = [item for item in options
+               if str(item.get("quote_id","")).rsplit("_",1)[-1]==bare]
+        if bare and len(own)==1 and "_" not in quote_id.strip():
+            return own[0]["text"]
     literal = match.get("evidence_quote")
     if isinstance(literal,str) and literal.strip() and literal in source:
         return literal

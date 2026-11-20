@@ -123,6 +123,7 @@ jobs:
           KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
+          KAURIVO_GEMINI_API_KEY: ${{ secrets.KAURIVO_GEMINI_API_KEY }}
           BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE || 'google/gemma-4-31b-it:free' }}
           QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE || 'qwen/qwen3.8-27b:free' }}
         run: |
@@ -144,6 +145,9 @@ jobs:
                            and bool(re.fullmatch(r"[0-9a-f]{32}",cf_account))
                            and bool(re.fullmatch(r"[A-Za-z0-9_-]{25,250}",cf_key)))
           print("Independent confirmed Workers Free configured:",cloudflare_ready)
+          # Presence/format only; the key itself is never printed.
+          print("Gemini free tier key configured:",
+                bool(re.fullmatch(r"[A-Za-z0-9_-]{30,60}",os.getenv("KAURIVO_GEMINI_API_KEY","").strip())))
           # GET /key validates bearer authorization without any model tokens.
           # Log ONLY the status and a boolean, never the token or key details.
           import urllib.request,urllib.error

@@ -562,6 +562,25 @@ def benchmark_failure_diagnostic(handle, start_position=0):
     return ""
 
 
+def selection_failure_diagnostic(handle, start_position=0):
+    """Only fixed numeric counters from reference selection; no names/URLs."""
+    handle.flush()
+    handle.seek(start_position)
+    labels = {"urls": "ehdokkaita", "inspected": "avattu", "proposed": "mallin ehdottamia",
+              "unknown_url": "tuntematon osoite", "not_same_industry": "ei samaa alaa",
+              "no_quote": "ei kelvollista lainausta"}
+    for line in reversed(handle.read()[-16000:].splitlines()):
+        match = re.search(r"diag=((?:[a-z_]+:\d{1,3},?){1,8})\s*$", line)
+        if match:
+            parts = []
+            for item in match.group(1).strip(",").split(","):
+                key, _, value = item.partition(":")
+                if key in labels:
+                    parts.append(labels[key] + " " + value)
+            return "Referenssivalinta: " + ", ".join(parts)
+    return ""
+
+
 def run_cli(args,log_handle,deadline=None):
     log_handle.seek(0,os.SEEK_END)
     stage_start=log_handle.tell()
@@ -590,6 +609,8 @@ def run_cli(args,log_handle,deadline=None):
             detail = creative_failure_diagnostic(log_handle, stage_start)
         if code == "comparison_design_benchmark_incomplete":
             detail = benchmark_failure_diagnostic(log_handle, stage_start)
+        if code == "comparison_sources_insufficient":
+            detail = selection_failure_diagnostic(log_handle, stage_start)
         if code == "research_design_coverage_incomplete":
             detail = "Suunnittelupäätöksistä puuttuu vaadittu aihe tai viittaus tarkistettuun lähteeseen"
         if code == "free_model_request_rejected":
