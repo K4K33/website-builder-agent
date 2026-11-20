@@ -20,6 +20,32 @@ from utils.quality import canonical_url
 CACHE_DAYS = 14
 # Categories use existing OSM tags or curated operator candidates.
 INDUSTRY_ALIASES = {
+    # Common Kaurivo SME trades without a free reference route before
+    # 20.11.2026 (Aurinkokeittiöt and Maalaus Valo stopped at
+    # comparison_free_sources_insufficient). Mapped to real OSM craft/shop
+    # tags; candidates are still verified by research before use.
+    "maalausliike": "maalausliike", "maalaustyöt": "maalausliike",
+    "maalaustyö": "maalausliike", "maalauspalvelu": "maalausliike",
+    "maalausurakointi": "maalausliike", "maalari": "maalausliike",
+    "painting contractor": "maalausliike", "house painter": "maalausliike",
+    "keittiöliike": "keittiöliike", "keittiökaluste": "keittiöliike",
+    "keittiömyymälä": "keittiöliike", "keittiösuunnittelu": "keittiöliike",
+    "keittiöremontti": "keittiöliike", "kitchen studio": "keittiöliike",
+    "kitchen design": "keittiöliike",
+    "kattoliike": "kattoliike", "kattotyöt": "kattoliike", "kattotyö": "kattoliike",
+    "kattoremontti": "kattoliike", "kattourakointi": "kattoliike",
+    "peltikatto": "kattoliike", "vesikattotyö": "kattoliike", "roofing": "kattoliike",
+    "laatoitus": "laatoitus", "laatoittaja": "laatoitus", "tiling": "laatoitus",
+    "rakennusliike": "rakennusliike", "talonrakennus": "rakennusliike",
+    "rakennusurakointi": "rakennusliike", "rakennuspalvelu": "rakennusliike",
+    "remonttipalvelu": "rakennusliike", "saneerausliike": "rakennusliike",
+    "general contractor": "rakennusliike", "building contractor": "rakennusliike",
+    "sisustusliike": "sisustusliike", "sisustusmyymälä": "sisustusliike",
+    "huonekaluliike": "sisustusliike", "huonekalumyymälä": "sisustusliike",
+    "interior design": "sisustusliike", "furniture store": "sisustusliike",
+    "lvi-urakointi": "lvi", "lvi-asennus": "lvi", "lvi-palvelu": "lvi",
+    "ilmanvaihtourakointi": "lvi", "hvac": "lvi",
+    "kirvesmies": "kirvesmies", "puusepänliike": "kirvesmies", "carpentry": "kirvesmies",
     # Distinct freight and security-service operators must be compared to their
     # own trade, never a generic consumer shop or a passenger transport site.
     "tieliikenteen tavarankuljetus": "maantiekuljetus",
@@ -231,7 +257,39 @@ OSM_CATEGORIES = {
     "autokorjaamo", "hammaslääkäri", "kuntosali", "hotelli",
     "sähköasentaja", "putkimies", "kukkakauppa", "pyöräliike",
     "suutari", "leipomo", "asianajotoimisto", "musiikkiliike",
+    "maalausliike", "keittiöliike", "kattoliike", "laatoitus",
+    "rakennusliike", "sisustusliike", "lvi", "kirvesmies",
 }
+
+# Two DIFFERENT observed work descriptions on the ORIGINAL site identify a
+# trade whose registry label is generic (e.g. "retail of furniture" for a
+# kitchen studio). A single word, a brand name or competitor text never does.
+TRADE_TEXT_SIGNALS = {
+    "maalausliike": ("maalaustyö", "maalausurakoin", "ulkomaalau", "sisämaalau",
+                     "julkisivumaalau", "maalaamme", "tapetoin", "maalauspalvel"),
+    "keittiöliike": ("keittiökalust", "keittiösuunnit", "keittiöremon",
+                     "keittiömallisto", "työtaso", "välitila", "keittiöt"),
+    "kattoliike": ("kattotyö", "kattoremon", "peltikat", "vesikat", "huopakat",
+                   "tiilikat", "räystä", "katon uusim"),
+    "laatoitus": ("laatoitu", "laatoit", "kylpyhuoneremon", "vedeneristy", "saumau"),
+    "rakennusliike": ("rakennusurak", "talonrakennu", "saneerau", "peruskorjau",
+                      "uudisrakenn", "avaimet käteen", "rakennamme"),
+    "sisustusliike": ("sisustussuunnit", "huonekalu", "sisustustuot", "matot",
+                      "valaisimet", "tekstiilit"),
+    "lvi": ("lvi-", "lämpöpump", "ilmanvaihd", "putkiremon", "käyttövesi"),
+    "kirvesmies": ("puusepäntyö", "kirvesmiestyö", "terassi", "rakennuspuusep", "listoitu"),
+}
+
+
+def trade_from_source_text(text: str) -> str:
+    """Return a trade only when two distinct work signals appear in the source."""
+    text = str(text or "").casefold()
+    best, best_hits = "", 1
+    for category, stems in TRADE_TEXT_SIGNALS.items():
+        hits = sum(1 for stem in stems if stem in text)
+        if hits > best_hits:
+            best, best_hits = category, hits
+    return best
 MAX_PUBLIC_REGIONS_PER_LOOKUP = 2
 
 
@@ -349,6 +407,9 @@ def verified_sector_search_hint(industry: str, original_text: str = "") -> str:
     if observed>=2 and any(x in text for x in
             ("mittauspalvel", "mittaustyöt", "mittaukset", "mittauksia")):
         return "mittauspalvelut"
+    trade = trade_from_source_text(text)
+    if trade:
+        return trade
     return industry
 
 

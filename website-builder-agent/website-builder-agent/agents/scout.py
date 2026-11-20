@@ -67,6 +67,14 @@ def _build_overpass_query(
         "leipomo": [("shop", "bakery")],
         "asianajotoimisto": [("office", "lawyer")],
         "musiikkiliike": [("shop", "musical_instrument")],
+        "maalausliike": [("craft", "painter")],
+        "keittiöliike": [("shop", "kitchen")],
+        "kattoliike": [("craft", "roofer")],
+        "laatoitus": [("craft", "tiler")],
+        "rakennusliike": [("craft", "builder")],
+        "sisustusliike": [("shop", "interior_decoration"), ("shop", "furniture")],
+        "lvi": [("craft", "hvac")],
+        "kirvesmies": [("craft", "carpenter")],
 
     }
     tags = categories.get(industry.strip().casefold())
