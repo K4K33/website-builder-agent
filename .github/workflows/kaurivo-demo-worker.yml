@@ -252,6 +252,12 @@ jobs:
               f.write("has_job="+value+"\n")
           print("Queued private Kaurivo demo available:",value)
           PY
+      - name: Cache free depth/cut-out models
+        if: steps.claim.outputs.has_job == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/kaurivo-models
+          key: kaurivo-models-depth-d2b11a11-mask-309c8469
       - name: Install dependencies only when a job exists
         if: steps.claim.outputs.has_job == 'true'
         run: |

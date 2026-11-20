@@ -30,6 +30,8 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
+from utils.depth_scene_runtime import SCRIPT as DEPTH_SCRIPT
+
 SCRUB_BRIEF = """
 SIGNATURE HERO ENGINE (use when pre_build_brief q1 technique is video_scrub,
 photo_sequence_scrub or cinematic_photo_scroll). Author the home page hero as
@@ -176,7 +178,7 @@ _SCRIPT = """
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   if (reduce.matches || !('IntersectionObserver' in window)) return;
   const phone = matchMedia('(max-width: 760px)').matches;
-  for (const scene of document.querySelectorAll('[data-kaurivo-scrub="ready"]')) {
+  for (const scene of document.querySelectorAll('[data-kaurivo-scrub="ready"]:not([data-scrub-mode="depth"])')) {
     const set = JSON.parse(scene.getAttribute(phone ? 'data-scrub-m' : 'data-scrub-d'));
     const stage = scene.querySelector('[data-scrub-stage]');
     const canvas = scene.querySelector('canvas[data-scrub-canvas]');
@@ -265,6 +267,22 @@ def _staged(route: str, src: str, allowed: dict) -> tuple[str, str] | None:
     return (resolved, digest) if digest else None
 
 
+def _depth_layers(sources, files, site_root: Path, prefix: str, route: str) -> list | None:
+    """Depth map per staged photo (free local model), or None to use frames."""
+    from utils import depth_estimation
+    if depth_estimation.disabled() or any(f.suffix.lower() in _VIDEO_EXT for f in files):
+        return None
+    key = sha256(json.dumps([d for _, d in sources] + ["depth-v1"]).encode()).hexdigest()[:12]
+    layers = []
+    for index, ((src, _), file) in enumerate(zip(sources, files)):
+        relative = PurePosixPath("assets/depth") / key / f"{index}.webp"
+        target = site_root / relative
+        if not target.is_file() and depth_estimation.estimate_depth(file, target) is None:
+            return None
+        layers.append({"img": prefix + src, "depth": prefix + str(relative)})
+    return layers
+
+
 def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
                          site_root: str | Path | None) -> str:
     """Attach the scrub engine to a well-formed hero built from staged media."""
@@ -276,7 +294,8 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
                if PurePosixPath(item["src"]).suffix.lower() in _IMAGE_EXT | _VIDEO_EXT}
     ready = False
     for scene in soup.select("[data-kaurivo-scrub]"):
-        for attr in ("data-scrub-active", "data-scrub-d", "data-scrub-m", "data-scrub-drawn"):
+        for attr in ("data-scrub-active", "data-scrub-d", "data-scrub-m", "data-scrub-drawn",
+                     "data-scrub-mode", "data-depth"):
             scene.attrs.pop(attr, None)
         scene["data-kaurivo-scrub"] = ""
         if ready or scene.find_parent("main") is None:
@@ -302,10 +321,20 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
         files = [site_root / src for src, _ in sources]
         if not all(f.is_file() for f in files):
             continue
+        prefix = "../" * (len(PurePosixPath(route).parts) - 1)
+        length = f"{300 + 40 * len(sources)}svh"
+        depth_layers = _depth_layers(sources, files, site_root, prefix, route)
+        if depth_layers:
+            # A real 3D camera move through the photos: far lighter than frames.
+            scene["data-scrub-mode"] = "depth"
+            scene["data-depth"] = json.dumps({"layers": depth_layers, "length": length},
+                                             separators=(",", ":"))
+            manifests = {"d": None, "m": None}
+        else:
+            manifests = {}
         key = sha256(json.dumps([d for _, d in sources] + [DESKTOP, MOBILE]).encode()).hexdigest()[:12]
         base = PurePosixPath("assets/scrub") / key
-        manifests = {}
-        for kind, spec in (("d", DESKTOP), ("m", MOBILE)):
+        for kind, spec in (() if depth_layers else (("d", DESKTOP), ("m", MOBILE))):
             folder = site_root / base / kind
             manifest_file = folder / "manifest.json"
             if manifest_file.is_file():
@@ -319,14 +348,14 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
                     manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
             if not manifest:
                 break
-            depth = len(PurePosixPath(route).parts) - 1
-            manifests[kind] = {"base": "../" * depth + f"{base}/{kind}/",
+            manifests[kind] = {"base": prefix + f"{base}/{kind}/",
                                "count": manifest["count"], "eager": EAGER_FRAMES,
-                               "length": f"{300 + 40 * len(sources)}svh"}
+                               "length": length}
         if set(manifests) != {"d", "m"}:
             continue
-        scene["data-scrub-d"] = json.dumps(manifests["d"], separators=(",", ":"))
-        scene["data-scrub-m"] = json.dumps(manifests["m"], separators=(",", ":"))
+        if not depth_layers:
+            scene["data-scrub-d"] = json.dumps(manifests["d"], separators=(",", ":"))
+            scene["data-scrub-m"] = json.dumps(manifests["m"], separators=(",", ":"))
         poster["fetchpriority"] = "high"
         poster.attrs.pop("loading", None)
         stage = soup.new_tag("div", attrs={"data-scrub-stage": ""})
@@ -349,7 +378,12 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
     for item in soup.select("style[data-kaurivo-scrub-runtime], script[data-kaurivo-scrub-runtime]"):
         item.decompose()
     if ready and soup.head and soup.body:
-        for name, code, parent in (("style", _STYLE, soup.head), ("script", _SCRIPT, soup.body)):
+        runtime = [("style", _STYLE, soup.head)]
+        if soup.select_one('[data-kaurivo-scrub="ready"]:not([data-scrub-mode="depth"])'):
+            runtime.append(("script", _SCRIPT, soup.body))
+        if soup.select_one('[data-kaurivo-scrub="ready"][data-scrub-mode="depth"]'):
+            runtime.append(("script", DEPTH_SCRIPT, soup.body))
+        for name, code, parent in runtime:
             tag = soup.new_tag(name, attrs={"data-kaurivo-scrub-runtime": ""})
             tag.string = code
             parent.append(tag)

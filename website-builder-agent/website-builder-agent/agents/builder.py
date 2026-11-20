@@ -28,6 +28,7 @@ from utils.site_build_pipeline import build_pages_from_response
 from utils.local_media_intake import stage_local_media
 from utils.source_photo_sequence import PHOTO_SEQUENCE_BRIEF
 from utils.scroll_scrub import SCRUB_BRIEF
+from utils.product_relief import PRODUCT_BRIEF
 from utils.quality_v7 import VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK
 from utils.content_parity import audit_content_parity
 from utils.source_fidelity import (source_manifest, validate_source_plan, audit_source_fidelity)
@@ -1156,7 +1157,7 @@ def _clean_html(html: str) -> str:
 
 
 def _request_site_pages(system, prompt, *, slug, architecture, image_paths, current_pages=None):
-    system = "\n\n".join((system, VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF))
+    system = "\n\n".join((system, VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF, PRODUCT_BRIEF))
     job_id = os.getenv("KAURIVO_QUEUED_DEMO_ID")
     if not job_id:
         return ask_claude(system, prompt, use_web_search=False, max_tokens=config.BUILDER_MAX_TOKENS,

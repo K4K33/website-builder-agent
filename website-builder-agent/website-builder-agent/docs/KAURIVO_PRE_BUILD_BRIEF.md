@@ -46,5 +46,25 @@ Over budget or invalid markup leaves the authored static hero. Verified
 20.11.2026 in Chromium at 1440x900 and 390x844: first frame drawn in
 0.2-0.5 s, chapters switch at their points, no console errors or overflow.
 
-Not yet automated: video intake (only images are staged today), Three.js
-for a real GLB model, and the pointer shader surface.
+## Depth scene and touchable product (free 3D from real photos)
+
+`utils/depth_estimation.py` runs two open models locally with onnxruntime,
+downloaded once from GitHub releases and verified by SHA-256 (cached in the
+worker with actions/cache): Depth Anything V2 Small (Apache-2.0) for depth
+and U2-Net-p (Apache-2.0, rembg) for product masks. About 1.3 s per photo on
+a CPU; no API, account or cost. Failure of either keeps the fallback.
+
+- Depth scene (default for photo heroes): each hero photo gets a depth map
+  (about 40 KB). A WebGL shader dollies the camera into the photo (near
+  pixels move more than far ones), dissolves to the next photo front to back,
+  and tilts and lifts a lens where the pointer or finger is. Pitskun test:
+  3 photos in 4.9 s and 120 KB, against 48 s and 6.8 MB for frames. Frames
+  remain the fallback, and the path for a company video.
+- Touchable product (`utils/product_relief.py`, `data-kaurivo-product`): a
+  product photo is cut out and given depth; the product floats as a lit
+  relief with a soft shadow and turns toward pointer, finger and scroll.
+  Only clean cut-outs are accepted (coverage 6-75 %, little contact with the
+  frame edge, few uncertain mask pixels); otherwise the photo stays.
+
+Not yet automated: video intake (only images are staged today) and full
+360-degree models; the relief turns convincingly up to roughly 25 degrees.
