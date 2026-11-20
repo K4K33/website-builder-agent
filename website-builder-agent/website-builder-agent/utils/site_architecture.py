@@ -88,6 +88,97 @@ def bind_source_routes(research: dict) -> None:
                 if fragment not in sections:
                     sections.append(fragment)
 
+_DEFAULT_ROUTES = (
+    ("index.html", ["hero", "palvelut", "yhteys"],
+     "Etusivu esittelee yrityksen vahvistetun päätarjonnan ja yhteydenoton",
+     "Asiakas näkee heti mitä yritys tekee ja miten siihen saa yhteyden"),
+    ("palvelut/index.html", ["palvelut"],
+     "Palvelusivu kokoaa yrityksen vahvistetut palvelut yhteen",
+     "Asiakas vertailee palveluita ja löytää omaan tarpeeseensa sopivan"),
+    ("yhteystiedot/index.html", ["yhteystiedot"],
+     "Yhteystietosivu kertoo miten ja mistä yrityksen tavoittaa",
+     "Asiakas soittaa, lähettää viestin tai löytää yrityksen sijainnin"),
+)
+
+
+def ensure_site_architecture(research: dict, *, no_site: bool = False) -> bool:
+    """Repair a missing or malformed model-written plan deterministically.
+
+    Free models sometimes omit ``site_architecture`` or return it in another
+    shape. The plan is structural, so it is rebuilt from the observed source
+    instead of stopping the demo: a list becomes {"pages": [...]}, section ids
+    are slugified, too-short page purposes are completed, and a missing plan
+    becomes index (+ services and contact for a content-rich source). Source
+    routes are added afterwards by bind_source_routes. Returns True if changed.
+    """
+    plan = research.get("site_architecture")
+    changed = False
+    if isinstance(plan, list):
+        plan, changed = {"pages": plan}, True
+    if isinstance(plan, dict) and not isinstance(plan.get("pages"), list):
+        for key in ("routes", "sivut", "page_plan"):
+            if isinstance(plan.get(key), list):
+                plan, changed = {**plan, "pages": plan[key]}, True
+                break
+    pages = []
+    seen = set()
+    for page in (plan.get("pages") if isinstance(plan, dict) else None) or []:
+        if not isinstance(page, dict):
+            changed = True
+            continue
+        try:
+            route = route_path(page.get("path"))
+        except ValueError:
+            changed = True
+            continue
+        if route in seen:
+            changed = True
+            continue
+        seen.add(route)
+        sections = []
+        for section in page.get("section_ids") or []:
+            fragment = slugify(str(section or ""))
+            if fragment and not fragment[0].isalpha():
+                fragment = "section-" + fragment
+            if fragment and fragment not in sections:
+                sections.append(fragment)
+        if sections != page.get("section_ids"):
+            changed = True
+        label = route.removesuffix("/index.html").removesuffix(".html").replace("/", " ")
+        purpose = str(page.get("purpose") or "").strip()
+        task = str(page.get("user_task") or "").strip()
+        if len(purpose) < 13:
+            purpose, changed = f"Sivu {label} esittelee yrityksen vahvistettua sisältöä", True
+        if len(task) < 13:
+            task, changed = f"Asiakas löytää sivulta {label} tarvitsemansa tiedon", True
+        pages.append({**page, "path": route, "purpose": purpose, "user_task": task,
+                      "section_ids": sections or ["sisalto"]})
+    inventory = research.get("source_inventory") or {}
+    originals = inventory.get("pages") or []
+    words = sum(len(str(p.get("text") or "").split()) for p in originals if isinstance(p, dict))
+    rich = not no_site and (len(originals) >= 3 or words >= 650)
+    if not any(p["path"] == "index.html" for p in pages):
+        pages.insert(0, dict(zip(("path", "section_ids", "purpose", "user_task"),
+                                 _DEFAULT_ROUTES[0])))
+        changed = True
+    if rich and len(pages) < 2:
+        for route, sections, purpose, task in _DEFAULT_ROUTES[1:]:
+            if route not in {p["path"] for p in pages}:
+                pages.append({"path": route, "section_ids": sections,
+                              "purpose": purpose, "user_task": task})
+        changed = True
+    # Distinct visitor tasks per route.
+    tasks = set()
+    for page in pages:
+        key = re.sub(r"\s+", " ", page["user_task"]).casefold()
+        if key in tasks:
+            page["user_task"] = page["user_task"].rstrip(".") + f" ({page['path']})"
+            changed = True
+        tasks.add(re.sub(r"\s+", " ", page["user_task"]).casefold())
+    research["site_architecture"] = {**(plan if isinstance(plan, dict) else {}), "pages": pages[:MAX_PAGES]}
+    return changed
+
+
 def validate_site_architecture(research: dict, *, no_site: bool = False) -> dict:
     plan = research.get("site_architecture")
     if not isinstance(plan, dict) or not isinstance(plan.get("pages"), list):
