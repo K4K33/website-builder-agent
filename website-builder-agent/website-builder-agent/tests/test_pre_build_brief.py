@@ -1,7 +1,6 @@
 import io
 from pathlib import Path
-
-import pytest
+import unittest
 
 from utils.pre_build_brief import (
     PROTOCOL, derive_pre_build_brief, ensure_pre_build_brief, validate_pre_build_brief,
@@ -33,77 +32,81 @@ def research(images=(), links=(), refs=2, journeys=True, contact=True, name="Esi
     }
 
 
-def test_all_six_questions_answered():
-    brief = derive_pre_build_brief(research(images=["/a.jpg", "/b.jpg", "/c.jpg"]))
-    assert brief["protocol"] == PROTOCOL and brief["gaps"] == []
-    for key in ("q1_signature_moment", "q2_assets", "q3_brand_feel",
-                "q4_primary_action", "q5_performance", "q6_verified_facts"):
-        assert brief[key]
-    assert brief["q1_signature_moment"]["moment"] == "Elementti nousee paikalleen"
-    assert brief["q4_primary_action"]["href"] == "tel:+3581012345"
-    assert brief["q6_verified_facts"]["primary_offering_quote"]
-    assert brief["q2_assets"]["generation_allowed"] is False
+class PreBuildBriefTests(unittest.TestCase):
+    def test_all_six_questions_answered(self):
+        brief = derive_pre_build_brief(research(images=["/a.jpg", "/b.jpg", "/c.jpg"]))
+        self.assertEqual(brief["protocol"], PROTOCOL)
+        self.assertEqual(brief["gaps"], [])
+        for key in ("q1_signature_moment", "q2_assets", "q3_brand_feel",
+                    "q4_primary_action", "q5_performance", "q6_verified_facts"):
+            self.assertTrue(brief[key])
+        self.assertEqual(brief["q1_signature_moment"]["moment"], "Elementti nousee paikalleen")
+        self.assertEqual(brief["q4_primary_action"]["href"], "tel:+3581012345")
+        self.assertTrue(brief["q6_verified_facts"]["primary_offering_quote"])
+        self.assertIs(brief["q2_assets"]["generation_allowed"], False)
+
+    def test_technique_follows_real_material(self):
+        cases = (
+            ((), (), "typographic_statement"),
+            (("/hero.jpg",), (), "cinematic_photo_scroll"),
+            (("/1.jpg", "/2.webp", "/3.png"), (), "photo_sequence_scrub"),
+            (("/1.jpg",), ("/esittely.mp4",), "video_scrub"),
+            (("/1.jpg",), ("/tuote.glb",), "product_3d"),
+            (("/logo.png", "/icon-phone.png", "/facebook.jpg"), (), "typographic_statement"),
+        )
+        for images, links, technique in cases:
+            with self.subTest(technique=technique, images=images):
+                brief = derive_pre_build_brief(research(images=images, links=links))
+                self.assertEqual(brief["q1_signature_moment"]["technique"], technique)
+
+    def test_procedural_3d_is_forbidden_in_every_brief(self):
+        brief = derive_pre_build_brief(research())
+        self.assertTrue(any("procedural" in rule for rule in brief["q1_signature_moment"]["forbidden"]))
+
+    def test_staged_media_decides_usable_technique(self):
+        data = research(images=["/1.jpg", "/2.jpg", "/3.jpg"])
+        self.assertEqual(derive_pre_build_brief(data, staged_media=[])["q1_signature_moment"]["technique"],
+                         "typographic_statement")
+        staged = [{"src": "assets/a.jpg"}]
+        self.assertEqual(derive_pre_build_brief(data, staged_media=staged)["q1_signature_moment"]["technique"],
+                         "cinematic_photo_scroll")
+
+    def test_gaps_block_before_any_page_is_authored(self):
+        for kwargs, gap in (({"refs": 1}, "q3_brand_feel"),
+                            ({"journeys": False, "contact": False}, "q4_primary_action"),
+                            ({"name": ""}, "q6_verified_facts")):
+            with self.subTest(gap=gap):
+                data = research(**kwargs)
+                with self.assertRaisesRegex(RuntimeError, "PRE_BUILD_BRIEF_INCOMPLETE: .*" + gap):
+                    ensure_pre_build_brief(data)
+                self.assertIn(gap, data["pre_build_brief"]["gaps"])
+
+    def test_benchmark_records_count_as_references(self):
+        data = research(refs=0)
+        data["design_benchmark"] = [{"url": "https://a.fi/"}, {"url": "https://b.fi/"}]
+        self.assertEqual(derive_pre_build_brief(data)["gaps"], [])
+
+    def test_phone_from_facts_when_no_journey(self):
+        brief = derive_pre_build_brief(research(journeys=False))
+        self.assertEqual(brief["q4_primary_action"]["href"], "tel:0101234567")
+
+    def test_missing_brief_is_rejected(self):
+        with self.assertRaisesRegex(RuntimeError, "missing"):
+            validate_pre_build_brief({})
+
+    def test_pipeline_wiring(self):
+        research_src = (ROOT / "agents/research.py").read_text(encoding="utf-8")
+        self.assertEqual(research_src.count('research_data["pre_build_brief"] = derive_pre_build_brief'), 2)
+        concept_src = (ROOT / "utils/concept_workflow.py").read_text(encoding="utf-8")
+        self.assertIn("ensure_pre_build_brief(research, media)", concept_src)
+        builder_src = (ROOT / "agents/builder.py").read_text(encoding="utf-8")
+        self.assertEqual(builder_src.count("ensure_pre_build_brief(research, media_manifest)"), 2)
+
+    def test_queue_classifies_gap(self):
+        from scripts.run_kaurivo_demo_queue import classify_stage_failure
+        log = io.StringIO("Traceback\nRuntimeError: PRE_BUILD_BRIEF_INCOMPLETE: q4_primary_action\n")
+        self.assertEqual(classify_stage_failure(log, "concepting"), "pre_build_brief_incomplete")
 
 
-@pytest.mark.parametrize("images,links,technique", [
-    ((), (), "typographic_statement"),
-    (("/hero.jpg",), (), "cinematic_photo_scroll"),
-    (("/1.jpg", "/2.webp", "/3.png"), (), "photo_sequence_scrub"),
-    (("/1.jpg",), ("/esittely.mp4",), "video_scrub"),
-    (("/1.jpg",), ("/tuote.glb",), "product_3d"),
-    (("/logo.png", "/icon-phone.png", "/facebook.jpg"), (), "typographic_statement"),
-])
-def test_technique_follows_real_material(images, links, technique):
-    brief = derive_pre_build_brief(research(images=images, links=links))
-    assert brief["q1_signature_moment"]["technique"] == technique
-
-
-def test_procedural_3d_is_forbidden_in_every_brief():
-    brief = derive_pre_build_brief(research())
-    assert any("procedural" in rule for rule in brief["q1_signature_moment"]["forbidden"])
-
-
-def test_staged_media_decides_usable_technique():
-    data = research(images=["/1.jpg", "/2.jpg", "/3.jpg"])
-    assert derive_pre_build_brief(data, staged_media=[])["q1_signature_moment"]["technique"] \
-        == "typographic_statement"
-    staged = [{"src": "assets/a.jpg"}]
-    assert derive_pre_build_brief(data, staged_media=staged)["q1_signature_moment"]["technique"] \
-        == "cinematic_photo_scroll"
-
-
-@pytest.mark.parametrize("kwargs,gap", [
-    ({"refs": 1}, "q3_brand_feel"),
-    ({"journeys": False, "contact": False}, "q4_primary_action"),
-    ({"name": ""}, "q6_verified_facts"),
-])
-def test_gaps_block_before_any_page_is_authored(kwargs, gap):
-    data = research(**kwargs)
-    with pytest.raises(RuntimeError, match="PRE_BUILD_BRIEF_INCOMPLETE: .*" + gap):
-        ensure_pre_build_brief(data)
-    assert gap in data["pre_build_brief"]["gaps"]
-
-
-def test_phone_from_facts_when_no_journey():
-    brief = derive_pre_build_brief(research(journeys=False))
-    assert brief["q4_primary_action"]["href"] == "tel:0101234567"
-
-
-def test_missing_brief_is_rejected():
-    with pytest.raises(RuntimeError, match="missing"):
-        validate_pre_build_brief({})
-
-
-def test_pipeline_wiring():
-    research_src = (ROOT / "agents/research.py").read_text(encoding="utf-8")
-    assert research_src.count('research_data["pre_build_brief"] = derive_pre_build_brief') == 2
-    concept_src = (ROOT / "utils/concept_workflow.py").read_text(encoding="utf-8")
-    assert "ensure_pre_build_brief(research, media)" in concept_src
-    builder_src = (ROOT / "agents/builder.py").read_text(encoding="utf-8")
-    assert builder_src.count("ensure_pre_build_brief(research, media_manifest)") == 2
-
-
-def test_queue_classifies_and_explains_gap():
-    from scripts.run_kaurivo_demo_queue import classify_stage_failure
-    log = io.StringIO("Traceback\nRuntimeError: PRE_BUILD_BRIEF_INCOMPLETE: q4_primary_action\n")
-    assert classify_stage_failure(log, "concepting") == "pre_build_brief_incomplete"
+if __name__ == "__main__":
+    unittest.main()
