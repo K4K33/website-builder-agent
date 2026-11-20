@@ -1155,6 +1155,7 @@ def _clean_html(html: str) -> str:
 
 
 def _request_site_pages(system, prompt, *, slug, architecture, image_paths, current_pages=None):
+    system = "\n\n".join((system, VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, PHOTO_SEQUENCE_BRIEF))
     job_id = os.getenv("KAURIVO_QUEUED_DEMO_ID")
     if not job_id:
         return ask_claude(system, prompt, use_web_search=False, max_tokens=config.BUILDER_MAX_TOKENS,
@@ -1959,7 +1960,7 @@ Palauta vain validi JSON ilman markdownia.
 
     html = _request_site_pages(
         BUILD_SYSTEM_PROMPT,
-        user_prompt + "\n\n" + VISUAL_PLAYBOOK + "\n\n" + PHOTO_SEQUENCE_BRIEF,
+        user_prompt,
         slug=slug, architecture=architecture,
         image_paths=reference_images + [path for path in (company.get("screenshots") or {}).values()
                      if isinstance(path, str) and os.path.isfile(path)] or None,
@@ -2339,7 +2340,7 @@ sama tapa kuin ensimmäisessä rakentamisessa. Älä palauta vain index.html.
 
     new_html = _request_site_pages(
         REVISE_SYSTEM_PROMPT,
-        user_prompt + "\n\n" + VISUAL_EXECUTION_BRIEF + VISUAL_PLAYBOOK + "\n\n" + PHOTO_SEQUENCE_BRIEF,
+        user_prompt,
         slug=slug, architecture=architecture, current_pages=current_pages,
         image_paths=reference_images + prior_views + motion_views or None,
     )
