@@ -243,6 +243,22 @@ def generate_concepts(name, *, response_path=None, producer=''):
             raw = json.dumps(authored, ensure_ascii=False)
             result = render_three_concepts(raw)
         if result["status"] != "ready_for_comparison":
+            # Last-resort deterministic V8 brand repair: map unproven vivid
+            # accents to the nearest OBSERVED original colour and show the
+            # exact verified service in the first section. Runs before the
+            # contrast repair so any new colour pairing is measured again.
+            from utils.brand_direction_v8 import repair_v8_findings
+            brand_changed = False
+            for identifier, concept in authored["concepts"].items():
+                pages_now = concept.get("pages") or {}
+                fixed = repair_v8_findings(pages_now, research)
+                for route, candidate in fixed.items():
+                    if candidate != pages_now.get(route):
+                        concept["pages"][route] = prepare_page(route, candidate)
+                        brand_changed = True
+            if brand_changed:
+                result = render_three_concepts(json.dumps(authored, ensure_ascii=False))
+        if result["status"] != "ready_for_comparison":
             # Last-resort, CSS-only deterministic repair for specific measured
             # contrast failures. Do NOT change copy, brand photos or routes.
             # It runs after model repairs so the author can first preserve the

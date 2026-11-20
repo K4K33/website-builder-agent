@@ -239,3 +239,68 @@ def audit_art_direction(
         "identity": identity,
         "does_not_certify_visual_premium_quality": True,
     }
+
+
+def _nearest_original(color: str, palette: list[str]) -> str:
+    target = _hex(color)
+    rgb = lambda value: tuple(int(value[pos:pos + 2], 16) for pos in (1, 3, 5))
+    t = rgb(target)
+    return min(palette, key=lambda value: sum((a - b) ** 2 for a, b in zip(rgb(value), t)))
+
+
+def repair_v8_findings(pages: dict[str, str], research: dict | None) -> dict[str, str]:
+    """Deterministic last resort for two exactly measured V8 brand defects.
+
+    Ostroferia 950ec193 (run 44776900054): free models left an unproven vivid
+    accent and omitted the verified service from the first section through
+    two model revisions. This changes nothing else:
+
+    * ``unproven_brand_accent``: each reported vivid hex literal is replaced
+      with the NEAREST source-observed original brand colour. With no
+      observed palette nothing is changed (no colour is ever invented).
+    * ``verified_service_not_visible_in_hero``: the exact source-verified
+      service label is inserted as one short line in the first main section.
+
+    The unchanged browser, contrast, content and independent review gates
+    run afterwards and remain the authority.
+    """
+    research = research if isinstance(research, dict) else {}
+    audit = audit_art_direction(pages, research)
+    palette = sorted({row["hex"] for row in audit["identity"]["verified_original_colors"]})
+    evidence = research.get("primary_offering_evidence") or {}
+    label = str(evidence.get("label") or "").strip() if isinstance(evidence, dict) else ""
+    repaired = dict(pages)
+    for finding in audit["blocking"]:
+        route = finding.get("route")
+        html = repaired.get(route)
+        if not isinstance(html, str):
+            continue
+        if finding.get("code") == "unproven_brand_accent" and palette:
+            for color in finding.get("evidence") or []:
+                normalized = _hex(color)
+                if not normalized:
+                    continue
+                replacement = _nearest_original(normalized, palette)
+                short = ("#" + normalized[1] + normalized[3] + normalized[5]
+                         if normalized[1] == normalized[2] and normalized[3] == normalized[4]
+                         and normalized[5] == normalized[6] else None)
+                for literal in filter(None, (normalized, short)):
+                    html = re.sub(re.escape(literal) + r"(?![0-9a-fA-F])", replacement,
+                                  html, flags=re.I)
+        if (finding.get("code") == "verified_service_not_visible_in_hero"
+                and label and route == "index.html"):
+            soup = BeautifulSoup(html, "html.parser")
+            main = soup.find("main")
+            first = (main.find("section") if main else None) or main
+            if first is not None:
+                line = soup.new_tag("p")
+                line["class"] = ["kaurivo-verified-service"]
+                line.string = label[:160]
+                heading = first.find(["h1", "h2"])
+                if heading is not None:
+                    heading.insert_after(line)
+                else:
+                    first.insert(0, line)
+                html = str(soup)
+        repaired[route] = html
+    return repaired
