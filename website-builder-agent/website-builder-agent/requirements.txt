@@ -7,3 +7,6 @@ ijson>=3.3.0,<4.0
 websocket-client>=1.8.0,<2.0
 
 Pillow>=10.0,<12.0
+# Free local depth maps and product cut-outs (utils/depth_estimation.py)
+numpy>=1.24
+onnxruntime>=1.17,<2

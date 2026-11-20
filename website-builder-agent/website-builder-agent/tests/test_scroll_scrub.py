@@ -27,6 +27,12 @@ SMALL = {"d": {"width": 64, "height": 40, "count": 6}, "m": {"width": 30, "heigh
 
 
 class ScrollScrubTests(unittest.TestCase):
+    def setUp(self):
+        # Frame-mode tests: no model download; depth mode has its own tests.
+        patcher = patch.dict("os.environ", {"KAURIVO_DEPTH_DISABLED": "1"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def site(self, tmp):
         root = Path(tmp)
         (root / "assets").mkdir()
@@ -100,7 +106,8 @@ class ScrollScrubTests(unittest.TestCase):
         pipeline = (ROOT / "utils/site_build_pipeline.py").read_text(encoding="utf-8")
         self.assertIn("enhance_scroll_scrub(body, route=route", pipeline)
         builder = (ROOT / "agents/builder.py").read_text(encoding="utf-8")
-        self.assertIn("PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF", builder)
+        self.assertIn("PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF, PRODUCT_BRIEF", builder)
+        self.assertIn("enhance_product_relief(body, route=route", pipeline)
 
 
 if __name__ == "__main__":
