@@ -33,6 +33,11 @@ MAX_PAGES = 6
 MAX_HTML_BYTES = 1_500_000
 MIN_CONTENT_IMAGES = 3
 MIN_WORDS = 200
+# Photo-rich, text-light sites are typical Kaurivo prospects (Maalaus Valo
+# 20.11.2026: 10 own photos, 192 words). Plenty of own photos compensates
+# for sparse copy; a truly empty page still stops.
+PHOTO_RICH_IMAGES = 6
+PHOTO_RICH_MIN_WORDS = 120
 SHELL_MAX_WORDS = 60
 
 _PRIORITY_LINK = re.compile(
@@ -219,7 +224,9 @@ def assess_pages(pages: list[tuple[str, str]]) -> dict:
     home_words = len(_visible_text(BeautifulSoup(home_html, "html.parser")).split())
     if home_words <= SHELL_MAX_WORDS and len(pages) == 1 and script_count >= 3:
         result["verdict"] = "needs_browser"
-    elif len(photos) < MIN_CONTENT_IMAGES or words < MIN_WORDS:
+    elif len(photos) < MIN_CONTENT_IMAGES or words < PHOTO_RICH_MIN_WORDS:
+        result["verdict"] = "thin"
+    elif words < MIN_WORDS and len(photos) < PHOTO_RICH_IMAGES:
         result["verdict"] = "thin"
     else:
         result["verdict"] = "ready"
@@ -256,8 +263,9 @@ def blocking_reason(result: dict) -> str:
     if verdict == "restricted":
         return "Alkuperäinen sivu on yksityinen tai kirjautumisen takana"
     return ("Lähdesivulla liian vähän aineistoa demolle: "
-            f"{result.get('content_images', 0)} omaa kuvaa (väh. {MIN_CONTENT_IMAGES}), "
-            f"{result.get('words', 0)} sanaa (väh. {MIN_WORDS}) {result.get('pages', 0)} sivulla")
+            f"{result.get('content_images', 0)} omaa kuvaa ja {result.get('words', 0)} sanaa "
+            f"{result.get('pages', 0)} sivulla (vaaditaan väh. {MIN_CONTENT_IMAGES} kuvaa ja "
+            f"{MIN_WORDS} sanaa, tai {PHOTO_RICH_IMAGES} kuvaa ja {PHOTO_RICH_MIN_WORDS} sanaa)")
 
 
 def main(argv=None) -> int:
