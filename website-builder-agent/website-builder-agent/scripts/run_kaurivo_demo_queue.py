@@ -1465,5 +1465,17 @@ def main():
             return 1
 
 
+def _main_with_ai_usage():
+    """Report how many free AI requests this one demo run used (counts only)."""
+    usage_dir=os.environ.get("RUNNER_TEMP") or tempfile.gettempdir()
+    usage_file=os.path.join(usage_dir,"kaurivo-ai-usage-%d.tsv"%os.getpid())
+    os.environ["KAURIVO_AI_USAGE_FILE"]=usage_file
+    try:
+        return main()
+    finally:
+        from utils.ai_usage import format_summary
+        print("Kaurivo AI usage this run:",format_summary(usage_file))
+
+
 if __name__=="__main__":
-    raise SystemExit(main())
+    raise SystemExit(_main_with_ai_usage())

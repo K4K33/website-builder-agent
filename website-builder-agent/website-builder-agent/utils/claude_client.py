@@ -352,6 +352,8 @@ def ask_claude(
             raise RuntimeError("OpenRouter request blocked by daily resource limit.")
 
         try:
+            from utils.ai_usage import record as _record_ai_usage
+            _record_ai_usage("openrouter", stage)
             response = requests.post(
                 OPENROUTER_URL,
                 headers=headers,
