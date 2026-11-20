@@ -465,7 +465,10 @@ def source_failure_diagnostic(handle,start_position=0):
         return ""
     terminal=terminals[-1]
     if "Original-site primary offering unverified" in terminal:
-        return "Vahvista nykyinen päätuote tai palvelu yrityksen asiakkaille suunnatusta lähteestä."
+        # Only a fixed, content-free reason code from service_quality is shown.
+        code=re.search(r"reason=([a-z_]{3,40})\b",terminal)
+        return ("Vahvista nykyinen päätuote tai palvelu yrityksen asiakkaille suunnatusta lähteestä."
+                +(" Syy: "+code.group(1) if code else ""))
     marker="Original-site content research incomplete; review these pages:"
     if marker not in terminal:
         return ""
