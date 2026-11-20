@@ -9,6 +9,7 @@ import os
 import tempfile
 
 from utils.source_photo_sequence import enhance_photo_sequence
+from utils.scroll_scrub import enhance_scroll_scrub
 from utils.site_architecture import (
     parse_generated_site, validate_site_architecture, validate_site_navigation,
     pages_for_validation,
@@ -39,6 +40,11 @@ def build_pages_from_response(raw: str, *, slug: str,
     direction=visual_direction_plan(research, creative, architecture)
     pages=parse_generated_site(raw, architecture)
     pages = {route: enhance_photo_sequence(body, route=route, media=media or [])
+             for route, body in pages.items()}
+    # Signature hero: frames from the company's own staged media, drawn by
+    # scroll position; poster/static fallback stays the authored HTML.
+    pages = {route: enhance_scroll_scrub(body, route=route, media=media or [],
+                                         site_root=Path(output_root) / slug)
              for route, body in pages.items()}
     pages, commerce_artifacts = attach_commerce_catalogue(pages, research)
     # The creative preflight is now an explicit implementation contract,

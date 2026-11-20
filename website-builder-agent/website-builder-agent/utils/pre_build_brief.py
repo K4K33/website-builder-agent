@@ -29,15 +29,15 @@ _MODEL_EXT = re.compile(r"\.(?:glb|gltf|usdz)$", re.I)
 
 # Technique -> (minimum material, implementation note). Ordered by impact.
 TECHNIQUES = {
-    "video_scrub": "Company's own video drawn frame by frame on a canvas as the "
-                   "visitor scrolls a pinned hero; poster image first.",
+    "video_scrub": "Signature hero engine (data-kaurivo-scrub): the company's own "
+                   "video is drawn frame by frame as the visitor scrolls; poster first.",
     "product_3d": "Company's own GLB/GLTF model in Three.js with an HDR "
                   "environment; rotates with scroll or pointer; poster fallback.",
-    "photo_sequence_scrub": "Pinned stage where 3-6 of the company's real work "
-                            "photos replace each other with scroll (scale, clip-path "
-                            "and caption per stage).",
-    "cinematic_photo_scroll": "One strong real photo, full bleed; scroll drives a "
-                              "slow scale and clip-path reveal under a masked headline.",
+    "photo_sequence_scrub": "Signature hero engine (data-kaurivo-scrub): poster plus "
+                            "up to 3 more real work photos in story order; the builder "
+                            "renders frames and plays them with scroll.",
+    "cinematic_photo_scroll": "Signature hero engine (data-kaurivo-scrub) with one strong "
+                              "real photo; the builder renders a slow camera move.",
     "typographic_statement": "No usable photography: the headline itself is the "
                              "signature (variable-font weight/width driven by scroll).",
 }
