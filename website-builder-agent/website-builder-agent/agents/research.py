@@ -49,7 +49,8 @@ from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.creative_directions import validate_creative_directions
 from utils.quality_v7 import CREATIVE_DIRECTION_BRIEF
 from utils.creative_brief_recovery import ensure_creative_directions
-from utils.site_architecture import bind_source_routes, validate_site_architecture
+from utils.site_architecture import (bind_source_routes, ensure_site_architecture,
+                                     validate_site_architecture)
 from utils.commerce_capture import capture_shop_catalogues
 from utils.commerce_catalogue import bind_commerce_architecture
 
@@ -1041,6 +1042,7 @@ def _research_verified_no_website_company(slug: str, company: dict) -> dict:
     research_data["primary_user_journeys"] = discover_source_journeys(research_data)
     _validate_research_design(research_data, "", images)
     validate_creative_directions(research_data)
+    ensure_site_architecture(research_data, no_site=True)
     validate_site_architecture(research_data, no_site=True)
     # One company-specific source/art-direction record is consumed by Builder
     # and QA. Absence of a website never proves absence of a brand.
@@ -1657,6 +1659,9 @@ Tärkeää:
         )
     # Do not spend a Builder request on a redesign that never planned to
     # preserve each originally observed content page and topic.
+    # A free model may omit or misshape the page plan; rebuild it from the
+    # observed source instead of stopping the demo.
+    ensure_site_architecture(research_data)
     bind_commerce_architecture(research_data)
     _repair_source_map(research_data, url)
     bind_source_routes(research_data)
