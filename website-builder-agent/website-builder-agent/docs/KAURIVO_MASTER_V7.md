@@ -1,5 +1,5 @@
 # KAURIVO MASTER V7 — active design craft contract
-Version: 7.0.5 (20 November 2026). This is a RUNTIME instruction, not merely a reference document.
+Version: 7.0.6 (20 November 2026). This is a RUNTIME instruction, not merely a reference document.
 
 MISSION: Design a credible, company-specific, commercially useful premium website. Preserve the owner's real identity and authentic strengths before adding novelty. A fully functional page is NOT necessarily well designed. The final 9.5/10 independently assessed agency benchmark is aspirational, not a numeric bar that prevents ethical early sales.
 
@@ -16,7 +16,9 @@ Three competing directions must be VISUALLY different in composition, image stra
 
 Apply the [visual playbook](KAURIVO_VISUAL_PLAYBOOK.md) in concept, Build and
 Revision. It defines opening compositions, colour roles, backgrounds, route
-hierarchy and motion choices. Its text is part of the runtime contract digest.
+hierarchy and motion choices. Apply the [colour theory guide](KAURIVO_COLOUR_GUIDE.md)
+to derive, compare and validate the palette. Both guides are part of the runtime
+contract digest.
 
 Use these as composition studies for the existing three rendered concepts. Select
 directions from the actual brief, available media and the visitor's first task.

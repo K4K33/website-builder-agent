@@ -253,6 +253,7 @@ Jokainen ennakkokonsepti kertoo, miksi pääkuva, materiaalikuva, navigaatio ja 
 ## Hero, navigaatio ja luottamus
 
 Noudata [visuaalisen toteutuksen ohjetta](KAURIVO_VISUAL_PLAYBOOK.md) konseptoinnissa, rakentamisessa ja korjauskierroksilla.
+Johda asiakkaan paletti [väriteoriaoppaan](KAURIVO_COLOUR_GUIDE.md) avulla ja todenna sen käyttö toteutetuissa näkymissä.
 
 Sovella [aktiivisen V7-ohjeen hero-malleja](KAURIVO_MASTER_V7.md#hero-composition-and-reference-selection) nykyisessä kolmen konseptin vertailussa. Valitse suunta yrityksen omien kuvien, brändin ja kävijän tärkeimmän tehtävän perusteella. Tarkista puhelimella ja työpöydällä myös ensimmäinen siirtymä herosta oikeaan sisältöön. Jos korjaus koskee esimerkiksi kuvan rajausta, arvioi uusi rajaus kummassakin näkymässä.
 

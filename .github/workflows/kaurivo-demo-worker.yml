@@ -21,6 +21,7 @@ on:
       - "website-builder-agent/website-builder-agent/utils/reference_scroll_experience.py"
       - "website-builder-agent/website-builder-agent/docs/KAURIVO_MASTER_V7.md"
       - "website-builder-agent/website-builder-agent/docs/KAURIVO_VISUAL_PLAYBOOK.md"
+      - "website-builder-agent/website-builder-agent/docs/KAURIVO_COLOUR_GUIDE.md"
       - "website-builder-agent/website-builder-agent/docs/KAURIVO_MESTARI_PROMPT.md"
       - "website-builder-agent/website-builder-agent/utils/creative_brief_recovery.py"
       - "website-builder-agent/website-builder-agent/utils/creative_directions.py"

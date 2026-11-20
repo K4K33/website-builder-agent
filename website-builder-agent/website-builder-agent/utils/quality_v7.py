@@ -41,14 +41,20 @@ Review the first view and next section on desktop and phone after rendering.
 """
 
 
-VISUAL_PLAYBOOK = (ROOT / "docs" / "KAURIVO_VISUAL_PLAYBOOK.md").read_text(encoding="utf-8")
+VISUAL_PLAYBOOK = "\n\n".join(
+    (ROOT / "docs" / name).read_text(encoding="utf-8")
+    for name in ("KAURIVO_VISUAL_PLAYBOOK.md", "KAURIVO_COLOUR_GUIDE.md")
+)
 V7_SHA256 = sha256((V7_POLICY + "\n" + VISUAL_PLAYBOOK).encode("utf-8")).hexdigest()
 
 CREATIVE_DIRECTION_BRIEF = """
 Use the existing concept fields to record concrete decisions. In first_view,
 specify the hero geometry, focal subject, offer and action. In image_strategy,
 choose the source imagery, background treatment and useful motion or a still.
-In brand_continuity, describe source-backed surface, ink and accent roles.
+In brand_continuity, distinguish observed identity colours from proposals and
+describe the palette strategy, dominant area, surface, ink and action roles.
+Compare alternatives by lightness hierarchy, chroma, media compatibility and
+the needs of the real visitor. Keep the approved identity anchor in each.
 In information_architecture, specify the first service decision after the hero
 and the destination page's distinct opening. In mobile_behavior, describe the
 crop, reordering, touch controls and stable version when applicable.
@@ -57,7 +63,10 @@ crop, reordering, touch controls and stable version when applicable.
 VISUAL_REVIEW_BRIEF = """
 Ground observations in the supplied screenshots. Identify the dominant subject,
 crop, text hierarchy, background and accent roles, then note whether they
-support the customer's offer and action. Inspect the next meaningful section
+support the customer's offer and action. Identify the component and surface
+behind each colour defect, distinguish weak lightness from competing chroma,
+and request a specific role or background correction. Check relevant state
+and contrast evidence when available. Inspect the next meaningful section
 and the service route for a coherent but task-specific composition. Flag
 interchangeable imagery, cloned openings, noisy backgrounds, illegible text or
 cropped subjects in the exact affected view. Judge motion only from browser

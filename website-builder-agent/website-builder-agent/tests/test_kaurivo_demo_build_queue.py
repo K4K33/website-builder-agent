@@ -136,7 +136,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
             "agents/qa.py", "utils/service_quality.py", "utils/quality_v7.py",
             "utils/global_craft_experience.py", "utils/reference_scroll_experience.py",
             "docs/KAURIVO_MASTER_V7.md", "docs/KAURIVO_MESTARI_PROMPT.md",
-            "docs/KAURIVO_VISUAL_PLAYBOOK.md",
+            "docs/KAURIVO_VISUAL_PLAYBOOK.md", "docs/KAURIVO_COLOUR_GUIDE.md",
         ):
             with self.subTest(path=path):
                 self.assertIn('"website-builder-agent/website-builder-agent/'+path+'"', workflow)

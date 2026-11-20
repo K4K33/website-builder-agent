@@ -39,6 +39,7 @@ class V7QualityContractTests(unittest.TestCase):
         from utils.quality_v7 import VISUAL_PLAYBOOK
 
         self.assertIn(VISUAL_PLAYBOOK, CONCEPT_PAGE_RULES)
+        self.assertIn("Kaurivo colour theory and application", VISUAL_PLAYBOOK)
         self.assertEqual(
             V7_SHA256, sha256((V7_POLICY + "\n" + VISUAL_PLAYBOOK).encode()).hexdigest()
         )
