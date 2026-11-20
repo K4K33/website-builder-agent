@@ -25,7 +25,9 @@ from threading import Lock
 import requests
 
 _URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-_KEY = re.compile(r"[A-Za-z0-9_\-]{30,60}")
+# Classic AI Studio keys are "AIza" + 35 chars; newer Google keys can be
+# longer and contain dots. Accept any printable token without whitespace.
+_KEY = re.compile(r"[A-Za-z0-9_.\-]{20,300}")
 DEFAULT_MODELS = ("gemini-2.5-flash", "gemini-2.5-flash-lite")
 _MAX_CALLS_PER_RUN = 60
 _LOCK = Lock()

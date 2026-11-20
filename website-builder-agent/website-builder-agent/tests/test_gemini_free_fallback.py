@@ -78,5 +78,14 @@ class GeminiFreeTests(unittest.TestCase):
                 "s", "u", stage="research", max_tokens=10, image_paths=None, json_mode=True))
 
 
+class GeminiKeyFormatTests(unittest.TestCase):
+    def test_classic_and_newer_key_formats(self):
+        for key in ("AIza" + "x" * 35, "AQ.Ab8RN6" + "y" * 60):
+            with self.subTest(key=key[:6]), mock.patch.dict(os.environ, {**ON, "KAURIVO_GEMINI_API_KEY": key}):
+                self.assertTrue(g.enabled())
+        with mock.patch.dict(os.environ, {**ON, "KAURIVO_GEMINI_API_KEY": "has space key value here"}):
+            self.assertFalse(g.enabled())
+
+
 if __name__ == "__main__":
     unittest.main()

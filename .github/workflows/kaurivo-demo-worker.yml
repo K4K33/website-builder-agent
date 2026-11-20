@@ -146,8 +146,10 @@ jobs:
                            and bool(re.fullmatch(r"[A-Za-z0-9_-]{25,250}",cf_key)))
           print("Independent confirmed Workers Free configured:",cloudflare_ready)
           # Presence/format only; the key itself is never printed.
-          print("Gemini free tier key configured:",
-                bool(re.fullmatch(r"[A-Za-z0-9_-]{30,60}",os.getenv("KAURIVO_GEMINI_API_KEY","").strip())))
+          gemini_raw=os.getenv("KAURIVO_GEMINI_API_KEY","").strip()
+          print("Gemini free tier key present:", bool(gemini_raw))
+          print("Gemini free tier key format accepted:",
+                bool(re.fullmatch(r"[A-Za-z0-9_.-]{20,300}",gemini_raw)))
           # GET /key validates bearer authorization without any model tokens.
           # Log ONLY the status and a boolean, never the token or key details.
           import urllib.request,urllib.error
