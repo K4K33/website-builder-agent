@@ -7,6 +7,8 @@ or treated as a passing browser/visual review.
 """
 import json
 
+from utils.quality_v7 import VISUAL_REVIEW_BRIEF
+
 
 class VisualReviewRevisionRequired(RuntimeError):
     """A complete, authentic independent review found no defect-free candidate.
@@ -108,6 +110,7 @@ def staged_concept_review(*, research, order, views, sources, ask, root):
             "content, inaccessible mobile layouts, or visual downgrades. "
             "Do not use the proposed design's own quality claims as evidence."
         )
+        system += VISUAL_REVIEW_BRIEF
         packet = {
             "direction": alias,
             "required_view_ids_in_order": ids,

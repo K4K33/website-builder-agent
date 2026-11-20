@@ -6,6 +6,32 @@ from utils.demo_page_drafts import draft_pages, _page_from_response
 
 
 class DemoPageDraftTests(unittest.TestCase):
+    def test_builder_and_revision_routes_receive_the_live_visual_guides(self):
+        from unittest.mock import patch
+        from agents import builder
+        from utils.quality_v7 import VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK
+        from utils.source_photo_sequence import PHOTO_SEQUENCE_BRIEF
+
+        route = "index.html"
+        options = {"slug": "test", "architecture": {"page_paths": [route]}, "image_paths": []}
+        with patch.dict("os.environ", {"KAURIVO_QUEUED_DEMO_ID": ""}):
+            with patch.object(builder, "ask_claude", return_value="response") as call:
+                builder._request_site_pages("Build", "Site brief", **options)
+                direct_system = call.call_args.args[0]
+                for guide in (VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, PHOTO_SEQUENCE_BRIEF):
+                    self.assertIn(guide, direct_system)
+
+        with patch.dict("os.environ", {"KAURIVO_QUEUED_DEMO_ID": "test-job"}):
+            with patch("utils.demo_page_drafts.draft_pages", return_value={route: "page"}) as draft:
+                builder._request_site_pages(
+                    "Revise", "Site brief", current_pages={route: "previous HTML"}, **options
+                )
+                request = draft.call_args.kwargs
+                self.assertEqual(request["phase"], "revision")
+                self.assertIn("previous HTML", request["prompt_for"](route))
+                for guide in (VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, PHOTO_SEQUENCE_BRIEF):
+                    self.assertIn(guide, request["system"])
+
     def test_invalid_cached_concept_repairs_only_its_own_route(self):
         from utils.concept_previews import validate_concept_page
 
