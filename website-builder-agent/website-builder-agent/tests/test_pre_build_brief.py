@@ -98,9 +98,9 @@ class PreBuildBriefTests(unittest.TestCase):
         research_src = (ROOT / "agents/research.py").read_text(encoding="utf-8")
         self.assertEqual(research_src.count('research_data["pre_build_brief"] = derive_pre_build_brief'), 2)
         concept_src = (ROOT / "utils/concept_workflow.py").read_text(encoding="utf-8")
-        self.assertIn("ensure_pre_build_brief(research, media)", concept_src)
+        self.assertIn("ensure_pre_build_brief(research, media, root)", concept_src)
         builder_src = (ROOT / "agents/builder.py").read_text(encoding="utf-8")
-        self.assertEqual(builder_src.count("ensure_pre_build_brief(research, media_manifest)"), 2)
+        self.assertEqual(builder_src.count("ensure_pre_build_brief(research, media_manifest, _output_dir(slug))"), 2)
 
     def test_queue_classifies_gap(self):
         from scripts.run_kaurivo_demo_queue import classify_stage_failure

@@ -115,6 +115,27 @@ def _choose_technique(assets: dict) -> str:
     return "typographic_statement"
 
 
+def _photo_palette(staged_media, media_root) -> dict | None:
+    """Light and dark colour roles derived from the company's staged photos."""
+    if not staged_media or media_root is None:
+        return None
+    from pathlib import Path
+    from utils.award_playbook import derive_photo_palette
+    root = Path(media_root)
+    photos = [root / str(m["src"]) for m in staged_media
+              if isinstance(m, dict) and str(m.get("src", "")).lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+              and "logo" not in str(m.get("purpose", "")).lower()]
+    photos = [p for p in photos if p.is_file()][:6]
+    if not photos:
+        return None
+    options = {mode: derive_photo_palette(photos, mode=mode) for mode in ("light", "dark")}
+    options = {mode: roles for mode, roles in options.items() if roles}
+    if not options:
+        return None
+    auto = derive_photo_palette(photos)
+    return {"suggested": auto["mode"] if auto else next(iter(options)), **options}
+
+
 def _selected_direction(research: dict) -> dict:
     directions = research.get("creative_directions")
     choice = research.get("creative_selection") or {}
@@ -177,7 +198,8 @@ def _verified_facts(research: dict) -> dict:
     }
 
 
-def derive_pre_build_brief(research: dict, staged_media: list | None = None) -> dict:
+def derive_pre_build_brief(research: dict, staged_media: list | None = None,
+                           media_root=None) -> dict:
     """staged_media: the files a page may actually use (concept/build stage).
 
     Observed source photos prove material exists; only staged files can be
@@ -224,6 +246,7 @@ def derive_pre_build_brief(research: dict, staged_media: list | None = None) -> 
             "verified_colors": [c.get("hex") for c in identity.get("verified_original_colors") or []
                                 if isinstance(c, dict)],
             "verified_logo": bool(identity.get("verified_original_logos")),
+            "photo_palette": _photo_palette(staged_media, media_root),
             "references": references,
             "rule": "References inform layout, rhythm and motion only; never "
                     "their colours, text, images or identity.",
@@ -257,9 +280,10 @@ def validate_pre_build_brief(brief: dict) -> dict:
     return brief
 
 
-def ensure_pre_build_brief(research: dict, staged_media: list | None = None) -> dict:
+def ensure_pre_build_brief(research: dict, staged_media: list | None = None,
+                           media_root=None) -> dict:
     """Derive (or re-derive for older checkpoints) and validate in place."""
-    brief = derive_pre_build_brief(research, staged_media)
+    brief = derive_pre_build_brief(research, staged_media, media_root)
     research["pre_build_brief"] = brief
     return validate_pre_build_brief(brief)
 
