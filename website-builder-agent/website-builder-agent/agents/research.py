@@ -37,7 +37,7 @@ from utils.screenshot import capture_website, REFERENCE_VIEWPORTS
 from utils.original_experience_probe import probe_original_site_experience
 from utils.industry_workflow import crawl_original_website, sector_guidance, _priority
 from utils.source_fidelity import source_map_gaps, validate_source_plan, source_manifest
-from utils.source_identity import bind_brand_plan_sources, validate_brand_preservation_plan
+from utils.source_identity import bind_brand_plan_sources, validate_brand_preservation_plan, repair_brand_preservation_plan
 from utils.free_references import discover_free_references, preferred_benchmark_regions, verified_sector_search_hint
 from utils.reference_quote_evidence import observed_quote_options, verified_evidence_quote
 from utils.free_tavily_cache import cached_free_search
@@ -1632,7 +1632,7 @@ Tärkeää:
                 "brand_preservation_plan": research_data.get("brand_preservation_plan"),
             },
         )
-    validate_brand_preservation_plan(research_data)
+    repair_brand_preservation_plan(research_data, ask_claude_json)
     if progress.get("milestone") == "references":
         save_progress(
             slug, company, milestone="references", source_url=url,

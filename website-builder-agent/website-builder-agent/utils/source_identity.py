@@ -6,6 +6,7 @@ output review gate operates on the complete generated multi-page site.
 """
 from __future__ import annotations
 
+import json
 import re
 import unicodedata
 from urllib.parse import urljoin
@@ -260,6 +261,68 @@ def validate_brand_preservation_plan(research: dict) -> dict:
         raise RuntimeError("Original brand plan omitted a source theme color.")
     return {"required": True, "source_pages": len(observed),
             "observed_logos": len(originals), "observed_colors": sorted(colors)}
+
+
+_TREATMENT_FIELDS = ("logo_treatment", "color_treatment",
+                     "typography_treatment", "photography_treatment")
+
+
+def repair_brand_preservation_plan(research: dict, repair_json, *, max_repairs: int = 2) -> dict:
+    """Validate the brand plan; fill only too-short treatment texts if needed.
+
+    Ostroferia 950ec193 (20.11.2026) passed the creative plan and then stopped
+    for good at "Original brand plan incomplete": a free model had left a
+    treatment field short and the hard gate had no repair path, so the whole
+    research (11 requests) was lost. Source URLs, logo assets and theme colors
+    are already bound deterministically from the observed pages; the model
+    only rewrites the missing treatment descriptions from that evidence.
+    The validator itself is unchanged and stays the authority.
+    """
+    try:
+        return validate_brand_preservation_plan(research)
+    except RuntimeError as exc:
+        if "brand plan incomplete" not in str(exc) and "Missing evidence-linked" not in str(exc):
+            raise
+        error = str(exc)
+    observed = _brand_source_pages(research)
+    evidence = [{
+        "url": url,
+        "logo_candidates": (identity.get("original_logo_candidates") or [])[:4],
+        "theme_color": identity.get("theme_color"),
+        "content_photos": len(identity.get("original_content_photos") or []),
+    } for url, identity in observed[:6]]
+    for _ in range(max_repairs):
+        plan = research.get("brand_preservation_plan")
+        plan = dict(plan) if isinstance(plan, dict) else {}
+        missing = [key for key in _TREATMENT_FIELDS
+                   if len(str(plan.get(key) or "").strip()) < 24]
+        answer = repair_json(
+            "Write only the missing fields of a brand preservation plan for a "
+            "redesign of this company's website. Each field is 1-3 concrete "
+            "sentences (at least 40 characters) that keep the ORIGINAL brand: "
+            "the observed logo file(s), the observed colors, the existing "
+            "typographic character and the company's own photos. Never invent "
+            "a new logo, colors that contradict the source, or stock/AI people. "
+            "Return a JSON object with exactly these keys: " + ", ".join(missing),
+            json.dumps({"observed_brand_evidence": evidence,
+                        "current_plan": {k: plan.get(k) for k in _TREATMENT_FIELDS},
+                        "validation_error": error}, ensure_ascii=False, default=str),
+            max_tokens=900, stage="research",
+        )
+        if isinstance(answer, dict):
+            for key in missing:
+                value = answer.get(key)
+                if isinstance(value, str) and len(value.strip()) >= 24:
+                    plan[key] = value.strip()[:900]
+        research["brand_preservation_plan"] = plan
+        bind_brand_plan_sources(research)
+        try:
+            return validate_brand_preservation_plan(research)
+        except RuntimeError as exc:
+            error = str(exc)
+            if "brand plan incomplete" not in error and "Missing evidence-linked" not in error:
+                raise
+    raise RuntimeError("Original brand plan repair did not pass validation: " + error)
 
 
 
