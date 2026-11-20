@@ -662,6 +662,9 @@ def _select_reference_candidates(references, facts, target_url):
         ]
     by_url = {item["url"]: item for item in candidates}
     selected, seen = [], set()
+    # Content-free counters, shown to the owner if selection still fails.
+    diag = {"urls": len(urls), "inspected": len(candidates), "proposed": 0,
+            "unknown_url": 0, "not_same_industry": 0, "no_quote": 0}
 
     def select_from_sites(pool_sites, *, repair=False):
         compact = [
@@ -707,12 +710,17 @@ def _select_reference_candidates(references, facts, target_url):
             url = canonical_url(match.get("url"))
             source = by_url.get(url)
             reason = match.get("reason")
-            if (not source or url in seen
-                    or match.get("same_industry") is not True
+            diag["proposed"] += 1
+            if not source:
+                diag["unknown_url"] += 1
+                continue
+            if (url in seen or match.get("same_industry") is not True
                     or not isinstance(reason, str) or not reason.strip()):
+                diag["not_same_industry"] += 1
                 continue
             quote = verified_evidence_quote(source, match)
             if not quote:
+                diag["no_quote"] += 1
                 # In particular, hallucinated or paraphrased free-text
                 # evidence is NEVER promoted to a source-backed reference.
                 continue
@@ -734,7 +742,8 @@ def _select_reference_candidates(references, facts, target_url):
             select_from_sites(remaining, repair=True)
     if len(selected) < 3:
         raise RuntimeError(
-            "Fewer than three source-backed same-industry operators; cannot build."
+            "Fewer than three source-backed same-industry operators; cannot build. "
+            "diag=" + ",".join(f"{key}:{value}" for key, value in diag.items())
         )
     return selected[:5]
 
