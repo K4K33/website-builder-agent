@@ -248,3 +248,19 @@ Noudatettava rinnakkainen standardi: `docs/KAURIVO_PREMIUM_EXPERIENCE_V6_2026111
 Jokainen ennakkokonsepti kertoo, miksi pääkuva, materiaalikuva, navigaatio ja työesimerkit ovat juuri tämän yrityksen omaa ilmettä. Ennen kuin uusi demo lähetetään arvioitavaksi, verrataan se 1) lähteen parhaaseen kohtaan, 2) kolmen premium-referenssin **suunnitteluperiaatteisiin** ja 3) kolmeen Kaurivon erillisen toimialan viimeisimpään demo-rakenteeseen. Kuvakaappausidentiteetin vertailu ei ole lisenssi eikä Awwwards-tyylin kopiointilupa.
 
 **Vahvistus vs. avoin työ:** Masterpromptin tekstimuutos + regressiotesti = sääntö lisätty ja testattu. Tämä EI osoita uutta 9,5/10-sivustoa eikä oikean asiakkaan toimivuuden paranemista. Tarvitaan vielä eri toimialan täysin uusi läpimeno ja riippumaton rakennuskohtainen visuaalinen arvio.
+
+
+## Hero, navigaatio ja luottamus
+
+Sovella [aktiivisen V7-ohjeen hero-malleja](KAURIVO_MASTER_V7.md#hero-composition-and-reference-selection) nykyisessä kolmen konseptin vertailussa. Valitse suunta yrityksen omien kuvien, brändin ja kävijän tärkeimmän tehtävän perusteella. Tarkista puhelimella ja työpöydällä myös ensimmäinen siirtymä herosta oikeaan sisältöön. Jos korjaus koskee esimerkiksi kuvan rajausta, arvioi uusi rajaus kummassakin näkymässä.
+
+| Lähde | Sovellus |
+| --- | --- |
+| [Supahero](https://supahero.io/), [Land-book](https://land-book.com/) ja [MotionSites](https://github.com/Motionsites-AI/claude-skill) | Hero, koko sivuston rytmi ja tarkoituksenmukainen liike. |
+| [Navbar Gallery](https://navbar.gallery/) | Sovita logo, luettavat linkit ja puhelinnumero samaan hierarkiaan. Varmista tärkein reitti mobiilivalikosta. |
+| [Social Proof Examples](https://socialproofexamples.com/) | Sijoita aito työesimerkki, arvio tai palkinto siihen kohtaan, jossa kävijä arvioi palvelun sopivuutta. |
+| [Pricing Pages](https://pricingpages.design/) | Käytä hinnastosivulla, jos yritys julkaisee varmennettuja hintoja. Tee pakettien todelliset erot ja tilauspolku selviksi. |
+| [OG Image Gallery](https://ogimage.gallery/) | Suunnittele ja tarkista jakokuva, josta tunnistaa yrityksen pienessäkin esikatselussa. |
+| [Really Good Emails](https://reallygoodemails.com/), [Deck Gallery](https://deck.gallery/), [Posts](https://posts.design/) ja [Adfolio](https://adfolio.design/) | Hyödynnä tarpeen mukaan Kaurivon viesteissä, myyntiesityksissä, somejulkaisuissa ja mainoksissa. |
+
+Kirjaa käytetystä referenssistä URL, havaittu suunnitteluratkaisu ja miten sitä sovellettiin asiakkaan aineistoon. Galleria ohjaa suunnittelua. Toteutuksesta kerätään nykyisten laatutarkistusten edellyttämä näyttö oikeasta sivusta.

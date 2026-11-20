@@ -1,5 +1,5 @@
 # KAURIVO MASTER V7 — active design craft contract
-Version: 7.0.2 (18 November 2026). This is a RUNTIME instruction, not merely a reference document.
+Version: 7.0.3 (20 November 2026). This is a RUNTIME instruction, not merely a reference document.
 
 MISSION: Design a credible, company-specific, commercially useful premium website. Preserve the owner's real identity and authentic strengths before adding novelty. A fully functional page is NOT necessarily well designed. The final 9.5/10 independently assessed agency benchmark is aspirational, not a numeric bar that prevents ethical early sales.
 
@@ -11,6 +11,39 @@ Before drawing a layout, study source screenshots, header, footer, logo, palette
 
 ## Art direction is visual, not adjectives
 Three competing directions must be VISUALLY different in composition, image strategy, type and service-page hierarchy, and rendered with real permitted source material and realistic copy for both phone and desktop. No concept wins just because it has an attractive color label. Explicitly compare first fold AND a meaningful subpage with the source and professionally reviewed references. If none is credible, reject the set rather than implementing the least bad direction. Never copy reference markup, copyrighted assets, original prose or distinctive trade dress.
+
+## Hero composition and reference selection
+
+Use these as composition studies for the existing three rendered concepts. Select
+directions from the actual brief, available media and the visitor's first task.
+Invent a more suitable direction when the source calls for it. Compare genuinely
+different silhouette, focal point, type placement and content order.
+
+| Direction | When and how to use it |
+| --- | --- |
+| One subject in depth | Give a real product, tool or architectural detail a clear silhouette and dominant scale. Reserve quiet space for the offer and action. Layer a backdrop and foreground only if they help frame the subject. |
+| Immersive real scene | Build around a verified project, space or strong existing company video. Choose separate crops for phone and desktop. Place the offer where it stays legible throughout playback. Supply a poster and reduced-motion fallback. |
+| Asymmetric visual grid | Assign clear roles to differently scaled areas: offer, dominant image, optional factual detail and action. Let the dominant image anchor the grid. On phones reorder by reading intent and remove purely decorative cells. |
+| Type-led reveal | Put the company-specific offer in a distinctive typographic composition and use one relevant image or texture as a deliberate reveal. Use this when the source has strong identity or one strong close-up. Keep the offer visible without animation. |
+
+Review a hero reference from [Supahero](https://supahero.io/) for scale, image
+placement and first-fold hierarchy. Use [Land-book](https://land-book.com/) or a
+live company site to study how the opening carries into services and projects.
+[MotionSites](https://github.com/Motionsites-AI/claude-skill) is a source of
+motion studies. Translate one purposeful behavior, such as a reveal that shows
+the stages of real work. Record the observed behavior, trigger, mobile variant
+and fallback. A gallery thumbnail can suggest a direction. Verify an actual
+site in the browser before counting it toward existing benchmark requirements.
+
+Choose one first action based on the visitor's task. Record its destination,
+the source asset and crop, and the visual decision borrowed from each studied
+reference. Review the running hero and the next section on phone and desktop:
+does the offer read immediately, does the focal point survive cropping, does the
+action work, and does the page continue in the same visual language? If a draft
+could fit another company after a logo swap, revise the composition or media.
+Review animations for smoothness and reduced-motion behavior. Preserve the
+customer's logo, colors, real assets and factual content. Use original
+implementation and approved media.
 
 ## Default anti-generic design decisions
 Use restrained, intentional composition. A decorative 01/02/03 counter, giant "20+" visual, rotating wheel, technical gear/moon SVG, fake map, arbitrary concentric circles, repetitive dark cards, broad empty title bands, duplicate hero images, random icon gradients or a generic "Less X, More Y" slogan is a WARNING sign, not sophistication. Reject them unless a documented business, source or usability requirement justifies them. Do not reproduce an art-gallery/college aesthetic for an ordinary repair shop merely to appear expensive. Every visual element must help visitors understand an offering, trust verified real work, or take a meaningful action.

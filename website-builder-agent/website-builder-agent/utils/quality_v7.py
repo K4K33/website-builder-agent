@@ -134,6 +134,13 @@ def design_brief(research: dict, company: dict | None = None) -> dict:
             "Original photos not verified: request client assets; licensed, clearly illustrated "
             "provisional imagery permitted only with exact rights, never fake company work."
         ),
+        "hero_direction": (
+            "Choose distinct compositions for the existing three concepts from the brief, "
+            "visitor task and permitted media. Consider one subject in depth, an immersive "
+            "real scene, an asymmetric visual grid or a type-led reveal. Record the reference "
+            "URL, borrowed principle, source asset, mobile crop and first action. Review the "
+            "rendered first fold and the transition into the next section in both viewports."
+        ),
         "avoid_by_default": [
             "decorative sequential number tiles", "fake map", "oversized abstract vector hero",
             "generic repeated dark/grey/red bands", "fake staff/customer photos",
