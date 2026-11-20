@@ -169,3 +169,41 @@ def mask_coverage(mask: Path) -> float:
     with Image.open(mask) as image:
         histogram = image.convert("L").histogram()
     return sum(histogram[128:]) / max(1, sum(histogram))
+
+
+def line_drawing(photo: Path, depth: Path, destination: Path) -> Path | None:
+    """Architectural line drawing (white lines) from a photo and its depth.
+
+    Photo gradients give windows, frames and profiles; depth gradients give
+    the strong outlines between near and far. Fine texture (gravel, grain) is
+    dropped by a threshold, so the drawing reads like a plan sketch.
+    """
+    try:
+        import numpy as np
+        from PIL import Image, ImageFilter
+
+        def gradient(values):
+            gx = np.zeros_like(values)
+            gy = np.zeros_like(values)
+            gx[:, 1:-1] = values[:, 2:] - values[:, :-2]
+            gy[1:-1, :] = values[2:, :] - values[:-2, :]
+            return np.hypot(gx, gy)
+
+        with Image.open(photo) as image:
+            grey = image.convert("L")
+            grey = grey.resize(_output_size(grey), Image.LANCZOS)
+        with Image.open(depth) as image:
+            depth_map = image.convert("L").resize(grey.size)
+        g = gradient(np.asarray(grey.filter(ImageFilter.GaussianBlur(1.6)), dtype=np.float32))
+        d = gradient(np.asarray(depth_map.filter(ImageFilter.GaussianBlur(1)), dtype=np.float32))
+        g = g / max(1e-6, float(np.percentile(g, 99.3)))
+        d = d / max(1e-6, float(np.percentile(d, 99.5)))
+        lines = np.clip(np.maximum(g * 0.85, d * 1.1), 0, 1)
+        lines = np.where(lines > 0.28, lines, 0)
+        lines = np.clip((lines - 0.28) / 0.5, 0, 1) ** 0.8
+        out = Image.fromarray((lines * 255).astype("uint8"), "L").filter(ImageFilter.GaussianBlur(.5))
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        out.save(destination, "WEBP", lossless=True)
+        return destination
+    except Exception:
+        return None

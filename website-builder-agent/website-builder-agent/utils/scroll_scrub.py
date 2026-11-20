@@ -49,6 +49,10 @@ ordinary HTML; the builder adds frames, canvas, pinning and playback:
   </div>
 </section>
 
+For a builder, renovator, carpenter or architect add data-scrub-style="blueprint"
+to the section: the first photo then starts as a line drawing of the real
+building and is built up from the ground as the visitor scrolls.
+
 Use only staged image paths. Chapters are short verified facts in story
 order; data-at is the scroll point between 0 and 0.9. Write a good static
 layout for the poster and copy too: it is what reduced-motion and no-script
@@ -267,7 +271,8 @@ def _staged(route: str, src: str, allowed: dict) -> tuple[str, str] | None:
     return (resolved, digest) if digest else None
 
 
-def _depth_layers(sources, files, site_root: Path, prefix: str, route: str) -> list | None:
+def _depth_layers(sources, files, site_root: Path, prefix: str, route: str,
+                  blueprint: bool = False) -> list | None:
     """Depth map per staged photo (free local model), or None to use frames."""
     from utils import depth_estimation
     if depth_estimation.disabled() or any(f.suffix.lower() in _VIDEO_EXT for f in files):
@@ -279,7 +284,13 @@ def _depth_layers(sources, files, site_root: Path, prefix: str, route: str) -> l
         target = site_root / relative
         if not target.is_file() and depth_estimation.estimate_depth(file, target) is None:
             return None
-        layers.append({"img": prefix + src, "depth": prefix + str(relative)})
+        layer = {"img": prefix + src, "depth": prefix + str(relative)}
+        if blueprint and index == 0:
+            drawing = PurePosixPath("assets/depth") / key / "0-lines.webp"
+            if (site_root / drawing).is_file() or depth_estimation.line_drawing(
+                    file, target, site_root / drawing):
+                layer["lines"] = prefix + str(drawing)
+        layers.append(layer)
     return layers
 
 
@@ -323,7 +334,8 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
             continue
         prefix = "../" * (len(PurePosixPath(route).parts) - 1)
         length = f"{300 + 40 * len(sources)}svh"
-        depth_layers = _depth_layers(sources, files, site_root, prefix, route)
+        blueprint = scene.get("data-scrub-style") == "blueprint"
+        depth_layers = _depth_layers(sources, files, site_root, prefix, route, blueprint)
         if depth_layers:
             # A real 3D camera move through the photos: far lighter than frames.
             scene["data-scrub-mode"] = "depth"

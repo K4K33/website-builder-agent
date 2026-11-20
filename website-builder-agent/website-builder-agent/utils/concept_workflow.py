@@ -12,6 +12,8 @@ from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
 from utils.quality_v7 import VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, VISUAL_REVIEW_BRIEF
 
+from utils.award_playbook import AWARD_BRIEF
+
 CONCEPT_PAGE_RULES = '''
 Use only the verified facts, original brand and explicitly supplied local media.
 Do not invent logos, products, testimonials, staff or a capability. Do not use
@@ -31,7 +33,7 @@ For a proposed source-photo sequence show its actual ordered source frames
 and desktop/phone crops in the static concept; the Builder handles playback.
 A strong still is suitable if the staged materials do not support a scene.
 These are PRIVATE PROTOTYPES, never a completed client website or checkout.
-''' + VISUAL_EXECUTION_BRIEF + VISUAL_PLAYBOOK
+''' + VISUAL_EXECUTION_BRIEF + VISUAL_PLAYBOOK + "\n\n" + AWARD_BRIEF
 CONCEPT_PROMPT = '''Create ONE ACTUAL RESPONSIVE HTML CONCEPT for the supplied direction.
 Return JSON {"concepts": {exact_direction_id: {"pages": {route: "<!doctype html>..."}}}}.
 Return the one exact direction id and both supplied routes.
@@ -90,7 +92,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
     media_direction = source_media_evidence(research, media)
     # Six pre-build questions must be answered before any concept is authored.
     from utils.pre_build_brief import ensure_pre_build_brief
-    pre_build = ensure_pre_build_brief(research, media)
+    pre_build = ensure_pre_build_brief(research, media, root)
 
     def validate_content(document, facts):
         _validate_generated_content(document, facts, source_inventory=research.get('source_inventory'))
