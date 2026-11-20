@@ -143,16 +143,41 @@ def candidate_public_site_verified(lead):
         return False
 
 
+def _same_site_redirect(current, location, resolve):
+    """Next URL for an http->https / apex<->www / same-host path redirect.
+
+    Most Finnish SME sites redirect https://x.fi to https://www.x.fi/ or to a
+    language path. Treating all of them as "redirect_not_followed" scored
+    healthy sites as unchecked. Cross-site redirects are still not followed.
+    """
+    from utils.kaurivo_demo_readiness import safe_url, _site_key
+    target=urljoin(current,location or "")
+    if target.startswith("http://"):
+        target="https://"+target[len("http://"):]
+    if _site_key(urlsplit(target).hostname or "")!=_site_key(urlsplit(current).hostname or ""):
+        return ""
+    return safe_url(target,resolve)
+
+
 def inspect_site(url, *,get=requests.get,head=None,resolve=socket.getaddrinfo):
     safe=safe_homepage(url,resolve=resolve)
     if not safe:return {"status":"unsafe_or_unresolvable_url","issues":[]}
     try:
-        with get(safe,headers={"User-Agent":USER_AGENT,
-             "Accept":"text/html,application/xhtml+xml"},
-             timeout=(4,9),stream=True,allow_redirects=False) as response:
-            # Do not follow cross-origin redirects; do not fetch assets.
-            if response.status_code in (301,302,303,307,308):
+        for _hop in range(4):
+            response=get(safe,headers={"User-Agent":USER_AGENT,
+                 "Accept":"text/html,application/xhtml+xml"},
+                 timeout=(4,9),stream=True,allow_redirects=False)
+            if response.status_code not in (301,302,303,307,308):
+                break
+            nxt=_same_site_redirect(safe,response.headers.get("Location",""),resolve)
+            response.close()
+            if not nxt:
+                # Cross-site redirects stay unfollowed; never fetch assets.
                 return {"status":"redirect_not_followed","issues":[]}
+            safe=nxt
+        else:
+            return {"status":"redirect_not_followed","issues":[]}
+        with response:
             if response.status_code in (403,429,451):
                 return {"status":"blocked_or_limited","issues":[]}
             if response.status_code!=200:
