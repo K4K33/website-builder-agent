@@ -23,7 +23,8 @@ class UniversalLessonsContractTests(unittest.TestCase):
         self.assertEqual(MASTER_PROMPT_SOURCE.count(end), 1)
         active = MASTER_PROMPT_SOURCE.split(start, 1)[1].split(end, 1)[0]
         self.assertIn(active.strip(), POLICY)
-        self.assertEqual(sha256(MASTER_PROMPT_SOURCE.encode()).hexdigest(),
+        # Checkpoints bind to the runtime contract the models receive.
+        self.assertEqual(sha256(active.strip().encode()).hexdigest(),
                          MASTER_PROMPT_SHA256)
         for phrase in (
             "SOURCE-CLAIM LEDGER",

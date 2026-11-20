@@ -47,6 +47,7 @@ from utils.kaurivo_ai_source_packet import pack_research_source_excerpts, compac
 from utils.premium_quality_gate import discover_source_journeys
 from utils.brand_signature_plan import derive_brand_signature_plan
 from utils.creative_directions import validate_creative_directions
+from utils.quality_v7 import CREATIVE_DIRECTION_BRIEF
 from utils.creative_brief_recovery import ensure_creative_directions
 from utils.site_architecture import bind_source_routes, validate_site_architecture
 from utils.commerce_capture import capture_shop_catalogues
@@ -349,6 +350,7 @@ määrää monisivuisia reittejä, kuitenkin enintään 14.
 HTML-sivustot rakentaa myöhemmin Builder. Tässä vastauksessa PELKKÄ JSON.
 """
 
+FINAL_RESEARCH_PROMPT += CREATIVE_DIRECTION_BRIEF
 FINAL_RESEARCH_PROMPT += SERVICE_QUALITY_POLICY + """
 Return these structured planning fields as part of the brief:
 - business_task_plan: one record per observed source task, with task_id (from the

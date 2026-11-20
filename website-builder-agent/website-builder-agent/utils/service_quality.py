@@ -52,14 +52,6 @@ from synthetic tests or the same demo revised repeatedly.
 MASTER_PROMPT_PATH = Path(__file__).resolve().parents[1] / "docs/KAURIVO_MESTARI_PROMPT.md"
 MASTER_PROMPT_SOURCE = MASTER_PROMPT_PATH.read_text(encoding="utf-8")
 from utils.quality_v7 import V7_POLICY, V7_SHA256
-# Version-bound research/preview evidence now changes when either V6 archive
-# or the short active V7 design contract changes.
-MASTER_PROMPT_SHA256 = hashlib.sha256(MASTER_PROMPT_SOURCE.encode("utf-8")).hexdigest()
-# Preserve historical V6 contract IDs used in source-bound review evidence.
-# V7 has a separate immutable SHA in every new design brief.
-EFFECTIVE_MASTER_PROMPT_SHA256 = hashlib.sha256(
-    (MASTER_PROMPT_SOURCE + "\nV7:" + V7_SHA256).encode("utf-8")
-).hexdigest()
 _MASTER_START = "<!-- ACTIVE_RUNTIME_CONTRACT_START -->"
 _MASTER_END = "<!-- ACTIVE_RUNTIME_CONTRACT_END -->"
 if MASTER_PROMPT_SOURCE.count(_MASTER_START) != 1 or MASTER_PROMPT_SOURCE.count(_MASTER_END) != 1:
@@ -67,6 +59,18 @@ if MASTER_PROMPT_SOURCE.count(_MASTER_START) != 1 or MASTER_PROMPT_SOURCE.count(
 _active = MASTER_PROMPT_SOURCE.split(_MASTER_START, 1)[1].split(_MASTER_END, 1)[0].strip()
 if len(_active) < 500:
     raise RuntimeError("Canonical master prompt runtime contract is incomplete")
+# Research checkpoints and preview evidence are bound to the contract that the
+# models actually receive at runtime: the active block only. Hashing the whole
+# ~70 KB file made every history note or appended study invalidate all
+# private research checkpoints, so jobs restarted research on nearly every
+# run ("outdated master checkpoint") and never reached a preview. A change
+# inside the active block still invalidates, exactly as before. The V7 design
+# contract keeps its own hash (V7_SHA256) in every design brief.
+MASTER_PROMPT_SHA256 = hashlib.sha256(_active.encode("utf-8")).hexdigest()
+# Release/review evidence keeps binding to the complete documents.
+EFFECTIVE_MASTER_PROMPT_SHA256 = hashlib.sha256(
+    (MASTER_PROMPT_SOURCE + "\nV7:" + V7_SHA256).encode("utf-8")
+).hexdigest()
 POLICY += "\n" + _active + "\n"
 # A short, ordered current standard overrides contradictory historical aesthetic
 # instructions. Old factual/rights/SEO gates remain mandatory.
@@ -96,21 +100,64 @@ _REGISTRY_SCOPE = re.compile(
 )
 
 
+def _label_in_quote(label, quote):
+    """True when the offer label is named in the quote, allowing inflection.
+
+    Finnish names an offer in inflected forms ("lukitustekniikan",
+    "kuljetuspalveluja"). Each label word of 5+ letters may drop up to three
+    final letters; short words must match exactly. The quote itself must
+    still be a verbatim excerpt of the observed page (checked separately).
+    """
+    folded_label, folded_quote = label.casefold(), quote.casefold()
+    if folded_label in folded_quote:
+        return True
+    quote_words = re.findall(r"\w+", folded_quote)
+    label_words = re.findall(r"\w+", folded_label)
+    if not label_words:
+        return False
+    for word in label_words:
+        stem = word if len(word) < 5 else word[:max(4, len(word) - 3)]
+        if not any(candidate.startswith(stem) for candidate in quote_words):
+            return False
+    return True
+
+
+def primary_offering_failure(evidence, pages):
+    """Return a short content-free reason code, or '' when evidence passes."""
+    if not isinstance(evidence, dict):
+        return "no_evidence"
+    url = evidence.get('source_url')
+    label = _normal(evidence.get('label'))
+    quote = _normal(evidence.get('quote'))
+    if not isinstance(url, str) or not url:
+        return "no_source_url"
+    if is_registry_source(url):
+        return "registry_source"
+    if not label:
+        return "no_label"
+    if len(quote.split()) < 3:
+        return "quote_too_short"
+    if _REGISTRY_SCOPE.search(quote):
+        return "registry_wording"
+    if not any(p.get('url') == url for p in pages):
+        return "source_page_not_captured"
+    if not any(p.get('url') == url and quote in _normal(p.get('text')) for p in pages):
+        return "quote_not_verbatim"
+    if not _label_in_quote(label, quote):
+        return "label_not_in_quote"
+    return ""
+
+
 def validate_primary_offering(evidence, pages):
     """Bind one concrete offer to an exact excerpt from the observed site."""
-    if isinstance(evidence, dict):
-        url = evidence.get('source_url')
-        label = _normal(evidence.get('label'))
-        quote = _normal(evidence.get('quote'))
-        if (isinstance(url, str) and label and len(quote.split()) >= 3
-                and label.casefold() in quote.casefold()
-                and not _REGISTRY_SCOPE.search(quote)
-                and any(p.get('url') == url and quote in _normal(p.get('text'))
-                        for p in pages)
-                and not is_registry_source(url)):
-            return {'label': label, 'quote': quote, 'source_url': url}
+    reason = primary_offering_failure(evidence, pages)
+    if not reason:
+        return {'label': _normal(evidence.get('label')),
+                'quote': _normal(evidence.get('quote')),
+                'source_url': evidence.get('source_url')}
     raise RuntimeError("Original-site primary offering unverified; "
-                       "confirm a current product or service with a customer-facing source.")
+                       "confirm a current product or service with a customer-facing source. "
+                       "reason=" + reason)
 
 
 def reconcile_primary_offering_with_source(evidence, pages):

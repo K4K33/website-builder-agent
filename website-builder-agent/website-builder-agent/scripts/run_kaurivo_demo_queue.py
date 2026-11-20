@@ -465,7 +465,10 @@ def source_failure_diagnostic(handle,start_position=0):
         return ""
     terminal=terminals[-1]
     if "Original-site primary offering unverified" in terminal:
-        return "Vahvista nykyinen päätuote tai palvelu yrityksen asiakkaille suunnatusta lähteestä."
+        # Only a fixed, content-free reason code from service_quality is shown.
+        code=re.search(r"reason=([a-z_]{3,40})\b",terminal)
+        return ("Vahvista nykyinen päätuote tai palvelu yrityksen asiakkaille suunnatusta lähteestä."
+                +(" Syy: "+code.group(1) if code else ""))
     marker="Original-site content research incomplete; review these pages:"
     if marker not in terminal:
         return ""
@@ -1278,6 +1281,20 @@ def main():
             if resume is None:
                 upsert_company(agent_slug,{"name":company_name,
                                           "url":source,"status":"found"})
+            if done<0 and resume is None and source:
+                # Zero-AI source gate: never spend free model requests on a
+                # site that cannot support a truthful demo (unreachable,
+                # private or too few own photos/words). Script-rendered
+                # shells pass on to the browser-based research.
+                from utils.kaurivo_demo_readiness import assess_site, blocking_reason
+                readiness = assess_site(source)
+                print("Kaurivo demo queue: source readiness:",
+                      readiness.get("verdict"), "images=%s words=%s pages=%s" % (
+                          readiness.get("content_images"), readiness.get("words"),
+                          readiness.get("pages")))
+                reason = blocking_reason(readiness)
+                if reason:
+                    raise HoldError("source_material_insufficient", reason)
             if done<0:
                 update("researching","Tutkitaan alkuperäistä sivustoa ja kolmea suunnittelusuuntaa")
                 run_cli(["research",agent_slug],stage_log,ai_deadline)
@@ -1462,5 +1479,17 @@ def main():
             return 1
 
 
+def _main_with_ai_usage():
+    """Report how many free AI requests this one demo run used (counts only)."""
+    usage_dir=os.environ.get("RUNNER_TEMP") or tempfile.gettempdir()
+    usage_file=os.path.join(usage_dir,"kaurivo-ai-usage-%d.tsv"%os.getpid())
+    os.environ["KAURIVO_AI_USAGE_FILE"]=usage_file
+    try:
+        return main()
+    finally:
+        from utils.ai_usage import format_summary
+        print("Kaurivo AI usage this run:",format_summary(usage_file))
+
+
 if __name__=="__main__":
-    raise SystemExit(main())
+    raise SystemExit(_main_with_ai_usage())

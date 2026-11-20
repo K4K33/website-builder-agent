@@ -15,6 +15,18 @@ FIELDS = (
 )
 CREATIVE_AXES = ("first_view", "information_architecture", "navigation", "image_strategy")
 
+# Word stems that show a reason is about a real audience or business task.
+# Finnish consonant gradation changes "asiakas" to "asiakkaan", "asiakkaat",
+# "asiakkaille"; matching only "asiaka" rejected natural Finnish such as
+# "Asiakkaan tarve on ..." and the repair loop could never converge, because
+# the repair prompt itself asks the model to name the customer.
+_AUDIENCE_STEMS = (
+    "yrity", "customer", "client", "asiaka", "asiakk", "osto", "ostaja",
+    "kävij", "palvel", "service", "tuot", "product", "toimial",
+    "business", "käyttäj", "kund", "besökar", "köpar", "tjänst",
+)
+
+
 def _normalized(value: str) -> str:
     return re.sub(r"\s+", " ", str(value or "").strip().casefold())
 
@@ -46,10 +58,8 @@ def validate_creative_directions(research: dict) -> dict:
         if identifier in ids:
             raise RuntimeError("Creative directions have duplicated identifiers.")
         ids.add(identifier)
-        if not any(word in _normalized(direction.get("business_reason")) for word in
-                   ("yrity", "customer", "client", "asiaka", "osto", "ostaja",
-                    "kävij", "palvel", "service", "tuot", "product", "toimial",
-                    "business", "käyttäj", "kund", "besökar", "köpar", "tjänst")):
+        if not any(word in _normalized(direction.get("business_reason"))
+                   for word in _AUDIENCE_STEMS):
             raise CreativeBusinessReasonError(index - 1)
     # Similar descriptions across the important structural axes are rejected.
     # Three palette/font variants are not three creative proposals.

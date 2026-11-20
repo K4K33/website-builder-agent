@@ -35,6 +35,7 @@ from utils.site_architecture import (
     validate_site_architecture, validate_site_navigation, pages_for_validation
 )
 from utils.creative_directions import validate_creative_directions
+from utils.quality_v7 import VISUAL_REVIEW_BRIEF
 from utils.visual_originality import audit_design_originality
 from utils.site_integrity import site_sha256
 from utils.kaurivo_site_quality_gate import lint_site_copy
@@ -1487,6 +1488,7 @@ def run_qa(slug_or_name: str) -> dict:
                                   "creative_directions":research.get("creative_directions"),
                                   "creative_selection":research.get("creative_selection"),
                                   "originality_preflight":originality},ensure_ascii=False)
+                    + VISUAL_REVIEW_BRIEF
                     + "\nPREMIUM VISUAL V2: score every source-grounded route separately, NEVER average a strong homepage over a weak subpage. If premium_visual_protocol=v2, return route_visual_review keyed by each route, with desktop, mobile, premium_appeal, brand_fidelity, image_authenticity, art_direction, interaction_quality scores 0..100; critical_issues array and concrete evidence >=60 characters on materials, real photos, layout rhythm, original brand pattern and conversion. Return reviewed_route_view_ids exactly for all listed image records. If a screenshot is missing, say so and FAIL; no self-certification as independent reviewer.\n"
                     + json.dumps({"premium_visual_protocol":research.get("premium_visual_protocol"),
                                   "all_routes_desktop_mobile_screenshot_order":route_view_ids},

@@ -102,6 +102,8 @@ def _run_same_model_rest_after_router_404(
     direct_payload = {key: value for key, value in payload.items()
                       if key != "model"}
     try:
+        from utils.ai_usage import record as _record_ai_usage
+        _record_ai_usage("cloudflare", "direct")
         resp = requests.post(
             direct_url,
             headers={"Authorization": "Bearer " + token,
@@ -231,6 +233,8 @@ def chat_cloudflare_free(
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
     try:
+        from utils.ai_usage import record as _record_ai_usage
+        _record_ai_usage("cloudflare", stage)
         resp = requests.post(
             _CF_URL.format(account=account),
             headers={"Authorization": "Bearer " + token,

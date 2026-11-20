@@ -20,7 +20,58 @@ ROOT = Path(__file__).resolve().parents[1]
 MASTER_V7 = ROOT / "docs" / "KAURIVO_MASTER_V7.md"
 REFERENCES_V7 = ROOT / "config" / "kaurivo_v7_reference_candidates.json"
 V7_POLICY = MASTER_V7.read_text(encoding="utf-8")
-V7_SHA256 = sha256(V7_POLICY.encode("utf-8")).hexdigest()
+
+VISUAL_EXECUTION_BRIEF = """
+Build the first view around the customer's genuine subject and visitor task.
+Choose distinct compositions for the three concepts: a single subject in
+depth, an immersive real scene, an asymmetric visual grid, a type-led reveal,
+or a source-specific alternative. Preserve the selected direction through the
+first meaningful section and carry its visual language into the service route.
+Treat reference work as evidence of a design principle. Record the URL,
+principle, source asset, mobile crop and primary action when making a selection.
+
+Choose motion only for a useful visual explanation. Prefer an ordered
+source-photo sequence for genuine stages, an existing approved video for a
+space or process, and an explicit gallery or comparison for material details.
+Allow direct navigation and ordinary scrolling throughout. Keep primary copy,
+actions and project evidence available with reduced motion and touch input.
+Use real 3D only when approved source assets and the visitor task justify it.
+Do not add a synthetic spotlight, decorative tilt or fake transformation.
+Review the first view and next section on desktop and phone after rendering.
+"""
+
+
+VISUAL_PLAYBOOK = "\n\n".join(
+    (ROOT / "docs" / name).read_text(encoding="utf-8")
+    for name in ("KAURIVO_VISUAL_PLAYBOOK.md", "KAURIVO_COLOUR_GUIDE.md")
+)
+V7_SHA256 = sha256((V7_POLICY + "\n" + VISUAL_PLAYBOOK).encode("utf-8")).hexdigest()
+
+CREATIVE_DIRECTION_BRIEF = """
+Use the existing concept fields to record concrete decisions. In first_view,
+specify the hero geometry, focal subject, offer and action. In image_strategy,
+choose the source imagery, background treatment and useful motion or a still.
+In brand_continuity, distinguish observed identity colours from proposals and
+describe the palette strategy, dominant area, surface, ink and action roles.
+Compare alternatives by lightness hierarchy, chroma, media compatibility and
+the needs of the real visitor. Keep the approved identity anchor in each.
+In information_architecture, specify the first service decision after the hero
+and the destination page's distinct opening. In mobile_behavior, describe the
+crop, reordering, touch controls and stable version when applicable.
+"""
+
+VISUAL_REVIEW_BRIEF = """
+Ground observations in the supplied screenshots. Identify the dominant subject,
+crop, text hierarchy, background and accent roles, then note whether they
+support the customer's offer and action. Identify the component and surface
+behind each colour defect, distinguish weak lightness from competing chroma,
+and request a specific role or background correction. Check relevant state
+and contrast evidence when available. Inspect the next meaningful section
+and the service route for a coherent but task-specific composition. Flag
+interchangeable imagery, cloned openings, noisy backgrounds, illegible text or
+cropped subjects in the exact affected view. Judge motion only from browser
+interaction evidence; screenshots establish static composition and fallback.
+"""
 
 # Sector match is only discovery routing, NEVER proof of a shared industry.
 SECTOR_TERMS = {
@@ -134,6 +185,7 @@ def design_brief(research: dict, company: dict | None = None) -> dict:
             "Original photos not verified: request client assets; licensed, clearly illustrated "
             "provisional imagery permitted only with exact rights, never fake company work."
         ),
+        "hero_direction": VISUAL_EXECUTION_BRIEF.strip(),
         "avoid_by_default": [
             "decorative sequential number tiles", "fake map", "oversized abstract vector hero",
             "generic repeated dark/grey/red bands", "fake staff/customer photos",

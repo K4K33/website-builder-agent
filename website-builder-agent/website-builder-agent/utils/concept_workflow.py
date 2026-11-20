@@ -10,6 +10,7 @@ from utils.concept_fact_recovery import prepare_verified_concept_copy
 from utils.concept_contrast_recovery import repair_browser_contrast
 from utils.local_media_intake import stage_local_media
 from utils.state import get_company, upsert_company
+from utils.quality_v7 import VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, VISUAL_REVIEW_BRIEF
 
 CONCEPT_PAGE_RULES = '''
 Use only the verified facts, original brand and explicitly supplied local media.
@@ -30,7 +31,7 @@ For a proposed source-photo sequence show its actual ordered source frames
 and desktop/phone crops in the static concept; the Builder handles playback.
 A strong still is suitable if the staged materials do not support a scene.
 These are PRIVATE PROTOTYPES, never a completed client website or checkout.
-'''
+''' + VISUAL_EXECUTION_BRIEF + VISUAL_PLAYBOOK
 CONCEPT_PROMPT = '''Create ONE ACTUAL RESPONSIVE HTML CONCEPT for the supplied direction.
 Return JSON {"concepts": {exact_direction_id: {"pages": {route: "<!doctype html>..."}}}}.
 Return the one exact direction id and both supplied routes.
@@ -340,7 +341,7 @@ def choose_concept(name, *, review_path=None, reviewer=''):
             'concept needs a pass on each page at both viewports and zero unresolved '
             'critical issues. An unsatisfactory candidate MUST be rejected. '
             'This is a preliminary visual choice, NOT a 9.5 score, licence or '
-            'independent human client approval.',
+            'independent human client approval.' + VISUAL_REVIEW_BRIEF,
             json.dumps({
                 'facts': research.get('company_facts'),
                 'visitor_tasks': (research.get('site_architecture') or {}).get('pages'),
