@@ -332,6 +332,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "free_ai_rate_limit"
     if "free_ai_response_truncated" in terminal:
         return "free_ai_response_truncated"
+    if "pre_build_brief_incomplete" in terminal:
+        return "pre_build_brief_incomplete"
     if "concept_page_needs_repair" in terminal:
         return "concept_page_needs_repair"
     if "concept_browser_validation_blocked" in terminal:
@@ -676,6 +678,16 @@ def run_cli(args,log_handle,deadline=None):
                 detail = "Konseptien selaintarkistus estää julkaisun"
             if categories:
                 detail += ": " + ", ".join(categories[:4])
+        if code == "pre_build_brief_incomplete":
+            from utils.pre_build_brief import GAP_LABELS
+            log_handle.seek(stage_start)
+            tail = log_handle.read()[-3000:]
+            marker = "PRE_BUILD_BRIEF_INCOMPLETE: "
+            if marker in tail:
+                gaps = re.findall(r"[a-z0-9_]+", tail.split(marker)[-1].splitlines()[0])
+                labels = [GAP_LABELS[g] for g in gaps if g in GAP_LABELS]
+                if labels:
+                    detail = "Rakennusta edeltävä brief: " + ", ".join(labels)
         if code == "concept_page_needs_repair":
             log_handle.seek(stage_start)
             last_error = log_handle.read()[-3000:]

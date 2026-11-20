@@ -1647,8 +1647,17 @@ def build_site(
         selected_entry = next(e for e in concepts['entries'] if e['id'] == concept_choice['choice']['selected_id'])
         selected_preview = "\n".join((concept_path.parent / selected_entry['folder'] / route).read_text(encoding='utf-8')
                                       for route in selected_entry['routes'])
+    from utils.pre_build_brief import ensure_pre_build_brief
+    pre_build = ensure_pre_build_brief(research, media_manifest)
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
+
+RAKENNUSTA EDELTÄVÄ BRIEF — KUUSI VASTATTUA KYSYMYSTÄ (velvoittava):
+{json.dumps(pre_build, ensure_ascii=False)}
+Toteuta TÄSMÄLLEEN yksi tunnusmerkkihetki q1:n tekniikalla ja yrityksen omalla
+materiaalilla (q2). Älä koodaa itse 3D-esineitä, jotka esittävät yrityksen
+tuotetta, rakennusta tai tiloja. Pääsivun ensisijainen toiminto on q4.
+Pysy q5:n suorituskykybudjetissa ja kirjoita vain q6:n vahvistettuja faktoja.
 
 KAURIVO V7 — VELVOITTAVA YRITYSKOHTAINEN SUUNNITTELUPAKETTI:
 {json.dumps(v7_brief, ensure_ascii=False)}
@@ -2158,7 +2167,16 @@ def revise_site(
         output_dir=_output_dir(slug)
     )
 
+    from utils.pre_build_brief import ensure_pre_build_brief
+    pre_build = ensure_pre_build_brief(research, media_manifest)
     user_prompt = f"""
+RAKENNUSTA EDELTÄVÄ BRIEF — KUUSI VASTATTUA KYSYMYSTÄ (velvoittava):
+{json.dumps(pre_build, ensure_ascii=False)}
+Toteuta TÄSMÄLLEEN yksi tunnusmerkkihetki q1:n tekniikalla ja yrityksen omalla
+materiaalilla (q2). Älä koodaa itse 3D-esineitä, jotka esittävät yrityksen
+tuotetta, rakennusta tai tiloja. Pääsivun ensisijainen toiminto on q4.
+Pysy q5:n suorituskykybudjetissa ja kirjoita vain q6:n vahvistettuja faktoja.
+
 JO SOVITTU YRITYSKOHTAINEN SIVUKARTTA, WIREFRAME JA BRÄNDITYYLIOHJE
 (käytä yhtenäisesti kaikilla alasivuilla; älä keksi uutta brändiä):
 {json.dumps(brand_blueprint, ensure_ascii=False)}

@@ -88,6 +88,9 @@ def generate_concepts(name, *, response_path=None, producer=''):
                               output_dir=root)
     from utils.authentic_media_direction import source_media_evidence
     media_direction = source_media_evidence(research, media)
+    # Six pre-build questions must be answered before any concept is authored.
+    from utils.pre_build_brief import ensure_pre_build_brief
+    pre_build = ensure_pre_build_brief(research, media)
 
     def validate_content(document, facts):
         _validate_generated_content(document, facts, source_inventory=research.get('source_inventory'))
@@ -112,6 +115,10 @@ def generate_concepts(name, *, response_path=None, producer=''):
         for direction in validate_creative_directions(research)["alternatives"]:
             packet = json.dumps({
                 "facts": research.get("company_facts"), "direction": direction,
+                "pre_build_brief": pre_build,
+                "signature_rule": "Plan exactly one signature moment: this direction's "
+                                  "first_view with the pre_build_brief technique. Show it "
+                                  "as static ordered frames here; the Builder adds playback.",
                 "prototype_routes": routes, "media": media,
                 "authentic_media_strategy": media_direction,
                 "brand_plan": research.get("brand_preservation_plan"),
@@ -146,7 +153,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
         for direction in directions:
             response = ask_claude_json(CONCEPT_PROMPT, json.dumps({
                 'facts': research.get('company_facts'), 'direction': direction,
-                'exact_direction_id': direction['id'],
+                'exact_direction_id': direction['id'], 'pre_build_brief': pre_build,
                 'required_routes': preview_routes(research), 'media': media,
                 'authentic_media_strategy': media_direction,
                 'brand_plan': research.get('brand_preservation_plan'),
@@ -194,6 +201,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
                         "source_bound_visual_identity_v8": research.get("v8_identity_boundaries"),
                         "verified_core_service": research.get("primary_offering_evidence"),
                         "direction": directions[identifier],
+                        "pre_build_brief": pre_build,
                         "allowed_media": media,
                         "authentic_media_strategy": media_direction,
                         "route": route,
