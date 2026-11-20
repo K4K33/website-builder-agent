@@ -150,6 +150,54 @@ INDUSTRY_ALIASES = {
 # Primary-source operator pages. These are candidates, not benchmark proof.
 # Research still checks matching services, quotes and desktop/mobile evidence.
 CURATED_REFERENCE_CANDIDATES = {
+    # Finnish operator sites found by public web search and opened in a real
+    # browser on 20.11.2026. OpenStreetMap lists too few of these trades with
+    # websites (Maalaus Valo 02ed83d3 still hit comparison_free_sources_insufficient
+    # after #276). Candidates only: research re-inspects each site, requires
+    # a same-trade model decision with an exact source quote, and skips any
+    # unavailable or mismatching one.
+    "maalausliike": (
+        ("Tammijuuri", "https://www.tammijuuri.fi/"),
+        ("Loistomaalarit", "https://www.loistomaalarit.fi/"),
+        ("Maalausliike ILME", "https://www.maalausliikeilme.fi/"),
+        ("Maalausliike Kuikanmäki", "https://www.maalausliikehelsinki.com/"),
+        ("O & L Maalaus", "https://olmaalaus.fi/"),
+        ("J&B Tasoitus ja Maalaus", "https://www.jbtasoitusmaalaus.fi/"),
+    ),
+    "keittiöliike": (
+        ("BLAU", "https://www.blau.fi/"),
+        ("Keittiöstudiot", "https://keittiostudiot.fi/"),
+        ("Keittiömetsä", "https://www.keittiometsa.fi/"),
+        ("Mittapuu", "https://mittapuu.fi/"),
+        ("Arkken", "https://arkken.fi/"),
+        ("Amelia-keittiöt", "https://ameliakeittiot.fi/"),
+    ),
+    "kattoliike": (
+        ("Pläkkärit", "https://plakkarit.fi/"),
+        ("Plus Kattopalvelu", "https://www.pluskattopalvelu.fi/"),
+        ("Katteeton", "https://katteeton.fi/"),
+        ("PerusKatto", "https://peruskatto.fi/"),
+        ("Pelti ja Rakennus Huusko", "https://www.peltijarakennus.com/"),
+    ),
+    "laatoitus": (
+        ("SA Laatoitus", "https://salaatoitus.fi/"),
+        ("JPK Laatoitus", "https://www.jpklaatoitus.fi/"),
+        ("Tammerlaatta", "https://www.tammerlaatta.fi/"),
+        ("LaattaBest", "https://laattabest.com/"),
+    ),
+    "rakennusliike": (
+        ("Rakennusliike Suvenkari", "https://rakennusliikesuvenkari.fi/"),
+        ("MJR Rakennuspalvelut", "https://mjr-rakennuspalvelut.fi/"),
+        ("Rakennusapu PKP", "https://www.rakennusapupkp.fi/"),
+        ("RBM Rakennus", "https://rbm-rakennus.fi/"),
+        ("Rakennus Ojaluoma", "https://ojaluoma.fi/"),
+    ),
+    "lvi": (
+        ("Palokan Putkipalvelu", "https://www.palokanputkipalvelu.fi/"),
+        ("LVI-Kaivola", "https://lvi-kaivola.fi/"),
+        ("Putkiwelho", "https://www.putkiwelho.fi/"),
+        ("LVI Wikström", "https://www.lvi-wikstrom.fi/"),
+    ),
     "somemanagerointi": (
         ("The Social Shepherd", "https://thesocialshepherd.com/"),
         ("Sociallyin", "https://sociallyin.com/"),

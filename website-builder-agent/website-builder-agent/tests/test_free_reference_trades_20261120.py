@@ -52,5 +52,28 @@ class TradeReferenceTests(unittest.TestCase):
         self.assertEqual(calls[0][0], "maalausliike")
 
 
+class CuratedTradeReferenceTests(unittest.TestCase):
+    def test_curated_pool_gives_three_without_osm(self):
+        import tempfile, os
+        for category in ("maalausliike", "keittiöliike", "kattoliike", "laatoitus",
+                         "rakennusliike", "lvi"):
+            with self.subTest(category=category), tempfile.TemporaryDirectory() as tmp:
+                rows = discover_free_references(
+                    category, target_url="https://www.maalausvalo.fi",
+                    cache_path=os.path.join(tmp, "c.json"),
+                    fetch_osm=lambda c, r: [], historic_lookup=lambda c: [])
+                self.assertGreaterEqual(len(rows), 3)
+                self.assertTrue(all(row["url"].startswith("https://") for row in rows))
+
+    def test_target_site_is_never_its_own_reference(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as tmp:
+            rows = discover_free_references(
+                "maalausliike", target_url="https://www.tammijuuri.fi/",
+                cache_path=os.path.join(tmp, "c.json"),
+                fetch_osm=lambda c, r: [], historic_lookup=lambda c: [])
+        self.assertNotIn("tammijuuri", " ".join(row["url"] for row in rows))
+
+
 if __name__ == "__main__":
     unittest.main()
