@@ -20,7 +20,6 @@ ROOT = Path(__file__).resolve().parents[1]
 MASTER_V7 = ROOT / "docs" / "KAURIVO_MASTER_V7.md"
 REFERENCES_V7 = ROOT / "config" / "kaurivo_v7_reference_candidates.json"
 V7_POLICY = MASTER_V7.read_text(encoding="utf-8")
-V7_SHA256 = sha256(V7_POLICY.encode("utf-8")).hexdigest()
 
 VISUAL_EXECUTION_BRIEF = """
 Build the first view around the customer's genuine subject and visitor task.
@@ -41,6 +40,29 @@ Do not add a synthetic spotlight, decorative tilt or fake transformation.
 Review the first view and next section on desktop and phone after rendering.
 """
 
+
+VISUAL_PLAYBOOK = (ROOT / "docs" / "KAURIVO_VISUAL_PLAYBOOK.md").read_text(encoding="utf-8")
+V7_SHA256 = sha256((V7_POLICY + "\n" + VISUAL_PLAYBOOK).encode("utf-8")).hexdigest()
+
+CREATIVE_DIRECTION_BRIEF = """
+Use the existing concept fields to record concrete decisions. In first_view,
+specify the hero geometry, focal subject, offer and action. In image_strategy,
+choose the source imagery, background treatment and useful motion or a still.
+In brand_continuity, describe source-backed surface, ink and accent roles.
+In information_architecture, specify the first service decision after the hero
+and the destination page's distinct opening. In mobile_behavior, describe the
+crop, reordering, touch controls and stable version when applicable.
+"""
+
+VISUAL_REVIEW_BRIEF = """
+Ground observations in the supplied screenshots. Identify the dominant subject,
+crop, text hierarchy, background and accent roles, then note whether they
+support the customer's offer and action. Inspect the next meaningful section
+and the service route for a coherent but task-specific composition. Flag
+interchangeable imagery, cloned openings, noisy backgrounds, illegible text or
+cropped subjects in the exact affected view. Judge motion only from browser
+interaction evidence; screenshots establish static composition and fallback.
+"""
 
 # Sector match is only discovery routing, NEVER proof of a shared industry.
 SECTOR_TERMS = {

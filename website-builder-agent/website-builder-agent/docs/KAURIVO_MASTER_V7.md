@@ -1,5 +1,5 @@
 # KAURIVO MASTER V7 — active design craft contract
-Version: 7.0.4 (20 November 2026). This is a RUNTIME instruction, not merely a reference document.
+Version: 7.0.5 (20 November 2026). This is a RUNTIME instruction, not merely a reference document.
 
 MISSION: Design a credible, company-specific, commercially useful premium website. Preserve the owner's real identity and authentic strengths before adding novelty. A fully functional page is NOT necessarily well designed. The final 9.5/10 independently assessed agency benchmark is aspirational, not a numeric bar that prevents ethical early sales.
 
@@ -13,6 +13,10 @@ Before drawing a layout, study source screenshots, header, footer, logo, palette
 Three competing directions must be VISUALLY different in composition, image strategy, type and service-page hierarchy, and rendered with real permitted source material and realistic copy for both phone and desktop. No concept wins just because it has an attractive color label. Explicitly compare first fold AND a meaningful subpage with the source and professionally reviewed references. If none is credible, reject the set rather than implementing the least bad direction. Never copy reference markup, copyrighted assets, original prose or distinctive trade dress.
 
 ## Hero composition and reference selection
+
+Apply the [visual playbook](KAURIVO_VISUAL_PLAYBOOK.md) in concept, Build and
+Revision. It defines opening compositions, colour roles, backgrounds, route
+hierarchy and motion choices. Its text is part of the runtime contract digest.
 
 Use these as composition studies for the existing three rendered concepts. Select
 directions from the actual brief, available media and the visitor's first task.

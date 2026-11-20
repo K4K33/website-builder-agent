@@ -27,7 +27,7 @@ from utils.commerce_catalogue import commerce_builder_brief
 from utils.site_build_pipeline import build_pages_from_response
 from utils.local_media_intake import stage_local_media
 from utils.source_photo_sequence import PHOTO_SEQUENCE_BRIEF
-from utils.quality_v7 import VISUAL_EXECUTION_BRIEF
+from utils.quality_v7 import VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK
 from utils.content_parity import audit_content_parity
 from utils.source_fidelity import (source_manifest, validate_source_plan, audit_source_fidelity)
 from utils.universal_quality import audit_universal_standards
@@ -1959,7 +1959,7 @@ Palauta vain validi JSON ilman markdownia.
 
     html = _request_site_pages(
         BUILD_SYSTEM_PROMPT,
-        user_prompt + "\n\n" + PHOTO_SEQUENCE_BRIEF,
+        user_prompt + "\n\n" + VISUAL_PLAYBOOK + "\n\n" + PHOTO_SEQUENCE_BRIEF,
         slug=slug, architecture=architecture,
         image_paths=reference_images + [path for path in (company.get("screenshots") or {}).values()
                      if isinstance(path, str) and os.path.isfile(path)] or None,
@@ -2339,7 +2339,7 @@ sama tapa kuin ensimmäisessä rakentamisessa. Älä palauta vain index.html.
 
     new_html = _request_site_pages(
         REVISE_SYSTEM_PROMPT,
-        user_prompt + "\n\n" + VISUAL_EXECUTION_BRIEF + "\n\n" + PHOTO_SEQUENCE_BRIEF,
+        user_prompt + "\n\n" + VISUAL_EXECUTION_BRIEF + VISUAL_PLAYBOOK + "\n\n" + PHOTO_SEQUENCE_BRIEF,
         slug=slug, architecture=architecture, current_pages=current_pages,
         image_paths=reference_images + prior_views + motion_views or None,
     )

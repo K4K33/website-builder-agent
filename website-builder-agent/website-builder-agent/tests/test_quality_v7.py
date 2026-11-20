@@ -33,6 +33,16 @@ class V7QualityContractTests(unittest.TestCase):
         # A V7 change invalidates prior research / review hashes.
         self.assertNotEqual(V7_SHA256, MASTER_PROMPT_SHA256)
 
+    def test_playbook_reaches_concepts_and_is_part_of_the_contract_digest(self):
+        from hashlib import sha256
+        from utils.concept_workflow import CONCEPT_PAGE_RULES
+        from utils.quality_v7 import VISUAL_PLAYBOOK
+
+        self.assertIn(VISUAL_PLAYBOOK, CONCEPT_PAGE_RULES)
+        self.assertEqual(
+            V7_SHA256, sha256((V7_POLICY + "\n" + VISUAL_PLAYBOOK).encode()).hexdigest()
+        )
+
     def test_reference_candidates_are_real_international_ideas_never_approved(self):
         for sector in ("autohuolto", "hammasklinikka", "asianajotoimisto",
                        "ravintola", "siivouspalvelu"):

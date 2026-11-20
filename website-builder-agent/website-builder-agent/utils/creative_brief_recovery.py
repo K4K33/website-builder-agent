@@ -15,6 +15,7 @@ import json
 from typing import Callable
 
 from utils.creative_directions import CreativeBusinessReasonError, validate_creative_directions
+from utils.quality_v7 import CREATIVE_DIRECTION_BRIEF
 
 
 def _with_consistent_choice(brief: dict) -> dict:
@@ -107,6 +108,7 @@ def ensure_creative_directions(
         "and rejected_ids naming the two alternatives. "
         "Treat the original brand as locked, not permission to rebrand."
     )
+    system += CREATIVE_DIRECTION_BRIEF
     candidate = normalized
     previous_reason_index = None
     for _ in range(max_repairs):

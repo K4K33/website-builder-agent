@@ -252,6 +252,8 @@ Jokainen ennakkokonsepti kertoo, miksi pääkuva, materiaalikuva, navigaatio ja 
 
 ## Hero, navigaatio ja luottamus
 
+Noudata [visuaalisen toteutuksen ohjetta](KAURIVO_VISUAL_PLAYBOOK.md) konseptoinnissa, rakentamisessa ja korjauskierroksilla.
+
 Sovella [aktiivisen V7-ohjeen hero-malleja](KAURIVO_MASTER_V7.md#hero-composition-and-reference-selection) nykyisessä kolmen konseptin vertailussa. Valitse suunta yrityksen omien kuvien, brändin ja kävijän tärkeimmän tehtävän perusteella. Tarkista puhelimella ja työpöydällä myös ensimmäinen siirtymä herosta oikeaan sisältöön. Jos korjaus koskee esimerkiksi kuvan rajausta, arvioi uusi rajaus kummassakin näkymässä.
 
 | Lähde | Sovellus |
@@ -264,3 +266,21 @@ Sovella [aktiivisen V7-ohjeen hero-malleja](KAURIVO_MASTER_V7.md#hero-compositio
 | [Really Good Emails](https://reallygoodemails.com/), [Deck Gallery](https://deck.gallery/), [Posts](https://posts.design/) ja [Adfolio](https://adfolio.design/) | Hyödynnä tarpeen mukaan Kaurivon viesteissä, myyntiesityksissä, somejulkaisuissa ja mainoksissa. |
 
 Kirjaa käytetystä referenssistä URL, havaittu suunnitteluratkaisu ja miten sitä sovellettiin asiakkaan aineistoon. Galleria ohjaa suunnittelua. Toteutuksesta kerätään nykyisten laatutarkistusten edellyttämä näyttö oikeasta sivusta.
+
+### Tallenteiden havainnot ja työkalujen käyttökohdat
+
+| Aineisto | Käytännön sovellus |
+| --- | --- |
+| 20.11. klo 12.48, loppuosa noin 1.45–2.00 | Väriasemiltaan erottuvat ruudukkopohjat, yksittäiseen tuotteeseen keskittyvä näyttämö ja keskitetty valaistu avaus. Sovella sommittelua, pinta-aloja ja kuvan roolia yrityskohtaisesti. |
+| 20.11. klo 00.59, noin 0.03–0.10 | Vierityssiirtymä, live-3D, tilallinen selaus ja kosketusta hyödyntävä pinta. Valitse näistä kävijän tehtävää tukeva liike ja suunnittele staattinen vaihtoehto. |
+| 19.11. klo 21.29 ja 21.41 | Tuote-esityksen lähikuvat, autenttiset työ- ja kohdekuvat sekä jatkuvuus avauksesta töiden selaamiseen. Vaihtele kuvan mittakaavaa sisällön mukaan. |
+| 20.11. klo 00.33 ja 00.46 | 3D-aineiston esitystesti sekä Claude Code -esimerkin referenssi → täsmennys → esikatselu. Rakenna kullekin asiakkaalle suunnitteluratkaisu lähteistä ja testaa se selaimessa ennen lopullista valintaa. |
+| Pitskun Rakennuksen liiketesti 19.11. | Tarkista, että avaus johtaa todennettuihin palveluihin ja oikeiden töiden esittelyyn. Tutki myös itsenäinen palvelu- tai kohdesivu. |
+
+Käytä Supaheroa ja Land-bookia sommittelun, MotionSitesia liikkeen ja Navbar
+Gallerya navigaation tutkimiseen. Projektin Playwright ja kuvasekvenssi
+palvelevat toteutusta ja katselmointia. Lighthouse on valinnainen paikallinen
+tekninen tarkistus suorituskyvylle ja saavutettavuudelle. Erillistä
+3D-julkaisupalvelua arvioidaan, kun asiakkaalla on käyttöön hyväksytty malli
+ja perusteltu käyttötapa. Varmista silloin mobiilivastine, latauspaino,
+aineiston omistajuus, saavutettavuus ja CMS-muokattavuus ennen palveluvalintaa.
