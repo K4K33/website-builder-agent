@@ -220,7 +220,8 @@ def validate_free_api_key():
     remaining=daily.get("remaining") if isinstance(daily,dict) else None
     if type(remaining) in (int,float) and remaining<=0:
         from utils.cloudflare_free_ai import enabled
-        if enabled():
+        from utils.gemini_free_ai import enabled as gemini_enabled
+        if enabled() or gemini_enabled():
             # Explicitly opt-in to verified Workers Free, *without* issuing
             # an OpenRouter request that is already known to fail.
             os.environ["KAURIVO_OPENROUTER_FREE_EXHAUSTED"] = "1"
