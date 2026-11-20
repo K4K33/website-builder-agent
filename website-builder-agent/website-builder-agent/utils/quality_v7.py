@@ -22,6 +22,26 @@ REFERENCES_V7 = ROOT / "config" / "kaurivo_v7_reference_candidates.json"
 V7_POLICY = MASTER_V7.read_text(encoding="utf-8")
 V7_SHA256 = sha256(V7_POLICY.encode("utf-8")).hexdigest()
 
+VISUAL_EXECUTION_BRIEF = """
+Build the first view around the customer's genuine subject and visitor task.
+Choose distinct compositions for the three concepts: a single subject in
+depth, an immersive real scene, an asymmetric visual grid, a type-led reveal,
+or a source-specific alternative. Preserve the selected direction through the
+first meaningful section and carry its visual language into the service route.
+Treat reference work as evidence of a design principle. Record the URL,
+principle, source asset, mobile crop and primary action when making a selection.
+
+Choose motion only for a useful visual explanation. Prefer an ordered
+source-photo sequence for genuine stages, an existing approved video for a
+space or process, and an explicit gallery or comparison for material details.
+Allow direct navigation and ordinary scrolling throughout. Keep primary copy,
+actions and project evidence available with reduced motion and touch input.
+Use real 3D only when approved source assets and the visitor task justify it.
+Do not add a synthetic spotlight, decorative tilt or fake transformation.
+Review the first view and next section on desktop and phone after rendering.
+"""
+
+
 # Sector match is only discovery routing, NEVER proof of a shared industry.
 SECTOR_TERMS = {
     "auto_repair": ("autohuol", "autokorja", "korjaamo", "car repair", "auto service", "vehicle repair"),
@@ -134,13 +154,7 @@ def design_brief(research: dict, company: dict | None = None) -> dict:
             "Original photos not verified: request client assets; licensed, clearly illustrated "
             "provisional imagery permitted only with exact rights, never fake company work."
         ),
-        "hero_direction": (
-            "Choose distinct compositions for the existing three concepts from the brief, "
-            "visitor task and permitted media. Consider one subject in depth, an immersive "
-            "real scene, an asymmetric visual grid or a type-led reveal. Record the reference "
-            "URL, borrowed principle, source asset, mobile crop and first action. Review the "
-            "rendered first fold and the transition into the next section in both viewports."
-        ),
+        "hero_direction": VISUAL_EXECUTION_BRIEF.strip(),
         "avoid_by_default": [
             "decorative sequential number tiles", "fake map", "oversized abstract vector hero",
             "generic repeated dark/grey/red bands", "fake staff/customer photos",

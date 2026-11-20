@@ -1,5 +1,5 @@
 # KAURIVO MASTER V7 — active design craft contract
-Version: 7.0.3 (20 November 2026). This is a RUNTIME instruction, not merely a reference document.
+Version: 7.0.4 (20 November 2026). This is a RUNTIME instruction, not merely a reference document.
 
 MISSION: Design a credible, company-specific, commercially useful premium website. Preserve the owner's real identity and authentic strengths before adding novelty. A fully functional page is NOT necessarily well designed. The final 9.5/10 independently assessed agency benchmark is aspirational, not a numeric bar that prevents ethical early sales.
 
@@ -53,6 +53,26 @@ Select families and weights consciously for the sector and brand; verify actual 
 
 ## Authentic photography and motion
 Use source/approved photographs before optional licensed stock. An image's filename or loading status does not make it thematically correct. Avoid invented generated staff, buildings, portfolios and company badges. Full-site design should vary appropriately between meaningful routes. Motion and 3D earn no points for existing: retain purposeful real source motion, supply reduced-motion and mobile fallback, and remove effects that look cheap, obscure content or harm responsiveness. Do not add arbitrary "premium depth" when restrained photography would be better.
+
+### Match the interaction to the subject
+
+- Construction and renovation: keep the page narrative anchored to a named,
+  verified project. When genuine sequential photos exist, use the existing
+  source-photo sequence to show the work progressing. Pair the opening with a
+  project or service route that answers what was done and how to inquire.
+- Product and craft: use approved imagery to show materials, parts, scale or
+  the result of a process. A still composition, gallery or owned product video
+  can supply depth. Reserve interactive 3D for a real model with a useful
+  inspection task. Keep specifications and buying actions available without it.
+- Spaces and galleries: retain useful browsing through actual rooms or projects.
+  Use direct item navigation and legible labels. A drag gesture needs a
+  tap/click or keyboard equivalent. Touch exploration must preserve normal
+  page scrolling and offer a stable reduced-motion view.
+
+On the rendered site, verify the interaction at the point where it is used,
+including one normal-motion and one reduced-motion run. Check navigation and
+the main action after the interaction. A still screenshot is evidence of
+composition. A normal-motion browser run is needed to judge the transition.
 
 ## Full visual review separate from technical QA
 Check at least homepage + principal service + contact/product, then every route. Review real 390/768/1440 screenshots; external hosted version matters. Evaluate enterprise identity, image authenticity, overall composition, typography, natural customer-focused Finnish/Swedish copy, navigation and CTA, useful motion, details (tab title/favicons/header/footer), and whether the site feels interchangeable/AI-generated. Record concrete observations and screenshot evidence. Give one overall quality score when legitimately reviewed, with a SEPARATE 0–10 AI-looking impression index (10 = highly formulaic looking). Do not claim an AI author detector or independent review without evidence. Pass/fail functional gates are NEVER an aesthetic score.
