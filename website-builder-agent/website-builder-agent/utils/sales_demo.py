@@ -59,6 +59,16 @@ def _e(value) -> str:
     return html.escape(str(value or "").strip(), quote=True)
 
 
+def _favicon(name, background: str, ink: str) -> str:
+    """URL-encoded SVG favicon: the company's initial on the accent colour."""
+    from urllib.parse import quote
+    letter = (re.sub(r"[^\w]", "", str(name or "K"), flags=re.UNICODE)[:1] or "K").upper()
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" '
+           f'fill="{background}"/><text x="32" y="45" font-family="Arial,sans-serif" font-size="38" '
+           f'font-weight="700" text-anchor="middle" fill="{ink}">{html.escape(letter)}</text></svg>')
+    return quote(svg, safe="")
+
+
 def _glue(text: str) -> str:
     """Escape, and bind words of 1-2 letters to the next word (no lone 'ja' line)."""
     return re.sub(r"(?<![\w-])(\w{1,2}) (?=\S)", "\\1\u00a0", _e(text))
@@ -273,6 +283,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>{name} | Kaurivon luonnos</title>
+<link rel="icon" href="data:image/svg+xml,{_favicon(company.get("name"), p["accent"], p["accent_ink"])}">
 <style>
 {_font_face("Display", display_file)}
 {_font_face("Body", body_file)}

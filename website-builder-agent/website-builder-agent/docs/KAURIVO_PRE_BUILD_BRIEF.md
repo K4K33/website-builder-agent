@@ -80,3 +80,23 @@ licence for Creative Commons, the draft note states that the
 images are illustrations and not the company's projects, and no project-like
 caption is kept. The final customer site uses the company's own photos and
 before/after pairs, requested once the company is interested.
+
+## Sales demo in production (`mode=sales`)
+
+The demo worker accepts `workflow_dispatch` input `mode: sales` together with
+`job_id`. For that job it skips the full pipeline and runs
+`utils/sales_demo_pipeline.py`:
+
+1. fetches up to six public pages of the source site (same safe-URL rules as
+   the readiness gate) and collects visible text, own photos, phone and e-mail
+2. one free model call fills the sales demo content plan
+3. every field is checked against the source text: unverifiable services,
+   chapters, captions and reference lines are dropped (numbers must match
+   exactly); an unverifiable headline or no verified service is a HOLD
+4. fewer than four own photos are topped up with labelled stock illustrations
+5. one page is rendered (shared photo grade, proof section from references),
+   published to the internal preview host and verified in Chromium at 390,
+   768 and 1440 px, then marked `internal_preview`
+
+Free-model rate limits defer the job like the full pipeline. Nothing is sent
+to the company.

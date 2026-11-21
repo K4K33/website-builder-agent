@@ -56,6 +56,11 @@ on:
         type: string
         required: false
         default: ""
+      mode:
+        description: "full = research/concepts/build/QA pipeline; sales = one-page sales demo (1 free model call)"
+        type: choice
+        options: [full, sales]
+        default: full
 # User-requested exact second 2026-11-18 company Employ Oy: single supervised source-verified build wake.
 # Owner-requested exact first 2026-11-18 company Mainoskilpi Muhonen Oy: initiate one supervised cloud queue wake.
 # Controlled re-run 2026-11-11 after merged local-minute quota correction; one eligible private job.
@@ -296,6 +301,7 @@ jobs:
           # Empty secret = disabled. Used only after OpenRouter's free quota.
           KAURIVO_GEMINI_API_KEY: ${{ secrets.KAURIVO_GEMINI_API_KEY }}
           KAURIVO_PEXELS_API_KEY: ${{ secrets.KAURIVO_PEXELS_API_KEY }}
+          KAURIVO_BUILD_MODE: ${{ inputs.mode || 'full' }}
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
           KAURIVO_GEMINI_FREE_CONFIRMED: ${{ vars.KAURIVO_GEMINI_FREE_CONFIRMED || '1' }}
           OPENROUTER_MODEL: openrouter/free

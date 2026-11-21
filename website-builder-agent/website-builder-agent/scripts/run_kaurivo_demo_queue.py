@@ -802,7 +802,7 @@ def get_site_directory(company):
     return source.parent
 
 
-def snapshot_for_preview(src, dest, marker):
+def snapshot_for_preview(src, dest, marker, min_pages=2):
     """Only publish static intended site assets; never model data or secrets."""
     if dest.exists():
         raise HoldError("preview_version_already_exists")
@@ -851,7 +851,7 @@ def snapshot_for_preview(src, dest, marker):
             count_html+=1
         else:
             shutil.copy2(file,target)
-    if count_html<2 or not (dest/"index.html").is_file():
+    if count_html<min_pages or not (dest/"index.html").is_file():
         raise HoldError("site_routes_incomplete")
     return files
 
@@ -960,7 +960,29 @@ def local_browser_smoke(site_root,routes):
         browser.close()
 
 
-def publish(site_root,job_id,slug,marker,expected_routes,qa_details=None):
+def verify_sales_page(site_root):
+    """One-page sales demo: semantics, noindex and only local media/styles."""
+    from bs4 import BeautifulSoup
+    pages=sorted(p.relative_to(site_root).as_posix() for p in site_root.rglob("*.html"))
+    if pages!=["index.html"]:
+        raise HoldError("sales_demo_route_mismatch")
+    soup=BeautifulSoup((site_root/"index.html").read_text(encoding="utf-8"),"html.parser")
+    if not soup.find("main") or len(soup.find_all("h1"))!=1:
+        raise HoldError("page_semantics_incomplete")
+    if "noindex" not in str((soup.select_one('meta[name="robots"]') or {}).get("content","")):
+        raise HoldError("noindex_missing")
+    if not soup.select_one(".draft"):
+        raise HoldError("sales_demo_draft_note_missing")
+    for img in soup.select("img[src]"):
+        if str(img.get("src","")).startswith(("http:","https:","//")):
+            raise HoldError("unapproved_external_media")
+    for style in soup.select("link[rel~=stylesheet][href]"):
+        if str(style.get("href","")).startswith(("http:","https:","//")):
+            raise HoldError("unapproved_external_stylesheet")
+    return pages
+
+
+def publish(site_root,job_id,slug,marker,expected_routes,qa_details=None,sales=False):
     # Commit to a dedicated Render-auto-deployed branch. Never modify main
     # or previously verified preview URLs; every job gets a new immutable URL.
     suffix=job_id.split("-")[0]
@@ -973,8 +995,9 @@ def publish(site_root,job_id,slug,marker,expected_routes,qa_details=None):
                         "kaurivo-job-"+suffix,"origin/"+PUBLISH_BRANCH],
                        cwd=PROJECT,check=True,stdout=subprocess.DEVNULL)
         directory=publish_root/PUBLISH_DIR/folder
-        snapshot_for_preview(site_root,directory,marker)
-        routes=verify_static_site(directory,expected_routes)
+        snapshot_for_preview(site_root,directory,marker,min_pages=1 if sales else 2)
+        routes=(verify_sales_page(directory) if sales else
+                verify_static_site(directory,expected_routes))
         local_browser_smoke(directory,routes)
         if LOCAL_WORKER:
             # Publish a REAL, source-safe summary of the approved independent
@@ -1253,6 +1276,43 @@ def restore_private_checkpoint(agent_slug, company_name, source):
         raise HoldError("checkpoint_restore_failed") from exc
 
 
+def run_sales_demo(source,company_name,agent_slug,marker):
+    """One-page sales demo for the claimed job: one free model call, verified
+    source facts, labelled stock illustrations when own photos are few."""
+    from utils.sales_demo_pipeline import SalesDemoBlocked, build_sales_demo
+    if not source:
+        raise HoldError("sales_source_missing")
+    update("researching","Myyntidemo: kerätään yrityksen omat tekstit ja kuvat")
+    site=PROJECT/"output"/agent_slug/"_sales_demo_site"
+    shutil.rmtree(site,ignore_errors=True)
+    work=Path(tempfile.mkdtemp(prefix="kaurivo-sales-"))
+    try:
+        update("building","Myyntidemo: sisältö lähdesivulta ja sivun rakennus")
+        summary=build_sales_demo(company_name,source,site,work_dir=work)
+    except SalesDemoBlocked as exc:
+        raise HoldError(exc.code,exc.detail) from None
+    except (RuntimeError,ValueError) as exc:
+        # Never print model or source text; keep only the failure class.
+        text=str(exc).lower()
+        if "429" in text or "rate limit" in text or "quota" in text:
+            raise HoldError("free_ai_rate_limit") from None
+        raise HoldError("sales_demo_build_failed",type(exc).__name__) from None
+    finally:
+        shutil.rmtree(work,ignore_errors=True)
+    print("Kaurivo sales demo:","own_photos=%s stock=%s services=%s proof_groups=%s dropped=%s"%(
+        summary["own_photos"],summary["stock_photos"],summary["services"],
+        summary["proof_groups"],len(summary["dropped"])))
+    update("publishing","Myyntidemo: julkaistaan ja tarkistetaan sisäinen esikatselu")
+    url,sha,routes=publish(site,working_job["id"],agent_slug,marker,["index.html"],sales=True)
+    verify_public(url,marker,routes)
+    note=("Myyntidemo (1 sivu) tarkistettu selaimessa. "+
+          ("Kuvapankin havainnekuvia %d, merkitty. "%summary["stock_photos"] if summary["stock_photos"] else "")+
+          "Ei asiakkaalle hyväksytty.")
+    update("internal_preview",note,preview_url=url,qa_url=RUN_URL,release_sha=sha)
+    print("Kaurivo sales demo: internal preview verified.")
+    return 0
+
+
 def main():
     global working_job
     if RUN_ID<=0:raise HoldError("not_github_actions")
@@ -1285,6 +1345,8 @@ def main():
             agent_slug=make_slug(company_name)
             if not agent_slug or len(agent_slug)>120:
                 raise HoldError("company_name_invalid")
+            if os.environ.get("KAURIVO_BUILD_MODE","full")=="sales":
+                return run_sales_demo(source,company_name,agent_slug,marker)
             resume=restore_private_checkpoint(agent_slug,company_name,source)
             last_checkpoint = resume
             # Verified private archives can contain research made under an old
