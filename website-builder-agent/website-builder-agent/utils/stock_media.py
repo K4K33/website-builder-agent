@@ -57,6 +57,11 @@ def pixabay_key() -> str:
     return key if re.fullmatch(r"[A-Za-z0-9-]{20,80}", key) else ""
 
 
+# Openverse indexes many sources; download only from these known image hosts.
+_OPENVERSE_HOSTS = ("live.staticflickr.com", "farm1.staticflickr.com", "farm2.staticflickr.com",
+                    "farm3.staticflickr.com", "farm4.staticflickr.com", "farm5.staticflickr.com",
+                    "farm6.staticflickr.com", "farm7.staticflickr.com", "farm8.staticflickr.com",
+                    "farm9.staticflickr.com", "upload.wikimedia.org", "images.rawpixel.com")
 _OPENVERSE_OK = {"cc0": "CC0", "pdm": "Public Domain Mark", "by": "CC BY"}
 
 
@@ -109,7 +114,7 @@ def _openverse(session, query):
         version = str(r.get("license_version") or "").strip()
         yield {"id": f"openverse-{r.get('id')}", "width": r.get("width") or 0, "height": r.get("height") or 0,
                "text": " ".join(str(r.get(k) or "") for k in ("title", "tags")), "url": r.get("url"),
-               "hosts": None, "min_width": 1000, "creator": r.get("creator"), "creator_url": r.get("creator_url"),
+               "hosts": _OPENVERSE_HOSTS, "min_width": 1000, "creator": r.get("creator"), "creator_url": r.get("creator_url"),
                "source_url": r.get("foreign_landing_url"),
                "licence": licence + (f" {version}" if licence == "CC BY" and version else ""),
                "provider": "Openverse"}
