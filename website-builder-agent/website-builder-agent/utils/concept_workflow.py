@@ -1,6 +1,7 @@
 """Explicit model/import entry points for source-bound visible concept choice."""
 from pathlib import Path
 import json
+import re
 import os
 import config
 from utils.concept_previews import (preview_routes, write_concepts, load_verified_set,
@@ -112,6 +113,7 @@ def generate_concepts(name, *, response_path=None, producer=''):
         allowed_media = {item["src"] for item in media}
 
         def prepare_page(route, body):
+            body = pin_phone_links(body, facts)
             page = prepare_concept_page(route, body, routes, allowed_media)
             page = prepare_verified_concept_copy(page, facts, validate_content)
             validate_concept_media(route, page, allowed_media)
@@ -309,6 +311,21 @@ def generate_concepts(name, *, response_path=None, producer=''):
                            "; ".join(labels[:4]) + " " + _blocked_diagnostic(authored, research)
                            + contrast_counts)
     return result
+
+
+def pin_phone_links(html: str, facts: dict) -> str:
+    """Point every tel: link at the single verified company number.
+
+    A model that mistypes or reformats the number in a link would otherwise
+    stop the demo; the link target is not creative content.
+    """
+    from agents.builder import _phone_key
+    from utils.quality import normalize_facts
+    phone = _phone_key(normalize_facts(facts or {}).get("contact_phone", ""))
+    if not phone or not isinstance(html, str):
+        return html
+    return re.sub(r'(href\s*=\s*["\'])tel:[^"\']*(["\'])',
+                  lambda m: m.group(1) + "tel:+358" + phone + m.group(2), html, flags=re.I)
 
 
 def _blocked_diagnostic(authored, research) -> str:
