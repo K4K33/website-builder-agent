@@ -220,6 +220,11 @@ if (hero) {
 
 
 def build_scene_for(text: str) -> str | None:
+    """The real-time 3D scenes move well but still read as drawn next to the
+    photoreal references, so they are opt-in (KAURIVO_BUILD_SCENE=1) until a
+    photoreal pre-rendered or video version replaces them."""
+    if os.getenv("KAURIVO_BUILD_SCENE", "0") != "1":
+        return None
     text = str(text or "").casefold()
     for key, scene in BUILD_SCENES.items():
         if re.search(scene["pattern"], text):

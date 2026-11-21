@@ -74,8 +74,10 @@ class SalesDemoTests(unittest.TestCase):
 
     def test_bathroom_build_scene_hero_without_photos(self):
         from utils.sales_demo import build_scene_for
-        self.assertEqual(build_scene_for("Kylpyhuoneremontit ja laatoitus"), "bathroom")
-        self.assertIsNone(build_scene_for("Kampaamo"))
+        self.assertIsNone(build_scene_for("Kylpyhuoneremontit ja laatoitus"))  # opt-in only
+        with patch.dict(os.environ, {"KAURIVO_BUILD_SCENE": "1"}):
+            self.assertEqual(build_scene_for("Kylpyhuoneremontit ja laatoitus"), "bathroom")
+            self.assertIsNone(build_scene_for("Kampaamo"))
         with TemporaryDirectory() as tmp:
             page = render_sales_demo(company=COMPANY, plan=PLAN, photos=[], out_dir=Path(tmp) / "out",
                                      build_scene="bathroom").read_text(encoding="utf-8")
