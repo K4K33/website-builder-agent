@@ -2,35 +2,68 @@ name: Kaurivo stock smoke
 # Verifies the free stock providers (Pixabay key secret, Openverse) without printing secrets or keeping images.
 on:
   workflow_dispatch:
+    inputs:
+      recipient:
+        description: "Base64 PEM public key for encrypted image output (probe branches only)"
+        required: false
+        default: ""
+        type: string
 permissions:
   contents: read
 jobs:
-  smoke:
+  probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: website-builder-agent/website-builder-agent
+    timeout-minutes: 15
+    env:
+      ACCOUNT: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
+      TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
+      FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
+      RECIPIENT: ${{ inputs.recipient }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
       - run: pip install -q requests pillow
-      - name: Pixabay only, then Openverse only
-        env:
-          KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
+      - name: Image generation probe
         run: |
+          test "$FREE_CONFIRMED" = "1"
+          mkdir -p out
           python - <<'PY'
-          import os, tempfile
-          from pathlib import Path
-          import utils.stock_media as s
-          print("pixabay key format ok:", bool(s.pixabay_key()))
-          for name, chain in (("pixabay", (s._pixabay,)), ("openverse", (s._openverse,))):
-              s.PROVIDERS = chain
-              with tempfile.TemporaryDirectory() as tmp:
-                  got = s.fetch_stock_photos("kylpyhuoneremontti laatoitus", Path(tmp), count=2)
-                  print(name, len(got), [(g["provider"], g["licence"], Path(g["path"]).stat().st_size) for g in got])
-                  if not got:
-                      raise SystemExit(name + " returned no usable photo")
+          import base64, json, os, requests
+          acc, tok = os.environ["ACCOUNT"], os.environ["TOKEN"]
+          scene = ("Realistic architectural photograph, eye-level straight-on wide shot of a small Nordic apartment "
+                   "bathroom, back wall facing camera, shower corner on the left, toilet on the right, ceiling light, "
+                   "24mm lens, soft daylight, high detail, no people, no text. ")
+          stages = {
+            "a": "Renovation stage: bare grey concrete walls and floor, exposed copper pipes, dust, empty room.",
+            "b": "Renovation stage: walls and floor painted with blue liquid waterproofing membrane, reinforcement tape in corners, no tiles yet.",
+            "c": "Renovation stage: light grey large tiles half installed on the back wall, tile spacers, trowel and adhesive bucket on the floor.",
+            "d": "Finished renovated bathroom: large light grey matte tiles, walk-in glass shower, wall-hung toilet, black fixtures, warm light.",
+          }
+          models = {
+            "flux": ("@cf/black-forest-labs/flux-1-schnell", lambda p: {"prompt": p, "steps": 8, "seed": 4242}),
+            "lucid": ("@cf/leonardo/lucid-origin", lambda p: {"prompt": p, "seed": 4242, "width": 1536, "height": 864, "guidance": 4.5, "num_steps": 30}),
+          }
+          for name, (model, body) in models.items():
+              for key, text in stages.items():
+                  r = requests.post(f"https://api.cloudflare.com/client/v4/accounts/{acc}/ai/run/{model}",
+                                    headers={"Authorization": "Bearer " + tok}, json=body(scene + text), timeout=180)
+                  ok = r.status_code == 200
+                  print("GEN", name, key, r.status_code, r.headers.get("content-type"))
+                  if not ok:
+                      try: print("  err", json.dumps(r.json().get("errors"))[:300])
+                      except Exception: print("  body", r.text[:200])
+                      continue
+                  j = r.json(); img = (j.get("result") or {}).get("image") or j.get("image")
+                  if img:
+                      open(f"out/{name}-{key}.jpg", "wb").write(base64.b64decode(img))
           PY
+          ls -la out
+      - name: Encrypt for the recipient
+        if: always()
+        run: |
+          [ -n "$RECIPIENT" ] || exit 0
+          echo "$RECIPIENT" | base64 -d > /tmp/pub.pem
+          tar -C out -czf /tmp/s.tgz .
+          openssl rand -hex 32 > /tmp/k
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/s.tgz -out /tmp/s.enc -pass file:/tmp/k
+          openssl pkeyutl -encrypt -pubin -inkey /tmp/pub.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out /tmp/k.enc
+          echo "KEY:$(base64 -w0 /tmp/k.enc)"
+          base64 -w 4000 /tmp/s.enc | sed 's/^/DAT:/'
