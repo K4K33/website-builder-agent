@@ -1,0 +1,51 @@
+name: Kaurivo stock fetch
+# Fetches licensed stock illustrations for one trade topic (no company data) so a
+# sales demo can be rendered elsewhere. Artifact kept 1 day only.
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "Trade words, e.g. kylpyhuoneremontti laatoitus"
+        required: true
+        type: string
+      count:
+        description: "Photos (max 8)"
+        required: false
+        default: "6"
+        type: string
+permissions:
+  contents: read
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q requests pillow
+      - name: Fetch
+        env:
+          KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
+          TOPIC: ${{ inputs.topic }}
+          COUNT: ${{ inputs.count }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from utils.stock_media import fetch_stock_photos
+          n = max(1, min(8, int(os.environ.get("COUNT") or 6)))
+          got = fetch_stock_photos(os.environ["TOPIC"][:120], Path("stock-out"), count=n)
+          print(len(got), [(g["provider"], g["licence"]) for g in got])
+          if not got:
+              raise SystemExit("no photos")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stock
+          path: website-builder-agent/website-builder-agent/stock-out
+          retention-days: 1
