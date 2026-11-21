@@ -1345,6 +1345,20 @@ def _validate_all_universal_rules(html: str, research: dict, company: dict) -> N
         )
 
 
+def _phone_key(value: str) -> str:
+    """Canonical Finnish phone digits: +358 / 00358 / 0 prefixes are the same.
+
+    "tel:+358401234567" and "040 123 4567" are one verified number; models
+    correctly write the international form in links.
+    """
+    digits = re.sub(r"\D", "", str(value or ""))
+    for prefix in ("00358", "358"):
+        if digits.startswith(prefix) and len(digits) > len(prefix) + 5:
+            digits = digits[len(prefix):]
+            break
+    return digits.lstrip("0")
+
+
 def _validate_generated_content(
     html: str,
     company_facts: dict,
@@ -1361,12 +1375,12 @@ def _validate_generated_content(
 
     soup = BeautifulSoup(html, "html.parser")
     allowed_email = company_facts.get("contact_email", "").casefold()
-    allowed_phone = re.sub(r"\D", "", company_facts.get("contact_phone", ""))
+    allowed_phone = _phone_key(company_facts.get("contact_phone", ""))
     for anchor in soup.find_all("a", href=True):
         href = anchor["href"].strip()
         if href.lower().startswith("mailto:") and href[7:].split("?")[0].casefold() != allowed_email:
             raise RuntimeError("Unverified email link in generated page")
-        if href.lower().startswith("tel:") and re.sub(r"\D", "", href[4:]) != allowed_phone:
+        if href.lower().startswith("tel:") and _phone_key(href[4:]) != allowed_phone:
             raise RuntimeError("Unverified telephone link in generated page")
 
     text = re.sub(
