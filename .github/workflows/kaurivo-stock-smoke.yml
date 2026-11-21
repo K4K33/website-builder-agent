@@ -31,6 +31,6 @@ jobs:
               with tempfile.TemporaryDirectory() as tmp:
                   got = s.fetch_stock_photos("kylpyhuoneremontti laatoitus", Path(tmp), count=2)
                   print(name, len(got), [(g["provider"], g["licence"], Path(g["path"]).stat().st_size) for g in got])
-                  if name == "pixabay" and not got:
-                      raise SystemExit("Pixabay returned no usable photo")
+                  if not got:
+                      raise SystemExit(name + " returned no usable photo")
           PY

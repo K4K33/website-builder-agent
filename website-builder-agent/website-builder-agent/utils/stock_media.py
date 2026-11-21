@@ -95,9 +95,11 @@ def _pixabay(session, query):
 def _openverse(session, query):
     if os.getenv("KAURIVO_OPENVERSE", "1") == "0":
         return
+    # Openverse matches all words; long queries return almost nothing, so use the
+    # last two words (the subject), and filter size and orientation locally.
+    short = " ".join(str(query).split()[-2:])
     reply = session.get("https://api.openverse.org/v1/images/", timeout=(5, 20),
-                        params={"q": query, "license": "cc0,pdm,by", "aspect_ratio": "wide",
-                                "size": "large", "mature": "false", "page_size": 20})
+                        params={"q": short, "license": "cc0,pdm,by", "mature": "false", "page_size": 40})
     if reply.status_code != 200:
         return
     for r in reply.json().get("results") or []:
@@ -107,7 +109,7 @@ def _openverse(session, query):
         version = str(r.get("license_version") or "").strip()
         yield {"id": f"openverse-{r.get('id')}", "width": r.get("width") or 0, "height": r.get("height") or 0,
                "text": " ".join(str(r.get(k) or "") for k in ("title", "tags")), "url": r.get("url"),
-               "hosts": None, "creator": r.get("creator"), "creator_url": r.get("creator_url"),
+               "hosts": None, "min_width": 1000, "creator": r.get("creator"), "creator_url": r.get("creator_url"),
                "source_url": r.get("foreign_landing_url"),
                "licence": licence + (f" {version}" if licence == "CC BY" and version else ""),
                "provider": "Openverse"}
@@ -118,7 +120,7 @@ PROVIDERS = (_pexels, _pixabay, _openverse)
 
 def _usable(photo: dict) -> bool:
     width, height = int(photo.get("width") or 0), int(photo.get("height") or 0)
-    return width >= 1200 and width > height and not _PEOPLE.search(str(photo.get("text") or ""))
+    return width >= int(photo.get("min_width") or 1200) and width > height * 1.2 and not _PEOPLE.search(str(photo.get("text") or ""))
 
 
 def _allowed_url(photo: dict) -> bool:
