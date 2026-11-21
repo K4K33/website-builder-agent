@@ -332,6 +332,8 @@ def classify_stage_failure(handle,stage_name,start_position=0):
         return "free_ai_rate_limit"
     if "free_ai_response_truncated" in terminal:
         return "free_ai_response_truncated"
+    if "visual_qa_rejected_after_revision" in terminal:
+        return "visual_qa_rejected"
     if "pre_build_brief_incomplete" in terminal:
         return "pre_build_brief_incomplete"
     if "concept_page_needs_repair" in terminal:
@@ -682,6 +684,12 @@ def run_cli(args,log_handle,deadline=None):
             diag = re.search(r"diag=[a-z0-9_:|#,]{1,240}", browser_hints)
             if diag:
                 detail += " · " + diag.group(0)
+        if code == "visual_qa_rejected":
+            log_handle.seek(stage_start)
+            tail = log_handle.read()[-3000:]
+            diag = re.search(r"diag=[a-z0-9_:,]{1,120}", tail)
+            detail = ("Riippumaton kuva-arvio hylkäsi konseptit kahden korjauskierroksen "
+                      "jälkeen" + (" · " + diag.group(0) if diag else ""))
         if code == "pre_build_brief_incomplete":
             from utils.pre_build_brief import GAP_LABELS
             log_handle.seek(stage_start)
