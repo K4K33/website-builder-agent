@@ -284,7 +284,9 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         rest = list(range(len(hero_photos), len(staged)))
         hero_badge = (f'<p class="hero__credit">{_e(captions[0])}</p>' if stock[0] else "")
     any_illustration = any(stock) or bool(seq_staged)
-    stock_note = (" Kuvat ovat havainnekuvia, eivät yrityksen omia kohteita." if any_illustration else "")
+    kinds = [k for k, on in (("tekoälyllä luotuja", bool(seq_staged)), ("kuvapankin", any(stock))) if on]
+    stock_note = (f" Kuvat ovat {' ja '.join(kinds)} havainnekuvia, eivät yrityksen omia kohteita."
+                  if any_illustration else "")
     stage_strip = ("" if not labels else '<ol class="stages" aria-hidden="true">' + "".join(
         f'<li data-stage="{i / len(labels):.3f}"><span>{i + 1}</span>{_e(t)}</li>'
         for i, t in enumerate(labels)) + "</ol>")
