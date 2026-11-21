@@ -24,7 +24,8 @@ _PEOPLE = re.compile(r"\b(man|woman|men|women|person|people|girl|boy|child|portr
 
 # Industry terms in the plan/services -> English stock queries (most specific first).
 QUERIES = (
-    (r"kylpyhuone|laatoit|laatta|vedeneristy", ("modern bathroom interior tiles", "bathroom renovation tiling", "tiled shower interior")),
+    (r"kylpyhuone|laatoit|laatta|vedeneristy", ("tile installation trowel", "bathroom renovation tiling",
+                                              "waterproofing bathroom", "modern bathroom interior tiles")),
     (r"maalaus|maalari|tasoitus", ("freshly painted interior wall", "house exterior painting", "paint roller wall")),
     (r"keittiö", ("modern kitchen interior", "kitchen cabinets installation")),
     (r"katto|kattoremontti|peltikatto", ("metal roof house", "roofing construction")),
@@ -143,7 +144,7 @@ def _allowed_url(photo: dict) -> bool:
 
 
 def fetch_stock_photos(topic_text: str, folder: Path, *, count: int = MAX_STOCK,
-                       session=None) -> list[dict]:
+                       session=None, queries: list[str] | None = None) -> list[dict]:
     """Download up to ``count`` licensed photos; returns credit records.
 
     Providers in order: Pexels (if a key exists), Pixabay (free key), then
@@ -151,7 +152,8 @@ def fetch_stock_photos(topic_text: str, folder: Path, *, count: int = MAX_STOCK,
     Each record: {"path", "photographer", "photographer_url", "source_url",
     "licence", "provider", "alt"}.
     """
-    queries = queries_for(topic_text)
+    queries = [q for q in (queries or []) if re.fullmatch(r"[a-z ]{3,60}", str(q).strip().lower())] \
+        or queries_for(topic_text)
     if not queries:
         return []
     if session is None:

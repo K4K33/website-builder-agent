@@ -12,6 +12,11 @@ on:
         description: "Base64 PEM public key; photos are encrypted to it and printed, never stored in plain form"
         required: true
         type: string
+      queries:
+        description: "Optional English queries, comma separated (lowercase words)"
+        required: false
+        default: ""
+        type: string
       count:
         description: "Photos (max 8)"
         required: false
@@ -37,13 +42,15 @@ jobs:
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
           TOPIC: ${{ inputs.topic }}
           COUNT: ${{ inputs.count }}
+          QUERIES: ${{ inputs.queries }}
         run: |
           python - <<'PY'
           import os
           from pathlib import Path
           from utils.stock_media import fetch_stock_photos
           n = max(1, min(8, int(os.environ.get("COUNT") or 6)))
-          got = fetch_stock_photos(os.environ["TOPIC"][:120], Path("stock-out"), count=n)
+          queries = [q.strip() for q in os.environ.get("QUERIES", "").split(",") if q.strip()][:6]
+          got = fetch_stock_photos(os.environ["TOPIC"][:120], Path("stock-out"), count=n, queries=queries)
           print(len(got), [(g["provider"], g["licence"]) for g in got])
           if not got:
               raise SystemExit("no photos")
