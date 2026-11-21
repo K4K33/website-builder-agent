@@ -80,6 +80,8 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
                                     source_inventory=research.get("source_inventory"))
 
     def prepare_page(route, body):
+        from utils.concept_workflow import pin_phone_links
+        body = pin_phone_links(body, facts)
         page = prepare_concept_page(route, body, routes, allowed_media)
         page = prepare_verified_concept_copy(page, facts, validate_content)
         validate_concept_media(route, page, allowed_media)
@@ -100,6 +102,8 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
             "verified_company_facts": facts,
             "source_brand_plan": research.get("brand_preservation_plan"),
             "source_visual_signature": research.get("brand_signature_plan"),
+            "allowed_colours_and_brief": research.get("pre_build_brief"),
+            "verified_primary_offering": (research.get("primary_offering_evidence") or {}).get("label"),
             "approved_media": media,
             "independent_critique": {
                 "viewports": views,
@@ -143,6 +147,22 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
             content_validator=validate_content,
         )
 
+    def repair_brand(result):
+        # Same deterministic last resort as the first concept round: map
+        # invented accents to observed brand/photo colours and show the
+        # verified service in the first section. Browser gates re-run.
+        if result["status"] == "ready_for_comparison":
+            return result
+        from utils.brand_direction_v8 import repair_v8_findings
+        current = {route: source_pages[route] for route in reject if route in source_pages}
+        fixed = repair_v8_findings(current, research)
+        changed = False
+        for route, candidate in fixed.items():
+            if candidate != current.get(route):
+                source_pages[route] = prepare_page(route, candidate)
+                changed = True
+        return render_current_concepts() if changed else result
+
     def repair_measured_contrast(result):
         # Chromium reports a bounded sample per viewport. Its next render
         # can expose unreadable copy beyond the first batch of measurements.
@@ -164,7 +184,7 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
             result = render_current_concepts()
         return result
 
-    new_set = repair_measured_contrast(render_current_concepts())
+    new_set = repair_measured_contrast(repair_brand(render_current_concepts()))
     if new_set["status"] != "ready_for_comparison":
         # One bounded second chance for ACTUAL failing browser elements only.
         # The independent QA never approves these pages itself; every route
@@ -179,6 +199,8 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
                     "route": route, "required_routes": routes,
                     "verified_company_facts": facts,
                     "source_brand_plan": research.get("brand_preservation_plan"),
+                    "allowed_colours_and_brief": research.get("pre_build_brief"),
+                    "verified_primary_offering": (research.get("primary_offering_evidence") or {}).get("label"),
                     "approved_media": media,
                     "current_html": source_pages[route],
                     "verified_browser_failures": private.get(route, [])[:8],
@@ -213,14 +235,16 @@ def revise_one_rejected_direction(*, slug, company, reference, research,
             # The second author edit can introduce a new contrast regression.
             # Use fresh measurements against this exact revision, then render
             # all three concepts again before the independent reviewer sees it.
-            new_set = repair_measured_contrast(render_current_concepts())
+            new_set = repair_measured_contrast(repair_brand(render_current_concepts()))
     if new_set["status"] != "ready_for_comparison":
         hints = sorted({
             hint for pages in new_set.get("repair_targets", {}).values()
             for problems in pages.values() for hint in problems
         })
         # The hints are fixed strings from browser_issue_repair_hints.
-        raise RuntimeError("VISUAL_QA_REVISION_BLOCKED: " + "; ".join(hints[:8]))
+        from utils.concept_workflow import _blocked_diagnostic
+        raise RuntimeError("VISUAL_QA_REVISION_BLOCKED: " + "; ".join(hints[:8])
+                           + " " + _blocked_diagnostic(authored, research))
     verified_ref = {key: value for key, value in new_set.items()
                     if key in ("manifest_path", "set_sha256",
                                "comparison_path", "status")}
