@@ -110,7 +110,7 @@ class SalesDemoPipelineTests(unittest.TestCase):
                 path.write_bytes(jpeg())
                 stock_paths.append({"path": str(path), "photographer": "Ville", "provider": "Pixabay",
                                     "licence": "Pixabay Content License", "source_url": "https://pixabay.com/x"})
-            with patch.dict(os.environ, {"KAURIVO_DEPTH_DISABLED": "1"}):
+            with patch.dict(os.environ, {"KAURIVO_DEPTH_DISABLED": "1", "KAURIVO_BUILD_SCENE": "1"}):
                 summary = build_sales_demo("Hannun Saneeraus Oy", "https://example.fi/", Path(tmp) / "out",
                                            work_dir=Path(tmp) / "work", get=fake_get, resolve=resolve, ask=ask,
                                            fetch_stock=lambda *a, **k: stock_paths)
