@@ -7,9 +7,16 @@ four build stages; only the surface/fixture words change between prompts,
 which keeps the room consistent. The page labels it "Havainnekuva,
 tekoälyllä luotu" and never presents it as the company's work.
 
-Runs only when the owner-confirmed Workers Free opt-in is enabled
-(``cloudflare_free_ai.enabled``). Failure returns no sequence and the demo
-falls back to stock illustrations.
+Cost: Workers Free gives 10 000 neurons per day, shared with the free LLM
+fallback. Lucid Origin costs about 4 000 neurons per 1536x864 image, so a
+4-stage sequence would exhaust a day. FLUX.2 [klein] 4B costs about 26 neurons
+per output 512 tile: the finished room is generated once (about 160 neurons)
+and the earlier stages are EDITS of that same image (input image about 30
+neurons), about 720 neurons per sequence and the same room in every frame.
+
+Off unless KAURIVO_ILLUSTRATED_SEQUENCE=1 and the owner-confirmed Workers Free
+opt-in is enabled. Any failure returns no sequence; the demo then falls back
+to stock illustrations.
 """
 from __future__ import annotations
 
@@ -19,7 +26,8 @@ import re
 from io import BytesIO
 from pathlib import Path
 
-MODEL = "@cf/leonardo/lucid-origin"
+MODEL = "@cf/black-forest-labs/flux-2-klein-4b"
+WIDTH, HEIGHT = 1536, 864  # multiples of 16, ~5 output tiles
 _URL = "https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{model}"
 
 # One template per trade: (pattern, seed, scene, [(label, surfaces, fixtures)], note).
@@ -76,7 +84,7 @@ def template_for(text: str):
 def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | None:
     """Return {"paths", "labels", "note"} for a 4-stage sequence, or None."""
     from utils import cloudflare_free_ai
-    if not cloudflare_free_ai.enabled() or os.getenv("KAURIVO_ILLUSTRATED_SEQUENCE", "1") == "0":
+    if not cloudflare_free_ai.enabled() or os.getenv("KAURIVO_ILLUSTRATED_SEQUENCE", "0") != "1":
         return None
     chosen = template_for(topic_text)
     if not chosen:
@@ -90,26 +98,48 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     token = os.getenv("CLOUDFLARE_API_TOKEN", "").strip()
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
-    paths, labels = [], []
-    for index, (label, surfaces, fixtures) in enumerate(stages):
-        try:
-            reply = post(_URL.format(account=account, model=MODEL), timeout=(10, 180),
-                         headers={"Authorization": "Bearer " + token},
-                         json={"prompt": scene.format(s=surfaces, f=fixtures), "seed": seed,
-                               "width": 1536, "height": 864, "guidance": 4.5, "num_steps": 30})
-            if reply.status_code != 200:
-                return None
-            body = reply.json()
-            data = (body.get("result") or {}).get("image") or body.get("image")
-            raw = base64.b64decode(data or "", validate=True)
-            with Image.open(BytesIO(raw)) as image:
-                image = image.convert("RGB")
-                if image.width < 1024 or image.width <= image.height:
-                    return None
-                target = folder / f"vaihe-{index + 1}.webp"
-                image.save(target, "WEBP", quality=88)
-        except Exception:
+    def run(prompt, reference=None):
+        """One multipart call; returns RGB image or None."""
+        fields = {"prompt": (None, prompt), "width": (None, str(WIDTH)), "height": (None, str(HEIGHT)),
+                  "seed": (None, str(seed))}
+        if reference is not None:
+            buffer = BytesIO()
+            reference.save(buffer, "JPEG", quality=92)
+            fields["input_image_0"] = ("reference.jpg", buffer.getvalue(), "image/jpeg")
+        reply = post(_URL.format(account=account, model=MODEL), timeout=(10, 180),
+                     headers={"Authorization": "Bearer " + token}, files=fields)
+        if reply.status_code != 200:
             return None
+        body = reply.json()
+        data = (body.get("result") or {}).get("image") or body.get("image")
+        with Image.open(BytesIO(base64.b64decode(data or "", validate=True))) as image:
+            image = image.convert("RGB")
+        if image.width < 1024 or image.width <= image.height:
+            return None
+        return image
+
+    # 1) the finished room from text; 2) each earlier stage as an edit of it.
+    finished_label, finished_s, finished_f = stages[-1]
+    images = {}
+    try:
+        final = run(scene.format(s=finished_s, f=finished_f))
+        if final is None:
+            return None
+        images[len(stages) - 1] = final
+        for index, (label, surfaces, fixtures) in enumerate(stages[:-1]):
+            edit = ("Edit this exact photo. Keep the same room, walls, ceiling, window, camera position, lens and "
+                    f"light. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
+                    "Photorealistic, no people, no text.")
+            image = run(edit, final)
+            if image is None:
+                return None
+            images[index] = image
+    except Exception:
+        return None
+    paths, labels = [], []
+    for index, (label, _surfaces, _fixtures) in enumerate(stages):
+        target = folder / f"vaihe-{index + 1}.webp"
+        images[index].save(target, "WEBP", quality=88)
         paths.append(target)
         labels.append(label)
     return {"paths": paths, "labels": labels, "note": note}

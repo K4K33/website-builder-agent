@@ -11,7 +11,7 @@ from PIL import Image
 from utils.illustrated_sequence import generate_sequence, template_for
 from utils.sales_demo import render_sales_demo
 
-ENV = {"FREE_ONLY": "1", "KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED": "1",
+ENV = {"FREE_ONLY": "1", "KAURIVO_ILLUSTRATED_SEQUENCE": "1", "KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED": "1",
        "CLOUDFLARE_ACCOUNT_ID": "a" * 32, "CLOUDFLARE_API_TOKEN": "t" * 40}
 
 
@@ -39,15 +39,21 @@ class IllustratedSequenceTests(unittest.TestCase):
         calls = []
 
         def post(url, **kwargs):
-            calls.append(kwargs["json"])
+            calls.append(kwargs["files"])
             return Reply(200, {"result": {"image": image_b64((40 * len(calls), 90, 120))}})
         with TemporaryDirectory() as tmp, patch.dict(os.environ, ENV):
             got = generate_sequence("kylpyhuoneremontti", Path(tmp), post=post)
             self.assertEqual(got["labels"], ["Pohja", "Vedeneristys", "Laatoitus", "Valmis"])
-            self.assertEqual(len({c["seed"] for c in calls}), 1)
+            self.assertEqual(len({c["seed"][1] for c in calls}), 1)
+            # Finished room first from text, earlier stages are edits of it.
+            self.assertNotIn("input_image_0", calls[0])
+            self.assertTrue(all("input_image_0" in c for c in calls[1:]))
+            self.assertIn("Edit this exact photo", calls[1]["prompt"][1])
             self.assertTrue(all(p.is_file() for p in got["paths"]))
             self.assertIn("tekoälyllä luotu", got["note"])
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED": "0"}):
+            self.assertIsNone(generate_sequence("kylpyhuoneremontti", Path(tmp), post=post))
+        with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_ILLUSTRATED_SEQUENCE": "0"}):
             self.assertIsNone(generate_sequence("kylpyhuoneremontti", Path(tmp), post=post))
 
     def test_any_failure_returns_no_sequence(self):
