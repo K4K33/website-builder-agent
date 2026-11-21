@@ -1652,6 +1652,7 @@ def build_site(
                                       for route in selected_entry['routes'])
     from utils.pre_build_brief import ensure_pre_build_brief
     pre_build = ensure_pre_build_brief(research, media_manifest, _output_dir(slug))
+    upsert_company(slug, {"research": research})  # gates reload research from disk
     user_prompt = f"""
 Rakenna verkkosivu tämän research-datan perusteella.
 
@@ -2172,6 +2173,7 @@ def revise_site(
 
     from utils.pre_build_brief import ensure_pre_build_brief
     pre_build = ensure_pre_build_brief(research, media_manifest, _output_dir(slug))
+    upsert_company(slug, {"research": research})  # gates reload research from disk
     user_prompt = f"""
 RAKENNUSTA EDELTÄVÄ BRIEF — KUUSI VASTATTUA KYSYMYSTÄ (velvoittava):
 {json.dumps(pre_build, ensure_ascii=False)}

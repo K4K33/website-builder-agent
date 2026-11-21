@@ -113,6 +113,34 @@ def _service_visible_in_first_view(label: str, text: str) -> bool:
     return hits >= max(1, (3 * len(terms) + 3) // 4)
 
 
+def photo_palette_colors(research: dict | None) -> set[str]:
+    """Colours derived deterministically from the company's own photographs.
+
+    utils/award_playbook.derive_photo_palette measures them from staged source
+    photos (never from benchmarks), so they are company evidence too.
+    """
+    brief = (research or {}).get("pre_build_brief") if isinstance(research, dict) else None
+    palette = ((brief or {}).get("q3_brand_feel") or {}).get("photo_palette") or {}
+    colors = set()
+    for mode in ("light", "dark"):
+        roles = palette.get(mode) if isinstance(palette, dict) else None
+        if isinstance(roles, dict):
+            for key in ("canvas", "surface", "ink", "muted", "accent", "accent_ink", "photo_dominant"):
+                normalized = _hex(str(roles.get(key) or ""))
+                if normalized:
+                    colors.add(normalized)
+    return colors
+
+
+_NEAR = 18  # RGB distance treated as the same colour (rounding by a model)
+
+
+def _near_any(color: str, palette) -> bool:
+    rgb = lambda value: tuple(int(value[pos:pos + 2], 16) for pos in (1, 3, 5))
+    target = rgb(color)
+    return any(sum((a - b) ** 2 for a, b in zip(rgb(c), target)) <= _NEAR ** 2 for c in palette)
+
+
 def audit_art_direction(
     pages: dict[str, str], research: dict | None,
     *, site_root: Path | None = None,
@@ -127,6 +155,7 @@ def audit_art_direction(
     research = research if isinstance(research, dict) else {}
     identity = derive_identity_boundaries(research)
     known = {row["hex"] for row in identity["verified_original_colors"]}
+    known |= photo_palette_colors(research)
     strict = research.get("v8_visual_protocol") == "v8"
     no_site = research.get("research_mode") == "verified_no_website"
     blockers, review = [], []
@@ -160,7 +189,8 @@ def audit_art_direction(
                 normalized = _hex(color)
                 if normalized and _vivid(normalized):
                     source_tokens.add(normalized)
-        uncovered = sorted(c for c in source_tokens if _vivid(c) and c not in known)
+        uncovered = sorted(c for c in source_tokens
+                           if _vivid(c) and c not in known and not _near_any(c, known))
         palette_observations[route] = {
             "named_chromatic_tokens": sorted(source_tokens),
             "source_palette": sorted(known),
@@ -266,7 +296,8 @@ def repair_v8_findings(pages: dict[str, str], research: dict | None) -> dict[str
     """
     research = research if isinstance(research, dict) else {}
     audit = audit_art_direction(pages, research)
-    palette = sorted({row["hex"] for row in audit["identity"]["verified_original_colors"]})
+    palette = sorted({row["hex"] for row in audit["identity"]["verified_original_colors"]}
+                     | photo_palette_colors(research))
     evidence = research.get("primary_offering_evidence") or {}
     label = str(evidence.get("label") or "").strip() if isinstance(evidence, dict) else ""
     repaired = dict(pages)
