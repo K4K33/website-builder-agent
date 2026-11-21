@@ -103,5 +103,159 @@
       "url": "https://k4k33.github.io/website-builder-agent/demos/test-company/",
       "published": true
     }
+  },
+  "studio": {
+    "research": {
+      "creative_directions": [
+        {
+          "id": "concept_1",
+          "concept": "Company-specific business approach 1",
+          "business_reason": "Customer needs to identify credible services, products and answers in a practical way",
+          "source_anchor": "Verified original business research and real archived customer work",
+          "first_view": "Photo-led service review with calm authentic workshop portrait",
+          "information_architecture": "Individual product detail routes and easy quote comparison",
+          "navigation": "Horizontal clear navigation with product categories",
+          "image_strategy": "Full-size original process photography with detailed captions",
+          "typography": "Distinctive readable company identity using client-approved fonts",
+          "brand_continuity": "Preserve the original logo and company-approved colours",
+          "non_goals": "Avoid decorative circles and generic luxury landing page patterns",
+          "mobile_behavior": "Small screens prioritize visitor tasks and credible media without broken layouts"
+        },
+        {
+          "id": "concept_2",
+          "concept": "Company-specific business approach 2",
+          "business_reason": "Customer needs to identify credible services, products and answers in a practical way",
+          "source_anchor": "Verified original business research and real archived customer work",
+          "first_view": "Typographic editorial orientation with information-first hero",
+          "information_architecture": "Question-led sections and searchable service categories",
+          "navigation": "Contextual short index anchored to visitor decisions",
+          "image_strategy": "Sparse project-detail documentation images with annotations",
+          "typography": "Distinctive readable company identity using client-approved fonts",
+          "brand_continuity": "Preserve the original logo and company-approved colours",
+          "non_goals": "Avoid decorative circles and generic luxury landing page patterns",
+          "mobile_behavior": "Small screens prioritize visitor tasks and credible media without broken layouts"
+        },
+        {
+          "id": "concept_3",
+          "concept": "Company-specific business approach 3",
+          "business_reason": "Customer needs to identify credible services, products and answers in a practical way",
+          "source_anchor": "Verified original business research and real archived customer work",
+          "first_view": "Dense visual proof board with projects in the first viewport",
+          "information_architecture": "Portfolio-first case-study sequence and linked details",
+          "navigation": "Grid-based filter and direct reference navigation",
+          "image_strategy": "Paired original evidence shots with descriptive task labels",
+          "typography": "Distinctive readable company identity using client-approved fonts",
+          "brand_continuity": "Preserve the original logo and company-approved colours",
+          "non_goals": "Avoid decorative circles and generic luxury landing page patterns",
+          "mobile_behavior": "Small screens prioritize visitor tasks and credible media without broken layouts"
+        }
+      ],
+      "creative_selection": {
+        "selected_id": "concept_2",
+        "business_reason": "This customer's dense service information is better read through question-led hierarchy than imagery-only editorial alternatives",
+        "rejected_ids": [
+          "concept_1",
+          "concept_3"
+        ]
+      },
+      "company_facts": {
+        "name": "Instrument Studio",
+        "contact": {
+          "email": "studio@example.org"
+        }
+      },
+      "reference_comparison": [
+        {
+          "url": "https://ref-a.example.org/"
+        },
+        {
+          "url": "https://ref-b.example.org/"
+        }
+      ],
+      "site_architecture": {
+        "pages": [
+          {
+            "path": "index.html"
+          },
+          {
+            "path": "work/index.html"
+          }
+        ]
+      },
+      "pre_build_brief": {
+        "protocol": "kaurivo-pre-build-brief-v1",
+        "q1_signature_moment": {
+          "technique": "typographic_statement",
+          "implementation": "No usable photography: the headline itself is the signature (variable-font weight/width driven by scroll).",
+          "moment": "Typographic editorial orientation with information-first hero",
+          "why": "Customer needs to identify credible services, products and answers in a practical way",
+          "forbidden": [
+            "procedural or hand-coded 3D objects that imitate the company's product, building or premises",
+            "a second competing signature effect",
+            "fade-and-slide-up entrance on every section",
+            "stock, AI-generated or other companies' images presented as the company's"
+          ]
+        },
+        "q2_assets": {
+          "real_photos": 0,
+          "usable_on_page": {
+            "photos": 0,
+            "videos": 0,
+            "models_3d": 0
+          },
+          "photo_urls": [],
+          "videos": [],
+          "models_3d": [],
+          "generation_allowed": false,
+          "rule": "Only the company's own material. Observing a file is not a licence; rights are confirmed with the owner before publishing."
+        },
+        "q3_brand_feel": {
+          "feel": "Company-specific business approach 2",
+          "typography": "Distinctive readable company identity using client-approved fonts",
+          "brand_continuity": "Preserve the original logo and company-approved colours",
+          "verified_colors": [],
+          "verified_logo": false,
+          "photo_palette": null,
+          "references": [
+            "https://ref-a.example.org/",
+            "https://ref-b.example.org/"
+          ],
+          "rule": "References inform layout, rhythm and motion only; never their colours, text, images or identity."
+        },
+        "q4_primary_action": {
+          "kind": "email",
+          "href": "mailto:studio@example.org",
+          "label": "",
+          "evidence": "verified company_facts"
+        },
+        "q5_performance": {
+          "first_view_bytes_max": 400000,
+          "hero_total_bytes_max_mobile": 2500000,
+          "scrub_frames_max_mobile": 90,
+          "scrub_frames_max_desktop": 150,
+          "javascript_bytes_max": 150000,
+          "device_pixel_ratio_cap": 2,
+          "required": [
+            "poster image visible before any script runs",
+            "prefers-reduced-motion shows the poster and all text without motion",
+            "no horizontal scroll at 360px width",
+            "primary action reachable without scrolling the pinned section on mobile"
+          ],
+          "technique": "typographic_statement"
+        },
+        "q6_verified_facts": {
+          "name": "Instrument Studio",
+          "services": [],
+          "location": "",
+          "contact": {
+            "email": "studio@example.org"
+          },
+          "primary_offering_quote": "",
+          "rule": "Only these facts and verbatim source text may appear as claims. Missing information stays missing; it is never invented."
+        },
+        "gaps": []
+      }
+    },
+    "slug": "studio"
   }
 }

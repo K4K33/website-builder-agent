@@ -93,6 +93,9 @@ def generate_concepts(name, *, response_path=None, producer=''):
     # Six pre-build questions must be answered before any concept is authored.
     from utils.pre_build_brief import ensure_pre_build_brief
     pre_build = ensure_pre_build_brief(research, media, root)
+    # Browser and QA gates reload research from disk; they must see the same
+    # photo palette the author was given.
+    upsert_company(slug, {'research': research})
 
     def validate_content(document, facts):
         _validate_generated_content(document, facts, source_inventory=research.get('source_inventory'))

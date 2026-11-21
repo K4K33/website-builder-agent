@@ -28,6 +28,8 @@ AWARD-LEVEL DESIGN RULES (measured on Awwwards-winning small-business sites):
    only for the primary action and small highlights. Text is tinted from the
    dominant hue (for example deep brown on cream, peach on espresso), never
    pure #000 on pure #fff. Use pre_build_brief q3 photo_palette when present.
+   Vivid colours may come ONLY from verified original brand colours or from
+   that photo_palette; never invent or borrow an accent from a reference.
 3. Typography: at most two families. Display is either a characterful serif
    at a light or medium weight (300-500) or a tight grotesque at 600-700, set
    large (clamp up to 7-9vw), line-height 0.9-1.05 and negative tracking
