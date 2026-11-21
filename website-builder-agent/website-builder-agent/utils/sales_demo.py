@@ -22,6 +22,7 @@ import html
 import json
 from pathlib import Path
 import re
+import os
 import shutil
 
 ASSETS = Path(__file__).resolve().parents[1] / "assets" / "sales_demo"
@@ -48,12 +49,19 @@ reviews or guarantees. Finnish unless the source is in another language.
  "statement": "2-3 sentences about the company from the source",
  "services": [{"name": "verified service name", "text": "one sentence from the source"}],
  "photo_captions": ["short factual caption per provided photo, same order"],
+ "proof": [{"title": "reference group heading from the source",
+            "items": ["each listed reference exactly as written, e.g. 'As Oy Kylätie 8, 15 kph'"]}],
  "contact_lead": "one sentence inviting contact, no promises"}
 """.strip()
 
 
 def _e(value) -> str:
     return html.escape(str(value or "").strip(), quote=True)
+
+
+def _glue(text: str) -> str:
+    """Escape, and bind words of 1-2 letters to the next word (no lone 'ja' line)."""
+    return re.sub(r"(?<![\w-])(\w{1,2}) (?=\S)", "\\1\u00a0", _e(text))
 
 
 def _tel(phone: str) -> str:
@@ -84,6 +92,9 @@ def validate_plan(plan: dict, photos: list[Path]) -> dict:
                      for s in (plan.get("services") or []) if isinstance(s, dict) and s.get("name")][:8],
         "photo_captions": [str(c).strip()[:80] for c in (plan.get("photo_captions") or [])],
         "contact_lead": str(plan.get("contact_lead") or "").strip()[:200],
+        "proof": [{"title": str(g.get("title") or "").strip()[:110],
+                   "items": [str(i).strip()[:90] for i in (g.get("items") or []) if str(i).strip()][:14]}
+                  for g in (plan.get("proof") or []) if isinstance(g, dict) and g.get("items")][:4],
     }
     if len(out["headline"].split()) < 2:
         raise ValueError("headline missing")
@@ -92,6 +103,47 @@ def validate_plan(plan: dict, photos: list[Path]) -> dict:
     if not photos:
         raise ValueError("a sales demo needs the company's own photos")
     return out
+
+
+_FIGURE = re.compile(r"(\d[\d\s]{0,6})\s*(kph|m2|m²)\b", re.I)
+
+
+def _figure(item: str) -> tuple[str, str, int, str]:
+    """Split a reference line into (name, figure text, number, unit) when it ends in a quantity."""
+    match = None
+    for match in _FIGURE.finditer(item):
+        pass
+    if not match:
+        return item, "", 0, ""
+    number = int(re.sub(r"\D", "", match.group(1)))
+    unit = "m²" if match.group(2).lower() in ("m2", "m²") else "kph"
+    name = (item[:match.start()] + item[match.end():]).strip(" ,–-")
+    return name or item, f"{number} {unit}", number, unit
+
+
+def _proof_section(groups: list[dict]) -> str:
+    """References as a typographic proof list; totals only from listed figures."""
+    if not groups:
+        return ""
+    blocks = []
+    for group in groups:
+        rows, totals = [], {}
+        for item in group["items"]:
+            name, figure, number, unit = _figure(item)
+            if unit:
+                totals.setdefault(unit, []).append(number)
+            rows.append(f'<li><span class="ref__name">{_e(name)}</span>'
+                        + (f'<span class="ref__fig">{_e(figure)}</span>' if figure else "") + "</li>")
+        total = ""
+        for unit, numbers in totals.items():
+            if len(numbers) >= 2:
+                label = "kylpyhuonetta" if unit == "kph" else "m² laatoitusta"
+                total = (f'<p class="ref__total"><span>{sum(numbers):,}'.replace(",", "\u202f")
+                         + f'</span> {label} näissä {len(numbers)} kohteessa</p>')
+                break
+        blocks.append(f'<div class="ref"><h3>{_e(group["title"])}</h3>{total}<ul>{"".join(rows)}</ul></div>')
+    return ('<section class="proof" aria-labelledby="kohteet"><h2 id="kohteet">Kohteita</h2>'
+            + "".join(blocks) + "</section>")
 
 
 def _logo_ratio(path: Path) -> float:
@@ -146,10 +198,24 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         logo_rel = f"assets/{target.name}"
         logo_ratio = _logo_ratio(target)
 
-    palette = derive_photo_palette([assets / Path(p).name for p in staged], mode=mode) \
-        or derive_photo_palette([assets / Path(p).name for p in staged], mode="light")
+    # The hero photos are the signature moment, so they alone set the palette.
+    palette_photos = [assets / Path(p).name for p in staged[:3]]
+    palette = derive_photo_palette(palette_photos, mode=mode) \
+        or derive_photo_palette(palette_photos, mode="light")
     if not palette:
         raise ValueError("photo palette unavailable")
+    if os.getenv("KAURIVO_PHOTO_GRADE", "1") != "0":
+        from utils.photo_grade import grade_photo
+        shadow = palette["ink"] if palette["mode"] == "light" else palette["surface"]
+        graded = []
+        for rel in staged:
+            source = out_dir / rel
+            target = grade_photo(source, source.with_name(source.stem + "-g.webp"),
+                                 shadow=shadow, highlight=palette["canvas"] if palette["mode"] == "light" else palette["ink"])
+            source.unlink()
+            graded.append(f"assets/{target.name}")
+        staged = graded
+        media = [{"src": rel, "sha256": sha256((out_dir / rel).read_bytes()).hexdigest()} for rel in staged]
     captions = plan["photo_captions"] + [""] * len(staged)
     credits = list(credits or []) + [None] * len(staged)
     stock = [bool(credits[i]) for i in range(len(staged))]
@@ -178,7 +244,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
   <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{alt(0)}">
   {"".join(f'<img data-kaurivo-scrub-frame src="{p}" alt="{alt(i + 1)}">' for i, p in enumerate(hero_photos[1:]))}
   <div data-kaurivo-scrub-copy>
-    <h1 id="otsikko">{_e(plan["headline"])}</h1>
+    <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     {chapters}
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
   </div>
@@ -220,8 +286,11 @@ font-size:clamp(16px,.96rem + .25vw,19px);line-height:1.55;-webkit-font-smoothin
 img{{display:block;max-width:100%}}
 a{{color:inherit}}
 :focus-visible{{outline:3px solid var(--accent);outline-offset:3px}}
-.draft{{position:fixed;z-index:40;right:16px;bottom:16px;margin:0;max-width:calc(100% - 32px);background:var(--ink);color:var(--canvas);
+.draft{{position:fixed;z-index:40;right:16px;bottom:16px;margin:0;max-width:min(400px,calc(100% - 32px));background:var(--ink);color:var(--canvas);
 font-size:12.5px;line-height:1.35;padding:8px 12px;border-radius:10px;box-shadow:0 8px 24px -12px rgba(0,0,0,.5)}}
+.draft__short{{display:none}}
+@media (max-width:560px){{.draft{{left:12px;right:12px;bottom:12px;max-width:none;padding:6px 10px;font-size:11.5px;border-radius:8px}}
+ .draft__long{{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.draft__short{{display:inline}}}}
 .nav{{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;
 padding:14px var(--gutter);background:linear-gradient(180deg,color-mix(in srgb,var(--canvas) 70%,transparent),transparent);transition:background-color .3s ease}}
 .nav.solid{{background:color-mix(in srgb,var(--canvas) 94%,transparent);backdrop-filter:blur(10px);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 12%,transparent)}}
@@ -268,6 +337,17 @@ padding:clamp(18px,3vh,30px) 0;border-bottom:1px solid color-mix(in srgb,var(--i
 .hero__credit{{position:absolute;z-index:3;top:76px;right:var(--gutter);margin:0;font-size:12px;color:#fff;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}}
 .hero > .hero__credit, [data-scrub-stage] > .hero__credit{{position:absolute}}
 .grow__cap{{position:absolute;left:var(--gutter);bottom:clamp(24px,6vh,60px);background:var(--canvas);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px}}
+.proof{{padding:clamp(72px,12vh,140px) var(--gutter);border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}}
+.proof>h2{{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;color:var(--muted);margin-bottom:clamp(28px,5vh,56px)}}
+.ref{{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:12px clamp(24px,5vw,80px);padding:clamp(28px,5vh,52px) 0;
+border-top:1px solid color-mix(in srgb,var(--ink) 22%,transparent)}}
+.ref h3{{font-size:clamp(24px,2.4vw,38px);line-height:1.05;max-width:18ch}}
+.ref__total{{grid-column:1;margin:0;color:var(--muted);max-width:24ch}}
+.ref__total span{{display:block;font-family:"Display";{display_css};font-size:clamp(64px,9vw,150px);line-height:.9;color:var(--ink);font-variant-numeric:tabular-nums}}
+.ref ul{{grid-column:2;grid-row:1 / span 2;list-style:none;margin:0;padding:0;columns:2 16rem;column-gap:clamp(20px,3vw,48px)}}
+.ref li{{display:flex;justify-content:space-between;gap:12px;break-inside:avoid;padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--ink) 12%,transparent)}}
+.ref__fig{{flex:none;font-variant-numeric:tabular-nums;color:var(--muted)}}
+@media (max-width:760px){{.ref{{grid-template-columns:1fr}}.ref ul{{grid-column:1;grid-row:auto}}}}
 .contact{{background:var(--band);color:var(--band-ink);padding:clamp(96px,16vh,180px) var(--gutter) clamp(48px,8vh,80px)}}
 .contact p{{max-width:38ch;font-size:clamp(18px,1rem + .5vw,24px);margin:0 0 24px}}
 .contact__phone{{display:inline-block;font-family:"Display";{display_css};font-size:clamp(54px,12vw,210px);line-height:.88;color:var(--phone);text-decoration:none;white-space:nowrap}}
@@ -280,7 +360,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 </style>
 </head>
 <body>
-<p class="draft" role="note">Kaurivon luonnos yritykselle {name}. Ei yrityksen virallinen verkkosivu.{stock_note}</p>
+<p class="draft" role="note"><span class="draft__long">Kaurivon luonnos yritykselle {name}. Ei yrityksen virallinen verkkosivu.{stock_note}</span><span class="draft__short" aria-hidden="true">Kaurivon luonnos, ei virallinen sivu.{" Kuvat ovat havainnekuvia." if any(stock) else ""}</span></p>
 <header class="nav">
   {f'<a class="nav__brand chip" href="#otsikko"><img class="nav__logo" src="{logo_rel}" alt="{name}" width="{round(20 * logo_ratio)}" height="20"></a>' if logo_rel else f'<a class="nav__name" href="#otsikko">{name}</a>'}
   {f'<a class="nav__call" href="{tel}">Soita<span class="long"> {_e(phone)}</span></a>' if tel else ""}
@@ -289,6 +369,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 {hero}
 <section class="statement" aria-label="Yrityksestä"><p id="lausunto">{_e(plan["statement"])}</p></section>
 <section class="services" aria-labelledby="palvelut"><h2 id="palvelut">Palvelut</h2><ul class="svc-list">{service_items}</ul></section>
+{_proof_section(plan["proof"])}
 <section class="grow" aria-label="Työkuva"><div class="grow__stage"><img src="{grow_photo}" alt="{alt(grow_index)}" loading="lazy">
 {f'<p class="grow__cap">{_e(captions[grow_index])}</p>' if captions[grow_index] else ""}</div></section>
 <section class="contact" aria-labelledby="yhteys">
@@ -301,7 +382,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
   </div>
 </section>
 </main>
-<footer><span>{name}</span>{"<span>Y-tunnus " + _e(company.get("business_id")) + "</span>" if company.get("business_id") else ""}</footer>
+<footer><span>{name}</span><span>Kaurivon luonnos, ei yrityksen virallinen verkkosivu.{stock_note}</span>{"<span>Y-tunnus " + _e(company.get("business_id")) + "</span>" if company.get("business_id") else ""}</footer>
 <script>
 (() => {{
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -47,8 +47,30 @@ class SalesDemoTests(unittest.TestCase):
             self.assertNotRegex(page, r'src="https?://')
             out = Path(tmp) / "out"
             self.assertTrue((out / "assets/fonts/archivo.woff").is_file())
-            self.assertTrue((out / "assets/kuva-1.webp").is_file())
+            self.assertTrue((out / "assets/kuva-1-g.webp").is_file())
+            self.assertFalse((out / "assets/kuva-1.webp").exists())
             self.assertEqual(page.count("<h1"), 1)
+
+    def test_references_become_proof_with_totals_from_listed_figures(self):
+        proof = [{"title": "Linjasaneeraukset", "items": ["As Oy Kylätie 8, 15 kph", "Luotsikatu 9",
+                                                          "As Oy Otsonmäki 62 kph"]},
+                 {"title": "Liiketilat", "items": ["Alepa 350m2", "Koinonia-keskus 450m2", "<b>x</b>"]}]
+        with TemporaryDirectory() as tmp:
+            page = self.render(tmp, proof=proof).read_text(encoding="utf-8")
+            self.assertIn('<span class="ref__name">As Oy Kylätie 8</span><span class="ref__fig">15 kph</span>', page)
+            self.assertIn("<span>77</span> kylpyhuonetta näissä 2 kohteessa", page)
+            self.assertIn("<span>800</span> m² laatoitusta näissä 2 kohteessa", page)
+            self.assertIn("Luotsikatu 9", page)
+            self.assertNotIn("<b>x</b>", page)
+
+    def test_photos_share_one_grade_without_clipped_white(self):
+        import numpy as np
+        from utils.photo_grade import grade_array
+        white = np.ones((8, 8, 3), dtype=np.float32)
+        out = grade_array(white, shadow="#10203a", highlight="#f4efe6")
+        self.assertLess(out.max(), .97)
+        black = np.zeros((8, 8, 3), dtype=np.float32)
+        self.assertGreater(grade_array(black, shadow="#10203a", highlight="#fff").mean(), .01)
 
     def test_each_trade_has_licensed_fonts(self):
         root = Path(__file__).resolve().parents[1] / "assets/sales_demo/fonts"

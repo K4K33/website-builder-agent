@@ -183,25 +183,47 @@ def line_drawing(photo: Path, depth: Path, destination: Path) -> Path | None:
         from PIL import Image, ImageFilter
 
         def gradient(values):
+            """Magnitude thinned to one-pixel ridges (non-maximum suppression),
+            so each edge is one clean line instead of a doubled glow."""
             gx = np.zeros_like(values)
             gy = np.zeros_like(values)
             gx[:, 1:-1] = values[:, 2:] - values[:, :-2]
             gy[1:-1, :] = values[2:, :] - values[:-2, :]
-            return np.hypot(gx, gy)
+            mag = np.hypot(gx, gy)
+            angle = (np.rad2deg(np.arctan2(gy, gx)) + 180) % 180
+            pad = np.pad(mag, 1)
+            h, w = mag.shape
+            n = lambda dy, dx: pad[1 + dy:1 + dy + h, 1 + dx:1 + dx + w]
+            horizontal = (angle < 22.5) | (angle >= 157.5)
+            diag1 = (angle >= 22.5) & (angle < 67.5)
+            vertical = (angle >= 67.5) & (angle < 112.5)
+            neighbours = np.where(horizontal, np.maximum(n(0, -1), n(0, 1)),
+                         np.where(diag1, np.maximum(n(-1, -1), n(1, 1)),
+                         np.where(vertical, np.maximum(n(-1, 0), n(1, 0)), np.maximum(n(-1, 1), n(1, -1)))))
+            return mag, mag >= neighbours
 
         with Image.open(photo) as image:
             grey = image.convert("L")
             grey = grey.resize(_output_size(grey), Image.LANCZOS)
         with Image.open(depth) as image:
             depth_map = image.convert("L").resize(grey.size)
-        g = gradient(np.asarray(grey.filter(ImageFilter.GaussianBlur(1.6)), dtype=np.float32))
-        d = gradient(np.asarray(depth_map.filter(ImageFilter.GaussianBlur(1)), dtype=np.float32))
+        g, g_ridge = gradient(np.asarray(grey.filter(ImageFilter.GaussianBlur(1.6)), dtype=np.float32))
+        d, d_ridge = gradient(np.asarray(depth_map.filter(ImageFilter.GaussianBlur(1)), dtype=np.float32))
         g = g / max(1e-6, float(np.percentile(g, 99.3)))
         d = d / max(1e-6, float(np.percentile(d, 99.5)))
+        g = np.where(g_ridge, g, 0)
+        d = np.where(d_ridge, d, 0)
         lines = np.clip(np.maximum(g * 0.85, d * 1.1), 0, 1)
         lines = np.where(lines > 0.28, lines, 0)
-        lines = np.clip((lines - 0.28) / 0.5, 0, 1) ** 0.8
-        out = Image.fromarray((lines * 255).astype("uint8"), "L").filter(ImageFilter.GaussianBlur(.5))
+        lines = np.clip((lines - 0.28) / 0.5, 0, 1) ** 0.6
+        # Drop isolated specks: keep a pixel only if a neighbour is also a line.
+        on = lines > 0
+        p = np.pad(on, 1)
+        h, w = on.shape
+        friends = sum(p[1 + dy:1 + dy + h, 1 + dx:1 + dx + w].astype(np.uint8)
+                      for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx)
+        lines = np.where(friends >= 2, lines, 0)
+        out = Image.fromarray((lines * 255).astype("uint8"), "L").filter(ImageFilter.GaussianBlur(.6))
         destination.parent.mkdir(parents=True, exist_ok=True)
         out.save(destination, "WEBP", lossless=True)
         return destination

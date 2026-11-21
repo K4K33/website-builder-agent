@@ -26,8 +26,13 @@ def photo(pid, alt="Modern bathroom with grey tiles", width=4000, height=2600, h
 
 class StockMediaTests(unittest.TestCase):
     def test_queries_follow_the_trade(self):
-        self.assertIn("modern bathroom interior tiles", stock.queries_for("Kylpyhuoneremontit ja vesieristykset"))
+        self.assertIn("bathroom tiles", stock.queries_for("Kylpyhuoneremontit ja vesieristykset"))
         self.assertEqual(stock.queries_for("Tilitoimisto"), [])
+
+    def test_tags_must_match_the_query_subject(self):
+        self.assertFalse(stock._relevant({"text": "solar panels, roof, tiles"}, "bathroom tile installation"))
+        self.assertTrue(stock._relevant({"text": "bathroom, tiling, renovation"}, "bathroom tile installation"))
+        self.assertTrue(stock._relevant({"text": "Modern bathroom with grey tiles"}, "modern bathroom interior tiles"))
 
     def test_no_key_means_no_request(self):
         session = MagicMock()
