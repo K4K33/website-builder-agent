@@ -198,8 +198,10 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         logo_rel = f"assets/{target.name}"
         logo_ratio = _logo_ratio(target)
 
-    palette = derive_photo_palette([assets / Path(p).name for p in staged], mode=mode) \
-        or derive_photo_palette([assets / Path(p).name for p in staged], mode="light")
+    # The hero photos are the signature moment, so they alone set the palette.
+    palette_photos = [assets / Path(p).name for p in staged[:3]]
+    palette = derive_photo_palette(palette_photos, mode=mode) \
+        or derive_photo_palette(palette_photos, mode="light")
     if not palette:
         raise ValueError("photo palette unavailable")
     if os.getenv("KAURIVO_PHOTO_GRADE", "1") != "0":
