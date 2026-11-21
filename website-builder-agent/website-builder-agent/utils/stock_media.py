@@ -24,8 +24,9 @@ _PEOPLE = re.compile(r"\b(man|woman|men|women|person|people|girl|boy|child|portr
 
 # Industry terms in the plan/services -> English stock queries (most specific first).
 QUERIES = (
-    (r"kylpyhuone|laatoit|laatta|vedeneristy", ("bathroom tile installation", "bathroom renovation",
-                                              "bathroom tiles", "bathroom interior")),
+    # Whole rooms first (hero), then work in progress (the growing photo).
+    (r"kylpyhuone|laatoit|laatta|vedeneristy", ("bathroom interior", "bathroom renovation",
+                                              "bathroom tile installation", "bathroom tiles")),
     (r"maalaus|maalari|tasoitus", ("freshly painted interior wall", "house exterior painting", "paint roller wall")),
     (r"keittiö", ("modern kitchen interior", "kitchen cabinets installation")),
     (r"katto|kattoremontti|peltikatto", ("metal roof house", "roofing construction")),
@@ -135,9 +136,15 @@ def _relevant(photo: dict, query: str) -> bool:
     return hits >= min(2, len(words))
 
 
+# Flat textures and wallpapers make poor heroes and drag the whole palette.
+_TEXTURE = re.compile(r"\b(background|wallpaper|texture|pattern|mosaic|backdrop|abstract|template|ornament)\b", re.I)
+
+
 def _usable(photo: dict) -> bool:
     width, height = int(photo.get("width") or 0), int(photo.get("height") or 0)
-    return width >= int(photo.get("min_width") or 1200) and width > height * 1.2 and not _PEOPLE.search(str(photo.get("text") or ""))
+    text = str(photo.get("text") or "")
+    return (width >= int(photo.get("min_width") or 1200) and width > height * 1.2
+            and not _PEOPLE.search(text) and not _TEXTURE.search(text))
 
 
 def _allowed_url(photo: dict) -> bool:
