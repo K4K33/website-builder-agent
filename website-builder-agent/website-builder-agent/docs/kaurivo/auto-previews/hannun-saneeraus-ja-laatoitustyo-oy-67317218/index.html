@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html data-kaurivo-release="kaurivo-auto-67317218" lang="fi">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="noindex,nofollow" name="robots"/>
+<title>HANNUN SANEERAUS JA LAATOITUSTYÖ OY | Kaurivon luonnos</title>
+<link href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23a6cb4d%22%2F%3E%3Ctext%20x%3D%2232%22%20y%3D%2245%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2238%22%20font-weight%3D%22700%22%20text-anchor%3D%22middle%22%20fill%3D%22%231e250e%22%3EH%3C%2Ftext%3E%3C%2Fsvg%3E" rel="icon"/>
+<style>
+@font-face{font-family:'Display';src:url(assets/fonts/archivo.woff) format('woff');font-weight:100 900;font-stretch:50% 125%;font-display:swap}
+@font-face{font-family:'Body';src:url(assets/fonts/hanken.woff) format('woff');font-weight:100 900;font-stretch:50% 125%;font-display:swap}
+:root{--canvas:#1e250e;--surface:#2d3617;--ink:#e7f1d0;--muted:#bcc99c;
+--accent:#a6cb4d;--accent-ink:#1e250e;
+--band:#2d3617;--band-ink:#e7f1d0;--phone:#a6cb4d;--gutter:clamp(20px,5vw,72px);--ease:cubic-bezier(.16,1,.3,1)}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--canvas)}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:"Body",system-ui,sans-serif;font-weight:400;
+font-size:clamp(16px,.96rem + .25vw,19px);line-height:1.55;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.draft{position:fixed;z-index:40;right:16px;bottom:16px;margin:0;max-width:min(400px,calc(100% - 32px));background:var(--ink);color:var(--canvas);
+font-size:12.5px;line-height:1.35;padding:8px 12px;border-radius:10px;box-shadow:0 8px 24px -12px rgba(0,0,0,.5)}
+.draft__short{display:none}
+@media (max-width:560px){.draft{left:12px;right:12px;bottom:12px;max-width:none;padding:6px 10px;font-size:11.5px;border-radius:8px}
+ .draft__long{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.draft__short{display:inline}}
+.nav{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;
+padding:14px var(--gutter);background:linear-gradient(180deg,color-mix(in srgb,var(--canvas) 70%,transparent),transparent);transition:background-color .3s ease}
+.nav.solid{background:color-mix(in srgb,var(--canvas) 94%,transparent);backdrop-filter:blur(10px);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 12%,transparent)}
+.nav__name{font-family:"Display";font-stretch:68%;font-weight:800;letter-spacing:-.025em;font-size:clamp(18px,1.6vw,24px);text-decoration:none;letter-spacing:-.01em}
+.nav__logo{display:block;height:clamp(14px,1.5vw,20px);width:auto;max-width:min(50vw,300px);object-fit:contain;object-position:left center}
+.nav__brand{display:inline-flex;align-items:center;min-width:0}
+.nav__brand.chip{background:var(--ink);padding:8px 14px;border-radius:10px}
+.nav__call .long{display:inline}
+@media (max-width:560px){.nav__call .long{display:none}}
+.nav__call{flex:none;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:650;padding:10px 18px;border-radius:999px;white-space:nowrap}
+h1,h2,h3{font-family:"Display",serif;font-stretch:68%;font-weight:800;letter-spacing:-.025em;margin:0;text-wrap:balance}
+h1{font-size:clamp(46px,8.2vw,132px);line-height:.92}
+.hero{position:relative;background:var(--surface)}
+.hero [data-kaurivo-scrub-poster]{width:100%;max-height:72svh;object-fit:cover}
+.hero [data-kaurivo-scrub-frame]{display:none}
+.hero [data-kaurivo-scrub-copy]{padding:clamp(24px,5vh,56px) var(--gutter)}
+.hero > [data-kaurivo-scrub-poster]{margin-top:0}
+main{padding-top:0}
+.hero [data-kaurivo-scrub-copy] p{max-width:34ch;font-size:clamp(17px,1rem + .45vw,23px);margin:.6em 0 0}
+.btn{display:inline-flex;align-items:center;min-height:52px;margin-top:22px;padding:0 26px;border-radius:999px;
+background:var(--accent);color:var(--accent-ink);font-weight:650;text-decoration:none}
+.statement{padding:clamp(96px,18vh,200px) var(--gutter)}
+.statement p{font-family:"Display";font-stretch:68%;font-weight:800;letter-spacing:-.025em;font-size:clamp(30px,1.3rem + 3.2vw,72px);line-height:1.04;margin:0;max-width:22ch}
+.statement .w{opacity:.18;transition:opacity .3s linear}
+.statement .w.on{opacity:1}
+.services{padding:0 var(--gutter) clamp(80px,14vh,160px)}
+.services h2{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;margin-bottom:12px;color:var(--muted)}
+.svc-list{list-style:none;margin:0;padding:0;border-top:1px solid color-mix(in srgb,var(--ink) 22%,transparent)}
+.svc{position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:8px 40px;align-items:baseline;
+padding:clamp(18px,3vh,30px) 0;border-bottom:1px solid color-mix(in srgb,var(--ink) 22%,transparent)}
+.svc h3{font-size:clamp(30px,4.6vw,76px);line-height:.95;transition:color .3s var(--ease),transform .5s var(--ease)}
+.svc p{margin:0;max-width:40ch;color:var(--muted)}
+.svc__img{display:none}
+@media (hover:hover) and (pointer:fine){
+ .svc:hover h3{color:var(--accent);transform:translateX(12px)}
+ .preview{position:fixed;left:0;top:0;width:min(28vw,380px);aspect-ratio:4/3;object-fit:cover;border-radius:14px;pointer-events:none;
+ z-index:20;opacity:0;transform:translate(-50%,-60%) scale(.9);transition:opacity .25s ease,transform .45s var(--ease)}
+ .preview.on{opacity:1;transform:translate(-50%,-60%) scale(1)}
+}
+@media (max-width:760px){.svc{grid-template-columns:1fr} .svc__img{display:block;margin-top:10px;border-radius:10px;aspect-ratio:16/10;object-fit:cover;width:100%}}
+.grow{position:relative;height:220vh}
+.grow__stage{position:sticky;top:0;height:100svh;display:grid;place-items:center;overflow:hidden}
+.grow__stage img{width:100%;height:100%;object-fit:cover;clip-path:inset(var(--inset,14%) var(--inset-x,20%) round 22px)}
+.hero__credit{position:absolute;z-index:3;top:76px;right:var(--gutter);margin:0;font-size:12px;color:#fff;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}
+.hero > .hero__credit, [data-scrub-stage] > .hero__credit{position:absolute}
+.grow__cap{position:absolute;left:var(--gutter);bottom:clamp(24px,6vh,60px);background:var(--canvas);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px}
+.proof{padding:clamp(72px,12vh,140px) var(--gutter);border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}
+.proof>h2{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;color:var(--muted);margin-bottom:clamp(28px,5vh,56px)}
+.ref{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:12px clamp(24px,5vw,80px);padding:clamp(28px,5vh,52px) 0;
+border-top:1px solid color-mix(in srgb,var(--ink) 22%,transparent)}
+.ref h3{font-size:clamp(24px,2.4vw,38px);line-height:1.05;max-width:18ch}
+.ref__total{grid-column:1;margin:0;color:var(--muted);max-width:24ch}
+.ref__total span{display:block;font-family:"Display";font-stretch:68%;font-weight:800;letter-spacing:-.025em;font-size:clamp(64px,9vw,150px);line-height:.9;color:var(--ink);font-variant-numeric:tabular-nums}
+.ref ul{grid-column:2;grid-row:1 / span 2;list-style:none;margin:0;padding:0;columns:2 16rem;column-gap:clamp(20px,3vw,48px)}
+.ref li{display:flex;justify-content:space-between;gap:12px;break-inside:avoid;padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+.ref__fig{flex:none;font-variant-numeric:tabular-nums;color:var(--muted)}
+@media (max-width:760px){.ref{grid-template-columns:1fr}.ref ul{grid-column:1;grid-row:auto}}
+.contact{background:var(--band);color:var(--band-ink);padding:clamp(96px,16vh,180px) var(--gutter) clamp(48px,8vh,80px)}
+.contact p{max-width:38ch;font-size:clamp(18px,1rem + .5vw,24px);margin:0 0 24px}
+.contact__phone{display:inline-block;font-family:"Display";font-stretch:68%;font-weight:800;letter-spacing:-.025em;font-size:clamp(54px,12vw,210px);line-height:.88;color:var(--phone);text-decoration:none;white-space:nowrap}
+.contact__row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px 48px;margin-top:clamp(32px,6vh,64px);padding-top:22px;
+border-top:1px solid color-mix(in srgb,var(--band-ink) 25%,transparent)}
+.contact address{font-style:normal}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,transparent);padding:0 var(--gutter) 28px;font-size:14px;display:flex;flex-wrap:wrap;gap:8px 28px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}.statement .w{opacity:1}.grow{height:auto}.grow__stage{position:relative;height:80svh}.grow__stage img{clip-path:none}}
+</style>
+<style data-kaurivo-scrub-runtime="">
+[data-kaurivo-scrub="ready"][data-scrub-active]{position:relative;display:block!important;block-size:var(--scrub-length,420svh)!important;padding:0!important;margin-inline:0!important;max-inline-size:none!important;border-radius:0!important}
+[data-scrub-active]>[data-scrub-stage]{position:sticky;inset-block-start:0;block-size:100svh;overflow:hidden;isolation:isolate}
+[data-scrub-active] [data-kaurivo-scrub-poster],[data-scrub-active] canvas[data-scrub-canvas]{position:absolute;inset:0;inline-size:100%;block-size:100%;object-fit:cover;margin:0}
+[data-scrub-active] [data-kaurivo-scrub-frame]{display:none}
+[data-scrub-active] canvas[data-scrub-canvas]{opacity:0;transition:opacity .4s ease}
+[data-scrub-active][data-scrub-drawn] canvas[data-scrub-canvas]{opacity:1}
+[data-scrub-active]>[data-scrub-stage]::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.7) 100%),radial-gradient(95% 80% at 0% 100%,rgba(0,0,0,.6),rgba(0,0,0,0) 72%),linear-gradient(90deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.18) 45%,rgba(0,0,0,0) 70%)}
+[data-scrub-active] [data-kaurivo-scrub-copy]{position:absolute;z-index:2;inset-inline:clamp(20px,5vw,72px);inset-block-end:clamp(28px,8svh,88px);max-inline-size:min(46rem,calc(100% - 40px));color:#fff;margin:0}
+[data-scrub-active] [data-kaurivo-scrub-copy] [data-at]{opacity:0;transform:translateY(12px);transition:opacity .45s ease,transform .6s cubic-bezier(.16,1,.3,1)}
+[data-scrub-active] [data-kaurivo-scrub-copy] [data-at].is-on{opacity:1;transform:none}
+[data-scrub-active] [data-scrub-chapters]{display:grid}
+[data-scrub-active] [data-scrub-chapters]>[data-at]{grid-area:1/1}
+[data-scrub-progress]{display:none}
+[data-scrub-active] [data-scrub-progress]{display:block;position:absolute;z-index:2;inset:auto 0 0;block-size:3px;background:rgba(255,255,255,.22)}
+[data-scrub-progress] i{display:block;block-size:100%;background:currentColor;transform-origin:left;transform:scaleX(var(--scrub-p,0))}
+</style></head>
+<body>
+<p class="draft" role="note"><span class="draft__long">Kaurivon luonnos yritykselle HANNUN SANEERAUS JA LAATOITUSTYÖ OY. Ei yrityksen virallinen verkkosivu. Kuvat ovat kuvapankin havainnekuvia, eivät yrityksen omia kohteita.</span><span aria-hidden="true" class="draft__short">Kaurivon luonnos, ei virallinen sivu. Kuvat ovat havainnekuvia.</span></p>
+<header class="nav">
+<a class="nav__name" href="#otsikko">HANNUN SANEERAUS JA LAATOITUSTYÖ OY</a>
+<a class="nav__call" href="tel:+358405119287">Soita<span class="long"> 040 5119 287</span></a>
+</header>
+<main>
+<section aria-labelledby="otsikko" class="hero" data-depth='{"layers":[{"img":"assets/kuva-1-g.webp","depth":"assets/depth/3743573a7c1d/0.webp","lines":"assets/depth/3743573a7c1d/0-lines.webp"},{"img":"assets/kuva-2-g.webp","depth":"assets/depth/3743573a7c1d/1.webp"},{"img":"assets/kuva-3-g.webp","depth":"assets/depth/3743573a7c1d/2.webp"}],"length":"420svh"}' data-kaurivo-scrub="ready" data-scrub-mode="depth" data-scrub-style="blueprint"><div data-scrub-stage="">
+<img alt="Havainnekuva, kuva: magics-cube / Pixabay" data-kaurivo-scrub-poster="" fetchpriority="high" src="assets/kuva-1-g.webp"/><canvas aria-hidden="true" data-scrub-canvas=""></canvas>
+<img alt="Havainnekuva, kuva: Pexels / Pixabay" data-kaurivo-scrub-frame="" src="assets/kuva-2-g.webp"/><img alt="Havainnekuva, kuva: 5460160 / Pixabay" data-kaurivo-scrub-frame="" src="assets/kuva-3-g.webp"/>
+<div data-kaurivo-scrub-copy="">
+<h1 id="otsikko">Kylpyhuone- ja huoneistoremontit kokemuksella ja ammattitaidolla</h1>
+<div data-scrub-chapters=""><p data-at="0">Toteutamme kylpyhuone- ja huoneistoremontit Uudenmaan seudulla</p><p data-at="0.36">Osaavaa kosteusmittausta kokemuksella</p><p data-at="0.7">Vesivahinkojen kuivaustyöt</p></div>
+<a class="btn" href="tel:+358405119287">Soita 040 5119 287</a>
+</div>
+<p class="hero__credit">Havainnekuva, kuva: magics-cube / Pixabay</p>
+<div aria-hidden="true" data-scrub-progress=""><i></i></div></div></section>
+<section aria-label="Yrityksestä" class="statement"><p id="lausunto">Toteutamme kokemuksella ja ammattitaidolla tarpeidesi mukaiset kylpyhuone- ja huoneistoremontit Uudenmaan seudulla. Hannun saneeraus ja laatoitustyö Oy - Osaavaa remontointia.</p></section>
+<section aria-labelledby="palvelut" class="services"><h2 id="palvelut">Palvelut</h2><ul class="svc-list"><li class="svc" data-photo="assets/kuva-1-g.webp">
+<h3>Kylpyhuoneremontit</h3><p>Kylpyhuoneremontit ja vesieristykset.</p>
+<img alt="" class="svc__img" loading="lazy" src="assets/kuva-1-g.webp"/>
+</li><li class="svc" data-photo="assets/kuva-2-g.webp">
+<h3>Kosteusmittaukset</h3><p>Osaavaa kosteusmittausta kokemuksella.</p>
+<img alt="" class="svc__img" loading="lazy" src="assets/kuva-2-g.webp"/>
+</li><li class="svc" data-photo="assets/kuva-3-g.webp">
+<h3>Vesivahingon kuivaus</h3><p>Vesivahinkojen kuivaustyöt.</p>
+<img alt="" class="svc__img" loading="lazy" src="assets/kuva-3-g.webp"/>
+</li><li class="svc" data-photo="assets/kuva-4-g.webp">
+<h3>Rappaustyöt</h3><p>Julkisivujen rappaustyöt kokemuksella.</p>
+<img alt="" class="svc__img" loading="lazy" src="assets/kuva-4-g.webp"/>
+</li></ul></section>
+<section aria-labelledby="kohteet" class="proof"><h2 id="kohteet">Kohteita</h2><div class="ref"><h3>Kylpyhuoneiden saneeraustöitä linjasaneerauskohteissa</h3><p class="ref__total"><span>195</span> kylpyhuonetta näissä 5 kohteessa</p><ul><li><span class="ref__name">Merimiehenkatu 19</span><span class="ref__fig">38 kph</span></li><li><span class="ref__name">As Oy Valpurintie 8</span></li><li><span class="ref__name">As Oy Steniuksentie 11</span><span class="ref__fig">24 kph</span></li><li><span class="ref__name">As Oy Ristolantie 9-11</span><span class="ref__fig">26 kph</span></li><li><span class="ref__name">Bostads Ab Sydremmaren</span><span class="ref__fig">45 kph</span></li><li><span class="ref__name">As Oy Otsonmäki</span><span class="ref__fig">62 kph</span></li><li><span class="ref__name">Luotsikatu 9</span></li></ul></div><div class="ref"><h3>Laatoitustöitä</h3><p class="ref__total"><span>1 150</span> m² laatoitusta näissä 3 kohteessa</p><ul><li><span class="ref__name">Kauppakeskus Viisari</span><span class="ref__fig">350 m²</span></li><li><span class="ref__name">Alepa</span><span class="ref__fig">350 m²</span></li><li><span class="ref__name">Koinonia-keskus</span><span class="ref__fig">450 m²</span></li></ul></div></section>
+<section aria-label="Työkuva" class="grow"><div class="grow__stage"><img alt="Havainnekuva, kuva: siala / Pixabay" loading="lazy" src="assets/kuva-4-g.webp"/>
+<p class="grow__cap">Havainnekuva, kuva: siala / Pixabay</p></div></section>
+<section aria-labelledby="yhteys" class="contact">
+<h2 class="sr" id="yhteys">Yhteystiedot</h2>
+<p>Ota yhteyttä ja pyydä tarjous palveluistamme tai kysy lisätietoa !</p>
+<a class="contact__phone" href="tel:+358405119287">040 5119 287</a>
+<div class="contact__row">
+<a href="mailto:hannun@saneerausjalaatoitus.com">hannun@saneerausjalaatoitus.com</a>
+<address>HANNUN SANEERAUS JA LAATOITUSTYÖ OY</address>
+</div>
+</section>
+</main>
+<footer><span>HANNUN SANEERAUS JA LAATOITUSTYÖ OY</span><span>Kaurivon luonnos, ei yrityksen virallinen verkkosivu. Kuvat ovat kuvapankin havainnekuvia, eivät yrityksen omia kohteita.</span></footer>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const nav = document.querySelector('.nav'), hero = document.querySelector('.hero');
+  const solid = () => nav.classList.toggle('solid', hero.getBoundingClientRect().bottom < innerHeight * .35 || scrollY > hero.offsetHeight);
+  addEventListener('scroll', solid, {passive: true}); solid();
+  const st = document.getElementById('lausunto');
+  st.innerHTML = st.textContent.split(' ').map(w => '<span class="w">' + w.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</span>').join(' ');
+  const words = st.querySelectorAll('.w');
+  const grow = document.querySelector('.grow');
+  const img = grow && grow.querySelector('img');
+  function tick() {
+    const r = st.getBoundingClientRect(), vh = innerHeight;
+    const p = Math.min(1, Math.max(0, (vh * .85 - r.top) / (r.height + vh * .4)));
+    const n = Math.round(p * words.length);
+    words.forEach((w, i) => w.classList.toggle('on', i < n));
+    if (img) {
+      const g = grow.getBoundingClientRect();
+      const q = Math.min(1, Math.max(0, -g.top / Math.max(1, g.height - vh)));
+      img.style.setProperty('--inset', (14 * (1 - q)).toFixed(2) + '%');
+      img.style.setProperty('--inset-x', (20 * (1 - q)).toFixed(2) + '%');
+    }
+  }
+  if (reduce) { words.forEach(w => w.classList.add('on')); return; }
+  addEventListener('scroll', () => requestAnimationFrame(tick), {passive: true}); tick();
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const preview = document.createElement('img'); preview.className = 'preview'; preview.alt = '';
+    document.body.appendChild(preview);
+    document.querySelectorAll('.svc').forEach(item => {
+      item.addEventListener('pointerenter', () => { preview.src = item.dataset.photo; preview.classList.add('on'); });
+      item.addEventListener('pointerleave', () => preview.classList.remove('on'));
+      item.addEventListener('pointermove', e => { preview.style.left = e.clientX + 'px'; preview.style.top = e.clientY + 'px'; });
+    });
+  }
+})();
+</script>
+<script data-kaurivo-scrub-runtime="">
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  if (reduce.matches) return;
+  const VERT = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
+  const FRAG = `precision highp float;varying vec2 v;
+uniform sampler2D i0,d0,i1,d1,e0;uniform vec2 c0,c1,cam;uniform vec3 touch;uniform float mixv,dolly0,dolly1,bp,reveal,draw;
+vec2 cover(vec2 u,vec2 c){return (u-.5)*c+.5;}
+vec2 par(sampler2D dep,vec2 u,vec2 t,float dolly){vec2 s=u;
+ for(int k=0;k<6;k++){float d=texture2D(dep,s).r;
+  vec2 disp=cam*(d-.35)+(s-.5)*d*dolly;vec2 tv=s-t;float f=exp(-dot(tv,tv)*22.);
+  disp+=tv*f*touch.z*(.4+d);s=u-disp;}
+ return clamp(s,0.,1.);}
+void main(){
+ vec2 u0=cover(v,c0),u1=cover(v,c1);
+ vec2 s0=par(d0,u0,cover(touch.xy,c0),dolly0);
+ vec3 col=texture2D(i0,s0).rgb;
+ if(bp>0.){float dn0=texture2D(d0,s0).r;float ln=texture2D(e0,s0).r*smoothstep(dn0-.15,dn0,draw*1.2);
+  vec3 sketch=mix(vec3(.06,.12,.23),vec3(.86,.91,.98),ln);
+  float above=smoothstep(reveal-.12,reveal,v.y*.75+(1.-dn0)*.25);
+  col=mix(col,sketch,above*bp);}
+ if(mixv>0.){vec2 s1=par(d1,u1,cover(touch.xy,c1),dolly1);
+  float dn=texture2D(d1,s1).r;float m=smoothstep(1.-mixv*1.25,1.25-mixv*1.25,dn);
+  col=mix(col,texture2D(i1,s1).rgb,m);}
+ vec2 q=v-.5;col*=1.-.28*dot(q,q);
+ gl_FragColor=vec4(col,1.);}`;
+  const load = src => new Promise((ok, fail) => {
+    const image = new Image(); image.decoding = 'async'; image.onload = () => ok(image);
+    image.onerror = fail; image.src = src;
+  });
+  for (const scene of document.querySelectorAll('[data-kaurivo-scrub="ready"][data-scrub-mode="depth"]')) {
+    const cfg = JSON.parse(scene.getAttribute('data-depth'));
+    const stage = scene.querySelector('[data-scrub-stage]');
+    const canvas = scene.querySelector('canvas[data-scrub-canvas]');
+    const bar = scene.querySelector('[data-scrub-progress]');
+    const gl = canvas.getContext('webgl', {antialias: false, alpha: false});
+    if (!gl) continue;
+    const shader = (type, code) => { const s = gl.createShader(type); gl.shaderSource(s, code); gl.compileShader(s); return s; };
+    const program = gl.createProgram();
+    gl.attachShader(program, shader(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(program, shader(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) continue;
+    gl.useProgram(program);
+    const buffer = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+    const at = gl.getAttribLocation(program, 'p'); gl.enableVertexAttribArray(at);
+    gl.vertexAttribPointer(at, 2, gl.FLOAT, false, 0, 0);
+    const U = name => gl.getUniformLocation(program, name);
+    ['i0','d0','i1','d1','e0'].forEach((n, k) => gl.uniform1i(U(n), k));
+    const sketch = !!cfg.layers[0].lines;
+    let sketchTex = null, drawStart = 0;
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    const texture = image => {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+      for (const [k, val] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR],
+                              [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]])
+        gl.texParameteri(gl.TEXTURE_2D, k, val);
+      return t;
+    };
+    const layers = cfg.layers.map(() => null);
+    const fetchLayer = k => Promise.all([load(cfg.layers[k].img), load(cfg.layers[k].depth),
+                                          k === 0 && sketch ? load(cfg.layers[0].lines) : null])
+      .then(([img, dep, lines]) => {
+        layers[k] = {img: texture(img), dep: texture(dep), aspect: img.naturalWidth / img.naturalHeight};
+        if (lines) { sketchTex = texture(lines); drawStart = performance.now(); }
+      });
+    const chapters = [...scene.querySelectorAll('[data-kaurivo-scrub-copy] [data-at]')]
+      .map(el => ({el, at: Math.min(.95, Math.max(0, parseFloat(el.dataset.at) || 0))})).sort((a, b) => a.at - b.at);
+    let target = 0, progress = 0, visible = true, running = false;
+    const pointer = {x: 0, y: 0, tx: 0, ty: 0, s: 0, ts: 0, ux: .5, uy: .5};
+    const coverOf = aspect => {
+      const a = canvas.width / Math.max(1, canvas.height);
+      return aspect > a ? [a / aspect, 1] : [1, aspect / a];
+    };
+    function size() {
+      const dpr = Math.min(devicePixelRatio || 1, 1.75);
+      canvas.width = Math.round(stage.clientWidth * dpr); canvas.height = Math.round(stage.clientHeight * dpr);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    function bind(unit, tex) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); }
+    function draw(time) {
+      progress += (target - progress) * .12;
+      pointer.x += (pointer.tx - pointer.x) * .08; pointer.y += (pointer.ty - pointer.y) * .08;
+      pointer.s += (pointer.ts - pointer.s) * .1;
+      const n = cfg.layers.length, pos = Math.min(n - 1e-4, progress * n);
+      const seg = Math.floor(pos), local = pos - seg;
+      const a = layers[seg] || layers[0];
+      const next = seg + 1 < n ? layers[seg + 1] : null;
+      const mixv = next ? Math.max(0, Math.min(1, (local - .68) / .32)) : 0;
+      const idle = Math.sin(time / 2600) * .006;
+      const orbit = (local - .5) * .05 * (seg % 2 ? -1 : 1);
+      gl.uniform2f(U('cam'), orbit + pointer.x * .035 + idle, pointer.y * .025 + idle * .5);
+      gl.uniform3f(U('touch'), pointer.ux, pointer.uy, pointer.s);
+      gl.uniform1f(U('dolly0'), .05 + .22 * local);
+      gl.uniform1f(U('dolly1'), .05 + .22 * Math.max(0, local - 1));
+      gl.uniform1f(U('mixv'), mixv);
+      const building = sketchTex && seg === 0;
+      gl.uniform1f(U('bp'), building ? 1 : 0);
+      gl.uniform1f(U('draw'), Math.min(1, (time - drawStart) / 1800));
+      gl.uniform1f(U('reveal'), Math.min(1.15, Math.max(0, local - .08) / .5 * 1.15));
+      if (building) bind(4, sketchTex);
+      gl.uniform2f(U('c0'), ...coverOf(a.aspect));
+      bind(0, a.img); bind(1, a.dep);
+      if (next) { gl.uniform2f(U('c1'), ...coverOf(next.aspect)); bind(2, next.img); bind(3, next.dep); }
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      scene.setAttribute('data-scrub-drawn', '');
+      if (visible) requestAnimationFrame(draw); else running = false;
+    }
+    function start() { if (!running) { running = true; requestAnimationFrame(draw); } }
+    function update() {
+      const r = scene.getBoundingClientRect();
+      target = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+      if (bar) bar.style.setProperty('--scrub-p', target.toFixed(4));
+      let on = 0; chapters.forEach((c, k) => { if (target >= c.at) on = k; });
+      chapters.forEach((c, k) => c.el.classList.toggle('is-on', k === on));
+    }
+    function aim(event, strength) {
+      const r = stage.getBoundingClientRect();
+      const x = (event.clientX - r.left) / r.width, y = (event.clientY - r.top) / r.height;
+      pointer.tx = (x - .5) * 2; pointer.ty = (.5 - y) * 2; pointer.ux = x; pointer.uy = 1 - y; pointer.ts = strength;
+    }
+    fetchLayer(0).then(() => {
+      scene.style.setProperty('--scrub-length', cfg.length);
+      scene.setAttribute('data-scrub-active', '');
+      size(); update(); start();
+      addEventListener('scroll', update, {passive: true});
+      addEventListener('resize', size, {passive: true});
+      reduce.addEventListener('change', () => location.reload());
+      stage.addEventListener('pointermove', e => aim(e, e.pointerType === 'mouse' ? .16 : .3), {passive: true});
+      stage.addEventListener('pointerdown', e => aim(e, .32), {passive: true});
+      for (const type of ['pointerleave', 'pointerup', 'pointercancel'])
+        stage.addEventListener(type, () => { pointer.tx = pointer.ty = 0; pointer.ts = 0; }, {passive: true});
+      new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) start(); }).observe(stage);
+      let k = 1; const more = () => { if (k < cfg.layers.length) fetchLayer(k++).then(more, more); }; more();
+    }).catch(() => {});  // keep the authored poster layout
+  }
+})();
+</script><aside aria-label="Kaurivon sisäinen suunnitteludemo" style="padding:13px 20px;text-align:center;background:#162029;color:#eaf0f3;font:600 12px/1.6 Arial,sans-serif">Kaurivon itsenäinen suunnitteludemo – ei yrityksen virallinen sivu. Ei vielä hyväksytty asiakastoimitus.</aside></body>
+</html>
