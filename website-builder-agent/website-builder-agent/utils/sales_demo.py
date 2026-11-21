@@ -295,7 +295,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         f'<p data-at="{at}">{_e(text)}</p>'
         for at, text in zip(("0", "0.36", "0.7"), plan["chapters"]))
     hero = f'''
-<section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""} aria-labelledby="otsikko">
+<section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""}{' data-scrub-warp="0"' if plan["trade"] == "rakennus" or seq_staged else ""} aria-labelledby="otsikko">
   <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{hero_alts[0]}">
   {"".join(f'<img data-kaurivo-scrub-frame src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
   <div data-kaurivo-scrub-copy>
