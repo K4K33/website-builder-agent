@@ -34,3 +34,9 @@ jobs:
                   if not got:
                       raise SystemExit(name + " returned no usable photo")
           PY
+      - name: Render preview host probe
+        if: always()
+        run: |
+          for u in https://kaurivo-auto-demos-2026.onrender.com/ https://kaurivo-auto-demos-2026.onrender.com/hannun-saneeraus-ja-laatoitustyo-oy-67317218/index.html https://kaurivo-auto-demos-2026.onrender.com/sahko247-premium-20261113/; do
+            echo "PROBE $u $(curl -s -o /tmp/b -w '%{http_code} %{content_type}' --max-time 60 "$u") $(head -c 160 /tmp/b | tr '\n' ' ')"
+          done
