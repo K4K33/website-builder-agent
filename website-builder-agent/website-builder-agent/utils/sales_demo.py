@@ -156,7 +156,10 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     for i, credit in enumerate(credits[:len(staged)]):
         if credit:  # an illustration caption replaces any project-like caption
             who = str(credit.get("photographer") or "").strip()
-            captions[i] = "Havainnekuva" + (f", kuva: {who} / Pexels" if who else ", Pexels")
+            provider = str(credit.get("provider") or "Pexels")
+            licence = str(credit.get("licence") or "")
+            captions[i] = ("Havainnekuva" + (f", kuva: {who} / {provider}" if who else f", {provider}")
+                           + (f", {licence}" if licence.startswith(("CC", "Public")) else ""))
 
     name = _e(company.get("name"))
     phone = str(company.get("phone") or "").strip()
