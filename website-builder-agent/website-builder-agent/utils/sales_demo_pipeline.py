@@ -235,7 +235,7 @@ class _Step:
 
 def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Path,
                      get=requests.get, resolve=socket.getaddrinfo, ask=None,
-                     fetch_stock=None) -> dict:
+                     fetch_stock=None, make_sequence=None) -> dict:
     """Collect, plan, verify and render. Returns a summary without page text."""
     from utils.sales_demo import render_sales_demo, validate_plan
     from utils.stock_media import MIN_OWN_PHOTOS, fetch_stock_photos
@@ -250,22 +250,35 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
     with _Step("verify"):
         plan, dropped = verify_plan(plan, source["text"])
     photos, credits = list(own), [None] * len(own)
+    sequence = None
     if len(own) < MIN_OWN_PHOTOS:
         topic = " ".join([plan.get("headline", "")] + [s["name"] for s in plan["services"]])
+        # One illustrated build sequence carries the hero; stock fills the rest.
+        with _Step("sequence"):
+            if make_sequence is None:
+                from utils.illustrated_sequence import generate_sequence as make_sequence
+            sequence = make_sequence(topic, Path(work_dir) / "sequence")
         with _Step("stock"):
-            stock = (fetch_stock or fetch_stock_photos)(topic, Path(work_dir) / "stock",
-                                                        count=max(3, MIN_OWN_PHOTOS - len(own) + 1))
+            stock = (fetch_stock or fetch_stock_photos)(
+                topic, Path(work_dir) / "stock",
+                count=2 if sequence else max(3, MIN_OWN_PHOTOS - len(own) + 1))
         # Own photos stay first; stock only fills the gap.
         photos += [Path(s["path"]) for s in stock]
         credits += stock
-    if not photos:
+    if not photos and not sequence:
         raise SalesDemoBlocked("sales_no_photos", "Ei omia eikä kuvapankkikuvia aiheeseen")
     with _Step("render"):
-        validate_plan(plan, photos)
+        validate_plan(plan, photos or sequence["paths"])
         company = {"name": display_name(company_name, source["text"]), "phone": source["phone"],
                    "email": source["email"]}
+        if sequence:
+            plan["hero_style"] = "depth"
         page = render_sales_demo(company=company, plan=plan, photos=photos, out_dir=Path(out_dir),
-                                 credits=credits)
+                                 credits=credits,
+                                 sequence=sequence["paths"] if sequence else None,
+                                 sequence_labels=sequence["labels"] if sequence else None,
+                                 sequence_note=sequence["note"] if sequence else "")
     return {"page": str(page), "own_photos": len(own), "stock_photos": sum(1 for c in credits if c),
+            "sequence_frames": len(sequence["paths"]) if sequence else 0,
             "services": len(plan["services"]), "proof_groups": len(plan.get("proof") or []),
             "dropped": dropped[:20], "source_pages": source["pages"]}

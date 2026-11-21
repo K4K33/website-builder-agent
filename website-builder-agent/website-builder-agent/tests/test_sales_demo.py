@@ -58,8 +58,8 @@ class SalesDemoTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             page = self.render(tmp, proof=proof).read_text(encoding="utf-8")
             self.assertIn('<span class="ref__name">As Oy Kylätie 8</span><span class="ref__fig">15 kph</span>', page)
-            self.assertIn("<span>77</span> kylpyhuonetta näissä 2 kohteessa", page)
-            self.assertIn("<span>800</span> m² laatoitusta näissä 2 kohteessa", page)
+            self.assertIn("<span data-to=\"77\">77</span> kylpyhuonetta näissä 2 kohteessa", page)
+            self.assertIn("<span data-to=\"800\">800</span> m² laatoitusta näissä 2 kohteessa", page)
             self.assertIn("Luotsikatu 9", page)
             self.assertNotIn("<b>x</b>", page)
 

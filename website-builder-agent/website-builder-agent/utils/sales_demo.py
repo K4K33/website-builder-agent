@@ -148,7 +148,7 @@ def _proof_section(groups: list[dict]) -> str:
         for unit, numbers in totals.items():
             if len(numbers) >= 2:
                 label = "kylpyhuonetta" if unit == "kph" else "m² laatoitusta"
-                total = (f'<p class="ref__total"><span>{sum(numbers):,}'.replace(",", "\u202f")
+                total = (f'<p class="ref__total"><span data-to="{sum(numbers)}">{sum(numbers):,}'.replace(",", "\u202f")
                          + f'</span> {label} näissä {len(numbers)} kohteessa</p>')
                 break
         blocks.append(f'<div class="ref"><h3>{_e(group["title"])}</h3>{total}<ul>{"".join(rows)}</ul></div>')
@@ -177,16 +177,34 @@ def _font_face(name: str, file: str) -> str:
             "font-weight:100 900;font-stretch:50% 125%;font-display:swap}")
 
 
+def _echoes(name: str, text: str) -> bool:
+    """True when a service text only repeats its name (e.g. 'Kylpyhuoneremontit ja ...')."""
+    stem = lambda w: w[:6]
+    words = lambda t: {stem(w) for w in re.findall(r"\w{3,}", str(t or "").casefold())}
+    named, said = words(name), words(text)
+    return not said or len(said - named) <= 1
+
+
 def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir: Path,
-                      logo: Path | None = None, credits: list | None = None) -> Path:
+                      logo: Path | None = None, credits: list | None = None,
+                      sequence: list[Path] | None = None, sequence_labels: list[str] | None = None,
+                      sequence_note: str = "") -> Path:
     """credits[i] is None for the company's own photo, or a stock credit
     {"photographer", "source_url", "licence"}: such photos are shown as
     labelled illustrations, never as the company's work."""
-    """Write index.html and assets for one prospect; returns the page path."""
+    """Write index.html and assets for one prospect; returns the page path.
+
+    ``sequence``: 2-4 frames of ONE illustrated scene in build order (e.g. a
+    bathroom from bare concrete to finished). They form the hero, set the
+    palette and are labelled with ``sequence_note``; ``photos`` then serve the
+    rest of the page, each used once."""
     from utils.award_playbook import derive_photo_palette
     from utils.scroll_scrub import enhance_scroll_scrub
 
-    plan = validate_plan(plan, photos)
+    sequence = [Path(f) for f in (sequence or []) if Path(f).is_file()][:4]
+    if len(sequence) < 2:
+        sequence = []
+    plan = validate_plan(plan, photos or sequence)
     out_dir = Path(out_dir)
     assets = out_dir / "assets"
     (assets / "fonts").mkdir(parents=True, exist_ok=True)
@@ -195,6 +213,11 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         shutil.copyfile(ASSETS / "fonts" / file, assets / "fonts" / file)
 
     staged, media = [], []
+    seq_staged = []
+    for index, frame in enumerate(sequence):
+        target = assets / f"vaihe-{index + 1}{frame.suffix.lower()}"
+        shutil.copyfile(frame, target)
+        seq_staged.append(f"assets/{target.name}")
     for index, photo in enumerate(photos[:6]):
         target = assets / f"kuva-{index + 1}{photo.suffix.lower()}"
         shutil.copyfile(photo, target)
@@ -209,7 +232,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         logo_ratio = _logo_ratio(target)
 
     # The hero photos are the signature moment, so they alone set the palette.
-    palette_photos = [assets / Path(p).name for p in staged[:3]]
+    palette_photos = [assets / Path(p).name for p in (seq_staged or staged[:3])]
     palette = derive_photo_palette(palette_photos, mode=mode) \
         or derive_photo_palette(palette_photos, mode="light")
     if not palette:
@@ -217,15 +240,22 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     if os.getenv("KAURIVO_PHOTO_GRADE", "1") != "0":
         from utils.photo_grade import grade_photo
         shadow = palette["ink"] if palette["mode"] == "light" else palette["surface"]
-        graded = []
-        for rel in staged:
-            source = out_dir / rel
-            target = grade_photo(source, source.with_name(source.stem + "-g.webp"),
-                                 shadow=shadow, highlight=palette["canvas"] if palette["mode"] == "light" else palette["ink"])
-            source.unlink()
-            graded.append(f"assets/{target.name}")
-        staged = graded
-        media = [{"src": rel, "sha256": sha256((out_dir / rel).read_bytes()).hexdigest()} for rel in staged]
+        highlight = palette["canvas"] if palette["mode"] == "light" else palette["ink"]
+
+        def _graded(rels, strength):
+            out = []
+            for rel in rels:
+                source = out_dir / rel
+                target = grade_photo(source, source.with_name(source.stem + "-g.webp"),
+                                     shadow=shadow, highlight=highlight, strength=strength)
+                source.unlink()
+                out.append(f"assets/{target.name}")
+            return out
+        staged = _graded(staged, 1.0)
+        # Illustrated sequences are already lit as one series: a light touch only.
+        seq_staged = _graded(seq_staged, .45)
+    media = [{"src": rel, "sha256": sha256((out_dir / rel).read_bytes()).hexdigest()}
+             for rel in seq_staged + staged]
     captions = plan["photo_captions"] + [""] * len(staged)
     credits = list(credits or []) + [None] * len(staged)
     stock = [bool(credits[i]) for i in range(len(staged))]
@@ -240,35 +270,57 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     name = _e(company.get("name"))
     phone = str(company.get("phone") or "").strip()
     tel, mail = _tel(phone), _mail(company.get("email"))
-    hero_photos = staged[:3]
     alt = lambda i: _e(captions[i] or f"{company.get('name')}: työkuva {i + 1}")
-    stock_note = (" Kuvat ovat kuvapankin havainnekuvia, eivät yrityksen omia kohteita."
-                  if any(stock) else "")
-    hero_badge = (f'<p class="hero__credit">{_e(captions[0])}</p>' if stock[0] else "")
+    labels = [str(x)[:24] for x in (sequence_labels or [])][:len(seq_staged)]
+    if seq_staged:
+        hero_photos = seq_staged
+        hero_alts = [_e(f"Havainnekuva: {labels[i]}" if i < len(labels) else "Havainnekuva")
+                     for i in range(len(seq_staged))]
+        rest = list(range(len(staged)))
+        hero_badge = f'<p class="hero__credit">{_e(sequence_note or "Havainnekuva")}</p>'
+    else:
+        hero_photos = staged[:3]
+        hero_alts = [alt(i) for i in range(len(hero_photos))]
+        rest = list(range(len(hero_photos), len(staged)))
+        hero_badge = (f'<p class="hero__credit">{_e(captions[0])}</p>' if stock[0] else "")
+    any_illustration = any(stock) or bool(seq_staged)
+    kinds = [k for k, on in (("tekoälyllä luotuja", bool(seq_staged)), ("kuvapankin", any(stock))) if on]
+    stock_note = (f" Kuvat ovat {' ja '.join(kinds)} havainnekuvia, eivät yrityksen omia kohteita."
+                  if any_illustration else "")
+    stage_strip = ("" if not labels else '<ol class="stages" aria-hidden="true">' + "".join(
+        f'<li data-stage="{i / len(labels):.3f}"><span>{i + 1}</span>{_e(t)}</li>'
+        for i, t in enumerate(labels)) + "</ol>")
 
     chapters = "".join(
         f'<p data-at="{at}">{_e(text)}</p>'
         for at, text in zip(("0", "0.36", "0.7"), plan["chapters"]))
     hero = f'''
 <section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""} aria-labelledby="otsikko">
-  <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{alt(0)}">
-  {"".join(f'<img data-kaurivo-scrub-frame src="{p}" alt="{alt(i + 1)}">' for i, p in enumerate(hero_photos[1:]))}
+  <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{hero_alts[0]}">
+  {"".join(f'<img data-kaurivo-scrub-frame src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
   <div data-kaurivo-scrub-copy>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     {chapters}
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
   </div>
   {hero_badge}
+  {stage_strip}
 </section>'''
 
+    # Every photo appears once: the growing photo first, then services.
+    grow_index = rest.pop(0) if rest else None
+    grow_photo = staged[grow_index] if grow_index is not None else ""
+    grow_html = ""
+    if grow_photo:
+        grow_cap = f'<p class="grow__cap">{_e(captions[grow_index])}</p>' if captions[grow_index] else ""
+        grow_html = (f'<section class="grow" aria-label="Työkuva"><div class="grow__stage">'
+                     f'<img src="{grow_photo}" alt="{alt(grow_index)}" loading="lazy">\n{grow_cap}</div></section>')
+    svc_photos = {i: staged[rest[i]] for i in range(min(len(rest), len(plan["services"])))}
     service_items = "".join(
-        f'''<li class="svc" data-photo="{staged[i % len(staged)]}">
-      <h3>{_e(s["name"])}</h3><p>{_e(s["text"])}</p>
-      <img class="svc__img" src="{staged[i % len(staged)]}" alt="" loading="lazy">
+        f'''<li class="svc"{f' data-photo="{svc_photos[i]}"' if i in svc_photos else ""}>
+      <h3>{_e(s["name"])}</h3>{"" if _echoes(s["name"], s["text"]) else f"<p>{_e(s['text'])}</p>"}
+      {f'<img class="svc__img" src="{svc_photos[i]}" alt="" loading="lazy">' if i in svc_photos else ""}
     </li>''' for i, s in enumerate(plan["services"]))
-
-    grow_photo = staged[min(len(staged) - 1, 3)] if len(staged) > 3 else staged[-1]
-    grow_index = staged.index(grow_photo)
 
     p = palette
     from utils.award_playbook import contrast
@@ -347,6 +399,15 @@ padding:clamp(18px,3vh,30px) 0;border-bottom:1px solid color-mix(in srgb,var(--i
 .grow__stage img{{width:100%;height:100%;object-fit:cover;clip-path:inset(var(--inset,14%) var(--inset-x,20%) round 22px)}}
 .hero__credit{{position:absolute;z-index:3;top:76px;right:var(--gutter);margin:0;font-size:12px;color:#fff;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}}
 .hero > .hero__credit, [data-scrub-stage] > .hero__credit{{position:absolute}}
+.stages{{position:absolute;z-index:3;right:var(--gutter);bottom:clamp(96px,12vh,128px);margin:0;padding:0;list-style:none;display:flex;gap:6px;
+font-size:13px;color:#fff}}
+.stages li{{display:flex;align-items:center;gap:8px;padding:7px 12px 7px 8px;border-radius:999px;background:rgba(0,0,0,.38);
+backdrop-filter:blur(6px);opacity:.55;transition:opacity .4s var(--ease),background-color .4s var(--ease)}}
+.stages li span{{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.6);font-size:11px;font-variant-numeric:tabular-nums}}
+.stages li.on{{opacity:1;background:color-mix(in srgb,var(--accent) 88%,transparent);color:var(--accent-ink)}}
+.stages li.on span{{border-color:currentColor}}
+@media (max-width:760px){{.stages{{left:var(--gutter);right:auto;top:118px;bottom:auto;flex-direction:column;align-items:flex-start;font-size:12px}}
+ .stages li:not(.on){{display:none}}}}
 .grow__cap{{position:absolute;left:var(--gutter);bottom:clamp(24px,6vh,60px);background:var(--canvas);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px}}
 .proof{{padding:clamp(72px,12vh,140px) var(--gutter);border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}}
 .proof>h2{{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;color:var(--muted);margin-bottom:clamp(28px,5vh,56px)}}
@@ -381,8 +442,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 <section class="statement" aria-label="Yrityksestä"><p id="lausunto">{_e(plan["statement"])}</p></section>
 <section class="services" aria-labelledby="palvelut"><h2 id="palvelut">Palvelut</h2><ul class="svc-list">{service_items}</ul></section>
 {_proof_section(plan["proof"])}
-<section class="grow" aria-label="Työkuva"><div class="grow__stage"><img src="{grow_photo}" alt="{alt(grow_index)}" loading="lazy">
-{f'<p class="grow__cap">{_e(captions[grow_index])}</p>' if captions[grow_index] else ""}</div></section>
+{grow_html}
 <section class="contact" aria-labelledby="yhteys">
   <h2 id="yhteys" class="sr">Yhteystiedot</h2>
   {f'<p>{_e(plan["contact_lead"])}</p>' if plan["contact_lead"] else ""}
@@ -414,10 +474,28 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
       const g = grow.getBoundingClientRect();
       const q = Math.min(1, Math.max(0, -g.top / Math.max(1, g.height - vh)));
       img.style.setProperty('--inset', (14 * (1 - q)).toFixed(2) + '%');
-      img.style.setProperty('--inset-x', (20 * (1 - q)).toFixed(2) + '%');
+      img.style.setProperty('--inset-x', ((innerWidth < 760 ? 5 : 20) * (1 - q)).toFixed(2) + '%');
     }}
   }}
-  if (reduce) {{ words.forEach(w => w.classList.add('on')); return; }}
+  const stages = [...document.querySelectorAll('.stages li')];
+  const counters = [...document.querySelectorAll('.ref__total span')].map(el => ({{el, to: +el.dataset.to || 0, ref: el.closest('.ref')}}));
+  const fmt = n => String(n).replace(/\\B(?=(\\d{{3}})+(?!\\d))/g, '\u202f');
+  function live() {{
+    const vh = innerHeight;
+    if (stages.length) {{
+      const h = hero.getBoundingClientRect();
+      const q = Math.min(.999, Math.max(0, -h.top / Math.max(1, h.height - vh)));
+      let on = 0; stages.forEach((s, i) => {{ if (q >= +s.dataset.stage) on = i; }});
+      stages.forEach((s, i) => s.classList.toggle('on', i === on));
+    }}
+    counters.forEach(c => {{
+      const r = c.ref.getBoundingClientRect();
+      const q = Math.min(1, Math.max(0, (vh * .9 - r.top) / Math.max(1, Math.min(r.height * .35, vh * .45))));
+      c.el.textContent = fmt(Math.round(c.to * (1 - Math.pow(1 - q, 2))));
+    }});
+  }}
+  if (reduce) {{ words.forEach(w => w.classList.add('on')); counters.forEach(c => c.el.textContent = fmt(c.to)); live(); return; }}
+  addEventListener('scroll', () => requestAnimationFrame(live), {{passive: true}}); live();
   addEventListener('scroll', () => requestAnimationFrame(tick), {{passive: true}}); tick();
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) {{
     const preview = document.createElement('img'); preview.className = 'preview'; preview.alt = '';
