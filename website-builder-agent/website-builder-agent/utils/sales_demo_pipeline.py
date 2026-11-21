@@ -188,10 +188,27 @@ def ask_plan(company_name: str, source: dict, photo_count: int, *, ask=None) -> 
         from utils.claude_client import ask_claude_json as ask
     prompt = (f"Company: {company_name}\nPhotos provided: {photo_count}\n"
               f"Verified source text (the ONLY allowed facts):\n<<<\n{source['text'][:MAX_SOURCE_CHARS]}\n>>>")
-    plan = ask(CONTENT_BRIEF, prompt, max_tokens=1800, stage="research")
+    plan = ask(CONTENT_BRIEF, prompt, max_tokens=4000, stage="research")
     if not isinstance(plan, dict):
         raise SalesDemoBlocked("sales_plan_invalid")
     return plan
+
+
+class _Step:
+    """Tag any failure with the pipeline step (no content in the tag)."""
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, kind, exc, tb):
+        if exc is not None and not getattr(exc, "sales_step", None):
+            try:
+                exc.sales_step = self.name
+            except Exception:
+                pass
+        return False
 
 
 def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Path,
@@ -200,26 +217,32 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
     """Collect, plan, verify and render. Returns a summary without page text."""
     from utils.sales_demo import render_sales_demo, validate_plan
     from utils.stock_media import MIN_OWN_PHOTOS, fetch_stock_photos
-    source = collect_source(url, get=get, resolve=resolve)
+    with _Step("collect"):
+        source = collect_source(url, get=get, resolve=resolve)
     if len(_norm(source["text"]).split()) < 40:
         raise SalesDemoBlocked("sales_source_text_thin", "Lähdesivulla alle 40 sanaa")
-    own = download_own_photos(source["photo_urls"], Path(work_dir) / "own", get=get, resolve=resolve)
-    plan = ask_plan(company_name, source, len(own), ask=ask)
-    plan, dropped = verify_plan(plan, source["text"])
+    with _Step("photos"):
+        own = download_own_photos(source["photo_urls"], Path(work_dir) / "own", get=get, resolve=resolve)
+    with _Step("plan"):
+        plan = ask_plan(company_name, source, len(own), ask=ask)
+    with _Step("verify"):
+        plan, dropped = verify_plan(plan, source["text"])
     photos, credits = list(own), [None] * len(own)
     if len(own) < MIN_OWN_PHOTOS:
         topic = " ".join([plan.get("headline", "")] + [s["name"] for s in plan["services"]])
-        stock = (fetch_stock or fetch_stock_photos)(topic, Path(work_dir) / "stock",
-                                                    count=max(3, MIN_OWN_PHOTOS - len(own) + 1))
+        with _Step("stock"):
+            stock = (fetch_stock or fetch_stock_photos)(topic, Path(work_dir) / "stock",
+                                                        count=max(3, MIN_OWN_PHOTOS - len(own) + 1))
         # Own photos stay first; stock only fills the gap.
         photos += [Path(s["path"]) for s in stock]
         credits += stock
     if not photos:
         raise SalesDemoBlocked("sales_no_photos", "Ei omia eikä kuvapankkikuvia aiheeseen")
-    validate_plan(plan, photos)
-    company = {"name": company_name, "phone": source["phone"], "email": source["email"]}
-    page = render_sales_demo(company=company, plan=plan, photos=photos, out_dir=Path(out_dir),
-                             credits=credits)
+    with _Step("render"):
+        validate_plan(plan, photos)
+        company = {"name": company_name, "phone": source["phone"], "email": source["email"]}
+        page = render_sales_demo(company=company, plan=plan, photos=photos, out_dir=Path(out_dir),
+                                 credits=credits)
     return {"page": str(page), "own_photos": len(own), "stock_photos": sum(1 for c in credits if c),
             "services": len(plan["services"]), "proof_groups": len(plan.get("proof") or []),
             "dropped": dropped[:20], "source_pages": source["pages"]}

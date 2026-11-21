@@ -1296,7 +1296,15 @@ def run_sales_demo(source,company_name,agent_slug,marker):
         text=str(exc).lower()
         if "429" in text or "rate limit" in text or "quota" in text:
             raise HoldError("free_ai_rate_limit") from None
-        raise HoldError("sales_demo_build_failed",type(exc).__name__) from None
+        step=str(getattr(exc,"sales_step","") or "unknown")[:12]
+        hint=""
+        if "json" in text:
+            hint=":invalid_json"
+        elif "palette" in text:
+            hint=":photo_palette"
+        elif "headline" in text or "service" in text:
+            hint=":plan_fields"
+        raise HoldError("sales_demo_build_failed",step+":"+type(exc).__name__+hint) from None
     finally:
         shutil.rmtree(work,ignore_errors=True)
     print("Kaurivo sales demo:","own_photos=%s stock=%s services=%s proof_groups=%s dropped=%s"%(
