@@ -451,6 +451,16 @@ def ask_claude(
                 continue
 
             if 400 <= status < 500:
+                # A free model can be withdrawn or refuse images (HTTP 400/
+                # 402/404). Try the other confirmed free providers (Workers
+                # Free handles visual QA images) before stopping the demo.
+                if config.free_only():
+                    print(f"  [OpenRouter] HTTP {status}; kokeillaan muuta maksutonta palvelua")
+                    alternate = _other_free_cloud(
+                        system, user_prompt, stage=stage, max_tokens=max_tokens,
+                        image_paths=image_paths, json_mode=json_mode)
+                    if alternate is not None:
+                        return alternate
                 raise RuntimeError(f"OpenRouter rejected request: HTTP {status}")
 
             if status >= 400:
