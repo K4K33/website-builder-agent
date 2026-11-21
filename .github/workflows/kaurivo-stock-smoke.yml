@@ -34,3 +34,18 @@ jobs:
                   if not got:
                       raise SystemExit(name + " returned no usable photo")
           PY
+      - name: Openverse candidate diagnosis
+        if: always()
+        run: |
+          python - <<'PY'
+          import requests, utils.stock_media as s
+          for q in s.queries_for("kylpyhuoneremontti"):
+              c = list(s._openverse(requests, q))
+              print(q, len(c))
+              for p in c[:8]:
+                  ok = s._allowed_url(p)
+                  st = ""
+                  if s._usable(p) and ok:
+                      r = requests.get(p["url"], timeout=20); st = (r.status_code, r.headers.get("content-type"))
+                  print("  ", p["width"], p["height"], s._usable(p), ok, st, p["url"][:60])
+          PY
