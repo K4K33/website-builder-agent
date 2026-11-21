@@ -115,17 +115,85 @@ def _choose_technique(assets: dict) -> str:
     return "typographic_statement"
 
 
-def _photo_palette(staged_media, media_root) -> dict | None:
-    """Light and dark colour roles derived from the company's staged photos."""
-    if not staged_media or media_root is None:
+MAX_PALETTE_FETCH = 4
+MAX_PALETTE_BYTES = 4_000_000
+
+
+def _fetch_source_photos(urls: list[str], folder) -> list:
+    """Download a few of the company's own source photos for colour analysis.
+
+    Only in a queued production build (KAURIVO_QUEUED_DEMO_ID): public HTTPS
+    hosts validated by safe_url, no redirects, image content types, size cap.
+    Files stay private in the build workspace and are never published.
+    """
+    import os
+    from hashlib import sha256
+    from pathlib import Path
+    if not os.getenv("KAURIVO_QUEUED_DEMO_ID") or os.getenv("KAURIVO_PALETTE_FETCH") == "0":
+        return []
+    try:
+        import requests
+        from utils.kaurivo_demo_readiness import USER_AGENT, safe_url
+    except Exception:
+        return []
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    saved = []
+    for url in urls:
+        if len(saved) >= MAX_PALETTE_FETCH:
+            break
+        target = folder / (sha256(url.encode()).hexdigest()[:16] + ".img")
+        if target.is_file():
+            saved.append(target)
+            continue
+        if not safe_url(url):
+            continue
+        try:
+            with requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=(5, 15),
+                              stream=True, allow_redirects=False) as reply:
+                kind = reply.headers.get("content-type", "")
+                if reply.status_code != 200 or not kind.startswith("image/") or "svg" in kind:
+                    continue
+                data = b""
+                for chunk in reply.iter_content(65536):
+                    data += chunk
+                    if len(data) > MAX_PALETTE_BYTES:
+                        data = b""
+                        break
+            if not data:
+                continue
+            from io import BytesIO
+            from PIL import Image
+            with Image.open(BytesIO(data)) as image:
+                if min(image.size) < 240:
+                    continue  # icons and thumbnails do not describe the brand
+                image.convert("RGB").save(target, "WEBP", quality=80)
+            saved.append(target)
+        except Exception:
+            continue
+    return saved
+
+
+def _photo_palette(staged_media, media_root, source_urls=()) -> dict | None:
+    """Light and dark colour roles derived from the company's own photos.
+
+    Staged (approved) photos are preferred; a queued build without staged
+    media measures a few of the original site's own photos instead.
+    """
+    if media_root is None:
         return None
     from pathlib import Path
     from utils.award_playbook import derive_photo_palette
     root = Path(media_root)
-    photos = [root / str(m["src"]) for m in staged_media
+    photos = [root / str(m["src"]) for m in staged_media or []
               if isinstance(m, dict) and str(m.get("src", "")).lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
               and "logo" not in str(m.get("purpose", "")).lower()]
     photos = [p for p in photos if p.is_file()][:6]
+    if not photos and source_urls:
+        import tempfile
+        # Outside the site folder: these files are analysed, never published.
+        cache = Path(tempfile.gettempdir()) / "kaurivo-palette" / (root.name or "site")
+        photos = _fetch_source_photos(list(source_urls), cache)
     if not photos:
         return None
     options = {mode: derive_photo_palette(photos, mode=mode) for mode in ("light", "dark")}
@@ -133,7 +201,8 @@ def _photo_palette(staged_media, media_root) -> dict | None:
     if not options:
         return None
     auto = derive_photo_palette(photos)
-    return {"suggested": auto["mode"] if auto else next(iter(options)), **options}
+    return {"suggested": auto["mode"] if auto else next(iter(options)), **options,
+            "from": "staged_media" if staged_media else "source_photos"}
 
 
 def _selected_direction(research: dict) -> dict:
@@ -246,7 +315,7 @@ def derive_pre_build_brief(research: dict, staged_media: list | None = None,
             "verified_colors": [c.get("hex") for c in identity.get("verified_original_colors") or []
                                 if isinstance(c, dict)],
             "verified_logo": bool(identity.get("verified_original_logos")),
-            "photo_palette": _photo_palette(staged_media, media_root),
+            "photo_palette": _photo_palette(staged_media, media_root, assets["photos"]),
             "references": references,
             "rule": "References inform layout, rhythm and motion only; never "
                     "their colours, text, images or identity.",

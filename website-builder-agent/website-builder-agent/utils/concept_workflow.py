@@ -292,6 +292,11 @@ def generate_concepts(name, *, response_path=None, producer=''):
     # Raw browser measurements can include source copy and local paths.
     # Use them only in the private repair model request; persist and return
     # only allowlisted issue categories and the immutable manifest reference.
+    contrast_seen = [str(issue) for routes in (result.get("private_contrast_issues") or {}).values()
+                     for issues in routes.values() for issue in issues]
+    contrast_counts = ",contrast_unverifiable:%d,contrast_fail:%d" % (
+        sum("NOT VERIFIABLE" in issue for issue in contrast_seen),
+        sum("measurable WCAG AA" in issue for issue in contrast_seen))
     result = {key: value for key, value in result.items()
               if key not in {"private_repair_evidence", "private_contrast_issues"}}
     upsert_company(slug, {'concept_previews': result})
@@ -301,8 +306,33 @@ def generate_concepts(name, *, response_path=None, producer=''):
         labels = sorted({str(problem) for routes_to_repair in targets.values()
                          for problems in routes_to_repair.values() for problem in problems})
         raise RuntimeError("CONCEPT_BROWSER_VALIDATION_BLOCKED: " +
-                           "; ".join(labels[:4]))
+                           "; ".join(labels[:4]) + " " + _blocked_diagnostic(authored, research)
+                           + contrast_counts)
     return result
+
+
+def _blocked_diagnostic(authored, research) -> str:
+    """Non-sensitive counters and colour codes for the job's error detail.
+
+    Hex colours and counts only: no copy, URLs or page text.
+    """
+    try:
+        from utils.brand_direction_v8 import audit_art_direction, photo_palette_colors
+        from utils.brand_direction_v8 import derive_identity_boundaries
+        known = len(derive_identity_boundaries(research)["verified_original_colors"])
+        photo = len(photo_palette_colors(research))
+        unproven, codes = set(), set()
+        for concept in (authored or {}).get("concepts", {}).values():
+            audit = audit_art_direction(concept.get("pages") or {}, research)
+            for finding in audit["blocking"]:
+                codes.add(str(finding.get("code")))
+                if finding.get("code") == "unproven_brand_accent":
+                    unproven.update(finding.get("evidence") or [])
+        return ("diag=brand_known:%d,photo_palette:%d,v8:%s,unproven:%s" % (
+            known, photo, "|".join(sorted(codes))[:120] or "none",
+            "|".join(sorted(unproven)[:6]) or "none"))
+    except Exception as error:
+        return "diag=unavailable:" + type(error).__name__
 
 
 def choose_concept(name, *, review_path=None, reviewer=''):

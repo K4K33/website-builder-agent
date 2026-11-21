@@ -678,6 +678,10 @@ def run_cli(args,log_handle,deadline=None):
                 detail = "Konseptien selaintarkistus estää julkaisun"
             if categories:
                 detail += ": " + ", ".join(categories[:4])
+            # Counters and hex colour codes only (see _blocked_diagnostic).
+            diag = re.search(r"diag=[a-z0-9_:|#,]{1,240}", browser_hints)
+            if diag:
+                detail += " · " + diag.group(0)
         if code == "pre_build_brief_incomplete":
             from utils.pre_build_brief import GAP_LABELS
             log_handle.seek(stage_start)
