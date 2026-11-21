@@ -72,9 +72,11 @@ Not yet automated: video intake (only images are staged today) and full
 ## Sales demos: stock illustrations, own photos later
 
 A sales demo for a prospect with fewer than four own photos may use licensed
-stock photos (`utils/stock_media.py`, Pexels API with the free
-`KAURIVO_PEXELS_API_KEY` secret). Every stock image is captioned
-"Havainnekuva, kuva: <photographer> / Pexels", the draft note states that the
+stock photos (`utils/stock_media.py`): Pexels when a key exists (new keys
+are paused), Pixabay with the free `KAURIVO_PIXABAY_API_KEY` secret, and
+Openverse without a key (CC0, Public Domain Mark or CC BY only). Every stock
+image is captioned "Havainnekuva, kuva: <creator> / <source>" plus the
+licence for Creative Commons, the draft note states that the
 images are illustrations and not the company's projects, and no project-like
 caption is kept. The final customer site uses the company's own photos and
 before/after pairs, requested once the company is interested.
