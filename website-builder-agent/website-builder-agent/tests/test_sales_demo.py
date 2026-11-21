@@ -72,6 +72,22 @@ class SalesDemoTests(unittest.TestCase):
         black = np.zeros((8, 8, 3), dtype=np.float32)
         self.assertGreater(grade_array(black, shadow="#10203a", highlight="#fff").mean(), .01)
 
+    def test_bathroom_build_scene_hero_without_photos(self):
+        from utils.sales_demo import build_scene_for
+        self.assertEqual(build_scene_for("Kylpyhuoneremontit ja laatoitus"), "bathroom")
+        self.assertIsNone(build_scene_for("Kampaamo"))
+        with TemporaryDirectory() as tmp:
+            page = render_sales_demo(company=COMPANY, plan=PLAN, photos=[], out_dir=Path(tmp) / "out",
+                                     build_scene="bathroom").read_text(encoding="utf-8")
+            out = Path(tmp) / "out/assets/build3d"
+            self.assertTrue((out / "bathroom.min.js").is_file() and (out / "LICENSE-three.txt").is_file())
+            self.assertIn('data-build3d="bathroom"', page)
+            self.assertIn("Vedeneristys", page)
+            self.assertIn("3D-havainnollistus kylpyhuoneremontin työvaiheista, ei yrityksen kohde", page)
+            self.assertIn("import('./assets/build3d/'", page)
+            self.assertNotIn("data-kaurivo-scrub", page)
+            self.assertEqual(page.count("<h1"), 1)
+
     def test_each_trade_has_licensed_fonts(self):
         root = Path(__file__).resolve().parents[1] / "assets/sales_demo/fonts"
         for display, _, body, _, _ in TYPE_PAIRS.values():

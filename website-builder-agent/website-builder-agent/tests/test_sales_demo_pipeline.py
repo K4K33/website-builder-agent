@@ -115,10 +115,15 @@ class SalesDemoPipelineTests(unittest.TestCase):
                                            work_dir=Path(tmp) / "work", get=fake_get, resolve=resolve, ask=ask,
                                            fetch_stock=lambda *a, **k: stock_paths)
             self.assertEqual(ask.call_count, 1)
-            self.assertEqual((summary["own_photos"], summary["stock_photos"]), (1, 3))
+            # Bathroom trade: the 3D build scene is the hero, no stock is mixed in.
+            self.assertEqual((summary["own_photos"], summary["stock_photos"], summary["build_scene"]),
+                             (1, 0, "bathroom"))
             page = Path(summary["page"]).read_text(encoding="utf-8")
             self.assertIn('href="tel:+358405119287"', page)
-            self.assertIn("Havainnekuva, kuva: Ville / Pixabay", page)
+            self.assertIn('data-build3d="bathroom"', page)
+            self.assertIn("3D-havainnollistus kylpyhuoneremontin työvaiheista", page)
+            self.assertTrue((Path(tmp) / "out/assets/build3d/bathroom.min.js").is_file())
+            self.assertNotIn("Pixabay", page)
             self.assertNotIn("Lattialämmitys", page)
             self.assertNotIn("Keksitty", page)
             self.assertIn('rel="icon"', page)

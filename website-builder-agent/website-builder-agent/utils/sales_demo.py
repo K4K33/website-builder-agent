@@ -177,6 +177,56 @@ def _font_face(name: str, file: str) -> str:
             "font-weight:100 900;font-stretch:50% 125%;font-display:swap}")
 
 
+# Purpose-made 3D build scenes (assets/sales_demo/build3d). Illustrations of the
+# work stages, labelled as such; free (Three.js, MIT), no AI call.
+BUILD_SCENES = {
+    "bathroom": {
+        "pattern": r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila",
+        "steps": ((0.0, "Runko"), (0.2, "Putkivedot"), (0.36, "Vedeneristys"), (0.56, "Laatoitus"), (0.84, "Valmis")),
+        "note": "3D-havainnollistus kylpyhuoneremontin työvaiheista, ei yrityksen kohde",
+        "alt": "3D-havainnollistus valmiista kylpyhuoneesta",
+    },
+}
+
+BUILD_RUNTIME = """<script type="module">
+const hero = document.querySelector('[data-build3d]');
+if (hero) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const steps = JSON.parse(hero.dataset.steps);
+  const box = hero.querySelector('.b3d__step'), name = hero.querySelector('.b3d__name'), num = hero.querySelector('.b3d__num');
+  const bar = hero.querySelector('.b3d__bar i'), chapters = [...hero.querySelectorAll('[data-at]')];
+  let scene = null;
+  try {
+    const mod = await import('./assets/build3d/' + hero.dataset.build3d + '.min.js');
+    scene = mod.mountBathroom(hero.querySelector('canvas'), {reduce});
+    hero.classList.add('is-live');
+  } catch (e) { hero.classList.add('no-3d'); }
+  const update = () => {
+    const r = hero.getBoundingClientRect();
+    const p = reduce ? 1 : Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+    if (scene && !reduce) scene.set(p);
+    let k = 0; steps.forEach((s, i) => { if (p >= s.at) k = i; });
+    if (name.textContent !== steps[k].name) {
+      name.textContent = steps[k].name; num.textContent = String(k + 1).padStart(2, '0');
+      box.classList.remove('flip'); void box.offsetWidth; box.classList.add('flip');
+    }
+    if (bar) bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    let c = 0; chapters.forEach((el, i) => { if (p >= +el.dataset.at) c = i; });
+    chapters.forEach((el, i) => el.classList.toggle('is-on', i === c));
+  };
+  addEventListener('scroll', update, {passive: true}); update();
+}
+</script>"""
+
+
+def build_scene_for(text: str) -> str | None:
+    text = str(text or "").casefold()
+    for key, scene in BUILD_SCENES.items():
+        if re.search(scene["pattern"], text):
+            return key
+    return None
+
+
 def _echoes(name: str, text: str) -> bool:
     """True when a service text only repeats its name (e.g. 'Kylpyhuoneremontit ja ...')."""
     stem = lambda w: w[:6]
@@ -188,7 +238,7 @@ def _echoes(name: str, text: str) -> bool:
 def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir: Path,
                       logo: Path | None = None, credits: list | None = None,
                       sequence: list[Path] | None = None, sequence_labels: list[str] | None = None,
-                      sequence_note: str = "") -> Path:
+                      sequence_note: str = "", build_scene: str | None = None) -> Path:
     """credits[i] is None for the company's own photo, or a stock credit
     {"photographer", "source_url", "licence"}: such photos are shown as
     labelled illustrations, never as the company's work."""
@@ -204,7 +254,10 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     sequence = [Path(f) for f in (sequence or []) if Path(f).is_file()][:4]
     if len(sequence) < 2:
         sequence = []
-    plan = validate_plan(plan, photos or sequence)
+    build_scene = build_scene if build_scene in BUILD_SCENES else None
+    if build_scene:
+        sequence = []  # one signature moment: the 3D build replaces an image sequence
+    plan = validate_plan(plan, photos or sequence or ([ASSETS / "build3d" / "bathroom-poster.webp"] if build_scene else []))
     out_dir = Path(out_dir)
     assets = out_dir / "assets"
     (assets / "fonts").mkdir(parents=True, exist_ok=True)
@@ -233,6 +286,15 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
 
     # The hero photos are the signature moment, so they alone set the palette.
     palette_photos = [assets / Path(p).name for p in (seq_staged or staged[:3])]
+    scene_rel = ""
+    if build_scene:
+        scene_dir = assets / "build3d"
+        scene_dir.mkdir(parents=True, exist_ok=True)
+        for file in (f"{build_scene}.min.js", f"{build_scene}-poster.webp", "LICENSE-three.txt"):
+            shutil.copyfile(ASSETS / "build3d" / file, scene_dir / file)
+        scene_rel = "assets/build3d/"
+        # The build scene is the signature moment and sets the palette.
+        palette_photos = [ASSETS / "build3d" / f"{build_scene}-palette.webp"]
     palette = derive_photo_palette(palette_photos, mode=mode) \
         or derive_photo_palette(palette_photos, mode="light")
     if not palette:
@@ -282,11 +344,14 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         hero_photos = staged[:3]
         hero_alts = [alt(i) for i in range(len(hero_photos))]
         rest = list(range(len(hero_photos), len(staged)))
-        hero_badge = (f'<p class="hero__credit">{_e(captions[0])}</p>' if stock[0] else "")
+        hero_badge = (f'<p class="hero__credit">{_e(captions[0])}</p>' if stock and stock[0] else "")
+    if build_scene:
+        rest = list(range(len(staged)))
     any_illustration = any(stock) or bool(seq_staged)
+    scene_note = (" Herossa on 3D-havainnollistus työvaiheista." if build_scene else "")
     kinds = [k for k, on in (("tekoälyllä luotuja", bool(seq_staged)), ("kuvapankin", any(stock))) if on]
     stock_note = (f" Kuvat ovat {' ja '.join(kinds)} havainnekuvia, eivät yrityksen omia kohteita."
-                  if any_illustration else "")
+                  if any_illustration else "") + scene_note
     stage_strip = ("" if not labels else '<ol class="stages" aria-hidden="true">' + "".join(
         f'<li data-stage="{i / len(labels):.3f}"><span>{i + 1}</span>{_e(t)}</li>'
         for i, t in enumerate(labels)) + "</ol>")
@@ -294,7 +359,30 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     chapters = "".join(
         f'<p data-at="{at}">{_e(text)}</p>'
         for at, text in zip(("0", "0.36", "0.7"), plan["chapters"]))
-    hero = f'''
+    if build_scene:
+        steps = BUILD_SCENES[build_scene]["steps"]
+        labels = [name for _, name in steps]
+        stage_strip = '<ol class="stages" aria-hidden="true">' + "".join(
+            f'<li data-stage="{at:.3f}"><span>{i + 1}</span>{_e(n)}</li>' for i, (at, n) in enumerate(steps)) + "</ol>"
+        steps_json = _e(json.dumps([{"at": at, "name": n} for at, n in steps], ensure_ascii=False))
+        hero = f'''
+<section class="hero hero--3d" data-build3d="{build_scene}" data-steps="{steps_json}" aria-labelledby="otsikko">
+ <div class="b3d__stage">
+  <img class="b3d__poster" src="{scene_rel}{build_scene}-poster.webp" alt="{_e(BUILD_SCENES[build_scene]["alt"])}">
+  <canvas class="b3d__canvas" aria-hidden="true"></canvas>
+  <p class="b3d__step" aria-hidden="true"><span class="b3d__num">01</span><span class="b3d__name">{_e(steps[0][1])}</span></p>
+  <div class="b3d__copy">
+    <h1 id="otsikko">{_glue(plan["headline"])}</h1>
+    <div class="b3d__chapters">{chapters}</div>
+    {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
+  </div>
+  <p class="hero__credit">{_e(BUILD_SCENES[build_scene]["note"])}</p>
+  {stage_strip}
+  <div class="b3d__bar" aria-hidden="true"><i></i></div>
+ </div>
+</section>'''
+    else:
+        hero = f'''
 <section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""}{' data-scrub-warp="0"' if plan["trade"] == "rakennus" or seq_staged else ""} aria-labelledby="otsikko">
   <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{hero_alts[0]}">
   {"".join(f'<img data-kaurivo-scrub-frame src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
@@ -416,6 +504,36 @@ backdrop-filter:blur(6px);opacity:.55;transition:opacity .4s var(--ease),backgro
 .stages li.on span{{border-color:currentColor}}
 @media (max-width:760px){{.stages{{left:var(--gutter);right:auto;top:118px;bottom:auto;flex-direction:column;align-items:flex-start;font-size:12px}}
  .stages li:not(.on){{display:none}}}}
+.hero--3d{{height:540svh;background:var(--canvas)}}
+.b3d__stage{{position:sticky;top:0;height:100svh;overflow:hidden}}
+.b3d__canvas,.b3d__poster{{position:absolute;top:0;bottom:0;left:28%;right:0;width:72%;height:100%;display:block}}
+.b3d__poster{{object-fit:contain;object-position:60% 58%;padding:12vh 4vw 6vh}}
+.hero--3d.is-live .b3d__poster{{display:none}}
+.b3d__step{{position:absolute;z-index:2;left:var(--gutter);top:clamp(92px,15vh,150px);margin:0;display:flex;align-items:baseline;gap:18px}}
+.b3d__num{{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:650;font-size:clamp(14px,1.1vw,18px)}}
+.b3d__name{{font-family:"Display";{display_css};font-size:clamp(44px,7.4vw,124px);line-height:.9;color:var(--ink)}}
+.b3d__step.flip .b3d__name{{animation:b3dIn .7s var(--ease)}}
+@keyframes b3dIn{{from{{opacity:0;transform:translateY(.25em)}}to{{opacity:1;transform:none}}}}
+.b3d__copy{{position:absolute;z-index:2;left:var(--gutter);bottom:clamp(36px,9vh,96px);max-width:min(34rem,36vw)}}
+.hero--3d h1{{font-size:clamp(34px,3.6vw,60px);line-height:.98}}
+.b3d__chapters{{display:grid;margin-top:14px}}
+.b3d__chapters p{{grid-area:1/1;margin:0;max-width:34ch;color:var(--muted);font-size:clamp(16px,1rem + .3vw,20px);opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .6s var(--ease)}}
+.b3d__chapters p.is-on{{opacity:1;transform:none}}
+.b3d__bar{{position:absolute;left:0;right:0;bottom:0;height:3px;background:color-mix(in srgb,var(--ink) 14%,transparent);z-index:2}}
+.b3d__bar i{{display:block;height:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}}
+.hero--3d .hero__credit{{top:auto;bottom:clamp(36px,9vh,96px);right:var(--gutter);background:color-mix(in srgb,var(--ink) 12%,transparent);color:var(--muted)}}
+.hero--3d .stages{{bottom:clamp(84px,15vh,150px)}}
+.hero--3d .stages li{{background:color-mix(in srgb,var(--ink) 10%,transparent);color:var(--ink)}}
+@media (max-width:760px){{
+ .b3d__canvas,.b3d__poster{{left:0;width:100%;top:9svh;height:48svh}}
+ .b3d__poster{{padding:4vh 2vw}}
+ .b3d__step{{top:84px}} .b3d__name{{font-size:clamp(34px,11vw,56px)}}
+ .b3d__copy{{max-width:none;right:var(--gutter);bottom:clamp(64px,10svh,96px)}}
+ .hero--3d h1{{font-size:clamp(30px,8.6vw,44px)}}
+ .hero--3d .stages{{display:none}}
+ .hero--3d .hero__credit{{bottom:auto;top:calc(9svh + 48svh + 6px);left:var(--gutter);right:var(--gutter);font-size:11px;line-height:1.3;border-radius:8px}}
+}}
+@media (prefers-reduced-motion:reduce){{.hero--3d{{height:auto}}.b3d__stage{{position:relative}}}}
 .grow__cap{{position:absolute;left:var(--gutter);bottom:clamp(24px,6vh,60px);background:var(--canvas);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px}}
 .proof{{padding:clamp(72px,12vh,140px) var(--gutter);border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}}
 .proof>h2{{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;color:var(--muted);margin-bottom:clamp(28px,5vh,56px)}}
@@ -516,6 +634,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
   }}
 }})();
 </script>
+{BUILD_RUNTIME if build_scene else ""}
 </body>
 </html>
 '''
