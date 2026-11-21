@@ -13,12 +13,13 @@ SCRIPT = r"""
   if (reduce.matches) return;
   const VERT = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
   const FRAG = `precision highp float;varying vec2 v;
-uniform sampler2D i0,d0,i1,d1,e0;uniform vec2 c0,c1,cam;uniform vec3 touch;uniform float mixv,dolly0,dolly1,bp,reveal,draw;
+uniform sampler2D i0,d0,i1,d1,e0;uniform vec2 c0,c1,cam;uniform vec3 touch;uniform float mixv,dolly0,dolly1,bp,reveal,draw,warp;
 vec2 cover(vec2 u,vec2 c){return (u-.5)*c+.5;}
-vec2 par(sampler2D dep,vec2 u,vec2 t,float dolly){vec2 s=u;
+vec2 par(sampler2D dep,vec2 u,vec2 t,float dolly){
+ vec2 z=(u-.5)/(1.+dolly*.5*(1.-warp))+.5;vec2 s=z;
  for(int k=0;k<6;k++){float d=texture2D(dep,s).r;
   vec2 disp=cam*(d-.35)+(s-.5)*d*dolly;vec2 tv=s-t;float f=exp(-dot(tv,tv)*22.);
-  disp+=tv*f*touch.z*(.4+d);s=u-disp;}
+  disp+=tv*f*touch.z*(.4+d);s=z-disp*warp;}
  return clamp(s,0.,1.);}
 void main(){
  vec2 u0=cover(v,c0),u1=cover(v,c1);
@@ -31,7 +32,7 @@ void main(){
  if(mixv>0.){vec2 s1=par(d1,u1,cover(touch.xy,c1),dolly1);
   float dn=texture2D(d1,s1).r;float m=smoothstep(1.-mixv*1.25,1.25-mixv*1.25,dn);
   col=mix(col,texture2D(i1,s1).rgb,m);}
- vec2 q=v-.5;col*=1.-.28*dot(q,q);
+ vec2 q=v-.5;col*=1.-(.08+.2*warp)*dot(q,q);
  gl_FragColor=vec4(col,1.);}`;
   const load = src => new Promise((ok, fail) => {
     const image = new Image(); image.decoding = 'async'; image.onload = () => ok(image);
@@ -57,6 +58,7 @@ void main(){
     gl.vertexAttribPointer(at, 2, gl.FLOAT, false, 0, 0);
     const U = name => gl.getUniformLocation(program, name);
     ['i0','d0','i1','d1','e0'].forEach((n, k) => gl.uniform1i(U(n), k));
+    gl.uniform1f(U('warp'), cfg.warp === 0 ? 0 : 1);
     const sketch = !!cfg.layers[0].lines;
     let sketchTex = null, drawStart = 0;
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -98,7 +100,8 @@ void main(){
       const a = layers[seg] || layers[0];
       const next = seg + 1 < n ? layers[seg + 1] : null;
       const mixv = next ? Math.max(0, Math.min(1, (local - .68) / .32)) : 0;
-      const idle = Math.sin(time / 2600) * .006;
+      // No idle motion: the scene moves only when the visitor scrolls or points.
+      const idle = 0;
       const orbit = (local - .5) * .05 * (seg % 2 ? -1 : 1);
       gl.uniform2f(U('cam'), orbit + pointer.x * .035 + idle, pointer.y * .025 + idle * .5);
       gl.uniform3f(U('touch'), pointer.ux, pointer.uy, pointer.s);

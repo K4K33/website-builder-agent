@@ -339,7 +339,10 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
         if depth_layers:
             # A real 3D camera move through the photos: far lighter than frames.
             scene["data-scrub-mode"] = "depth"
-            scene["data-depth"] = json.dumps({"layers": depth_layers, "length": length},
+            # Architecture (data-scrub-warp="0"): straight lines must stay straight,
+            # so the camera zooms instead of displacing pixels by depth.
+            warp = 0 if scene.get("data-scrub-warp") == "0" else 1
+            scene["data-depth"] = json.dumps({"layers": depth_layers, "length": length, "warp": warp},
                                              separators=(",", ":"))
             manifests = {"d": None, "m": None}
         else:
