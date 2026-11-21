@@ -308,6 +308,11 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     # Every photo appears once: the growing photo first, then services.
     grow_index = rest.pop(0) if rest else None
     grow_photo = staged[grow_index] if grow_index is not None else ""
+    grow_html = ""
+    if grow_photo:
+        grow_cap = f'<p class="grow__cap">{_e(captions[grow_index])}</p>' if captions[grow_index] else ""
+        grow_html = (f'<section class="grow" aria-label="Työkuva"><div class="grow__stage">'
+                     f'<img src="{grow_photo}" alt="{alt(grow_index)}" loading="lazy">\n{grow_cap}</div></section>')
     svc_photos = {i: staged[rest[i]] for i in range(min(len(rest), len(plan["services"])))}
     service_items = "".join(
         f'''<li class="svc"{f' data-photo="{svc_photos[i]}"' if i in svc_photos else ""}>
@@ -435,8 +440,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 <section class="statement" aria-label="Yrityksestä"><p id="lausunto">{_e(plan["statement"])}</p></section>
 <section class="services" aria-labelledby="palvelut"><h2 id="palvelut">Palvelut</h2><ul class="svc-list">{service_items}</ul></section>
 {_proof_section(plan["proof"])}
-{f'''<section class="grow" aria-label="Työkuva"><div class="grow__stage"><img src="{grow_photo}" alt="{alt(grow_index)}" loading="lazy">
-{f'<p class="grow__cap">{_e(captions[grow_index])}</p>' if captions[grow_index] else ""}</div></section>''' if grow_photo else ""}
+{grow_html}
 <section class="contact" aria-labelledby="yhteys">
   <h2 id="yhteys" class="sr">Yhteystiedot</h2>
   {f'<p>{_e(plan["contact_lead"])}</p>' if plan["contact_lead"] else ""}
