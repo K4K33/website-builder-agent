@@ -24,8 +24,8 @@ _PEOPLE = re.compile(r"\b(man|woman|men|women|person|people|girl|boy|child|portr
 
 # Industry terms in the plan/services -> English stock queries (most specific first).
 QUERIES = (
-    (r"kylpyhuone|laatoit|laatta|vedeneristy", ("tile installation trowel", "bathroom renovation tiling",
-                                              "waterproofing bathroom", "modern bathroom interior tiles")),
+    (r"kylpyhuone|laatoit|laatta|vedeneristy", ("bathroom tile installation", "bathroom renovation",
+                                              "bathroom tiles", "bathroom interior")),
     (r"maalaus|maalari|tasoitus", ("freshly painted interior wall", "house exterior painting", "paint roller wall")),
     (r"keittiö", ("modern kitchen interior", "kitchen cabinets installation")),
     (r"katto|kattoremontti|peltikatto", ("metal roof house", "roofing construction")),
@@ -124,6 +124,17 @@ def _openverse(session, query):
 PROVIDERS = (_pexels, _pixabay, _openverse)
 
 
+_GENERIC = {"modern", "interior", "freshly", "house", "home", "clean", "bright", "cozy", "work", "wall"}
+
+
+def _relevant(photo: dict, query: str) -> bool:
+    """Tags must mention the query's key words (prefix match, so tile ~ tiles ~ tiling)."""
+    text = str(photo.get("text") or "").lower()
+    words = [w for w in query.lower().split() if len(w) >= 4 and w not in _GENERIC]
+    hits = sum(1 for w in words if w[:min(5, len(w) - 1)] in text)
+    return hits >= min(2, len(words))
+
+
 def _usable(photo: dict) -> bool:
     width, height = int(photo.get("width") or 0), int(photo.get("height") or 0)
     return width >= int(photo.get("min_width") or 1200) and width > height * 1.2 and not _PEOPLE.search(str(photo.get("text") or ""))
@@ -173,7 +184,8 @@ def fetch_stock_photos(topic_text: str, folder: Path, *, count: int = MAX_STOCK,
             for photo in candidates:
                 if len(chosen) >= count:
                     break
-                if photo["id"] in seen or not _usable(photo) or not _allowed_url(photo):
+                if (photo["id"] in seen or not _usable(photo) or not _relevant(photo, query)
+                        or not _allowed_url(photo)):
                     continue
                 try:
                     image = session.get(photo["url"], timeout=(5, 30))
