@@ -384,21 +384,32 @@ def choose_concept(name, *, review_path=None, reviewer=''):
                     ask=lambda system, prompt, *, image_paths, max_tokens:
                         ask_claude_json(system, prompt, image_paths=image_paths,
                                         max_tokens=max_tokens, stage="qa"))
-            try:
-                report = review_current_set()
-            except VisualReviewRevisionRequired as rejection:
-                # One source-preserving revision of the highest-potential
-                # independently REJECTED direction, followed by entirely new
-                # Chromium/browser evidence and a fresh independent review.
-                # Never accept or copy old reviewer verdicts into the new set.
-                reference, path, manifest = revise_one_rejected_direction(
-                    slug=slug, company=company, reference=reference,
-                    research=research, manifest=manifest, order=order,
-                    critique=rejection, root=root)
-                order = blind_order(manifest)
-                views = [{'alias': alias, **view}
-                         for alias, entry in order.items() for view in entry['views']]
-                report = review_current_set()
+            report = None
+            # Up to two bounded, source-preserving revisions of the highest-
+            # potential independently REJECTED direction, each followed by
+            # entirely new Chromium evidence and a fresh independent review.
+            # Never accept or copy old reviewer verdicts into the new set.
+            for revision in range(3):
+                try:
+                    report = review_current_set()
+                    break
+                except VisualReviewRevisionRequired as rejection:
+                    if revision == 2:
+                        issues = sum(len(r.get("critical_issues") or [])
+                                     for r in rejection.reports.values())
+                        passing = sum(r.get("passing_views", 0)
+                                      for r in rejection.reports.values())
+                        raise RuntimeError(
+                            "VISUAL_QA_REJECTED_AFTER_REVISION: "
+                            f"diag=passing_views:{passing},critical_issues:{issues}"
+                        ) from rejection
+                    reference, path, manifest = revise_one_rejected_direction(
+                        slug=slug, company=company, reference=reference,
+                        research=research, manifest=manifest, order=order,
+                        critique=rejection, root=root)
+                    order = blind_order(manifest)
+                    views = [{'alias': alias, **view}
+                             for alias, entry in order.items() for view in entry['views']]
         else:
             # Original path remains available without confirmed free backup.
             report = ask_claude_json(
