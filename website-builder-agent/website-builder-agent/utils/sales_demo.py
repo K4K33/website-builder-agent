@@ -182,7 +182,7 @@ def _echoes(name: str, text: str) -> bool:
     stem = lambda w: w[:6]
     words = lambda t: {stem(w) for w in re.findall(r"\w{3,}", str(t or "").casefold())}
     named, said = words(name), words(text)
-    return not said or len(said - named) <= 1
+    return not (said - named)
 
 
 def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir: Path,
@@ -307,14 +307,21 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
   {stage_strip}
 </section>'''
 
-    # Every photo appears once: the growing photo first, then services.
+    # Every photo appears once: the growing photo first, then services. Next to an
+    # illustrated sequence, stock photos from other cameras would break the world:
+    # only the company's own photos are added, and the finished frame grows.
+    if seq_staged:
+        rest = [i for i in rest if not stock[i]]
     grow_index = rest.pop(0) if rest else None
     grow_photo = staged[grow_index] if grow_index is not None else ""
+    if seq_staged and grow_index is None:
+        grow_photo = seq_staged[-1]
     grow_html = ""
     if grow_photo:
-        grow_cap = f'<p class="grow__cap">{_e(captions[grow_index])}</p>' if captions[grow_index] else ""
+        cap_text = captions[grow_index] if grow_index is not None else (sequence_note or "Havainnekuva")
+        grow_cap = f'<p class="grow__cap">{_e(cap_text)}</p>' if cap_text else ""
         grow_html = (f'<section class="grow" aria-label="Työkuva"><div class="grow__stage">'
-                     f'<img src="{grow_photo}" alt="{alt(grow_index)}" loading="lazy">\n{grow_cap}</div></section>')
+                     f'<img src="{grow_photo}" alt="{alt(grow_index) if grow_index is not None else hero_alts[-1]}" loading="lazy">\n{grow_cap}</div></section>')
     svc_photos = {i: staged[rest[i]] for i in range(min(len(rest), len(plan["services"])))}
     service_items = "".join(
         f'''<li class="svc"{f' data-photo="{svc_photos[i]}"' if i in svc_photos else ""}>
@@ -351,6 +358,7 @@ a{{color:inherit}}
 :focus-visible{{outline:3px solid var(--accent);outline-offset:3px}}
 .draft{{position:fixed;z-index:40;right:16px;bottom:16px;margin:0;max-width:min(400px,calc(100% - 32px));background:var(--ink);color:var(--canvas);
 font-size:12.5px;line-height:1.35;padding:8px 12px;border-radius:10px;box-shadow:0 8px 24px -12px rgba(0,0,0,.5)}}
+.draft{{max-width:min(300px,calc(100% - 32px))}}
 .draft__short{{display:none}}
 @media (max-width:560px){{.draft{{left:12px;right:12px;bottom:12px;max-width:none;padding:6px 10px;font-size:11.5px;border-radius:8px}}
  .draft__long{{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.draft__short{{display:inline}}}}

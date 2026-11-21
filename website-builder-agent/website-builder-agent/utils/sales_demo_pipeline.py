@@ -261,7 +261,7 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
         with _Step("stock"):
             stock = (fetch_stock or fetch_stock_photos)(
                 topic, Path(work_dir) / "stock",
-                count=2 if sequence else max(3, MIN_OWN_PHOTOS - len(own) + 1))
+                count=max(3, MIN_OWN_PHOTOS - len(own) + 1)) if not sequence else []
         # Own photos stay first; stock only fills the gap.
         photos += [Path(s["path"]) for s in stock]
         credits += stock

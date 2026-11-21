@@ -87,9 +87,11 @@ class IllustratedSequenceTests(unittest.TestCase):
             self.assertIn("Havainnekuva, tekoälyllä luotu", page)
             self.assertIn('<li data-stage="0.250"><span>2</span>Vedeneristys</li>', page)
             self.assertIn('alt="Havainnekuva: Pohja"', page)
-            for name in ("kuva-1-g.webp", "kuva-2-g.webp"):
-                self.assertEqual(page.count(f'src="assets/{name}"'), 1, name)
-            self.assertNotIn("<p>Kylpyhuoneremontit ja vesieristykset.</p>", page)
+            # Stock photos are not mixed with the illustrated world; the finished frame grows.
+            self.assertNotIn('src="assets/kuva-1-g.webp"', page)
+            self.assertIn('class="grow"', page)
+            self.assertIn('<img alt="Havainnekuva: Valmis" loading="lazy" src="assets/vaihe-4-g.webp"/>', page)
+            self.assertIn("<p>Kylpyhuoneremontit ja vesieristykset.</p>", page)
             self.assertIn("<p>Osaavaa kosteusmittausta kokemuksella.</p>", page)
 
 
