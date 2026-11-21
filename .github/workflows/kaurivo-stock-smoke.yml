@@ -34,3 +34,19 @@ jobs:
                   if name == "pixabay" and not got:
                       raise SystemExit("Pixabay returned no usable photo")
           PY
+      - name: Openverse raw probe
+        run: |
+          python - <<'PY'
+          import requests
+          for ua in (None, "Kaurivo/1.0 (+https://github.com/K4K33/website-builder-agent)"):
+              for params in ({"q": "modern bathroom interior tiles", "license": "cc0,pdm,by", "aspect_ratio": "wide", "size": "large", "mature": "false", "page_size": 20},
+                             {"q": "bathroom tiles", "license": "cc0,pdm,by", "page_size": 20}):
+                  r = requests.get("https://api.openverse.org/v1/images/", params=params, timeout=20,
+                                   headers={"User-Agent": ua} if ua else {})
+                  print("ua", bool(ua), "status", r.status_code, r.headers.get("content-type"))
+                  try:
+                      j = r.json(); res = j.get("results") or []
+                      print(" count", j.get("result_count"), [(x.get("license"), x.get("width"), x.get("height"), (x.get("url") or "")[:50]) for x in res[:6]])
+                  except Exception as e:
+                      print(" body", r.text[:200])
+          PY
