@@ -1,0 +1,36 @@
+name: Kaurivo stock smoke
+# Verifies the free stock providers (Pixabay key secret, Openverse) without printing secrets or keeping images.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q requests pillow
+      - name: Pixabay only, then Openverse only
+        env:
+          KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os, tempfile
+          from pathlib import Path
+          import utils.stock_media as s
+          print("pixabay key format ok:", bool(s.pixabay_key()))
+          for name, chain in (("pixabay", (s._pixabay,)), ("openverse", (s._openverse,))):
+              s.PROVIDERS = chain
+              with tempfile.TemporaryDirectory() as tmp:
+                  got = s.fetch_stock_photos("kylpyhuoneremontti laatoitus", Path(tmp), count=2)
+                  print(name, len(got), [(g["provider"], g["licence"], Path(g["path"]).stat().st_size) for g in got])
+                  if name == "pixabay" and not got:
+                      raise SystemExit("Pixabay returned no usable photo")
+          PY
