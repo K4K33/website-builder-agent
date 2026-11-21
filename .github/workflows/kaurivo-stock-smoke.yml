@@ -2,69 +2,35 @@ name: Kaurivo stock smoke
 # Verifies the free stock providers (Pixabay key secret, Openverse) without printing secrets or keeping images.
 on:
   workflow_dispatch:
-    inputs:
-      recipient:
-        description: "Base64 PEM public key for encrypted image output (probe branches only)"
-        required: false
-        default: ""
-        type: string
 permissions:
   contents: read
 jobs:
-  probe:
+  smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      ACCOUNT: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
-      TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
-      FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
-      RECIPIENT: ${{ inputs.recipient }}
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - run: pip install -q requests pillow
-      - name: Image generation probe
+      - name: Pixabay only, then Openverse only
+        env:
+          KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
         run: |
-          test "$FREE_CONFIRMED" = "1"
-          mkdir -p out
           python - <<'PY'
-          import base64, json, os, requests
-          acc, tok = os.environ["ACCOUNT"], os.environ["TOKEN"]
-          tpl = ("Realistic architectural photograph, eye-level straight-on wide shot of a small Nordic apartment bathroom. "
-                 "The back wall faces the camera. Left side: shower corner. Right side: toilet position. Round ceiling light. "
-                 "24mm lens, soft daylight, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.")
-          stages = {
-            "a": ("bare grey concrete walls and floor, renovation site, dust", "none installed, only capped water pipes sticking out of the walls"),
-            "b": ("all walls and floor coated with smooth light blue waterproofing membrane, white reinforcement tape in the corners", "none installed, only capped water pipes sticking out of the walls"),
-            "c": ("large light grey tiles installed on the lower half of the walls and the floor, light blue waterproofing membrane still visible above, tile adhesive bucket and trowel on the floor", "none installed yet, capped pipes"),
-            "d": ("large light grey matte tiles on all walls and the floor", "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures"),
-          }
-          stages = {k: tpl.format(s=s, f=f) for k, (s, f) in stages.items()}
-          models = {
-            "s4242": ("@cf/leonardo/lucid-origin", lambda p: {"prompt": p, "seed": 4242, "width": 1536, "height": 864, "guidance": 4.5, "num_steps": 30}),
-            "s9001": ("@cf/leonardo/lucid-origin", lambda p: {"prompt": p, "seed": 9001, "width": 1536, "height": 864, "guidance": 4.5, "num_steps": 30}),
-          }
-          for name, (model, body) in models.items():
-              for key, text in stages.items():
-                  r = requests.post(f"https://api.cloudflare.com/client/v4/accounts/{acc}/ai/run/{model}",
-                                    headers={"Authorization": "Bearer " + tok}, json=body(text), timeout=180)
-                  ok = r.status_code == 200
-                  print("GEN", name, key, r.status_code, r.headers.get("content-type"))
-                  if not ok:
-                      try: print("  err", json.dumps(r.json().get("errors"))[:300])
-                      except Exception: print("  body", r.text[:200])
-                      continue
-                  j = r.json(); img = (j.get("result") or {}).get("image") or j.get("image")
-                  if img:
-                      open(f"out/{name}-{key}.jpg", "wb").write(base64.b64decode(img))
+          import os, tempfile
+          from pathlib import Path
+          import utils.stock_media as s
+          print("pixabay key format ok:", bool(s.pixabay_key()))
+          for name, chain in (("pixabay", (s._pixabay,)), ("openverse", (s._openverse,))):
+              s.PROVIDERS = chain
+              with tempfile.TemporaryDirectory() as tmp:
+                  got = s.fetch_stock_photos("kylpyhuoneremontti laatoitus", Path(tmp), count=2)
+                  print(name, len(got), [(g["provider"], g["licence"], Path(g["path"]).stat().st_size) for g in got])
+                  if not got:
+                      raise SystemExit(name + " returned no usable photo")
           PY
-          ls -la out
-      - name: Encrypt for the recipient
-        if: always()
-        run: |
-          [ -n "$RECIPIENT" ] || exit 0
-          echo "$RECIPIENT" | base64 -d > /tmp/pub.pem
-          tar -C out -czf /tmp/s.tgz .
-          openssl rand -hex 32 > /tmp/k
-          openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/s.tgz -out /tmp/s.enc -pass file:/tmp/k
-          openssl pkeyutl -encrypt -pubin -inkey /tmp/pub.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out /tmp/k.enc
-          echo "KEY:$(base64 -w0 /tmp/k.enc)"
-          base64 -w 4000 /tmp/s.enc | sed 's/^/DAT:/'

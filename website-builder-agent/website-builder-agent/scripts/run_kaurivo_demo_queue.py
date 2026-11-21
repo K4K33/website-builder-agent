@@ -846,7 +846,10 @@ def snapshot_for_preview(src, dest, marker, min_pages=2):
                 'Kaurivon itsenäinen suunnitteludemo – ei yrityksen virallinen sivu. '
                 'Ei vielä hyväksytty asiakastoimitus.</aside>'
             )
-            html=re.sub(r"</body\s*>",disclaimer+"</body>",html,count=1,flags=re.I)
+            # A sales demo already carries its own fixed draft note and footer
+            # disclaimer; a third notice only covers content.
+            if not re.search(r'<p class="draft" role="note">',html):
+                html=re.sub(r"</body\s*>",disclaimer+"</body>",html,count=1,flags=re.I)
             target.write_text(html,encoding="utf-8")
             count_html+=1
         else:
@@ -1307,13 +1310,14 @@ def run_sales_demo(source,company_name,agent_slug,marker):
         raise HoldError("sales_demo_build_failed",step+":"+type(exc).__name__+hint) from None
     finally:
         shutil.rmtree(work,ignore_errors=True)
-    print("Kaurivo sales demo:","own_photos=%s stock=%s services=%s proof_groups=%s dropped=%s"%(
-        summary["own_photos"],summary["stock_photos"],summary["services"],
+    print("Kaurivo sales demo:","own_photos=%s sequence=%s stock=%s services=%s proof_groups=%s dropped=%s"%(
+        summary["own_photos"],summary.get("sequence_frames",0),summary["stock_photos"],summary["services"],
         summary["proof_groups"],len(summary["dropped"])))
     update("publishing","Myyntidemo: julkaistaan ja tarkistetaan sisäinen esikatselu")
     url,sha,routes=publish(site,working_job["id"],agent_slug,marker,["index.html"],sales=True)
     verify_public(url,marker,routes)
     note=("Myyntidemo (1 sivu) tarkistettu selaimessa. "+
+          ("Tekoälyllä luotu rakentumissarja, merkitty. " if summary.get("sequence_frames") else "")+
           ("Kuvapankin havainnekuvia %d, merkitty. "%summary["stock_photos"] if summary["stock_photos"] else "")+
           "Ei asiakkaalle hyväksytty.")
     update("internal_preview",note,preview_url=url,qa_url=RUN_URL,release_sha=sha)
