@@ -116,7 +116,10 @@ def _font_face(name: str, file: str) -> str:
 
 
 def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir: Path,
-                      logo: Path | None = None) -> Path:
+                      logo: Path | None = None, credits: list | None = None) -> Path:
+    """credits[i] is None for the company's own photo, or a stock credit
+    {"photographer", "source_url", "licence"}: such photos are shown as
+    labelled illustrations, never as the company's work."""
     """Write index.html and assets for one prospect; returns the page path."""
     from utils.award_playbook import derive_photo_palette
     from utils.scroll_scrub import enhance_scroll_scrub
@@ -148,12 +151,21 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     if not palette:
         raise ValueError("photo palette unavailable")
     captions = plan["photo_captions"] + [""] * len(staged)
+    credits = list(credits or []) + [None] * len(staged)
+    stock = [bool(credits[i]) for i in range(len(staged))]
+    for i, credit in enumerate(credits[:len(staged)]):
+        if credit:  # an illustration caption replaces any project-like caption
+            who = str(credit.get("photographer") or "").strip()
+            captions[i] = "Havainnekuva" + (f", kuva: {who} / Pexels" if who else ", Pexels")
 
     name = _e(company.get("name"))
     phone = str(company.get("phone") or "").strip()
     tel, mail = _tel(phone), _mail(company.get("email"))
     hero_photos = staged[:3]
     alt = lambda i: _e(captions[i] or f"{company.get('name')}: työkuva {i + 1}")
+    stock_note = (" Kuvat ovat kuvapankin havainnekuvia, eivät yrityksen omia kohteita."
+                  if any(stock) else "")
+    hero_badge = (f'<p class="hero__credit">{_e(captions[0])}</p>' if stock[0] else "")
 
     chapters = "".join(
         f'<p data-at="{at}">{_e(text)}</p>'
@@ -167,6 +179,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     {chapters}
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
   </div>
+  {hero_badge}
 </section>'''
 
     service_items = "".join(
@@ -218,7 +231,7 @@ padding:14px var(--gutter);background:linear-gradient(180deg,color-mix(in srgb,v
 .nav__call{{flex:none;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:650;padding:10px 18px;border-radius:999px;white-space:nowrap}}
 h1,h2,h3{{font-family:"Display",serif;{display_css};margin:0;text-wrap:balance}}
 h1{{font-size:clamp(46px,8.2vw,132px);line-height:.92}}
-.hero{{background:var(--surface)}}
+.hero{{position:relative;background:var(--surface)}}
 .hero [data-kaurivo-scrub-poster]{{width:100%;max-height:72svh;object-fit:cover}}
 .hero [data-kaurivo-scrub-frame]{{display:none}}
 .hero [data-kaurivo-scrub-copy]{{padding:clamp(24px,5vh,56px) var(--gutter)}}
@@ -249,6 +262,8 @@ padding:clamp(18px,3vh,30px) 0;border-bottom:1px solid color-mix(in srgb,var(--i
 .grow{{position:relative;height:220vh}}
 .grow__stage{{position:sticky;top:0;height:100svh;display:grid;place-items:center;overflow:hidden}}
 .grow__stage img{{width:100%;height:100%;object-fit:cover;clip-path:inset(var(--inset,14%) var(--inset-x,20%) round 22px)}}
+.hero__credit{{position:absolute;z-index:3;top:76px;right:var(--gutter);margin:0;font-size:12px;color:#fff;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}}
+.hero > .hero__credit, [data-scrub-stage] > .hero__credit{{position:absolute}}
 .grow__cap{{position:absolute;left:var(--gutter);bottom:clamp(24px,6vh,60px);background:var(--canvas);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px}}
 .contact{{background:var(--band);color:var(--band-ink);padding:clamp(96px,16vh,180px) var(--gutter) clamp(48px,8vh,80px)}}
 .contact p{{max-width:38ch;font-size:clamp(18px,1rem + .5vw,24px);margin:0 0 24px}}
@@ -262,7 +277,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 </style>
 </head>
 <body>
-<p class="draft" role="note">Kaurivon luonnos yritykselle {name}. Ei yrityksen virallinen verkkosivu.</p>
+<p class="draft" role="note">Kaurivon luonnos yritykselle {name}. Ei yrityksen virallinen verkkosivu.{stock_note}</p>
 <header class="nav">
   {f'<a class="nav__brand chip" href="#otsikko"><img class="nav__logo" src="{logo_rel}" alt="{name}" width="{round(20 * logo_ratio)}" height="20"></a>' if logo_rel else f'<a class="nav__name" href="#otsikko">{name}</a>'}
   {f'<a class="nav__call" href="{tel}">Soita<span class="long"> {_e(phone)}</span></a>' if tel else ""}
