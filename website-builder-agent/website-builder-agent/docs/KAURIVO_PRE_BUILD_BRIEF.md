@@ -68,3 +68,13 @@ a CPU; no API, account or cost. Failure of either keeps the fallback.
 
 Not yet automated: video intake (only images are staged today) and full
 360-degree models; the relief turns convincingly up to roughly 25 degrees.
+
+## Sales demos: stock illustrations, own photos later
+
+A sales demo for a prospect with fewer than four own photos may use licensed
+stock photos (`utils/stock_media.py`, Pexels API with the free
+`KAURIVO_PEXELS_API_KEY` secret). Every stock image is captioned
+"Havainnekuva, kuva: <photographer> / Pexels", the draft note states that the
+images are illustrations and not the company's projects, and no project-like
+caption is kept. The final customer site uses the company's own photos and
+before/after pairs, requested once the company is interested.
