@@ -25,7 +25,7 @@ void main(){
  vec2 s0=par(d0,u0,cover(touch.xy,c0),dolly0);
  vec3 col=texture2D(i0,s0).rgb;
  if(bp>0.){float dn0=texture2D(d0,s0).r;float ln=texture2D(e0,s0).r*smoothstep(dn0-.15,dn0,draw*1.2);
-  vec3 sketch=mix(vec3(.93,.94,.92),vec3(.11,.19,.31),ln);
+  vec3 sketch=mix(vec3(.06,.12,.23),vec3(.86,.91,.98),ln);
   float above=smoothstep(reveal-.12,reveal,v.y*.75+(1.-dn0)*.25);
   col=mix(col,sketch,above*bp);}
  if(mixv>0.){vec2 s1=par(d1,u1,cover(touch.xy,c1),dolly1);
