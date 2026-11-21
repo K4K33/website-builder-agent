@@ -28,23 +28,24 @@ jobs:
           python - <<'PY'
           import base64, json, os, requests
           acc, tok = os.environ["ACCOUNT"], os.environ["TOKEN"]
-          scene = ("Realistic architectural photograph, eye-level straight-on wide shot of a small Nordic apartment "
-                   "bathroom, back wall facing camera, shower corner on the left, toilet on the right, ceiling light, "
-                   "24mm lens, soft daylight, high detail, no people, no text. ")
+          tpl = ("Realistic architectural photograph, eye-level straight-on wide shot of a small Nordic apartment bathroom. "
+                 "The back wall faces the camera. Left side: shower corner. Right side: toilet position. Round ceiling light. "
+                 "24mm lens, soft daylight, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.")
           stages = {
-            "a": "Renovation stage: bare grey concrete walls and floor, exposed copper pipes, dust, empty room.",
-            "b": "Renovation stage: walls and floor painted with blue liquid waterproofing membrane, reinforcement tape in corners, no tiles yet.",
-            "c": "Renovation stage: light grey large tiles half installed on the back wall, tile spacers, trowel and adhesive bucket on the floor.",
-            "d": "Finished renovated bathroom: large light grey matte tiles, walk-in glass shower, wall-hung toilet, black fixtures, warm light.",
+            "a": ("bare grey concrete walls and floor, renovation site, dust", "none installed, only capped water pipes sticking out of the walls"),
+            "b": ("all walls and floor coated with smooth light blue waterproofing membrane, white reinforcement tape in the corners", "none installed, only capped water pipes sticking out of the walls"),
+            "c": ("large light grey tiles installed on the lower half of the walls and the floor, light blue waterproofing membrane still visible above, tile adhesive bucket and trowel on the floor", "none installed yet, capped pipes"),
+            "d": ("large light grey matte tiles on all walls and the floor", "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures"),
           }
+          stages = {k: tpl.format(s=s, f=f) for k, (s, f) in stages.items()}
           models = {
-            "flux": ("@cf/black-forest-labs/flux-1-schnell", lambda p: {"prompt": p, "steps": 8, "seed": 4242}),
-            "lucid": ("@cf/leonardo/lucid-origin", lambda p: {"prompt": p, "seed": 4242, "width": 1536, "height": 864, "guidance": 4.5, "num_steps": 30}),
+            "s4242": ("@cf/leonardo/lucid-origin", lambda p: {"prompt": p, "seed": 4242, "width": 1536, "height": 864, "guidance": 4.5, "num_steps": 30}),
+            "s9001": ("@cf/leonardo/lucid-origin", lambda p: {"prompt": p, "seed": 9001, "width": 1536, "height": 864, "guidance": 4.5, "num_steps": 30}),
           }
           for name, (model, body) in models.items():
               for key, text in stages.items():
                   r = requests.post(f"https://api.cloudflare.com/client/v4/accounts/{acc}/ai/run/{model}",
-                                    headers={"Authorization": "Bearer " + tok}, json=body(scene + text), timeout=180)
+                                    headers={"Authorization": "Bearer " + tok}, json=body(text), timeout=180)
                   ok = r.status_code == 200
                   print("GEN", name, key, r.status_code, r.headers.get("content-type"))
                   if not ok:
