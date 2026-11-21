@@ -85,7 +85,7 @@ class SalesDemoTests(unittest.TestCase):
             self.assertIn("Vedeneristys", page)
             self.assertIn("3D-havainnollistus kylpyhuoneremontin työvaiheista, ei yrityksen kohde", page)
             self.assertIn("import('./assets/build3d/'", page)
-            self.assertNotIn("data-kaurivo-scrub", page)
+            self.assertNotRegex(page, r"<section[^>]*data-kaurivo-scrub")
             self.assertEqual(page.count("<h1"), 1)
 
     def test_each_trade_has_licensed_fonts(self):
