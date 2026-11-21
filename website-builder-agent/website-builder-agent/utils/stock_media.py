@@ -99,7 +99,7 @@ def _openverse(session, query):
     # last two words (the subject), and filter size and orientation locally.
     short = " ".join(str(query).split()[-2:])
     reply = session.get("https://api.openverse.org/v1/images/", timeout=(5, 20),
-                        params={"q": short, "license": "cc0,pdm,by", "mature": "false", "page_size": 40})
+                        params={"q": short, "license": "cc0,pdm,by", "mature": "false", "page_size": 20})
     if reply.status_code != 200:
         return
     for r in reply.json().get("results") or []:
