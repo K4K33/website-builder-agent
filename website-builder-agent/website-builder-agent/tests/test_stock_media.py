@@ -34,6 +34,11 @@ class StockMediaTests(unittest.TestCase):
         self.assertTrue(stock._relevant({"text": "bathroom, tiling, renovation"}, "bathroom tile installation"))
         self.assertTrue(stock._relevant({"text": "Modern bathroom with grey tiles"}, "modern bathroom interior tiles"))
 
+    def test_textures_are_not_heroes(self):
+        base = {"width": 3000, "height": 2000}
+        self.assertFalse(stock._usable({**base, "text": "tiles, background, green, wallpaper"}))
+        self.assertTrue(stock._usable({**base, "text": "bathroom, interior, bathtub"}))
+
     def test_no_key_means_no_request(self):
         session = MagicMock()
         with patch.dict(os.environ, {"KAURIVO_PEXELS_API_KEY": "", "KAURIVO_PIXABAY_API_KEY": "",

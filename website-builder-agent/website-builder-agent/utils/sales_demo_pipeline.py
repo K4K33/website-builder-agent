@@ -194,6 +194,28 @@ def ask_plan(company_name: str, source: dict, photo_count: int, *, ask=None) -> 
     return plan
 
 
+def display_name(registry_name: str, source_text: str) -> str:
+    """The company's name as written on its own site, else a readable casing
+    of the registry form (PRH stores many names in capitals)."""
+    name = " ".join(str(registry_name or "").split())
+    match = re.search(re.escape(name), source_text or "", re.I)
+    if match and not match.group(0).isupper():
+        return match.group(0)
+    if not name.isupper():
+        return name
+    small = {"ja", "och", "and", "&"}
+    fixed = {"OY": "Oy", "AB": "Ab", "OYJ": "Oyj", "KY": "Ky", "TMI": "Tmi", "AY": "Ay", "RY": "ry"}
+    words = []
+    for i, word in enumerate(name.split()):
+        if word in fixed:
+            words.append(fixed[word])
+        elif i and word.lower() in small:
+            words.append(word.lower())
+        else:
+            words.append(word[:1] + word[1:].lower())
+    return " ".join(words)
+
+
 class _Step:
     """Tag any failure with the pipeline step (no content in the tag)."""
     def __init__(self, name):
@@ -240,7 +262,8 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
         raise SalesDemoBlocked("sales_no_photos", "Ei omia eikä kuvapankkikuvia aiheeseen")
     with _Step("render"):
         validate_plan(plan, photos)
-        company = {"name": company_name, "phone": source["phone"], "email": source["email"]}
+        company = {"name": display_name(company_name, source["text"]), "phone": source["phone"],
+                   "email": source["email"]}
         page = render_sales_demo(company=company, plan=plan, photos=photos, out_dir=Path(out_dir),
                                  credits=credits)
     return {"page": str(page), "own_photos": len(own), "stock_photos": sum(1 for c in credits if c),

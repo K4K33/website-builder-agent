@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 from PIL import Image, ImageDraw
 
 from utils.sales_demo_pipeline import (SalesDemoBlocked, build_sales_demo, collect_source,
-                                       supported, verify_plan)
+                                       display_name, supported, verify_plan)
 
 SOURCE = """Osaavaa remontointia. Toteutamme kokemuksella ja ammattitaidolla tarpeidesi mukaiset
 kylpyhuone- ja huoneistoremontit Uudenmaan seudulla. Kylpyhuoneremontit ja vesieristykset.
@@ -74,6 +74,13 @@ class SalesDemoPipelineTests(unittest.TestCase):
         self.assertTrue(supported("As Oy Kylätie 8, 15 kph", SOURCE, share=1.0))
         self.assertFalse(supported("As Oy Kylätie 8, 16 kph", SOURCE, share=1.0))
         self.assertFalse(supported("Yli 30 vuoden kokemus", SOURCE))
+
+    def test_display_name_prefers_the_sites_own_casing(self):
+        self.assertEqual(display_name("HANNUN SANEERAUS JA LAATOITUSTYÖ OY",
+                                      "Hannun saneeraus ja laatoitustyö Oy - Osaavaa remontointia"),
+                         "Hannun saneeraus ja laatoitustyö Oy")
+        self.assertEqual(display_name("MAALAUS VALO OY", "ei mainintaa"), "Maalaus Valo Oy")
+        self.assertEqual(display_name("Pitskun Rakennus Oy", ""), "Pitskun Rakennus Oy")
 
     def test_unverified_fields_are_dropped_and_headline_is_required(self):
         plan, dropped = verify_plan(PLAN, SOURCE)
