@@ -8,6 +8,10 @@ on:
         description: "Trade words, e.g. kylpyhuoneremontti laatoitus"
         required: true
         type: string
+      recipient:
+        description: "Base64 PEM public key; photos are encrypted to it and printed, never stored in plain form"
+        required: true
+        type: string
       count:
         description: "Photos (max 8)"
         required: false
@@ -44,8 +48,22 @@ jobs:
           if not got:
               raise SystemExit("no photos")
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: stock
-          path: website-builder-agent/website-builder-agent/stock-out
-          retention-days: 1
+      - name: Encrypt for the recipient
+        env:
+          RECIPIENT: ${{ inputs.recipient }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path("stock-out").glob("*.jpg"):
+              im = Image.open(p).convert("RGB"); im.thumbnail((1800, 1800)); im.save(p.with_suffix(".webp"), "WEBP", quality=82); p.unlink()
+          PY
+          sed -i 's/\.jpg"/.webp"/g' stock-out/credits.json
+          echo "$RECIPIENT" | base64 -d > /tmp/pub.pem
+          tar -C stock-out -czf /tmp/s.tgz .
+          openssl rand -hex 32 > /tmp/k
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/s.tgz -out /tmp/s.enc -pass file:/tmp/k
+          openssl pkeyutl -encrypt -pubin -inkey /tmp/pub.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out /tmp/k.enc
+          echo "KEY:$(base64 -w0 /tmp/k.enc)"
+          base64 -w 4000 /tmp/s.enc | sed 's/^/DAT:/'
+          rm -f /tmp/k /tmp/s.tgz
