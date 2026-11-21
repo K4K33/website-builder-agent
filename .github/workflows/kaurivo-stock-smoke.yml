@@ -39,8 +39,11 @@ jobs:
         run: |
           python - <<'PY'
           import requests, utils.stock_media as s
+          class S:
+              def get(self, *a, **k):
+                  r = requests.get(*a, **k); print("  GET", k.get("params", {}).get("q"), r.status_code, r.text[:160].replace("\n", " ")); return r
           for q in s.queries_for("kylpyhuoneremontti"):
-              c = list(s._openverse(requests, q))
+              c = list(s._openverse(S(), q))
               print(q, len(c))
               for p in c[:8]:
                   ok = s._allowed_url(p)
