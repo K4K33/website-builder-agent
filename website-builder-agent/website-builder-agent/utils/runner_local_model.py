@@ -27,6 +27,7 @@ OLLAMA_VERSION = "v0.9.0"
 _RELEASE = "https://github.com/ollama/ollama/releases/download/{v}/ollama-linux-amd64.tgz"
 _API = "http://127.0.0.1:11434"
 _MODEL = re.compile(r"[a-z0-9][a-z0-9._-]{0,40}(?::[a-z0-9._-]{1,30})?")
+LAST_ERROR = ""
 QUOTA_HINTS = ("429", "rate limit", "rate_limit", "quota", "capacity", "free_ai", "free_model_unavailable",
                "resource_exhausted", "daily")
 
@@ -66,10 +67,12 @@ def _install(home: Path) -> Path:
     # CPU runner: skip the GPU libraries (most of the archive's size on disk).
     script = ("set -o pipefail; curl -fsSL --retry 3 '" + _RELEASE.format(v=OLLAMA_VERSION) +
               "' | tar -xz -C '" + str(home) + "' --exclude='lib/ollama/cuda*' --exclude='lib/ollama/rocm*'")
-    subprocess.run(["bash", "-c", script], check=True, timeout=900,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    if not binary.is_file():
-        raise RuntimeError("local_model_install_failed")
+    done = subprocess.run(["bash", "-c", script], timeout=900, stdout=subprocess.DEVNULL,
+                          stderr=subprocess.PIPE, text=True)
+    if done.returncode or not binary.is_file():
+        found = sorted(str(x.relative_to(home)) for x in home.glob("*/*"))[:6]
+        raise RuntimeError("local_model_install_failed rc=%s %s found=%s" % (
+            done.returncode, done.stderr.strip()[-200:], found))
     return binary
 
 
@@ -90,14 +93,22 @@ def ensure() -> str:
             while not _up() and time.monotonic() < deadline:
                 time.sleep(1)
             if not _up():
+                _note("ollama serve did not start")
                 return ""
         reply = requests.post(_API + "/api/pull", json={"model": name, "stream": False},
                               timeout=1200, allow_redirects=False)
         if reply.status_code != 200 or (reply.json() or {}).get("status") != "success":
+            _note("pull HTTP %s %s" % (reply.status_code, reply.text[:160]))
             return ""
         return name
-    except (OSError, subprocess.SubprocessError, requests.RequestException, ValueError, RuntimeError):
+    except (OSError, subprocess.SubprocessError, requests.RequestException, ValueError, RuntimeError) as exc:
+        _note(type(exc).__name__ + " " + str(exc)[:300])
         return ""
+
+
+def _note(text: str) -> None:
+    global LAST_ERROR
+    LAST_ERROR = text
 
 
 def parse_json(text: str):

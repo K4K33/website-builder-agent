@@ -26,6 +26,7 @@ def main() -> int:
     model = local.ensure()
     print("local model ready:", bool(model), model, "%.0fs" % (time.monotonic() - started))
     if not model:
+        print("local model error:", local.LAST_ERROR)
         return 1
     prompt = ("Company: Testimaalaus Esimerkki Oy\nPhotos provided: 0\n"
               "Verified source text (the ONLY allowed facts):\n<<<\n" + SOURCE + "\n>>>")
