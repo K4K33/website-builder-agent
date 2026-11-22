@@ -118,10 +118,31 @@ def make_film(trade: str, root: Path, out: Path, *, limit: int = 0) -> dict | No
     for index, (label, prompt) in enumerate(script):
         clip = animate_pair(keys[index], keys[index + 1], prompt, out / f"clip-{index + 1}.mp4")
         if clip is None:
-            return {"error": animate_pair.errors, "done": len(clips)}
+            return {"error": getattr(animate_pair, "errors", []), "done": len(clips)}
         clips.append(clip)
     film = join_clips(clips, out / f"{trade}.mp4")
     meta = {"trade": trade, "labels": [label for label, _ in script], "clips": len(clips),
             "note": "Havainnevideo, tekoälyllä luotu"}
     (out / "film.json").write_text(json.dumps(meta, ensure_ascii=False))
     return {"film": str(film), **meta}
+
+
+ASSETS = Path(__file__).resolve().parents[1] / "assets" / "sales_demo" / "film"
+TRADES = {"kylpyhuone": r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila"}
+
+
+def film_for(text: str, root: Path | None = None) -> dict | None:
+    """A finished, reviewed film for the trade (frames/ + film.json), or None."""
+    import re
+    text = str(text or "").casefold()
+    for trade, pattern in TRADES.items():
+        if not re.search(pattern, text):
+            continue
+        folder = Path(root or ASSETS) / trade
+        frames = sorted((folder / "frames").glob("f*.webp"))
+        meta = folder / "film.json"
+        if len(frames) >= 24 and meta.is_file():
+            data = json.loads(meta.read_text(encoding="utf-8"))
+            return {"frames": frames, "labels": list(data.get("labels") or []),
+                    "note": data.get("note") or "Havainnevideo, tekoälyllä luotu", "trade": trade}
+    return None

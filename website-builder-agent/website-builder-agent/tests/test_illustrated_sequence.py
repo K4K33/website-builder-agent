@@ -31,7 +31,7 @@ class Reply:
 
 class IllustratedSequenceTests(unittest.TestCase):
     def test_trade_templates(self):
-        self.assertEqual(template_for("Kylpyhuoneremontit ja vesieristykset")[2][1][0], "Vedeneristys")
+        self.assertEqual(template_for("Kylpyhuoneremontit ja vesieristykset")[2][2][0], "Vedeneristys")
         self.assertEqual(template_for("Maalaus ja tasoitustyöt")[2][0][0], "Pohjatyöt")
         self.assertIsNone(template_for("Kampaamo"))
 
@@ -43,7 +43,8 @@ class IllustratedSequenceTests(unittest.TestCase):
             return Reply(200, {"result": {"image": image_b64((40 * len(calls), 90, 120))}})
         with TemporaryDirectory() as tmp, patch.dict(os.environ, ENV):
             got = generate_sequence("kylpyhuoneremontti", Path(tmp), post=post)
-            self.assertEqual(got["labels"], ["Pohja", "Vedeneristys", "Laatoitus", "Valmis"])
+            # The old bathroom first, so the build film can show the demolition.
+            self.assertEqual(got["labels"], ["Lähtötilanne", "Pohja", "Vedeneristys", "Laatoitus", "Valmis"])
             self.assertEqual(len({c["seed"][1] for c in calls}), 1)
             # Finished room first from text, earlier stages are edits of it.
             self.assertNotIn("input_image_0", calls[0])
@@ -51,7 +52,7 @@ class IllustratedSequenceTests(unittest.TestCase):
             self.assertIn("Edit this exact photo", calls[1]["prompt"][1])
             self.assertTrue(all(p.is_file() for p in got["paths"]))
             self.assertIn("tekoälyllä luotu", got["note"])
-            self.assertEqual(got["transitions"], ["depth", "coat", "tiles", "depth"])
+            self.assertEqual(got["transitions"], ["depth", "depth", "coat", "tiles", "depth"])
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED": "0"}):
             self.assertIsNone(generate_sequence("kylpyhuoneremontti", Path(tmp), post=post))
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_ILLUSTRATED_SEQUENCE": "0"}):

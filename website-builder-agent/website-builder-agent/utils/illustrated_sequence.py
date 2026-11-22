@@ -36,7 +36,7 @@ LAST_ERROR = ""
 # One template per trade: (pattern, seed, scene, [(label, surfaces, fixtures)], note).
 # How each stage appears on scroll (coat = roller strokes, tiles = row by row,
 # rise = bottom up, depth = objects front to back); the first stage has none.
-MOVES = {"kylpyhuone": ("depth", "coat", "tiles", "depth"),
+MOVES = {"kylpyhuone": ("depth", "depth", "coat", "tiles", "depth"),
          "maalaus": ("depth", "coat", "coat", "depth"),
          "talo": ("depth", "rise", "rise", "depth")}
 TEMPLATES = (
@@ -44,7 +44,9 @@ TEMPLATES = (
      "Realistic architectural photograph, eye-level straight-on wide shot of a small Nordic apartment bathroom. "
      "The back wall faces the camera. Left side: shower corner. Right side: toilet position. Round ceiling light. "
      "24mm lens, soft daylight, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.",
-     (("Pohja", "bare grey concrete walls and floor, renovation site, dust",
+     (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
+       "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
+      ("Pohja", "bare grey concrete walls and floor, renovation site, dust",
        "nothing installed, empty room, only capped water pipes and a capped floor drain"),
       ("Vedeneristys", "all walls and floor coated with smooth light blue waterproofing membrane, "
                        "white reinforcement tape in the corners", "nothing installed, empty room, capped pipes"),
