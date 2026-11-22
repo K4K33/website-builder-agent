@@ -50,13 +50,15 @@ TEMPLATES = (
      "Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
-      ("Pohja", "bare grey concrete walls and floor, renovation site, dust",
-       "nothing installed, empty room, only capped water pipes and a capped floor drain"),
+      ("Pohja", "bare grey concrete walls and floor",
+       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps, no sink; completely empty room, "
+       "only a capped floor drain"),
       ("Vedeneristys", "all walls and floor coated with smooth light blue waterproofing membrane, "
-                       "white reinforcement tape in the corners", "nothing installed, empty room, capped pipes"),
-      ("Laatoitus", "large light grey tiles installed on the lower half of the walls and the floor, light blue "
-                    "waterproofing membrane still visible above, tile adhesive bucket and trowel on the floor",
-       "nothing installed yet, empty room"),
+                       "white reinforcement tape in the corners",
+       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps; completely empty room"),
+      ("Laatoitus", "the same large light grey tiles as the finished room on the floor and the lower half of the "
+                    "walls, light blue waterproofing membrane still visible on the upper half",
+       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps; empty room, no tools"),
       ("Valmis", "large light grey matte tiles on all walls and the floor",
        "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures")),
      "Havainnekuva, tekoälyllä luotu: kylpyhuoneremontin vaiheet"),
@@ -203,9 +205,10 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
             return None
         images[len(stages) - 1] = final
         for index, (label, surfaces, fixtures) in enumerate(stages[:-1]):
-            edit = ("Edit this exact photo. Keep the same room, walls, ceiling, window, camera position, lens and "
-                    f"light. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
-                    "Photorealistic, no people, no text.")
+            edit = ("Edit this exact image. Keep exactly the same camera position, framing, scale, lens, light "
+                    "and the same background colour and floor around the room; keep the room's shape and wall "
+                    f"heights. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
+                    "Same rendering style, no people, no text.")
             image = run(edit, final)
             if image is None:
                 return None
