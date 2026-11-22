@@ -31,6 +31,11 @@ WIDTH, HEIGHT = 1536, 864  # multiples of 16, ~5 output tiles
 _URL = "https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{model}"
 
 # One template per trade: (pattern, seed, scene, [(label, surfaces, fixtures)], note).
+# How each stage appears on scroll (coat = roller strokes, tiles = row by row,
+# rise = bottom up, depth = objects front to back); the first stage has none.
+MOVES = {"kylpyhuone": ("depth", "coat", "tiles", "depth"),
+         "maalaus": ("depth", "coat", "coat", "depth"),
+         "talo": ("depth", "rise", "rise", "depth")}
 TEMPLATES = (
     (r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila", 9001,
      "Realistic architectural photograph, eye-level straight-on wide shot of a small Nordic apartment bathroom. "
@@ -142,4 +147,5 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         images[index].save(target, "WEBP", quality=88)
         paths.append(target)
         labels.append(label)
-    return {"paths": paths, "labels": labels, "note": note}
+    kind = "kylpyhuone" if "kylpyhuone" in note else "maalaus" if "maalaus" in note else "talo"
+    return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind])}
