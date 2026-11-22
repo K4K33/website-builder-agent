@@ -207,12 +207,17 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     # the room and the light stay identical. One provider for the whole set.
     base = base_stage(stages)
     _label, base_s, base_f = stages[base]
+    # Negations ("no toilet") make image models draw the toilet: say only what is there.
+    base_f = "completely empty, nothing installed, only a capped floor drain" if "empty" in base_f else base_f
     images = {}
     try:
         # Image models furnish anything called a bathroom/kitchen: describe the empty
         # shell as a bare room so nothing is installed before its stage.
         base_prompt = re.sub(r"\b(apartment )?(bathroom|kitchen|living room)\b", "empty concrete room",
                              scene.format(s=base_s, f=base_f))
+        # ...and drop any furnishing hints (e.g. "right: the place for a toilet").
+        base_prompt = re.sub(r"[^.]*\b(toilet|shower|sink|sofa|bathtub)\b[^.]*\.", "", base_prompt.split("Surfaces:")[0]) \
+            + " Surfaces:" + base_prompt.split("Surfaces:", 1)[1] if "Surfaces:" in base_prompt else base_prompt
         final = run(base_prompt) if use_cf else None
         if final is None and use_gemini:
             run = lambda prompt, reference=None: _gemini_image(prompt, reference, post=post)
