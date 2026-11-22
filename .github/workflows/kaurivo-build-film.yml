@@ -1,0 +1,62 @@
+name: Kaurivo build film
+# Makes one trade's construction film from committed AI keyframes with the
+# open Wan 2.2 first-last-frame model (free Hugging Face ZeroGPU Space). No
+# company data. The film is encrypted to the recipient and printed.
+on:
+  workflow_dispatch:
+    inputs:
+      trade:
+        description: Trade folder under assets/sales_demo/film
+        default: kylpyhuone
+      recipient:
+        description: Base64 PEM public key for the encrypted result
+        required: true
+      limit:
+        description: Number of clips (0 = all)
+        default: "0"
+permissions:
+  contents: read
+jobs:
+  film:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q "gradio_client>=1.3" pillow
+      - name: Animate keyframes
+        env:
+          KAURIVO_HF_TOKEN: ${{ secrets.KAURIVO_HF_TOKEN }}
+          TRADE: ${{ inputs.trade }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          python - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          from utils.build_film import make_film
+          start = time.monotonic()
+          out = Path("film-out")
+          got = make_film(os.environ["TRADE"], Path("assets/sales_demo/film"), out, limit=int(os.environ.get("LIMIT") or 0))
+          print("film:", json.dumps(got)[:1500], "%.0fs" % (time.monotonic() - start))
+          if not got or "film" not in got:
+              clips = sorted(out.glob("clip-*.mp4"))
+              if not clips:
+                  raise SystemExit("no film")
+          PY
+      - name: Encrypt for the recipient
+        env:
+          RECIPIENT: ${{ inputs.recipient }}
+        run: |
+          echo "$RECIPIENT" | base64 -d > /tmp/pub.pem
+          tar -C film-out -czf /tmp/s.tgz .
+          openssl rand -hex 32 > /tmp/k
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/s.tgz -out /tmp/s.enc -pass file:/tmp/k
+          openssl pkeyutl -encrypt -pubin -inkey /tmp/pub.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out /tmp/k.enc
+          echo "KEY:$(base64 -w0 /tmp/k.enc)"
+          base64 -w 4000 /tmp/s.enc | sed 's/^/DAT:/'
+          rm -f /tmp/k /tmp/s.tgz
