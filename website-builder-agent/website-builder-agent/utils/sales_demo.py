@@ -478,11 +478,14 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         grow_photo = f"assets/film/f{len(film['frames']):03d}.webp"
         sequence_note = sequence_note or film["note"]
     grow_html = ""
+    # Python 3.11: no same-quote nesting inside f-strings, so compute the alt first.
+    film_alt = _e(film["note"] + ": valmis lopputulos") if film else ""
+    grow_alt = (alt(grow_index) if grow_index is not None else (film_alt or (hero_alts[-1] if hero_alts else "")))
     if grow_photo:
         cap_text = captions[grow_index] if grow_index is not None else (sequence_note or "Havainnekuva")
         grow_cap = f'<p class="grow__cap">{_e(cap_text)}</p>' if cap_text else ""
         grow_html = (f'<section class="grow" aria-label="Työkuva"><div class="grow__stage">'
-                     f'<img src="{grow_photo}" alt="{alt(grow_index) if grow_index is not None else (_e(film['note'] + ': valmis lopputulos') if film else hero_alts[-1])}" loading="lazy">\n{grow_cap}</div></section>')
+                     f'<img src="{grow_photo}" alt="{grow_alt}" loading="lazy">\n{grow_cap}</div></section>')
     svc_photos = {i: staged[rest[i]] for i in range(min(len(rest), len(plan["services"])))}
     service_items = "".join(
         f'''<li class="svc"{f' data-photo="{i}"' if i in svc_photos else ""}>
