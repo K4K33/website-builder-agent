@@ -95,10 +95,61 @@ def template_for(text: str):
     return None
 
 
+GEMINI_IMAGE_MODELS = ("gemini-2.5-flash-image", "gemini-2.0-flash-preview-image-generation")
+_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+
+def _gemini_image(prompt: str, reference=None, *, post):
+    """Gemini API free tier (no-billing key) image generation/editing; RGB image or None."""
+    global LAST_ERROR
+    from PIL import Image
+    key = os.getenv("KAURIVO_GEMINI_API_KEY", "").strip()
+    parts = [{"text": prompt + " Wide 16:9 landscape image."}]
+    if reference is not None:
+        buffer = BytesIO()
+        reference.save(buffer, "JPEG", quality=92)
+        parts.append({"inline_data": {"mime_type": "image/jpeg",
+                                      "data": base64.b64encode(buffer.getvalue()).decode("ascii")}})
+    for model in GEMINI_IMAGE_MODELS:
+        body = {"contents": [{"parts": parts}],
+                "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}}
+        if model.startswith("gemini-2.5"):
+            body["generationConfig"]["imageConfig"] = {"aspectRatio": "16:9"}
+        reply = post(_GEMINI_URL.format(model=model), timeout=(10, 180), json=body,
+                     headers={"x-goog-api-key": key, "Content-Type": "application/json"})
+        if reply.status_code != 200:
+            try:
+                LAST_ERROR = "gemini %s HTTP %s %s" % (model, reply.status_code,
+                                                      str((reply.json().get("error") or {}).get("message", ""))[:160])
+            except ValueError:
+                LAST_ERROR = "gemini %s HTTP %s" % (model, reply.status_code)
+            continue
+        for candidate in reply.json().get("candidates") or []:
+            for part in (candidate.get("content") or {}).get("parts") or []:
+                data = (part.get("inline_data") or part.get("inlineData") or {}).get("data")
+                if data:
+                    with Image.open(BytesIO(base64.b64decode(data))) as image:
+                        image = image.convert("RGB")
+                    if image.width < image.height:
+                        return None
+                    # Same frame size as the Cloudflare path (cover crop to 16:9).
+                    from PIL import ImageOps
+                    return ImageOps.fit(image, (WIDTH, HEIGHT), Image.LANCZOS)
+        LAST_ERROR = "gemini %s returned no image" % model
+    return None
+
+
 def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | None:
-    """Return {"paths", "labels", "note"} for a 4-stage sequence, or None."""
-    from utils import cloudflare_free_ai
-    if not cloudflare_free_ai.enabled() or os.getenv("KAURIVO_ILLUSTRATED_SEQUENCE", "0") != "1":
+    """Return {"paths", "labels", "note", "transitions"} for a staged sequence, or None.
+
+    Cloudflare Workers Free (FLUX klein) first; when its daily neurons are spent,
+    the Gemini API free tier (no-billing key) makes the whole sequence instead.
+    """
+    from utils import cloudflare_free_ai, gemini_free_ai
+    if os.getenv("KAURIVO_ILLUSTRATED_SEQUENCE", "0") != "1":
+        return None
+    use_cf, use_gemini = cloudflare_free_ai.enabled(), gemini_free_ai.enabled()
+    if not (use_cf or use_gemini):
         return None
     chosen = template_for(topic_text)
     if not chosen:
@@ -140,10 +191,14 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         return image
 
     # 1) the finished room from text; 2) each earlier stage as an edit of it.
+    # One provider for the whole sequence keeps every frame the same room.
     finished_label, finished_s, finished_f = stages[-1]
     images = {}
     try:
-        final = run(scene.format(s=finished_s, f=finished_f))
+        final = run(scene.format(s=finished_s, f=finished_f)) if use_cf else None
+        if final is None and use_gemini:
+            run = lambda prompt, reference=None: _gemini_image(prompt, reference, post=post)
+            final = run(scene.format(s=finished_s, f=finished_f))
         if final is None:
             return None
         images[len(stages) - 1] = final
