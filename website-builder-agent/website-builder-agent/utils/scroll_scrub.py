@@ -271,7 +271,7 @@ def _staged(route: str, src: str, allowed: dict) -> tuple[str, str] | None:
     return (resolved, digest) if digest else None
 
 
-TRANSITIONS = ("depth", "coat", "tiles", "rise")
+TRANSITIONS = ("depth", "coat", "tiles", "rise", "build")
 
 
 def change_mask(before: Path, after: Path, target: Path) -> Path | None:

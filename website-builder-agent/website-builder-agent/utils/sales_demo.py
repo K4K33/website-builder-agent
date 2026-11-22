@@ -359,7 +359,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     # illustrated sequence where the frames really are stages of the same scene.
     stage_moves = [str(t or "depth") for t in (sequence_transitions or [])] if seq_staged else []
     _transition = lambda i: (f' data-scrub-transition="{_e(stage_moves[i])}"'
-                             if i < len(stage_moves) and stage_moves[i] in ("coat", "tiles", "rise") else "")
+                             if i < len(stage_moves) and stage_moves[i] in ("coat", "tiles", "rise", "build") else "")
     labels = [str(x)[:24] for x in (sequence_labels or [])][:len(seq_staged)]
     if seq_staged:
         hero_photos = seq_staged
@@ -401,7 +401,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         if i == 0:
             return 0.0
         move = stage_moves[i] if i < len(stage_moves) else "depth"
-        return ((i - 1) + (.14 if move in ("coat", "tiles", "rise") else .7)) / len(labels)
+        return ((i - 1) + (.14 if move in ("coat", "tiles", "rise", "build") else .7)) / len(labels)
     stage_strip = ("" if not labels else '<ol class="stages" aria-hidden="true">' + "".join(
         f'<li data-stage="{_stage_at(i):.3f}"><span>{i + 1}</span>{_e(t)}</li>'
         for i, t in enumerate(labels)) + "</ol>")
