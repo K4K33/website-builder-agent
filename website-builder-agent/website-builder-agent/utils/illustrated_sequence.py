@@ -44,8 +44,8 @@ MOVES = {"kylpyhuone": ("depth", "depth", "depth", "depth", "depth"),
 TEMPLATES = (
     (r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila", 9001,
      "Photorealistic architectural interior photograph, eye-level view from inside a small Nordic apartment "
-     "bathroom, camera standing inside the room against the entrance wall, looking straight at the back wall, "
-     "perfectly symmetric one-point perspective, the whole room fills the frame, no door frame in view. "
+     "bathroom, camera in the doorway looking straight at the back wall, perfectly symmetric one-point "
+     "perspective, thin white door frame at the edges. "
      "Back wall faces the camera; left: the shower corner area; right: the place for a toilet; round ceiling light. "
      "24mm lens, soft even daylight, calm and clean, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
@@ -234,7 +234,7 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
                     "(the same ceiling light on), and the same background colour and floor around the room; keep the "
                     "room's shape and wall "
                     f"heights. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
-                    "Same rendering style, no people, no text.")
+                    "The same photographic style and colour grade as the input, no people, no text.")
             image = run(edit, final)
             if image is None:
                 return None
