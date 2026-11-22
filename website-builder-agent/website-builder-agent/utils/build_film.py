@@ -59,7 +59,12 @@ def animate_pair(start: Path, end: Path, prompt: str, target: Path, *, client=No
     errors = []
     for space in SPACES:
         try:
-            api = client or Client(space, hf_token=token, verbose=False)
+            api = client
+            if api is None:
+                try:
+                    api = Client(space, token=token, verbose=False)
+                except TypeError:  # older gradio_client
+                    api = Client(space, hf_token=token, verbose=False)
             result = api.predict(handle_file(str(start)), handle_file(str(end)), prompt, NEGATIVE,
                                  seconds, 8, 1.0, 1.0, seed, False, api_name="/generate_video")
             video = result[0] if isinstance(result, (list, tuple)) else result
