@@ -213,7 +213,7 @@ class DemoQueueSourceSafetyTests(unittest.TestCase):
         self.assertIn('contents: write',flow)
         self.assertIn('FREE_ONLY: "1"',flow)
         self.assertIn("google/gemma-4-31b-it:free",flow)
-        self.assertIn("qwen/qwen3.8-27b:free",flow)
+        self.assertIn("nvidia/nemotron-3.5-super-vl:free",flow)
         self.assertIn("google/gemma-4-26b-a4b-it:free",flow)
         self.assertIn("Independent Builder and QA models:",flow)
         self.assertIn('cron: "4-59/5 * * * *"',flow)
