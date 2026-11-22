@@ -43,8 +43,9 @@ MOVES = {"kylpyhuone": ("depth", "depth", "depth", "depth", "depth"),
          "talo": ("depth", "depth", "depth", "depth")}
 TEMPLATES = (
     (r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila", 9001,
-     "Architectural interior visualization, eye-level view from inside a small Nordic apartment bathroom, "
-     "camera in the doorway looking straight at the back wall, perfectly symmetric one-point perspective. "
+     "Photorealistic architectural interior photograph, eye-level view from inside a small Nordic apartment "
+     "bathroom, camera standing inside the room against the entrance wall, looking straight at the back wall, "
+     "perfectly symmetric one-point perspective, the whole room fills the frame, no door frame in view. "
      "Back wall faces the camera; left: the shower corner area; right: the place for a toilet; round ceiling light. "
      "24mm lens, soft even daylight, calm and clean, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
@@ -167,6 +168,7 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     if not chosen:
         return None
     seed, scene, stages, note = chosen
+    seed += int(os.getenv("KAURIVO_SEQUENCE_SEED_OFFSET", "0") or 0)
     if post is None:
         import requests
         post = requests.post
@@ -228,7 +230,8 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         for index, (label, surfaces, fixtures) in enumerate(stages):
             if index == base:
                 continue
-            edit = ("Edit this exact image. Keep exactly the same camera position, framing, scale, lens, light "
+            edit = ("Edit this exact photo. Keep exactly the same camera position, framing, scale, lens, the same "
+                    "ceiling light switched on, the same daylight colour and exposure, photorealistic photo style, "
                     "and the same background colour and floor around the room; keep the room's shape and wall "
                     f"heights. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
                     "Same rendering style, no people, no text.")

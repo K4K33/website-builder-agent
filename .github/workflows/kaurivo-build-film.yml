@@ -57,6 +57,7 @@ jobs:
           LIMIT: ${{ inputs.limit }}
           KEYS: ${{ inputs.keys }}
           KAURIVO_SEQUENCE_PROVIDER: ${{ inputs.provider }}
+          ATTEMPTS: "3"
         run: |
           python - <<'PY'
           import json, os, shutil, time
@@ -67,20 +68,34 @@ jobs:
           keys = root / trade / "keys"
           keys.mkdir(parents=True, exist_ok=True)
           out.mkdir(exist_ok=True)
+          best = None
           if os.environ.get("KEYS", "generate") == "generate":
-              seq = illustrated_sequence.generate_sequence(trade + "remontti", root / "seq")
-              print("keyframes:", bool(seq), illustrated_sequence.LAST_ERROR)
-              if not seq:
+              # Up to 3 attempts (different seeds); keep the best, stop at the first pass.
+              for attempt in range(int(os.environ.get("ATTEMPTS") or 3)):
+                  os.environ["KAURIVO_SEQUENCE_SEED_OFFSET"] = str(attempt * 17)
+                  seq = illustrated_sequence.generate_sequence(trade + "remontti", root / f"seq{attempt}")
+                  print("keyframes attempt", attempt + 1, bool(seq), illustrated_sequence.LAST_ERROR)
+                  if not seq:
+                      break
+                  qa = sequence_qa.check([Path(p) for p in seq["paths"]], seq["labels"])
+                  print("quality gate:", json.dumps(qa, ensure_ascii=False))
+                  if best is None or (qa["ok"], qa["score"]) > (best[1]["ok"], best[1]["score"]):
+                      best = (seq["paths"], qa, attempt)
+                  if qa["ok"]:
+                      break
+              if best is None:
                   raise SystemExit("no keyframes")
-              paths, labels = seq["paths"], seq["labels"]
+              paths, qa = best[0], best[1]
+              for a in range(3):
+                  for p in sorted((root / f"seq{a}").glob("*.webp")):
+                      shutil.copyfile(p, out / f"try{a + 1}-{p.name}")
           else:
               paths = build_film.keyframes(trade, Path("assets/sales_demo/film"))
-              labels = [f"k{i + 1}" for i in range(len(paths))]
+              qa = sequence_qa.check(paths, [f"k{i + 1}" for i in range(len(paths))])
           for i, p in enumerate(paths):
               shutil.copyfile(p, keys / f"k{i + 1}{Path(p).suffix}")
               shutil.copyfile(p, out / f"key-{i + 1}{Path(p).suffix}")
-          qa = sequence_qa.check([Path(p) for p in paths], labels)
-          print("quality gate:", json.dumps(qa, ensure_ascii=False))
+          print("chosen:", json.dumps(qa, ensure_ascii=False))
           (out / "qa.json").write_text(json.dumps(qa, ensure_ascii=False))
           if not qa["ok"]:
               print("Rejected by the quality gate: no film is made from these keyframes.")
