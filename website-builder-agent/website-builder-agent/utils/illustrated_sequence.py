@@ -45,7 +45,7 @@ TEMPLATES = (
     (r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila", 9001,
      "Architectural interior visualization, eye-level view from inside a small Nordic apartment bathroom, "
      "camera in the doorway looking straight at the back wall, perfectly symmetric one-point perspective. "
-     "Back wall faces the camera; left: shower corner; right: wall-hung toilet; round ceiling light. "
+     "Back wall faces the camera; left: the shower corner area; right: the place for a toilet; round ceiling light. "
      "24mm lens, soft even daylight, calm and clean, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
@@ -57,8 +57,9 @@ TEMPLATES = (
       ("Laatoitus", "the same large light grey tiles as the finished room on the floor and the lower half of the "
                     "walls, light blue waterproofing membrane still visible on the upper half",
        "completely empty room: no toilet, no shower, no glass wall, no taps, no tools"),
-      ("Valmis", "large light grey matte tiles on all walls and the floor",
-       "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures")),
+      ("Valmis", "every wall from floor to ceiling and the whole floor fully covered with large light grey matte "
+                 "tiles with thin straight grout lines, warm finished look",
+       "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures, a towel")),
      "Havainnekuva, tekoälyllä luotu: kylpyhuoneremontin vaiheet"),
     (r"maalaus|maalari|tasoitus|tapetointi", 9001,
      "Realistic interior photograph, eye-level straight-on wide shot of a bright Nordic living room wall with a "
@@ -158,6 +159,8 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     if os.getenv("KAURIVO_ILLUSTRATED_SEQUENCE", "0") != "1":
         return None
     use_cf, use_gemini = cloudflare_free_ai.enabled(), gemini_free_ai.enabled()
+    if os.getenv("KAURIVO_SEQUENCE_PROVIDER", "").strip().lower() == "gemini" and use_gemini:
+        use_cf = False
     if not (use_cf or use_gemini):
         return None
     chosen = template_for(topic_text)

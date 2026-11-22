@@ -20,6 +20,9 @@ on:
       keys:
         description: "generate = new keyframes, repo = committed keyframes"
         default: generate
+      provider:
+        description: "Image provider for keyframes: auto (Workers Free first) or gemini"
+        default: auto
 permissions:
   contents: read
 jobs:
@@ -53,6 +56,7 @@ jobs:
           TRADE: ${{ inputs.trade }}
           LIMIT: ${{ inputs.limit }}
           KEYS: ${{ inputs.keys }}
+          KAURIVO_SEQUENCE_PROVIDER: ${{ inputs.provider }}
         run: |
           python - <<'PY'
           import json, os, shutil, time
