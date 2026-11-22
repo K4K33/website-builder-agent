@@ -34,7 +34,7 @@ vec2 stageReveal(float st,float t,vec2 u,float dn){
  float courses=14.;float h=(1.-u.y)+abs(u.x-.5)*.35;float c=floor(h*courses)/courses;
  float q=t*1.42-c;float l=smoothstep(0.,.05,q);
  return vec2(l,smoothstep(.06,0.,abs(q-.03))*.9);}
-vec2 cover(vec2 u,vec2 c){float f=c.x<1.?clamp(fx,c.x*.5,1.-c.x*.5):fx;return vec2((u.x-.5)*c.x+f,(u.y-.5)*c.y+fy);}
+vec2 cover(vec2 u,vec2 c){float f=c.x<.999?clamp(fx,c.x*.5,1.-c.x*.5):c.x>1.001?fx:.5;return vec2((u.x-.5)*c.x+f,(u.y-.5)*c.y+fy);}
 vec2 par(sampler2D dep,vec2 u,vec2 t,float dolly){
  vec2 z=(u-.5)/(1.+dolly*.5*(1.-warp))+.5;vec2 s=z;
  for(int k=0;k<6;k++){float d=texture2D(dep,s).r;
