@@ -23,8 +23,9 @@ import time
 
 import requests
 
-OLLAMA_VERSION = "v0.9.0"
-_RELEASE = "https://github.com/ollama/ollama/releases/download/{v}/ollama-linux-amd64.tgz"
+# The model registry refuses models an old Ollama cannot run, so take the
+# latest official release from Ollama's own GitHub repository.
+_LATEST = "https://api.github.com/repos/ollama/ollama/releases/latest"
 _API = "http://127.0.0.1:11434"
 _MODEL = re.compile(r"[a-z0-9][a-z0-9._-]{0,40}(?::[a-z0-9._-]{1,30})?")
 LAST_ERROR = ""
@@ -64,9 +65,15 @@ def _install(home: Path) -> Path:
     if binary.is_file():
         return binary
     home.mkdir(parents=True, exist_ok=True)
+    release = requests.get(_LATEST, timeout=30, headers={"Accept": "application/vnd.github+json"}).json()
+    assets = {a.get("name"): a.get("browser_download_url") for a in release.get("assets") or []}
+    url = next((assets[n] for n in ("ollama-linux-amd64.tar.zst", "ollama-linux-amd64.tgz") if assets.get(n)), "")
+    if not url.startswith("https://github.com/ollama/ollama/releases/download/"):
+        raise RuntimeError("local_model_release_not_found")
+    unpack = "tar --zstd -x" if url.endswith(".zst") else "tar -xz"
     # CPU runner: skip the GPU libraries (most of the archive's size on disk).
-    script = ("set -o pipefail; curl -fsSL --retry 3 '" + _RELEASE.format(v=OLLAMA_VERSION) +
-              "' | tar -xz -C '" + str(home) + "' --exclude='lib/ollama/cuda*' --exclude='lib/ollama/rocm*'")
+    script = ("set -o pipefail; curl -fsSL --retry 3 '" + url + "' | " + unpack + " -C '" + str(home) +
+              "' --wildcards --exclude='*cuda*' --exclude='*rocm*'")
     done = subprocess.run(["bash", "-c", script], timeout=900, stdout=subprocess.DEVNULL,
                           stderr=subprocess.PIPE, text=True)
     if done.returncode or not binary.is_file():
