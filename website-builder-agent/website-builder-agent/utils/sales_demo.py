@@ -456,9 +456,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     # Every photo appears once: the growing photo first, then services. Next to an
     # illustrated sequence, stock photos from other cameras would break the world:
     # only the company's own photos are added, and the finished frame grows.
-    if seq_staged:
-        rest = [i for i in rest if not stock[i]]
-    grow_index = rest.pop(0) if rest else None
+    grow_index = None if seq_staged else (rest.pop(0) if rest else None)
     grow_photo = staged[grow_index] if grow_index is not None else ""
     if seq_staged and grow_index is None:
         grow_photo = seq_staged[-1]
@@ -470,15 +468,17 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
                      f'<img src="{grow_photo}" alt="{alt(grow_index) if grow_index is not None else hero_alts[-1]}" loading="lazy">\n{grow_cap}</div></section>')
     svc_photos = {i: staged[rest[i]] for i in range(min(len(rest), len(plan["services"])))}
     service_items = "".join(
-        f'''<li class="svc"{f' data-photo="{svc_photos[i]}"' if i in svc_photos else ""}>
+        f'''<li class="svc"{f' data-photo="{i}"' if i in svc_photos else ""}>
       <h3>{_e(s["name"])}</h3>{"" if _echoes(s["name"], s["text"]) else f"<p>{_e(s['text'])}</p>"}
-      {f'<img class="svc__img" src="{svc_photos[i]}" alt="" loading="lazy">' if i in svc_photos else ""}
     </li>''' for i, s in enumerate(plan["services"]))
+    svc_bg = ('<div class="svc-bg" aria-hidden="true">' + "".join(
+        f'<img src="{src}" alt="" loading="lazy" data-photo="{i}">' for i, src in svc_photos.items()) + "</div>"
+              if svc_photos else "")
 
     # A band of the verified service names in giant moving type paces the page
     # between the statement and the service list (the list carries the meaning).
     from utils.kinetic_type import band_html, enhance_kinetic_type
-    kinetic_html = band_html([s["name"] for s in plan["services"]]) if len(plan["services"]) >= 3 else ""
+    kinetic_html = band_html([s["name"] for s in plan["services"]]) if len(plan["services"]) >= 3 and not svc_photos else ""
 
     p = palette
     from utils.award_playbook import contrast
@@ -507,19 +507,17 @@ font-size:clamp(16px,.96rem + .25vw,19px);line-height:1.55;-webkit-font-smoothin
 img{{display:block;max-width:100%}}
 a{{color:inherit}}
 :focus-visible{{outline:3px solid var(--accent);outline-offset:3px}}
-.draft{{position:fixed;z-index:40;right:16px;bottom:16px;margin:0;max-width:min(400px,calc(100% - 32px));background:var(--ink);color:var(--canvas);
-font-size:12.5px;line-height:1.35;padding:8px 12px;border-radius:10px;box-shadow:0 8px 24px -12px rgba(0,0,0,.5)}}
-.draft{{max-width:min(300px,calc(100% - 32px))}}
+.draft{{position:fixed;z-index:40;top:0;left:0;right:0;margin:0;height:26px;display:flex;align-items:center;justify-content:center;
+background:var(--ink);color:var(--canvas);font-size:12px;line-height:1;padding:0 var(--gutter);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 .draft__short{{display:none}}
-@media (max-width:560px){{.draft{{left:12px;right:12px;bottom:12px;max-width:none;padding:6px 10px;font-size:11.5px;border-radius:8px}}
- .draft__long{{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.draft__short{{display:inline}}}}
-.nav{{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;
-padding:14px var(--gutter);background:linear-gradient(180deg,color-mix(in srgb,var(--canvas) 70%,transparent),transparent);transition:background-color .3s ease}}
-.nav.solid{{background:color-mix(in srgb,var(--canvas) 94%,transparent);backdrop-filter:blur(10px);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 12%,transparent)}}
+@media (max-width:760px){{.draft__long{{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.draft__short{{display:inline}}}}
+.nav{{position:fixed;top:26px;left:0;right:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;
+padding:14px var(--gutter);background:linear-gradient(180deg,rgba(0,0,0,.42),transparent);color:#fff;transition:background-color .3s ease,color .3s ease}}
+.nav.solid{{color:var(--ink);background:color-mix(in srgb,var(--canvas) 94%,transparent);backdrop-filter:blur(10px);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 12%,transparent)}}
 .nav__name{{font-family:"Display";{display_css};font-size:clamp(18px,1.6vw,24px);text-decoration:none;letter-spacing:-.01em}}
 .nav__logo{{display:block;height:clamp(14px,1.5vw,20px);width:auto;max-width:min(50vw,300px);object-fit:contain;object-position:left center}}
 .nav__brand{{display:inline-flex;align-items:center;min-width:0}}
-.nav__brand.chip{{background:{"var(--ink)" if p["mode"] == "dark" else "transparent"};padding:{"8px 14px" if p["mode"] == "dark" else "0"};border-radius:10px}}
+.nav__brand.chip{{background:{"var(--ink)" if p["mode"] == "dark" else "var(--canvas)"};padding:8px 14px;border-radius:10px}}
 .nav__call .long{{display:inline}}
 @media (max-width:560px){{.nav__call .long{{display:none}}}}
 .nav__call{{flex:none;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:650;padding:10px 18px;border-radius:999px;white-space:nowrap}}
@@ -538,21 +536,24 @@ background:var(--accent);color:var(--accent-ink);font-weight:650;text-decoration
 .statement p{{font-family:"Display";{display_css};font-size:clamp(30px,1.3rem + 3.2vw,72px);line-height:1.04;margin:0;max-width:22ch}}
 .statement .w{{opacity:.18;transition:opacity .3s linear}}
 .statement .w.on{{opacity:1}}
-.services{{padding:0 var(--gutter) clamp(80px,14vh,160px)}}
-.services h2{{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;margin-bottom:12px;color:var(--muted)}}
-.svc-list{{list-style:none;margin:0;padding:0;border-top:1px solid color-mix(in srgb,var(--ink) 22%,transparent)}}
-.svc{{position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:8px 40px;align-items:baseline;
-padding:clamp(18px,3vh,30px) 0;border-bottom:1px solid color-mix(in srgb,var(--ink) 22%,transparent)}}
-.svc h3{{font-size:clamp(30px,4.6vw,76px);line-height:.95;transition:color .3s var(--ease),transform .5s var(--ease)}}
-.svc p{{margin:0;max-width:40ch;color:var(--muted)}}
-.svc__img{{display:none}}
-@media (hover:hover) and (pointer:fine){{
- .svc:hover h3{{color:var(--accent);transform:translateX(12px)}}
- .preview{{position:fixed;left:0;top:0;width:min(28vw,380px);aspect-ratio:4/3;object-fit:cover;border-radius:14px;pointer-events:none;
- z-index:20;opacity:0;transform:translate(-50%,-60%) scale(.9);transition:opacity .25s ease,transform .45s var(--ease)}}
- .preview.on{{opacity:1;transform:translate(-50%,-60%) scale(1)}}
-}}
-@media (max-width:760px){{.svc{{grid-template-columns:1fr}} .svc__img{{display:block;margin-top:10px;border-radius:10px;aspect-ratio:16/10;object-fit:cover;width:100%}}}}
+.services{{position:relative;background:var(--band);color:var(--band-ink);padding:0 0 clamp(80px,14vh,160px);isolation:isolate;overflow:clip}}
+.services h2{{position:relative;z-index:2;font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;margin:0;
+padding:clamp(72px,12vh,140px) var(--gutter) 18px;color:color-mix(in srgb,var(--band-ink) 70%,transparent)}}
+.svc-bg{{position:sticky;top:0;height:100svh;margin-bottom:-100svh;overflow:hidden;z-index:0}}
+.svc-bg img{{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);
+transition:opacity .7s var(--ease),transform 1.6s var(--ease)}}
+.svc-bg img.on{{opacity:1;transform:scale(1)}}
+.svc-bg::after{{content:"";position:absolute;inset:0;background:linear-gradient(90deg,color-mix(in srgb,var(--band) 94%,transparent) 0%,
+color-mix(in srgb,var(--band) 74%,transparent) 55%,color-mix(in srgb,var(--band) 48%,transparent) 100%),
+linear-gradient(0deg,var(--band),transparent 30%,transparent 80%,var(--band))}}
+.svc-list{{position:relative;z-index:2;list-style:none;margin:0;padding:0 var(--gutter)}}
+.svc{{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px 40px;align-items:end;padding:clamp(26px,6vh,64px) 0;
+border-top:1px solid color-mix(in srgb,var(--band-ink) 20%,transparent);opacity:.32;transition:opacity .5s var(--ease)}}
+.svc.on{{opacity:1}}
+.svc h3{{font-size:clamp(40px,7.4vw,132px);line-height:.9;letter-spacing:-.02em;transition:transform .6s var(--ease)}}
+.svc.on h3{{transform:translateX(clamp(6px,1.2vw,18px))}}
+.svc p{{margin:0 0 .4em;max-width:36ch;color:color-mix(in srgb,var(--band-ink) 82%,transparent)}}
+@media (max-width:760px){{.svc{{grid-template-columns:1fr}}}}
 .grow{{position:relative;height:220vh}}
 .grow__stage{{position:sticky;top:0;height:100svh;display:grid;place-items:center;overflow:hidden}}
 .grow__stage img{{width:100%;height:100%;object-fit:cover;clip-path:inset(var(--inset,14%) var(--inset-x,20%) round 22px)}}
@@ -638,7 +639,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 {hero}
 <section class="statement" aria-label="Yrityksestä"><p id="lausunto">{_e(plan["statement"])}</p></section>
 {kinetic_html}
-<section class="services" aria-labelledby="palvelut"><h2 id="palvelut">Palvelut</h2><ul class="svc-list">{service_items}</ul></section>
+<section class="services" aria-labelledby="palvelut">{svc_bg}<h2 id="palvelut">Palvelut</h2><ul class="svc-list">{service_items}</ul></section>
 {_proof_section(plan["proof"])}
 {grow_html}
 <section class="contact" aria-labelledby="yhteys">
@@ -692,18 +693,18 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
       c.el.textContent = fmt(Math.round(c.to * (1 - Math.pow(1 - q, 2))));
     }});
   }}
+  const rows = [...document.querySelectorAll('.svc')], bgs = [...document.querySelectorAll('.svc-bg img')];
+  function index() {{
+    const mid = innerHeight * .55; let best = 0, dist = 1e9;
+    rows.forEach((r, i) => {{ const b = r.getBoundingClientRect(); const d = Math.abs(b.top + b.height / 2 - mid); if (d < dist) {{ dist = d; best = i; }} }});
+    rows.forEach((r, i) => r.classList.toggle('on', i === best));
+    const want = rows[best] && rows[best].dataset.photo;
+    bgs.forEach(img => img.classList.toggle('on', img.dataset.photo === want));
+  }}
+  addEventListener('scroll', () => requestAnimationFrame(index), {{passive: true}}); index();
   if (reduce) {{ words.forEach(w => w.classList.add('on')); counters.forEach(c => c.el.textContent = fmt(c.to)); live(); return; }}
   addEventListener('scroll', () => requestAnimationFrame(live), {{passive: true}}); live();
   addEventListener('scroll', () => requestAnimationFrame(tick), {{passive: true}}); tick();
-  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {{
-    const preview = document.createElement('img'); preview.className = 'preview'; preview.alt = '';
-    document.body.appendChild(preview);
-    document.querySelectorAll('.svc').forEach(item => {{
-      item.addEventListener('pointerenter', () => {{ preview.src = item.dataset.photo; preview.classList.add('on'); }});
-      item.addEventListener('pointerleave', () => preview.classList.remove('on'));
-      item.addEventListener('pointermove', e => {{ preview.style.left = e.clientX + 'px'; preview.style.top = e.clientY + 'px'; }});
-    }});
-  }}
 }})();
 </script>
 {BUILD_RUNTIME if build_scene else ""}
