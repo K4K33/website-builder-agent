@@ -282,7 +282,8 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
                                  credits=credits,
                                  sequence=sequence["paths"] if sequence else None,
                                  sequence_labels=sequence["labels"] if sequence else None,
-                                 sequence_note=sequence["note"] if sequence else "", build_scene=scene)
+                                 sequence_note=sequence["note"] if sequence else "", build_scene=scene,
+                                 sequence_transitions=sequence.get("transitions") if sequence else None)
     return {"page": str(page), "own_photos": len(own), "stock_photos": sum(1 for c in credits if c),
             "sequence_frames": len(sequence["paths"]) if sequence else 0, "build_scene": scene or "",
             "services": len(plan["services"]), "proof_groups": len(plan.get("proof") or []),

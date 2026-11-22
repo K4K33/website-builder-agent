@@ -271,13 +271,40 @@ def _staged(route: str, src: str, allowed: dict) -> tuple[str, str] | None:
     return (resolved, digest) if digest else None
 
 
+TRANSITIONS = ("depth", "coat", "tiles", "rise")
+
+
+def change_mask(before: Path, after: Path, target: Path) -> Path | None:
+    """Grey mask of where the work really changes between two stage photos
+    (white = changed). The runtime animates the process only there."""
+    try:
+        import numpy as np
+        from PIL import Image, ImageFilter
+        size = (384, 216)
+        a = np.asarray(Image.open(before).convert("RGB").resize(size), dtype=np.float32) / 255
+        b = np.asarray(Image.open(after).convert("RGB").resize(size), dtype=np.float32) / 255
+        diff = np.abs(a - b).mean(axis=2)
+        blurred = np.asarray(Image.fromarray((diff * 255).astype("uint8")).filter(
+            ImageFilter.GaussianBlur(3)), dtype=np.float32) / 255
+        scale = max(1e-3, float(np.percentile(blurred, 97)))
+        mask = np.clip((blurred / scale - .18) / .35, 0, 1)
+        out = Image.fromarray((mask * 255).astype("uint8"), "L").filter(ImageFilter.MaxFilter(5)) \
+            .filter(ImageFilter.GaussianBlur(4))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        out.save(target, "WEBP", quality=80)
+        return target
+    except Exception:
+        return None
+
+
 def _depth_layers(sources, files, site_root: Path, prefix: str, route: str,
-                  blueprint: bool = False) -> list | None:
+                  blueprint: bool = False, transitions: list | None = None) -> list | None:
     """Depth map per staged photo (free local model), or None to use frames."""
     from utils import depth_estimation
     if depth_estimation.disabled() or any(f.suffix.lower() in _VIDEO_EXT for f in files):
         return None
-    key = sha256(json.dumps([d for _, d in sources] + ["depth-v1"]).encode()).hexdigest()[:12]
+    transitions = list(transitions or [])
+    key = sha256(json.dumps([d for _, d in sources] + ["depth-v1"] + transitions).encode()).hexdigest()[:12]
     layers = []
     for index, ((src, _), file) in enumerate(zip(sources, files)):
         relative = PurePosixPath("assets/depth") / key / f"{index}.webp"
@@ -290,6 +317,12 @@ def _depth_layers(sources, files, site_root: Path, prefix: str, route: str,
             if (site_root / drawing).is_file() or depth_estimation.line_drawing(
                     file, target, site_root / drawing):
                 layer["lines"] = prefix + str(drawing)
+        enter = transitions[index] if index < len(transitions) else "depth"
+        if index and enter in TRANSITIONS and enter != "depth":
+            mask_rel = PurePosixPath("assets/depth") / key / f"{index}-mask.webp"
+            if (site_root / mask_rel).is_file() or change_mask(files[index - 1], file, site_root / mask_rel):
+                layer["enter"] = enter
+                layer["mask"] = prefix + str(mask_rel)
         layers.append(layer)
     return layers
 
@@ -335,7 +368,10 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
         prefix = "../" * (len(PurePosixPath(route).parts) - 1)
         length = f"{300 + 40 * len(sources)}svh"
         blueprint = scene.get("data-scrub-style") == "blueprint"
-        depth_layers = _depth_layers(sources, files, site_root, prefix, route, blueprint)
+        transitions = ["depth"] + [str(image.get("data-scrub-transition") or "depth") for image in extra]
+        if any(t in TRANSITIONS[1:] for t in transitions):
+            length = f"{260 + 100 * len(sources)}svh"  # room to watch each work stage happen
+        depth_layers = _depth_layers(sources, files, site_root, prefix, route, blueprint, transitions)
         if depth_layers:
             # A real 3D camera move through the photos: far lighter than frames.
             scene["data-scrub-mode"] = "depth"

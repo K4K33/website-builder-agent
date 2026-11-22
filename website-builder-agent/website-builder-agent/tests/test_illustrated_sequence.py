@@ -51,6 +51,7 @@ class IllustratedSequenceTests(unittest.TestCase):
             self.assertIn("Edit this exact photo", calls[1]["prompt"][1])
             self.assertTrue(all(p.is_file() for p in got["paths"]))
             self.assertIn("tekoälyllä luotu", got["note"])
+            self.assertEqual(got["transitions"], ["depth", "coat", "tiles", "depth"])
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED": "0"}):
             self.assertIsNone(generate_sequence("kylpyhuoneremontti", Path(tmp), post=post))
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_ILLUSTRATED_SEQUENCE": "0"}):
@@ -83,9 +84,12 @@ class IllustratedSequenceTests(unittest.TestCase):
             page = render_sales_demo(company={"name": "Testi Oy", "phone": "040 1234567"}, plan=plan,
                                      photos=photos, out_dir=root / "out", credits=[credit, credit], sequence=seq,
                                      sequence_labels=["Pohja", "Vedeneristys", "Laatoitus", "Valmis"],
-                                     sequence_note="Havainnekuva, tekoälyllä luotu").read_text(encoding="utf-8")
+                                     sequence_note="Havainnekuva, tekoälyllä luotu",
+                                     sequence_transitions=["depth", "coat", "tiles", "depth"]).read_text(encoding="utf-8")
+            self.assertEqual(page.count('data-scrub-transition="coat"'), 1)
+            self.assertEqual(page.count('data-scrub-transition="tiles"'), 1)
             self.assertIn("Havainnekuva, tekoälyllä luotu", page)
-            self.assertIn('<li data-stage="0.250"><span>2</span>Vedeneristys</li>', page)
+            self.assertIn('<li data-stage="0.035"><span>2</span>Vedeneristys</li>', page)
             self.assertIn('alt="Havainnekuva: Pohja"', page)
             # Stock photos are not mixed with the illustrated world; the finished frame grows.
             self.assertNotIn('src="assets/kuva-1-g.webp"', page)

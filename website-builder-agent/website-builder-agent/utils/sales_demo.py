@@ -243,7 +243,8 @@ def _echoes(name: str, text: str) -> bool:
 def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir: Path,
                       logo: Path | None = None, credits: list | None = None,
                       sequence: list[Path] | None = None, sequence_labels: list[str] | None = None,
-                      sequence_note: str = "", build_scene: str | None = None) -> Path:
+                      sequence_note: str = "", build_scene: str | None = None,
+                      sequence_transitions: list[str] | None = None) -> Path:
     """credits[i] is None for the company's own photo, or a stock credit
     {"photographer", "source_url", "licence"}: such photos are shown as
     labelled illustrations, never as the company's work."""
@@ -338,6 +339,11 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     phone = str(company.get("phone") or "").strip()
     tel, mail = _tel(phone), _mail(company.get("email"))
     alt = lambda i: _e(captions[i] or f"{company.get('name')}: työkuva {i + 1}")
+    # How each build stage appears (coat / tiles / rise / depth), only for one
+    # illustrated sequence where the frames really are stages of the same scene.
+    stage_moves = [str(t or "depth") for t in (sequence_transitions or [])] if seq_staged else []
+    _transition = lambda i: (f' data-scrub-transition="{_e(stage_moves[i])}"'
+                             if i < len(stage_moves) and stage_moves[i] in ("coat", "tiles", "rise") else "")
     labels = [str(x)[:24] for x in (sequence_labels or [])][:len(seq_staged)]
     if seq_staged:
         hero_photos = seq_staged
@@ -357,8 +363,15 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     kinds = [k for k, on in (("tekoälyllä luotuja", bool(seq_staged)), ("kuvapankin", any(stock))) if on]
     stock_note = (f" Kuvat ovat {' ja '.join(kinds)} havainnekuvia, eivät yrityksen omia kohteita."
                   if any_illustration else "") + scene_note
+    # A stage label switches when its work starts on screen: process moves start
+    # early in the previous segment, a depth dissolve late.
+    def _stage_at(i):
+        if i == 0:
+            return 0.0
+        move = stage_moves[i] if i < len(stage_moves) else "depth"
+        return ((i - 1) + (.14 if move in ("coat", "tiles", "rise") else .7)) / len(labels)
     stage_strip = ("" if not labels else '<ol class="stages" aria-hidden="true">' + "".join(
-        f'<li data-stage="{i / len(labels):.3f}"><span>{i + 1}</span>{_e(t)}</li>'
+        f'<li data-stage="{_stage_at(i):.3f}"><span>{i + 1}</span>{_e(t)}</li>'
         for i, t in enumerate(labels)) + "</ol>")
 
     chapters = "".join(
@@ -390,7 +403,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         hero = f'''
 <section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""}{' data-scrub-warp="0"' if plan["trade"] == "rakennus" or seq_staged else ""} aria-labelledby="otsikko">
   <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{hero_alts[0]}">
-  {"".join(f'<img data-kaurivo-scrub-frame src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
+  {"".join(f'<img data-kaurivo-scrub-frame{_transition(i + 1)} src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
   <div data-kaurivo-scrub-copy>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     {chapters}
