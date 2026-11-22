@@ -23,6 +23,9 @@ on:
       provider:
         description: "Image provider for keyframes: auto (Workers Free first) or gemini"
         default: auto
+      preview:
+        description: "yes = make the film even if the gate fails (owner preview only, never used in demos)"
+        default: "no"
 permissions:
   contents: read
 jobs:
@@ -58,6 +61,7 @@ jobs:
           KEYS: ${{ inputs.keys }}
           KAURIVO_SEQUENCE_PROVIDER: ${{ inputs.provider }}
           ATTEMPTS: "3"
+          PREVIEW: ${{ inputs.preview }}
         run: |
           python - <<'PY'
           import json, os, shutil, time
@@ -97,9 +101,11 @@ jobs:
               shutil.copyfile(p, out / f"key-{i + 1}{Path(p).suffix}")
           print("chosen:", json.dumps(qa, ensure_ascii=False))
           (out / "qa.json").write_text(json.dumps(qa, ensure_ascii=False))
-          if not qa["ok"]:
+          if not qa["ok"] and os.environ.get("PREVIEW") != "yes":
               print("Rejected by the quality gate: no film is made from these keyframes.")
               raise SystemExit(0)
+          if not qa["ok"]:
+              print("Owner preview of keyframes that FAILED the gate: not for any demo.")
           start = time.monotonic()
           got = build_film.make_film(trade, root, out, limit=int(os.environ.get("LIMIT") or 0))
           print("film:", json.dumps(got, default=str)[:1500], "%.0fs" % (time.monotonic() - start))
