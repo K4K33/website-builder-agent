@@ -1,12 +1,15 @@
 name: Kaurivo build film
-# Makes one trade's construction film from committed AI keyframes with the
-# open Wan 2.2 first-last-frame model (free Hugging Face ZeroGPU Space). No
-# company data. The film is encrypted to the recipient and printed.
+# One trade's construction film, end to end, free and without company data:
+# 1) interior keyframes of one room in its stages (Workers Free / Gemini free),
+# 2) quality gate (same room and camera + strict free vision review),
+# 3) only if it passes: the open Wan 2.2 first-last-frame model animates each
+#    pair (free Hugging Face ZeroGPU), clips are joined and cut into frames.
+# Results are encrypted to the recipient and printed (never stored in plain form).
 on:
   workflow_dispatch:
     inputs:
       trade:
-        description: Trade folder under assets/sales_demo/film
+        description: Trade (kylpyhuone)
         default: kylpyhuone
       recipient:
         description: Base64 PEM public key for the encrypted result
@@ -14,6 +17,9 @@ on:
       limit:
         description: Number of clips (0 = all)
         default: "0"
+      keys:
+        description: "generate = new keyframes, repo = committed keyframes"
+        default: generate
 permissions:
   contents: read
 jobs:
@@ -28,30 +34,63 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -q "gradio_client>=1.3" pillow && (command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null))
-      - name: Animate keyframes
+      - run: pip install -q -r requirements.txt "gradio_client>=1.3" && (command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null))
+      - name: Keyframes, quality gate, film
         env:
+          FREE_ONLY: "1"
           KAURIVO_HF_TOKEN: ${{ secrets.KAURIVO_HF_TOKEN }}
+          KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
+          KAURIVO_GEMINI_API_KEY: ${{ secrets.KAURIVO_GEMINI_API_KEY }}
+          KAURIVO_GEMINI_FREE_CONFIRMED: ${{ vars.KAURIVO_GEMINI_FREE_CONFIRMED || '1' }}
+          KAURIVO_ILLUSTRATED_SEQUENCE: "1"
+          AI_BACKEND: openrouter
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: openrouter/free
+          QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE_V2 || 'nvidia/nemotron-3.5-super-vl:free' }}
+          QA_FALLBACK_MODELS: ${{ vars.KAURIVO_QA_FALLBACK_MODELS_FREE || 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free' }}
           TRADE: ${{ inputs.trade }}
           LIMIT: ${{ inputs.limit }}
+          KEYS: ${{ inputs.keys }}
         run: |
           python - <<'PY'
-          import json, os, time
+          import json, os, shutil, time
           from pathlib import Path
-          from utils.build_film import make_film
+          from utils import build_film, illustrated_sequence, sequence_qa
+          trade, out = os.environ["TRADE"], Path("film-out")
+          root = Path("film-work")
+          keys = root / trade / "keys"
+          keys.mkdir(parents=True, exist_ok=True)
+          out.mkdir(exist_ok=True)
+          if os.environ.get("KEYS", "generate") == "generate":
+              seq = illustrated_sequence.generate_sequence(trade + "remontti", root / "seq")
+              print("keyframes:", bool(seq), illustrated_sequence.LAST_ERROR)
+              if not seq:
+                  raise SystemExit("no keyframes")
+              paths, labels = seq["paths"], seq["labels"]
+          else:
+              paths = build_film.keyframes(trade, Path("assets/sales_demo/film"))
+              labels = [f"k{i + 1}" for i in range(len(paths))]
+          for i, p in enumerate(paths):
+              shutil.copyfile(p, keys / f"k{i + 1}{Path(p).suffix}")
+              shutil.copyfile(p, out / f"key-{i + 1}{Path(p).suffix}")
+          qa = sequence_qa.check([Path(p) for p in paths], labels)
+          print("quality gate:", json.dumps(qa, ensure_ascii=False))
+          (out / "qa.json").write_text(json.dumps(qa, ensure_ascii=False))
+          if not qa["ok"]:
+              print("Rejected by the quality gate: no film is made from these keyframes.")
+              raise SystemExit(0)
           start = time.monotonic()
-          out = Path("film-out")
-          got = make_film(os.environ["TRADE"], Path("assets/sales_demo/film"), out, limit=int(os.environ.get("LIMIT") or 0))
-          print("film:", json.dumps(got)[:1500], "%.0fs" % (time.monotonic() - start))
-          if not got or "film" not in got:
-              clips = sorted(out.glob("clip-*.mp4"))
-              if not clips:
-                  raise SystemExit("no film")
+          got = build_film.make_film(trade, root, out, limit=int(os.environ.get("LIMIT") or 0))
+          print("film:", json.dumps(got, default=str)[:1500], "%.0fs" % (time.monotonic() - start))
           PY
       - name: Encrypt for the recipient
+        if: always()
         env:
           RECIPIENT: ${{ inputs.recipient }}
         run: |
+          test -d film-out || exit 0
           echo "$RECIPIENT" | base64 -d > /tmp/pub.pem
           tar -C film-out -czf /tmp/s.tgz .
           openssl rand -hex 32 > /tmp/k

@@ -38,16 +38,15 @@ LAST_ERROR = ""
 # rise = bottom up, build = floor by floor from the bottom, symmetric about the
 # centre, depth = objects front to back); the first stage has none. Building
 # trades follow the reference: one 3/4 aerial view, the work grows in order.
-MOVES = {"kylpyhuone": ("depth", "depth", "build", "build", "build"),
+MOVES = {"kylpyhuone": ("depth", "depth", "depth", "depth", "depth"),
          "maalaus": ("depth", "coat", "coat", "depth"),
-         "talo": ("depth", "build", "build", "build")}
+         "talo": ("depth", "depth", "depth", "depth")}
 TEMPLATES = (
     (r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila", 9001,
-     "Premium 3D architectural visualization, symmetric three-quarter aerial cutaway view from above of one small "
-     "Nordic bathroom standing alone on a dark charcoal studio floor: no ceiling, the two front walls cut away at "
-     "the same height so the whole room is visible like a dollhouse. Back-left wall: shower corner; back-right wall: "
-     "toilet. Soft warm studio light, gentle shadows, clean and tidy, high detail, no people, no text. "
-     "Surfaces: {s}. Fixtures: {f}.",
+     "Architectural interior visualization, eye-level view from inside a small Nordic apartment bathroom, "
+     "camera in the doorway looking straight at the back wall, perfectly symmetric one-point perspective. "
+     "Back wall faces the camera; left: shower corner; right: wall-hung toilet; round ceiling light. "
+     "24mm lens, soft even daylight, calm and clean, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
       ("Pohja", "bare grey concrete walls and floor",
@@ -218,14 +217,7 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         LAST_ERROR = LAST_ERROR or type(exc).__name__
         return None
     # Same backdrop in every stage, then compose for the headline (object right).
-    try:
-        ordered = [images[i] for i in range(len(stages))]
-        ordered = unify_background(ordered[:-1], ordered[-1]) + [ordered[-1]]
-        reframed = reframe_for_copy(ordered)
-        focus = REFRAME_X if reframed is not ordered else .5
-        images = dict(enumerate(reframed))
-    except Exception:
-        focus = .5
+    focus = .5
     paths, labels = [], []
     for index, (label, _surfaces, _fixtures) in enumerate(stages):
         target = folder / f"vaihe-{index + 1}.webp"

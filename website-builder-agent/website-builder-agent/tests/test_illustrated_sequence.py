@@ -52,7 +52,7 @@ class IllustratedSequenceTests(unittest.TestCase):
             self.assertIn("Edit this exact image", calls[1]["prompt"][1])
             self.assertTrue(all(p.is_file() for p in got["paths"]))
             self.assertIn("tekoälyllä luotu", got["note"])
-            self.assertEqual(got["transitions"], ["depth", "depth", "build", "build", "build"])
+            self.assertEqual(got["transitions"], ["depth", "depth", "depth", "depth", "depth"])
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED": "0"}):
             self.assertIsNone(generate_sequence("kylpyhuoneremontti", Path(tmp), post=post))
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_ILLUSTRATED_SEQUENCE": "0"}):

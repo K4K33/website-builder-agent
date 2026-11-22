@@ -29,19 +29,21 @@ NEGATIVE = ("people, hands, workers, text, watermark, logo, blurry, distorted ge
 
 # Per trade: (stage label, how the change between this keyframe and the next happens).
 SCRIPTS = {
+    # Seen from inside, camera locked; every change progresses evenly and in order
+    # (symmetric, layer by layer), like the reference sites, never patchy.
     "kylpyhuone": (
-        ("Purku", "Static locked-off camera, same bathroom. The old tiles, bathtub, sink and toilet are "
-                  "removed piece by piece and vanish, revealing bare grey concrete walls and floor. "
-                  "Realistic renovation timelapse, no people."),
-        ("Vedeneristys", "Static locked-off camera, same room. Light blue waterproofing membrane is rolled "
-                         "onto the concrete walls and floor in smooth vertical strokes, corner tape appears. "
-                         "Realistic timelapse, no people."),
-        ("Laatoitus", "Static locked-off camera, same room. Large grey tiles are laid row by row from the "
-                      "floor up the walls, covering the blue membrane, grout lines straight. Realistic "
-                      "timelapse, no people."),
-        ("Valmis", "Static locked-off camera, same room. The fixtures are installed: glass shower wall, "
-                   "black rain shower, wall-hung toilet; lights switch on, warm finished bathroom. "
-                   "Realistic timelapse, no people."),
+        ("Purku", "Locked-off camera inside the same bathroom. The old tiles, bathtub, sink, toilet and curtain "
+                  "are removed in an orderly sequence from top to bottom, evenly on both sides, revealing bare grey "
+                  "concrete. Smooth, calm, architectural animation, no people."),
+        ("Vedeneristys", "Locked-off camera inside the same room. Light blue waterproofing rises evenly up all "
+                         "walls at the same speed from the floor to the ceiling, a clean straight horizontal edge, "
+                         "perfectly symmetric left and right. Smooth architectural animation, no people."),
+        ("Laatoitus", "Locked-off camera inside the same room. Large grey tiles appear row by row from the floor "
+                      "upwards, each row completing evenly across all walls, symmetric, straight grout lines. "
+                      "Smooth architectural animation, no people."),
+        ("Valmis", "Locked-off camera inside the same room. The glass shower wall, black rain shower and wall-hung "
+                   "toilet glide gently into place one after another, then the light warms up; slow push-in. "
+                   "Smooth architectural animation, no people."),
     ),
 }
 
