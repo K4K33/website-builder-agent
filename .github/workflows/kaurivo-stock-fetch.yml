@@ -68,6 +68,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
           KAURIVO_ILLUSTRATED_SEQUENCE: "1"
+          KAURIVO_GEMINI_API_KEY: ${{ secrets.KAURIVO_GEMINI_API_KEY }}
+          KAURIVO_GEMINI_FREE_CONFIRMED: ${{ vars.KAURIVO_GEMINI_FREE_CONFIRMED || '1' }}
           FREE_ONLY: "1"
           TOPIC: ${{ inputs.topic }}
         run: |

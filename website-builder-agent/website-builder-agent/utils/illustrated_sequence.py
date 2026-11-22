@@ -50,13 +50,15 @@ TEMPLATES = (
      "Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
-      ("Pohja", "bare grey concrete walls and floor, renovation site, dust",
-       "nothing installed, empty room, only capped water pipes and a capped floor drain"),
+      ("Pohja", "bare grey concrete walls and floor",
+       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps, no sink; completely empty room, "
+       "only a capped floor drain"),
       ("Vedeneristys", "all walls and floor coated with smooth light blue waterproofing membrane, "
-                       "white reinforcement tape in the corners", "nothing installed, empty room, capped pipes"),
-      ("Laatoitus", "large light grey tiles installed on the lower half of the walls and the floor, light blue "
-                    "waterproofing membrane still visible above, tile adhesive bucket and trowel on the floor",
-       "nothing installed yet, empty room"),
+                       "white reinforcement tape in the corners",
+       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps; completely empty room"),
+      ("Laatoitus", "the same large light grey tiles as the finished room on the floor and the lower half of the "
+                    "walls, light blue waterproofing membrane still visible on the upper half",
+       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps; empty room, no tools"),
       ("Valmis", "large light grey matte tiles on all walls and the floor",
        "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures")),
      "Havainnekuva, tekoälyllä luotu: kylpyhuoneremontin vaiheet"),
@@ -95,10 +97,61 @@ def template_for(text: str):
     return None
 
 
+GEMINI_IMAGE_MODELS = ("gemini-2.5-flash-image", "gemini-2.0-flash-preview-image-generation")
+_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+
+def _gemini_image(prompt: str, reference=None, *, post):
+    """Gemini API free tier (no-billing key) image generation/editing; RGB image or None."""
+    global LAST_ERROR
+    from PIL import Image
+    key = os.getenv("KAURIVO_GEMINI_API_KEY", "").strip()
+    parts = [{"text": prompt + " Wide 16:9 landscape image."}]
+    if reference is not None:
+        buffer = BytesIO()
+        reference.save(buffer, "JPEG", quality=92)
+        parts.append({"inline_data": {"mime_type": "image/jpeg",
+                                      "data": base64.b64encode(buffer.getvalue()).decode("ascii")}})
+    for model in GEMINI_IMAGE_MODELS:
+        body = {"contents": [{"parts": parts}],
+                "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}}
+        if model.startswith("gemini-2.5"):
+            body["generationConfig"]["imageConfig"] = {"aspectRatio": "16:9"}
+        reply = post(_GEMINI_URL.format(model=model), timeout=(10, 180), json=body,
+                     headers={"x-goog-api-key": key, "Content-Type": "application/json"})
+        if reply.status_code != 200:
+            try:
+                LAST_ERROR = "gemini %s HTTP %s %s" % (model, reply.status_code,
+                                                      str((reply.json().get("error") or {}).get("message", ""))[:160])
+            except ValueError:
+                LAST_ERROR = "gemini %s HTTP %s" % (model, reply.status_code)
+            continue
+        for candidate in reply.json().get("candidates") or []:
+            for part in (candidate.get("content") or {}).get("parts") or []:
+                data = (part.get("inline_data") or part.get("inlineData") or {}).get("data")
+                if data:
+                    with Image.open(BytesIO(base64.b64decode(data))) as image:
+                        image = image.convert("RGB")
+                    if image.width < image.height:
+                        return None
+                    # Same frame size as the Cloudflare path (cover crop to 16:9).
+                    from PIL import ImageOps
+                    return ImageOps.fit(image, (WIDTH, HEIGHT), Image.LANCZOS)
+        LAST_ERROR = "gemini %s returned no image" % model
+    return None
+
+
 def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | None:
-    """Return {"paths", "labels", "note"} for a 4-stage sequence, or None."""
-    from utils import cloudflare_free_ai
-    if not cloudflare_free_ai.enabled() or os.getenv("KAURIVO_ILLUSTRATED_SEQUENCE", "0") != "1":
+    """Return {"paths", "labels", "note", "transitions"} for a staged sequence, or None.
+
+    Cloudflare Workers Free (FLUX klein) first; when its daily neurons are spent,
+    the Gemini API free tier (no-billing key) makes the whole sequence instead.
+    """
+    from utils import cloudflare_free_ai, gemini_free_ai
+    if os.getenv("KAURIVO_ILLUSTRATED_SEQUENCE", "0") != "1":
+        return None
+    use_cf, use_gemini = cloudflare_free_ai.enabled(), gemini_free_ai.enabled()
+    if not (use_cf or use_gemini):
         return None
     chosen = template_for(topic_text)
     if not chosen:
@@ -140,17 +193,22 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         return image
 
     # 1) the finished room from text; 2) each earlier stage as an edit of it.
+    # One provider for the whole sequence keeps every frame the same room.
     finished_label, finished_s, finished_f = stages[-1]
     images = {}
     try:
-        final = run(scene.format(s=finished_s, f=finished_f))
+        final = run(scene.format(s=finished_s, f=finished_f)) if use_cf else None
+        if final is None and use_gemini:
+            run = lambda prompt, reference=None: _gemini_image(prompt, reference, post=post)
+            final = run(scene.format(s=finished_s, f=finished_f))
         if final is None:
             return None
         images[len(stages) - 1] = final
         for index, (label, surfaces, fixtures) in enumerate(stages[:-1]):
-            edit = ("Edit this exact photo. Keep the same room, walls, ceiling, window, camera position, lens and "
-                    f"light. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
-                    "Photorealistic, no people, no text.")
+            edit = ("Edit this exact image. Keep exactly the same camera position, framing, scale, lens, light "
+                    "and the same background colour and floor around the room; keep the room's shape and wall "
+                    f"heights. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
+                    "Same rendering style, no people, no text.")
             image = run(edit, final)
             if image is None:
                 return None
@@ -159,6 +217,15 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         global LAST_ERROR
         LAST_ERROR = LAST_ERROR or type(exc).__name__
         return None
+    # Same backdrop in every stage, then compose for the headline (object right).
+    try:
+        ordered = [images[i] for i in range(len(stages))]
+        ordered = unify_background(ordered[:-1], ordered[-1]) + [ordered[-1]]
+        reframed = reframe_for_copy(ordered)
+        focus = REFRAME_X if reframed is not ordered else .5
+        images = dict(enumerate(reframed))
+    except Exception:
+        focus = .5
     paths, labels = [], []
     for index, (label, _surfaces, _fixtures) in enumerate(stages):
         target = folder / f"vaihe-{index + 1}.webp"
@@ -166,4 +233,66 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         paths.append(target)
         labels.append(label)
     kind = "kylpyhuone" if "kylpyhuone" in note else "maalaus" if "maalaus" in note else "talo"
-    return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind])}
+    return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind]), "focus": focus}
+
+
+def subject_mask(final, *, threshold: float = 28.0):
+    """Mask of the built object (room/house) in the finished frame: everything that
+    differs clearly from the studio backdrop sampled along the image border."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    a = np.asarray(final.convert("RGB"), dtype=np.float32)
+    border = np.concatenate([a[:8].reshape(-1, 3), a[-8:].reshape(-1, 3), a[:, :8].reshape(-1, 3), a[:, -8:].reshape(-1, 3)])
+    bg = np.median(border, axis=0)
+    dist = np.sqrt(((a - bg) ** 2).sum(axis=2))
+    mask = Image.fromarray((dist > threshold).astype(np.uint8) * 255, "L")
+    # Close small gaps, fill the object, then feather the edge.
+    mask = mask.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(5))
+    from utils.type_through import solid_mask
+    return solid_mask(mask).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.GaussianBlur(2))
+
+
+def unify_background(images: list, final) -> list:
+    """Edits sometimes repaint the backdrop; keep the finished frame's backdrop in
+    every stage (the camera is the same), so only the work itself changes."""
+    from PIL import Image
+    mask = subject_mask(final)
+    if not 0.05 < sum(mask.getdata()) / (255 * mask.width * mask.height) < 0.8:
+        return images  # not a clean object on a backdrop: leave as is
+    out = []
+    for image in images:
+        image = image.convert("RGB").resize(final.size)
+        out.append(Image.composite(image, final.convert("RGB"), mask))
+    return out
+
+
+REFRAME_X = 0.72
+
+
+def reframe_for_copy(images: list, *, scale: float = 0.6, centre_x: float = REFRAME_X):
+    """Object-on-backdrop sequences (a cutaway room, a house on its plot) are
+    re-composed like the reference hero: the object a little smaller and right
+    of centre, calm backdrop on the left for the headline. The same plate and
+    offset are used for every stage, so the stages stay pixel-aligned."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    final = images[-1].convert("RGB")
+    mask = subject_mask(final).filter(ImageFilter.MaxFilter(15)).filter(ImageFilter.GaussianBlur(6))
+    if not 0.05 < np.asarray(mask).mean() / 255 < 0.6:
+        return images
+    w, h = final.size
+    a = np.asarray(final, dtype=np.float32)
+    bg = np.median(np.concatenate([a[:8].reshape(-1, 3), a[-8:].reshape(-1, 3)]), axis=0)
+    plate = Image.composite(Image.new("RGB", final.size, tuple(int(v) for v in bg)), final, mask)
+    plate = plate.filter(ImageFilter.GaussianBlur(40))
+    sw, sh = int(w * scale), int(h * scale)
+    small_mask = mask.resize((sw, sh), Image.LANCZOS)
+    x = int(w * centre_x - sw / 2)
+    x = max(0, min(w - sw, x))
+    y = int((h - sh) * 0.75)
+    out = []
+    for image in images:
+        canvas = plate.copy()
+        canvas.paste(image.convert("RGB").resize((sw, sh), Image.LANCZOS), (x, y), small_mask)
+        out.append(canvas)
+    return out

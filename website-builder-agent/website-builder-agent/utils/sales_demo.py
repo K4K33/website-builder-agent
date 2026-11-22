@@ -260,7 +260,8 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
                       logo: Path | None = None, credits: list | None = None,
                       sequence: list[Path] | None = None, sequence_labels: list[str] | None = None,
                       sequence_note: str = "", build_scene: str | None = None,
-                      sequence_transitions: list[str] | None = None, film: dict | None = None) -> Path:
+                      sequence_transitions: list[str] | None = None, film: dict | None = None,
+                      sequence_focus: float = .5) -> Path:
     """credits[i] is None for the company's own photo, or a stock credit
     {"photographer", "source_url", "licence"}: such photos are shown as
     labelled illustrations, never as the company's work."""
@@ -273,7 +274,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     from utils.award_playbook import derive_photo_palette
     from utils.scroll_scrub import enhance_scroll_scrub
 
-    sequence = [Path(f) for f in (sequence or []) if Path(f).is_file()][:4]
+    sequence = [Path(f) for f in (sequence or []) if Path(f).is_file()][:6]
     if len(sequence) < 2:
         sequence = []
     build_scene = build_scene if build_scene in BUILD_SCENES else None
@@ -453,7 +454,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
 </section>'''
     else:
         hero = f'''
-<section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""}{' data-scrub-warp="0"' if plan["trade"] == "rakennus" or seq_staged else ""} aria-labelledby="otsikko">
+<section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""}{' data-scrub-warp="0"' if plan["trade"] == "rakennus" or seq_staged else ""}{f' data-scrub-focus="{sequence_focus:.2f}"' if seq_staged and sequence_focus != .5 else ""} aria-labelledby="otsikko">
   <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{hero_alts[0]}">
   {"".join(f'<img data-kaurivo-scrub-frame{_transition(i + 1)} src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
   <div data-kaurivo-scrub-copy>
