@@ -256,7 +256,17 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
     # A purpose-made 3D build scene (free, no AI) is the strongest hero; with it
     # only the company's own photos are added, never stock from other cameras.
     scene = build_scene_for(topic)
-    if not scene and len(own) < MIN_OWN_PHOTOS:
+    # A reviewed construction film for the trade (made once, reused) leads the hero.
+    from utils.build_film import film_for
+    film = film_for(topic)
+    if film:
+        scene = None
+        with _Step("stock"):
+            stock = (fetch_stock or fetch_stock_photos)(
+                topic, Path(work_dir) / "stock", count=4) if len(own) < MIN_OWN_PHOTOS else []
+        photos += [Path(s["path"]) for s in stock]
+        credits += stock
+    if not film and not scene and len(own) < MIN_OWN_PHOTOS:
         topic = " ".join([plan.get("headline", "")] + [s["name"] for s in plan["services"]])
         # One illustrated build sequence carries the hero; stock fills the rest.
         with _Step("sequence"):
@@ -270,10 +280,10 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
         # Own photos stay first; stock only fills the gap.
         photos += [Path(s["path"]) for s in stock]
         credits += stock
-    if not photos and not sequence and not scene:
+    if not photos and not sequence and not scene and not film:
         raise SalesDemoBlocked("sales_no_photos", "Ei omia eikä kuvapankkikuvia aiheeseen")
     with _Step("render"):
-        validate_plan(plan, photos or (sequence["paths"] if sequence else [Path("build3d")]))
+        validate_plan(plan, photos or (sequence["paths"] if sequence else film["frames"][-1:] if film else [Path("build3d")]))
         company = {"name": display_name(company_name, source["text"]), "phone": source["phone"],
                    "email": source["email"]}
         if sequence:
@@ -283,8 +293,9 @@ def build_sales_demo(company_name: str, url: str, out_dir: Path, *, work_dir: Pa
                                  sequence=sequence["paths"] if sequence else None,
                                  sequence_labels=sequence["labels"] if sequence else None,
                                  sequence_note=sequence["note"] if sequence else "", build_scene=scene,
-                                 sequence_transitions=sequence.get("transitions") if sequence else None)
+                                 sequence_transitions=sequence.get("transitions") if sequence else None,
+                                 film=film)
     return {"page": str(page), "own_photos": len(own), "stock_photos": sum(1 for c in credits if c),
-            "sequence_frames": len(sequence["paths"]) if sequence else 0, "build_scene": scene or "",
+            "sequence_frames": len(sequence["paths"]) if sequence else 0, "build_scene": scene or "", "film": (film or {}).get("trade", ""),
             "services": len(plan["services"]), "proof_groups": len(plan.get("proof") or []),
             "dropped": dropped[:20], "source_pages": source["pages"]}

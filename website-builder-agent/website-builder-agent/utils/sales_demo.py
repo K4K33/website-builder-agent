@@ -253,11 +253,14 @@ def _echoes(name: str, text: str) -> bool:
     return not (said - named)
 
 
+from utils.film_hero import SCRIPT as FILM_SCRIPT, STYLE as FILM_STYLE
+
+
 def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir: Path,
                       logo: Path | None = None, credits: list | None = None,
                       sequence: list[Path] | None = None, sequence_labels: list[str] | None = None,
                       sequence_note: str = "", build_scene: str | None = None,
-                      sequence_transitions: list[str] | None = None) -> Path:
+                      sequence_transitions: list[str] | None = None, film: dict | None = None) -> Path:
     """credits[i] is None for the company's own photo, or a stock credit
     {"photographer", "source_url", "licence"}: such photos are shown as
     labelled illustrations, never as the company's work."""
@@ -406,7 +409,16 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     chapters = "".join(
         f'<p data-at="{at}">{_e(text)}</p>'
         for at, text in zip(("0", "0.36", "0.7"), plan["chapters"]))
-    if build_scene:
+    if film:
+        from utils.film_hero import hero_html, stage_frames
+        film_prefix = stage_frames(film["frames"], out_dir)
+        hero = hero_html(
+            prefix=film_prefix, count=len(film["frames"]), labels=film["labels"],
+            headline_html=f'<h1 id="otsikko">{_glue(plan["headline"])}</h1>',
+            body_html=(f'<p>{_e(plan["chapters"][0])}</p>' if plan["chapters"] else "")
+                      + (f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""),
+            note=film["note"], alt=film["note"] + ": valmis " + (film.get("trade") or "kohde"))
+    elif build_scene:
         steps = BUILD_SCENES[build_scene]["steps"]
         labels = [name for _, name in steps]
         stage_strip = '<ol class="stages" aria-hidden="true">' + "".join(
@@ -627,6 +639,7 @@ border-top:1px solid color-mix(in srgb,var(--band-ink) 25%,transparent)}}
 .sr{{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
 footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,transparent);padding:0 var(--gutter) 28px;font-size:14px;display:flex;flex-wrap:wrap;gap:8px 28px}}
 @media (prefers-reduced-motion:reduce){{*,*::before,*::after{{transition:none!important}}.statement .w{{opacity:1}}.grow{{height:auto}}.grow__stage{{position:relative;height:80svh}}.grow__stage img{{clip-path:none}}}}
+{FILM_STYLE if film else ""}
 </style>
 </head>
 <body>
@@ -708,6 +721,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 }})();
 </script>
 {BUILD_RUNTIME if build_scene else ""}
+{"<script>" + FILM_SCRIPT + "</script>" if film else ""}
 </body>
 </html>
 '''
