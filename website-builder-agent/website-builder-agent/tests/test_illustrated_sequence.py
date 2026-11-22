@@ -91,8 +91,9 @@ class IllustratedSequenceTests(unittest.TestCase):
             self.assertIn("Havainnekuva, tekoälyllä luotu", page)
             self.assertIn('<li data-stage="0.035"><span>2</span>Vedeneristys</li>', page)
             self.assertIn('alt="Havainnekuva: Pohja"', page)
-            # Stock photos are not mixed with the illustrated world; the finished frame grows.
-            self.assertNotIn('src="assets/kuva-1-g.webp"', page)
+            # Stock illustrates the services band only; the finished frame grows.
+            self.assertEqual(page.count('src="assets/kuva-1-g.webp"'), 1)
+            self.assertIn('class="svc-bg"', page)
             self.assertIn('class="grow"', page)
             self.assertIn('<img alt="Havainnekuva: Valmis" loading="lazy" src="assets/vaihe-4-g.webp"/>', page)
             self.assertIn("<p>Kylpyhuoneremontit ja vesieristykset.</p>", page)
