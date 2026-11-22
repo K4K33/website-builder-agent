@@ -1,36 +1,44 @@
 name: Kaurivo stock smoke
-# Verifies the free stock providers (Pixabay key secret, Openverse) without printing secrets or keeping images.
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  smoke:
+  probe:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: website-builder-agent/website-builder-agent
+    env:
+      OR_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ACCOUNT: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
+      TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
+      QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE || 'qwen/qwen3.8-27b:free' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
       - run: pip install -q requests pillow
-      - name: Pixabay only, then Openverse only
-        env:
-          KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
+      - name: QA model probe (status codes only)
         run: |
           python - <<'PY'
-          import os, tempfile
-          from pathlib import Path
-          import utils.stock_media as s
-          print("pixabay key format ok:", bool(s.pixabay_key()))
-          for name, chain in (("pixabay", (s._pixabay,)), ("openverse", (s._openverse,))):
-              s.PROVIDERS = chain
-              with tempfile.TemporaryDirectory() as tmp:
-                  got = s.fetch_stock_photos("kylpyhuoneremontti laatoitus", Path(tmp), count=2)
-                  print(name, len(got), [(g["provider"], g["licence"], Path(g["path"]).stat().st_size) for g in got])
-                  if not got:
-                      raise SystemExit(name + " returned no usable photo")
+          import base64, io, json, os, requests
+          from PIL import Image
+          buf = io.BytesIO(); Image.new("RGB", (640, 400), (120, 140, 160)).save(buf, "PNG")
+          img = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+          def short(r):
+              try: return json.dumps(r.json())[:300]
+              except Exception: return r.text[:300]
+          m = os.environ["QA_MODEL"]
+          r = requests.get("https://openrouter.ai/api/v1/models", timeout=30)
+          ids = {x["id"] for x in r.json().get("data", [])}
+          print("QA model listed:", m, m in ids)
+          print("free vision-ish candidates:", sorted(i for i in ids if i.endswith(":free"))[:60])
+          for label, content in (("text", "Reply OK"), ("vision", [{"type": "text", "text": "Describe colour"}, {"type": "image_url", "image_url": {"url": img}}])):
+              r = requests.post("https://openrouter.ai/api/v1/chat/completions", timeout=90,
+                  headers={"Authorization": "Bearer " + os.environ["OR_KEY"]},
+                  json={"model": m, "messages": [{"role": "user", "content": content}], "max_tokens": 20})
+              print("OR", label, r.status_code, short(r))
+          r = requests.get("https://openrouter.ai/api/v1/key", timeout=30, headers={"Authorization": "Bearer " + os.environ["OR_KEY"]})
+          d = r.json().get("data", {}); print("OR key usage:", {k: d.get(k) for k in ("usage", "limit", "is_free_tier", "rate_limit")})
+          for cf in ("@cf/google/gemma-4-26b-a4b-it", "@cf/mistralai/mistral-small-3.1-24b-instruct"):
+              r = requests.post(f"https://api.cloudflare.com/client/v4/accounts/{os.environ['ACCOUNT']}/ai/run/{cf}", timeout=120,
+                  headers={"Authorization": "Bearer " + os.environ["TOKEN"]},
+                  json={"messages": [{"role": "user", "content": [{"type": "text", "text": "Describe colour"}, {"type": "image_url", "image_url": {"url": img}}]}], "max_tokens": 20})
+              print("CF", cf, r.status_code, short(r))
           PY
