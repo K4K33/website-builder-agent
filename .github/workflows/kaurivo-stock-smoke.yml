@@ -24,7 +24,7 @@ jobs:
           def short(r):
               try: return json.dumps(r.json())[:300]
               except Exception: return r.text[:300]
-          m = os.environ["QA_MODEL"]
+          m = "nvidia/nemotron-3.5-super-vl:free"
           r = requests.get("https://openrouter.ai/api/v1/models", timeout=30)
           ids = {x["id"] for x in r.json().get("data", [])}
           print("QA model listed:", m, m in ids)
@@ -32,11 +32,16 @@ jobs:
           for label, content in (("text", "Reply OK"), ("vision", [{"type": "text", "text": "Describe colour"}, {"type": "image_url", "image_url": {"url": img}}])):
               r = requests.post("https://openrouter.ai/api/v1/chat/completions", timeout=90,
                   headers={"Authorization": "Bearer " + os.environ["OR_KEY"]},
-                  json={"model": m, "messages": [{"role": "user", "content": content}], "max_tokens": 20})
+                  json={"model": m, "messages": [{"role": "user", "content": content}], "max_tokens": 300})
               print("OR", label, r.status_code, short(r))
           r = requests.get("https://openrouter.ai/api/v1/key", timeout=30, headers={"Authorization": "Bearer " + os.environ["OR_KEY"]})
           d = r.json().get("data", {}); print("OR key usage:", {k: d.get(k) for k in ("usage", "limit", "is_free_tier", "rate_limit")})
-          for cf in ("@cf/google/gemma-4-26b-a4b-it", "@cf/mistralai/mistral-small-3.1-24b-instruct"):
+          for m2 in ("google/gemma-4-26b-a4b-it:free", "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free", "baidu/ernie-5.5-flash-preview:free"):
+              r = requests.post("https://openrouter.ai/api/v1/chat/completions", timeout=90,
+                  headers={"Authorization": "Bearer " + os.environ["OR_KEY"]},
+                  json={"model": m2, "messages": [{"role": "user", "content": [{"type": "text", "text": "What colour is this image? One word."}, {"type": "image_url", "image_url": {"url": img}}]}], "max_tokens": 300})
+              print("OR2", m2, r.status_code, short(r))
+          for cf in ():
               r = requests.post(f"https://api.cloudflare.com/client/v4/accounts/{os.environ['ACCOUNT']}/ai/run/{cf}", timeout=120,
                   headers={"Authorization": "Bearer " + os.environ["TOKEN"]},
                   json={"messages": [{"role": "user", "content": [{"type": "text", "text": "Describe colour"}, {"type": "image_url", "image_url": {"url": img}}]}], "max_tokens": 20})
