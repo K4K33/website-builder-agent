@@ -59,6 +59,19 @@ def _e(value) -> str:
     return html.escape(str(value or "").strip(), quote=True)
 
 
+_LEGAL = {"oy", "oyj", "ab", "ky", "tmi", "ay", "ry", "ltd", "inc"}
+
+
+def _brand_word(name, headline) -> str:
+    """One short verified word for the type-through hero: the company's first
+    distinctive name word, else the headline's first word."""
+    for source in (name, headline):
+        for word in re.findall(r"[\wÅÄÖåäö-]+", str(source or "")):
+            if word.casefold() not in _LEGAL and 3 <= len(word) <= 12:
+                return word[:1].upper() + word[1:].lower() if word.isupper() else word
+    return str(name or "")[:12]
+
+
 def _favicon(name, background: str, ink: str) -> str:
     """URL-encoded SVG favicon: the company's initial on the accent colour."""
     from urllib.parse import quote
@@ -358,6 +371,22 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         hero_badge = (f'<p class="hero__credit">{_e(captions[0])}</p>' if stock and stock[0] else "")
     if build_scene:
         rest = list(range(len(staged)))
+    # Subject through type: when the company's own first photo has a clearly
+    # separated subject, one giant word slides behind it (award-style hero).
+    typecut = False
+    if not build_scene and not seq_staged and staged and not stock[0] \
+            and os.getenv("KAURIVO_TYPECUT", "1") != "0":
+        from utils import depth_estimation
+        from utils.type_through import subject_mask_ok
+        probe = assets / "typecut-probe.webp"
+        try:
+            typecut = (not depth_estimation.disabled()
+                       and depth_estimation.estimate_mask(out_dir / staged[0], probe) is not None
+                       and subject_mask_ok(probe))
+        finally:
+            probe.unlink(missing_ok=True)
+        if typecut:
+            rest = list(range(1, len(staged)))
     any_illustration = any(stock) or bool(seq_staged)
     scene_note = (" Herossa on 3D-havainnollistus työvaiheista." if build_scene else "")
     kinds = [k for k, on in (("tekoälyllä luotuja", bool(seq_staged)), ("kuvapankin", any(stock))) if on]
@@ -398,6 +427,17 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
   {stage_strip}
   <div class="b3d__bar" aria-hidden="true"><i></i></div>
  </div>
+</section>'''
+    elif typecut:
+        hero = f'''
+<section class="hero hero--typecut" data-kaurivo-typecut aria-labelledby="otsikko">
+  <img src="{staged[0]}" alt="{alt(0)}">
+  <p data-typecut-word aria-hidden="true">{_e(_brand_word(company.get("name"), plan["headline"]))}</p>
+  <div class="typecut__copy">
+    <h1 id="otsikko">{_glue(plan["headline"])}</h1>
+    {f'<p>{_e(plan["chapters"][0])}</p>' if plan["chapters"] else ""}
+    {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
+  </div>
 </section>'''
     else:
         hero = f'''
@@ -552,6 +592,13 @@ backdrop-filter:blur(6px);opacity:.55;transition:opacity .4s var(--ease),backgro
  .hero--3d .hero__credit{{bottom:auto;top:calc(9svh + 48svh + 6px);left:var(--gutter);right:var(--gutter);font-size:11px;line-height:1.3;border-radius:8px}}
 }}
 @media (prefers-reduced-motion:reduce){{.hero--3d{{height:auto}}.b3d__stage{{position:relative}}}}
+.hero--typecut{{height:100svh;min-height:560px;background:var(--surface)}}
+.hero--typecut [data-typecut-word]{{font-family:"Display";{display_css};color:#fff;letter-spacing:-.03em;text-shadow:0 2px 40px rgba(0,0,0,.18)}}
+.hero--typecut::after{{content:"";position:absolute;inset:auto 0 0 0;height:55%;z-index:2;pointer-events:none;
+background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0))}}
+.typecut__copy{{position:absolute!important;z-index:4!important;left:var(--gutter);right:var(--gutter);bottom:clamp(28px,8vh,80px);max-width:40rem;color:#fff}}
+.typecut__copy h1{{font-size:clamp(34px,4.2vw,68px);line-height:.98;color:#fff}}
+.typecut__copy p{{margin:12px 0 0;max-width:36ch;color:rgba(255,255,255,.86)}}
 .grow__cap{{position:absolute;left:var(--gutter);bottom:clamp(24px,6vh,60px);background:var(--canvas);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px}}
 .proof{{padding:clamp(72px,12vh,140px) var(--gutter);border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}}
 .proof>h2{{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;color:var(--muted);margin-bottom:clamp(28px,5vh,56px)}}
@@ -657,6 +704,9 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 </html>
 '''
     page = enhance_scroll_scrub(page, route="index.html", media=media, site_root=out_dir)
+    if typecut:
+        from utils.type_through import enhance_type_through
+        page = enhance_type_through(page, route="index.html", media=media, site_root=out_dir)
     target = out_dir / "index.html"
     target.write_text(page, encoding="utf-8")
     (out_dir / "sales-demo.json").write_text(json.dumps(

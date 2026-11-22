@@ -11,6 +11,7 @@ import tempfile
 from utils.source_photo_sequence import enhance_photo_sequence
 from utils.scroll_scrub import enhance_scroll_scrub
 from utils.product_relief import enhance_product_relief
+from utils.type_through import enhance_type_through
 from utils.site_architecture import (
     parse_generated_site, validate_site_architecture, validate_site_navigation,
     pages_for_validation,
@@ -49,6 +50,10 @@ def build_pages_from_response(raw: str, *, slug: str,
              for route, body in pages.items()}
     pages = {route: enhance_product_relief(body, route=route, media=media or [],
                                            site_root=Path(output_root) / slug)
+             for route, body in pages.items()}
+    # Subject through type: one giant word behind the subject of an own photo.
+    pages = {route: enhance_type_through(body, route=route, media=media or [],
+                                         site_root=Path(output_root) / slug)
              for route, body in pages.items()}
     pages, commerce_artifacts = attach_commerce_catalogue(pages, research)
     # The creative preflight is now an explicit implementation contract,
