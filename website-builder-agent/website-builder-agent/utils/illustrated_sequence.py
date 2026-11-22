@@ -29,6 +29,9 @@ from pathlib import Path
 MODEL = "@cf/black-forest-labs/flux-2-klein-4b"
 WIDTH, HEIGHT = 1536, 864  # multiples of 16, ~5 output tiles
 _URL = "https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{model}"
+# Last failure, for diagnostics only (HTTP status and the provider's error
+# code/message; never prompts, keys or images).
+LAST_ERROR = ""
 
 # One template per trade: (pattern, seed, scene, [(label, surfaces, fixtures)], note).
 # How each stage appears on scroll (coat = roller strokes, tiles = row by row,
@@ -114,6 +117,13 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         reply = post(_URL.format(account=account, model=MODEL), timeout=(10, 180),
                      headers={"Authorization": "Bearer " + token}, files=fields)
         if reply.status_code != 200:
+            global LAST_ERROR
+            try:
+                errors = (reply.json() or {}).get("errors") or [{}]
+                detail = "%s %s" % (errors[0].get("code", ""), str(errors[0].get("message", ""))[:160])
+            except ValueError:
+                detail = ""
+            LAST_ERROR = "HTTP %s %s" % (reply.status_code, detail)
             return None
         body = reply.json()
         data = (body.get("result") or {}).get("image") or body.get("image")
@@ -139,7 +149,9 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
             if image is None:
                 return None
             images[index] = image
-    except Exception:
+    except Exception as exc:
+        global LAST_ERROR
+        LAST_ERROR = LAST_ERROR or type(exc).__name__
         return None
     paths, labels = [], []
     for index, (label, _surfaces, _fixtures) in enumerate(stages):
