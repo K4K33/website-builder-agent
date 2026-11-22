@@ -27,7 +27,13 @@ vec2 stageReveal(float st,float t,vec2 u,float dn){
   // Tiles are laid row by row from the floor up, each row left to right.
   float q=t*(rows+1.3)-r-u.x*1.1;float l=smoothstep(0.,.07,q);
   return vec2(l,smoothstep(.07,0.,abs(q-.035))*.8);}
- float key=u.y+(vn(vec2(u.x*12.,u.y*3.))-.5)*.05;return vec2(smoothstep(key-.025,key+.025,t*1.08),0.);}
+ if(st<3.5){float key=u.y+(vn(vec2(u.x*12.,u.y*3.))-.5)*.05;return vec2(smoothstep(key-.025,key+.025,t*1.08),0.);}
+ // build: the new stage grows floor by floor from the bottom, symmetric about the
+ // centre (the middle leads), in clean courses with a light edge (reference: a
+ // house built brick by brick, floor by floor).
+ float courses=14.;float h=(1.-u.y)+abs(u.x-.5)*.35;float c=floor(h*courses)/courses;
+ float q=t*1.42-c;float l=smoothstep(0.,.05,q);
+ return vec2(l,smoothstep(.06,0.,abs(q-.03))*.9);}
 vec2 cover(vec2 u,vec2 c){return (u-.5)*c+.5;}
 vec2 par(sampler2D dep,vec2 u,vec2 t,float dolly){
  vec2 z=(u-.5)/(1.+dolly*.5*(1.-warp))+.5;vec2 s=z;
@@ -47,7 +53,7 @@ void main(){
   float dn=texture2D(d1,s1).r;vec2 r=stageReveal(style,mixv,s1,dn);
   // Where the photos really change the work animates; elsewhere a quiet early crossfade.
   float ch=style<.5?1.:texture2D(m1,s1).r;float m=mix(smoothstep(0.,.4,mixv),r.x,ch);
-  vec3 nx=texture2D(i1,s1).rgb*(1.-.22*r.y*ch);
+  vec3 nx=style>3.5?mix(texture2D(i1,s1).rgb,vec3(1.,.93,.8),.55*r.y*ch):texture2D(i1,s1).rgb*(1.-.22*r.y*ch);
   col=mix(col,nx,m);}
  vec2 q=v-.5;col*=1.-(.08+.2*warp)*dot(q,q);
  gl_FragColor=vec4(col,1.);}`;
@@ -75,7 +81,7 @@ void main(){
     gl.vertexAttribPointer(at, 2, gl.FLOAT, false, 0, 0);
     const U = name => gl.getUniformLocation(program, name);
     ['i0','d0','i1','d1','e0','m1'].forEach((n, k) => gl.uniform1i(U(n), k));
-    const STYLE = {depth: 0, coat: 1, tiles: 2, rise: 3};
+    const STYLE = {depth: 0, coat: 1, tiles: 2, rise: 3, build: 4};
     gl.uniform1f(U('warp'), cfg.warp === 0 ? 0 : 1);
     const sketch = !!cfg.layers[0].lines;
     let sketchTex = null, drawStart = 0;

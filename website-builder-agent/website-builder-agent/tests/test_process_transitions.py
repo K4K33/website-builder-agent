@@ -22,8 +22,8 @@ class ProcessTransitionTests(unittest.TestCase):
             self.assertGreater(sum(bottom.getdata()) / (384 * 66), 180)
 
     def test_runtime_knows_every_process_move(self):
-        self.assertEqual(TRANSITIONS, ("depth", "coat", "tiles", "rise"))
-        for name in ("coat: 1", "tiles: 2", "rise: 3", "stageReveal", "uniform1f(U('style')"):
+        self.assertEqual(TRANSITIONS, ("depth", "coat", "tiles", "rise", "build"))
+        for name in ("coat: 1", "tiles: 2", "rise: 3", "build: 4", "stageReveal", "uniform1f(U('style')"):
             self.assertIn(name, SCRIPT)
 
 

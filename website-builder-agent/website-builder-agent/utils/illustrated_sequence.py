@@ -35,15 +35,19 @@ LAST_ERROR = ""
 
 # One template per trade: (pattern, seed, scene, [(label, surfaces, fixtures)], note).
 # How each stage appears on scroll (coat = roller strokes, tiles = row by row,
-# rise = bottom up, depth = objects front to back); the first stage has none.
-MOVES = {"kylpyhuone": ("depth", "depth", "coat", "tiles", "depth"),
+# rise = bottom up, build = floor by floor from the bottom, symmetric about the
+# centre, depth = objects front to back); the first stage has none. Building
+# trades follow the reference: one 3/4 aerial view, the work grows in order.
+MOVES = {"kylpyhuone": ("depth", "depth", "build", "build", "build"),
          "maalaus": ("depth", "coat", "coat", "depth"),
-         "talo": ("depth", "rise", "rise", "depth")}
+         "talo": ("depth", "build", "build", "build")}
 TEMPLATES = (
     (r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila", 9001,
-     "Realistic architectural photograph, eye-level straight-on wide shot of a small Nordic apartment bathroom. "
-     "The back wall faces the camera. Left side: shower corner. Right side: toilet position. Round ceiling light. "
-     "24mm lens, soft daylight, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.",
+     "Premium 3D architectural visualization, symmetric three-quarter aerial cutaway view from above of one small "
+     "Nordic bathroom standing alone on a dark charcoal studio floor: no ceiling, the two front walls cut away at "
+     "the same height so the whole room is visible like a dollhouse. Back-left wall: shower corner; back-right wall: "
+     "toilet. Soft warm studio light, gentle shadows, clean and tidy, high detail, no people, no text. "
+     "Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
       ("Pohja", "bare grey concrete walls and floor, renovation site, dust",
@@ -69,14 +73,14 @@ TEMPLATES = (
                  "a simple sofa and a plant")),
      "Havainnekuva, tekoälyllä luotu: maalaustyön vaiheet"),
     (r"rakennus|rakentaminen|omakotitalo|rivitalo|runko|talopaketti", 4242,
-     "Realistic architectural photograph, three-quarter view at eye level of a single-storey Nordic family house "
-     "on a flat plot with pine trees behind, overcast soft light, 35mm lens, high detail, no people, no text. "
-     "The house: {s}. Site: {f}.",
-     (("Perustus", "only the concrete foundation slab is finished", "gravel, formwork boards, construction site"),
-      ("Runko", "timber wall frame and roof trusses erected on the slab, no cladding",
-       "gravel, stacked timber, construction site"),
-      ("Vesikatto", "black metal roof and wind barrier installed, windows fitted, no cladding yet",
-       "gravel, scaffolding, construction site"),
+     "Premium 3D architectural visualization, three-quarter aerial view from about 30 metres of a two-storey "
+     "Nordic family house in the centre of a neat plot with pine trees around, golden-hour light, cinematic, "
+     "high detail, no people, no text. The house: {s}. Site: {f}.",
+     (("Perustus", "only the concrete foundation slab is finished", "levelled sand plot, tidy construction site"),
+      ("Runko", "the walls of both floors built in light grey blocks up to the roof line, window openings, no roof",
+       "tidy construction site, stacked materials"),
+      ("Vesikatto", "dark roof installed on the block walls, windows fitted, no cladding yet",
+       "tidy construction site"),
       ("Valmis", "finished with dark vertical wooden cladding, black metal roof and warm lit windows",
        "finished yard with lawn, dusk")),
      "Havainnekuva, tekoälyllä luotu: talon rakentumisen vaiheet"),
