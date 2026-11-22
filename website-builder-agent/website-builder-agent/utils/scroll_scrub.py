@@ -354,7 +354,7 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
             continue
         if copy.find("h1") is None:
             continue
-        extra = scene.find_all(attrs={"data-kaurivo-scrub-frame": True}, recursive=False)[:3]
+        extra = scene.find_all(attrs={"data-kaurivo-scrub-frame": True}, recursive=False)[:5]
         sources = []
         for image in [poster, *extra]:
             staged = _staged(route, image.get("src"), allowed)
@@ -378,7 +378,11 @@ def enhance_scroll_scrub(html: str, *, route: str, media: list[dict],
             # Architecture (data-scrub-warp="0"): straight lines must stay straight,
             # so the camera zooms instead of displacing pixels by depth.
             warp = 0 if scene.get("data-scrub-warp") == "0" else 1
-            scene["data-depth"] = json.dumps({"layers": depth_layers, "length": length, "warp": warp},
+            try:
+                focus = min(.85, max(.15, float(scene.get("data-scrub-focus", .5))))
+            except (TypeError, ValueError):
+                focus = .5
+            scene["data-depth"] = json.dumps({"layers": depth_layers, "length": length, "warp": warp, "focus": focus},
                                              separators=(",", ":"))
             manifests = {"d": None, "m": None}
         else:

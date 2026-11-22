@@ -13,7 +13,7 @@ SCRIPT = r"""
   if (reduce.matches) return;
   const VERT = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
   const FRAG = `precision highp float;varying vec2 v;
-uniform sampler2D i0,d0,i1,d1,e0,m1;uniform vec2 c0,c1,cam;uniform vec3 touch;uniform float mixv,dolly0,dolly1,bp,reveal,draw,warp,style;
+uniform sampler2D i0,d0,i1,d1,e0,m1;uniform vec2 c0,c1,cam;uniform vec3 touch;uniform float mixv,dolly0,dolly1,bp,reveal,draw,warp,style,fx,fy;
 float h21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
  return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}
@@ -34,7 +34,7 @@ vec2 stageReveal(float st,float t,vec2 u,float dn){
  float courses=14.;float h=(1.-u.y)+abs(u.x-.5)*.35;float c=floor(h*courses)/courses;
  float q=t*1.42-c;float l=smoothstep(0.,.05,q);
  return vec2(l,smoothstep(.06,0.,abs(q-.03))*.9);}
-vec2 cover(vec2 u,vec2 c){return (u-.5)*c+.5;}
+vec2 cover(vec2 u,vec2 c){float f=c.x<1.?clamp(fx,c.x*.5,1.-c.x*.5):fx;return vec2((u.x-.5)*c.x+f,(u.y-.5)*c.y+fy);}
 vec2 par(sampler2D dep,vec2 u,vec2 t,float dolly){
  vec2 z=(u-.5)/(1.+dolly*.5*(1.-warp))+.5;vec2 s=z;
  for(int k=0;k<6;k++){float d=texture2D(dep,s).r;
@@ -83,6 +83,9 @@ void main(){
     ['i0','d0','i1','d1','e0','m1'].forEach((n, k) => gl.uniform1i(U(n), k));
     const STYLE = {depth: 0, coat: 1, tiles: 2, rise: 3, build: 4};
     gl.uniform1f(U('warp'), cfg.warp === 0 ? 0 : 1);
+    // Narrow screens crop the sides: keep the subject (focus x) in view.
+    gl.uniform1f(U('fx'), typeof cfg.focus === 'number' ? cfg.focus : .5);
+    gl.uniform1f(U('fy'), typeof cfg.focus === 'number' && cfg.focus !== .5 && stage.clientWidth < stage.clientHeight ? .3 : .5);
     const sketch = !!cfg.layers[0].lines;
     let sketchTex = null, drawStart = 0;
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -110,7 +113,11 @@ void main(){
     const pointer = {x: 0, y: 0, tx: 0, ty: 0, s: 0, ts: 0, ux: .5, uy: .5};
     const coverOf = aspect => {
       const a = canvas.width / Math.max(1, canvas.height);
-      return aspect > a ? [a / aspect, 1] : [1, aspect / a];
+      const c = aspect > a ? [a / aspect, 1] : [1, aspect / a];
+      // A framed object on a plain backdrop (focus set): on a phone, zoom out so
+      // the whole object shows above the copy instead of a cropped slice.
+      const k = typeof cfg.focus === 'number' && cfg.focus !== .5 && a < 1 ? 1.55 : 1;
+      return [c[0] * k, c[1] * k];
     };
     function size() {
       const dpr = Math.min(devicePixelRatio || 1, 1.75);
@@ -136,7 +143,8 @@ void main(){
       gl.uniform2f(U('cam'), orbit + pointer.x * .035 + idle, pointer.y * .025 + idle * .5);
       gl.uniform3f(U('touch'), pointer.ux, pointer.uy, pointer.s);
       // One continuous camera move over the whole sequence (no zoom jump per stage).
-      const dolly = cfg.warp === 0 ? .04 + .22 * progress : .05 + .22 * local;
+      // A framed object (focus) gets a gentler push-in so it never leaves the frame.
+      const dolly = cfg.warp === 0 ? .04 + (typeof cfg.focus === 'number' && cfg.focus !== .5 ? .1 : .22) * progress : .05 + .22 * local;
       gl.uniform1f(U('dolly0'), dolly);
       gl.uniform1f(U('dolly1'), cfg.warp === 0 ? dolly : .05 + .22 * Math.max(0, local - 1));
       gl.uniform1f(U('style'), processStyle);

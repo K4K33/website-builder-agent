@@ -217,6 +217,15 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         global LAST_ERROR
         LAST_ERROR = LAST_ERROR or type(exc).__name__
         return None
+    # Same backdrop in every stage, then compose for the headline (object right).
+    try:
+        ordered = [images[i] for i in range(len(stages))]
+        ordered = unify_background(ordered[:-1], ordered[-1]) + [ordered[-1]]
+        reframed = reframe_for_copy(ordered)
+        focus = REFRAME_X if reframed is not ordered else .5
+        images = dict(enumerate(reframed))
+    except Exception:
+        focus = .5
     paths, labels = [], []
     for index, (label, _surfaces, _fixtures) in enumerate(stages):
         target = folder / f"vaihe-{index + 1}.webp"
@@ -224,4 +233,66 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         paths.append(target)
         labels.append(label)
     kind = "kylpyhuone" if "kylpyhuone" in note else "maalaus" if "maalaus" in note else "talo"
-    return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind])}
+    return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind]), "focus": focus}
+
+
+def subject_mask(final, *, threshold: float = 28.0):
+    """Mask of the built object (room/house) in the finished frame: everything that
+    differs clearly from the studio backdrop sampled along the image border."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    a = np.asarray(final.convert("RGB"), dtype=np.float32)
+    border = np.concatenate([a[:8].reshape(-1, 3), a[-8:].reshape(-1, 3), a[:, :8].reshape(-1, 3), a[:, -8:].reshape(-1, 3)])
+    bg = np.median(border, axis=0)
+    dist = np.sqrt(((a - bg) ** 2).sum(axis=2))
+    mask = Image.fromarray((dist > threshold).astype(np.uint8) * 255, "L")
+    # Close small gaps, fill the object, then feather the edge.
+    mask = mask.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(5))
+    from utils.type_through import solid_mask
+    return solid_mask(mask).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.GaussianBlur(2))
+
+
+def unify_background(images: list, final) -> list:
+    """Edits sometimes repaint the backdrop; keep the finished frame's backdrop in
+    every stage (the camera is the same), so only the work itself changes."""
+    from PIL import Image
+    mask = subject_mask(final)
+    if not 0.05 < sum(mask.getdata()) / (255 * mask.width * mask.height) < 0.8:
+        return images  # not a clean object on a backdrop: leave as is
+    out = []
+    for image in images:
+        image = image.convert("RGB").resize(final.size)
+        out.append(Image.composite(image, final.convert("RGB"), mask))
+    return out
+
+
+REFRAME_X = 0.72
+
+
+def reframe_for_copy(images: list, *, scale: float = 0.6, centre_x: float = REFRAME_X):
+    """Object-on-backdrop sequences (a cutaway room, a house on its plot) are
+    re-composed like the reference hero: the object a little smaller and right
+    of centre, calm backdrop on the left for the headline. The same plate and
+    offset are used for every stage, so the stages stay pixel-aligned."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    final = images[-1].convert("RGB")
+    mask = subject_mask(final).filter(ImageFilter.MaxFilter(15)).filter(ImageFilter.GaussianBlur(6))
+    if not 0.05 < np.asarray(mask).mean() / 255 < 0.6:
+        return images
+    w, h = final.size
+    a = np.asarray(final, dtype=np.float32)
+    bg = np.median(np.concatenate([a[:8].reshape(-1, 3), a[-8:].reshape(-1, 3)]), axis=0)
+    plate = Image.composite(Image.new("RGB", final.size, tuple(int(v) for v in bg)), final, mask)
+    plate = plate.filter(ImageFilter.GaussianBlur(40))
+    sw, sh = int(w * scale), int(h * scale)
+    small_mask = mask.resize((sw, sh), Image.LANCZOS)
+    x = int(w * centre_x - sw / 2)
+    x = max(0, min(w - sw, x))
+    y = int((h - sh) * 0.75)
+    out = []
+    for image in images:
+        canvas = plate.copy()
+        canvas.paste(image.convert("RGB").resize((sw, sh), Image.LANCZOS), (x, y), small_mask)
+        out.append(canvas)
+    return out
