@@ -209,10 +209,14 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     _label, base_s, base_f = stages[base]
     images = {}
     try:
-        final = run(scene.format(s=base_s, f=base_f)) if use_cf else None
+        # Image models furnish anything called a bathroom/kitchen: describe the empty
+        # shell as a bare room so nothing is installed before its stage.
+        base_prompt = re.sub(r"\b(apartment )?(bathroom|kitchen|living room)\b", "empty concrete room",
+                             scene.format(s=base_s, f=base_f))
+        final = run(base_prompt) if use_cf else None
         if final is None and use_gemini:
             run = lambda prompt, reference=None: _gemini_image(prompt, reference, post=post)
-            final = run(scene.format(s=base_s, f=base_f))
+            final = run(base_prompt)
         if final is None:
             return None
         images[base] = final
