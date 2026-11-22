@@ -22,6 +22,11 @@ on:
         required: false
         default: "6"
         type: string
+      kind:
+        description: "stock = licensed stock photos; sequence = AI build-stage sequence (Workers Free, ~720 neurons)"
+        required: false
+        default: "stock"
+        type: string
 permissions:
   contents: read
 jobs:
@@ -38,6 +43,7 @@ jobs:
           python-version: "3.11"
       - run: pip install -q requests pillow
       - name: Fetch
+        if: inputs.kind != 'sequence'
         env:
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
           TOPIC: ${{ inputs.topic }}
@@ -54,6 +60,30 @@ jobs:
           print(len(got), [(g["provider"], g["licence"]) for g in got])
           if not got:
               raise SystemExit("no photos")
+          PY
+      - name: Generate illustrated build sequence (Workers Free)
+        if: inputs.kind == 'sequence'
+        env:
+          KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED: ${{ vars.KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED || '0' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.KAURIVO_CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.KAURIVO_CLOUDFLARE_API_TOKEN }}
+          KAURIVO_ILLUSTRATED_SEQUENCE: "1"
+          FREE_ONLY: "1"
+          TOPIC: ${{ inputs.topic }}
+        run: |
+          python - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          from utils.illustrated_sequence import generate_sequence
+          start = time.monotonic()
+          got = generate_sequence(os.environ["TOPIC"][:120], Path("stock-out"))
+          print("sequence:", bool(got), "%.0fs" % (time.monotonic() - start))
+          if not got:
+              raise SystemExit("no sequence")
+          for p in got["paths"]:
+              Path(p).rename(Path(p).with_suffix(".jpg"))
+          Path("stock-out/credits.json").write_text(json.dumps(
+              {"labels": got["labels"], "note": got["note"], "transitions": got["transitions"]}))
           PY
       - name: Encrypt for the recipient
         env:
