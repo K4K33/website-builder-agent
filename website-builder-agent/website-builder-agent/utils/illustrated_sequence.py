@@ -50,14 +50,13 @@ TEMPLATES = (
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
       ("Pohja", "bare grey concrete walls and floor",
-       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps, no sink; completely empty room, "
-       "only a capped floor drain"),
+       "completely empty room: no toilet, no shower, no glass wall, no taps, no sink, only a capped floor drain"),
       ("Vedeneristys", "all walls and floor coated with smooth light blue waterproofing membrane, "
                        "white reinforcement tape in the corners",
-       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps; completely empty room"),
+       "completely empty room: no toilet, no shower, no glass wall, no taps"),
       ("Laatoitus", "the same large light grey tiles as the finished room on the floor and the lower half of the "
                     "walls, light blue waterproofing membrane still visible on the upper half",
-       "REMOVE every fixture: no toilet, no shower, no glass wall, no taps; empty room, no tools"),
+       "completely empty room: no toilet, no shower, no glass wall, no taps, no tools"),
       ("Valmis", "large light grey matte tiles on all walls and the floor",
        "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures")),
      "Havainnekuva, tekoälyllä luotu: kylpyhuoneremontin vaiheet"),
@@ -86,6 +85,15 @@ TEMPLATES = (
        "finished yard with lawn, dusk")),
      "Havainnekuva, tekoälyllä luotu: talon rakentumisen vaiheet"),
 )
+
+
+def base_stage(stages) -> int:
+    """The empty shell (nothing installed) is generated first; the last stage
+    when no stage is empty."""
+    for index, (_label, _surfaces, fixtures) in enumerate(stages):
+        if "empty" in fixtures.casefold():
+            return index
+    return len(stages) - 1
 
 
 def template_for(text: str):
@@ -191,19 +199,23 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
             return None
         return image
 
-    # 1) the finished room from text; 2) each earlier stage as an edit of it.
-    # One provider for the whole sequence keeps every frame the same room.
-    finished_label, finished_s, finished_f = stages[-1]
+    # 1) the EMPTY shell from text (edit models add things well but rarely remove
+    # them); 2) every other stage as an edit of that same shell, so the camera,
+    # the room and the light stay identical. One provider for the whole set.
+    base = base_stage(stages)
+    _label, base_s, base_f = stages[base]
     images = {}
     try:
-        final = run(scene.format(s=finished_s, f=finished_f)) if use_cf else None
+        final = run(scene.format(s=base_s, f=base_f)) if use_cf else None
         if final is None and use_gemini:
             run = lambda prompt, reference=None: _gemini_image(prompt, reference, post=post)
-            final = run(scene.format(s=finished_s, f=finished_f))
+            final = run(scene.format(s=base_s, f=base_f))
         if final is None:
             return None
-        images[len(stages) - 1] = final
-        for index, (label, surfaces, fixtures) in enumerate(stages[:-1]):
+        images[base] = final
+        for index, (label, surfaces, fixtures) in enumerate(stages):
+            if index == base:
+                continue
             edit = ("Edit this exact image. Keep exactly the same camera position, framing, scale, lens, light "
                     "and the same background colour and floor around the room; keep the room's shape and wall "
                     f"heights. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
