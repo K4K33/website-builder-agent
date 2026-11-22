@@ -14,18 +14,25 @@ from pathlib import Path
 import shutil
 
 STYLE = """
-.hero--film{position:relative;height:430svh;background:#0d0f10;color:#fff}
+.hero--film{position:relative;height:500svh;background:#0d0f10;color:#fff}
 .film__stage{position:sticky;top:0;height:100svh;overflow:hidden}
 .film__stage canvas,.film__poster{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
 .hero--film.is-live .film__poster{visibility:hidden}
-.film__stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+.film__stage::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.3;transition:opacity 1s ease;
  background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.18) 48%,transparent 70%),linear-gradient(0deg,rgba(0,0,0,.5),transparent 40%)}
 .film__step{position:absolute;z-index:2;left:var(--gutter,24px);top:clamp(96px,16vh,160px);margin:0;display:flex;align-items:baseline;gap:16px}
 .film__num{font-variant-numeric:tabular-nums;font-weight:650;font-size:clamp(14px,1.1vw,18px);opacity:.8}
-.film__name{font-family:"Display",inherit;font-size:clamp(46px,8vw,132px);line-height:.9;letter-spacing:-.02em}
+.film__name{font-family:"Display",sans-serif;font-size:clamp(46px,8vw,132px);line-height:.9;letter-spacing:-.02em}
 .film__step.flip .film__name{animation:filmIn .8s cubic-bezier(.16,1,.3,1)}
 @keyframes filmIn{from{opacity:0;transform:translateY(.25em)}to{opacity:1;transform:none}}
-.film__copy{position:absolute;z-index:2;left:var(--gutter,24px);bottom:clamp(40px,9vh,96px);max-width:min(36rem,82vw)}
+.film__copy{position:absolute;z-index:2;left:var(--gutter,24px);bottom:clamp(40px,9vh,96px);max-width:min(36rem,82vw);
+ transition:opacity 1s cubic-bezier(.16,1,.3,1),transform 1.1s cubic-bezier(.16,1,.3,1)}
+.film__step{transition:opacity .6s ease,transform .6s ease}
+/* While the room is being built only the film and the stage name are on screen;
+   the headline arrives over the finished room (without JS it is always shown). */
+.hero--film.is-js:not(.is-done) .film__copy{opacity:0;transform:translateY(28px);pointer-events:none}
+.hero--film.is-done .film__step{opacity:0;transform:translateY(-14px)}
+.hero--film.is-done .film__stage::after{opacity:1}
 .film__copy h1{font-size:clamp(34px,4.4vw,72px);line-height:.98;margin:0;color:#fff}
 .film__copy p{margin:12px 0 0;max-width:36ch;color:rgba(255,255,255,.86)}
 .film__note{position:absolute;z-index:2;right:var(--gutter,24px);top:clamp(80px,11vh,96px);margin:0;font-size:12px;
@@ -44,6 +51,11 @@ SCRIPT = r"""
   const step = hero.querySelector('.film__step'), name = hero.querySelector('.film__name'), num = hero.querySelector('.film__num');
   const pad = i => String(i + 1).padStart(3, '0');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The film plays over the first BUILD share of the scroll; the rest holds the
+  // finished room while the camera keeps a slow push-in and the copy arrives.
+  const BUILD = .8;
+  let zoom = 1;
+  hero.classList.add('is-js');
   const frames = new Array(n);
   let current = -1, label = -1;
   function draw(i) {
@@ -51,7 +63,7 @@ SCRIPT = r"""
     const img = frames[k]; if (!img || !img.complete || !img.naturalWidth) return;
     const w = canvas.clientWidth, h = canvas.clientHeight, d = Math.min(2, devicePixelRatio || 1);
     if (canvas.width !== Math.round(w * d)) { canvas.width = Math.round(w * d); canvas.height = Math.round(h * d); }
-    const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+    const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight) * zoom;
     const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
     ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
     hero.classList.add('is-live');
@@ -61,10 +73,14 @@ SCRIPT = r"""
   function update() {
     const r = hero.getBoundingClientRect();
     const q = reduce ? 1 : Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
-    const i = Math.round(q * (n - 1));
-    hero.style.setProperty('--film-q', q.toFixed(4));
-    if (i !== current) { current = i; load(i); draw(i); }
-    const l = Math.min(labels.length - 1, Math.floor(q * labels.length * .999));
+    const b = Math.min(1, q / BUILD);
+    const i = Math.round(b * (n - 1));
+    zoom = 1 + .14 * q;
+    hero.style.setProperty('--film-q', b.toFixed(4));
+    hero.classList.toggle('is-done', q >= BUILD + .02 || reduce);
+    if (i !== current) { current = i; load(i); }
+    draw(i);
+    const l = Math.min(labels.length - 1, Math.floor(b * labels.length * .999));
     if (l !== label && labels.length) { label = l; name.textContent = labels[l]; num.textContent = String(l + 1).padStart(2, '0');
       step.classList.remove('flip'); void step.offsetWidth; step.classList.add('flip'); }
   }

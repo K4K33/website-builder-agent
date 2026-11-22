@@ -469,16 +469,20 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     # Every photo appears once: the growing photo first, then services. Next to an
     # illustrated sequence, stock photos from other cameras would break the world:
     # only the company's own photos are added, and the finished frame grows.
-    grow_index = None if seq_staged else (rest.pop(0) if rest else None)
+    grow_index = None if (seq_staged or film) else (rest.pop(0) if rest else None)
     grow_photo = staged[grow_index] if grow_index is not None else ""
     if seq_staged and grow_index is None:
         grow_photo = seq_staged[-1]
+    if film:
+        # One visual world: the room the film built grows here, not another camera's.
+        grow_photo = f"assets/film/f{len(film['frames']):03d}.webp"
+        sequence_note = sequence_note or film["note"]
     grow_html = ""
     if grow_photo:
         cap_text = captions[grow_index] if grow_index is not None else (sequence_note or "Havainnekuva")
         grow_cap = f'<p class="grow__cap">{_e(cap_text)}</p>' if cap_text else ""
         grow_html = (f'<section class="grow" aria-label="Työkuva"><div class="grow__stage">'
-                     f'<img src="{grow_photo}" alt="{alt(grow_index) if grow_index is not None else hero_alts[-1]}" loading="lazy">\n{grow_cap}</div></section>')
+                     f'<img src="{grow_photo}" alt="{alt(grow_index) if grow_index is not None else (_e(film['note'] + ': valmis lopputulos') if film else hero_alts[-1])}" loading="lazy">\n{grow_cap}</div></section>')
     svc_photos = {i: staged[rest[i]] for i in range(min(len(rest), len(plan["services"])))}
     service_items = "".join(
         f'''<li class="svc"{f' data-photo="{i}"' if i in svc_photos else ""}>
