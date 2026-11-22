@@ -1,0 +1,33 @@
+name: Kaurivo runner local model check
+# Verifies the quota-proof fallback (open model on the runner) with invented
+# public text only. No secrets, no company data, no paid services.
+on:
+  pull_request:
+    paths:
+      - "website-builder-agent/website-builder-agent/utils/runner_local_model.py"
+      - "website-builder-agent/website-builder-agent/scripts/check_runner_local_model.py"
+      - ".github/workflows/kaurivo-local-model-check.yml"
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Ollama model tag
+        default: gemma3:12b
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: website-builder-agent/website-builder-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Open model writes and verifies a sales plan
+        env:
+          KAURIVO_LOCAL_SALES_MODEL: ${{ inputs.model || 'gemma3:12b' }}
+        run: python -m scripts.check_runner_local_model

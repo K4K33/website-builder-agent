@@ -475,6 +475,11 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
       {f'<img class="svc__img" src="{svc_photos[i]}" alt="" loading="lazy">' if i in svc_photos else ""}
     </li>''' for i, s in enumerate(plan["services"]))
 
+    # A band of the verified service names in giant moving type paces the page
+    # between the statement and the service list (the list carries the meaning).
+    from utils.kinetic_type import band_html, enhance_kinetic_type
+    kinetic_html = band_html([s["name"] for s in plan["services"]]) if len(plan["services"]) >= 3 else ""
+
     p = palette
     from utils.award_playbook import contrast
     hexrgb = lambda v: tuple(int(v[i:i + 2], 16) for i in (1, 3, 5))
@@ -599,6 +604,7 @@ background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0))}}
 .typecut__copy{{position:absolute!important;z-index:4!important;left:var(--gutter);right:var(--gutter);bottom:clamp(28px,8vh,80px);max-width:40rem;color:#fff}}
 .typecut__copy h1{{font-size:clamp(34px,4.2vw,68px);line-height:.98;color:#fff}}
 .typecut__copy p{{margin:12px 0 0;max-width:36ch;color:rgba(255,255,255,.86)}}
+[data-kaurivo-kinetic]{{font-family:"Display",sans-serif;{display_css};color:var(--ink);--kinetic-dot:var(--accent)}}
 .grow__cap{{position:absolute;left:var(--gutter);bottom:clamp(24px,6vh,60px);background:var(--canvas);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px}}
 .proof{{padding:clamp(72px,12vh,140px) var(--gutter);border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}}
 .proof>h2{{font-size:clamp(22px,1.6vw,28px);font-family:"Body";font-weight:600;letter-spacing:0;color:var(--muted);margin-bottom:clamp(28px,5vh,56px)}}
@@ -631,6 +637,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 <main>
 {hero}
 <section class="statement" aria-label="Yrityksestä"><p id="lausunto">{_e(plan["statement"])}</p></section>
+{kinetic_html}
 <section class="services" aria-labelledby="palvelut"><h2 id="palvelut">Palvelut</h2><ul class="svc-list">{service_items}</ul></section>
 {_proof_section(plan["proof"])}
 {grow_html}
@@ -704,6 +711,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 </html>
 '''
     page = enhance_scroll_scrub(page, route="index.html", media=media, site_root=out_dir)
+    page = enhance_kinetic_type(page)
     if typecut:
         from utils.type_through import enhance_type_through
         page = enhance_type_through(page, route="index.html", media=media, site_root=out_dir)

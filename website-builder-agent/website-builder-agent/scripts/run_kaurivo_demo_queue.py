@@ -1291,7 +1291,19 @@ def run_sales_demo(source,company_name,agent_slug,marker):
     work=Path(tempfile.mkdtemp(prefix="kaurivo-sales-"))
     try:
         update("building","Myyntidemo: sisältö lähdesivulta ja sivun rakennus")
-        summary=build_sales_demo(company_name,source,site,work_dir=work)
+        # Free cloud quotas first; when all are spent, the open model on the
+        # runner writes the one content plan (slow but free, quota-proof).
+        from utils.claude_client import ask_claude_json
+        from utils.runner_local_model import with_local_fallback
+        used_local=[]
+        def on_local(model):
+            used_local.append(model)
+            update("building","Myyntidemo: pilvi-AI:n ilmaiskiintiö täynnä, sisältö kirjoitetaan "
+                   "ajokoneen omalla avoimella mallilla (hidas, maksuton)")
+        summary=build_sales_demo(company_name,source,site,work_dir=work,
+                                 ask=with_local_fallback(ask_claude_json,on_local=on_local))
+        if used_local:
+            print("Kaurivo sales demo: plan written by the runner's local open model.")
     except SalesDemoBlocked as exc:
         raise HoldError(exc.code,exc.detail) from None
     except (RuntimeError,ValueError) as exc:
@@ -1553,6 +1565,17 @@ def main():
                     cloud_limit=(not LOCAL_WORKER and error.code in {
                         "free_ai_rate_limit","free_ai_capacity_unavailable"
                     })
+                    if (cloud_limit and os.environ.get("KAURIVO_SALES_FALLBACK","0")=="1"
+                            and os.environ.get("KAURIVO_BUILD_MODE","full")!="sales"
+                            and "company_name" in locals() and "agent_slug" in locals()):
+                        # The full builder needs dozens of free requests; a
+                        # one-page sales demo needs one, and can use the
+                        # runner's own model. Deliver that instead of waiting.
+                        try:
+                            print("Kaurivo demo queue: free quota spent; building the sales demo instead.")
+                            return run_sales_demo(source,company_name,agent_slug,marker)
+                        except HoldError as sales_error:
+                            print("Kaurivo demo queue: sales fallback held:",sales_error.code)
                     if cloud_limit:
                         message=("Maksuttoman pilvi-AI:n (OpenRouter tai "
                                  "Cloudflare) kapasiteetti rajoitti pyyntöä "

@@ -302,6 +302,12 @@ jobs:
           KAURIVO_GEMINI_API_KEY: ${{ secrets.KAURIVO_GEMINI_API_KEY }}
           KAURIVO_PEXELS_API_KEY: ${{ secrets.KAURIVO_PEXELS_API_KEY }}
           KAURIVO_BUILD_MODE: ${{ inputs.mode || 'full' }}
+          # Quota-proof free fallback: when every free cloud quota is spent,
+          # the one-page sales demo's content plan is written by an open
+          # model on this runner (Ollama, loopback only, no cost), and a
+          # full build stopped by quota delivers the sales demo instead.
+          KAURIVO_LOCAL_SALES_MODEL: ${{ vars.KAURIVO_LOCAL_SALES_MODEL || 'gemma3:12b' }}
+          KAURIVO_SALES_FALLBACK: ${{ vars.KAURIVO_SALES_FALLBACK || '1' }}
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
           KAURIVO_GEMINI_FREE_CONFIRMED: ${{ vars.KAURIVO_GEMINI_FREE_CONFIRMED || '1' }}
           OPENROUTER_MODEL: openrouter/free
