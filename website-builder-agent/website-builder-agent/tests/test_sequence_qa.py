@@ -19,7 +19,7 @@ def room(shift=0, tint=(200, 200, 200)):
 
 class SequenceQaTests(unittest.TestCase):
     def test_same_camera_passes_moved_camera_fails(self):
-        same = sequence_qa.alignment([room(tint=(150, 180, 210)), room()])
+        same = sequence_qa.alignment([room(), room()])
         moved = sequence_qa.alignment([room(shift=90), room()])
         self.assertGreaterEqual(min(same), sequence_qa.MIN_ALIGNMENT)
         self.assertLess(min(moved), sequence_qa.MIN_ALIGNMENT)

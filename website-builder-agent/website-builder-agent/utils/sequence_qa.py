@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-MIN_ALIGNMENT = 0.78
+MIN_ALIGNMENT = 0.88
 MIN_SCORE = 8
 
 REVIEW_BRIEF = """You are a strict art director reviewing AI images for a premium website hero that shows
@@ -41,23 +41,21 @@ def _edges(image, size=(192, 108)):
     return a > float(np.percentile(a, 93))
 
 
-def alignment(images: list) -> list[float]:
-    """Structural agreement of each stage with the finished frame (calibrated:
-    same room and camera 0.84-0.94, a different room or camera 0.57-0.71)."""
+def alignment(images: list, ref: int | None = None) -> list[float]:
+    """How much of the reference stage's room structure (walls, corners, ceiling
+    edges) survives in every other stage. The reference is the empty shell, so
+    fixtures added later never count against a stage. Calibrated: same room and
+    camera 0.90-0.99; a moved camera or another room 0.62-0.84."""
     import numpy as np
     from PIL import Image, ImageFilter
-
-    def binary_dilation(mask, iterations=1):
-        grown = Image.fromarray(mask.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(2 * iterations + 1))
-        return np.asarray(grown) > 0
-    final = _edges(images[-1])
-    grown = binary_dilation(final, iterations=1)
+    ref = len(images) - 1 if ref is None else ref
+    base = _edges(images[ref])
     scores = []
-    for image in images[:-1]:
-        edges = _edges(image)
-        forward = (edges & grown).sum() / max(1, edges.sum())
-        back = (final & binary_dilation(edges, iterations=1)).sum() / max(1, final.sum())
-        scores.append(round(float(min(forward, back)), 3))
+    for index, image in enumerate(images):
+        if index == ref:
+            continue
+        grown = Image.fromarray(_edges(image).astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(3))
+        scores.append(round(float((base & (np.asarray(grown) > 0)).sum() / max(1, base.sum())), 3))
     return scores
 
 
@@ -76,10 +74,10 @@ def review(paths: list[Path], labels: list[str], *, ask=None) -> dict:
         return {"ok": False, "score": 0, "issues": ["review unavailable: " + type(exc).__name__]}
 
 
-def check(paths: list[Path], labels: list[str], *, ask=None) -> dict:
+def check(paths: list[Path], labels: list[str], *, ask=None, ref: int | None = None) -> dict:
     from PIL import Image
     images = [Image.open(p).convert("RGB") for p in paths]
-    aligned = alignment(images)
+    aligned = alignment(images, ref)
     result = {"alignment": aligned, "aligned": min(aligned or [1]) >= MIN_ALIGNMENT}
     result.update(review(paths, labels, ask=ask) if result["aligned"] else
                   {"ok": False, "score": 0, "issues": ["stages are not the same room/camera"]})

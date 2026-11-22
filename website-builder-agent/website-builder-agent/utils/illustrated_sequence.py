@@ -230,9 +230,9 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         for index, (label, surfaces, fixtures) in enumerate(stages):
             if index == base:
                 continue
-            edit = ("Edit this exact photo. Keep exactly the same camera position, framing, scale, lens, the same "
-                    "ceiling light switched on, the same daylight colour and exposure, photorealistic photo style, "
-                    "and the same background colour and floor around the room; keep the room's shape and wall "
+            edit = ("Edit this exact photo. Keep exactly the same camera position, framing, scale, lens and light "
+                    "(the same ceiling light on), and the same background colour and floor around the room; keep the "
+                    "room's shape and wall "
                     f"heights. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
                     "Same rendering style, no people, no text.")
             image = run(edit, final)
@@ -252,7 +252,8 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         paths.append(target)
         labels.append(label)
     kind = "kylpyhuone" if "kylpyhuone" in note else "maalaus" if "maalaus" in note else "talo"
-    return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind]), "focus": focus}
+    return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind]), "focus": focus,
+            "base": base}
 
 
 def subject_mask(final, *, threshold: float = 28.0):
