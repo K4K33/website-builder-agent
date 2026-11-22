@@ -40,7 +40,7 @@ class BuildFilmTests(unittest.TestCase):
             finally:
                 build_film.animate_pair = original
         self.assertEqual(len(calls), 1)
-        self.assertIn("membrane", calls[0])
+        self.assertIn("waterproofing", calls[0])
 
     def test_hero_is_labelled_and_has_still_fallback(self):
         page = hero_html(prefix="assets/film/", count=120, labels=["Purku", "Valmis"], headline_html="<h1>X</h1>",

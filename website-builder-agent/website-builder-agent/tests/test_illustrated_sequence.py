@@ -49,10 +49,10 @@ class IllustratedSequenceTests(unittest.TestCase):
             # Finished room first from text, earlier stages are edits of it.
             self.assertNotIn("input_image_0", calls[0])
             self.assertTrue(all("input_image_0" in c for c in calls[1:]))
-            self.assertIn("Edit this exact image", calls[1]["prompt"][1])
+            self.assertIn("Edit this exact photo", calls[1]["prompt"][1])
             self.assertTrue(all(p.is_file() for p in got["paths"]))
             self.assertIn("tekoälyllä luotu", got["note"])
-            self.assertEqual(got["transitions"], ["depth", "depth", "build", "build", "build"])
+            self.assertEqual(got["transitions"], ["depth", "depth", "depth", "depth", "depth"])
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_CLOUDFLARE_WORKERS_FREE_CONFIRMED": "0"}):
             self.assertIsNone(generate_sequence("kylpyhuoneremontti", Path(tmp), post=post))
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_ILLUSTRATED_SEQUENCE": "0"}):
