@@ -122,7 +122,8 @@ class EvidenceAndDeliveryTests(unittest.TestCase):
                        / "assets" / "i18n.js").read_text(encoding="utf-8")
         for name in ("main_goal", "editing_priority", "brand_preference"):
             self.assertIn('name="' + name + '"', page)
-        self.assertIn("These are planning preferences", page)
+        self.assertIn("These are planning preferences", translation)
+        self.assertIn("Nämä ovat suunnittelutoiveita", page)
         self.assertIn("Verkkosivun tärkein tavoite", translation)
 
     def test_agreement_requires_all_terms_and_scope_version(self):

@@ -727,3 +727,9 @@ body{background:var(--v6-ink);color:#f7f8fa}
 @media(max-width:850px){.customer-feedback-grid{grid-template-columns:minmax(0,1fr);gap:32px}.customer-feedback-intro .display{font-size:clamp(44px,8vw,69px)}}
 @media(max-width:600px){.customer-feedback-hero{padding-bottom:46px}.customer-feedback-intro .display{font-size:clamp(42px,10.8vw,60px)}.customer-feedback-grid{gap:26px}.customer-feedback-form{padding:23px 17px}.customer-feedback-form .feedback-star-options{justify-content:space-between;gap:6px}.customer-feedback-form .feedback-star-options label{width:clamp(43px,13vw,55px);height:52px}.customer-feedback-form .star-glyph{font-size:36px}.customer-feedback-promise{margin-top:20px}}
 @media(prefers-reduced-motion:reduce){.customer-feedback-form .feedback-star-options label{transition:none}}
+
+/* Finnish-first: long Finnish compounds must never overflow narrow phones */
+h1,h2,.display{overflow-wrap:break-word;hyphens:auto}
+@media(max-width:380px){.display{font-size:clamp(38px,11.8vw,47px)}}
+.prototype-controls,.prototype-controls>*{min-width:0}
+@media(max-width:850px){.wrap.prototype{grid-template-columns:minmax(0,1fr)}}

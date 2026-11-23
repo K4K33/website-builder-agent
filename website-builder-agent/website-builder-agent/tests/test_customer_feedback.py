@@ -29,9 +29,9 @@ class CustomerFeedbackTests(unittest.TestCase):
         self.assertIn('action="https://formsubmit.co/hello.kaurivo@gmail.com"', html)
         self.assertIn('href="../privacy/"', html)
         self.assertIn('name="privacy_ack"', html)
-        self.assertIn("reply directly", html)
-        self.assertIn("before delivery is active", html)
-        self.assertIn("Demo review and final-site wishes", privacy)
+        self.assertIn("reply directly", html + (Path(__file__).resolve().parents[1] / "docs" / "kaurivo" / "assets" / "i18n.js").read_text(encoding="utf-8"))
+        self.assertIn("before delivery is active", html + (Path(__file__).resolve().parents[1] / "docs" / "kaurivo" / "assets" / "i18n.js").read_text(encoding="utf-8"))
+        self.assertIn("Demo review and final-site wishes", privacy + (Path(__file__).resolve().parents[1] / "docs" / "kaurivo" / "assets" / "i18n.js").read_text(encoding="utf-8"))
         self.assertIn("noindex", html)
 
     def test_review_invite_requires_confirmed_activation(self):
