@@ -36,7 +36,7 @@ RAMP = (10, 15, 25, 35, 50)
 
 
 def sender() -> str:
-    return os.getenv("KAURIVO_SENDER", "").strip() or "hello.kaurivo@gmail.com"
+    return os.getenv("KAURIVO_SENDER", "").strip() or "hello@kaurivo.com"
 
 
 def demo_host() -> str:
@@ -55,7 +55,7 @@ def preflight(subject: str, body: str, *, from_address: str | None = None, html:
     address = from_address or sender()
     if _domain(address) in FREE_MAILBOXES or not _domain(address):
         issues.append("Lähettäjä on ilmainen postilaatikko: lähetä Kaurivon omasta verkkotunnuksesta "
-                      "(esim. kaarlo@kaurivo.fi), jolle on SPF, DKIM ja DMARC.")
+                      "(hello@kaurivo.com), jolle on SPF, DKIM ja DMARC.")
     links = URL.findall(body) + URL.findall(html)
     for link in links:
         host = re.sub(r"^https?://", "", link).split("/")[0].casefold()
