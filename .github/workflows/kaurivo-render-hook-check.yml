@@ -1,0 +1,20 @@
+name: Kaurivo Render deploy hook check
+# Manually confirms that the KAURIVO_RENDER_DEPLOY_HOOK secret starts a deploy of
+# the internal preview site. Prints only the HTTP status, never the URL.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hook:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call the deploy hook
+        env:
+          HOOK: ${{ secrets.KAURIVO_RENDER_DEPLOY_HOOK }}
+        run: |
+          case "$HOOK" in https://api.render.com/deploy/*) ;; *) echo "secret missing or not a Render deploy hook"; exit 1;; esac
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$HOOK")
+          echo "Render deploy hook HTTP $code"
+          test "$code" -ge 200 -a "$code" -lt 300
