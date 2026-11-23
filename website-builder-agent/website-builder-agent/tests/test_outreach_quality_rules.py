@@ -55,7 +55,7 @@ class OutreachQualityTests(unittest.TestCase):
         self.assertIn("toteuttaa uuden sivuston teille kokonaan", prompt)
         self.assertIn("Haluaisitteko tällaiset verkkosivut yrityksellenne?", prompt)
         self.assertIn("juuri tälle yritykselle tehtyä demosivustoa", prompt)
-        self.assertIn("hello.kaurivo@gmail.com", prompt)
+        self.assertIn("hello@kaurivo.com", prompt)
         self.assertIn("ihmisen erillisellä hyväksynnällä", prompt)
 
     def test_draft_includes_company_specific_evidence_and_customer_task(self):
