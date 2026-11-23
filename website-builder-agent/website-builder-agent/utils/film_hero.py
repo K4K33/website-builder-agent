@@ -109,12 +109,12 @@ def hero_html(*, prefix: str, count: int, labels: list[str], headline_html: str,
     labels_json = html.escape(json.dumps(labels, ensure_ascii=False), quote=True)
     first = html.escape(labels[0]) if labels else ""
     return f'''
-<section class="hero hero--film" data-frames="{prefix}" data-count="{count}" data-labels="{labels_json}" aria-labelledby="otsikko">
+<section class="hero hero--film" data-copy-after="0.82" data-frames="{prefix}" data-count="{count}" data-labels="{labels_json}" aria-labelledby="otsikko">
  <div class="film__stage">
   <img class="film__poster" src="{prefix}f{count:03d}.webp" alt="{html.escape(alt)}">
   <canvas aria-hidden="true"></canvas>
   <p class="film__step" aria-hidden="true"><span class="film__num">01</span><span class="film__name">{first}</span></p>
-  <div class="film__copy">{headline_html}{body_html}</div>
+  <div class="film__copy" data-hero-copy>{headline_html}{body_html}</div>
   <p class="film__note">{html.escape(note)}</p>
   <div class="film__bar" aria-hidden="true"><i></i></div>
  </div>
