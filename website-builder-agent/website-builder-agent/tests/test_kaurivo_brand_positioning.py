@@ -38,7 +38,8 @@ class KaurivoPositioningTests(unittest.TestCase):
         translations = (ASSET / "i18n.js").read_text(encoding="utf-8")
         html = HOME.read_text(encoding="utf-8")
         composer = (ASSET / "outreach-mail.js").read_text(encoding="utf-8")
-        self.assertIn('new URLSearchParams(location.search).get("lang")==="fi"', translations)
+        # Finnish is the static page; ?lang=en or ?lang=fi selects the view.
+        self.assertIn('if(q==="en"||q==="fi")chosen=q', translations)
         self.assertIn("Kaurivo", html)
         self.assertNotIn("https://", composer)
         self.assertNotIn("http://", composer)
@@ -46,8 +47,10 @@ class KaurivoPositioningTests(unittest.TestCase):
     def test_website_clarifies_new_sites_and_redesigns_in_two_languages(self):
         html = HOME.read_text(encoding="utf-8")
         translations = (ASSET / "i18n.js").read_text(encoding="utf-8")
-        self.assertIn("Kaurivo is an independent web design studio creating new websites", html)
-        self.assertIn("redesigning existing ones", html)
+        # Finnish is the static HTML (search engines), English the translated view.
+        self.assertIn("Kaurivo on uuden sukupolven verkkosivustudio", html)
+        self.assertIn("Kaurivo is an independent web design studio creating new websites", translations)
+        self.assertIn("redesigning existing ones", translations)
         self.assertIn("Kaurivo on uuden sukupolven verkkosivustudio", translations)
         self.assertIn("uudistaa nykyisiä", translations)
         self.assertIn('data-lang-set="fi"', html)

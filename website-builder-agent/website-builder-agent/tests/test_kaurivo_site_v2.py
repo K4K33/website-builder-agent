@@ -81,19 +81,19 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertNotIn('id="enquiry-form"', home)
         self.assertNotIn('id="faq-list"', home)
         self.assertIn('id="faq-list"', faq)
-        self.assertIn("Can I update my website myself?", faq)
+        self.assertIn("Can I update my website myself?", (SITE / "assets" / "i18n.js").read_text(encoding="utf-8"))
         self.assertGreaterEqual(faq.count("<details>"), 8)
         self.assertIn("data-stage-button", process)
         self.assertIn('id="selected-work"', home)
         self.assertIn('href="lab/service/"', home)
         self.assertIn('href="lab/editorial/"', home)
-        self.assertIn("performance targets, not measured results", process.lower())
+        self.assertIn("suorituskykytavoitteita, eivät kaurivon tai asiakkaiden sivuilta mitattuja tuloksia", process.lower())
         self.assertIn('id="enquiry-form"', contact)
         self.assertIn('href="faq/"', home)
         for name in ("services", "process", "faq", "contact", "work", "about", "privacy", "thanks", "demo_review", "feedback"):
             page_text = PAGES[name].read_text(encoding="utf-8")
             self.assertIn('class="back-home" href="../"', page_text)
-            self.assertIn("Back to Home", page_text)
+            self.assertIn("Takaisin etusivulle", page_text)
         self.assertNotIn('class="back-home"', home)
         self.assertIn('href="../faq/"', process)
 
@@ -177,7 +177,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
                                 self.assertEqual(page.locator(".v6-work-card").count(), 2)
                                 self.assertEqual(page.locator(".service-card").count(), 3)
                             if name != "home":
-                                back = page.get_by_role("link", name="Back to Home page")
+                                back = page.get_by_role("link", name="Takaisin etusivulle")
                                 self.assertTrue(back.is_visible())
                                 self.assertEqual(back.get_attribute("href"), "../")
                             if name == "contact":
