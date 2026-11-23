@@ -426,12 +426,12 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
             f'<li data-stage="{at:.3f}"><span>{i + 1}</span>{_e(n)}</li>' for i, (at, n) in enumerate(steps)) + "</ol>"
         steps_json = _e(json.dumps([{"at": at, "name": n} for at, n in steps], ensure_ascii=False))
         hero = f'''
-<section class="hero hero--3d" data-build3d="{build_scene}" data-steps="{steps_json}" aria-labelledby="otsikko">
+<section class="hero hero--3d" data-build3d="{build_scene}" data-steps="{steps_json}" data-copy-after="0.82" aria-labelledby="otsikko">
  <div class="b3d__stage">
   <img class="b3d__poster" src="{scene_rel}{build_scene}-poster.webp" alt="{_e(BUILD_SCENES[build_scene]["alt"])}">
   <canvas class="b3d__canvas" aria-hidden="true"></canvas>
   <p class="b3d__step" aria-hidden="true"><span class="b3d__num">01</span><span class="b3d__name">{_e(steps[0][1])}</span></p>
-  <div class="b3d__copy">
+  <div class="b3d__copy" data-hero-copy>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     <div class="b3d__chapters">{chapters}</div>
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
@@ -443,10 +443,10 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
 </section>'''
     elif typecut:
         hero = f'''
-<section class="hero hero--typecut" data-kaurivo-typecut aria-labelledby="otsikko">
+<section class="hero hero--typecut" data-kaurivo-typecut data-copy-after="0.6" aria-labelledby="otsikko">
   <img src="{staged[0]}" alt="{alt(0)}">
   <p data-typecut-word aria-hidden="true">{_e(_brand_word(company.get("name"), plan["headline"]))}</p>
-  <div class="typecut__copy">
+  <div class="typecut__copy" data-hero-copy>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     {f'<p>{_e(plan["chapters"][0])}</p>' if plan["chapters"] else ""}
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
@@ -454,10 +454,10 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
 </section>'''
     else:
         hero = f'''
-<section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""}{' data-scrub-warp="0"' if plan["trade"] == "rakennus" or seq_staged else ""}{f' data-scrub-focus="{sequence_focus:.2f}"' if seq_staged and sequence_focus != .5 else ""} aria-labelledby="otsikko">
+<section class="hero" data-kaurivo-scrub{' data-scrub-style="blueprint"' if plan["hero_style"] == "blueprint" else ""}{' data-scrub-warp="0"' if plan["trade"] == "rakennus" or seq_staged else ""}{f' data-scrub-focus="{sequence_focus:.2f}"' if seq_staged and sequence_focus != .5 else ""} data-copy-after="0.82" aria-labelledby="otsikko">
   <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{hero_alts[0]}">
   {"".join(f'<img data-kaurivo-scrub-frame{_transition(i + 1)} src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
-  <div data-kaurivo-scrub-copy>
+  <div data-kaurivo-scrub-copy data-hero-copy>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     {chapters}
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
@@ -735,9 +735,12 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 '''
     page = enhance_scroll_scrub(page, route="index.html", media=media, site_root=out_dir)
     page = enhance_kinetic_type(page)
+    from utils.hero_reveal import enhance_hero_reveal
     if typecut:
         from utils.type_through import enhance_type_through
         page = enhance_type_through(page, route="index.html", media=media, site_root=out_dir)
+    # Every hero: the visual alone first, the words when its animation is done.
+    page = enhance_hero_reveal(page)
     target = out_dir / "index.html"
     target.write_text(page, encoding="utf-8")
     (out_dir / "sales-demo.json").write_text(json.dumps(
