@@ -73,7 +73,8 @@ jobs:
               # Up to 3 attempts (different seeds); keep the best, stop at the first pass.
               for attempt in range(int(os.environ.get("ATTEMPTS") or 3)):
                   os.environ["KAURIVO_SEQUENCE_SEED_OFFSET"] = str(attempt * 17)
-                  seq = illustrated_sequence.generate_sequence(trade + "remontti", root / f"seq{attempt}")
+                  topic = {"talo": "omakotitalon rakentaminen", "maalaus": "maalaustyöt"}.get(trade, trade + "remontti")
+                  seq = illustrated_sequence.generate_sequence(topic, root / f"seq{attempt}")
                   print("keyframes attempt", attempt + 1, bool(seq), illustrated_sequence.LAST_ERROR)
                   if not seq:
                       break

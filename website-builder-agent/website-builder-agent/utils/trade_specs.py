@@ -30,6 +30,25 @@ SPECS = {
             "Valmis": "every finished element is installed and the room is clean and styled",
         },
     },
+    "talo": {
+        "finished_must": [
+            "a dark standing-seam metal roof with gutters and downpipes",
+            "all windows and the front door installed with clean trims",
+            "the facade fully clad (vertical wooden cladding and white render), no unfinished areas",
+            "entrance steps or a porch with a light by the door",
+            "a finished yard: lawn, a path to the door and plants",
+            "warm lights glowing inside at dusk",
+        ],
+        "stage_work": {
+            "Perustus": "a cast foundation slab with stacked building materials and a machine on site",
+            "Runko": "block walls of both floors built up to the roof line with scaffolding",
+            "Vesikatto": "roof trusses and the metal roof on, windows fitted",
+            "Julkisivu": "cladding and render complete, scaffolding gone, yard finished, lights on",
+            "Valmis": "the same finished house seen at eye level from the front door at dusk",
+        },
+        # The last keyframe moves the camera: compare structure only up to here.
+        "same_camera_until": 4,
+    },
     "maalaus": {
         "finished_must": [
             "an evenly painted wall with crisp straight edges at the ceiling and corners",

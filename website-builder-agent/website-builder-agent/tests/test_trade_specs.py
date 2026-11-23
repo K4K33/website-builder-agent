@@ -26,3 +26,15 @@ class TradeSpecsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HouseBuildTests(unittest.TestCase):
+    def test_house_follows_the_reference_build(self):
+        from utils.illustrated_sequence import BASE_STAGE, LAST_VIEW, template_for
+        seed, scene, stages, note = template_for("Omakotitalojen rakentaminen")
+        self.assertIn("drone", scene)
+        self.assertEqual([s[0] for s in stages], ["Perustus", "Runko", "Vesikatto", "Julkisivu", "Valmis"])
+        self.assertEqual(BASE_STAGE["talo"], 0)          # built up from the foundation
+        self.assertIn("front door", LAST_VIEW["talo"])   # ends at the door like the reference
+        self.assertEqual(SPECS["talo"]["same_camera_until"], 4)
+        self.assertIn("gutters", finished_text("talo"))
