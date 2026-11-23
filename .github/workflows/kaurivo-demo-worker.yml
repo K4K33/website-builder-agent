@@ -308,6 +308,7 @@ jobs:
           # full build stopped by quota delivers the sales demo instead.
           KAURIVO_LOCAL_SALES_MODEL: ${{ vars.KAURIVO_LOCAL_SALES_MODEL || 'gemma3:12b' }}
           KAURIVO_SALES_FALLBACK: ${{ vars.KAURIVO_SALES_FALLBACK || '1' }}
+          KAURIVO_RENDER_DEPLOY_HOOK: ${{ secrets.KAURIVO_RENDER_DEPLOY_HOOK }}
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
           KAURIVO_GEMINI_FREE_CONFIRMED: ${{ vars.KAURIVO_GEMINI_FREE_CONFIRMED || '1' }}
           OPENROUTER_MODEL: openrouter/free
