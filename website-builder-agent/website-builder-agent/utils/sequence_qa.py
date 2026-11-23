@@ -26,6 +26,9 @@ Judge like a demanding client. Fail it if ANY of these is true:
 - the stages are not clearly the same room from the same camera position
 - a stage shows things that do not belong to that stage (fixtures before they are installed,
   tools, debris, people, text, logos)
+- any object appears twice where one is expected (two toilets, two sinks, doubled taps)
+- a stage does not clearly show its own work (e.g. "tiles" must show visible tiles with grout
+  lines, "waterproofing" an even membrane, "finished" a fully finished premium room)
 - geometry is warped, melted, doubled or physically impossible
 - it looks cheap, cartoonish, noisy or inconsistent in colour and light
 Answer JSON only: {{"score": 0-10, "ok": true/false, "issues": ["short issue", ...]}}.
