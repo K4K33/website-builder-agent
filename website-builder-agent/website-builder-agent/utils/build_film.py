@@ -32,18 +32,20 @@ SCRIPTS = {
     # Seen from inside, camera locked; every change progresses evenly and in order
     # (symmetric, layer by layer), like the reference sites, never patchy.
     "kylpyhuone": (
-        ("Purku", "Locked-off camera inside the same bathroom. The old tiles, bathtub, sink, toilet and curtain "
-                  "are removed in an orderly sequence from top to bottom, evenly on both sides, revealing bare grey "
-                  "concrete. Smooth, calm, architectural animation, no people."),
-        ("Vedeneristys", "Locked-off camera inside the same room. Off-white waterproofing rises evenly up all "
-                         "walls at the same speed from the floor to the ceiling, a clean straight horizontal edge, "
-                         "perfectly symmetric left and right. Smooth architectural animation, no people."),
-        ("Laatoitus", "Locked-off camera inside the same room. Large grey tiles appear row by row from the floor "
-                      "upwards, each row completing evenly across all walls, symmetric, straight grout lines. "
-                      "Smooth architectural animation, no people."),
-        ("Valmis", "Locked-off camera inside the same room. The glass shower wall, black rain shower and wall-hung "
-                   "toilet glide gently into place one after another, then the light warms up; slow push-in. "
-                   "Smooth architectural animation, no people."),
+        ("Purku", "Locked-off camera inside the same bathroom. The renovation happens visibly: the old shower "
+                  "curtain, bathtub, sink and toilet are lifted out one by one, the old tiles come off the walls row "
+                  "by row from the top down, revealing bare concrete, new copper pipe stubs and electrical boxes. "
+                  "Smooth architectural animation, no people."),
+        ("Vedeneristys", "Locked-off camera inside the same room. White reinforcement tape is laid into every "
+                         "corner, collars go around the pipe stubs, then the off-white waterproofing membrane is "
+                         "rolled on wall by wall from the floor upwards. Smooth architectural animation, no people."),
+        ("Laatoitus", "Locked-off camera inside the same room. Large grey tiles are placed one by one, row after row "
+                      "from the floor up every wall, then the floor is tiled towards the drain and the grout lines "
+                      "appear. Smooth architectural animation, no people."),
+        ("Valmis", "Locked-off camera inside the same room. The fixtures are mounted one after another: the "
+                   "washbasin with its faucet and mirror, the wall-hung toilet, the glass shower wall and rain "
+                   "shower, the heated towel rail; finally the lights warm up. Slow push-in. Smooth architectural "
+                   "animation, no people."),
     ),
 }
 

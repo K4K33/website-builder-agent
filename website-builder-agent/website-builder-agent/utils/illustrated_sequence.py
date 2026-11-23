@@ -50,17 +50,17 @@ TEMPLATES = (
      "24mm lens, soft even daylight, calm and clean, high detail, no people, no text. Surfaces: {s}. Fixtures: {f}.",
      (("Lähtötilanne", "old worn 1990s bathroom: small beige tiles on the walls and floor, stained grout",
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
-      ("Pohja", "bare grey concrete walls and floor",
-       "completely empty room: no toilet, no shower, no glass wall, no taps, no sink, only a capped floor drain"),
-      ("Vedeneristys", "all walls and floor coated with smooth off-white waterproofing membrane, "
-                       "white reinforcement tape in the corners",
-       "completely empty room: no toilet, no shower, no glass wall, no taps"),
-      ("Laatoitus", "the same large light grey tiles as the finished room on the floor and the lower half of the "
-                    "walls, off-white waterproofing membrane still visible on the upper half",
-       "completely empty room: no toilet, no shower, no glass wall, no taps, no tools"),
-      ("Valmis", "every wall from floor to ceiling and the whole floor fully covered with large light grey matte "
-                 "tiles with thin straight grout lines, warm finished look",
-       "black rain shower, frameless glass shower wall, wall-hung white toilet, black fixtures, a towel")),
+      ("Pohja", "bare grey concrete walls and floor; new copper water pipe stubs and grey electrical boxes on the "
+                "walls where the washbasin, toilet and shower will go; a new floor drain",
+       "empty room, nothing installed yet"),
+      ("Vedeneristys", "all walls and the floor coated with smooth off-white waterproofing membrane, white "
+                       "reinforcement tape in every corner and collars around each pipe stub",
+       "empty room, nothing installed yet"),
+      ("Laatoitus", "large light grey matte tiles laid on every wall from floor to ceiling and on the floor, thin "
+                    "straight grout lines, the pipe stubs coming through the tiles",
+       "empty room, no fixtures yet"),
+      ("Valmis", "large light grey matte tiles from floor to ceiling, the floor sloping to the drain, warm finished look",
+       "{finished}")),
      "Havainnekuva, tekoälyllä luotu: kylpyhuoneremontin vaiheet"),
     (r"maalaus|maalari|tasoitus|tapetointi", 9001,
      "Realistic interior photograph, eye-level straight-on wide shot of a bright Nordic living room wall with a "
@@ -168,6 +168,10 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     if not chosen:
         return None
     seed, scene, stages, note = chosen
+    from utils.trade_specs import finished_text
+    kind_key = "kylpyhuone" if "kylpyhuone" in note else "maalaus" if "maalaus" in note else "talo"
+    stages = tuple((label, surfaces, fixtures.replace("{finished}", finished_text(kind_key) or "finished fixtures"))
+                   for label, surfaces, fixtures in stages)
     seed += int(os.getenv("KAURIVO_SEQUENCE_SEED_OFFSET", "0") or 0)
     if post is None:
         import requests
@@ -210,7 +214,8 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     base = base_stage(stages)
     _label, base_s, base_f = stages[base]
     # Negations ("no toilet") make image models draw the toilet: say only what is there.
-    base_f = "completely empty, nothing installed, only a capped floor drain" if "empty" in base_f else base_f
+    if "empty" in base_f:
+        base_f = "nothing installed yet; only the surfaces described"
     images = {}
     try:
         # Image models furnish anything called a bathroom/kitchen: describe the empty
@@ -253,7 +258,7 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         labels.append(label)
     kind = "kylpyhuone" if "kylpyhuone" in note else "maalaus" if "maalaus" in note else "talo"
     return {"paths": paths, "labels": labels, "note": note, "transitions": list(MOVES[kind]), "focus": focus,
-            "base": base}
+            "base": base, "trade": kind}
 
 
 def subject_mask(final, *, threshold: float = 28.0):

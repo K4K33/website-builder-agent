@@ -62,12 +62,17 @@ def alignment(images: list, ref: int | None = None) -> list[float]:
     return scores
 
 
-def review(paths: list[Path], labels: list[str], *, ask=None) -> dict:
+def review(paths: list[Path], labels: list[str], *, ask=None, trade: str = "") -> dict:
     """Ask the free vision QA model; {'ok', 'score', 'issues'} (never raises)."""
     try:
         if ask is None:
             from utils.claude_client import ask_claude_json as ask
-        reply = ask(REVIEW_BRIEF.format(labels=" -> ".join(labels)),
+        from utils.trade_specs import review_checklist
+        brief = REVIEW_BRIEF.format(labels=" -> ".join(labels))
+        extra = review_checklist(trade, labels)
+        if extra:
+            brief += "\n" + extra + "\nFail it if anything in this checklist is missing."
+        reply = ask(brief,
                     "Review these stage images in order.", max_tokens=600,
                     image_paths=[str(p) for p in paths], stage="qa")
         score = int(reply.get("score", 0))
@@ -77,12 +82,12 @@ def review(paths: list[Path], labels: list[str], *, ask=None) -> dict:
         return {"ok": False, "score": 0, "issues": ["review unavailable: " + type(exc).__name__]}
 
 
-def check(paths: list[Path], labels: list[str], *, ask=None, ref: int | None = None) -> dict:
+def check(paths: list[Path], labels: list[str], *, ask=None, ref: int | None = None, trade: str = "") -> dict:
     from PIL import Image
     images = [Image.open(p).convert("RGB") for p in paths]
     aligned = alignment(images, ref)
     result = {"alignment": aligned, "aligned": min(aligned or [1]) >= MIN_ALIGNMENT}
-    result.update(review(paths, labels, ask=ask) if result["aligned"] else
+    result.update(review(paths, labels, ask=ask, trade=trade) if result["aligned"] else
                   {"ok": False, "score": 0, "issues": ["stages are not the same room/camera"]})
     result["ok"] = result["aligned"] and result["ok"]
     return result
