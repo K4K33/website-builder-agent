@@ -35,7 +35,7 @@ SCRIPTS = {
         ("Purku", "Locked-off camera inside the same bathroom. The old tiles, bathtub, sink, toilet and curtain "
                   "are removed in an orderly sequence from top to bottom, evenly on both sides, revealing bare grey "
                   "concrete. Smooth, calm, architectural animation, no people."),
-        ("Vedeneristys", "Locked-off camera inside the same room. Light blue waterproofing rises evenly up all "
+        ("Vedeneristys", "Locked-off camera inside the same room. Off-white waterproofing rises evenly up all "
                          "walls at the same speed from the floor to the ceiling, a clean straight horizontal edge, "
                          "perfectly symmetric left and right. Smooth architectural animation, no people."),
         ("Laatoitus", "Locked-off camera inside the same room. Large grey tiles appear row by row from the floor "

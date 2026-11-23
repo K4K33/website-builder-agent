@@ -415,7 +415,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         film_prefix = stage_frames(film["frames"], out_dir)
         hero = hero_html(
             prefix=film_prefix, count=len(film["frames"]), labels=film["labels"],
-            headline_html=f'<h1 id="otsikko">{_glue(plan["headline"])}</h1>',
+            headline_html=f'<p class="hero__brand">{name}</p><h1 id="otsikko">{_glue(plan["headline"])}</h1>',
             body_html=(f'<p>{_e(plan["chapters"][0])}</p>' if plan["chapters"] else "")
                       + (f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""),
             note=film["note"], alt=film["note"] + ": valmis " + (film.get("trade") or "kohde"))
@@ -432,6 +432,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
   <canvas class="b3d__canvas" aria-hidden="true"></canvas>
   <p class="b3d__step" aria-hidden="true"><span class="b3d__num">01</span><span class="b3d__name">{_e(steps[0][1])}</span></p>
   <div class="b3d__copy" data-hero-copy>
+    <p class="hero__brand">{name}</p>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     <div class="b3d__chapters">{chapters}</div>
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
@@ -447,6 +448,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
   <img src="{staged[0]}" alt="{alt(0)}">
   <p data-typecut-word aria-hidden="true">{_e(_brand_word(company.get("name"), plan["headline"]))}</p>
   <div class="typecut__copy" data-hero-copy>
+    <p class="hero__brand">{name}</p>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     {f'<p>{_e(plan["chapters"][0])}</p>' if plan["chapters"] else ""}
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
@@ -458,6 +460,7 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
   <img data-kaurivo-scrub-poster src="{hero_photos[0]}" alt="{hero_alts[0]}">
   {"".join(f'<img data-kaurivo-scrub-frame{_transition(i + 1)} src="{p}" alt="{hero_alts[i + 1]}">' for i, p in enumerate(hero_photos[1:]))}
   <div data-kaurivo-scrub-copy data-hero-copy>
+    <p class="hero__brand">{name}</p>
     <h1 id="otsikko">{_glue(plan["headline"])}</h1>
     {chapters}
     {f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""}
@@ -539,6 +542,7 @@ padding:14px var(--gutter);background:linear-gradient(180deg,rgba(0,0,0,.42),tra
 .nav__brand{{display:inline-flex;align-items:center;min-width:0}}
 .nav__brand.chip{{background:{"var(--ink)" if p["mode"] == "dark" else "var(--canvas)"};padding:8px 14px;border-radius:10px}}
 .nav__call .long{{display:inline}}
+.hero__brand{{margin:0 0 14px;font-family:"Display",sans-serif;font-size:clamp(22px,2.4vw,36px);line-height:1.05;color:#fff;letter-spacing:.01em}}
 @media (max-width:560px){{.nav__call .long{{display:none}}}}
 .nav__call{{flex:none;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:650;padding:10px 18px;border-radius:999px;white-space:nowrap}}
 h1,h2,h3{{font-family:"Display",serif;{display_css};margin:0;text-wrap:balance}}
@@ -658,7 +662,7 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
 <p class="draft" role="note"><span class="draft__long">Kaurivon luonnos yritykselle {name}. Ei yrityksen virallinen verkkosivu.{stock_note}</span><span class="draft__short" aria-hidden="true">Kaurivon luonnos, ei virallinen sivu.{" Kuvat ovat havainnekuvia." if any(stock) else ""}</span></p>
 <header class="nav">
   {f'<a class="nav__brand chip" href="#otsikko"><img class="nav__logo" src="{logo_rel}" alt="{name}" width="{round(20 * logo_ratio)}" height="20"></a>' if logo_rel else f'<a class="nav__name" href="#otsikko">{name}</a>'}
-  {f'<a class="nav__call" href="{tel}">Soita<span class="long"> {_e(phone)}</span></a>' if tel else ""}
+  {f'<a class="nav__call" data-hide-while-building href="{tel}">Soita<span class="long"> {_e(phone)}</span></a>' if tel else ""}
 </header>
 <main>
 {hero}

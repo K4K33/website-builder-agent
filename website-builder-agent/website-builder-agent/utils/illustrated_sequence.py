@@ -52,11 +52,11 @@ TEMPLATES = (
        "old white bathtub with a shower curtain, old pedestal sink, old toilet, old chrome fixtures"),
       ("Pohja", "bare grey concrete walls and floor",
        "completely empty room: no toilet, no shower, no glass wall, no taps, no sink, only a capped floor drain"),
-      ("Vedeneristys", "all walls and floor coated with smooth light blue waterproofing membrane, "
+      ("Vedeneristys", "all walls and floor coated with smooth off-white waterproofing membrane, "
                        "white reinforcement tape in the corners",
        "completely empty room: no toilet, no shower, no glass wall, no taps"),
       ("Laatoitus", "the same large light grey tiles as the finished room on the floor and the lower half of the "
-                    "walls, light blue waterproofing membrane still visible on the upper half",
+                    "walls, off-white waterproofing membrane still visible on the upper half",
        "completely empty room: no toilet, no shower, no glass wall, no taps, no tools"),
       ("Valmis", "every wall from floor to ceiling and the whole floor fully covered with large light grey matte "
                  "tiles with thin straight grout lines, warm finished look",

@@ -16,6 +16,9 @@ from bs4 import BeautifulSoup
 STYLE = """
 [data-copy-after] [data-hero-copy]{transition:opacity .9s cubic-bezier(.16,1,.3,1),transform 1s cubic-bezier(.16,1,.3,1)}
 [data-copy-after].is-js:not(.is-done) [data-hero-copy]{opacity:0!important;transform:translateY(28px)!important;pointer-events:none}
+/* Page chrome that would compete with the animation (the call button) waits too. */
+[data-hide-while-building]{transition:opacity .8s ease,transform .8s ease}
+html.hero-building [data-hide-while-building]{opacity:0;transform:translateY(-8px);pointer-events:none}
 """
 
 SCRIPT = r"""
@@ -24,13 +27,16 @@ SCRIPT = r"""
   if (!heroes.length) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   function update() {
+    let building = false;
     for (const h of heroes) {
       const r = h.getBoundingClientRect(), room = r.height - innerHeight;
       const at = Math.min(.95, Math.max(.1, +h.dataset.copyAfter || .8));
       // A hero without scroll room (no animation to finish) shows its copy at once.
       const done = reduce || room < innerHeight * .25 || -r.top / room >= at;
       h.classList.toggle('is-done', done);
+      if (r.top < innerHeight && r.bottom > 0 && !done) building = true;
     }
+    document.documentElement.classList.toggle('hero-building', building);
   }
   heroes.forEach(h => h.classList.add('is-js'));
   addEventListener('scroll', () => requestAnimationFrame(update), {passive: true});
