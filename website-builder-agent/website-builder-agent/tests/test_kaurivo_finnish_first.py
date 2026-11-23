@@ -5,7 +5,7 @@ from pathlib import Path
 
 SITE = Path(__file__).resolve().parents[1] / "docs" / "kaurivo"
 PUBLIC = ("index.html", "about/index.html", "services/index.html", "process/index.html", "work/index.html",
-          "faq/index.html", "contact/index.html", "privacy/index.html")
+          "faq/index.html", "contact/index.html", "privacy/index.html", "hinnat/index.html")
 
 
 class FinnishFirstSiteTests(unittest.TestCase):
@@ -35,6 +35,17 @@ class FinnishFirstSiteTests(unittest.TestCase):
         self.assertIn("Disallow: /admin/", robots)
         self.assertIn("Sitemap: https://kaurivo.com/sitemap.xml", robots)
         self.assertIn("<loc>https://kaurivo.com/faq/</loc>", (SITE / "sitemap.xml").read_text())
+
+
+class PricingPageTests(unittest.TestCase):
+    def test_price_list_is_public_and_linked(self):
+        page = (SITE / "hinnat" / "index.html").read_text(encoding="utf-8")
+        for price in ("alkaen 990\u00a0€", "1\u00a0900–3\u00a0500\u00a0€", "alkaen 3\u00a0500\u00a0€", "alv 0\u00a0%"):
+            self.assertIn(price, page)
+        self.assertIn('"@type": "Offer"', page)
+        self.assertIn("../hinnat/", (SITE / "faq" / "index.html").read_text(encoding="utf-8"))
+        self.assertIn('href="hinnat/">Hinnat</a>', (SITE / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("<loc>https://kaurivo.com/hinnat/</loc>", (SITE / "sitemap.xml").read_text())
 
 
 if __name__ == "__main__":
