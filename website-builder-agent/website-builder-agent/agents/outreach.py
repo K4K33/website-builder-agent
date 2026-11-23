@@ -107,6 +107,7 @@ Palauta VAIN validi JSON:
 
 # The sign-off follows the configured business mailbox (own domain once it exists).
 from utils.marketing_compliance import SENDER as _SENDER
+from utils.email_deliverability import public_demo_url as _public_demo_url
 OUTREACH_SYSTEM_PROMPT = OUTREACH_SYSTEM_PROMPT.replace("hello.kaurivo@gmail.com", _SENDER)
 
 
@@ -279,7 +280,7 @@ käytettävissä on seuraava vahvistettu palautelinkki:
 Jos palautelinkki on tyhjä, älä keksi sellaista.
 
 Valmis julkinen demolinkki (ei anneta ellei vahvistettu):
-{company.get("demo_url", "")}
+{_public_demo_url(company.get("demo_url", ""))}
 Jos tämä on tyhjä, viesti voi viitata kuvan ja linkin sisältävään
 erilliseen hyväksyttyyn HTML-demokorttiin. Älä keksi URLia.
 Demon kuvavalinnan periaate:
@@ -352,7 +353,7 @@ Jokainen asiakkaan hyöty ja havainto tarkistetaan ennen lähettämistä.
     # Put the source-accurate image note directly beneath the linked demo
     # and expose it as a separate caption for the HTML demo card.
     media_note = demo_image_caption(company)
-    demo_url = company.get("demo_url")
+    demo_url = _public_demo_url(company.get("demo_url"))
     body = place_demo_caption(
         body, media_note, demo_url if isinstance(demo_url, str) else ""
     )
