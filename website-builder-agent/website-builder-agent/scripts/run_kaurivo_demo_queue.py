@@ -985,6 +985,22 @@ def verify_sales_page(site_root):
     return pages
 
 
+def trigger_render_deploy():
+    """Render's GitHub auto-deploy can silently stop; its free Deploy Hook (a
+    secret URL from the service settings) starts the deploy directly."""
+    hook=os.environ.get("KAURIVO_RENDER_DEPLOY_HOOK","").strip()
+    if not hook.startswith("https://api.render.com/deploy/"):
+        return False
+    try:
+        import requests
+        ok=requests.post(hook,timeout=20,allow_redirects=False).status_code in (200,201,202)
+        print("Kaurivo demo queue: Render deploy hook",("accepted" if ok else "refused"))
+        return ok
+    except Exception as exc:
+        print("Kaurivo demo queue: Render deploy hook failed:",type(exc).__name__)
+        return False
+
+
 def publish(site_root,job_id,slug,marker,expected_routes,qa_details=None,sales=False):
     # Commit to a dedicated Render-auto-deployed branch. Never modify main
     # or previously verified preview URLs; every job gets a new immutable URL.
@@ -1031,6 +1047,7 @@ def publish(site_root,job_id,slug,marker,expected_routes,qa_details=None,sales=F
                                     cwd=publish_root,text=True).strip()
         subprocess.run(["git","push","origin","HEAD:refs/heads/"+PUBLISH_BRANCH],
                        cwd=publish_root,check=True,stdout=subprocess.DEVNULL)
+        trigger_render_deploy()
         return PREVIEW_HOST+"/"+folder+"/index.html",sha,routes
     except HoldError:
         raise
