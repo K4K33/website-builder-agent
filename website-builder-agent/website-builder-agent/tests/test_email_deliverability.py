@@ -52,5 +52,17 @@ class DeliverabilityTests(unittest.TestCase):
             self.assertEqual(d.demo_host(), "https://demo.kaurivo.fi")
 
 
+
+class PublicDemoUrlTests(unittest.TestCase):
+    def test_render_preview_links_move_to_own_domain(self):
+        self.assertEqual(d.public_demo_url("https://kaurivo-auto-demos-2026.onrender.com/maalaus-1/index.html"),
+                         "https://demo.kaurivo.com/maalaus-1/index.html")
+        self.assertEqual(d.public_demo_url("https://example.com/x"), "https://example.com/x")
+        self.assertEqual(d.public_demo_url(None), "")
+        self.assertEqual(d.preflight("Luonnos", GOOD.replace("https://demo.kaurivo.fi/maalaus-valo",
+                         d.public_demo_url("https://kaurivo-auto-demos-2026.onrender.com/m/index.html")),
+                         from_address="hello@kaurivo.com"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

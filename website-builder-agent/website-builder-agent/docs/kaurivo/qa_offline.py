@@ -23,7 +23,7 @@ with sync_playwright() as p:
         page.evaluate("document.documentElement.style.scrollBehavior='auto'")
         assert page.title().startswith('Kaurivo')
         assert page.locator('h1').count() == 1
-        assert page.locator('a[href="mailto:hello.kaurivo@gmail.com?subject=Website%20project%20enquiry"]').count() == 1
+        assert page.locator('a[href="mailto:hello@kaurivo.com?subject=Website%20project%20enquiry"]').count() == 1
         assert page.locator('header .brand-icon').evaluate('(img)=>img.complete && img.naturalWidth > 0')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Horizontal overflow at {width}'
         for percent, expected in ((.02,'01 / THE STRUCTURE'), (.31,'02 / THE DESIGN'), (.56,'03 / THE DEVELOPMENT'), (.84,'04 / THE RESULT')):

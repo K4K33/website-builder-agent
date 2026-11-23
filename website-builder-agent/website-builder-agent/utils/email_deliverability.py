@@ -42,7 +42,17 @@ def sender() -> str:
 def demo_host() -> str:
     """Public host for demo links in emails (own domain once it exists)."""
     return (os.getenv("KAURIVO_DEMO_HOST", "").strip()
-            or "https://kaurivo-auto-demos-2026.onrender.com").rstrip("/")
+            or "https://demo.kaurivo.com").rstrip("/")
+
+
+RENDER_PREVIEW = "kaurivo-auto-demos-2026.onrender.com"
+
+
+def public_demo_url(url: str) -> str:
+    """The same demo on Kaurivo's own domain (demo.kaurivo.com is a CNAME of
+    the Render preview service), so emails never carry an onrender.com link."""
+    url = str(url or "").strip()
+    return re.sub(r"^https?://" + re.escape(RENDER_PREVIEW) + r"(?=/|$)", demo_host(), url, flags=re.I)
 
 
 def _domain(address: str) -> str:
