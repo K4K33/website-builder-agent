@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /demo-review/
+Disallow: /feedback/
+Disallow: /thanks/
+Disallow: /demos/
+Disallow: /owner-previews/
+Disallow: /lab/
+Disallow: /backend/
+
+Sitemap: https://kaurivo.com/sitemap.xml
