@@ -20,9 +20,9 @@ STYLE = """
 .hero--film.is-live .film__poster{visibility:hidden}
 .film__stage::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.3;transition:opacity 1s ease;
  background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.18) 48%,transparent 70%),linear-gradient(0deg,rgba(0,0,0,.5),transparent 40%)}
-.film__step{position:absolute;z-index:2;left:var(--gutter,24px);top:clamp(96px,16vh,160px);margin:0;display:flex;align-items:baseline;gap:16px}
-.film__num{font-variant-numeric:tabular-nums;font-weight:650;font-size:clamp(14px,1.1vw,18px);opacity:.8}
-.film__name{font-family:"Display",sans-serif;font-size:clamp(46px,8vw,132px);line-height:.9;letter-spacing:-.02em}
+.film__step{position:absolute;z-index:2;left:var(--gutter,24px);bottom:clamp(40px,10vh,110px);margin:0}
+.film__num{display:none;font-variant-numeric:tabular-nums;font-weight:650;font-size:clamp(14px,1.1vw,18px);opacity:.8}
+.film__name{font-family:"Display",sans-serif;font-size:clamp(18px,1.7vw,26px);line-height:1.2;opacity:.92;text-shadow:0 1px 18px rgba(0,0,0,.4)}
 .film__step.flip .film__name{animation:filmIn .8s cubic-bezier(.16,1,.3,1)}
 @keyframes filmIn{from{opacity:0;transform:translateY(.25em)}to{opacity:1;transform:none}}
 .film__copy{position:absolute;z-index:2;left:var(--gutter,24px);bottom:clamp(40px,9vh,96px);max-width:min(36rem,82vw);
@@ -35,7 +35,8 @@ STYLE = """
 .hero--film.is-done .film__stage::after{opacity:1}
 .film__copy h1{font-size:clamp(34px,4.4vw,72px);line-height:.98;margin:0;color:#fff}
 .film__copy p{margin:12px 0 0;max-width:36ch;color:rgba(255,255,255,.86)}
-.film__note{position:absolute;z-index:2;right:var(--gutter,24px);top:clamp(80px,11vh,96px);margin:0;font-size:12px;
+.hero--film.is-js:not(.is-done) .film__note{opacity:0}
+.film__note{transition:opacity .8s ease;position:absolute;z-index:2;right:var(--gutter,24px);top:clamp(80px,11vh,96px);margin:0;font-size:12px;
  background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}
 .film__bar{position:absolute;z-index:2;left:var(--gutter,24px);right:var(--gutter,24px);bottom:20px;height:2px;background:rgba(255,255,255,.22)}
 .film__bar i{display:block;height:100%;width:100%;background:#fff;transform-origin:0 50%;transform:scaleX(var(--film-q,0))}

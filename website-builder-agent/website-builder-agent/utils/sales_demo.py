@@ -579,15 +579,19 @@ border-top:1px solid color-mix(in srgb,var(--band-ink) 20%,transparent);opacity:
 .grow__stage img{{width:100%;height:100%;object-fit:cover;clip-path:inset(var(--inset,14%) var(--inset-x,20%) round 22px)}}
 .hero__credit{{position:absolute;z-index:3;top:76px;right:var(--gutter);margin:0;font-size:12px;color:#fff;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}}
 .hero > .hero__credit, [data-scrub-stage] > .hero__credit{{position:absolute}}
-.stages{{position:absolute;z-index:3;right:var(--gutter);bottom:clamp(96px,12vh,128px);margin:0;padding:0;list-style:none;display:flex;gap:6px;
-font-size:13px;color:#fff}}
-.stages li{{display:flex;align-items:center;gap:8px;padding:7px 12px 7px 8px;border-radius:999px;background:rgba(0,0,0,.38);
-backdrop-filter:blur(6px);opacity:.55;transition:opacity .4s var(--ease),background-color .4s var(--ease)}}
-.stages li span{{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.6);font-size:11px;font-variant-numeric:tabular-nums}}
-.stages li.on{{opacity:1;background:color-mix(in srgb,var(--accent) 88%,transparent);color:var(--accent-ink)}}
-.stages li.on span{{border-color:currentColor}}
-@media (max-width:760px){{.stages{{left:var(--gutter);right:auto;top:118px;bottom:auto;flex-direction:column;align-items:flex-start;font-size:12px}}
- .stages li:not(.on){{display:none}}}}
+/* Reference heroes stay quiet while they build: no chips or numbers, only the
+   current stage as one small line that fades into the next. */
+.stages{{position:absolute;z-index:3;left:var(--gutter);bottom:clamp(40px,10vh,110px);margin:0;padding:0;list-style:none;
+height:1.4em;width:min(70vw,30rem);color:#fff;font-family:"Display",sans-serif;font-size:clamp(18px,1.7vw,26px);
+transition:opacity .6s var(--ease)}}
+.stages li{{position:absolute;left:0;bottom:0;white-space:nowrap;opacity:0;transform:translateY(10px);
+text-shadow:0 1px 18px rgba(0,0,0,.4);transition:opacity .6s var(--ease),transform .8s var(--ease)}}
+.stages li span{{display:none}}
+.stages li.on{{opacity:.92;transform:none}}
+[data-copy-after].is-done .stages{{opacity:0}}
+/* The illustration label joins the copy at the end (the top strip names it the whole time). */
+[data-copy-after].is-js:not(.is-done) .hero__credit{{opacity:0}}
+.hero__credit{{transition:opacity .8s var(--ease)}}
 .hero--3d{{height:540svh;background:var(--canvas)}}
 .b3d__stage{{position:sticky;top:0;height:100svh;overflow:hidden}}
 .b3d__canvas,.b3d__poster{{position:absolute;top:0;bottom:0;left:28%;right:0;width:72%;height:100%;display:block}}
