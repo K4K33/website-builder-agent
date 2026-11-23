@@ -187,10 +187,16 @@ def enhance_type_through(html: str, *, route: str, media: list[dict],
         left, top, right, bottom = subject_box(mask)
         cx, cy = (left + right) / 2, (top + bottom) / 2
         height = max(.15, bottom - top)
-        scene["style"] = (str(scene.get("style") or "").rstrip("; ") + ("; " if scene.get("style") else "")
+        # The word lives in the UPPER band of the hero and must end above the copy
+        # (headline, text and call sit in the lower half): top 6-18 %, and its
+        # height (font-size x .85) never past 44 % of the hero.
+        word_top = min(18.0, max(6.0, (top + height * .08) * 100 - 6))
+        word_size = max(12.0, min(height * 62, (44.0 - word_top) / .85))
+        kept = re.sub(r"--typecut-(?:pos|top|size):[^;]*;?\s*", "", str(scene.get("style") or "")).strip().rstrip(";")
+        scene["style"] = (kept + ("; " if kept else "")
                           + f"--typecut-pos:{cx * 100:.1f}% {cy * 100:.1f}%;"
-                          + f"--typecut-top:{max(2.0, (top + height * .08) * 100 - 6):.1f}%;"
-                          + f"--typecut-size:min(22vw,{max(18.0, height * 62):.1f}svh)")
+                          + f"--typecut-top:{word_top:.1f}%;"
+                          + f"--typecut-size:min(22vw,{word_size:.1f}svh)")
         word.insert_after(soup.new_tag("img", attrs={
             "data-typecut-front": "", "src": prefix + str(folder / "front.webp"), "alt": "",
             "aria-hidden": "true", "decoding": "async"}))

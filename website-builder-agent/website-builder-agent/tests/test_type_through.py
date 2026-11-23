@@ -55,6 +55,12 @@ class TypeThroughTests(unittest.TestCase):
             self.assertIn("data-typecut-active", html)
             self.assertRegex(html, r'<p aria-hidden="true" data-typecut-word="">Kahvila</p><img[^>]*data-typecut-front')
             self.assertIn("--typecut-top:", html)
+            # The word stays in the upper band and ends above the copy (44 % of the hero).
+            import re as _re
+            top = float(_re.search(r"--typecut-top:([\d.]+)%", html).group(1))
+            size = float(_re.search(r"--typecut-size:min\(22vw,([\d.]+)svh\)", html).group(1))
+            self.assertLessEqual(top, 18.0)
+            self.assertLessEqual(top + size * .85, 44.05)
             self.assertEqual(html.count("data-kaurivo-typecut-runtime"), 2)
             front = next((root / "assets/typecut").rglob("front.webp"))
             self.assertEqual(Image.open(front).size, (400, 300))
