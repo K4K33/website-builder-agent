@@ -22,8 +22,10 @@ MIN_SCORE = 8
 REVIEW_BRIEF = """You are a strict art director reviewing AI images for a premium website hero that shows
 a renovation step by step. The images are the stages in order: {labels}.
 Judge like a demanding client. Fail it if ANY of these is true:
-- the view is not from inside the room at eye level (e.g. a dollhouse or aerial cutaway from outside)
-- the stages are not clearly the same room from the same camera position
+- an interior job is not seen from inside the room at eye level (e.g. a dollhouse or aerial cutaway);
+  a house build is seen from a drone view and may end at eye level by the front door
+- the stages are not clearly the same room or building (from the same camera, except a final view
+  that is described as a deliberate camera move)
 - a stage shows things that do not belong to that stage (fixtures before they are installed,
   tools, debris, people, text, logos)
 - any object appears twice where one is expected (two toilets, two sinks, doubled taps)
@@ -85,7 +87,10 @@ def review(paths: list[Path], labels: list[str], *, ask=None, trade: str = "") -
 def check(paths: list[Path], labels: list[str], *, ask=None, ref: int | None = None, trade: str = "") -> dict:
     from PIL import Image
     images = [Image.open(p).convert("RGB") for p in paths]
-    aligned = alignment(images, ref)
+    from utils.trade_specs import SPECS
+    same = (SPECS.get(trade) or {}).get("same_camera_until")
+    # A designed camera move (drone -> front door) is not a misalignment.
+    aligned = alignment(images[:same] if same else images, ref)
     result = {"alignment": aligned, "aligned": min(aligned or [1]) >= MIN_ALIGNMENT}
     result.update(review(paths, labels, ask=ask, trade=trade) if result["aligned"] else
                   {"ok": False, "score": 0, "issues": ["stages are not the same room/camera"]})

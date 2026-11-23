@@ -29,6 +29,19 @@ NEGATIVE = ("people, hands, workers, text, watermark, logo, blurry, distorted ge
 
 # Per trade: (stage label, how the change between this keyframe and the next happens).
 SCRIPTS = {
+    # Reference house build: drone view, real construction order, life on site,
+    # finally the camera comes down to the front door at dusk.
+    "talo": (
+        ("Runko", "Drone view of the same plot, slow push-in. The block walls rise course by course and floor by "
+                  "floor all around the slab, scaffolding goes up with them, the small excavator moves on the site. "
+                  "Smooth architectural animation, no people."),
+        ("Vesikatto", "Same drone view, slow push-in. Roof trusses are set one after another, then the dark metal "
+                      "roof closes from one end to the other and the windows go in. Smooth, no people."),
+        ("Julkisivu", "Same drone view, slow push-in. Cladding and render cover the facade, the scaffolding comes "
+                      "down, the lawn and path appear and warm lights switch on inside as dusk falls. Smooth, no people."),
+        ("Valmis", "The drone smoothly descends from the air to eye level in front of the finished house and glides "
+                   "towards the open front door at dusk, warm light inside. Cinematic, smooth, no people."),
+    ),
     # Seen from inside, camera locked; every change progresses evenly and in order
     # (symmetric, layer by layer), like the reference sites, never patchy.
     "kylpyhuone": (
@@ -132,7 +145,8 @@ def make_film(trade: str, root: Path, out: Path, *, limit: int = 0) -> dict | No
 
 
 ASSETS = Path(__file__).resolve().parents[1] / "assets" / "sales_demo" / "film"
-TRADES = {"kylpyhuone": r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila"}
+TRADES = {"kylpyhuone": r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila",
+          "talo": r"rakennus|rakentaminen|omakotitalo|rivitalo|talopaketti|talotehdas|rakennusliike"}
 
 
 def film_for(text: str, root: Path | None = None) -> dict | None:

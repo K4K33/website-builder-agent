@@ -40,7 +40,7 @@ LAST_ERROR = ""
 # trades follow the reference: one 3/4 aerial view, the work grows in order.
 MOVES = {"kylpyhuone": ("depth", "depth", "depth", "depth", "depth"),
          "maalaus": ("depth", "coat", "coat", "depth"),
-         "talo": ("depth", "depth", "depth", "depth")}
+         "talo": ("depth", "depth", "depth", "depth", "depth")}
 TEMPLATES = (
     (r"kylpyhuone|laatoit|laatta|vedeneristy|märkätila", 9001,
      "Photorealistic architectural interior photograph, eye-level view from inside a small Nordic apartment "
@@ -74,19 +74,36 @@ TEMPLATES = (
       ("Valmis", "finished wall painted in deep warm green, crisp edges", "protective paper removed, clean wooden floor, "
                  "a simple sofa and a plant")),
      "Havainnekuva, tekoälyllä luotu: maalaustyön vaiheet"),
-    (r"rakennus|rakentaminen|omakotitalo|rivitalo|runko|talopaketti", 4242,
-     "Premium 3D architectural visualization, three-quarter aerial view from about 30 metres of a two-storey "
-     "Nordic family house in the centre of a neat plot with pine trees around, golden-hour light, cinematic, "
-     "high detail, no people, no text. The house: {s}. Site: {f}.",
-     (("Perustus", "only the concrete foundation slab is finished", "levelled sand plot, tidy construction site"),
-      ("Runko", "the walls of both floors built in light grey blocks up to the roof line, window openings, no roof",
-       "tidy construction site, stacked materials"),
-      ("Vesikatto", "dark roof installed on the block walls, windows fitted, no cladding yet",
-       "tidy construction site"),
-      ("Valmis", "finished with dark vertical wooden cladding, black metal roof and warm lit windows",
-       "finished yard with lawn, dusk")),
+    # Reference sites (GoMore, Elypt): a drone view of one plot at golden hour; the
+    # house rises in real construction order with materials and machines on site,
+    # then the camera comes down to the front door at dusk.
+    (r"rakennus|rakentaminen|omakotitalo|rivitalo|runko|talopaketti|talotehdas|rakennusliike", 4242,
+     "Photorealistic architectural drone photograph, three-quarter aerial view from about 25 metres of one "
+     "detached two-storey Nordic family house plot in the centre of the frame, pine and birch trees around, "
+     "golden-hour light, long soft shadows, cinematic, high detail, no people, no text. The house: {s}. Site: {f}.",
+     (("Perustus", "a freshly cast light grey concrete foundation slab with the outline of the house",
+       "levelled sand plot, neat stacks of grey building blocks and timber on pallets, a small yellow excavator"),
+      ("Runko", "the walls of both floors built from light grey lightweight concrete blocks up to the roof line, "
+                "window and door openings, scaffolding around the walls",
+       "stacks of blocks and timber, the small yellow excavator, tidy construction site"),
+      ("Vesikatto", "the same block walls with timber roof trusses set and a dark grey standing-seam metal roof, "
+                    "windows fitted, scaffolding still around",
+       "tidy construction site, a few pallets"),
+      ("Julkisivu", "finished: vertical dark wooden cladding and white render, dark metal roof with gutters and "
+                    "downpipes, all windows and the front door installed, warm lights glowing inside",
+       "scaffolding removed, fresh lawn, a gravel path to the front door, young plants, dusk"),
+      ("Valmis", "{finished}", "the same house and yard; dusk")),
      "Havainnekuva, tekoälyllä luotu: talon rakentumisen vaiheet"),
 )
+
+
+# Trades whose first stage is the shell everything else is added to.
+BASE_STAGE = {"talo": 0}
+# Trades whose last keyframe moves the camera (drone -> front door at eye level).
+LAST_VIEW = {"talo": ("Edit this exact photo into a new camera view of the SAME house: the camera has come down "
+                      "from the air to eye level in front of the house, about 8 metres from the open front door, "
+                      "at dusk, warm light glowing through the windows and the doorway. Keep the same house design, "
+                      "materials, colours, roof and yard. Photorealistic, no people, no text.")}
 
 
 def base_stage(stages) -> int:
@@ -170,7 +187,8 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     seed, scene, stages, note = chosen
     from utils.trade_specs import finished_text
     kind_key = "kylpyhuone" if "kylpyhuone" in note else "maalaus" if "maalaus" in note else "talo"
-    stages = tuple((label, surfaces, fixtures.replace("{finished}", finished_text(kind_key) or "finished fixtures"))
+    done = finished_text(kind_key) or "finished"
+    stages = tuple((label, surfaces.replace("{finished}", done), fixtures.replace("{finished}", done))
                    for label, surfaces, fixtures in stages)
     seed += int(os.getenv("KAURIVO_SEQUENCE_SEED_OFFSET", "0") or 0)
     if post is None:
@@ -211,7 +229,7 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
     # 1) the EMPTY shell from text (edit models add things well but rarely remove
     # them); 2) every other stage as an edit of that same shell, so the camera,
     # the room and the light stay identical. One provider for the whole set.
-    base = base_stage(stages)
+    base = BASE_STAGE.get(kind_key, base_stage(stages))
     _label, base_s, base_f = stages[base]
     # Negations ("no toilet") make image models draw the toilet: say only what is there.
     if "empty" in base_f:
@@ -235,10 +253,16 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         for index, (label, surfaces, fixtures) in enumerate(stages):
             if index == base:
                 continue
-            edit = ("Edit this exact photo. Keep exactly the same camera position, framing, scale, lens and light "
-                    "(the same ceiling light on), and the same background colour and floor around the room; keep the "
-                    "room's shape and wall "
-                    f"heights. Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
+            if kind_key in LAST_VIEW and index == len(stages) - 1:
+                # The camera comes down to the front door: an edit of the finished stage.
+                image = run(LAST_VIEW[kind_key], images[index - 1])
+                if image is None:
+                    return None
+                images[index] = image
+                continue
+            edit = ("Edit this exact photo. Keep exactly the same camera position, framing, scale, lens and light, "
+                    "the same surroundings and the same footprint and size of the room or building. "
+                    f"Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
                     "The same photographic style and colour grade as the input, no people, no text.")
             image = run(edit, final)
             if image is None:
