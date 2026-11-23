@@ -12,7 +12,11 @@ from html import escape
 import re
 from urllib.parse import quote
 
-SENDER = "hello.kaurivo@gmail.com"
+import os
+
+# The connected business mailbox; set KAURIVO_SENDER to the own-domain address
+# (e.g. kaarlo@kaurivo.fi) once it exists, see utils/email_deliverability.py.
+SENDER = os.getenv("KAURIVO_SENDER", "").strip() or "hello.kaurivo@gmail.com"
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 

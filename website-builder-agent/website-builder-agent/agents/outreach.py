@@ -105,6 +105,11 @@ Palauta VAIN validi JSON:
 """
 
 
+# The sign-off follows the configured business mailbox (own domain once it exists).
+from utils.marketing_compliance import SENDER as _SENDER
+OUTREACH_SYSTEM_PROMPT = OUTREACH_SYSTEM_PROMPT.replace("hello.kaurivo@gmail.com", _SENDER)
+
+
 def place_demo_caption(body: str, note: str, demo_url: str = "") -> str:
     """Insert source-accurate caption beneath the demo link/paragraph.
 
@@ -356,10 +361,15 @@ Jokainen asiakkaan hyöty ja havainto tarkistetaan ennen lähettämistä.
     # 5. Tallenna luonnos
     # ---------------------------------------------------------
 
+    # Inbox, not spam: own-domain sender and links, short plain text, a way to
+    # refuse. The footer added at send time carries the refusal; include it here.
+    from utils.email_deliverability import preflight
+    from utils.marketing_compliance import make_optout_footer
     outreach_data = {
         "subject": subject,
         "body": body,
         "demo_card_caption": media_note,
+        "deliverability_issues": preflight(subject, body + "\n\n" + make_optout_footer()[0]),
         "approved": False,
     }
 
