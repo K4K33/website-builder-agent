@@ -48,16 +48,18 @@ MAX_SIDE_SHARE = 0.16
 _IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".avif"}
 
 STYLE = """
-[data-kaurivo-typecut]{position:relative;overflow:hidden;isolation:isolate}
-[data-kaurivo-typecut] > img,[data-kaurivo-typecut] > [data-typecut-front]{position:absolute;inset:0;width:100%;height:100%;
+[data-kaurivo-typecut]{position:relative;overflow:clip;isolation:isolate}
+[data-kaurivo-typecut][data-typecut-active]{height:210svh}
+.typecut__stage{position:sticky;top:0;height:100svh;overflow:hidden;isolation:isolate}
+.typecut__stage > img,.typecut__stage > [data-typecut-front]{position:absolute;inset:0;width:100%;height:100%;
  object-fit:cover;object-position:var(--typecut-pos,50% 50%);transform:scale(var(--typecut-s,1));transform-origin:50% 70%;will-change:transform}
-[data-kaurivo-typecut] > img{z-index:0}
-[data-kaurivo-typecut] > [data-typecut-word]{position:absolute;z-index:1;left:-50vw;right:-50vw;top:var(--typecut-top,18%);margin:0;
+.typecut__stage > img{z-index:0}
+.typecut__stage > [data-typecut-word]{position:absolute;z-index:1;left:-50vw;right:-50vw;top:var(--typecut-top,18%);margin:0;
  white-space:nowrap;text-align:center;line-height:.8;font-size:var(--typecut-size,clamp(96px,24vw,420px));
  transform:translate3d(var(--typecut-x,0),0,0);will-change:transform;pointer-events:none}
-[data-kaurivo-typecut] > [data-typecut-front]{z-index:2;pointer-events:none}
-:where([data-kaurivo-typecut] > :not(img):not([data-typecut-word]):not([data-typecut-front])){position:relative}
-[data-kaurivo-typecut] > :not(img):not([data-typecut-word]):not([data-typecut-front]){z-index:3}
+.typecut__stage > [data-typecut-front]{z-index:2;pointer-events:none}
+:where(.typecut__stage > :not(img):not([data-typecut-word]):not([data-typecut-front])){position:relative}
+.typecut__stage > :not(img):not([data-typecut-word]):not([data-typecut-front]){z-index:3}
 """
 
 SCRIPT = r"""
@@ -69,7 +71,7 @@ SCRIPT = r"""
     ticking = false;
     for (const s of scenes) {
       const r = s.getBoundingClientRect();
-      const q = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height)));
+      const q = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
       // The word travels behind the subject; photo and cut-out scale together.
       s.style.setProperty('--typecut-x', (-q * 28).toFixed(2) + 'vw');
       s.style.setProperty('--typecut-s', (1 + q * .08).toFixed(4));
@@ -164,6 +166,8 @@ def enhance_type_through(html: str, *, route: str, media: list[dict],
         scene.attrs.pop("data-typecut-active", None)
         for old in scene.select("[data-typecut-front]"):
             old.decompose()
+        for stage in scene.find_all("div", class_="typecut__stage", recursive=False):
+            stage.unwrap()
         photo = scene.find("img", recursive=False)
         word = scene.find(attrs={"data-typecut-word": True}, recursive=False)
         if (active or photo is None or word is None or not photo.get("alt", "").strip()
@@ -201,6 +205,11 @@ def enhance_type_through(html: str, *, route: str, media: list[dict],
             "data-typecut-front": "", "src": prefix + str(folder / "front.webp"), "alt": "",
             "aria-hidden": "true", "decoding": "async"}))
         scene["data-typecut-active"] = ""
+        # Pin all layers in one stage so the word can slide while the hero holds.
+        stage = soup.new_tag("div", attrs={"class": "typecut__stage"})
+        for child in list(scene.children):
+            stage.append(child.extract())
+        scene.append(stage)
         active += 1
     for item in soup.select("style[data-kaurivo-typecut-runtime], script[data-kaurivo-typecut-runtime]"):
         item.decompose()
