@@ -15,8 +15,8 @@ from urllib.parse import quote
 import os
 
 # The connected business mailbox; set KAURIVO_SENDER to the own-domain address
-# (e.g. kaarlo@kaurivo.fi) once it exists, see utils/email_deliverability.py.
-SENDER = os.getenv("KAURIVO_SENDER", "").strip() or "hello.kaurivo@gmail.com"
+# (hello@kaurivo.com: Cloudflare Email Routing in, Brevo out), see utils/email_deliverability.py.
+SENDER = os.getenv("KAURIVO_SENDER", "").strip() or "hello@kaurivo.com"
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 

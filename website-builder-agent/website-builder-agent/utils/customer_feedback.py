@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import re
 
-SENDER = "hello.kaurivo@gmail.com"
+SENDER = "hello@kaurivo.com"
 DEMO_REVIEW_URL = "https://k4k33.github.io/website-builder-agent/kaurivo/demo-review/"
 
 CATEGORY_TERMS = {
