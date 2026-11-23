@@ -77,7 +77,8 @@ jobs:
                   print("keyframes attempt", attempt + 1, bool(seq), illustrated_sequence.LAST_ERROR)
                   if not seq:
                       break
-                  qa = sequence_qa.check([Path(p) for p in seq["paths"]], seq["labels"], ref=seq.get("base"))
+                  qa = sequence_qa.check([Path(p) for p in seq["paths"]], seq["labels"], ref=seq.get("base"),
+                                         trade=seq.get("trade", ""))
                   print("quality gate:", json.dumps(qa, ensure_ascii=False))
                   if best is None or (qa["ok"], qa["score"]) > (best[1]["ok"], best[1]["score"]):
                       best = (seq["paths"], qa, attempt)
