@@ -218,6 +218,63 @@
      "needs": "brand colours"
     }
    ]
+  },
+  {
+   "id": "font-pairing-reel",
+   "source": "owner video 24.11.2026 (Adrien Ninet, 'make your web design look 10x better': fonts shown on real sites)",
+   "fits": [
+    "any"
+   ],
+   "techniques": [
+    {
+     "name": "Fraunces editorial",
+     "observed": "a warm soft serif set large and light, with small images and emoji placed inside the sentence",
+     "recipe": "Fraunces (Google Fonts) 300-400 for big statements; inline rounded photos between words for personal or crafted brands",
+     "needs": "a personal, warm or crafted brand"
+    },
+    {
+     "name": "Montserrat bold product",
+     "observed": "heavy geometric sans on a saturated blue field for a confident product claim",
+     "recipe": "Montserrat 800 headlines on a full colour field; plain body",
+     "needs": "a direct, commercial message"
+    },
+    {
+     "name": "Inter quiet portfolio",
+     "observed": "Inter at large size with two greys for a calm professional introduction",
+     "recipe": "Inter / Inter Display, size contrast instead of weight contrast",
+     "needs": "calm level-1 businesses"
+    },
+    {
+     "name": "Sora big word",
+     "observed": "one oversized word ('botanical') over a full-bleed photo",
+     "recipe": "Sora 600-700 at 15-20vw for a single word over imagery",
+     "needs": "one strong photo and one word that sums up the business"
+    },
+    {
+     "name": "Space Grotesk giant crop",
+     "observed": "a name in Space Grotesk so large it is cropped by the viewport",
+     "recipe": "Space Grotesk 500-700 at 25vw+, cropped; pairs with the giant-wordmark hero",
+     "needs": "a short, strong name"
+    },
+    {
+     "name": "Inter Tight on glow",
+     "observed": "tight display type on black with a soft colour glow behind",
+     "recipe": "Inter Tight 500 with -0.04em tracking over a blurred gradient blob",
+     "needs": "tech or modern service brands"
+    },
+    {
+     "name": "Satoshi + italic serif",
+     "observed": "clean grotesk with one italic serif phrase ('one task at a time') over a vivid gradient product shot",
+     "recipe": "Satoshi (Fontshare, free licence) or Instrument Sans with Instrument Serif italic for the accent phrase",
+     "needs": "one phrase worth emphasising"
+    },
+    {
+     "name": "choose fonts per brand",
+     "observed": "the same layout looks ten times better with the right typeface",
+     "recipe": "pick one display face from this list by the brand's character and keep the body face plain; never default to the same font for every site",
+     "needs": "brand character"
+    }
+   ]
   }
  ]
 }
