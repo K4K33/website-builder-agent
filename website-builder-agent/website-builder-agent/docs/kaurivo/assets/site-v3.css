@@ -733,3 +733,12 @@ h1,h2,.display{overflow-wrap:break-word;hyphens:auto}
 @media(max-width:380px){.display{font-size:clamp(38px,11.8vw,47px)}}
 .prototype-controls,.prototype-controls>*{min-width:0}
 @media(max-width:850px){.wrap.prototype{grid-template-columns:minmax(0,1fr)}}
+
+/* Brand accent: steel blue (owner choice 2026-11-24). Dark: #7fa8d9 (7.8:1 on #090b0e); light: #3f6e9e (4.9:1 on #e8ecf0). */
+:root{--accent:#7fa8d9;--accent-deep:#3f6e9e}
+.v6-hero-line,.section-black .blue,.v6-process-preview h2 em,.v6-studio-intro h2 span,.v6-work .v6-section-head h2 span{color:var(--accent)}
+.section-paper .blue{color:var(--accent-deep)}
+.v6-hero-line:after{background:var(--accent)}
+.eyebrow::before{background:var(--accent)}
+.v6-studio-intro h2 span{color:var(--accent-deep)}
+.v6-studio-intro .eyebrow{color:#4b5661}
