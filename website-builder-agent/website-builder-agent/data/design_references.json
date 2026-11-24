@@ -21,6 +21,8 @@
   "Each site gets one signature interaction that belongs to its trade (e.g. dish image following the pointer over a menu, a visit calculator on a price list, a scroll story of a day at a cabin), not only fade-in reveals.",
   "Full-bleed photography needs source images at least as wide as the largest screen it fills (about 2400 px); 1280 px stock stretched across a desktop reads as cheap and blurry. Keep one consistent light and style across a site's photos.",
   "Hero from the library, every time (owner, 24.11.2026): every site's hero is chosen from utils.hero_library and named in the design notes; sites shown side by side (demos, a portfolio) each use a different library pattern, e.g. cinematic photo + touchable light for a restaurant, slatted reveal for a salon, giant wordmark for a cabin.",
+  "Every subpage has its own structure and first view, shaped by its job (owner, 24.11.2026): e.g. services as an index with a live example, prices as an estimator, process as a scroll story, FAQ as a search, contact as form-first. Never the same coloured hero with a giant word and stacked rows on every page.",
+  "FAQ only answers questions the rest of the site does not: never repeat prices, the free demo, editability or anything already stated elsewhere; each answer must be a fact the business has confirmed.",
   "No decorative numbering (owner, 24.11.2026): no 01/02/03 labels beside headings, services or cards; it reads as AI-made. Numbers appear only where the visitor needs the order (a short numbered how-to list).",
   "A studio's own example demos are proof met while scrolling, not the hero or the services page: one clearly labelled examples section ('fictional companies; names, addresses and prices invented') with a way to open each demo."
  ],
