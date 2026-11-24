@@ -776,7 +776,9 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
         from utils.type_through import enhance_type_through
         page = enhance_type_through(page, route="index.html", media=media, site_root=out_dir)
     # Every hero: the visual alone first, the words when its animation is done.
-    page = enhance_scroll_story(enhance_hero_reveal(page))
+    from utils.motion_system import enhance_motion_system
+    # ...and every section below it moves with the scroll too.
+    page = enhance_motion_system(enhance_scroll_story(enhance_hero_reveal(page)))
     target = out_dir / "index.html"
     target.write_text(page, encoding="utf-8")
     (out_dir / "sales-demo.json").write_text(json.dumps(
