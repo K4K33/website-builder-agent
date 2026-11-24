@@ -31,7 +31,8 @@ Motion decisions, in order:
 Craft floor checks on the rendered page:
 - Contrast: body text 4.5:1, large text 3:1; secondary text on a colour field is tinted from that hue, never grey.
 - Brand: keep the client's existing logo, colours and typeface on every page and strengthen them; never swap the
-  brand for a new look. One type system for the whole site (one family ideal, two at most), demo/example content included.
+  brand for a new look. One type system for the site's own text (one family ideal, two at most); showcased example/client work keeps its
+  own identity inside a framed [data-showcase]. Never ship wireframe guides or annotation labels; text never overlaps text.
 - Type: body 65-75 characters per line; display tracking no tighter than -0.04em; balanced headings; clear size
   and weight steps; a real display face chosen for the brand, never the platform sans as the display voice.
 - Spacing: tight inside groups, generous between them, more space above a heading than below it.
