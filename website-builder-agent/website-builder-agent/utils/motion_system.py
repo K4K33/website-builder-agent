@@ -34,6 +34,9 @@ html.mo-js [data-reveal]{--v:0}
 [data-reveal="media"] img,[data-reveal="media"] video,img[data-reveal="media"]{scale:calc(1.14 - var(--v) * .14)}
 [data-reveal="stagger"]>[data-si]{--vi:clamp(0,calc(var(--v) * 1.6 - var(--i,0) * .16),1);
   translate:0 calc((1 - var(--vi)) * 54px);opacity:calc(.1 + var(--vi) * .9)}
+[data-hscroll]{position:relative}
+[data-hscroll]>[data-hscroll-stage]{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;display:flex;align-items:center}
+[data-hscroll-track]{display:flex;gap:clamp(16px,3vw,48px);will-change:transform;padding:0 6vw}
 [data-depth-wall]{perspective:900px;perspective-origin:50% 40%;overflow:hidden}
 [data-depth-wall]>*{transform-style:preserve-3d;
   transform:translateZ(calc(-380px + var(--pass,.5) * 560px)) rotateX(calc(16deg - var(--pass,.5) * 26deg))}
@@ -45,6 +48,7 @@ html.mo-js [data-reveal]{--v:0}
   html.mo-js [data-reveal],[data-reveal]{--v:1!important}
   [data-reveal="stagger"]>[data-si]{--vi:1!important}
   [data-depth-wall]>*{transform:none}
+  [data-hscroll]>[data-hscroll-stage]{position:static;height:auto;overflow-x:auto}
   .mo-card,.mo-card img{transition:none}
 }
 """
@@ -90,6 +94,13 @@ SCRIPT = r"""
   const ease = t => 1 - Math.pow(1 - t, 3);
   const items = [...document.querySelectorAll('[data-reveal],[data-depth-wall]')].map(el => ({el, cur: -1, wall: el.hasAttribute('data-depth-wall')}));
   const tones = [...document.querySelectorAll('[data-tone]')];
+  const tracks = [...document.querySelectorAll('[data-hscroll]')].map(el => ({el, track: el.querySelector('[data-hscroll-track]'), cur: -1, shift: 0}));
+  const sizeTracks = () => tracks.forEach(t => {
+    if (!t.track) return;
+    t.shift = Math.max(0, t.track.scrollWidth - innerWidth);
+    t.el.style.height = (innerHeight + t.shift) + 'px';
+  });
+  sizeTracks(); addEventListener('resize', sizeTracks);
   let toneCur = null, running = false;
   const target = it => {
     const r = it.el.getBoundingClientRect(), vh = innerHeight;
@@ -119,6 +130,14 @@ SCRIPT = r"""
         it.el.style.setProperty(it.wall ? '--pass' : '--v', v.toFixed(4));
       }
     }
+    for (const t of tracks) {
+      if (!t.track) continue;
+      const r = t.el.getBoundingClientRect();
+      const goal = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+      t.cur = t.cur < 0 ? goal : t.cur + (goal - t.cur) * .16;
+      if (Math.abs(goal - t.cur) > .0008) moving = true; else t.cur = goal;
+      t.track.style.transform = `translate3d(${(-t.cur * t.shift).toFixed(1)}px,0,0)`;
+    }
     if (tones.length) {
       const t = toneTarget();
       if (t) {
@@ -141,7 +160,9 @@ MOTION_SYSTEM_BRIEF = """PAGE-WIDE MOTION (every section, not only the hero; uti
 - Each section gets ONE scroll-linked motion idea that fits its content: headings rise through a mask
   (data-reveal="rise"), key images open from an inset frame (data-reveal="media"), rows of cards/services
   arrive one after another (data-reveal="stagger" on their parent), a gallery of work becomes a 3D wall
-  the camera passes through (data-depth-wall with children marked data-col="-2..2"), and sections may set
+  the camera passes through (data-depth-wall with children marked data-col="-2..2"), parallel items may run on a
+  horizontal track that slides sideways as you scroll (section data-hscroll > div data-hscroll-stage >
+  div data-hscroll-track), and sections may set
   data-tone="#hex" so the page background blends between section colours as you scroll.
 - Motion is scroll-linked and smoothed, never a timed fade-up per block; small text and buttons do not move.
 - Interactive elements answer the cursor (cards lift, images breathe); nothing loops without purpose."""
@@ -212,7 +233,7 @@ def enhance_motion_system(html: str, *, asset_href: str | None = None, asset_src
         return html
     for item in soup.select("style[data-kaurivo-motion], script[data-kaurivo-motion], link[data-kaurivo-motion]"):
         item.decompose()
-    if not annotate(soup) and not soup.select("[data-reveal],[data-depth-wall],[data-tone]"):
+    if not annotate(soup) and not soup.select("[data-reveal],[data-depth-wall],[data-tone],[data-hscroll]"):
         return str(soup)
     if asset_href and asset_src:
         soup.head.append(soup.new_tag("link", attrs={"rel": "stylesheet", "href": asset_href, "data-kaurivo-motion": ""}))
