@@ -173,21 +173,36 @@ def audit_pairs(pairs, *, min_share=0.01):
 # Text colour and the first opaque background behind it, weighted by characters x size.
 PAIR_SCRIPT = """() => {
   const toHex = c => { const m = c.match(/\\d+(\\.\\d+)?/g); if (!m) return null;
-    if (m.length > 3 && parseFloat(m[3]) < 0.98) return null;
+    if (m.length > 3 && parseFloat(m[3]) < 0.85) return null;
     return '#' + m.slice(0, 3).map(v => Math.round(+v).toString(16).padStart(2, '0')).join(''); };
-  const bgOf = el => { for (let e = el; e; e = e.parentElement) {
-      const cs = getComputedStyle(e);
-      if (cs.backgroundImage && cs.backgroundImage !== 'none') return null;
-      const h = toHex(cs.backgroundColor); if (h) return h; }
+  const painted = e => { const cs = getComputedStyle(e);
+    if (['IMG', 'VIDEO', 'CANVAS', 'PICTURE', 'IFRAME'].includes(e.tagName) || (cs.backgroundImage && cs.backgroundImage !== 'none')) return 'media';
+    return toHex(cs.backgroundColor); };
+  const mediaChild = e => [...e.children].some(c => ['IMG', 'VIDEO', 'PICTURE', 'CANVAS'].includes(c.tagName) && /absolute|fixed/.test(getComputedStyle(c).position));
+  const bgOf = el => {
+    // what is actually painted behind the text; null when that is a photo/video (visual review
+    // judges those) or when something else covers the text at this moment
+    const r = el.getBoundingClientRect();
+    if (r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth) {
+      const x = Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), y = Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2));
+      const stack = document.elementsFromPoint(x, y);
+      const at = stack.findIndex(e => e === el || el.contains(e));
+      if (at < 0) return null;
+      for (const e of stack.slice(0, at)) if (painted(e)) return null;   // covered by another layer
+      for (const e of stack.slice(at)) { const p = painted(e); if (p === 'media') return null; if (p) return p; }
+      return '#ffffff';
+    }
+    for (let e = el; e; e = e.parentElement) {
+      const p = painted(e); if (p === 'media' || mediaChild(e)) return null; if (p) return p; }
     return '#ffffff'; };
   const out = {};
   const skip = new Set(['SCRIPT','STYLE','NOSCRIPT','OPTION','SELECT','TEXTAREA','INPUT','TITLE']);
   for (const el of document.body.querySelectorAll('*')) {
-    if (skip.has(el.tagName)) continue;
+    if (skip.has(el.tagName) || el.closest(':disabled') || (el.closest('details:not([open])') && !el.closest('summary'))) continue;
     let own = ''; for (const n of el.childNodes) if (n.nodeType === 3) own += n.textContent;
     own = own.trim(); if (!own || el.closest('[aria-hidden="true"]')) continue;
     const cs = getComputedStyle(el);
-    if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) < 0.5) continue;
+    if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) < 0.5 || !el.getClientRects().length) continue;
     const text = toHex(cs.color), bg = bgOf(el); if (!text || !bg) continue;
     const size = parseFloat(cs.fontSize), large = size >= 24 || (size >= 18.66 && +cs.fontWeight >= 700);
     const k = text + bg + large;
