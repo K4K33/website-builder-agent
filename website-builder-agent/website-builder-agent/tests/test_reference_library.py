@@ -18,6 +18,15 @@ class ReferenceLibraryTests(unittest.TestCase):
         self.assertIn("horizontal track [curation-by]", text)
         self.assertIn("utils.reference_library import brief", (ROOT / "agents/builder.py").read_text(encoding="utf-8"))
 
+    def test_needs_decide_how_much_spectacle(self):
+        self.assertEqual(lib.intensity("tilitoimisto Jyväskylä"), 1)
+        self.assertEqual(lib.intensity("kylpyhuoneremontit"), 2)
+        self.assertEqual(lib.intensity("ravintola", own_media=8), 3)
+        self.assertEqual(lib.intensity("ravintola", own_media=0), 2)   # no real material, no spectacle
+        self.assertEqual(lib.intensity("ravintola", own_media=8, wants="rauhallinen ja asiallinen"), 1)
+        self.assertIn("level 1 CALM", lib.brief("tilitoimisto"))
+        self.assertIn("Do not add spectacle", lib.brief("kaurivo studio"))
+
     def test_trade_specific_techniques_come_first(self):
         first = lib.select("kylpyhuone remontti", limit=4)
         self.assertTrue(all(t["reference"] == "steal-these-interactions-reel" for t in first))

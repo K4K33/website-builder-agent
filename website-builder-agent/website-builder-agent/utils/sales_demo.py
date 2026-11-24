@@ -395,7 +395,9 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     # authentic subject, so it assembles in 3D as the hero (utils.logo_story)
     # instead of a stock photo carrying the first impression.
     logo_cut = None
-    if logo_rel and not (film or build_scene or seq_staged or typecut) and all(stock) \
+    from utils.reference_library import intensity
+    calm = intensity(" ".join(str(company.get(k) or "") for k in ("industry", "name", "description"))) == 1
+    if logo_rel and not (film or build_scene or seq_staged or typecut or calm) and all(stock) \
             and os.getenv("KAURIVO_LOGO_STORY", "1") != "0":
         from utils.logo_story import cut_logo
         try:
