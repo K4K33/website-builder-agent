@@ -205,7 +205,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
                                 fi = page.locator("[data-lang-set=fi]")
                                 fi.click()
                                 self.assertEqual(page.locator("html").get_attribute("lang"), "fi")
-                                self.assertIn("Verkkosivut", page.locator("#hero-heading").inner_text())
+                                self.assertIn("Näe uudet", page.locator("#hero-heading").inner_text())
                                 t.click()
                                 self.assertFalse(page.locator("body").evaluate("(b)=>b.classList.contains('mobile-menu-open')"))
                                 self.assertFalse(page.locator(".nav-menu").is_visible())

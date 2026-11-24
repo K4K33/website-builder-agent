@@ -48,7 +48,10 @@ class KaurivoPositioningTests(unittest.TestCase):
         html = HOME.read_text(encoding="utf-8")
         translations = (ASSET / "i18n.js").read_text(encoding="utf-8")
         # Finnish is the static HTML (search engines), English the translated view.
-        self.assertIn("Kaurivo on uuden sukupolven verkkosivustudio", html)
+        # The offer is the demo before any decision, with the price in plain sight.
+        self.assertIn("Teemme ensin demon nykyisen sivusi pohjalta", html)
+        self.assertIn("alkaen 990\u00a0€", html)
+        self.assertIn("We first build a demo based on your current site", translations)
         self.assertIn("Kaurivo is an independent web design studio creating new websites", translations)
         self.assertIn("redesigning existing ones", translations)
         self.assertIn("Kaurivo on uuden sukupolven verkkosivustudio", translations)
