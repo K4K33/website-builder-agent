@@ -1516,7 +1516,10 @@ def run_qa(slug_or_name: str) -> dict:
                     "is frame 0 already a poster with the business's own subject at full scale, "
                     "does every step add crafted visible change (depth, light, assembly), and does "
                     "anything look like a wireframe mock-up, clip-art or a small object in an empty "
-                    "stage? Those are blockers, not polish. Still frames do not establish smoothness.\n"
+                    "stage? Those are blockers, not polish. Still frames do not establish smoothness. "
+                    "Also block a page that is mostly stacked boxes: heading-left/text-right rectangles, "
+                    "rows of bordered cards or an eyebrow label over every heading (owner rule: no blocks). "
+                    "The hero must be one full-bleed subject from the hero library, not a card or split box.\n"
                     + json.dumps(photo_sequences, ensure_ascii=False)
                     + "\nGLOBAL CRAFT SCROLL FILMSTRIPS: appended AFTER sector images. "
                     "In order Lando Norris, Dropbox Brand, Igloo Inc. desktop "
