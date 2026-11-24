@@ -99,6 +99,16 @@ TEMPLATES = (
 
 # Trades whose first stage is the shell everything else is added to.
 BASE_STAGE = {"talo": 0}
+# The empty shell described without the finished object: a prompt that says
+# "house plot" gets a finished house (2026-11-24 run: stage 1 was a rendered
+# house, stage 3 removed its roof again). Only what physically stands there.
+BASE_PROMPT = {"talo": (
+    "Photorealistic architectural drone photograph, three-quarter aerial view from about 25 metres of an "
+    "empty levelled sand building plot in a Nordic pine and birch forest, golden-hour light, long soft "
+    "shadows, cinematic, high detail, no people, no text. In the centre of the plot only a freshly cast flat "
+    "light grey concrete foundation slab lies on the ground, the size of a two-storey family house footprint, "
+    "with nothing standing on it. Around it: neat stacks of grey building blocks and timber on pallets and a "
+    "small yellow excavator.")}
 # Trades whose last keyframe moves the camera (drone -> front door at eye level).
 LAST_VIEW = {"talo": ("Edit this exact photo into a new camera view of the SAME house: the camera has come down "
                       "from the air to eye level in front of the house, about 8 metres from the open front door, "
@@ -243,6 +253,7 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
         # ...and drop any furnishing hints (e.g. "right: the place for a toilet").
         base_prompt = re.sub(r"[^.]*\b(toilet|shower|sink|sofa|bathtub)\b[^.]*\.", "", base_prompt.split("Surfaces:")[0]) \
             + " Surfaces:" + base_prompt.split("Surfaces:", 1)[1] if "Surfaces:" in base_prompt else base_prompt
+        base_prompt = BASE_PROMPT.get(kind_key, base_prompt)
         final = run(base_prompt) if use_cf else None
         if final is None and use_gemini:
             run = lambda prompt, reference=None: _gemini_image(prompt, reference, post=post)
