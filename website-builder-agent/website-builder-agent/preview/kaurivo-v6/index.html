@@ -1,0 +1,523 @@
+<!doctype html><html lang="fi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kaurivo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Figtree:wght@400;600&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;600&family=Young+Serif&display=swap">
+<style>
+/* Kaurivo brand: the K mark, black and white with ONE loud colour (deep Kaurivo cobalt, white text 9:1) used as whole fields.
+   ONE type system everywhere, demo content included: Bricolage Grotesque for display, Inter for text.
+   The hero opens with the headline; scrolling lifts the cobalt curtain and a website is designed and built
+   in front of the visitor, then goes live and hands over to more finished demos in the same type system. */
+:root{
+  --ink:#0b0b0d; --ink-2:#141418; --bone:#ffffff; --bone-2:#cfd1dc; --cobalt:#1c24c4; --cobalt-deep:#161da3;
+  --line:rgba(242,238,230,.14);
+  --display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+::selection{background:var(--cobalt);color:var(--bone)}
+body{background:var(--ink);color:var(--bone);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit;text-underline-offset:.2em}
+img{max-width:100%;display:block}
+:focus-visible{outline:2px solid var(--bone);outline-offset:4px}
+.wrap{padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:max(22px,env(safe-area-inset-right,0px))}
+@media (min-width:900px){.wrap{padding-left:max(5vw,env(safe-area-inset-left,0px));padding-right:max(5vw,env(safe-area-inset-right,0px))}}
+.d{font-family:var(--display)}
+
+/* header: mix-blend keeps it legible over every field */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--ink)}
+.top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:20px;
+  background:rgba(11,11,13,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08);padding-block:16px;padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:max(22px,env(safe-area-inset-right,0px));color:var(--bone);text-shadow:0 1px 14px rgba(0,0,0,.35)}
+@media (min-width:900px){.top{padding-left:max(5vw,env(safe-area-inset-left,0px));padding-right:max(5vw,env(safe-area-inset-right,0px))}}
+.word{display:inline-flex;align-items:center;gap:10px;font:700 17px/1 var(--display);letter-spacing:.16em;text-decoration:none}
+.kmark{width:30px;height:auto;display:block}
+.links{display:flex;gap:26px;align-items:center}
+.links a{font-size:14px;text-decoration:none;opacity:.78;transition:opacity .2s var(--ease-out)}
+.links a[aria-current="page"],.links a:hover{opacity:1}
+.cta-top{font-weight:600;opacity:1!important;border-bottom:1.5px solid currentColor;padding-bottom:2px}
+.menu-btn,.menu-close{background:none;border:0;color:inherit;font:600 14px var(--body);cursor:pointer}
+.menu-btn{display:none}.menu-close{display:none}
+@media (max-width:860px){.links{display:none}.menu-btn{display:block}
+  .links.open{display:flex;position:fixed;inset:0;flex-direction:column;justify-content:center;align-items:flex-start;gap:14px;padding:0 max(22px,env(safe-area-inset-left,0px));background:var(--cobalt);mix-blend-mode:normal;z-index:25}
+  .links.open a{font:700 44px/1 var(--display);opacity:1;color:var(--bone)}
+  .links.open .menu-close{display:block;position:absolute;top:calc(20px + env(safe-area-inset-top,0px));right:max(22px,env(safe-area-inset-right,0px));color:var(--bone)}}
+
+[data-view]{display:none}[data-view].on{display:block}
+.btn{display:inline-flex;align-items:center;gap:16px;background:var(--bone);color:var(--ink);text-decoration:none;font:600 15px var(--body);padding:16px 22px;border:0;cursor:pointer;
+  transition:transform 160ms var(--ease-out),background-color .2s var(--ease-out)}
+.btn:active{transform:scale(.97)}
+.btn span{transition:transform .25s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.btn:hover span{transform:translate(3px,-3px)}}
+.ghost{text-decoration:none;border-bottom:1.5px solid currentColor;font-weight:600;font-size:15px}
+
+/* ---------- HERO: headline first; the cobalt field lifts into a showcase of three demos ----------
+   The showcase frame is Kaurivo; everything inside it is a different (fictional) client with its own identity. */
+.hero{position:relative;height:300svh}
+.stage{position:sticky;top:0;height:100svh;overflow:hidden;background:var(--cobalt)}
+.frame{position:absolute;left:max(22px,env(safe-area-inset-left,0px));right:max(22px,env(safe-area-inset-right,0px));
+  top:calc(78px + env(safe-area-inset-top,0px));bottom:calc(64px + env(safe-area-inset-bottom,0px));
+  overflow:hidden;background:#000;container-type:size;box-shadow:0 30px 80px rgba(5,8,60,.45);
+  transform:scale(calc(.9 + var(--c,0) * .1));transform-origin:50% 70%}
+@media (min-width:900px){.frame{left:max(5vw,env(safe-area-inset-left,0px));right:max(5vw,env(safe-area-inset-right,0px))}}
+.demo{position:absolute;inset:0;clip-path:inset(calc((1 - var(--w,1)) * 100%) 0 0 0)}
+.demo img{position:absolute;object-fit:cover;transform:scale(calc(1.1 - var(--w,1) * .1))}
+.demo .bar{position:absolute;left:5cqw;right:5cqw;top:0;height:clamp(44px,9cqh,70px);display:flex;align-items:center;justify-content:space-between;gap:16px;z-index:2}
+.demo .bar span{display:flex;gap:clamp(12px,2.4cqw,30px)}
+@container (max-width:620px){.demo .bar span{display:none}}
+.demo .copy{position:absolute;z-index:2}
+.demo h2{margin:0;text-wrap:balance}
+.demo p{margin:0}
+.demo .act{display:inline-block;text-decoration:none}
+
+/* Ravintola Kuura: warm night, Fraunces italic, amber */
+.d-kuura{background:#17110c;color:#f3e9dc;font-family:"Figtree",sans-serif}
+.d-kuura img{right:0;top:0;width:58%;height:100%}
+.d-kuura::after{content:"";position:absolute;inset:0 0 0 42%;background:linear-gradient(90deg,#17110c 0%,rgba(23,17,12,0) 38%);pointer-events:none}
+.d-kuura .bar{font-size:clamp(12px,1.25cqw,15px);letter-spacing:.06em}
+.d-kuura .bar b{font:italic 500 clamp(20px,2.6cqw,30px)/1 "Fraunces",serif;letter-spacing:0}
+.d-kuura .copy{left:5cqw;bottom:9cqh;width:min(52cqw,640px)}
+.d-kuura h2{font:italic 300 clamp(40px,8.4cqw,128px)/.92 "Fraunces",serif;letter-spacing:-.02em}
+.d-kuura p{margin-top:2.2cqh;font-size:clamp(14px,1.5cqw,18px);color:#d9c9b4;max-width:34ch}
+.d-kuura .act{margin-top:3cqh;background:#e0a458;color:#17110c;font-weight:600;padding:12px 20px;border-radius:999px;font-size:clamp(13px,1.3cqw,16px)}
+@container (max-width:620px){.d-kuura img{width:100%;height:56%}.d-kuura::after{inset:0;background:linear-gradient(180deg,rgba(23,17,12,0) 30%,#17110c 58%)}.d-kuura .copy{width:auto;right:5cqw}}
+
+/* Salonki Siru: light, Instrument Serif, rose */
+.d-siru{background:#f5ede7;color:#2a1a1c;font-family:"Instrument Sans",sans-serif}
+.d-siru img{left:0;top:0;width:46%;height:100%}
+.d-siru .bar{left:51cqw;font-size:clamp(12px,1.2cqw,15px)}
+.d-siru .bar b{font:400 clamp(22px,2.6cqw,32px)/1 "Instrument Serif",serif}
+.d-siru .copy{left:51cqw;right:5cqw;top:22cqh}
+.d-siru h2{font:400 clamp(40px,7.4cqw,116px)/.95 "Instrument Serif",serif;letter-spacing:-.01em}
+.d-siru h2 i{font-style:italic;color:#a8475f}
+.d-siru p{margin-top:2.6cqh;font-size:clamp(14px,1.45cqw,18px);max-width:36ch;color:#5a4547}
+.d-siru .act{margin-top:3.4cqh;background:#a8475f;color:#fff;font-weight:600;padding:13px 22px;font-size:clamp(13px,1.3cqw,16px)}
+@container (max-width:620px){.d-siru img{width:100%;height:42%}.d-siru .bar{left:5cqw;color:#fff}.d-siru .copy{left:5cqw;top:47cqh}}
+
+/* Saunamökki Ahven: spruce green, Young Serif, birch and brass */
+.d-ahven{background:#0f241c;color:#eef1ea;font-family:"Inter",sans-serif}
+.d-ahven img{left:5cqw;right:5cqw;top:clamp(44px,9cqh,70px);width:90cqw;height:56cqh;border-radius:clamp(10px,1.4cqw,20px)}
+.d-ahven .bar{font-size:clamp(12px,1.2cqw,15px)}
+.d-ahven .bar b{font:400 clamp(19px,2.2cqw,26px)/1 "Young Serif",serif}
+.d-ahven .copy{left:5cqw;right:5cqw;bottom:6cqh;display:flex;justify-content:space-between;align-items:flex-end;gap:4cqw;flex-wrap:wrap}
+.d-ahven h2{font:400 clamp(34px,5.6cqw,88px)/1 "Young Serif",serif;max-width:14ch}
+.d-ahven p{font-size:clamp(14px,1.4cqw,17px);color:#c9d3c8;max-width:30ch;margin-bottom:1.6cqh}
+.d-ahven .act{background:#d6b37a;color:#0f241c;font-weight:600;padding:12px 20px;border-radius:8px;font-size:clamp(13px,1.3cqw,16px)}
+@container (max-width:620px){.d-ahven img{height:40cqh}.d-ahven .copy{display:block}.d-ahven .act{margin-top:12px}}
+
+.caption{position:absolute;z-index:4;left:max(22px,env(safe-area-inset-left,0px));right:max(22px,env(safe-area-inset-right,0px));
+  bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:baseline;gap:6px 22px;flex-wrap:wrap;
+  font-size:14px;color:#fff;opacity:var(--c,0)}
+@media (min-width:900px){.caption{left:max(5vw,env(safe-area-inset-left,0px));right:max(5vw,env(safe-area-inset-right,0px))}}
+.caption b{font:700 clamp(16px,1.4vw,20px)/1.1 var(--display);letter-spacing:-.01em}
+.caption small{font-size:12px;color:#d6d9ff}
+.curtain{position:absolute;inset:0;z-index:8;background:var(--cobalt);color:var(--bone);display:flex;flex-direction:column;justify-content:flex-end;
+  padding-bottom:calc(8vh + env(safe-area-inset-bottom,0px));transform:translateY(calc(var(--c,0) * -100%))}
+.curtain h1{font:700 clamp(44px,10vw,184px)/.92 var(--display);letter-spacing:-.028em;margin:0 0 .3em;text-wrap:balance;
+  transform:translateY(calc(var(--c,0) * -24vh));opacity:calc(1 - var(--c,0) * 1.4)}
+.curtain .row{display:flex;flex-wrap:wrap;gap:22px 48px;align-items:flex-end;justify-content:space-between;opacity:calc(1 - var(--c,0) * 2)}
+.curtain p{margin:0;max-width:40ch;font-size:clamp(17px,1.35vw,20px)}
+.curtain .acts{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.cue{position:absolute;right:max(22px,env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));font-size:13px;display:flex;gap:10px;align-items:center}
+@media (min-width:900px){.cue{right:max(5vw,env(safe-area-inset-right,0px))}}
+.cue i{width:1px;height:38px;background:rgba(255,255,255,.4);position:relative;overflow:hidden}
+.cue i::after{content:"";position:absolute;left:0;top:0;width:1px;height:14px;background:var(--bone);animation:cue 1.8s var(--ease-out) infinite}
+@keyframes cue{from{transform:translateY(-14px)}to{transform:translateY(38px)}}
+
+/* ---------- manifesto ---------- */
+.mf{padding-block:22vh 16vh}
+.mf p{margin:0;font:700 clamp(40px,7.4vw,132px)/.94 var(--display);letter-spacing:-.025em;text-wrap:balance;}
+.mf .w{opacity:.16;transition:opacity .3s var(--ease-out)}
+.mf .w.lit{opacity:1}
+.mf .w.c{color:#8b95ff}
+.mf small{display:block;margin-top:44px;max-width:48ch;font-size:clamp(16px,1.3vw,19px);color:var(--bone-2)}
+
+/* ---------- process on a cobalt field, sideways ---------- */
+.hs{position:relative;background:var(--cobalt);color:var(--bone)}
+.hs-stage{position:sticky;top:0;height:100svh;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.hs-head{margin:0 0 5vh;font:700 clamp(34px,4.4vw,72px)/.95 var(--display);letter-spacing:-.025em;max-width:18ch}
+.hs-track{display:flex;gap:6vw;will-change:transform;padding-right:22vw}
+.step{flex:0 0 min(80vw,600px);border-top:1.5px solid rgba(242,238,230,.5);padding-top:24px}
+.step .n{font:300 clamp(96px,15vw,240px)/.8 var(--display);letter-spacing:-.03em;}
+.step h3{font:700 clamp(28px,2.8vw,44px)/1.02 var(--display);letter-spacing:-.025em;margin:26px 0 10px;}
+.step p{margin:0;max-width:40ch;color:#e6e8ff}
+@media (max-width:700px){.amount{font-size:clamp(40px,12vw,64px);white-space:normal}.close .big{white-space:normal;font-size:clamp(64px,19vw,120px)}}
+@media (prefers-reduced-motion:reduce){.hs-stage{position:static;height:auto;overflow-x:auto;padding-block:12vh}.hs{height:auto!important}}
+
+/* ---------- prices as type ---------- */
+.prices{padding-block:18vh}
+.ptitle{font:700 clamp(36px,5vw,88px)/.95 var(--display);letter-spacing:-.025em;margin:0 0 8vh;max-width:16ch;}
+.prow{display:grid;grid-template-columns:minmax(0,1fr);gap:8px 4vw;padding-block:34px;border-top:1px solid var(--line)}
+@media (min-width:900px){.prow{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);align-items:end}}
+.amount{font:300 clamp(48px,7.2vw,132px)/.86 var(--display);letter-spacing:-.03em;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.amount small{font:500 .26em var(--body);letter-spacing:0;margin-left:.3em}
+.prow h3{font:700 24px/1.15 var(--display);margin:0 0 8px;}
+.prow p{margin:0;color:var(--bone-2);max-width:44ch}
+.prow{transition:background-color .3s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.prow:hover .amount{color:#8b95ff}}
+.note{color:var(--bone-2);font-size:15px;margin-top:28px;max-width:62ch}
+
+/* ---------- closing ---------- */
+.close{background:var(--cobalt);padding-block:16vh 12vh;overflow:hidden}
+.close a{display:block;text-decoration:none}
+.close .big{font:700 clamp(64px,11vw,220px)/.9 var(--display);letter-spacing:-.028em;white-space:nowrap;display:inline-block;will-change:transform;}
+.close p{margin:28px 0 0;max-width:46ch}
+footer{padding-block:42px;display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-between;font-size:13px;color:var(--bone-2)}
+footer a{text-decoration:none}
+
+/* ---------- subpage heroes ---------- */
+.ph{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;padding-block:20vh 8vh;overflow:hidden;background:var(--cobalt)}
+.ph .giant{position:absolute;left:0;top:calc(78px + env(safe-area-inset-top,0px));font:700 clamp(120px,27vw,500px)/.78 var(--display);letter-spacing:-.028em;
+  color:var(--cobalt-deep);white-space:nowrap;will-change:transform;pointer-events:none;}
+.ph h1{position:relative;font:700 clamp(46px,7.4vw,128px)/.9 var(--display);letter-spacing:-.028em;margin:0 0 .35em;max-width:15ch;text-wrap:balance;}
+.ph p.lead{position:relative;max-width:46ch;font-size:clamp(17px,1.35vw,20px);margin:0}
+.ph.photo{background:#000}
+.ph.photo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.52)}
+
+.svc{padding-block:8vh 14vh}
+.svc-row{display:grid;gap:10px 4vw;padding-block:40px;border-top:1px solid var(--line)}
+@media (min-width:900px){.svc-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.svc-row h3{font:700 clamp(34px,4.8vw,84px)/.92 var(--display);letter-spacing:-.028em;margin:0;}
+.svc-row p{margin:0;color:var(--bone-2);max-width:46ch}
+.svc-row .tags{font-size:13px;color:#8b95ff;margin-top:12px}
+
+.faq{padding-block:8vh 14vh}
+.faq details{border-top:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:24px;padding-block:28px;font:600 clamp(24px,2.6vw,42px)/1.08 var(--display);letter-spacing:-.025em;}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:#8b95ff;font-weight:300;transition:transform .25s var(--ease-out)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 30px;max-width:60ch;color:var(--bone-2)}
+
+.costs{padding-block:4vh 14vh}
+.costs div{display:flex;justify-content:space-between;gap:20px;padding-block:20px;border-top:1px solid var(--line);font-size:18px}
+.costs b{font-weight:600;white-space:nowrap}
+
+form.demo{display:grid;gap:24px;max-width:820px;padding-block:8vh 16vh}
+.f2{display:grid;gap:24px}
+@media (min-width:700px){.f2{grid-template-columns:1fr 1fr}}
+form.demo label{display:grid;gap:8px;font-size:14px;color:var(--bone-2)}
+form.demo input,form.demo textarea,form.demo select{font:400 19px var(--body);color:var(--bone);background:transparent;border:0;border-bottom:1.5px solid rgba(242,238,230,.3);padding:10px 0;border-radius:0;width:100%;caret-color:#8b95ff}
+form.demo select option{color:#000}
+form.demo textarea{min-height:96px;resize:vertical}
+form.demo input:focus,form.demo textarea:focus,form.demo select:focus{outline:none;border-bottom-color:#8b95ff}
+.check{display:flex!important;gap:12px;align-items:flex-start}
+.check input{width:auto!important;margin-top:5px}
+.sent{color:#8b95ff;font-size:15px}
+
+[data-rise]{transform:translateY(calc((1 - var(--v,1)) * 56px));opacity:calc(.3 + var(--v,1) * .7)}
+@media (prefers-reduced-motion:reduce){[data-rise]{transform:none;opacity:1}.hero{height:auto}.stage{position:relative}.curtain{position:relative;min-height:100svh}
+  .scene{position:relative;height:100svh}.cue i::after{animation:none}.mf .w{opacity:1}}
+</style>
+
+<header class="top">
+  <a class="word" href="#etusivu" aria-label="Kaurivo, etusivu"><svg class="kmark" viewBox="28 22 428 300" aria-hidden="true"><path fill="currentColor" d="M106 27H211V107L106 216Z M30 314L324 24L454 25Z M208 222L293 170L452 319H296Z"/></svg><span>KAURIVO</span></a>
+  <nav class="links" id="nav" aria-label="Päävalikko">
+    <button class="menu-close" type="button" id="menu-close">Sulje</button>
+    <a href="#palvelut">Palvelut</a><a href="#hinnat">Hinnat</a><a href="#prosessi">Työprosessi</a><a href="#ukk">UKK</a>
+    <a class="cta-top" href="#yhteys">Pyydä oma demo ↗</a>
+  </nav>
+  <button class="menu-btn" type="button" id="menu-btn" aria-expanded="false" aria-controls="nav">Valikko</button>
+</header>
+
+<main>
+<!-- ================= ETUSIVU ================= -->
+<div data-view="etusivu" class="on">
+  <section class="hero" id="hero" aria-labelledby="h-home">
+    <div class="stage" id="stage">
+      <div class="frame" data-showcase aria-label="Kolme Kaurivon esimerkkidemoa">
+        <div class="demo d-kuura" data-demo>
+          <img src="img/ravintola.webp" alt="Katettu pöytä ravintolassa iltavalossa">
+          <div class="bar"><b>Kuura</b><span>Menu&nbsp;&nbsp; Pöytävaraus&nbsp;&nbsp; Yksityistilat</span></div>
+          <div class="copy"><h2>Illallinen, joka jää mieleen.</h2><p>Pohjoisen raaka-aineet, puuhiillos ja pitkä ilta. Avoinna ti–la klo 17–23.</p><span class="act">Varaa pöytä</span></div>
+        </div>
+        <div class="demo d-siru" data-demo>
+          <img src="img/kampaamo.webp" alt="Kampaaja leikkaa hiuksia">
+          <div class="bar"><b>Siru</b><span>Hinnasto&nbsp;&nbsp; Kampaajat&nbsp;&nbsp; Varaa aika</span></div>
+          <div class="copy"><h2>Leikkaus, joka <i>kestää viikkoja.</i></h2><p>Kolme kampaajaa, yksi tuoli kerrallaan. Varaa aika verkossa vuorokauden ympäri.</p><span class="act">Varaa aika</span></div>
+        </div>
+        <div class="demo d-ahven" data-demo>
+          <img src="img/sauna.webp" alt="Puulla lämpiävä sauna">
+          <div class="bar"><b>Ahven</b><span>Mökit&nbsp;&nbsp; Vapaat päivät&nbsp;&nbsp; Saapuminen</span></div>
+          <div class="copy"><h2>Löylyt, järvi ja hiljaisuus.</h2><div><p>Kaksi hirsimökkiä ja rantasauna. Vapaita viikonloppuja joulukuussa.</p><span class="act">Katso vapaat päivät</span></div></div>
+        </div>
+      </div>
+      <p class="caption"><b id="cap-name">Esimerkkidemo 1/3: ravintola</b><small id="cap-credit">Kuvitteellinen yritys. Kuva: PublicDomainPictures, Pixabay</small></p>
+
+      <div class="curtain wrap" id="curtain">
+        <p class="cue" aria-hidden="true">Rullaa ja katso esimerkit <i></i></p>
+        <h1 id="h-home">Näe uudet verkkosivusi ennen kuin päätät.</h1>
+        <div class="row">
+          <p>Kaurivo suunnittelee ja rakentaa yritysten verkkosivut. Teemme ensin demon nykyisen sivusi pohjalta, ilmaiseksi ja ilman sitoumusta. Yrityssivut alkaen 990&nbsp;€ (alv 0&nbsp;%).</p>
+          <div class="acts"><a class="btn" href="#yhteys">Pyydä oma demo <span aria-hidden="true">↗</span></a><a class="ghost" href="#hinnat">Katso hinnat</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mf wrap" aria-label="Kaurivon ajatus">
+    <p data-words>Ravintola, kampaamo, sauna vai remonttifirma: jokainen yritys tekee jotain, mikä kannattaa *näyttää.* Me teemme sivut, jotka *näyttävät* sen.</p>
+    <small>Ylempänä on kolme Kaurivon demoa kuvitteellisille yrityksille. Jokaisella on oma ilme ja omat tärkeimmät toiminnot, koska ravintola tarvitsee pöytävarauksen ja kampaamo ajanvarauksen. Sinun demosi tehdään yrityksesi omasta ilmeestä.</small>
+  </section>
+
+  <section class="hs" data-hs aria-labelledby="h-steps">
+    <div class="hs-stage">
+      <h2 class="hs-head wrap" id="h-steps">Neljä vaihetta. Yksi päätös, ja sen teet sinä.</h2>
+      <div class="hs-track wrap">
+        <article class="step"><div class="n">01</div><h3>Nykyinen sivu</h3><p>Käymme läpi sivusi, palvelusi ja sen, mitä asiakkaasi etsivät.</p></article>
+        <article class="step"><div class="n">02</div><h3>Demo</h3><p>Teemme etusivustasi demon, jonka avaat puhelimella ja koneella. Ilmainen, ei sitoumusta.</p></article>
+        <article class="step"><div class="n">03</div><h3>Päätös</h3><p>Jos demo miellyttää, saat kiinteän tarjouksen. Jos ei, mitään ei tarvitse tehdä.</p></article>
+        <article class="step"><div class="n">04</div><h3>Julkaisu</h3><p>Viimeistelemme sivuston omilla kuvillasi, julkaisemme sen ja näytämme, miten päivität sitä itse.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="prices wrap" aria-labelledby="h-prices">
+    <h2 class="ptitle" id="h-prices" data-rise>Mitä verkkosivut maksavat.</h2>
+    <div class="prow" data-rise><div class="amount">990&nbsp;€<small>alkaen</small></div><div><h3>Yrityssivu</h3><p>Etusivu, palvelut ja yhteystiedot yhdellä tai muutamalla sivulla.</p></div></div>
+    <div class="prow" data-rise><div class="amount">1&nbsp;900–3&nbsp;500&nbsp;€</div><div><h3>Laajempi sivusto</h3><p>4–8 sivua, työnäytteet ja sisällönhallinta, jolla päivität tekstit ja kuvat itse.</p></div></div>
+    <div class="prow" data-rise><div class="amount">3&nbsp;500&nbsp;€<small>alkaen</small></div><div><h3>Räätälöity toteutus</h3><p>Ajanvaraus, verkkokauppa, integraatiot tai laajempi animaatio.</p></div></div>
+    <p class="note">Hinnat ilman arvonlisäveroa (alv 0&nbsp;%). Kiinteä tarjous tulee vasta, kun olet nähnyt demon. <a href="#hinnat">Koko hinnasto</a></p>
+  </section>
+
+  <section class="close wrap" aria-label="Pyydä oma demo">
+    <a href="#yhteys"><span class="big" data-drift>Pyydä oma demo ↗</span></a>
+    <p>Ilmainen demo, ei sitoumusta. Vastaan yleensä saman päivän aikana: hello@kaurivo.com</p>
+  </section>
+</div>
+
+<!-- ================= PALVELUT ================= -->
+<div data-view="palvelut">
+  <section class="ph wrap" aria-labelledby="h-svc">
+    <div class="giant" data-drift aria-hidden="true">PALVELUT</div>
+    <h1 id="h-svc">Uudet verkkosivut ja vanhojen uudistus.</h1>
+    <p class="lead">Suunnittelemme ja rakennamme sivut, jotka kertovat selvästi, mitä yrityksesi tekee, mitä se maksaa ja miten sinuun saa yhteyden.</p>
+  </section>
+  <section class="svc wrap">
+    <div class="svc-row" data-rise><h3>Uudet yritys&shy;sivut</h3><div><p>Suunnittelemme rakenteen ja ilmeen palveluidesi ympärille, ei valmiiseen pohjaan logoa vaihtamalla.</p><p class="tags">Suunnittelu · toteutus · hakukoneiden perusteet</p></div></div>
+    <div class="svc-row" data-rise><h3>Vanhan sivun uudistus</h3><div><p>Säilytämme logon, värit ja tunnistettavan ilmeen ja uudistamme rakenteen, typografian, navigaation ja mobiilikokemuksen.</p><p class="tags">Brändin jatkuvuus · käytettävyys · mobiili</p></div></div>
+    <div class="svc-row" data-rise><h3>Liike, joka näyttää työn</h3><div><p>Työvaiheet, ennen ja jälkeen, tuotteet tai tilat rakentuvat sivulle selatessa. Mitoitamme liikkeen tarpeen mukaan: tilitoimisto saa rauhallisen sivun, ravintola näyttävämmän.</p><p class="tags">Scroll-tarinat · tarpeen mukaan</p></div></div>
+    <div class="svc-row" data-rise><h3>Sivut, joita voit muokata</h3><div><p>Valitsemme sopivan sisällönhallinnan, jotta voit päivittää tekstit, kuvat ja yhteystiedot itse.</p><p class="tags">Sisällönhallinta · opastus · omistajuus</p></div></div>
+  </section>
+  <section class="close wrap"><a href="#yhteys"><span class="big" data-drift>Pyydä oma demo ↗</span></a></section>
+</div>
+
+<!-- ================= HINNAT ================= -->
+<div data-view="hinnat">
+  <section class="ph wrap" aria-labelledby="h-price">
+    <div class="giant" data-drift aria-hidden="true">990 €</div>
+    <h1 id="h-price">Verkkosivujen hinnat.</h1>
+    <p class="lead">Yrityksen verkkosivut maksavat Kaurivolla 990 eurosta alkaen. Kerro, mitä tarvitset, niin saat kiinteän tarjouksen ennen kuin mitään sovitaan.</p>
+  </section>
+  <section class="prices wrap" style="padding-top:8vh">
+    <div class="prow" data-rise><div class="amount">990&nbsp;€<small>alkaen</small></div><div><h3>Yrityssivu</h3><p>Selkeät 1–3 sivun verkkosivut: etusivu, palvelut ja yhteystiedot. Oma ilme, mobiili, yhteydenottolomake ja hakukoneiden perusteet.</p></div></div>
+    <div class="prow" data-rise><div class="amount">1&nbsp;900–3&nbsp;500&nbsp;€</div><div><h3>Laajempi sivusto</h3><p>4–8 sivua: palvelut omille sivuilleen, työnäytteet tai referenssit, hinnasto ja sisällönhallinta.</p></div></div>
+    <div class="prow" data-rise><div class="amount">3&nbsp;500&nbsp;€<small>alkaen</small></div><div><h3>Räätälöity toteutus</h3><p>Näyttävät animaatiot, ajanvaraus, integraatiot tai verkkokauppa. Laajuus ja hinta sovitaan tarkasti ennen aloitusta.</p></div></div>
+    <p class="note">Saat kirjallisen tarjouksen, eikä työtä aloiteta ennen kuin olet hyväksynyt sen. Hinnat alv 0&nbsp;%.</p>
+  </section>
+  <section class="costs wrap">
+    <h2 class="ptitle" data-rise>Mitä muuta kannattaa varata.</h2>
+    <div><span>Verkkotunnus (esim. yrityksesi.fi)</span><b>noin 10–30 € / vuosi</b></div>
+    <div><span>Palvelintila</span><b>noin 5–20 € / kk</b></div>
+    <div><span>Ylläpito ja päivitykset</span><b>sovitaan erikseen</b></div>
+    <p class="note">Verkkotunnus ja palvelintila ovat yrityksesi omissa nimissä, ja autamme käyttöönotossa.</p>
+  </section>
+  <section class="close wrap"><a href="#yhteys"><span class="big" data-drift>Pyydä oma demo ↗</span></a></section>
+</div>
+
+<!-- ================= PROSESSI ================= -->
+<div data-view="prosessi">
+  <section class="ph wrap" aria-labelledby="h-proc">
+    <div class="giant" data-drift aria-hidden="true">01 02 03 04</div>
+    <h1 id="h-proc">Näin työ etenee.</h1>
+    <p class="lead">Ensin näet demon. Vasta sen jälkeen sovitaan hinta, sisältö ja aikataulu. Voit antaa palautetta jokaisessa vaiheessa.</p>
+  </section>
+  <section class="svc wrap">
+    <div class="svc-row" data-rise><h3>01 Kartoitus</h3><p>Tutustumme palveluihisi, asiakkaisiisi ja nykyiseen sivustoon. Arvioimme myös, kuinka näyttävän sivun yrityksesi oikeasti tarvitsee.</p></div>
+    <div class="svc-row" data-rise><h3>02 Demo</h3><p>Rakennamme etusivusta demon. Demossa voi olla havainnekuvia; lopulliseen sivuun tulevat omat kuvasi.</p></div>
+    <div class="svc-row" data-rise><h3>03 Toteutus</h3><p>Rakennamme ja testaamme sivuston puhelimella ja koneella: luettavuus, nopeus ja yhteydenotto ensin.</p></div>
+    <div class="svc-row" data-rise><h3>04 Julkaisu</h3><p>Hyväksynnän jälkeen sivusto julkaistaan, ja saat käyttöösi pääsyn sekä opastuksen.</p></div>
+  </section>
+  <section class="close wrap"><a href="#yhteys"><span class="big" data-drift>Pyydä oma demo ↗</span></a></section>
+</div>
+
+<!-- ================= UKK ================= -->
+<div data-view="ukk">
+  <section class="ph wrap" aria-labelledby="h-faq">
+    <div class="giant" data-drift aria-hidden="true">KYSYMYKSET</div>
+    <h1 id="h-faq">Usein kysytyt kysymykset.</h1>
+    <p class="lead">Jos et löydä vastausta, kysy suoraan: hello@kaurivo.com</p>
+  </section>
+  <section class="faq wrap">
+    <details><summary>Paljonko uudet verkkosivut maksavat?</summary><p>Yrityssivu maksaa alkaen 990 €, laajempi 4–8 sivun sivusto 1 900–3 500 € ja räätälöity toteutus alkaen 3 500 € (alv 0 %). Saat kiinteän tarjouksen ennen sitoutumista.</p></details>
+    <details><summary>Maksaako demo jotain?</summary><p>Ei. Demo on ilmainen eikä sido mihinkään. Jos se ei miellytä, mitään ei tarvitse tehdä.</p></details>
+    <details><summary>Voinko muokata verkkosivujani itse?</summary><p>Kyllä. Valitsemme sopivan sisällönhallinnan, jolla päivität tekstit, kuvat ja yhteystiedot itse.</p></details>
+    <details><summary>Voitteko uudistaa sivuston säilyttäen brändimme?</summary><p>Kyllä. Säilytämme logon, värit ja tunnistettavan ilmeen ja uudistamme rakenteen, typografian, navigaation ja mobiilikokemuksen.</p></details>
+    <details><summary>Kuinka kauan projekti kestää?</summary><p>Aikataulu riippuu laajuudesta, materiaalien valmiudesta ja palautteesta. Sovimme aikataulusta yhdessä.</p></details>
+    <details><summary>Toimiiko sivusto puhelimella?</summary><p>Kyllä. Suunnittelemme sivut ensin puhelimelle ja testaamme navigaation, luettavuuden ja yhteydenoton ennen luovutusta.</p></details>
+    <details><summary>Hoidatteko verkkotunnuksen ja palvelintilan?</summary><p>Autamme valinnassa. Verkkotunnuksen, palvelintilan ja muiden palveluiden kulut eritellään tarjouksessa.</p></details>
+    <details><summary>Näkyykö yritykseni Googlessa?</summary><p>Rakennamme sivut selkeällä rakenteella ja hakukoneiden ymmärtämällä sisällöllä. Tiettyjä sijoituksia tai kävijämääriä ei voi taata.</p></details>
+  </section>
+  <section class="close wrap"><a href="#yhteys"><span class="big" data-drift>Pyydä oma demo ↗</span></a></section>
+</div>
+
+<!-- ================= YHTEYS ================= -->
+<div data-view="yhteys">
+  <section class="ph wrap" aria-labelledby="h-contact">
+    <div class="giant" data-drift aria-hidden="true">DEMO</div>
+    <h1 id="h-contact">Pyydä oma demo.</h1>
+    <p class="lead">Kerro yrityksestäsi ja nykyisestä sivustasi. Teemme etusivustasi demon, ja päätät vasta kun olet nähnyt sen.</p>
+  </section>
+  <section class="wrap">
+    <form class="demo" id="demo-form" novalidate>
+      <div class="f2">
+        <label for="f-name">Nimi<input id="f-name" name="name" autocomplete="name" required></label>
+        <label for="f-email">Sähköposti<input id="f-email" name="email" type="email" autocomplete="email" required></label>
+      </div>
+      <div class="f2">
+        <label for="f-company">Yritys<input id="f-company" name="company" autocomplete="organization" required></label>
+        <label for="f-site">Nykyinen verkkosivu (jos on)<input id="f-site" name="website" inputmode="url" placeholder="esim. yritys.fi"></label>
+      </div>
+      <label for="f-services">Kolme tärkeintä palveluasi<input id="f-services" name="services" placeholder="esim. kylpyhuoneremontit, laatoitus, saunat"></label>
+      <label for="f-asks">Mitä asiakkaasi useimmiten kysyvät?<textarea id="f-asks" name="asks"></textarea></label>
+      <div class="f2">
+        <label for="f-prices">Hinnat tai hintahaarukka (jos haluat ne sivulle)<input id="f-prices" name="prices"></label>
+        <label for="f-area">Toiminta-alue<input id="f-area" name="area" placeholder="esim. Jyväskylä ja lähikunnat"></label>
+      </div>
+      <div class="f2">
+        <label for="f-level">Millaiset sivut sopivat yrityksellesi?
+          <select id="f-level" name="level"><option>En osaa sanoa, ehdota</option><option>Rauhalliset ja asialliset</option><option>Viimeistellyt, yksi näyttävä kohta</option><option>Näyttävät</option></select></label>
+        <label for="f-liked">Verkkosivu, josta pidät (minkä tahansa yrityksen)<input id="f-liked" name="liked" inputmode="url"></label>
+      </div>
+      <label class="check" for="f-ok"><input id="f-ok" type="checkbox" required> Ymmärrän, että tietoja käytetään vain pyyntööni vastaamiseen.</label>
+      <div><button class="btn" type="submit">Lähetä demopyyntö <span aria-hidden="true">↗</span></button></div>
+      <p class="sent" id="sent" hidden>Esikatselussa lomake ei lähetä viestiä. Julkaistulla sivulla pyyntö menee osoitteeseen hello@kaurivo.com.</p>
+    </form>
+  </section>
+</div>
+</main>
+
+<footer class="wrap">
+  <span>KAURIVO · verkkosivustudio, Suomi</span>
+  <span><a href="#palvelut">Palvelut</a> · <a href="#hinnat">Hinnat</a> · <a href="#prosessi">Työprosessi</a> · <a href="#ukk">UKK</a></span>
+  <span>Esimerkkikuvat: Pixabay (PublicDomainPictures, kaleido-dp, kathrina5)</span>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const ease = t => 1 - Math.pow(1 - t, 3);
+
+  /* views */
+  const views = [...document.querySelectorAll('[data-view]')];
+  const navLinks = [...document.querySelectorAll('.links a')];
+  const nav = document.getElementById('nav'), btn = document.getElementById('menu-btn');
+  const closeMenu = () => { nav.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); };
+  btn.addEventListener('click', () => { nav.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); });
+  document.getElementById('menu-close').addEventListener('click', closeMenu);
+  function show() {
+    const name = (location.hash || '#etusivu').slice(1);
+    const view = views.find(v => v.dataset.view === name) || views[0];
+    views.forEach(v => v.classList.toggle('on', v === view));
+    navLinks.forEach(a => a.getAttribute('href') === '#' + view.dataset.view ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+    scrollTo(0, 0); closeMenu(); setup(); kick();
+  }
+  addEventListener('hashchange', show);
+
+  /* manifesto words; *word* marks the accent words */
+  document.querySelectorAll('[data-words]').forEach(p => {
+    const parts = p.textContent.split(/(\s+)/);
+    p.textContent = '';
+    parts.forEach(t => {
+      if (!t) return;
+      if (/^\s+$/.test(t)) { p.append(t); return; }
+      const s = document.createElement('span');
+      const accent = /^\*.*\*[.,:]?$/.test(t);
+      s.className = 'w' + (accent ? ' c' : '');
+      s.textContent = t.replace(/\*/g, '');
+      p.append(s);
+    });
+  });
+
+  /* one engine for every scroll effect; displayed values only ever trail the real scroll slightly */
+  const credits = ['Kuvitteellinen yritys. Kuva: PublicDomainPictures, Pixabay', 'Kuvitteellinen yritys. Kuva: kaleido-dp, Pixabay', 'Kuvitteellinen yritys. Kuva: kathrina5, Pixabay'];
+  const names = ['Esimerkkidemo 1/3: ravintola', 'Esimerkkidemo 2/3: kampaamo', 'Esimerkkidemo 3/3: mökkivuokraus'];
+  const span = (p, a, len) => ease(clamp((p - a) / len));
+  let hero, stage, curtain, scenes, tagName, tagCredit, demos, tracks, rises, drifts, wordsets, heroCur = -1;
+  function setup() {
+    const root = views.find(v => v.classList.contains('on'));
+    hero = root.querySelector('#hero');
+    if (hero) { stage = hero.querySelector('#stage'); curtain = hero.querySelector('#curtain'); demos = [...hero.querySelectorAll('[data-demo]')]; tagName = hero.querySelector('#cap-name'); tagCredit = hero.querySelector('#cap-credit'); }
+    tracks = [...root.querySelectorAll('[data-hs]')].map(el => {
+      const track = el.querySelector('.hs-track');
+      const shift = Math.max(0, track.scrollWidth - innerWidth);
+      if (!reduce) el.style.height = (innerHeight + shift) + 'px';
+      return { el, track, shift, cur: -1 };
+    });
+    rises = [...root.querySelectorAll('[data-rise]')].map(el => ({ el, cur: -1 }));
+    drifts = [...root.querySelectorAll('[data-drift]')];
+    wordsets = [...root.querySelectorAll('[data-words]')].map(p => ({ p, words: [...p.querySelectorAll('.w')] }));
+    heroCur = -1;
+  }
+  let raf = 0;
+  const follow = (cur, goal) => cur < 0 ? goal : cur + (goal - cur) * .22;
+  function frame() {
+    raf = 0; let moving = false; const vh = innerHeight;
+    if (hero) {
+      const r = hero.getBoundingClientRect();
+      const goal = reduce ? 1 : clamp(-r.top / Math.max(1, r.height - vh));
+      heroCur = follow(heroCur, goal);
+      if (Math.abs(goal - heroCur) > .0005) moving = true; else heroCur = goal;
+      const p = heroCur;
+      // the headline field lifts into the showcase frame; the next demos wipe up over the first
+      const c = span(p, 0, .16);
+      curtain.style.setProperty('--c', c.toFixed(4));
+      stage.style.setProperty('--c', c.toFixed(4));
+      let current = 0;
+      demos.forEach((d, i) => {
+        const w = i === 0 ? 1 : span(p, .3 + (i - 1) * .3, .16);
+        d.style.setProperty('--w', w.toFixed(4));
+        if (w > .5) current = i;
+      });
+      if (tagName.textContent !== names[current]) { tagName.textContent = names[current]; tagCredit.textContent = credits[current]; }
+    }
+    for (const t of tracks) {
+      const r = t.el.getBoundingClientRect();
+      const goal = clamp(-r.top / Math.max(1, r.height - vh));
+      t.cur = follow(t.cur, goal);
+      if (Math.abs(goal - t.cur) > .0008) moving = true; else t.cur = goal;
+      if (!reduce) t.track.style.transform = `translate3d(${(-t.cur * t.shift).toFixed(1)}px,0,0)`;
+    }
+    for (const it of rises) {
+      const r = it.el.getBoundingClientRect();
+      const goal = clamp((vh - r.top) / (vh * .55));
+      it.cur = follow(it.cur, goal);
+      if (Math.abs(goal - it.cur) > .001) moving = true; else it.cur = goal;
+      it.el.style.setProperty('--v', ease(it.cur).toFixed(3));
+    }
+    for (const ws of wordsets) {
+      const r = ws.p.getBoundingClientRect();
+      const lit = clamp((vh * .8 - r.top) / (r.height + vh * .2));
+      const n = Math.round(lit * ws.words.length);
+      ws.words.forEach((w, i) => w.classList.toggle('lit', reduce || i < n));
+    }
+    for (const d of drifts) {
+      const r = d.getBoundingClientRect();
+      const k = clamp((vh - r.top) / (vh + r.height));
+      d.style.transform = `translateX(${(-k * 22 + 3).toFixed(2)}vw)`;
+    }
+    if (moving) raf = requestAnimationFrame(frame);
+  }
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  addEventListener('scroll', kick, { passive: true });
+  addEventListener('resize', () => { setup(); kick(); });
+
+  document.getElementById('demo-form').addEventListener('submit', e => { e.preventDefault(); document.getElementById('sent').hidden = false; });
+  show();
+})();
+</script>
+</html>
