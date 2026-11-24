@@ -12,9 +12,8 @@ This module makes that automatic for any logo file:
   grouped to 2-10 pieces left to right. A single-shape mark is cut into three
   bands so it can still assemble.
 - ``logo_story_html`` emits a [data-story] hero (utils.scroll_story runtime,
-  utils.hero_reveal copy timing) where every piece is the company's real logo
-  pixels clipped by its own outline: colours and shapes are never redrawn or
-  invented.
+  utils.hero_reveal copy timing) where every piece is an image of the company's
+  real logo pixels: colours and shapes are never redrawn or invented.
 
 Use it when the logo is the most authentic subject available (no own photos,
 only illustrations): the business's real work beats its logo, its logo beats
@@ -44,15 +43,47 @@ def _load_rgba(path: Path):
         return image.convert("RGBA")
 
 
-def cut_logo(path: Path, out_png: Path, *, max_pieces: int = MAX_PIECES) -> dict | None:
-    """Write a transparent PNG of the logo and return its pieces, or None if unusable.
+def _components(mask, max_side: int = 360):
+    """Connected parts of a boolean mask (numpy + Pillow only; CI has no OpenCV).
 
-    Returns {"width", "height", "ratio", "luminance", "pieces": [{"polygons": [...], "cx", "cy"}]}
-    in the PNG's pixel space.
+    Labels are found on a max-pooled, slightly grown copy at most ``max_side``
+    wide and mapped back to full resolution, so every logo pixel gets a part."""
+    import numpy as np
+    h, w = mask.shape
+    step = max(1, math.ceil(max(h, w) / max_side))
+    hh, ww = math.ceil(h / step), math.ceil(w / step)
+    padded = np.zeros((hh * step, ww * step), bool)
+    padded[:h, :w] = mask
+    small = padded.reshape(hh, step, ww, step).any(axis=(1, 3))
+    grown = small.copy()
+    grown[1:] |= small[:-1]; grown[:-1] |= small[1:]
+    grown[:, 1:] |= small[:, :-1]; grown[:, :-1] |= small[:, 1:]
+    labels = np.zeros(grown.shape, np.int32)
+    count = 0
+    for y, x in zip(*np.nonzero(grown)):
+        if labels[y, x]:
+            continue
+        count += 1
+        stack = [(y, x)]
+        labels[y, x] = count
+        while stack:
+            cy, cx = stack.pop()
+            for ny, nx in ((cy - 1, cx), (cy + 1, cx), (cy, cx - 1), (cy, cx + 1)):
+                if 0 <= ny < hh and 0 <= nx < ww and grown[ny, nx] and not labels[ny, nx]:
+                    labels[ny, nx] = count
+                    stack.append((ny, nx))
+    full = np.repeat(np.repeat(labels, step, axis=0), step, axis=1)[:h, :w]
+    return np.where(mask, full, 0), count
+
+
+def cut_logo(path: Path, out_png: Path, *, max_pieces: int = MAX_PIECES) -> dict | None:
+    """Write a transparent PNG of the logo plus one PNG per piece; return the pieces or None.
+
+    Returns {"width", "height", "ratio", "luminance", "pieces": [{"file", "cx", "cy"}]};
+    piece files sit next to ``out_png`` and share its canvas, so they stack exactly.
     """
     import numpy as np
-    import cv2
-    from PIL import Image
+    from PIL import Image, ImageFilter
 
     image = _load_rgba(path)
     if image is None:
@@ -60,7 +91,7 @@ def cut_logo(path: Path, out_png: Path, *, max_pieces: int = MAX_PIECES) -> dict
     w, h = image.size
     if w < 40 or h < 16:
         return None
-    if max(w, h) < 900:  # contour precision and a sharper poster frame
+    if max(w, h) < 900:  # sharper poster frame
         scale = 900 / max(w, h)
         image = image.resize((round(w * scale), round(h * scale)), Image.LANCZOS)
         w, h = image.size
@@ -81,55 +112,57 @@ def cut_logo(path: Path, out_png: Path, *, max_pieces: int = MAX_PIECES) -> dict
     x1, y1 = min(w, x1 + pad), min(h, y1 + pad)
     mask = mask[y0:y1, x0:x1]
     cut = np.asarray(image)[y0:y1, x0:x1].copy()
-    soft = cv2.GaussianBlur(mask.astype(np.float32), (3, 3), 0)
-    cut[..., 3] = np.minimum(cut[..., 3], (soft * 255).astype(np.uint8))
+    soft = np.asarray(Image.fromarray(mask.astype(np.uint8) * 255).filter(ImageFilter.GaussianBlur(0.8)))
+    cut[..., 3] = np.minimum(cut[..., 3], soft)
+    out_png = Path(out_png)
     out_png.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(cut, "RGBA").save(out_png, optimize=True)
     h, w = mask.shape
 
-    grown = cv2.dilate(mask.astype(np.uint8) * 255, np.ones((5, 5), np.uint8))
-    contours, _ = cv2.findContours(grown, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    total = sum(cv2.contourArea(c) for c in contours) or 1
+    labels, count = _components(mask)
+    total = int(mask.sum()) or 1
     parts = []
-    for c in contours:
-        area = cv2.contourArea(c)
+    for label in range(1, count + 1):
+        sel = labels == label
+        area = int(sel.sum())
         if area < total * 0.002:
             continue
-        m = cv2.moments(c)
-        poly = cv2.approxPolyDP(c, 0.8, True).reshape(-1, 2)
-        if len(poly) < 3:
-            continue
-        parts.append({"area": area, "cx": m["m10"] / (m["m00"] or 1), "cy": m["m01"] / (m["m00"] or 1),
-                      "poly": poly})
+        py, px = np.nonzero(sel)
+        parts.append({"area": area, "cx": float(px.mean()), "cy": float(py.mean()), "labels": [label]})
     if not parts:
         return None
     # tiny parts (dots, accents) travel with their nearest big neighbour
     big = [p for p in parts if p["area"] >= total * 0.02] or parts
-    groups = [{"members": [p]} for p in big]
     for p in parts:
         if p in big:
             continue
-        nearest = min(groups, key=lambda g: math.hypot(g["members"][0]["cx"] - p["cx"], g["members"][0]["cy"] - p["cy"]))
-        nearest["members"].append(p)
-    groups.sort(key=lambda g: g["members"][0]["cx"])
+        near = min(big, key=lambda g: math.hypot(g["cx"] - p["cx"], g["cy"] - p["cy"]))
+        near["labels"] += p["labels"]
+        near["area"] += p["area"]
+    groups = sorted(big, key=lambda g: g["cx"])
     while len(groups) > max_pieces:  # merge the closest neighbours left to right
-        gaps = [abs(groups[i + 1]["members"][0]["cx"] - groups[i]["members"][0]["cx"]) for i in range(len(groups) - 1)]
+        gaps = [groups[i + 1]["cx"] - groups[i]["cx"] for i in range(len(groups) - 1)]
         i = gaps.index(min(gaps))
-        groups[i]["members"] += groups.pop(i + 1)["members"]
-    pieces = []
-    for g in groups:
-        area = sum(p["area"] for p in g["members"]) or 1
-        pieces.append({
-            "polygons": [" ".join(f"{x},{y}" for x, y in p["poly"]) for p in g["members"]],
-            "cx": sum(p["cx"] * p["area"] for p in g["members"]) / area,
-            "cy": sum(p["cy"] * p["area"] for p in g["members"]) / area,
-        })
-    if len(pieces) == 1:  # one solid shape: three vertical bands still assemble
-        bands = []
+        a, b = groups[i], groups.pop(i + 1)
+        total_area = a["area"] + b["area"]
+        a["cx"] = (a["cx"] * a["area"] + b["cx"] * b["area"]) / total_area
+        a["cy"] = (a["cy"] * a["area"] + b["cy"] * b["area"]) / total_area
+        a["area"], a["labels"] = total_area, a["labels"] + b["labels"]
+    if len(groups) == 1:  # one solid shape: three vertical bands still assemble
+        masks = []
         for i in range(3):
-            a, b = round(w * i / 3), round(w * (i + 1) / 3)
-            bands.append({"polygons": [f"{a},0 {b},0 {b},{h} {a},{h}"], "cx": (a + b) / 2, "cy": h / 2})
-        pieces = bands
+            band = np.zeros_like(mask)
+            band[:, round(w * i / 3):round(w * (i + 1) / 3)] = True
+            masks.append((band, (w * (i + .5)) / 3, h / 2))
+    else:
+        masks = [(np.isin(labels, g["labels"]), g["cx"], g["cy"]) for g in groups]
+    pieces = []
+    for i, (sel, cx, cy) in enumerate(masks):
+        piece = cut.copy()
+        piece[..., 3] = np.where(sel, piece[..., 3], 0)
+        name = f"{out_png.stem}-{i + 1}.png"
+        Image.fromarray(piece, "RGBA").save(out_png.with_name(name), optimize=True)
+        pieces.append({"file": name, "cx": cx, "cy": cy})
     rgb = cut[..., :3][mask].astype(float)
     lum = float((0.2126 * rgb[:, 0] + 0.7152 * rgb[:, 1] + 0.0722 * rgb[:, 2]).mean() / 255) if len(rgb) else .5
     return {"width": w, "height": h, "ratio": w / h, "luminance": lum, "pieces": pieces}
@@ -158,15 +191,13 @@ def logo_story_html(*, logo_rel: str, cut: dict, copy_html: str, label: str,
         # everything moves from the first pixel of scroll; pieces land one after another
         start = round(0.1 * i / max(1, n - 1), 3) if n > 1 else 0.0
         end = round(0.2 + 0.14 * i / max(1, n - 1), 3)
-        clip = f"ls-c-{i}"
-        polys = "".join(f'<polygon points="{p}"/>' for p in piece["polygons"])
+        base = logo_rel.rsplit("/", 1)[0] + "/" if "/" in logo_rel else ""
         pieces.append(
-            f'<svg class="ls-piece" data-k="{start},{end}" viewBox="0 0 {w} {h}" focusable="false" '
+            f'<img class="ls-piece" data-k="{start},{end}" src="{html.escape(base + piece["file"])}" alt="" '
+            f'width="{w}" height="{h}" decoding="async" '
             f'style="--x:{x:.1f}vw;--y:{y:.1f}svh;--z:{z:.0f}px;--rx:{(r[3] - .5) * 70:.0f}deg;'
             f'--ry:{(r[4] - .5) * 80:.0f}deg;--rz:{(r[5] - .5) * 50:.0f}deg;--b:{4 + 4 * r[2]:.1f}px;'
-            f'--ox:{100 * piece["cx"] / w:.1f}%;--oy:{100 * piece["cy"] / h:.1f}%">'
-            f'<defs><clipPath id="{clip}">{polys}</clipPath></defs>'
-            f'<image href="{html.escape(logo_rel)}" width="{w}" height="{h}" clip-path="url(#{clip})"/></svg>')
+            f'--ox:{100 * piece["cx"] / w:.1f}%;--oy:{100 * piece["cy"] / h:.1f}%">')
     photo = (f'<img class="ls-photo" data-k="0.28,0.74" src="{html.escape(photo_rel)}" alt="{html.escape(photo_alt)}">'
              if photo_rel else "")
     tone = "ls--dark" if dark else "ls--light"
@@ -192,7 +223,7 @@ STYLE = """
 .ls-lockup{position:absolute;left:50%;top:48%;width:min(78vw,1080px,44svh * var(--ratio));transform-style:preserve-3d;
   transform:translate(-50%,-50%) translateY(calc(var(--k) * -24svh)) scale(calc(1 - var(--k) * .5))}
 .ls-mark{position:relative;aspect-ratio:var(--ratio);transform-style:preserve-3d}
-.ls-piece{position:absolute;inset:0;width:100%;height:100%;overflow:visible;transform-origin:var(--ox) var(--oy);will-change:transform;
+.ls-piece{position:absolute;inset:0;width:100%;height:100%;max-width:none;transform-origin:var(--ox) var(--oy);will-change:transform;
   --i:calc(1 - var(--k));
   transform:translate3d(calc(var(--x) * var(--i)),calc(var(--y) * var(--i)),calc(var(--z) * var(--i)))
     rotateX(calc(var(--rx) * var(--i))) rotateY(calc(var(--ry) * var(--i))) rotateZ(calc(var(--rz) * var(--i)));

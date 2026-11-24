@@ -54,7 +54,7 @@ class LogoStoryTests(unittest.TestCase):
         self.assertIn("data-copy-after", section)
         self.assertIn("data-hero-copy", section)
         self.assertEqual(section.count('class="ls-piece"'), 6)
-        self.assertEqual(section.count('href="assets/logo-story.png"'), 6)
+        self.assertEqual(section.count('src="assets/cut-'), 6)
 
     def test_sales_demo_uses_logo_story_when_only_stock_photos_exist(self):
         from utils.sales_demo import render_sales_demo
