@@ -131,6 +131,7 @@ jobs:
           KAURIVO_GEMINI_API_KEY: ${{ secrets.KAURIVO_GEMINI_API_KEY }}
           KAURIVO_PEXELS_API_KEY: ${{ secrets.KAURIVO_PEXELS_API_KEY }}
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
+          KAURIVO_UNSPLASH_ACCESS_KEY: ${{ secrets.KAURIVO_UNSPLASH_ACCESS_KEY }}
           BUILDER_MODEL: ${{ vars.KAURIVO_BUILDER_MODEL_FREE || 'google/gemma-4-31b-it:free' }}
           QA_MODEL: ${{ vars.KAURIVO_QA_MODEL_FREE_V2 || 'nvidia/nemotron-3.5-super-vl:free' }}
         run: |
@@ -310,6 +311,7 @@ jobs:
           KAURIVO_SALES_FALLBACK: ${{ vars.KAURIVO_SALES_FALLBACK || '1' }}
           KAURIVO_RENDER_DEPLOY_HOOK: ${{ secrets.KAURIVO_RENDER_DEPLOY_HOOK }}
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
+          KAURIVO_UNSPLASH_ACCESS_KEY: ${{ secrets.KAURIVO_UNSPLASH_ACCESS_KEY }}
           KAURIVO_GEMINI_FREE_CONFIRMED: ${{ vars.KAURIVO_GEMINI_FREE_CONFIRMED || '1' }}
           OPENROUTER_MODEL: openrouter/free
           RESEARCH_MODEL: ${{ vars.KAURIVO_RESEARCH_MODEL_FREE || 'google/gemma-4-26b-a4b-it:free' }}
