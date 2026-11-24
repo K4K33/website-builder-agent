@@ -471,6 +471,9 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                           "use a legible opaque text panel or independently "
                                           "review the real rendered image: "
                                           + json.dumps(color_review["ambiguous"], ensure_ascii=False))
+                        from utils.brand_consistency import FAMILY_SCRIPT, typeface_issues
+                        issues.extend(f"{name}: {problem}" for problem in
+                                      typeface_issues(page.evaluate(FAMILY_SCRIPT)))
                         if color_review["scrollBlocked"]:
                             issues.append(f"{name}: native vertical scrolling blocked")
                         for key, message in (("overflow", "horizontal overflow"),
