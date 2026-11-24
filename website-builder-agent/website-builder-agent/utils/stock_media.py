@@ -125,6 +125,15 @@ def _openverse(session, query):
 PROVIDERS = (_pexels, _pixabay, _openverse)
 
 
+def _providers():
+    """Providers to use: KAURIVO_STOCK_PROVIDERS="openverse,pixabay" picks and orders them."""
+    wanted = [w.strip().lower() for w in os.getenv("KAURIVO_STOCK_PROVIDERS", "").split(",") if w.strip()]
+    if not wanted:
+        return PROVIDERS
+    by_name = {f.__name__.lstrip("_"): f for f in PROVIDERS}
+    return tuple(by_name[w] for w in wanted if w in by_name) or PROVIDERS
+
+
 _GENERIC = {"modern", "interior", "freshly", "house", "home", "clean", "bright", "cozy", "work", "wall"}
 
 
@@ -143,7 +152,8 @@ _TEXTURE = re.compile(r"\b(background|wallpaper|texture|pattern|mosaic|backdrop|
 def _usable(photo: dict) -> bool:
     width, height = int(photo.get("width") or 0), int(photo.get("height") or 0)
     text = str(photo.get("text") or "")
-    return (width >= int(photo.get("min_width") or 1200) and width > height * 1.2
+    floor = max(int(photo.get("min_width") or 1200), int(os.getenv("KAURIVO_STOCK_MIN_WIDTH") or 0))
+    return (width >= floor and width > height * 1.2
             and not _PEOPLE.search(text) and not _TEXTURE.search(text))
 
 
@@ -180,7 +190,7 @@ def fetch_stock_photos(topic_text: str, folder: Path, *, count: int = MAX_STOCK,
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
     chosen, seen = [], set()
-    for provider in PROVIDERS:
+    for provider in _providers():
         for query in queries:
             if len(chosen) >= count:
                 break

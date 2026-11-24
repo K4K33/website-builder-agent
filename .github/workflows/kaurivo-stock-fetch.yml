@@ -22,6 +22,21 @@ on:
         required: false
         default: "6"
         type: string
+      providers:
+        description: "Optional provider order, e.g. openverse,pixabay (default: pexels,pixabay,openverse)"
+        required: false
+        default: ""
+        type: string
+      min_width:
+        description: "Optional minimum photo width in px (e.g. 2400 for full-bleed heroes)"
+        required: false
+        default: ""
+        type: string
+      max_side:
+        description: "Longest side of the delivered webp (default 1800, max 3000)"
+        required: false
+        default: "1800"
+        type: string
       kind:
         description: "stock = licensed stock photos; sequence = AI build-stage sequence (Workers Free, ~720 neurons)"
         required: false
@@ -49,6 +64,8 @@ jobs:
           TOPIC: ${{ inputs.topic }}
           COUNT: ${{ inputs.count }}
           QUERIES: ${{ inputs.queries }}
+          KAURIVO_STOCK_PROVIDERS: ${{ inputs.providers }}
+          KAURIVO_STOCK_MIN_WIDTH: ${{ inputs.min_width }}
         run: |
           python - <<'PY'
           import os
@@ -92,12 +109,14 @@ jobs:
       - name: Encrypt for the recipient
         env:
           RECIPIENT: ${{ inputs.recipient }}
+          MAX_SIDE: ${{ inputs.max_side }}
         run: |
           python - <<'PY'
+          import os
           from pathlib import Path
           from PIL import Image
           for p in Path("stock-out").glob("*.jpg"):
-              im = Image.open(p).convert("RGB"); im.thumbnail((1800, 1800)); im.save(p.with_suffix(".webp"), "WEBP", quality=82); p.unlink()
+              side = max(800, min(3000, int(os.environ.get("MAX_SIDE") or 1800))); im = Image.open(p).convert("RGB"); im.thumbnail((side, side)); im.save(p.with_suffix(".webp"), "WEBP", quality=82); p.unlink()
           PY
           sed -i 's/\.jpg"/.webp"/g' stock-out/credits.json
           echo "$RECIPIENT" | base64 -d > /tmp/pub.pem
