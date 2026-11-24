@@ -18,7 +18,7 @@ def load(path: Path = PATH) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def select(trade: str = "", *, limit: int = 8, path: Path = PATH) -> list[dict]:
+def select(trade: str = "", *, limit: int = 12, path: Path = PATH) -> list[dict]:
     """Techniques that fit this trade first, then the generally useful ones."""
     words = (trade or "").lower()
     scored = []
