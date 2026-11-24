@@ -9,34 +9,210 @@
   "Examples the owner sends are training data: extract the technique, add it here, and apply it to future sites without being asked."
  ],
  "references": [
-  {"id": "curation-by", "source": "owner video 24.11.2026 (Curation by, sonic identity studio, site by Coko studio)",
+  {
+   "id": "curation-by",
+   "source": "owner video 24.11.2026 (Curation by, sonic identity studio, site by Coko studio)",
    "techniques": [
-    {"name": "persistent atmosphere", "observed": "one fixed, softly lit textured background (a glowing mesh) stays behind every section while content scrolls over it", "recipe": "a fixed full-viewport layer (photo, video, canvas or CSS texture from the brand's material) under transparent sections; content panels never get their own boxes", "needs": "one atmospheric texture from the business's world"},
-    {"name": "chapter colours", "observed": "each chapter tints its title and small cards with its own accent (white, purple, green) while the background stays", "recipe": "data-tone per section and an accent variable per chapter; type changes colour as the chapter enters", "needs": "3-4 accents derived from the brand palette"},
-    {"name": "horizontal track", "observed": "chapter titles and service cards slide sideways as you scroll down", "recipe": "data-hscroll section: sticky stage, inner track translates X with progress (utils.motion_system)", "needs": "3-6 parallel items (services, steps, projects)"},
-    {"name": "brand motif ending", "observed": "a large black-and-white photo opens under the closing call to action and a waveform motif (the brand's medium) fills the footer", "recipe": "closing section with one full-bleed photo revealed by mask and a motif drawn from the business's own medium", "needs": "one strong closing image; a motif that belongs to the trade"}
+    {
+     "name": "persistent atmosphere",
+     "observed": "one fixed, softly lit textured background (a glowing mesh) stays behind every section while content scrolls over it",
+     "recipe": "a fixed full-viewport layer (photo, video, canvas or CSS texture from the brand's material) under transparent sections; content panels never get their own boxes",
+     "needs": "one atmospheric texture from the business's world"
+    },
+    {
+     "name": "chapter colours",
+     "observed": "each chapter tints its title and small cards with its own accent (white, purple, green) while the background stays",
+     "recipe": "data-tone per section and an accent variable per chapter; type changes colour as the chapter enters",
+     "needs": "3-4 accents derived from the brand palette"
+    },
+    {
+     "name": "horizontal track",
+     "observed": "chapter titles and service cards slide sideways as you scroll down",
+     "recipe": "data-hscroll section: sticky stage, inner track translates X with progress (utils.motion_system)",
+     "needs": "3-6 parallel items (services, steps, projects)"
+    },
+    {
+     "name": "brand motif ending",
+     "observed": "a large black-and-white photo opens under the closing call to action and a waveform motif (the brand's medium) fills the footer",
+     "recipe": "closing section with one full-bleed photo revealed by mask and a motif drawn from the business's own medium",
+     "needs": "one strong closing image; a motif that belongs to the trade"
+    }
    ],
-   "fits": ["studio", "agency", "creative", "hospitality", "kaurivo"]},
-  {"id": "squarespace-home", "source": "owner video 24.11.2026",
+   "fits": [
+    "studio",
+    "agency",
+    "creative",
+    "hospitality",
+    "kaurivo"
+   ]
+  },
+  {
+   "id": "squarespace-home",
+   "source": "owner video 24.11.2026",
    "techniques": [
-    {"name": "tone blend", "observed": "page background blends white -> warm brown -> black between sections", "recipe": "data-tone=#hex on sections (utils.motion_system)", "needs": "palette"},
-    {"name": "depth wall", "observed": "a 3D wall of real sites the camera flies through", "recipe": "data-depth-wall with data-col children", "needs": "6+ real work images"},
-    {"name": "live product demo", "observed": "the product types a business name live as the section enters", "recipe": "a small real interaction of the business's own tool or booking flow", "needs": "a real tool or flow"}
-   ], "fits": ["saas", "platform", "kaurivo"]},
-  {"id": "steal-these-interactions-reel", "source": "owner video 24.11.2026",
+    {
+     "name": "tone blend",
+     "observed": "page background blends white -> warm brown -> black between sections",
+     "recipe": "data-tone=#hex on sections (utils.motion_system)",
+     "needs": "palette"
+    },
+    {
+     "name": "depth wall",
+     "observed": "a 3D wall of real sites the camera flies through",
+     "recipe": "data-depth-wall with data-col children",
+     "needs": "6+ real work images"
+    },
+    {
+     "name": "live product demo",
+     "observed": "the product types a business name live as the section enters",
+     "recipe": "a small real interaction of the business's own tool or booking flow",
+     "needs": "a real tool or flow"
+    }
+   ],
+   "fits": [
+    "saas",
+    "platform",
+    "kaurivo"
+   ]
+  },
+  {
+   "id": "steal-these-interactions-reel",
+   "source": "owner video 24.11.2026",
    "techniques": [
-    {"name": "transition as scroll", "observed": "full-bleed scene flows into the next (through clouds)", "recipe": "stacked full-bleed scenes with scroll-linked scale/opacity crossfade", "needs": "2-4 scenes of the same world"},
-    {"name": "live 3D room", "observed": "a real-estate hero moves from room to room", "recipe": "sequence of interior photos or a 3D scene, one room per scroll step", "needs": "interior photos or model"},
-    {"name": "spatial browsing", "observed": "products float in space and glide past", "recipe": "data-depth-wall with product cut-outs", "needs": "product photos"},
-    {"name": "touchable surface", "observed": "a portrait ripples under the cursor", "recipe": "cursor light or displacement on the hero image, paired with another pattern", "needs": "one strong hero image"}
-   ], "fits": ["real estate", "retail", "fashion", "interior", "rakennus", "remontti"]},
-  {"id": "award-first-folds", "source": "Awwwards Sites of the Month, studied 24.11.2026",
+    {
+     "name": "transition as scroll",
+     "observed": "full-bleed scene flows into the next (through clouds)",
+     "recipe": "stacked full-bleed scenes with scroll-linked scale/opacity crossfade",
+     "needs": "2-4 scenes of the same world"
+    },
+    {
+     "name": "live 3D room",
+     "observed": "a real-estate hero moves from room to room",
+     "recipe": "sequence of interior photos or a 3D scene, one room per scroll step",
+     "needs": "interior photos or model"
+    },
+    {
+     "name": "spatial browsing",
+     "observed": "products float in space and glide past",
+     "recipe": "data-depth-wall with product cut-outs",
+     "needs": "product photos"
+    },
+    {
+     "name": "touchable surface",
+     "observed": "a portrait ripples under the cursor",
+     "recipe": "cursor light or displacement on the hero image, paired with another pattern",
+     "needs": "one strong hero image"
+    }
+   ],
+   "fits": [
+    "real estate",
+    "retail",
+    "fashion",
+    "interior",
+    "rakennus",
+    "remontti"
+   ]
+  },
+  {
+   "id": "award-first-folds",
+   "source": "Awwwards Sites of the Month, studied 24.11.2026",
    "techniques": [
-    {"name": "giant wordmark", "observed": "THE LINE, Watson, Akaru: the name across the full width, cropped by the edge", "recipe": "HERO_LIBRARY 2", "needs": "a strong name"},
-    {"name": "cinematic photo", "observed": "Son Daven, Terminal: one full-bleed image, lots of quiet space", "recipe": "HERO_LIBRARY 1", "needs": "one strong own photo"},
-    {"name": "slatted reveal", "observed": "Siena: the name seen through moving vertical slats", "recipe": "HERO_LIBRARY 7", "needs": "name or photo"},
-    {"name": "video + index", "observed": "Inkfish: full-bleed footage with a quiet project list", "recipe": "HERO_LIBRARY 8", "needs": "real footage"},
-    {"name": "scattered gallery", "observed": "Floema: product photos scattered on a calm canvas", "recipe": "HERO_LIBRARY 6", "needs": "6+ product photos"}
-   ], "fits": ["any"]}
+    {
+     "name": "giant wordmark",
+     "observed": "THE LINE, Watson, Akaru: the name across the full width, cropped by the edge",
+     "recipe": "HERO_LIBRARY 2",
+     "needs": "a strong name"
+    },
+    {
+     "name": "cinematic photo",
+     "observed": "Son Daven, Terminal: one full-bleed image, lots of quiet space",
+     "recipe": "HERO_LIBRARY 1",
+     "needs": "one strong own photo"
+    },
+    {
+     "name": "slatted reveal",
+     "observed": "Siena: the name seen through moving vertical slats",
+     "recipe": "HERO_LIBRARY 7",
+     "needs": "name or photo"
+    },
+    {
+     "name": "video + index",
+     "observed": "Inkfish: full-bleed footage with a quiet project list",
+     "recipe": "HERO_LIBRARY 8",
+     "needs": "real footage"
+    },
+    {
+     "name": "scattered gallery",
+     "observed": "Floema: product photos scattered on a calm canvas",
+     "recipe": "HERO_LIBRARY 6",
+     "needs": "6+ product photos"
+    }
+   ],
+   "fits": [
+    "any"
+   ]
+  },
+  {
+   "id": "lando-norris",
+   "source": "owner link 24.11.2026 (landonorris.com, Awwwards Site of the Year level)",
+   "fits": [
+    "any",
+    "personal brand",
+    "athlete",
+    "studio",
+    "kaurivo",
+    "sport"
+   ],
+   "techniques": [
+    {
+     "name": "3D portrait hero",
+     "observed": "a lit 3D head scan wears the helmet that turns with the cursor over a pale topographic line background",
+     "recipe": "one real 3D/photographic subject of the person or product that answers the cursor; a quiet line motif from the brand's world behind it",
+     "needs": "a 3D scan, product model or cut-out photo of the real subject"
+    },
+    {
+     "name": "signature stroke",
+     "observed": "a neon handwritten signature draws itself over a black-and-white portrait as it scrolls in",
+     "recipe": "inline SVG path of the owner's signature or a brand mark, stroke-dashoffset driven by scroll progress over a duotone photo",
+     "needs": "a signature or mark as SVG; one portrait or work photo"
+    },
+    {
+     "name": "mixed-type manifesto",
+     "observed": "a giant statement in two faces (italic serif accent words in neon, condensed caps in bone) fills and overflows the screen and brightens word by word while scrolling",
+     "recipe": "one manifesto paragraph set at 9-12vw, words wrapped in spans whose opacity/colour follow scroll progress; accent words in a second typeface",
+     "needs": "one true sentence about the business"
+    },
+    {
+     "name": "giant marquee",
+     "observed": "huge words slide sideways across the section edge",
+     "recipe": "kinetic type band (utils.kinetic_type) at display size, scroll-linked direction",
+     "needs": "3-5 short words"
+    },
+    {
+     "name": "captioned photo collage",
+     "observed": "photos at different sizes scroll at different speeds, each with a small place-and-year caption",
+     "recipe": "absolute-positioned real photos with per-image parallax speed and a tiny caption; no frames or cards",
+     "needs": "6+ real photos with place/date"
+    },
+    {
+     "name": "split giant links",
+     "observed": "ON TRACK / OFF TRACK as two huge words that act as the navigation into two worlds",
+     "recipe": "two full-width typographic links with hover image reveal instead of cards",
+     "needs": "two clear paths through the site"
+    },
+    {
+     "name": "object carousel",
+     "observed": "a hall of fame of helmets as a horizontal sequence of rotating objects with year labels",
+     "recipe": "data-hscroll track of cut-out product images, each turning slightly with progress",
+     "needs": "cut-out photos of the business's signature objects"
+    },
+    {
+     "name": "tight brand palette",
+     "observed": "dark olive, bone and one neon lime used everywhere, including the cursor and strokes",
+     "recipe": "one dark ground, one light ink and one loud accent reserved for strokes and emphasis words",
+     "needs": "brand colours"
+    }
+   ]
+  }
  ]
 }
