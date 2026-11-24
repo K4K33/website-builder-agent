@@ -106,7 +106,7 @@ class ScrollScrubTests(unittest.TestCase):
         pipeline = (ROOT / "utils/site_build_pipeline.py").read_text(encoding="utf-8")
         self.assertIn("enhance_scroll_scrub(body, route=route", pipeline)
         builder = (ROOT / "agents/builder.py").read_text(encoding="utf-8")
-        self.assertIn("PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF, PRODUCT_BRIEF, TYPECUT_BRIEF, KINETIC_BRIEF, REVEAL_BRIEF, AWARD_BRIEF", builder)
+        self.assertIn("PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF, PRODUCT_BRIEF, TYPECUT_BRIEF, KINETIC_BRIEF, REVEAL_BRIEF, MOTION_BRIEF, AWARD_BRIEF", builder)
         self.assertIn("enhance_product_relief(body, route=route", pipeline)
 
 

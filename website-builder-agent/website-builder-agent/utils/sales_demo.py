@@ -744,11 +744,12 @@ footer{{background:var(--band);color:color-mix(in srgb,var(--band-ink) 72%,trans
     page = enhance_scroll_scrub(page, route="index.html", media=media, site_root=out_dir)
     page = enhance_kinetic_type(page)
     from utils.hero_reveal import enhance_hero_reveal
+    from utils.scroll_story import enhance_scroll_story
     if typecut:
         from utils.type_through import enhance_type_through
         page = enhance_type_through(page, route="index.html", media=media, site_root=out_dir)
     # Every hero: the visual alone first, the words when its animation is done.
-    page = enhance_hero_reveal(page)
+    page = enhance_scroll_story(enhance_hero_reveal(page))
     target = out_dir / "index.html"
     target.write_text(page, encoding="utf-8")
     (out_dir / "sales-demo.json").write_text(json.dumps(

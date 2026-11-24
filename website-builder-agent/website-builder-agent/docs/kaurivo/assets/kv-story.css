@@ -1,0 +1,115 @@
+/* Generated from utils/hero_reveal.py + utils/scroll_story.py runtimes, then the Kaurivo story. */
+
+[data-copy-after] [data-hero-copy]{transition:opacity .9s cubic-bezier(.16,1,.3,1),transform 1s cubic-bezier(.16,1,.3,1)}
+[data-copy-after].is-js:not(.is-done) [data-hero-copy]{opacity:0!important;transform:translateY(28px)!important;pointer-events:none}
+/* Page chrome that would compete with the animation (the call button) waits too. */
+[data-hide-while-building]{transition:opacity .8s ease,transform .8s ease}
+html.hero-building [data-hide-while-building]{opacity:0;transform:translateY(-8px);pointer-events:none}
+
+[data-story] [data-k]{--k:1}
+[data-story].is-js [data-k]{--k:0}
+[data-story] [data-story-caption]{transition:opacity .4s ease}
+@media (prefers-reduced-motion:reduce){[data-story] [data-k]{--k:1!important}}
+/* Kaurivo home hero: the business's own transformation, an old website rebuilt
+   into a new one as you scroll (scroll_story runtime, hero_reveal choreography). */
+.kv-story{position:relative;height:430svh;background:#090b0e;color:#f6f7f8}
+.kv-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
+.kv-sticky::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 55% at 62% 48%,rgba(127,168,217,.10),transparent 70%);pointer-events:none}
+.kv-scene{position:absolute;inset:64px 0 0;display:grid;place-items:center}
+.kv-desk{position:relative;width:min(1000px,84vw);
+  transform:translate(calc(var(--k) * 21vw),calc(var(--k) * 1svh)) scale(calc(1 - var(--k) * .4));transform-origin:50% 50%;will-change:transform}
+.kv-browser{border-radius:12px;overflow:hidden;background:#15191e;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(226,233,240,.14)}
+.kv-bar{display:flex;align-items:center;gap:7px;height:32px;padding:0 12px;background:#1d2228;border-bottom:1px solid rgba(226,233,240,.08)}
+.kv-bar>i{width:10px;height:10px;border-radius:50%;background:#3a4149}
+.kv-url{position:relative;flex:1;margin-left:10px;height:20px;border-radius:6px;background:#0f1317;font:500 11px/20px "DM Sans",Arial,sans-serif;color:#9aa6b1;overflow:hidden}
+.kv-url b{position:absolute;left:10px;top:0;font-weight:500;white-space:nowrap}
+.kv-url-old{opacity:calc(1 - var(--k))}
+.kv-url-new{opacity:var(--k);color:#e6edf4}
+.kv-view{position:relative;aspect-ratio:16/10;container-type:inline-size;overflow:hidden;background:#d4d0c8;font-family:"Times New Roman",Times,serif}
+
+/* Beat 1-2: the old site, then its parts come off */
+.kv-old-bg{position:absolute;inset:0;background:#d4d0c8;opacity:calc(1 - var(--k))}
+.kv-o{position:absolute;transform:translate(calc(var(--dx) * var(--k)),calc(var(--dy) * var(--k))) rotate(calc(var(--r) * var(--k)));opacity:calc(1 - var(--k) * 1.1)}
+.kv-o-head{left:0;right:0;top:0;height:15%;display:flex;flex-direction:column;justify-content:center;padding:0 3cqw;background:linear-gradient(#2346c8,#1531a1);color:#ffef5a;border-bottom:.5cqw ridge #8fa1e8}
+.kv-o-head b{font:700 3.4cqw/1.05 "Comic Sans MS","Times New Roman",serif}
+.kv-o-head span{font:italic 1.6cqw/1.4 "Times New Roman",serif;color:#fff}
+.kv-o-nav{left:2cqw;top:19%;width:17%;display:flex;flex-direction:column;gap:1.1cqw;padding:1.6cqw;background:#c0c0c0;border:.35cqw outset #e6e6e6}
+.kv-o-nav span{font:1.55cqw/1 "Times New Roman",serif;color:#0000ee;text-decoration:underline}
+.kv-o-text{left:23%;top:19%;width:42%;font:1.75cqw/1.4 "Times New Roman",serif;color:#111}
+.kv-o-text p{margin:0 0 1.4cqw}
+.kv-o-new{color:#d00000;font-weight:700}
+.kv-o-img{right:3cqw;top:19%;width:26%;aspect-ratio:4/3;display:grid;place-items:center;background:repeating-linear-gradient(45deg,#b9b9b9 0 1cqw,#c9c9c9 1cqw 2cqw);border:.35cqw inset #efefef}
+.kv-o-img span{font:1.5cqw "Times New Roman",serif;color:#444;background:#e9e9e9;padding:.4cqw 1cqw}
+.kv-o-foot{left:23%;bottom:5%;font:1.4cqw "Courier New",monospace;color:#333;background:#efe9a8;padding:.6cqw 1.2cqw;border:1px solid #9b956a}
+
+/* Beat 3: the structure is drawn */
+.kv-wire{position:absolute;inset:0;opacity:var(--k);background:
+  repeating-linear-gradient(90deg,rgba(127,168,217,.13) 0 1px,transparent 1px calc(100% / 12)),#0f141a}
+.kv-wire-out{position:absolute;inset:0;opacity:calc(1 - var(--k))}
+.kv-w{position:absolute;border:1px solid rgba(127,168,217,.75);background:rgba(127,168,217,.07);clip-path:inset(0 calc((1 - var(--k)) * 100%) 0 0)}
+.kv-w-nav{left:5%;right:5%;top:5%;height:7%}
+.kv-w-h1{left:5%;top:24%;width:40%;height:11%}
+.kv-w-h2{left:5%;top:37%;width:34%;height:11%}
+.kv-w-p{left:5%;top:53%;width:36%;height:8%}
+.kv-w-btn{left:5%;top:66%;width:18%;height:8%}
+.kv-w-img{left:51%;right:5%;top:20%;bottom:9%}
+
+/* Beat 4: the new look */
+.kv-new{position:absolute;inset:0;opacity:var(--k);font-family:Manrope,"DM Sans",Arial,sans-serif;color:#f3f6f8}
+.kv-n-nav{position:absolute;left:5%;right:5%;top:5%;height:7%;display:flex;align-items:center;gap:3cqw;font:600 1.35cqw/1 "DM Sans",Arial,sans-serif;color:#aab4be;
+  opacity:var(--k);transform:translateY(calc((1 - var(--k)) * -2cqw))}
+.kv-n-nav b{font:800 1.7cqw/1 Manrope,Arial,sans-serif;letter-spacing:.14em;color:#fff;margin-right:auto}
+.kv-n-nav em{font-style:normal;color:#0b1016;background:#7fa8d9;padding:1cqw 1.6cqw;border-radius:.5cqw}
+.kv-n-copy{position:absolute;left:5%;top:20%;width:42%}
+.kv-n-kicker{margin:0 0 2cqw;font:600 1.3cqw/1 "DM Sans",Arial,sans-serif;color:#7fa8d9;opacity:var(--k)}
+.kv-n-h{margin:0;font:750 4.6cqw/1.02 Manrope,Arial,sans-serif;letter-spacing:-.045em}
+.kv-n-h span{display:block;clip-path:inset(calc((1 - var(--k)) * 100%) 0 0 0);transform:translateY(calc((1 - var(--k)) * 2cqw))}
+.kv-n-p{margin:2.6cqw 0 0;font:400 1.55cqw/1.5 "DM Sans",Arial,sans-serif;color:#b7c1cb;opacity:var(--k);transform:translateY(calc((1 - var(--k)) * 1.5cqw))}
+.kv-n-btn{display:inline-block;margin:2.6cqw 0 0;padding:1.4cqw 2.2cqw;border-radius:.5cqw;background:#f3f6f8;color:#0f141a;font:700 1.4cqw/1 "DM Sans",Arial,sans-serif;
+  opacity:var(--k);transform:scale(calc(.85 + var(--k) * .15))}
+.kv-n-chips{display:flex;gap:1cqw;margin-top:3cqw;opacity:var(--k)}
+.kv-n-chips span{font:500 1.15cqw/1 "DM Sans",Arial,sans-serif;color:#cdd6de;border:1px solid rgba(226,233,240,.22);border-radius:99px;padding:.8cqw 1.3cqw}
+.kv-n-img{position:absolute;left:51%;right:5%;top:20%;bottom:9%;border-radius:1cqw;overflow:hidden;clip-path:inset(0 0 0 calc((1 - var(--k)) * 100%) round 1cqw)}
+/* Illustrated tiled bathroom wall: grout grid, soft window light, a mirror and a basin silhouette. */
+.kv-n-img,.kv-ph-img{background:
+  radial-gradient(70% 55% at 75% 18%,rgba(255,246,228,.55),transparent 60%),
+  repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),rgba(70,80,88,.35) calc(25% - 1px) 25%),
+  repeating-linear-gradient(0deg,transparent 0 calc(12.5% - 1px),rgba(70,80,88,.35) calc(12.5% - 1px) 12.5%),
+  linear-gradient(160deg,#d8dcdc,#aeb5b7 70%,#959da0)}
+.kv-n-img i,.kv-ph-img i{position:absolute;left:24%;width:30%;top:16%;height:34%;border-radius:.6cqw;background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(200,210,215,.35));box-shadow:0 0 0 .4cqw rgba(30,35,40,.25)}
+.kv-n-img i::after,.kv-ph-img i::after{content:"";position:absolute;left:-12%;right:-12%;top:132%;height:30%;border-radius:0 0 40% 40%/0 0 80% 80%;background:#f4f6f6;box-shadow:0 1cqw 2cqw rgba(0,0,0,.25)}
+
+/* Beat 5: every screen */
+.kv-phone{position:absolute;right:-7%;bottom:-10%;width:23%;aspect-ratio:9/18.5;border-radius:2.6cqw;background:#0f141a;overflow:hidden;
+  box-shadow:0 30px 60px rgba(0,0,0,.6),0 0 0 .6cqw #1d2228,0 0 0 calc(.6cqw + 1px) rgba(226,233,240,.2);
+  container-type:inline-size;opacity:var(--k);transform:translateY(calc((1 - var(--k)) * 40%)) rotate(calc((1 - var(--k)) * 4deg))}
+.kv-ph-bar{display:flex;justify-content:space-between;align-items:center;padding:9cqw 8cqw 5cqw;font:800 7cqw/1 Manrope,Arial,sans-serif;letter-spacing:.12em;color:#fff}
+.kv-ph-bar i{width:10cqw;height:6cqw;border-top:2px solid #cfd6dd;border-bottom:2px solid #cfd6dd}
+.kv-ph-img{position:relative;height:38%;margin:0 6cqw;border-radius:4cqw}
+.kv-ph-h{margin:7cqw 8cqw 0;font:750 10cqw/1.05 Manrope,Arial,sans-serif;letter-spacing:-.04em;color:#f3f6f8}
+.kv-ph-btn{margin:7cqw 8cqw 0;padding:5cqw 0;text-align:center;border-radius:2.5cqw;background:#7fa8d9;color:#0b1016;font:700 6cqw/1 "DM Sans",Arial,sans-serif}
+
+/* The one stage line during the story, then the copy on the held final frame */
+.kv-caption{position:absolute;left:50%;bottom:4.5svh;transform:translateX(-50%);margin:0;padding:.55em 1.1em;border:1px solid rgba(226,233,240,.2);border-radius:99px;
+  font:500 13px/1 "DM Sans",Arial,sans-serif;color:#c6d0da;background:rgba(9,11,14,.6);backdrop-filter:blur(6px);white-space:nowrap}
+.kv-story.is-done .kv-caption{opacity:0}
+.kv-copy{position:absolute;left:max(24px,5vw);top:50%;transform:translateY(-44%);width:min(540px,38vw);z-index:2}
+.kv-copy h1{margin:.35em 0 .3em;font:700 clamp(44px,5.2vw,84px)/.96 Manrope,Arial,sans-serif;letter-spacing:-.05em}
+.kv-copy .lead{max-width:34em}
+.kv-copy .actions{display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin-top:28px}
+.kv-note{margin:22px 0 0;font:400 12px/1.4 "DM Sans",Arial,sans-serif;color:#8e99a4}
+
+@media (max-width:900px){
+  .kv-story{height:380svh}
+  .kv-scene{inset:56px 0 0}
+  .kv-desk{width:92vw;transform:translateY(calc(var(--k) * -25svh)) scale(calc(1 - var(--k) * .16))}
+  .kv-phone{right:-2%;bottom:-24%;width:25%}
+  .kv-copy{left:16px;right:16px;top:auto;bottom:4svh;width:auto;transform:none}
+  .kv-copy h1{font-size:clamp(36px,10.5vw,56px)}
+  .kv-copy .lead{font-size:15px}
+  .kv-copy .actions{margin-top:18px;gap:16px}
+  .kv-note{margin-top:12px}
+  .kv-caption{bottom:12svh}
+}
+@media (max-width:900px) and (max-height:700px){.kv-copy .lead{display:none}}
+@media (prefers-reduced-motion:reduce){.kv-story{height:auto;min-height:100svh}.kv-sticky{position:relative}}
