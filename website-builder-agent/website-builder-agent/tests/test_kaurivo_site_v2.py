@@ -110,7 +110,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertIn("scroll-behavior:auto", css)
         self.assertIn("v6-logo-complete", css)
         self.assertIn("@keyframes v6-part-a", css)
-        self.assertIn("v6-logo-part-three", PAGES["home"].read_text(encoding="utf-8"))
+        self.assertIn("data-story", PAGES["home"].read_text(encoding="utf-8"))
         self.assertNotIn("v4-window-headline", PAGES["home"].read_text(encoding="utf-8"))
         self.assertIn("data-stage-button", js)
         self.assertNotIn("getContext(", js)
@@ -170,9 +170,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             self.assertEqual(errors,[],(width,name,errors))
                             self.assertTrue(page.locator("header .brand-icon").is_visible())
                             if name == "home":
-                                mark = page.locator(".v6-logo-complete")
-                                mark.wait_for(state="visible", timeout=3500)
-                                self.assertTrue(mark.is_visible())
+                                self.assertTrue(page.locator(".kv-browser").is_visible())
                                 self.assertTrue(page.locator(".delivery-panel").count() == 1)
                                 self.assertEqual(page.locator(".v6-work-card").count(), 2)
                                 self.assertEqual(page.locator(".service-card").count(), 3)
@@ -215,9 +213,9 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             if width == 1440 and name == "home":
                                 self.assertTrue(page.locator(".nav-menu").is_visible())
                                 self.assertFalse(page.locator(".mobile-toggle").is_visible())
-                                self.assertGreater(page.locator(".v6-logo-stage").bounding_box()["height"],400)
+                                self.assertGreater(page.locator(".kv-browser").bounding_box()["height"],400)
                             if width == 390 and name == "home":
-                                self.assertLess(page.locator(".v6-logo-stage").bounding_box()["height"],225)
+                                self.assertLessEqual(page.locator(".kv-browser").bounding_box()["width"],390)
                             if width == 960 and name == "home":
                                 toggle=page.locator(".mobile-toggle")
                                 self.assertTrue(toggle.is_visible())

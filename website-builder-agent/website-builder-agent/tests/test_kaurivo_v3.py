@@ -35,7 +35,7 @@ class V3Tests(unittest.TestCase):
         self.assertIn("@keyframes v6-part-a", css)
         self.assertIn("scroll-behavior:auto", css)
         self.assertIn("delivery-panel", (ROOT / "index.html").read_text())
-        self.assertIn("v6-logo-piece", (ROOT / "index.html").read_text())
+        self.assertIn("data-k=", (ROOT / "index.html").read_text())
         self.assertNotIn("pointermove", js)
         self.assertNotIn("pointerleave", js)
         self.assertIn("v4-window", css)
