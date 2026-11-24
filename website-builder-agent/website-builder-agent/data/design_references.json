@@ -16,7 +16,10 @@
   "One type system for the whole site (owner, 24.11.2026): one family is best, two at most, and illustrative content inside the site (demo pages, examples) uses the same faces. Never a new typeface per section or per example.",
   "The first screen must say what the business does within a second, in its own world: a web studio shows a website being designed and built (layout, type, image, going live), not photos of other trades.",
   "Showcased work keeps its own identity (owner, 24.11.2026): example or client sites shown on a studio's own site must look like different companies (own palette, typefaces, layout), never like the host site's template. The one-type-system rule covers the host site's own text; showcased work sits in a clearly framed showcase (data-showcase) with the host's caption around it.",
-  "Never ship design scaffolding as decoration: no wireframe guides, annotation labels or placeholder crosses on a finished page, and text never overlaps other text anywhere (browser QA fails it)."
+  "Never ship design scaffolding as decoration: no wireframe guides, annotation labels or placeholder crosses on a finished page, and text never overlaps other text anywhere (browser QA fails it).",
+  "No shared skeleton (owner review of three demos, 24.11.2026): sites for different businesses must not repeat the same section pattern (sticky heading left + list right, giant wordmark footer). Each section's layout comes from its content: a menu reads as a menu, a calendar as a calendar, a route as a route.",
+  "Each site gets one signature interaction that belongs to its trade (e.g. dish image following the pointer over a menu, a visit calculator on a price list, a scroll story of a day at a cabin), not only fade-in reveals.",
+  "Full-bleed photography needs source images at least as wide as the largest screen it fills (about 2400 px); 1280 px stock stretched across a desktop reads as cheap and blurry. Keep one consistent light and style across a site's photos."
  ],
  "references": [
   {
