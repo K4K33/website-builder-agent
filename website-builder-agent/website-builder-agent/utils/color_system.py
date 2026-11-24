@@ -173,7 +173,7 @@ def audit_pairs(pairs, *, min_share=0.01):
 # Text colour and the first opaque background behind it, weighted by characters x size.
 PAIR_SCRIPT = """() => {
   const toHex = c => { const m = c.match(/\\d+(\\.\\d+)?/g); if (!m) return null;
-    if (m.length > 3 && parseFloat(m[3]) < 0.98) return null;
+    if (m.length > 3 && parseFloat(m[3]) < 0.85) return null;
     return '#' + m.slice(0, 3).map(v => Math.round(+v).toString(16).padStart(2, '0')).join(''); };
   const painted = e => { const cs = getComputedStyle(e);
     if (['IMG', 'VIDEO', 'CANVAS', 'PICTURE', 'IFRAME'].includes(e.tagName) || (cs.backgroundImage && cs.backgroundImage !== 'none')) return 'media';
