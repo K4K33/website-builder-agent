@@ -22,7 +22,8 @@
   "Full-bleed photography needs source images at least as wide as the largest screen it fills (about 2400 px); 1280 px stock stretched across a desktop reads as cheap and blurry. Keep one consistent light and style across a site's photos.",
   "Hero from the library, every time (owner, 24.11.2026): every site's hero is chosen from utils.hero_library and named in the design notes; sites shown side by side (demos, a portfolio) each use a different library pattern, e.g. cinematic photo + touchable light for a restaurant, slatted reveal for a salon, giant wordmark for a cabin.",
   "Every subpage has its own structure and first view, shaped by its job (owner, 24.11.2026): e.g. services as an index with a live example, prices as an estimator, process as a scroll story, FAQ as a search, contact as form-first. Never the same coloured hero with a giant word and stacked rows on every page.",
-  "FAQ only answers questions the rest of the site does not: never repeat prices, the free demo, editability or anything already stated elsewhere; each answer must be a fact the business has confirmed."
+  "FAQ only answers questions the rest of the site does not: never repeat prices, the free demo, editability or anything already stated elsewhere; each answer must be a fact the business has confirmed.",
+  "Spacing like Squarespace (owner, 24.11.2026): information reads well only with room. One section rhythm (about 104-200 px between sections), one content measure (about 1320 px, centred), a calm type scale (section headings about 30-60 px, hero 46-120 px, not giant type everywhere), and consistent space between a heading and its text. Never pack everything together."
  ],
  "references": [
   {
@@ -83,6 +84,12 @@
      "observed": "the product types a business name live as the section enters",
      "recipe": "a small real interaction of the business's own tool or booking flow",
      "needs": "a real tool or flow"
+    },
+    {
+     "name": "rising product tiles",
+     "observed": "a row of four product tiles (Domains, Online Store, Services, Scheduling), each with a small product scene inside, rises into place one after another as the row enters; the row scrolls sideways with arrows on small screens; generous black space around a modest headline",
+     "recipe": "3-4 tiles of the business's offers, each with a small looping illustration or real image, staggered rise (80-100 ms apart) when the row enters, side-scroll with snap on phones; heading 30-60 px with lots of space above",
+     "needs": "short names and one line per offer; simple illustrations can be drawn in CSS"
     }
    ],
    "fits": [
