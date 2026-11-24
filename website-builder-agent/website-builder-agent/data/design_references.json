@@ -19,7 +19,8 @@
   "Never ship design scaffolding as decoration: no wireframe guides, annotation labels or placeholder crosses on a finished page, and text never overlaps other text anywhere (browser QA fails it).",
   "No shared skeleton (owner review of three demos, 24.11.2026): sites for different businesses must not repeat the same section pattern (sticky heading left + list right, giant wordmark footer). Each section's layout comes from its content: a menu reads as a menu, a calendar as a calendar, a route as a route.",
   "Each site gets one signature interaction that belongs to its trade (e.g. dish image following the pointer over a menu, a visit calculator on a price list, a scroll story of a day at a cabin), not only fade-in reveals.",
-  "Full-bleed photography needs source images at least as wide as the largest screen it fills (about 2400 px); 1280 px stock stretched across a desktop reads as cheap and blurry. Keep one consistent light and style across a site's photos."
+  "Full-bleed photography needs source images at least as wide as the largest screen it fills (about 2400 px); 1280 px stock stretched across a desktop reads as cheap and blurry. Keep one consistent light and style across a site's photos.",
+  "Hero from the library, every time (owner, 24.11.2026): every site's hero is chosen from utils.hero_library and named in the design notes; sites shown side by side (demos, a portfolio) each use a different library pattern, e.g. cinematic photo + touchable light for a restaurant, slatted reveal for a salon, giant wordmark for a cabin."
  ],
  "references": [
   {
