@@ -107,16 +107,21 @@ OVERLAP_SCRIPT = r"""() => {
   for (const el of document.body.querySelectorAll('*')) {
     if (['SCRIPT','STYLE','NOSCRIPT','OPTION','SELECT','TEXTAREA','INPUT'].includes(el.tagName)) continue;
     if (el.closest('[aria-hidden="true"]') && !el.closest('[data-qa-text]')) continue;
+    if (el.closest('details:not([open])') && !el.closest('summary')) continue;
     const nodes = [...el.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim());
     if (!nodes.length) continue;
     const alpha = visibleAlpha(el);
     if (alpha < 0.45) continue;
     for (const n of nodes) {
       const r = document.createRange(); r.selectNodeContents(n);
-      for (const rect of r.getClientRects()) {
-        if (rect.width < 4 || rect.height < 4) continue;
+      const fs = parseFloat(getComputedStyle(el).fontSize) || 16;
+      for (const raw of r.getClientRects()) {
+        if (raw.width < 4 || raw.height < 4) continue;
+        // the range box includes the font's ascent/descent padding; keep only the band glyphs occupy
+        const ink = Math.min(raw.height, fs * 0.74), pad = (raw.height - ink) / 2;
+        const rect = {left: raw.left, right: raw.right, top: raw.top + pad, bottom: raw.bottom - pad, width: raw.width, height: ink};
         if (rect.bottom < 0 || rect.top > innerHeight || rect.right < 0 || rect.left > innerWidth) continue;
-        let block = el;
+        let block = el.closest('h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,dt,dd,label,button,a') || el;
         while (block.parentElement && getComputedStyle(block).display.startsWith('inline')) block = block.parentElement;
         boxes.push({el, block, rect, text: n.textContent.trim().slice(0, 40)});
       }
