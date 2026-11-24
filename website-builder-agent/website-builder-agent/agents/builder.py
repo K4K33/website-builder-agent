@@ -37,6 +37,7 @@ from utils.motion_system import MOTION_SYSTEM_BRIEF
 from utils.hero_library import HERO_LIBRARY, FLOW_RULES
 from utils.reference_library import brief as reference_brief
 from utils.craft_brief import CRAFT_BRIEF
+from utils.color_system import COLOR_BRIEF
 from utils.award_playbook import AWARD_BRIEF
 from utils.quality_v7 import VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK
 from utils.content_parity import audit_content_parity
@@ -1166,7 +1167,7 @@ def _clean_html(html: str) -> str:
 
 
 def _request_site_pages(system, prompt, *, slug, architecture, image_paths, current_pages=None):
-    system = "\n\n".join((system, VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF, PRODUCT_BRIEF, TYPECUT_BRIEF, KINETIC_BRIEF, REVEAL_BRIEF, MOTION_BRIEF, MOTION_SYSTEM_BRIEF, HERO_LIBRARY, FLOW_RULES, reference_brief(json.dumps(architecture, ensure_ascii=False)[:2000] if architecture else ""), CRAFT_BRIEF, AWARD_BRIEF))
+    system = "\n\n".join((system, VISUAL_EXECUTION_BRIEF, VISUAL_PLAYBOOK, PHOTO_SEQUENCE_BRIEF, SCRUB_BRIEF, PRODUCT_BRIEF, TYPECUT_BRIEF, KINETIC_BRIEF, REVEAL_BRIEF, MOTION_BRIEF, MOTION_SYSTEM_BRIEF, HERO_LIBRARY, FLOW_RULES, reference_brief(json.dumps(architecture, ensure_ascii=False)[:2000] if architecture else ""), COLOR_BRIEF, CRAFT_BRIEF, AWARD_BRIEF))
     job_id = os.getenv("KAURIVO_QUEUED_DEMO_ID")
     if not job_id:
         return ask_claude(system, prompt, use_web_search=False, max_tokens=config.BUILDER_MAX_TOKENS,
