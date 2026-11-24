@@ -1,5 +1,3 @@
-/* Generated from utils/hero_reveal.py + utils/scroll_story.py. */
-
 (() => {
   const heroes = [...document.querySelectorAll('[data-copy-after]')];
   if (!heroes.length) return;
@@ -21,7 +19,6 @@
   addEventListener('resize', update);
   update();
 })();
-
 (() => {
   "use strict";
   const stories = [...document.querySelectorAll('[data-story]')];

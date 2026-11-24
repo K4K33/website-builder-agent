@@ -170,7 +170,7 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             self.assertEqual(errors,[],(width,name,errors))
                             self.assertTrue(page.locator("header .brand-icon").is_visible())
                             if name == "home":
-                                self.assertTrue(page.locator(".kv-browser").is_visible())
+                                self.assertTrue(page.locator(".kv-mark").is_visible())
                                 self.assertTrue(page.locator(".delivery-panel").count() == 1)
                                 self.assertEqual(page.locator(".v6-work-card").count(), 2)
                                 self.assertEqual(page.locator(".service-card").count(), 3)
@@ -213,9 +213,9 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             if width == 1440 and name == "home":
                                 self.assertTrue(page.locator(".nav-menu").is_visible())
                                 self.assertFalse(page.locator(".mobile-toggle").is_visible())
-                                self.assertGreater(page.locator(".kv-browser").bounding_box()["height"],400)
+                                self.assertGreater(page.locator(".kv-mark").bounding_box()["height"],400)
                             if width == 390 and name == "home":
-                                self.assertLessEqual(page.locator(".kv-browser").bounding_box()["width"],390)
+                                self.assertLessEqual(page.locator(".kv-mark").bounding_box()["width"],390)
                             if width == 960 and name == "home":
                                 toggle=page.locator(".mobile-toggle")
                                 self.assertTrue(toggle.is_visible())

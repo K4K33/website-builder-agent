@@ -1510,9 +1510,13 @@ def run_qa(slug_or_name: str) -> dict:
                     "and independently_9_5_certified=false. If browser evidence "
                     "missing, report that explicitly.\n"
                     + json.dumps(global_craft,ensure_ascii=False,default=str)
-                    + "\nPHOTO SEQUENCE BROWSER FILMSTRIPS (last attached images, order below): "
+                    + "\nPHOTO SEQUENCE AND SCROLL STORY BROWSER FILMSTRIPS (last attached images, order below): "
                     "judge crops, photo alignment, transition, legibility and whether the "
-                    "scene contributes to this business. Still frames do not establish smoothness.\n"
+                    "scene contributes to this business. For scroll_story filmstrips also judge: "
+                    "is frame 0 already a poster with the business's own subject at full scale, "
+                    "does every step add crafted visible change (depth, light, assembly), and does "
+                    "anything look like a wireframe mock-up, clip-art or a small object in an empty "
+                    "stage? Those are blockers, not polish. Still frames do not establish smoothness.\n"
                     + json.dumps(photo_sequences, ensure_ascii=False)
                     + "\nGLOBAL CRAFT SCROLL FILMSTRIPS: appended AFTER sector images. "
                     "In order Lando Norris, Dropbox Brand, Igloo Inc. desktop "

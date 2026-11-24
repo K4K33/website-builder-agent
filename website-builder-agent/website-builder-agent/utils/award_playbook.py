@@ -40,8 +40,10 @@ AWARD-LEVEL DESIGN RULES (measured on Awwwards-winning small-business sites):
    section. No row of identical cards with icons; real photos carry sections.
 5. Motion is about content: an image that grows from inset to full bleed on
    scroll, a product that turns, a sequence of real process steps, a text
-   line revealed by a mask. One orchestrated entrance, not a fade-up on every
-   block. Every motion has a reduced-motion still.
+   line revealed by a mask, a brand mark assembled in 3D that starts as a
+   full-screen poster. One orchestrated entrance, not a fade-up on every
+   block. Never animate placeholder boxes, grey bars or fake browser
+   windows. Every motion has a reduced-motion still.
 6. Proof inside the hero: a small real detail card over the image (a verified
    service area, a project fact, opening hours) instead of a third paragraph.
 7. Navigation stays small and quiet (13-15 px), with one clear action button.
