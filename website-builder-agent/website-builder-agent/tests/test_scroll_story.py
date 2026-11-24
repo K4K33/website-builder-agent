@@ -27,7 +27,7 @@ class ScrollStoryTests(unittest.TestCase):
     def test_builder_is_told_how_to_design_motion(self):
         builder = (ROOT / "agents" / "builder.py").read_text(encoding="utf-8")
         self.assertIn("MOTION_BRIEF", builder)
-        for rule in ("ONE transformation", "4-5 beats", "data-k", "reduced motion"):
+        for rule in ("frame 0 is already a poster", "placeholder blocks", "dead stretch", "data-k", "reduced motion"):
             self.assertIn(rule, MOTION_BRIEF)
         for path in ("utils/site_build_pipeline.py", "utils/sales_demo.py"):
             self.assertIn("enhance_scroll_story", (ROOT / path).read_text(encoding="utf-8"))
@@ -39,9 +39,41 @@ class ScrollStoryTests(unittest.TestCase):
         self.assertIn("data-copy-after", html)
         self.assertIn("data-hero-copy", html)
         self.assertIn("data-hide-while-building", html)
-        self.assertIn("kuvitteellinen esimerkki", html)
+        self.assertEqual(html.count('class="kv-piece '), 3)
+        self.assertNotIn("kv-browser", html)
         js = (ROOT / "docs" / "kaurivo" / "assets" / "kv-story.js").read_text(encoding="utf-8")
         self.assertIn("data-story", js)
+
+
+    def test_browser_audit_passes_kaurivo_and_rejects_wireframes(self):
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            self.skipTest("Playwright unavailable locally")
+        import tempfile
+        from utils.scroll_story import audit_scroll_story
+        wire = ('<html><head></head><body><section data-story data-copy-after="0.9" style="height:300vh">'
+                '<div style="position:sticky;top:0;height:100vh">'
+                + "".join(f'<i data-k="{i/20},{i/20+.1}" style="display:block;width:120px;height:14px;background:#888;margin:8px auto"></i>' for i in range(6))
+                + '<div data-hero-copy><h1>x</h1></div></div></section></body></html>')
+        with tempfile.TemporaryDirectory() as tmp, sync_playwright() as p:
+            browser = p.chromium.launch()
+            try:
+                bad = Path(tmp) / "wire.html"
+                bad.write_text(enhance_scroll_story(wire), encoding="utf-8")
+                page = browser.new_page(viewport={"width": 1440, "height": 900})
+                page.goto(bad.as_uri())
+                issues = audit_scroll_story(page, output_dir=Path(tmp), viewport="desktop")["issues"]
+                self.assertTrue(any("first frame" in i for i in issues), issues)
+                self.assertTrue(any("placeholder" in i for i in issues), issues)
+                for size in ((1440, 900), (390, 844)):
+                    page = browser.new_page(viewport={"width": size[0], "height": size[1]})
+                    page.goto(HOME.as_uri())
+                    result = audit_scroll_story(page, output_dir=Path(tmp), viewport=str(size[0]))
+                    self.assertEqual(result["issues"], [], size)
+                    self.assertEqual(len(result["observations"]), 1)
+            finally:
+                browser.close()
 
 
 if __name__ == "__main__":

@@ -533,6 +533,12 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                                 page, output_dir=destination.parent / "_motion" / source.stem, viewport=name)
                             issues.extend(f"{name}: {problem}" for problem in motion["issues"])
                             photo_sequences.extend(motion["observations"])
+                        if name in ("desktop", "mobile") and page.locator("[data-story] [data-k]").count():
+                            from utils.scroll_story import audit_scroll_story
+                            story = audit_scroll_story(
+                                page, output_dir=destination.parent / "_motion" / source.stem, viewport=name)
+                            issues.extend(f"{name}: {problem}" for problem in story["issues"])
+                            photo_sequences.extend(story["observations"])
                             issues.extend(f"{name}: JavaScript error during motion: {e[:180]}"
                                           for e in errors[:3]
                                           if f"{name}: JavaScript error: {e[:180]}" not in issues)
