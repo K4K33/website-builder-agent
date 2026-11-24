@@ -41,9 +41,10 @@ html.mo-js [data-reveal]{--v:0}
 [data-depth-wall]>*{transform-style:preserve-3d;
   transform:translateZ(calc(-380px + var(--pass,.5) * 560px)) rotateX(calc(16deg - var(--pass,.5) * 26deg))}
 [data-depth-wall] [data-col]{transform:rotateY(calc(var(--col) * -13deg)) translateZ(calc(var(--col) * var(--col) * -40px))}
-.mo-card{transition:translate .5s cubic-bezier(.2,.8,.2,1),box-shadow .5s}
+.mo-card{transition:translate .3s cubic-bezier(.23,1,.32,1),box-shadow .3s cubic-bezier(.23,1,.32,1)}
+.mo-card:active{scale:.97}
 .mo-card img{transition:scale .9s cubic-bezier(.2,.8,.2,1)}
-@media (hover:hover){.mo-card:hover{translate:0 -6px;box-shadow:0 22px 50px -24px rgba(0,0,0,.45)}.mo-card:hover img{scale:1.045}}
+@media (hover:hover) and (pointer:fine){.mo-card:hover{translate:0 -6px;box-shadow:0 22px 50px -24px rgba(0,0,0,.45)}.mo-card:hover img{scale:1.045}}
 @media (prefers-reduced-motion:reduce){
   html.mo-js [data-reveal],[data-reveal]{--v:1!important}
   [data-reveal="stagger"]>[data-si]{--vi:1!important}
