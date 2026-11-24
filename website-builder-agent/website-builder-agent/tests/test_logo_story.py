@@ -56,12 +56,18 @@ class LogoStoryTests(unittest.TestCase):
         self.assertEqual(section.count('class="ls-piece"'), 6)
         self.assertEqual(section.count('src="assets/cut-'), 6)
 
-    def test_sales_demo_uses_logo_story_when_only_stock_photos_exist(self):
+    def _render(self, tmp, photos, credits):
         from utils.sales_demo import render_sales_demo
         plan = {"trade": "rakennus", "hero_style": "depth", "headline": "Putkityöt avaimet käteen",
                 "chapters": ["Vesijohdot."], "statement": "Testi.",
                 "services": [{"name": "Putkityöt", "text": "Putkityöt."}],
                 "photo_captions": ["Kuva"], "contact_lead": ""}
+        return render_sales_demo(company={"name": "Testi Oy", "phone": "040 1234567"}, plan=plan,
+                                 photos=photos, credits=credits, logo=_wordmark(Path(tmp) / "logo.png"),
+                                 out_dir=Path(tmp) / "out")
+
+    def test_stock_photos_carry_the_demo_hero_not_the_logo(self):
+        # owner 24.11.2026: demos may use Pexels photos; they beat a logo animation
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {"KAURIVO_DEPTH_DISABLED": "1"}):
             photos = []
             for i in range(2):
@@ -69,31 +75,9 @@ class LogoStoryTests(unittest.TestCase):
                 Image.new("RGB", (400, 260), (120 + i * 40, 110, 100)).save(p)
                 photos.append(p)
             credit = {"photographer": "Anna K", "source_url": "https://www.pexels.com/photo/1/", "licence": "Pexels License"}
-            page = render_sales_demo(company={"name": "Testi Oy", "phone": "040 1234567"}, plan=plan,
-                                     photos=photos, credits=[credit, credit], logo=_wordmark(Path(tmp) / "logo.png"),
-                                     out_dir=Path(tmp) / "out")
-            text = page.read_text(encoding="utf-8")
-            self.assertIn('class="ls-hero', text)
-            self.assertIn("data-kaurivo-story-runtime", text)
-            self.assertTrue((page.parent / "assets/logo-story.png").is_file())
-            self.assertNotIn("<img data-kaurivo-scrub-poster", text)
-            self.assertIn("Havainnekuva", text)  # the stock photo behind the logo stays labelled
-            try:
-                from playwright.sync_api import sync_playwright
-            except ImportError:
-                return
-            from utils.scroll_story import audit_scroll_story
-            with sync_playwright() as p:
-                browser = p.chromium.launch()
-                try:
-                    for size in ((1440, 900), (390, 844)):
-                        view = browser.new_page(viewport={"width": size[0], "height": size[1]})
-                        view.goto(page.as_uri())
-                        issues = audit_scroll_story(view, output_dir=Path(tmp) / "a", viewport=str(size[0]))["issues"]
-                        self.assertEqual(issues, [], size)
-                finally:
-                    browser.close()
-
+            text = self._render(tmp, photos, [credit, credit]).read_text(encoding="utf-8")
+            self.assertNotIn('class="ls-hero', text)
+            self.assertIn("Havainnekuva", text)
 
 if __name__ == "__main__":
     unittest.main()
