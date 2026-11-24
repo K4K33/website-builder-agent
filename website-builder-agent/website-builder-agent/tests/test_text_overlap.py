@@ -1,8 +1,6 @@
-import pytest
+import unittest
 
 from utils.brand_consistency import OVERLAP_SCRIPT, overlap_issues
-
-playwright = pytest.importorskip("playwright.sync_api")
 
 HTML = """<div style="position:relative;height:120px">
 <span style="position:absolute;top:10px;left:10px">Navigaatio: menu ja pöytävaraus</span>
@@ -13,7 +11,8 @@ CLEAN = """<h1 style="line-height:.8">Kaksi riviä joka on pitkä<br>toinen rivi
 
 
 def _hits(html):
-    with playwright.sync_playwright() as p:
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
         browser = p.chromium.launch()
         try:
             page = browser.new_page()
@@ -23,10 +22,20 @@ def _hits(html):
             browser.close()
 
 
-def test_label_on_label_is_flagged():
-    problems = overlap_issues(_hits(HTML))
-    assert problems and "Navigaatio" in problems[0]
+class TextOverlapTests(unittest.TestCase):
+    def setUp(self):
+        try:
+            _hits("<p>x</p>")
+        except Exception:
+            self.skipTest("Chromium is not available in this environment.")
+
+    def test_label_on_label_is_flagged(self):
+        problems = overlap_issues(_hits(HTML))
+        self.assertTrue(problems and "Navigaatio" in problems[0])
+
+    def test_tight_lines_covered_text_and_decoration_pass(self):
+        self.assertEqual(overlap_issues(_hits(CLEAN)), [])
 
 
-def test_tight_lines_covered_text_and_decoration_pass():
-    assert overlap_issues(_hits(CLEAN)) == []
+if __name__ == "__main__":
+    unittest.main()
