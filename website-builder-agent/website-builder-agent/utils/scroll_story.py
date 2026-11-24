@@ -174,6 +174,9 @@ def audit_scroll_story(page, *, output_dir, viewport):
                 page.wait_for_timeout(260)
                 page.evaluate("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")
                 states.append(story.evaluate(_STORY_STATE))
+                from utils.brand_consistency import OVERLAP_SCRIPT, overlap_issues
+                issues.extend(f"{label}: {problem}" for problem in
+                              overlap_issues(page.evaluate(OVERLAP_SCRIPT), where=f"at {position:.0%} of the story"))
                 frames.append(Image.open(BytesIO(page.screenshot(animations="disabled"))).convert("RGB"))
             if states[0]["coverage"] < 0.12:
                 issues.append(f"{label}: first frame is nearly empty (subject covers "

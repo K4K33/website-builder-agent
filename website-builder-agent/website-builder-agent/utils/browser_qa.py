@@ -476,6 +476,9 @@ def inspect_site(path, *, first_view_requirement: dict | None = None, allowed_fi
                         from utils.color_system import PAIR_SCRIPT, audit_pairs
                         issues.extend(f"{name}: {problem}" for problem in
                                       typeface_issues(page.evaluate(FAMILY_SCRIPT)))
+                        from utils.brand_consistency import OVERLAP_SCRIPT, overlap_issues
+                        issues.extend(f"{name}: {problem}" for problem in
+                                      overlap_issues(page.evaluate(OVERLAP_SCRIPT), where="on load"))
                         failed_fonts = page.evaluate(FONT_ERROR_SCRIPT)
                         issues.extend(f"{name}: {problem}" for problem in font_load_issues(failed_fonts))
                         visual_review_flags.extend({"category": "typography_fallback", "viewport": name, "note": note}
