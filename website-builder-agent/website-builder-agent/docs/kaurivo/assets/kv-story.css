@@ -62,4 +62,4 @@ html.hero-building [data-hide-while-building]{opacity:0;transform:translateY(-8p
   .kv-copy .lead{font-size:15.5px;line-height:1.6}
 }
 @media (max-width:850px) and (max-height:700px){.kv-copy h1{font-size:clamp(34px,9.6vw,46px)}.kv-copy .lead{margin-bottom:18px}}
-@media (prefers-reduced-motion:reduce){.kv-cue{display:none}.kv-piece{will-change:auto}}
+@media (prefers-reduced-motion:reduce){.kv-cue{display:none}.kv-piece{will-change:auto}.kv-hero{height:auto}.kv-stage{position:relative}}

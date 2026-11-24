@@ -391,6 +391,19 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
             probe.unlink(missing_ok=True)
         if typecut:
             rest = list(range(1, len(staged)))
+    # Logo story: with no own photos the company's real logo is the most
+    # authentic subject, so it assembles in 3D as the hero (utils.logo_story)
+    # instead of a stock photo carrying the first impression.
+    logo_cut = None
+    if logo_rel and not (film or build_scene or seq_staged or typecut) and all(stock) \
+            and os.getenv("KAURIVO_LOGO_STORY", "1") != "0":
+        from utils.logo_story import cut_logo
+        try:
+            logo_cut = cut_logo(out_dir / logo_rel, assets / "logo-story.png")
+        except Exception:
+            logo_cut = None
+        if logo_cut:
+            rest = list(range(1, len(staged)))
     any_illustration = any(stock) or bool(seq_staged)
     scene_note = (" Herossa on 3D-havainnollistus työvaiheista." if build_scene else "")
     kinds = [k for k, on in (("tekoälyllä luotuja", bool(seq_staged)), ("kuvapankin", any(stock))) if on]
@@ -442,6 +455,20 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
   <div class="b3d__bar" aria-hidden="true"><i></i></div>
  </div>
 </section>'''
+    elif logo_cut:
+        from utils.logo_story import STYLE as LOGO_STORY_STYLE, logo_story_html
+        tones = sorted((palette["ink"], palette["surface"], palette["canvas"]),
+                       key=lambda c: sum(int(c[i:i + 2], 16) for i in (1, 3, 5)))
+        dark = logo_cut["luminance"] > 0.45
+        bg, ink = (tones[0], tones[-1]) if dark else (tones[-1], tones[0])
+        copy_html = (f'<p class="hero__brand">{name}</p><h1 id="otsikko">{_glue(plan["headline"])}</h1>'
+                     + (f'<p>{_e(plan["chapters"][0])}</p>' if plan["chapters"] else "")
+                     + (f'<a class="btn" href="{tel}">Soita {_e(phone)}</a>' if tel else ""))
+        hero = (f'<style>.ls-hero{{--ls-bg:{bg};--ls-ink:{ink}}}{LOGO_STORY_STYLE}</style>'
+                + logo_story_html(logo_rel="assets/logo-story.png", cut=logo_cut, copy_html=copy_html,
+                                  label=f"{company.get('name') or ''} logo", dark=dark,
+                                  photo_rel=staged[0] if staged else "", photo_alt=alt(0) if staged else "",
+                                  credit_html=hero_badge if staged else ""))
     elif typecut:
         hero = f'''
 <section class="hero hero--typecut" data-kaurivo-typecut data-copy-after="0.6" aria-labelledby="otsikko">

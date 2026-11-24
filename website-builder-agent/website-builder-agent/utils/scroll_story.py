@@ -39,6 +39,8 @@ MOTION_BRIEF = """SCROLL STORY (hero animation design, required when the hero an
   transform:translate3d(calc((1 - var(--k)) * 30vw),0,calc((1 - var(--k)) * 400px)).
   Vector or high-resolution media only: a logo is redrawn as SVG (gradients, edge highlight, thickness),
   never an upscaled bitmap.
+  Sales demos do this automatically: utils.logo_story cuts the company's own logo into its pieces and
+  assembles them when no own photos exist; real work (film, build scene, own photos) still comes first.
 - Mobile first: the poster frame and the final frame both work at 360px wide; reduced motion and no-JS
   show the final frame. The browser QA films the story and rejects empty first frames, dead stretches
   and placeholder blocks."""

@@ -742,3 +742,16 @@ h1,h2,.display{overflow-wrap:break-word;hyphens:auto}
 .eyebrow::before{background:var(--accent)}
 .v6-studio-intro h2 span{color:var(--accent-deep)}
 .v6-studio-intro .eyebrow{color:#4b5661}
+
+/* Quality pass 24.11.2026: quieter type, no template chrome, one accent. */
+main :is(h1,h2),.footer h2{letter-spacing:-.045em!important}
+.display{line-height:1.02}
+.blue,.section-black .blue,.section-paper .blue,.v6-process-preview h2 em,.v6-studio-intro h2 span,.v6-work .v6-section-head h2 span{color:inherit!important;font-style:normal}
+.eyebrow{text-transform:none!important;letter-spacing:.01em!important;font-size:13px!important;font-weight:600!important;color:#9fb0c2}
+.eyebrow::before{display:none!important}
+.section-paper .eyebrow,.v6-studio-intro .eyebrow{color:#4b5661}
+.cta-band:before,.page-hero:after{display:none}
+.feature-row .num{text-transform:none;letter-spacing:.01em;font-size:13px}
+.feature-row .price{font:650 clamp(30px,4vw,44px)/1.05 Manrope,Arial,sans-serif;letter-spacing:-.04em;color:#f3f7fb;margin:0 0 14px}
+.footer-top{grid-template-columns:1fr!important}
+@media (prefers-reduced-motion:reduce){.kv-hero{height:auto}.kv-stage{position:relative}}

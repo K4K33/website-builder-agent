@@ -34,7 +34,7 @@ class V3Tests(unittest.TestCase):
         self.assertNotIn("IntersectionObserver", js)
         self.assertIn("@keyframes v6-part-a", css)
         self.assertIn("scroll-behavior:auto", css)
-        self.assertIn("delivery-panel", (ROOT / "index.html").read_text())
+        self.assertIn("hinnat-lyhyesti", (ROOT / "index.html").read_text())
         self.assertIn("data-k=", (ROOT / "index.html").read_text())
         self.assertNotIn("pointermove", js)
         self.assertNotIn("pointerleave", js)
