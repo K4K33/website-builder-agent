@@ -35,7 +35,9 @@ Craft floor checks on the rendered page:
   own identity inside a framed [data-showcase]. Never ship wireframe guides or annotation labels; text never overlaps text.
 - Type: body 65-75 characters per line; display tracking no tighter than -0.04em; balanced headings; clear size
   and weight steps; a real display face chosen for the brand, never the platform sans as the display voice.
-- Spacing: tight inside groups, generous between them, more space above a heading than below it.
+- Spacing: tight inside groups, generous between them, more space above a heading than below it. Use one section
+  rhythm (about 104-200 px), one centred content measure (about 1320 px) and a calm type scale; giant type only for
+  one moment per page, never on every section.
 - Browser surfaces carry the design too: text selection colour, focus rings, caret, underline offset, numerals.
 - States: hover, focus, disabled, loading, error and empty all designed.
 Refuse unless the brief explicitly asks: same-size icon+heading+text cards as page structure; the big-number hero
