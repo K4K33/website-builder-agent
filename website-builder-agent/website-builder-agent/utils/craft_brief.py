@@ -39,7 +39,7 @@ Craft floor checks on the rendered page:
 - Browser surfaces carry the design too: text selection colour, focus rings, caret, underline offset, numerals.
 - States: hover, focus, disabled, loading, error and empty all designed.
 Refuse unless the brief explicitly asks: same-size icon+heading+text cards as page structure; the big-number hero
-template; an eyebrow/kicker label above headings (always refuse); 01/02/03 numbering without a real sequence;
+template; an eyebrow/kicker label above headings (always refuse); 01/02/03 numbering (even for a real sequence, prefer words; a plain numbered how-to list is the only exception);
 gradient text; decorative glassmorphism; a coloured bar down one side of a box; hard zero-blur offset shadows;
 emoji or unicode as icons; a circle or polygon mask faking a photo cut-out; light or dark chosen by category
 instead of by where and how the site is used."""
