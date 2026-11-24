@@ -58,6 +58,22 @@ class IllustratedSequenceTests(unittest.TestCase):
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {**ENV, "KAURIVO_ILLUSTRATED_SEQUENCE": "0"}):
             self.assertIsNone(generate_sequence("kylpyhuoneremontti", Path(tmp), post=post))
 
+    def test_house_build_starts_from_an_empty_slab(self):
+        calls = []
+
+        def post(url, **kwargs):
+            calls.append(kwargs["files"])
+            return Reply(200, {"result": {"image": image_b64((30 * len(calls), 90, 120))}})
+        with TemporaryDirectory() as tmp, patch.dict(os.environ, ENV):
+            got = generate_sequence("omakotitalon rakentaminen", Path(tmp), post=post)
+        self.assertEqual(got["labels"][0], "Perustus")
+        base = calls[0]["prompt"][1]
+        self.assertNotIn("input_image_0", calls[0])
+        self.assertIn("foundation slab", base)
+        self.assertIn("nothing standing on it", base)
+        self.assertNotIn("The house:", base)
+        self.assertNotRegex(base, r"\b(roof|walls|windows|cladding)\b")
+
     def test_any_failure_returns_no_sequence(self):
         with TemporaryDirectory() as tmp, patch.dict(os.environ, ENV):
             self.assertIsNone(generate_sequence("kylpyhuone", Path(tmp), post=lambda *a, **k: Reply(429, {})))
