@@ -30,10 +30,10 @@ MOTION_BRIEF = """SCROLL STORY (hero animation design, required when the hero an
   it locks). Small centred objects in an empty dark stage read as a template.
 - Storyboard 3-5 beats; every scroll interval changes something visible (no dead stretch longer than
   ~12 % of the scroll). Big moves early, details late, then a short hold of the finished frame.
-- Show, don't label: no step captions ("Step 1", "Purku") unless the change cannot be read without them;
-  at most one small line. Headline, text and the call button wait ([data-hero-copy],
-  data-hide-while-building) until the final frame holds, then share the frame with the subject.
-- Mechanics: <section data-story data-copy-after="0.82" style="height:260-300svh"> with a position:sticky
+- Show, don't label: no step captions ("Step 1", "Purku") unless the change cannot be read without them.
+- Order (owner rule): headline and call to action are on screen when the page opens; the first scroll moves
+  the text away and the story plays; keep the story short (about 1.5-2 screens) and never block scrolling.
+- Mechanics: <section data-story style="height:180-220svh"> with a position:sticky
   100svh stage. Each moving element gets data-k="a,b" (its window of scroll progress 0..1); CSS uses
   var(--k) (0..1, eased) only in transform, opacity, clip-path or filter, e.g.
   transform:translate3d(calc((1 - var(--k)) * 30vw),0,calc((1 - var(--k)) * 400px)).

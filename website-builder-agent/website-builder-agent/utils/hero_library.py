@@ -31,8 +31,8 @@ HERO_LIBRARY = """HERO LIBRARY (choose ONE per site from the material the busine
    changes the footage (Inkfish). Needs real footage.
 9. TOUCHABLE SURFACE - the hero image answers the cursor (a light that follows, a gentle ripple); always paired
    with one of the above, never alone.
-Rules: the subject fills the viewport at frame 0; type is large, few words, never inside a card; the call to
-action arrives on the held final frame; mobile gets its own crop (phone screenshots, tall images)."""
+Rules: the subject fills the viewport at frame 0; type is large, few words, never inside a card; the headline
+and call to action are visible on load and move away as scrolling starts the story; mobile gets its own crop (phone screenshots, tall images)."""
 
 FLOW_RULES = """PAGE FLOW, NOT BOXES (owner: "en pidä siitä, että kaikki on palikoissa"):
 - Do not stack sections as rectangles with a heading left and text right, and do not put content in rows of

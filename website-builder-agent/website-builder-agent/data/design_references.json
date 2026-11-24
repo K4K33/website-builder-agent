@@ -9,9 +9,9 @@
   "Examples the owner sends are training data: extract the technique, add it here, and apply it to future sites without being asked.",
   "Demos may use licensed Pexels (or other commercially licensed stock) photos, always labelled as illustrations; the final paid site is built from the client's own photos and video. Stock counts as material for a demo's level, not for the final site.",
   "The hero subject must be the business's own world: a web studio shows websites, a renovator shows renovations. Borrowing another trade's imagery (a bathroom on a web studio) reads as the wrong company.",
-  "Never gate the headline behind the whole animation: the scroll story is short (about 1.5-2 screens) and flows straight into the text; the text arrives while the scene is still moving, and scrolling up or down is never blocked or slowed.",
   "No grey or washed-out palettes. The site must be memorable: a confident brand colour carried through whole sections (colour fields, chapter colours), not one small accent on grey.",
-  "Choose typefaces with character for each brand; the default sans plus an italic serif is not enough on its own."
+  "Choose typefaces with character for each brand; the default sans plus an italic serif is not enough on its own.",
+  "Hero order (owner, 24.11.2026): the headline and call to action are visible the moment the page opens; when the visitor starts scrolling the text moves away and the scroll animation plays; the story is short (about 1.5-2 screens) and scrolling is never blocked or slowed. This replaces the older 'copy after the final frame' choreography."
  ],
  "references": [
   {
