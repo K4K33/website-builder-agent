@@ -1,8 +1,9 @@
 """Typeface and brand consistency check on the rendered page.
 
 Owner feedback (24.11.2026): the Kaurivo preview changed typeface from section to section
-and lost the brand. A site keeps one type system everywhere, including illustrative demo
-content shown inside it: one family is best, two at most.
+and lost the brand. A site keeps one type system for its own text: one family is best, two at most.
+Showcased work (example or client sites inside [data-showcase]) keeps its own identity
+and is not counted.
 """
 
 MAX_FAMILIES = 2
@@ -14,7 +15,7 @@ FAMILY_SCRIPT = """() => {
   const skip = new Set(['SCRIPT','STYLE','NOSCRIPT','TITLE','HEAD','META','LINK','SVG','PATH',
                         'INPUT','SELECT','TEXTAREA','OPTION','CODE','PRE','KBD','SAMP']);
   for (const el of document.body.querySelectorAll('*')) {
-    if (skip.has(el.tagName)) continue;
+    if (skip.has(el.tagName) || el.closest('[data-showcase]')) continue;
     let own = '';
     for (const n of el.childNodes) if (n.nodeType === 3) own += n.textContent;
     own = own.trim();
