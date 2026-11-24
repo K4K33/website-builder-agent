@@ -2,8 +2,9 @@
 
 Sales demos may use free stock photography as clearly labelled illustrations
 (havainnekuvat). The final customer site uses the company's own photos, asked
-for once the company is interested. Sources: Pexels (if a key exists; new
-keys are paused), Pixabay (free key, KAURIVO_PIXABAY_API_KEY) and Openverse
+for once the company is interested. Sources: Unsplash (KAURIVO_UNSPLASH_ACCESS_KEY;
+full resolution, Unsplash License, download tracked as the API guidelines require),
+Pexels (if a key exists; new keys are paused), Pixabay (free key, KAURIVO_PIXABAY_API_KEY) and Openverse
 (no key; only CC0, Public Domain Mark and CC BY). We show the photographer,
 source and, for Creative Commons, the licence on every image,
 avoid photos of identifiable people where possible, and never present a stock
@@ -83,6 +84,36 @@ def _pexels(session, query):
                "source_url": p.get("url"), "licence": "Pexels License", "provider": "Pexels"}
 
 
+def unsplash_key() -> str:
+    key = os.getenv("KAURIVO_UNSPLASH_ACCESS_KEY", "").strip()
+    return key if re.fullmatch(r"[A-Za-z0-9_-]{30,80}", key) else ""
+
+
+def _unsplash(session, query):
+    key = unsplash_key()
+    if not key:
+        return
+    headers = {"Authorization": f"Client-ID {key}", "Accept-Version": "v1"}
+    reply = session.get("https://api.unsplash.com/search/photos", headers=headers, timeout=(5, 20),
+                        params={"query": query, "orientation": "landscape", "per_page": 20, "content_filter": "high"})
+    if reply.status_code != 200:
+        return
+    for p in reply.json().get("results") or []:
+        raw = (p.get("urls") or {}).get("raw") or ""
+        if not raw:
+            continue
+        user = p.get("user") or {}
+        links = p.get("links") or {}
+        yield {"id": f"unsplash-{p.get('id')}", "width": p.get("width", 0), "height": p.get("height", 0),
+               "text": " ".join(str(x or "") for x in (p.get("alt_description"), p.get("description"),
+                                                         " ".join(t.get("title", "") for t in p.get("tags") or []))),
+               "url": raw + ("&" if "?" in raw else "?") + "w=3000&fm=jpg&q=82", "hosts": ("images.unsplash.com",),
+               "creator": user.get("name"), "creator_url": (user.get("links") or {}).get("html", ""),
+               "source_url": links.get("html"), "licence": "Unsplash License", "provider": "Unsplash",
+               # The API guidelines ask apps to report each download.
+               "track": (links.get("download_location"), headers)}
+
+
 def _pixabay(session, query):
     key = pixabay_key()
     if not key:
@@ -122,7 +153,7 @@ def _openverse(session, query):
                "provider": "Openverse"}
 
 
-PROVIDERS = (_pexels, _pixabay, _openverse)
+PROVIDERS = (_unsplash, _pexels, _pixabay, _openverse)
 
 
 def _providers():
@@ -213,6 +244,11 @@ def fetch_stock_photos(topic_text: str, folder: Path, *, count: int = MAX_STOCK,
                     target.write_bytes(image.content[:12_000_000])
                 except Exception:
                     continue
+                if photo.get("track") and photo["track"][0]:
+                    try:
+                        session.get(photo["track"][0], headers=photo["track"][1], timeout=(5, 10))
+                    except Exception:
+                        pass
                 seen.add(photo["id"])
                 chosen.append({"path": str(target), "photographer": str(photo.get("creator") or "")[:80],
                                "photographer_url": str(photo.get("creator_url") or ""),

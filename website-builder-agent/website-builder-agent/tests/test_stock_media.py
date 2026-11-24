@@ -112,3 +112,43 @@ class StockMediaTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UnsplashProviderTests(__import__("unittest").TestCase):
+    def test_unsplash_results_are_full_size_credited_and_tracked(self):
+        import os
+        from unittest import mock
+        from utils import stock_media
+
+        class Reply:
+            def __init__(self, status, data=None, content=b"", ctype="image/jpeg"):
+                self.status_code, self._data, self.content, self.headers = status, data, content, {"content-type": ctype}
+
+            def json(self):
+                return self._data
+
+        calls = []
+
+        class Session:
+            def get(self, url, **kw):
+                calls.append(url)
+                if "api.unsplash.com/search" in url:
+                    return Reply(200, {"results": [{"id": "abc", "width": 6000, "height": 4000,
+                                                    "alt_description": "hair salon interior with chairs",
+                                                    "urls": {"raw": "https://images.unsplash.com/photo-1?ixid=x"},
+                                                    "user": {"name": "Ann Example", "links": {"html": "https://unsplash.com/@ann"}},
+                                                    "links": {"html": "https://unsplash.com/photos/abc",
+                                                              "download_location": "https://api.unsplash.com/photos/abc/download?ixid=x"}}]})
+                if "images.unsplash.com" in url:
+                    return Reply(200, content=b"img")
+                return Reply(200, {})
+
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {"KAURIVO_UNSPLASH_ACCESS_KEY": "a" * 43, "KAURIVO_STOCK_PROVIDERS": "unsplash"}):
+            got = stock_media.fetch_stock_photos("kampaamo", Path(tmp), count=1, session=Session(), queries=["hair salon interior"])
+        self.assertEqual(len(got), 1)
+        self.assertEqual(got[0]["provider"], "Unsplash")
+        self.assertEqual(got[0]["photographer"], "Ann Example")
+        self.assertTrue(any("w=3000" in c for c in calls))
+        self.assertTrue(any("/download" in c for c in calls))

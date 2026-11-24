@@ -61,6 +61,7 @@ jobs:
         if: inputs.kind != 'sequence'
         env:
           KAURIVO_PIXABAY_API_KEY: ${{ secrets.KAURIVO_PIXABAY_API_KEY }}
+          KAURIVO_UNSPLASH_ACCESS_KEY: ${{ secrets.KAURIVO_UNSPLASH_ACCESS_KEY }}
           TOPIC: ${{ inputs.topic }}
           COUNT: ${{ inputs.count }}
           QUERIES: ${{ inputs.queries }}
