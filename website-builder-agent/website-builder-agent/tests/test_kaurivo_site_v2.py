@@ -92,8 +92,9 @@ class KaurivoWebsiteTests(unittest.TestCase):
         self.assertIn('href="faq/"', home)
         for name in ("services", "process", "faq", "contact", "work", "about", "privacy", "thanks", "demo_review", "feedback"):
             page_text = PAGES[name].read_text(encoding="utf-8")
-            self.assertIn('class="back-home" href="../"', page_text)
-            self.assertIn("Takaisin etusivulle", page_text)
+            # the header nav and brand link home; no extra "back" links
+            self.assertNotIn('class="back-home"', page_text)
+            self.assertIn('class="brand" href="../"', page_text)
         self.assertNotIn('class="back-home"', home)
         self.assertIn('href="../faq/"', process)
 
@@ -171,13 +172,8 @@ class KaurivoWebsiteTests(unittest.TestCase):
                             self.assertTrue(page.locator("header .brand-icon").is_visible())
                             if name == "home":
                                 self.assertTrue(page.locator(".kv-mark").is_visible())
-                                self.assertTrue(page.locator(".delivery-panel").count() == 1)
+                                self.assertEqual(page.locator("#hinnat-lyhyesti .feature-row").count(), 3)
                                 self.assertEqual(page.locator(".v6-work-card").count(), 2)
-                                self.assertEqual(page.locator(".service-card").count(), 3)
-                            if name != "home":
-                                back = page.get_by_role("link", name="Takaisin etusivulle")
-                                self.assertTrue(back.is_visible())
-                                self.assertEqual(back.get_attribute("href"), "../")
                             if name == "contact":
                                 form = page.locator("#enquiry-form")
                                 self.assertEqual(form.get_attribute("method"), "POST")
