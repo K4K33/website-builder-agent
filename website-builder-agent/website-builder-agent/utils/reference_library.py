@@ -49,7 +49,7 @@ _EXPRESSIVE = ("studio", "agency", "toimisto design", "design", "creative", "luo
                "musiikki", "music", "event", "tapahtuma", "urheilija", "athlete", "kaurivo", "personal brand")
 
 
-def intensity(trade: str = "", *, own_media: int = 0, wants: str = "") -> int:
+def intensity(trade: str = "", *, own_media: int = 0, wants: str = "", stock_media: int = 0, demo: bool = False) -> int:
     """1 calm, 2 crafted, 3 expressive. An explicit wish ('rauhallinen'/'näyttävä') wins; real
     material is required for 3, because spectacle without real content looks cheap."""
     words, wish = (trade or "").lower(), (wants or "").lower()
@@ -60,7 +60,9 @@ def intensity(trade: str = "", *, own_media: int = 0, wants: str = "") -> int:
     if any(w in words for w in _CALM):
         return 1
     if any(w in words for w in _EXPRESSIVE):
-        return 3 if own_media >= 4 or "kaurivo" in words or "studio" in words else 2
+        # a demo may stand on licensed stock (owner rule); the final site needs the client's own media
+        usable = own_media + (stock_media if demo else 0)
+        return 3 if usable >= 4 or "kaurivo" in words or "studio" in words else 2
     return 2
 
 

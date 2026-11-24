@@ -23,6 +23,8 @@ class ReferenceLibraryTests(unittest.TestCase):
         self.assertEqual(lib.intensity("kylpyhuoneremontit"), 2)
         self.assertEqual(lib.intensity("ravintola", own_media=8), 3)
         self.assertEqual(lib.intensity("ravintola", own_media=0), 2)   # no real material, no spectacle
+        self.assertEqual(lib.intensity("ravintola", stock_media=6, demo=True), 3)   # a demo may use Pexels
+        self.assertEqual(lib.intensity("ravintola", stock_media=6), 2)              # the final site may not
         self.assertEqual(lib.intensity("ravintola", own_media=8, wants="rauhallinen ja asiallinen"), 1)
         self.assertIn("level 1 CALM", lib.brief("tilitoimisto"))
         self.assertIn("Do not add spectacle", lib.brief("kaurivo studio"))

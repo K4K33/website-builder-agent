@@ -308,7 +308,8 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
         logo_ratio = _logo_ratio(target)
 
     # The hero photos are the signature moment, so they alone set the palette.
-    palette_photos = [assets / Path(p).name for p in (seq_staged or staged[:3])]
+    palette_photos = [assets / Path(p).name for p in (seq_staged or staged[:3])] \
+        or ([out_dir / logo_rel] if logo_rel else [])   # logo-only demo: colours from the logo
     scene_rel = ""
     if build_scene:
         scene_dir = assets / "build3d"
@@ -397,7 +398,9 @@ def render_sales_demo(*, company: dict, plan: dict, photos: list[Path], out_dir:
     logo_cut = None
     from utils.reference_library import intensity
     calm = intensity(" ".join(str(company.get(k) or "") for k in ("industry", "name", "description"))) == 1
-    if logo_rel and not (film or build_scene or seq_staged or typecut or calm) and all(stock) \
+    # Logo story only when the demo has no photos at all: licensed stock photos (Pexels,
+    # labelled as illustrations) carry a demo hero better than a logo (owner, 24.11.2026).
+    if logo_rel and not (film or build_scene or seq_staged or typecut or calm) and not staged \
             and os.getenv("KAURIVO_LOGO_STORY", "1") != "0":
         from utils.logo_story import cut_logo
         try:
