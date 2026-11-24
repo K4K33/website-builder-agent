@@ -216,6 +216,12 @@
      "observed": "dark olive, bone and one neon lime used everywhere, including the cursor and strokes",
      "recipe": "one dark ground, one light ink and one loud accent reserved for strokes and emphasis words",
      "needs": "brand colours"
+    },
+    {
+     "name": "measured brand system",
+     "observed": "Firecrawl branding scan: dark olive ground #282C20, bone text #F4F4ED, one acid accent #D2FF00 used for links and the primary button only; display face Brier (characterful) over Mona Sans body; 1px radii, 9.6px button radius, no shadows",
+     "recipe": "tinted dark ground taken from the subject's world (not neutral black), warm off-white text, exactly one loud accent reserved for actions; one display face with character plus a plain sans; near-square corners and no shadows",
+     "needs": "nothing beyond a chosen accent and display face"
     }
    ]
   },
