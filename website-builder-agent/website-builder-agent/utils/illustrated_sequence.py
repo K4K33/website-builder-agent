@@ -59,8 +59,9 @@ TEMPLATES = (
       ("Laatoitus", "large light grey matte tiles laid on every wall from floor to ceiling and on the floor, thin "
                     "straight grout lines, the pipe stubs coming through the tiles",
        "empty room, no fixtures yet"),
-      ("Valmis", "large light grey matte tiles from floor to ceiling, the floor sloping to the drain, warm finished look",
-       "{finished}")),
+      ("Valmis", "the same large light grey matte tiles from floor to ceiling, the floor sloping to the drain, "
+                 "every pipe concealed inside the tiled walls with no visible copper pipe, warm finished look",
+       "on the right wall a white wall-hung toilet with a chrome flush plate; {finished}")),
      "Havainnekuva, tekoälyllä luotu: kylpyhuoneremontin vaiheet"),
     (r"maalaus|maalari|tasoitus|tapetointi", 9001,
      "Realistic interior photograph, eye-level straight-on wide shot of a bright Nordic living room wall with a "
@@ -109,6 +110,10 @@ BASE_PROMPT = {"talo": (
     "light grey concrete foundation slab lies on the ground, the size of a two-storey family house footprint, "
     "with nothing standing on it. Around it: neat stacks of grey building blocks and timber on pallets and a "
     "small yellow excavator.")}
+# Trades whose finished keyframe is an edit of the stage before it (the tiled room),
+# not of the bare shell: edits of the shell kept the exposed copper pipes and
+# left fixtures out (2026-11-24 run, review score 3).
+FINISH_FROM_PREVIOUS = {"kylpyhuone"}
 # Trades whose last keyframe moves the camera (drone -> front door at eye level).
 LAST_VIEW = {"talo": ("Edit this exact photo into a new camera view of the SAME house: the camera has come down "
                       "from the air to eye level in front of the house, about 8 metres from the open front door, "
@@ -275,7 +280,10 @@ def generate_sequence(topic_text: str, folder: Path, *, post=None) -> dict | Non
                     "the same surroundings and the same footprint and size of the room or building. "
                     f"Change only the build stage: surfaces: {surfaces}. Contents: {fixtures}. "
                     "The same photographic style and colour grade as the input, no people, no text.")
-            image = run(edit, final)
+            source = final
+            if kind_key in FINISH_FROM_PREVIOUS and index == len(stages) - 1 and index - 1 in images:
+                source = images[index - 1]
+            image = run(edit, source)
             if image is None:
                 return None
             images[index] = image

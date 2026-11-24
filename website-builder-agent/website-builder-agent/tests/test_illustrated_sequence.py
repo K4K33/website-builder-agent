@@ -74,6 +74,21 @@ class IllustratedSequenceTests(unittest.TestCase):
         self.assertNotIn("The house:", base)
         self.assertNotRegex(base, r"\b(roof|walls|windows|cladding)\b")
 
+    def test_finished_bathroom_is_built_on_the_tiled_room(self):
+        calls = []
+
+        def post(url, **kwargs):
+            calls.append(kwargs["files"])
+            return Reply(200, {"result": {"image": image_b64((20 * len(calls), 90, 120))}})
+        with TemporaryDirectory() as tmp, patch.dict(os.environ, ENV):
+            got = generate_sequence("kylpyhuoneremontti", Path(tmp), post=post)
+        self.assertEqual(got["labels"][-1], "Valmis")
+        last = calls[-1]
+        self.assertIn("wall-hung toilet", last["prompt"][1])
+        self.assertIn("concealed", last["prompt"][1])
+        # input is the tiled stage (the previous reply), not the bare shell
+        self.assertNotEqual(last["input_image_0"][1], calls[1]["input_image_0"][1])
+
     def test_any_failure_returns_no_sequence(self):
         with TemporaryDirectory() as tmp, patch.dict(os.environ, ENV):
             self.assertIsNone(generate_sequence("kylpyhuone", Path(tmp), post=lambda *a, **k: Reply(429, {})))
