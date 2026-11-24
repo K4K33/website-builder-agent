@@ -35,11 +35,17 @@
     story.classList.add('is-js');
     return {story, items, stages, caption: story.querySelector('[data-story-caption]'), last: -1};
   });
+  // Displayed progress glides toward the real scroll position (lerp per frame):
+  // wheel steps never jump, native scrolling stays untouched.
+  let running = false;
   function frame() {
+    let moving = false;
     for (const s of setup) {
       const r = s.story.getBoundingClientRect(), room = Math.max(1, r.height - innerHeight);
-      const p = reduce ? 1 : Math.min(1, Math.max(0, -r.top / room));
-      if (Math.abs(p - s.last) < .0004) continue;
+      const goal = reduce ? 1 : Math.min(1, Math.max(0, -r.top / room));
+      let p = s.last < 0 ? goal : s.last + (goal - s.last) * .18;
+      if (Math.abs(goal - p) < .0006) p = goal; else moving = true;
+      if (Math.abs(p - s.last) < .0002) continue;
       s.last = p;
       s.story.style.setProperty('--p', p.toFixed(4));
       for (const it of s.items) {
@@ -53,9 +59,10 @@
         if (s.caption.textContent !== text) s.caption.textContent = text;
       }
     }
+    running = moving;
+    if (moving) requestAnimationFrame(frame);
   }
-  let queued = false;
-  const request = () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; frame(); }); } };
+  const request = () => { if (!running) { running = true; requestAnimationFrame(frame); } };
   addEventListener('scroll', request, {passive: true});
   addEventListener('resize', request);
   new MutationObserver(request).observe(document.documentElement, {attributes: true, attributeFilter: ['lang']});

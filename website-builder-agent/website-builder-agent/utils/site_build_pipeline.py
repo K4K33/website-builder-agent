@@ -14,6 +14,7 @@ from utils.product_relief import enhance_product_relief
 from utils.type_through import enhance_type_through
 from utils.kinetic_type import enhance_kinetic_type
 from utils.hero_reveal import enhance_hero_reveal
+from utils.motion_system import enhance_motion_system
 from utils.scroll_story import enhance_scroll_story
 from utils.site_architecture import (
     parse_generated_site, validate_site_architecture, validate_site_navigation,
@@ -59,7 +60,8 @@ def build_pages_from_response(raw: str, *, slug: str,
                                          site_root=Path(output_root) / slug)
              for route, body in pages.items()}
     # Kinetic type band: verified words only, moving on scroll.
-    pages = {route: enhance_scroll_story(enhance_hero_reveal(enhance_kinetic_type(body))) for route, body in pages.items()}
+    pages = {route: enhance_motion_system(enhance_scroll_story(enhance_hero_reveal(enhance_kinetic_type(body))))
+             for route, body in pages.items()}
     pages, commerce_artifacts = attach_commerce_catalogue(pages, research)
     # The creative preflight is now an explicit implementation contract,
     # not just a generic inspiration paragraph.
